@@ -160,6 +160,21 @@ export function findBookById(id: string): Book | undefined {
 }
 
 /**
+ * Other books in the same category, in canonical order, excluding
+ * the one passed in. Used by the book overview screen's "More from
+ * {category}" carousel — a small recommendation surface that feels
+ * editorial rather than algorithmic, since the canon already groups
+ * books that "belong together".
+ */
+export function siblingBooks(bookId: string): Book[] {
+  const book = findBookById(bookId);
+  if (!book) return [];
+  return BOOKS.filter(
+    (b) => b.category === book.category && b.id !== book.id,
+  ).sort((a, b) => a.order - b.order);
+}
+
+/**
  * Group a flat list of books by their category, preserving the
  * canonical category order. Empty categories are dropped — handy
  * when search results only land in a couple of sections.

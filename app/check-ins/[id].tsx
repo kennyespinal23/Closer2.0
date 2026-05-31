@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
+  Image,
   Pressable,
   ScrollView,
   Share,
@@ -69,7 +70,9 @@ export default function CheckInDetailScreen() {
   );
   const accent = mood?.swatch ?? colors.primary;
   const moodLabel = mood?.label ?? "Check-in";
-  const moodGlyph = mood?.glyph ?? "·";
+  // Image is optional — a check-in saved before the catalog had
+  // images (or with a retired mood id) shows the pill alone.
+  const moodImage = mood?.image ?? null;
 
   // ─── Soft halo intro animation ────────────────────────────────
   // Mirrors the verse delivery screen so the visual language is
@@ -202,8 +205,16 @@ export default function CheckInDetailScreen() {
           </Text>
         </View>
 
-        {/* ─── Mood pill ─────────────────────────────────────── */}
+        {/* ─── Mood image + pill ─────────────────────────────── */}
         <View className="items-center mt-4 px-6">
+          {moodImage ? (
+            <Image
+              source={moodImage}
+              style={{ width: 88, height: 88, marginBottom: 12 }}
+              resizeMode="contain"
+              accessibilityIgnoresInvertColors
+            />
+          ) : null}
           <View
             className="flex-row items-center px-3 py-1.5 rounded-full"
             style={{
@@ -213,16 +224,7 @@ export default function CheckInDetailScreen() {
             }}
           >
             <Text
-              style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                fontSize: 13,
-                color: accent,
-              }}
-            >
-              {moodGlyph}
-            </Text>
-            <Text
-              className="text-[10.5px] tracking-[2.5px] uppercase ml-2"
+              className="text-[10.5px] tracking-[2.5px] uppercase"
               style={{
                 fontFamily: "PlusJakartaSans_700Bold",
                 color: accent,

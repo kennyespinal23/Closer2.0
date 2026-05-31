@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, {
   Circle,
   Defs,
+  G,
   Path,
   RadialGradient,
   Rect,
@@ -26,18 +27,10 @@ import { useCheckIns } from "@/state/checkIns";
 import { useOnboarding } from "@/state/onboarding";
 import { usePreferences } from "@/state/preferences";
 import { useProgress } from "@/state/progress";
+import { useReadingGoal } from "@/state/readingGoal";
 
-// ─────────────────────────────────────────────────────────────────
-// MOCK DAILY CONTENT
-// Sermon meta now lives in `constants/sermon.ts` so the home card and
-// the sermon flow stay in sync. Verse is still a local mock.
-// Reading is now real (constants/reading.ts).
-// ─────────────────────────────────────────────────────────────────
-
-const TODAYS_VERSE = {
-  text: "Be still, and know that I am God.",
-  reference: "Psalm 46:10",
-};
+// Sermon meta lives in `constants/sermon.ts` so the home card and
+// the sermon flow stay in sync. Reading is real (constants/reading.ts).
 
 export default function TodayScreen() {
   const router = useRouter();
@@ -45,6 +38,7 @@ export default function TodayScreen() {
   const { reset: resetPreferences } = usePreferences();
   const { reset: resetAnnotations } = useAnnotations();
   const { reset: resetCheckIns } = useCheckIns();
+  const { reset: resetReadingGoal } = useReadingGoal();
   const progress = useProgress();
   const {
     streak,
@@ -52,6 +46,11 @@ export default function TodayScreen() {
     lastVisited,
     hasCompletedSermonToday,
   } = progress;
+  const {
+    todayMinutes: readingMinutes,
+    goalMinutes: readingGoal,
+    reachedToday: readingGoalReached,
+  } = useReadingGoal();
 
   const greeting = useMemo(() => getGreeting(), []);
   const todaysDate = useMemo(() => formatDate(new Date()), []);
@@ -111,6 +110,7 @@ export default function TodayScreen() {
     resetAnnotations();
     resetPreferences();
     resetCheckIns();
+    resetReadingGoal();
     router.replace("/");
   };
 
@@ -124,6 +124,7 @@ export default function TodayScreen() {
     resetAnnotations();
     resetPreferences();
     resetCheckIns();
+    resetReadingGoal();
     router.replace("/onboarding/name");
   };
 
@@ -189,14 +190,32 @@ export default function TodayScreen() {
           </View>
         </FadeIn>
 
+        {/* ─── Reading ring hero ──────────────────────────────────
+            Apple-Fitness-style activity-ring card showing the user's
+            daily reading-minutes goal. Sits at the top of the page
+            content (after the week strip) as the day's pulse — one
+            glance tells you whether you've spent your moments with
+            Scripture today. Tap drills into the goal settings, same
+            as the Profile-drawer link. */}
+        <FadeIn delayMs={120} durationMs={800}>
+          <View className="px-6 mt-7">
+            <ReadingRingCard
+              minutes={readingMinutes}
+              goal={readingGoal}
+              reached={readingGoalReached}
+              onPress={() => router.push("/settings/reading-goal")}
+            />
+          </View>
+        </FadeIn>
+
         {/* ─── Continue reading ────────────────────────────────────
             Slim, low-chrome card that only appears when there's a
             real "where I left off" to surface. Sits ABOVE the sermon
             so it's the first thing someone reaching back into the
             app sees, but stays visually quieter than the sermon card. */}
         {continueReading && (
-          <FadeIn delayMs={150} durationMs={800}>
-            <View className="px-6 mt-7">
+          <FadeIn delayMs={200} durationMs={800}>
+            <View className="px-6 mt-5">
               <ContinueReadingCard
                 reference={continueReading.reference}
                 hint={continueReading.hint}
@@ -268,66 +287,13 @@ export default function TodayScreen() {
           </View>
         </FadeIn>
 
-        {/* ─── Today's Verse ───────────────────────────────────── */}
-        <FadeIn delayMs={550} durationMs={900}>
-          <View className="px-6 mt-10">
-            <View className="flex-row items-center mb-3">
-              <View className="w-6 h-[1.5px] bg-primary rounded-full mr-3" />
-              <Text
-                className="text-ink-subtle text-[11px] tracking-[3px] uppercase"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-              >
-                Verse of the Day
-              </Text>
-            </View>
-
-            <Text
-              className="text-ink text-[20px] leading-[30px]"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-            >
-              &ldquo;{TODAYS_VERSE.text}&rdquo;
-            </Text>
-            <Text
-              className="text-ink-muted text-[12px] mt-2 tracking-[2px] uppercase"
-              style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-            >
-              {TODAYS_VERSE.reference}
-            </Text>
-          </View>
-        </FadeIn>
-
-        {/* ─── Quick Actions ───────────────────────────────────── */}
-        <FadeIn delayMs={750} durationMs={900}>
-          <View className="px-6 mt-10">
-            <Text
-              className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-4"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-            >
-              Quick Actions
-            </Text>
-            <View className="flex-row gap-3">
-              <ActionTile
-                icon={<PrayIcon />}
-                label="Pray"
-                sublabel="Guided"
-              />
-              <ActionTile
-                icon={<ReflectIcon />}
-                label="Reflect"
-                sublabel="2 min"
-              />
-              <ActionTile
-                icon={<ScriptureIcon />}
-                label="Scripture"
-                sublabel="Browse"
-                onPress={() => router.push("/library")}
-              />
-            </View>
-          </View>
-        </FadeIn>
-
-        {/* Weekly rhythm lives at the top of the screen now, woven
-            into the greeting — see WeekStrip above. */}
+        {/* Weekly rhythm lives at the top of the screen woven into
+            the greeting (see WeekStrip). Verse of the Day and Quick
+            Actions were intentionally removed during the home-screen
+            declutter pass — the daily anchor is the sermon + reading
+            challenge above; mood check-ins handle "I want a verse
+            right now"; the bottom tab bar covers library/journey
+            navigation. */}
 
         {/* ─── Dev tools ────────────────────────────────────────────
             Gated behind __DEV__ so the entire subtree is stripped from
@@ -364,6 +330,237 @@ export default function TodayScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ReadingRingCard — Apple-Fitness-style hero for the daily goal
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Hero card showing reading-minutes progress as a circular ring on
+ * the left, with a calorie-card-style title + metric on the right.
+ *
+ * Visual language is borrowed directly from Apple Fitness's
+ * "Activity Ring" card — bold ring on the left, glanceable metric
+ * and label on the right, plus a little arrow tipping along the
+ * arc that gives the ring a sense of motion. Tap drills into the
+ * goal-detail screen for tuning the daily target.
+ *
+ * Three visual states:
+ *   • Untouched (0 min)  — quiet, encouraging copy
+ *   • In progress        — accent-orange ring, motion arrow
+ *   • Reached            — ring fills to white (primary) + a small
+ *                          "checkmark" replaces the motion arrow
+ */
+function ReadingRingCard({
+  minutes,
+  goal,
+  reached,
+  onPress,
+}: {
+  minutes: number;
+  goal: number;
+  reached: boolean;
+  onPress: () => void;
+}) {
+  const pct = goal > 0 ? Math.min(1, minutes / goal) : 0;
+  const minutesLabel = formatMinutes(minutes);
+  const remainingLabel = formatRemaining(minutes, goal, reached);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      className="rounded-3xl border border-border bg-surface px-5 py-5"
+      style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
+    >
+      <View className="flex-row items-center">
+        <ActivityRing pct={pct} reached={reached} size={96} stroke={12} />
+        <View className="flex-1 ml-5">
+          <Text
+            className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase"
+            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          >
+            Drawing Near
+          </Text>
+          <View className="flex-row items-baseline mt-1.5">
+            <Text
+              className="text-ink text-[28px] leading-[28px] tracking-[-0.6px]"
+              style={{
+                fontFamily: "PlusJakartaSans_800ExtraBold",
+                color: reached ? colors.ink : RING_ACCENT,
+              }}
+            >
+              {minutesLabel}
+            </Text>
+            <Text
+              className="text-ink-muted text-[13px] ml-1.5"
+              style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+            >
+              / {goal} MIN
+            </Text>
+          </View>
+          <Text
+            className="text-ink-muted text-[12.5px] mt-1.5 leading-[18px]"
+            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            numberOfLines={2}
+          >
+            {remainingLabel}
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+/**
+ * The reading-goal accent color — a warm amber that matches the
+ * flame icon in the WeekStrip, so the ring and the streak flames
+ * read as one "your effort" color story rather than two separate
+ * accents fighting for attention.
+ */
+const RING_ACCENT = "#FFB672";
+
+/**
+ * Apple-Fitness-style activity ring.
+ *
+ * Two stacked stroked circles:
+ *   • Track — full circle in a dim border color, the "missed" arc
+ *   • Fill  — partial circle (length = pct * circumference) drawn in
+ *             accent or primary, with rounded ends so the head of
+ *             the arc reads as a tip, not a hard chop
+ *
+ * A tiny indicator (arrow for in-progress, checkmark for reached)
+ * sits at the END of the arc, mirroring Apple Fitness' ring head
+ * marker. We compute its angular position from `pct` and place it
+ * on the ring's center line so it always reads as "where you are".
+ *
+ * SVG is rotated -90° around the center so 0° starts at 12-o'clock
+ * (the natural mental model for "the top of the ring"). Without the
+ * rotation, fills would start at 3-o'clock.
+ */
+function ActivityRing({
+  pct,
+  reached,
+  size,
+  stroke,
+}: {
+  pct: number;
+  reached: boolean;
+  size: number;
+  stroke: number;
+}) {
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * r;
+  // strokeDasharray = [filled, gap]. Floor a hairline so the
+  // rounded cap is still visible at 0% (looks like the ring's
+  // starting nub) — pure 0 would render nothing.
+  const filled = Math.max(circumference * 0.001, circumference * pct);
+  const accent = reached ? colors.ink : RING_ACCENT;
+
+  // Position of the head/tip of the arc — used to drop the small
+  // indicator icon. 12-o'clock at pct=0 → moving clockwise.
+  const tipAngle = -90 + 360 * pct;
+  const tipRad = (tipAngle * Math.PI) / 180;
+  const tipX = cx + r * Math.cos(tipRad);
+  const tipY = cy + r * Math.sin(tipRad);
+
+  return (
+    <View style={{ width: size, height: size }}>
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {/* Track — the unfilled portion of the ring. Drawn at a
+            slight opacity so it shows the missed arc without
+            yelling about it. */}
+        <Circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          stroke={colors.border}
+          strokeWidth={stroke}
+          fill="none"
+        />
+        {/* Filled arc — rotated so 0% starts at 12-o'clock. */}
+        <G originX={cx} originY={cy} rotation={-90}>
+          <Circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            stroke={accent}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            fill="none"
+            strokeDasharray={`${filled} ${circumference}`}
+          />
+        </G>
+
+        {/* Tip indicator — sits at the leading edge of the arc.
+            Apple Fitness uses a small white arrow inside a colored
+            disc; we mirror that for in-progress and switch to a
+            check glyph when the goal is reached. The whole thing is
+            wrapped in a Path-positioned group so it tracks the arc. */}
+        <G>
+          <Circle
+            cx={tipX}
+            cy={tipY}
+            r={stroke / 2 + 1}
+            fill={accent}
+          />
+          {reached ? (
+            <Path
+              d={`M ${tipX - 3.2} ${tipY + 0.2} L ${tipX - 0.8} ${tipY + 2.6} L ${tipX + 3.4} ${tipY - 2}`}
+              stroke={colors.bg}
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          ) : (
+            <Path
+              d={`M ${tipX - 2.4} ${tipY - 0.4} L ${tipX + 1.2} ${tipY - 0.4} M ${tipX - 0.6} ${tipY - 2.2} L ${tipX + 1.6} ${tipY - 0.4} L ${tipX - 0.6} ${tipY + 1.4}`}
+              stroke={colors.bg}
+              strokeWidth={1.6}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          )}
+        </G>
+      </Svg>
+    </View>
+  );
+}
+
+/**
+ * Show today's accumulated minutes as a clean integer when ≥ 1, or
+ * "M:SS" with seconds when still under a minute / fractional, so
+ * the number feels alive in the early moments of a reading session.
+ */
+function formatMinutes(m: number): string {
+  if (m <= 0) return "0";
+  if (m < 1) {
+    const seconds = Math.round(m * 60);
+    return `0:${String(seconds).padStart(2, "0")}`;
+  }
+  const whole = Math.floor(m);
+  const seconds = Math.round((m - whole) * 60);
+  if (seconds === 0) return String(whole);
+  return `${whole}:${String(seconds).padStart(2, "0")}`;
+}
+
+/**
+ * One-liner that contextualizes the metric — encouraging at 0,
+ * specific in the middle, celebratory once reached.
+ */
+function formatRemaining(minutes: number, goal: number, reached: boolean): string {
+  if (reached) return "Today's reading goal honored.";
+  if (minutes <= 0) {
+    return `Spend ${goal} minutes near Scripture today.`;
+  }
+  const remaining = Math.max(0, goal - minutes);
+  if (remaining < 1) return "Less than a minute to today's goal.";
+  const rounded = Math.ceil(remaining);
+  return `${rounded} ${rounded === 1 ? "minute" : "minutes"} to today's goal.`;
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -609,45 +806,8 @@ function PlayPill() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// ActionTile — secondary entry points
-// ─────────────────────────────────────────────────────────────────
-
-type ActionTileProps = {
-  icon: React.ReactNode;
-  label: string;
-  sublabel: string;
-  onPress?: () => void;
-};
-
-function ActionTile({ icon, label, sublabel, onPress }: ActionTileProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className="flex-1 rounded-2xl border border-border bg-surface px-4 py-5 items-center"
-      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-    >
-      <View className="w-10 h-10 rounded-full bg-accent-soft items-center justify-center mb-3">
-        {icon}
-      </View>
-      <Text
-        className="text-ink text-[14px]"
-        style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-      >
-        {label}
-      </Text>
-      <Text
-        className="text-ink-subtle text-[11px] mt-1"
-        style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-      >
-        {sublabel}
-      </Text>
-    </Pressable>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// ReadingCard — the Today's Reading hero, sized between the bold
-// SermonCard above and the quiet verse below
+// ReadingCard — the Daily Reading Challenge hero, sits beneath the
+// sermon as the second daily anchor
 // ─────────────────────────────────────────────────────────────────
 
 function ReadingCard({
@@ -1058,31 +1218,6 @@ function DevPill({
         {label}
       </Text>
     </Pressable>
-  );
-}
-
-function PrayIcon() {
-  // Two simple hands meeting — abstracted as a softly closed shape
-  return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M9 3v9M15 3v9M9 12c-2 1-3 3-3 6h12c0-3-1-5-3-6"
-        stroke={colors.primary}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function ReflectIcon() {
-  // A soft inward swirl — pause + reflection
-  return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-      <Circle cx={12} cy={12} r={8} stroke={colors.primary} strokeWidth={1.8} />
-      <Circle cx={12} cy={12} r={3} stroke={colors.primary} strokeWidth={1.8} />
-    </Svg>
   );
 }
 

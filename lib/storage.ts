@@ -63,6 +63,8 @@ export const STORAGE_KEYS = {
   progress: "closer.progress.v1",
   annotations: "closer.annotations.v1",
   checkIns: "closer.checkIns.v1",
+  readingGoal: "closer.readingGoal.v1",
+  savedInsights: "closer.savedInsights.v1",
 } as const;
 
 /**

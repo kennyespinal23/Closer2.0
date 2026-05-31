@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
+  Image,
   Pressable,
   ScrollView,
   Share,
@@ -217,9 +218,18 @@ export default function VerseDeliveryScreen() {
 
         {/* ─── Mood echo ───────────────────────────────────── */}
         <FadeIn delayMs={100} durationMs={900}>
-          <View className="px-6 mt-8 items-center">
+          <View className="px-6 mt-6 items-center">
+            {/* Hero: the mood's head illustration. Sits above the
+                echo pill so the moment "lands" visually before any
+                text arrives. The image is the primary identity. */}
+            <Image
+              source={mood.image}
+              style={{ width: 110, height: 110 }}
+              resizeMode="contain"
+              accessibilityIgnoresInvertColors
+            />
             <View
-              className="flex-row items-center px-3 py-1.5 rounded-full"
+              className="flex-row items-center px-3 py-1.5 rounded-full mt-4"
               style={{
                 backgroundColor: hexAlpha(mood.swatch, 0.12),
                 borderWidth: 1,
@@ -227,16 +237,7 @@ export default function VerseDeliveryScreen() {
               }}
             >
               <Text
-                style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  fontSize: 13,
-                  color: mood.swatch,
-                }}
-              >
-                {mood.glyph}
-              </Text>
-              <Text
-                className="text-[10.5px] tracking-[2.5px] uppercase ml-2"
+                className="text-[10.5px] tracking-[2.5px] uppercase"
                 style={{
                   fontFamily: "PlusJakartaSans_700Bold",
                   color: mood.swatch,

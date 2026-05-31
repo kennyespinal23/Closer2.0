@@ -9,23 +9,62 @@ import type { BookCategory } from "./books";
  * named explicitly here. To add a new cover:
  *
  *   1. Drop the PNG into assets/book-covers/
- *   2. Add a line below mapping `bookId` → require("..." )
+ *   2. Add an entry below — at minimum a `require(...)` path, and
+ *      ideally a `bloom` palette sampled from the artwork (see
+ *      `CoverBloom` below)
  *
  * The Library + book overview screens use `getBookCover` and fall
  * back to a generated placeholder (see BookCoverPlaceholder) for
  * any book that doesn't have art yet, so partial coverage is fine.
  */
 
-const COVER_MAP: Partial<Record<string, ImageSourcePropType>> = {
-  job: require("../assets/book-covers/thebookofjob.png"),
+/**
+ * Two-stop palette used to drive the radial bloom behind the cover
+ * on the book detail screen. Both colors should be drawn from the
+ * artwork itself so the glow "matches" what the user is looking at:
+ *
+ *   • inner — a brighter highlight from the painting (often a
+ *     mid-tone saturated color near the focal point)
+ *   • outer — a deeper supporting color (typically the dominant
+ *     background hue)
+ *
+ * Keep saturation moderate — the bloom is a hint of color, not a
+ * neon ring. Anything ≥ ~70% saturation tends to upstage the cover
+ * it's supposed to flatter.
+ */
+export type CoverBloom = {
+  inner: string;
+  outer: string;
+};
+
+type CoverEntry = {
+  image: ImageSourcePropType;
+  bloom?: CoverBloom;
+};
+
+const COVER_MAP: Partial<Record<string, CoverEntry>> = {
+  job: {
+    image: require("../assets/book-covers/thebookofjob.png"),
+    // Sampled from the painting: the cyan-blue beam of light
+    // pouring down on the figure (inner highlight) → the deep
+    // night-sky blue behind the cosmic swirls (outer body).
+    // Colors stay close to the painting itself — the bloom layer
+    // pulls its visual weight from stop opacity, not over-bright
+    // hues that would feel detached from the artwork.
+    bloom: { inner: "#90D4F2", outer: "#243A98" },
+  },
 };
 
 export function getBookCover(bookId: string): ImageSourcePropType | null {
-  return COVER_MAP[bookId] ?? null;
+  return COVER_MAP[bookId]?.image ?? null;
+}
+
+export function getCoverBloom(bookId: string): CoverBloom | null {
+  return COVER_MAP[bookId]?.bloom ?? null;
 }
 
 export function hasBookCover(bookId: string): boolean {
-  return getBookCover(bookId) !== null;
+  return COVER_MAP[bookId] != null;
 }
 
 /**

@@ -19,6 +19,14 @@ import { CheckInsProvider, useCheckIns } from "@/state/checkIns";
 import { OnboardingProvider, useOnboarding } from "@/state/onboarding";
 import { PreferencesProvider, usePreferences } from "@/state/preferences";
 import { ProgressProvider, useProgress } from "@/state/progress";
+import {
+  ReadingGoalProvider,
+  useReadingGoal,
+} from "@/state/readingGoal";
+import {
+  SavedInsightsProvider,
+  useSavedInsights,
+} from "@/state/savedInsights";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   /* splash screen may already be hidden; safe to ignore */
@@ -45,6 +53,8 @@ export default function RootLayout() {
           <AnnotationsProvider>
             <ProgressProvider>
               <CheckInsProvider>
+                <ReadingGoalProvider>
+                <SavedInsightsProvider>
                 <HydrationGate>
                 <Stack
                   screenOptions={{
@@ -94,6 +104,20 @@ export default function RootLayout() {
                     name="check-ins/[id]"
                     options={{ animation: "slide_from_right" }}
                   />
+                  {/* Insight (magazine article) detail. Drill-down
+                      from the Insights index. */}
+                  <Stack.Screen
+                    name="insight/[id]"
+                    options={{ animation: "slide_from_right" }}
+                  />
+                  {/* "Your Practice" stats screen — the data view that
+                      used to live on the Insights tab, now reached
+                      from the Profile drawer so the tab can host the
+                      content library instead. */}
+                  <Stack.Screen
+                    name="stats"
+                    options={{ animation: "slide_from_right" }}
+                  />
                   {/* Mood check-in. Presented as a full-screen modal
                       (slide from bottom) so the user feels like
                       they're entering a quiet, separate moment. Has
@@ -107,6 +131,8 @@ export default function RootLayout() {
                   />
                 </Stack>
                 </HydrationGate>
+                </SavedInsightsProvider>
+                </ReadingGoalProvider>
               </CheckInsProvider>
             </ProgressProvider>
           </AnnotationsProvider>
@@ -134,13 +160,17 @@ function HydrationGate({ children }: { children: React.ReactNode }) {
   const { hydrated: progressHydrated } = useProgress();
   const { hydrated: annotationsHydrated } = useAnnotations();
   const { hydrated: checkInsHydrated } = useCheckIns();
+  const { hydrated: readingGoalHydrated } = useReadingGoal();
+  const { hydrated: savedInsightsHydrated } = useSavedInsights();
 
   const allReady =
     onboardingHydrated &&
     preferencesHydrated &&
     progressHydrated &&
     annotationsHydrated &&
-    checkInsHydrated;
+    checkInsHydrated &&
+    readingGoalHydrated &&
+    savedInsightsHydrated;
 
   useEffect(() => {
     if (allReady) {

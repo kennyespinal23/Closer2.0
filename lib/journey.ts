@@ -150,8 +150,20 @@ export type HighlightStack = {
   highlights: HighlightEvent[];
 };
 
+export type CheckInStack = {
+  kind: "checkInStack";
+  id: string;
+  at: number;
+  dateISO: string;
+  checkIns: CheckInEvent[];
+};
+
 /** Anything that can appear as a row in a day bucket. */
-export type JourneyRow = JourneyEvent | NoteStack | HighlightStack;
+export type JourneyRow =
+  | JourneyEvent
+  | NoteStack
+  | HighlightStack
+  | CheckInStack;
 
 export type JourneyDay = {
   dateISO: string;
@@ -302,7 +314,9 @@ export function buildJourney(
  * Rule:
  *   - 2+ notes in the day      → 1 NoteStack row
  *   - 2+ highlights in the day → 1 HighlightStack row
- *   - everything else stays individual
+ *   - 2+ check-ins in the day  → 1 CheckInStack row
+ *   - everything else stays individual (sermons, chapters,
+ *     milestones — each is a discrete moment worth its own row)
  *
  * The stack inherits the newest child's timestamp so the day's
  * within-day ordering stays meaningful: a stack containing a
@@ -314,11 +328,13 @@ function groupDayRows(
 ): JourneyRow[] {
   const notes: NoteEvent[] = [];
   const highlights: HighlightEvent[] = [];
+  const checkIns: CheckInEvent[] = [];
   const others: JourneyEvent[] = [];
 
   for (const e of events) {
     if (e.kind === "note") notes.push(e);
     else if (e.kind === "highlight") highlights.push(e);
+    else if (e.kind === "checkIn") checkIns.push(e);
     else others.push(e);
   }
 
@@ -346,6 +362,18 @@ function groupDayRows(
     });
   } else if (highlights.length === 1) {
     rows.push(highlights[0]!);
+  }
+
+  if (checkIns.length >= 2) {
+    rows.push({
+      kind: "checkInStack",
+      id: `stack-checkins-${dateISO}`,
+      at: checkIns[0]!.at,
+      dateISO,
+      checkIns,
+    });
+  } else if (checkIns.length === 1) {
+    rows.push(checkIns[0]!);
   }
 
   rows.sort((a, b) => b.at - a.at);

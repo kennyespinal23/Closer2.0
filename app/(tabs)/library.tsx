@@ -5,48 +5,90 @@ import {
   ScrollView,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { BookCover } from "@/components/BookCover";
+import { FadeIn } from "@/components/FadeIn";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
 import { colors } from "@/constants/theme";
 import {
   type Book,
+  BOOKS,
   filterBooks,
+  findBookById,
   groupByCategory,
   type Testament,
 } from "@/constants/books";
 import { hasBookCover } from "@/constants/bookCovers";
+import { useProgress } from "@/state/progress";
 
 /**
- * Library — the Bible.
+ * Library — Apple Books-style browse surface for the canon.
  *
- * Layout (top → bottom):
- *   • Quiet header     ("The Word" / 66 books, one story)
- *   • Search field     (filters within the active testament)
- *   • Segmented switch (Old / New Testament)
- *   • Stack of grouped category cards (Law, Historical, etc.)
+ * Two modes:
  *
- * Tapping a book pushes /book/[id] (a placeholder for now — the
- * actual reader lives there).
+ *   1. Browse (no search query)
+ *      • Continue Reading hero — pulled from progress.lastVisited
+ *        when present. Big cover, picks up at the last chapter.
+ *      • Illustrated Editions rail — books with hand-painted art
+ *        (currently Job; grows as we ship more covers).
+ *      • Testament switcher (Old / New) — pill with a sliding
+ *        bubble. Drives the rails below.
+ *      • Per-category rails — one per BookCategory in the active
+ *        testament. Each rail is a horizontal scroller of portrait
+ *        3:4 cover tiles, with the book's name + chapter count
+ *        beneath. Reads like flipping through a shelf.
+ *
+ *   2. Search (query present)
+ *      • Hides hero + rails entirely.
+ *      • Shows a flat grid of matching covers across BOTH
+ *        testaments — when the user knows what they want, the
+ *        testament filter is friction, not help.
+ *
+ * The grid uses portrait 3:4 covers throughout (matching Apple
+ * Books' Library tab) — `BookCover` already handles real art vs.
+ * the gradient placeholder per book.
  */
 export default function LibraryScreen() {
   const router = useRouter();
   const [testament, setTestament] = useState<Testament>("old");
   const [query, setQuery] = useState("");
+  const { lastVisited } = useProgress();
 
-  // Filter once, group once. Cheap enough for 66 items that we don't
-  // even need to think about it, but keeping the work in a memo
-  // means the keyboard taps don't re-walk the array unnecessarily.
+  // Browse data — only computed when the user isn't searching.
   const groups = useMemo(
-    () => groupByCategory(filterBooks(testament, query), testament),
-    [testament, query],
+    () => groupByCategory(filterBooks(testament, ""), testament),
+    [testament],
   );
 
-  const noResults = groups.length === 0;
+  // Search data — flat list across both testaments.
+  const searchResults = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return BOOKS.filter(
+      (b) =>
+        b.name.toLowerCase().includes(q) ||
+        b.abbr.toLowerCase().includes(q),
+    );
+  }, [query]);
+
+  const isSearching = query.trim().length > 0;
+
+  // Illustrated rail — every book that has a hand-painted cover.
+  // As the catalog of art grows this rail automatically grows with it.
+  const illustrated = useMemo(
+    () => BOOKS.filter((b) => hasBookCover(b.id)),
+    [],
+  );
+
+  // Continue reading — resolve the lastVisited id back to a Book so
+  // we can render its cover/name without coupling the hero to the
+  // shape of the progress state.
+  const continueBook = lastVisited ? findBookById(lastVisited.bookId) : null;
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
@@ -56,53 +98,98 @@ export default function LibraryScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* ─── Header ─────────────────────────────────────────── */}
-        <View className="px-6 pt-2">
-          <Text
-            className="text-ink-subtle text-[11px] uppercase tracking-[2.5px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            Library
-          </Text>
-          <Text
-            className="text-ink text-[34px] leading-[40px] tracking-[-0.6px] mt-1.5"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            The Word
-          </Text>
-          <Text
-            className="text-ink-muted text-[14px] leading-[20px] mt-2"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-          >
-            Sixty-six books. One quiet, unbroken story.
-          </Text>
-        </View>
+        <FadeIn delayMs={0} durationMs={700}>
+          <View className="px-6 pt-2">
+            <Text
+              className="text-ink-subtle text-[11px] uppercase tracking-[2.5px]"
+              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            >
+              Library
+            </Text>
+            <Text
+              className="text-ink text-[34px] leading-[40px] tracking-[-0.6px] mt-1.5"
+              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            >
+              The Word
+            </Text>
+            <Text
+              className="text-ink-muted text-[14px] leading-[20px] mt-2"
+              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            >
+              Sixty-six books. One quiet, unbroken story.
+            </Text>
+          </View>
+        </FadeIn>
 
         {/* ─── Search ─────────────────────────────────────────── */}
         <SearchField value={query} onChangeText={setQuery} />
 
-        {/* ─── Testament switcher ─────────────────────────────── */}
-        <TestamentSegments value={testament} onChange={setTestament} />
-
-        {/* ─── Grouped book list ──────────────────────────────── */}
-        {noResults ? (
-          <EmptyState query={query} />
+        {isSearching ? (
+          /* ─── Search results ─── */
+          <SearchResults
+            results={searchResults}
+            query={query}
+            onPick={(b) => router.push(`/book/${b.id}`)}
+          />
         ) : (
-          groups.map(({ category, books }) => (
-            <CategorySection
-              key={category}
-              title={category}
-              count={books.length}
-            >
-              {books.map((book, i) => (
-                <BookRow
-                  key={book.id}
-                  book={book}
-                  showDivider={i < books.length - 1}
-                  onPress={() => router.push(`/book/${book.id}`)}
+          <>
+            {/* ─── Continue Reading hero ────────────────────── */}
+            {continueBook && lastVisited && (
+              <FadeIn delayMs={150} durationMs={900}>
+                <ContinueReadingHero
+                  book={continueBook}
+                  chapter={lastVisited.chapter}
+                  visitedAt={lastVisited.visitedAt}
+                  onPress={() =>
+                    router.push(
+                      `/book/${continueBook.id}/${lastVisited.chapter}` as never,
+                    )
+                  }
                 />
-              ))}
-            </CategorySection>
-          ))
+              </FadeIn>
+            )}
+
+            {/* ─── Illustrated rail ─────────────────────────── */}
+            {illustrated.length > 0 && (
+              <FadeIn delayMs={250} durationMs={900}>
+                <IllustratedRail
+                  books={illustrated}
+                  onPick={(b) => router.push(`/book/${b.id}`)}
+                />
+              </FadeIn>
+            )}
+
+            {/* ─── Testament switcher ──────────────────────── */}
+            <FadeIn delayMs={350} durationMs={900}>
+              <TestamentSegments value={testament} onChange={setTestament} />
+            </FadeIn>
+
+            {/* ─── Per-category rails ──────────────────────── */}
+            {groups.map(({ category, books }, idx) => (
+              <FadeIn
+                key={category}
+                delayMs={450 + idx * 60}
+                durationMs={900}
+              >
+                <CategoryRail
+                  title={category}
+                  books={books}
+                  onPick={(b) => router.push(`/book/${b.id}`)}
+                />
+              </FadeIn>
+            ))}
+
+            <FadeIn delayMs={800} durationMs={900}>
+              <View className="px-6 mt-12">
+                <Text
+                  className="text-ink-muted text-[12.5px] leading-[19px] text-center"
+                  style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                >
+                  Every chapter is a doorway.{"\n"}Walk through one tonight.
+                </Text>
+              </View>
+            </FadeIn>
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -110,7 +197,265 @@ export default function LibraryScreen() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Search
+// Continue Reading hero — the "Reading Now" anchor of the page
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Large cover + chapter info + CTA. Mirrors Apple Books' "Reading
+ * Now" hero — when the user has an in-progress book the app's first
+ * job is to make resuming it one tap away.
+ *
+ * Hits the chapter route directly (not the book overview) so a tap
+ * really IS resuming, not navigating-then-navigating.
+ */
+function ContinueReadingHero({
+  book,
+  chapter,
+  visitedAt,
+  onPress,
+}: {
+  book: Book;
+  chapter: number;
+  visitedAt: number;
+  onPress: () => void;
+}) {
+  const { width: screenWidth } = useWindowDimensions();
+  // Cover is bounded so the hero never dominates the screen — the
+  // rails beneath need to peek so the user understands the page
+  // keeps going.
+  const COVER_W = Math.min(110, Math.round(screenWidth * 0.28));
+  const COVER_H = Math.round((COVER_W * 4) / 3); // 3:4 portrait
+
+  return (
+    <View className="px-6 mt-7">
+      <Text
+        className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3 ml-1"
+        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+      >
+        Continue Reading
+      </Text>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
+      >
+        <View className="rounded-3xl border border-border bg-surface p-5 flex-row">
+          <View style={{ width: COVER_W, height: COVER_H }}>
+            <BookCover book={book} variant="card" />
+          </View>
+          <View className="flex-1 ml-5 justify-between py-1">
+            <View>
+              <Text
+                className="text-ink-subtle text-[10.5px] tracking-[2px] uppercase"
+                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              >
+                {book.category}
+              </Text>
+              <Text
+                className="text-ink text-[20px] leading-[24px] tracking-[-0.3px] mt-1.5"
+                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                numberOfLines={1}
+              >
+                {book.name}
+              </Text>
+              <Text
+                className="text-ink-muted text-[13px] mt-1"
+                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                numberOfLines={1}
+              >
+                Picking up at chapter {chapter}
+              </Text>
+            </View>
+            <View className="flex-row items-center mt-3">
+              <Text
+                className="text-primary text-[12.5px] mr-1.5"
+                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              >
+                Open chapter
+              </Text>
+              <PlayChevronIcon />
+              <Text
+                className="text-ink-subtle text-[11px] ml-auto"
+                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              >
+                {relativeMoment(visitedAt)}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Pressable>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Illustrated rail — books that ship with hand-painted covers
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Apple Books "Featured" rail equivalent — but tuned to OUR
+ * library, where the bespoke covers are the marketing. Books with
+ * real art get a bigger treatment than the catalog rails below
+ * (they're literally the point of the curated shelf).
+ */
+function IllustratedRail({
+  books,
+  onPick,
+}: {
+  books: ReadonlyArray<Book>;
+  onPick: (b: Book) => void;
+}) {
+  return (
+    <View className="mt-9">
+      <View className="px-6 mb-3">
+        <View className="flex-row items-baseline justify-between">
+          <Text
+            className="text-ink text-[18px] tracking-[-0.2px]"
+            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          >
+            Illustrated Editions
+          </Text>
+          <Text
+            className="text-ink-subtle text-[11px] tracking-[2px] uppercase"
+            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          >
+            {books.length}
+          </Text>
+        </View>
+        <Text
+          className="text-ink-muted text-[12.5px] mt-1"
+          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+        >
+          Books with covers painted just for Closer.
+        </Text>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingRight: 24,
+        }}
+      >
+        {books.map((book, i) => (
+          <View
+            key={book.id}
+            style={{ marginRight: i === books.length - 1 ? 0 : 14 }}
+          >
+            <BookTile book={book} size="lg" onPress={() => onPick(book)} />
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Category rail — one rail per category in the active testament
+// ─────────────────────────────────────────────────────────────────
+
+function CategoryRail({
+  title,
+  books,
+  onPick,
+}: {
+  title: string;
+  books: ReadonlyArray<Book>;
+  onPick: (b: Book) => void;
+}) {
+  return (
+    <View className="mt-9">
+      <View className="px-6 mb-3 flex-row items-baseline justify-between">
+        <Text
+          className="text-ink text-[17px] tracking-[-0.2px]"
+          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        >
+          {title}
+        </Text>
+        <Text
+          className="text-ink-subtle text-[11px] tracking-[2px] uppercase"
+          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        >
+          {books.length} {books.length === 1 ? "book" : "books"}
+        </Text>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingRight: 24 }}
+      >
+        {books.map((book, i) => (
+          <View
+            key={book.id}
+            style={{ marginRight: i === books.length - 1 ? 0 : 12 }}
+          >
+            <BookTile book={book} size="md" onPress={() => onPick(book)} />
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Book tile — the unit of the rails
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * A single tappable book cover with its name + chapter count below.
+ * Two sizes:
+ *   • md (96pt)  — used in category rails (3+ visible at once)
+ *   • lg (136pt) — used in the Illustrated rail (~2.5 visible)
+ *
+ * Covers always render at 3:4 portrait via the shared `BookCover`
+ * component, so a real cover sits next to a placeholder seamlessly.
+ */
+function BookTile({
+  book,
+  size,
+  onPress,
+}: {
+  book: Book;
+  size: "md" | "lg";
+  onPress: () => void;
+}) {
+  const WIDTH = size === "lg" ? 136 : 96;
+  const HEIGHT = Math.round((WIDTH * 4) / 3);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+    >
+      <View style={{ width: WIDTH }}>
+        <View style={{ width: WIDTH, height: HEIGHT }}>
+          <BookCover book={book} variant={size === "lg" ? "card" : "thumb"} />
+        </View>
+        <Text
+          className="text-ink text-[12.5px] mt-2"
+          style={{
+            fontFamily: "PlusJakartaSans_700Bold",
+            letterSpacing: -0.1,
+          }}
+          numberOfLines={1}
+        >
+          {book.name}
+        </Text>
+        <Text
+          className="text-ink-subtle text-[10.5px] mt-0.5"
+          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          numberOfLines={1}
+        >
+          {book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Search field
 // ─────────────────────────────────────────────────────────────────
 
 function SearchField({
@@ -132,9 +477,6 @@ function SearchField({
         style={{
           fontFamily: "PlusJakartaSans_500Medium",
           fontSize: 15,
-          // The default iOS TextInput height varies with font metrics;
-          // a fixed height + alignVertical center keeps the placeholder
-          // visually centered with the icon next to it.
           paddingVertical: 0,
         }}
         autoCorrect={false}
@@ -152,10 +494,72 @@ function SearchField({
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Testament segmented control
+// Search results — a 3-column grid of matching covers
 // ─────────────────────────────────────────────────────────────────
-// Two-segment pill with an animated bubble. The bubble translates
-// between the two halves with a spring so it feels native.
+
+/**
+ * When the user has a search query, hide the curated browse layout
+ * and render a flat grid. Apple Books does the same — search is a
+ * different mode, not a filter over the browse view.
+ *
+ * Grid is 3 columns of 3:4 portrait covers with names beneath.
+ */
+function SearchResults({
+  results,
+  query,
+  onPick,
+}: {
+  results: ReadonlyArray<Book>;
+  query: string;
+  onPick: (b: Book) => void;
+}) {
+  const { width: screenWidth } = useWindowDimensions();
+  const COLS = 3;
+  const SIDE = 24;
+  const GAP = 14;
+  const colWidth = Math.floor(
+    (screenWidth - SIDE * 2 - GAP * (COLS - 1)) / COLS,
+  );
+
+  if (results.length === 0) {
+    return <EmptyState query={query} />;
+  }
+
+  return (
+    <View className="mt-7 px-6">
+      <Text
+        className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3 ml-1"
+        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+      >
+        {results.length} {results.length === 1 ? "match" : "matches"}
+      </Text>
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          marginHorizontal: -GAP / 2,
+        }}
+      >
+        {results.map((book) => (
+          <View
+            key={book.id}
+            style={{
+              width: colWidth,
+              marginHorizontal: GAP / 2,
+              marginBottom: 18,
+            }}
+          >
+            <BookTile book={book} size="md" onPress={() => onPick(book)} />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Testament segmented control — sliding bubble, two slots
+// ─────────────────────────────────────────────────────────────────
 
 function TestamentSegments({
   value,
@@ -164,9 +568,6 @@ function TestamentSegments({
   value: Testament;
   onChange: (next: Testament) => void;
 }) {
-  // Slot width is half of the segmented container's inner width. We
-  // measure the container via onLayout the first time it renders, then
-  // animate the bubble via translateX.
   const [trackWidth, setTrackWidth] = useState(0);
   const slotWidth = trackWidth / 2;
   const bubbleX = useMemo(() => new Animated.Value(0), []);
@@ -184,17 +585,14 @@ function TestamentSegments({
 
   return (
     <View
-      className="mx-5 mt-4 rounded-2xl border border-border bg-surface p-1"
+      className="mx-5 mt-9 rounded-2xl border border-border bg-surface p-1"
       onLayout={(e) => {
-        const w = e.nativeEvent.layout.width - 8; // minus padding (1 * 2 sides)
+        const w = e.nativeEvent.layout.width - 8;
         setTrackWidth(w);
-        // Keep the bubble snapped to the active position if the user
-        // rotates / resizes — no animation, just realign.
         bubbleX.setValue(value === "old" ? 0 : w / 2);
       }}
     >
       <View style={{ position: "relative", height: 38 }}>
-        {/* Animated highlight bubble */}
         {slotWidth > 0 && (
           <Animated.View
             pointerEvents="none"
@@ -261,115 +659,6 @@ function Segment({
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Section card + book row
-// ─────────────────────────────────────────────────────────────────
-
-function CategorySection({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count: number;
-  children: React.ReactNode;
-}) {
-  return (
-    <View className="px-5 mt-7">
-      <View className="flex-row items-baseline mb-2.5 ml-1">
-        <Text
-          className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase flex-1"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-        >
-          {title}
-        </Text>
-        <Text
-          className="text-ink-subtle text-[10.5px] tracking-[1px]"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-        >
-          {count} {count === 1 ? "book" : "books"}
-        </Text>
-      </View>
-      <View className="rounded-2xl border border-border bg-surface overflow-hidden">
-        {children}
-      </View>
-    </View>
-  );
-}
-
-function BookRow({
-  book,
-  onPress,
-  showDivider,
-}: {
-  book: Book;
-  onPress: () => void;
-  showDivider: boolean;
-}) {
-  // A row with a registered cover gets a small "Illustrated" pill
-  // — a quiet hint that the book has real art behind it. It's the
-  // only differentiation between rows we make today; once more
-  // books have art, it'll act as a way to spot them at a glance
-  // without breaking out a separate "Featured" surface.
-  const illustrated = hasBookCover(book.id);
-
-  return (
-    <View>
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
-      >
-        <View className="flex-row items-center px-4 py-3">
-          {/* Cover thumbnail — 48×64 (3:4) at the left. Real art when
-              available; tasteful gradient placeholder otherwise. */}
-          <View style={{ width: 48, marginRight: 12 }}>
-            <BookCover book={book} variant="thumb" />
-          </View>
-
-          <View className="flex-1 pr-2">
-            <View className="flex-row items-center">
-              <Text
-                className="text-ink text-[15.5px] tracking-[-0.1px]"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-                numberOfLines={1}
-              >
-                {book.name}
-              </Text>
-              {illustrated && (
-                <View
-                  className="ml-2 px-1.5 py-0.5 rounded-full border border-border"
-                  style={{ backgroundColor: colors.accentSoft }}
-                >
-                  <Text
-                    className="text-ink-subtle text-[9px] tracking-[1.5px] uppercase"
-                    style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-                  >
-                    Illustrated
-                  </Text>
-                </View>
-              )}
-            </View>
-            <Text
-              className="text-ink-subtle text-[12px] mt-1"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-            >
-              Book {book.order} ·{" "}
-              {book.chapters === 1
-                ? "1 chapter"
-                : `${book.chapters} chapters`}
-            </Text>
-          </View>
-
-          <ChevronIcon />
-        </View>
-      </Pressable>
-      {showDivider && (
-        <View className="h-[1px] bg-border" style={{ marginLeft: 76 }} />
-      )}
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
 // Empty state for searches that match nothing
 // ─────────────────────────────────────────────────────────────────
 
@@ -390,11 +679,38 @@ function EmptyState({ query }: { query: string }) {
         style={{ fontFamily: "PlusJakartaSans_400Regular" }}
       >
         {query
-          ? `Nothing in this testament contains "${query}". Try the other one.`
+          ? `Nothing in the canon contains "${query}".`
           : "Try a different search."}
       </Text>
     </View>
   );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Friendly relative time used by the Continue Reading hero. Goes
+ * down to "Just now" within a minute, then minutes, hours, "Yesterday",
+ * days; falls back to a date label past a week.
+ */
+function relativeMoment(epochMs: number): string {
+  const now = Date.now();
+  const diff = Math.max(0, now - epochMs);
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "Just now";
+  if (m < 60) return `${m} min ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d === 1) return "Yesterday";
+  if (d < 7) return `${d} days ago`;
+  const date = new Date(epochMs);
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -429,13 +745,13 @@ function ClearIcon() {
   );
 }
 
-function ChevronIcon() {
+function PlayChevronIcon() {
   return (
     <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
       <Path
         d="M9 6l6 6-6 6"
-        stroke={colors.inkSubtle}
-        strokeWidth={1.8}
+        stroke={colors.primary}
+        strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
       />

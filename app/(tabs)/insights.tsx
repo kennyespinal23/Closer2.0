@@ -1,57 +1,74 @@
 import { useMemo } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { FadeIn } from "@/components/FadeIn";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
-import { findBookById } from "@/constants/books";
-import { SERMON_TYPES, type SermonType } from "@/constants/sermonTypes";
-import { colors } from "@/constants/theme";
-import { formatRef, relativeTime } from "@/lib/annotationsFormat";
-import { useAnnotations } from "@/state/annotations";
-import { didCompleteToday, useProgress } from "@/state/progress";
+import {
+  ArticleHero,
+  hexWithAlpha,
+} from "@/components/insight/ArticleHero";
+import {
+  INSIGHT_CATEGORIES,
+  findInsight,
+  insightsInCategory,
+  type Insight,
+  type InsightCategory,
+} from "@/constants/insights";
+import { useSavedInsights } from "@/state/savedInsights";
 
 /**
- * Insights
+ * Insights — content library.
  *
- * The "data" tab. Where Today is the day's moment and Library is the
- * archive, Insights is the user's reflection on their own rhythm:
+ * This tab is the magazine. Each article is a short, contemplative
+ * read on a foundational topic (grace, prayer, doubt, etc.). The
+ * surface is intentionally calm and scannable:
  *
- *   • Total sermons completed
- *   • Whether today's already been honored
- *   • Per-type breakdown — which sermon types they keep coming back to,
- *     and which they haven't touched yet
+ *   • Page eyebrow + title at the top
+ *   • Featured rail — the first article in each category, full-bleed
+ *   • Saved rail — only renders when the user has saved at least one
+ *   • One rail per category below — horizontal scroll of all entries
  *
- * Account / settings deliberately live elsewhere (the profile sheet) —
- * this screen is only about the journey itself.
+ * What this tab is NOT:
+ *   • The personal stats / streak view. That lives in /stats now
+ *     and is reached from the Profile drawer ("Your Practice"). The
+ *     reason we moved it: a "data tab" and a "content tab" have
+ *     fundamentally different reading rhythms — mixing them dilutes
+ *     both. The drawer entry preserves the path for users who want
+ *     to check their numbers.
+ *
+ * Why no search/filter yet:
+ *   • The catalog is small (single digits). When it grows past a
+ *     dozen entries we'll add a search bar at the top + tags. Until
+ *     then it's noise.
  */
 export default function InsightsScreen() {
   const router = useRouter();
-  const progress = useProgress();
-  const completedToday = didCompleteToday(progress);
-  const { streak, chaptersRead } = progress;
-  const lastReadChapter = chaptersRead[chaptersRead.length - 1];
+  const { saved, count: savedCount } = useSavedInsights();
 
-  const { allNotes, allHighlights, counts: annotationCounts } =
-    useAnnotations();
-  // Take the three most recent of each to surface as previews.
-  const recentNotes = useMemo(() => allNotes().slice(0, 3), [allNotes]);
-  const recentHighlights = useMemo(
-    () => allHighlights().slice(0, 3),
-    [allHighlights],
+  // Featured = the first insight in the first category. Stable while
+  // the catalog has a single entry per category; later this can be
+  // hand-curated via an editor's `featured` flag.
+  const featured = useMemo(() => {
+    const first = INSIGHT_CATEGORIES[0];
+    if (!first) return null;
+    return insightsInCategory(first.id)[0] ?? null;
+  }, []);
+
+  const savedInsights = useMemo(
+    () =>
+      saved
+        .map((id) => findInsight(id))
+        .filter((i): i is Insight => i !== null),
+    [saved],
   );
-
-  // Sort sermon types so the ones the user actually engages with rise
-  // to the top. Untouched types still render — they're aspirational.
-  const sortedTypes = useMemo(() => {
-    return [...SERMON_TYPES].sort((a, b) => {
-      const ca = progress.completionsByType[a.id] ?? 0;
-      const cb = progress.completionsByType[b.id] ?? 0;
-      if (cb !== ca) return cb - ca;
-      return SERMON_TYPES.indexOf(a) - SERMON_TYPES.indexOf(b);
-    });
-  }, [progress.completionsByType]);
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
@@ -59,6 +76,7 @@ export default function InsightsScreen() {
         contentContainerStyle={{ paddingBottom: TAB_BAR_TOTAL_HEIGHT + 16 }}
         showsVerticalScrollIndicator={false}
       >
+        {/* ─── Page header ─────────────────────────────────────── */}
         <FadeIn delayMs={0} durationMs={700}>
           <View className="px-6 pt-2">
             <Text
@@ -73,320 +91,60 @@ export default function InsightsScreen() {
             >
               Insights
             </Text>
-          </View>
-        </FadeIn>
-
-        {/* ─── Hero stat ───────────────────────────────────────────
-            One number, given the room of an entire section. The total
-            is what matters; everything below it is texture. */}
-        <FadeIn delayMs={200} durationMs={900}>
-          <View className="px-6 mt-10">
             <Text
-              className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-3"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-            >
-              Your Rhythm
-            </Text>
-            <View className="rounded-3xl border border-border bg-surface px-6 py-7">
-              <Text
-                className="text-ink text-[72px] leading-[72px] tracking-[-2px]"
-                style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
-              >
-                {progress.totalCompletions}
-              </Text>
-              <Text
-                className="text-ink-muted text-[14px] mt-1"
-                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-              >
-                {progress.totalCompletions === 1
-                  ? "sermon completed"
-                  : "sermons completed"}
-              </Text>
-
-              <View className="h-[1px] bg-border my-5" />
-
-              <View className="flex-row items-center">
-                <View
-                  className={`w-2 h-2 rounded-full mr-3 ${
-                    completedToday ? "bg-primary" : "bg-border-strong"
-                  }`}
-                />
-                <Text
-                  className="text-ink text-[14px]"
-                  style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-                >
-                  {completedToday
-                    ? "Today is honored."
-                    : "Today is still waiting."}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </FadeIn>
-
-        {/* ─── Streak ──────────────────────────────────────────
-            Big current-streak number, longest-ever beneath it, and a
-            seven-dot calendar mirror of the home-screen Journey card
-            so the user has one consistent visual vocabulary for
-            their rhythm. */}
-        <FadeIn delayMs={350} durationMs={900}>
-          <View className="px-6 mt-8">
-            <Text
-              className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-3"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-            >
-              Streak
-            </Text>
-            <View className="rounded-3xl border border-border bg-surface px-6 py-6">
-              <View className="flex-row items-end">
-                <Text
-                  className="text-ink text-[56px] leading-[56px] tracking-[-1.5px]"
-                  style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
-                >
-                  {streak.current}
-                </Text>
-                <Text
-                  className="text-ink-muted text-[15px] ml-2 mb-1.5"
-                  style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-                >
-                  {streak.current === 1 ? "day in a row" : "days in a row"}
-                </Text>
-              </View>
-              <Text
-                className="text-ink-subtle text-[12px] mt-1.5 tracking-[0.5px]"
-                style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-              >
-                {streak.longest > streak.current
-                  ? `Best ever · ${streak.longest} days`
-                  : streak.longest > 0
-                    ? "A new personal best."
-                    : "Day one is just a day away."}
-              </Text>
-
-              <View className="h-[1px] bg-border my-5" />
-
-              <Text
-                className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-              >
-                Last 7 days
-              </Text>
-              <View className="flex-row justify-between">
-                {streak.lastSevenDays.map((day, i) => (
-                  <MiniDot
-                    key={day.dateISO}
-                    engaged={day.engaged}
-                    isToday={i === streak.lastSevenDays.length - 1}
-                    label={shortWeekday(day.dateISO)}
-                  />
-                ))}
-              </View>
-            </View>
-          </View>
-        </FadeIn>
-
-        {/* ─── Reading ─────────────────────────────────────────
-            Tracks the chapter-mark-as-read side of engagement.
-            Surfaces total chapters read and the most recent one
-            so the user remembers where they last were. */}
-        <FadeIn delayMs={500} durationMs={900}>
-          <View className="px-6 mt-8">
-            <Text
-              className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-3"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-            >
-              Reading
-            </Text>
-            <View className="rounded-3xl border border-border bg-surface px-6 py-6">
-              <View className="flex-row items-end">
-                <Text
-                  className="text-ink text-[44px] leading-[44px] tracking-[-1px]"
-                  style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
-                >
-                  {chaptersRead.length}
-                </Text>
-                <Text
-                  className="text-ink-muted text-[14px] ml-2 mb-1"
-                  style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-                >
-                  {chaptersRead.length === 1
-                    ? "chapter read"
-                    : "chapters read"}
-                </Text>
-              </View>
-              {lastReadChapter && (
-                <View className="flex-row items-center mt-4">
-                  <BookmarkIcon />
-                  <Text
-                    className="text-ink-muted text-[12.5px] ml-2"
-                    style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-                  >
-                    Last read · {formatChapterRef(lastReadChapter)}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        </FadeIn>
-
-        {/* ─── Highlights preview ──────────────────────────────
-            Surfaces the most recent few; tap the card or "See all"
-            to drill into the full /highlights screen. */}
-        <FadeIn delayMs={600} durationMs={900}>
-          <View className="px-6 mt-8">
-            <SectionHeader
-              title="Highlights"
-              count={annotationCounts.highlights}
-              onSeeAll={() => router.push("/highlights")}
-            />
-            {annotationCounts.highlights === 0 ? (
-              <AnnotationEmpty
-                copy="Tap any verse and pick a color — your highlights gather here."
-                onPress={() => router.push("/highlights")}
-              />
-            ) : (
-              <View className="rounded-3xl border border-border bg-surface overflow-hidden">
-                {recentHighlights.map((h, i) => (
-                  <Pressable
-                    key={h.key}
-                    onPress={() => router.push(`/book/${h.bookId}/${h.chapter}`)}
-                    style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-                    className="flex-row items-stretch"
-                  >
-                    <View
-                      style={{ width: 4, backgroundColor: h.color.swatch }}
-                    />
-                    <View className="flex-1 px-4 py-3.5">
-                      <View className="flex-row items-baseline justify-between">
-                        <Text
-                          className="text-ink text-[13px]"
-                          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-                        >
-                          {formatRef(h)}
-                        </Text>
-                        <Text
-                          className="text-ink-subtle text-[11px]"
-                          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-                        >
-                          {relativeTime(h.updatedAt)}
-                        </Text>
-                      </View>
-                      {h.verseText ? (
-                        <Text
-                          className="text-ink-muted text-[12.5px] mt-1 leading-[18px]"
-                          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-                          numberOfLines={1}
-                        >
-                          &ldquo;{h.verseText}&rdquo;
-                        </Text>
-                      ) : null}
-                    </View>
-                    {i < recentHighlights.length - 1 && null}
-                  </Pressable>
-                ))}
-              </View>
-            )}
-          </View>
-        </FadeIn>
-
-        {/* ─── Notes preview ─────────────────────────────────── */}
-        <FadeIn delayMs={650} durationMs={900}>
-          <View className="px-6 mt-8">
-            <SectionHeader
-              title="Notes"
-              count={annotationCounts.notes}
-              onSeeAll={() => router.push("/notes")}
-            />
-            {annotationCounts.notes === 0 ? (
-              <AnnotationEmpty
-                copy="Tap any verse → Add note. Reflections collect here over time."
-                onPress={() => router.push("/notes")}
-              />
-            ) : (
-              <View className="rounded-3xl border border-border bg-surface overflow-hidden">
-                {recentNotes.map((n, i) => (
-                  // Multiple notes can share a verseKey now, so use
-                  // the per-note id for React identity.
-                  <View key={n.noteId}>
-                    <Pressable
-                      onPress={() =>
-                        router.push(`/book/${n.bookId}/${n.chapter}`)
-                      }
-                      style={({ pressed }) => ({
-                        opacity: pressed ? 0.85 : 1,
-                      })}
-                      className="px-4 py-3.5"
-                    >
-                      <View className="flex-row items-baseline justify-between">
-                        <Text
-                          className="text-primary text-[10.5px] tracking-[2px] uppercase"
-                          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-                        >
-                          {formatRef(n)}
-                        </Text>
-                        <Text
-                          className="text-ink-subtle text-[11px]"
-                          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-                        >
-                          {relativeTime(n.updatedAt)}
-                        </Text>
-                      </View>
-                      <Text
-                        className="text-ink text-[13.5px] mt-1.5 leading-[19px]"
-                        style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-                        numberOfLines={2}
-                      >
-                        {n.text}
-                      </Text>
-                    </Pressable>
-                    {i < recentNotes.length - 1 && (
-                      <View className="h-[1px] bg-border ml-4" />
-                    )}
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-        </FadeIn>
-
-        {/* ─── Per-type breakdown ──────────────────────────────────
-            A scannable list of all 10 sermon types with each one's
-            completion count. Untouched types render at 0 with a muted
-            row — they're an invitation, not a rebuke. */}
-        <FadeIn delayMs={450} durationMs={900}>
-          <View className="px-6 mt-10">
-            <Text
-              className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-4"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-            >
-              By Sermon Type
-            </Text>
-
-            <View className="rounded-3xl border border-border bg-surface overflow-hidden">
-              {sortedTypes.map((type, i) => {
-                const count = progress.completionsByType[type.id] ?? 0;
-                const isLast = i === sortedTypes.length - 1;
-                return (
-                  <TypeRow
-                    key={type.id}
-                    type={type}
-                    count={count}
-                    showDivider={!isLast}
-                  />
-                );
-              })}
-            </View>
-          </View>
-        </FadeIn>
-
-        <FadeIn delayMs={750} durationMs={900}>
-          <View className="px-6 mt-8">
-            <Text
-              className="text-ink-muted text-[13px] leading-[20px] text-center"
+              className="text-ink-muted text-[13.5px] leading-[20px] mt-1.5"
               style={{ fontFamily: "PlusJakartaSans_400Regular" }}
             >
-              The point was never the streak.{"\n"}
-              It was always the showing up.
+              Short, contemplative reads on the things faith asks of us.
+            </Text>
+          </View>
+        </FadeIn>
+
+        {/* ─── Featured ─────────────────────────────────────────
+            A distinct moment in the page rhythm. The header has its
+            own sparkle glyph + accent-tinted backdrop so the user
+            reads it as "this one's special", not as just-another-rail
+            section heading. */}
+        {featured && (
+          <FadeIn delayMs={150} durationMs={900}>
+            <FeaturedSection
+              insight={featured}
+              onPress={() => router.push(`/insight/${featured.id}`)}
+            />
+          </FadeIn>
+        )}
+
+        {/* ─── Saved (only when the user has at least one) ───── */}
+        {savedCount > 0 && (
+          <FadeIn delayMs={250} durationMs={900}>
+            <View className="mt-9">
+              <CategoryHeader title="Saved" count={savedCount} />
+              <InsightRail
+                insights={savedInsights}
+                onSelect={(i) => router.push(`/insight/${i.id}`)}
+              />
+            </View>
+          </FadeIn>
+        )}
+
+        {/* ─── A rail per category ────────────────────────────── */}
+        {INSIGHT_CATEGORIES.map((cat, idx) => (
+          <CategoryRail
+            key={cat.id}
+            category={cat}
+            delayMs={350 + idx * 100}
+            onSelect={(i) => router.push(`/insight/${i.id}`)}
+          />
+        ))}
+
+        {/* ─── Soft footer ────────────────────────────────────── */}
+        <FadeIn delayMs={650} durationMs={900}>
+          <View className="px-6 mt-12">
+            <Text
+              className="text-ink-muted text-[12.5px] leading-[20px] text-center"
+              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            >
+              More reads added each week.
             </Text>
           </View>
         </FadeIn>
@@ -395,214 +153,421 @@ export default function InsightsScreen() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Featured card — full-bleed hero, magazine cover energy
+// ─────────────────────────────────────────────────────────────────
+
 /**
- * A single row in the per-type breakdown.
- *
- * Hero thumbnail (left) — name + count copy (middle) — numeric
- * count (right). Rows are dim if the user has never opened that
- * type, so the list reads as a "filling in" rather than a leaderboard.
+ * Hero card. Renders the article's hero image if provided; falls
+ * back to a typographic cover sampled from the article's palette
+ * (so launch quality is high even before art lands).
  */
-function TypeRow({
-  type,
-  count,
-  showDivider,
+/**
+ * The Featured section — header + cover, treated as a single visual
+ * moment.
+ *
+ * Layout decisions:
+ *   • Header is a centered pill (sparkle ✦ + "FEATURED" + sparkle)
+ *     with a hairline rule trailing on either side, magazine-cover
+ *     style. The pill picks up a soft accent-tinted background so
+ *     the eye lands on it before anything else.
+ *   • Cover is centered at ~64% of the screen width — substantial
+ *     but no longer dominating the viewport. The reduced size lets
+ *     the rail beneath start to peek above the fold on most iPhones.
+ *   • A soft palette glow halos behind the cover so it visually
+ *     pops off the page even when surrounded by other dark sections.
+ */
+function FeaturedSection({
+  insight,
+  onPress,
 }: {
-  type: SermonType;
-  count: number;
-  showDivider: boolean;
+  insight: Insight;
+  onPress: () => void;
 }) {
-  const touched = count > 0;
   return (
-    <View>
-      <View className="flex-row items-center px-4 py-3.5">
-        <View
-          className="w-12 h-12 rounded-2xl items-center justify-center mr-4"
-          style={{
-            backgroundColor: touched
-              ? `${type.accent}1F` // ~12% accent fill
-              : "rgba(255, 255, 255, 0.03)",
-          }}
-        >
-          <Image
-            source={type.hero}
-            style={{
-              width: 40,
-              height: 36,
-              opacity: touched ? 1 : 0.4,
-            }}
-            resizeMode="contain"
-          />
-        </View>
+    <View className="mt-8">
+      <FeaturedHeader accent={insight.palette.accent} />
+      <View className="mt-5">
+        {insight.coverIncludesTitle ? (
+          <FeaturedCoverHero insight={insight} onPress={onPress} />
+        ) : (
+          <FeaturedIllustrativeCard insight={insight} onPress={onPress} />
+        )}
+      </View>
+    </View>
+  );
+}
 
-        <View className="flex-1 pr-3">
-          <Text
-            className={`text-[14px] ${touched ? "text-ink" : "text-ink-muted"}`}
-            style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-            numberOfLines={1}
-          >
-            {type.name}
-          </Text>
-          <Text
-            className="text-ink-subtle text-[11.5px] mt-0.5"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-            numberOfLines={1}
-          >
-            {touched
-              ? `${count} ${count === 1 ? "completion" : "completions"}`
-              : "Not yet visited"}
-          </Text>
-        </View>
-
+/**
+ * Centered "FEATURED" eyebrow with sparkle glyphs and a hairline
+ * rule on either side. Treats featured as a curated moment, not a
+ * heading.
+ */
+function FeaturedHeader({ accent }: { accent: string }) {
+  return (
+    <View className="flex-row items-center px-6">
+      {/* Left rule — fades to the eyebrow. */}
+      <View
+        style={{
+          flex: 1,
+          height: 1,
+          backgroundColor: hexWithAlpha(accent, 0.35),
+        }}
+      />
+      <View
+        className="flex-row items-center mx-3 px-3 py-1.5 rounded-full"
+        style={{
+          backgroundColor: hexWithAlpha(accent, 0.16),
+          borderWidth: 1,
+          borderColor: hexWithAlpha(accent, 0.32),
+        }}
+      >
+        <SparkleIcon color={accent} size={11} />
         <Text
-          className={`text-[18px] ${touched ? "text-ink" : "text-ink-subtle"}`}
           style={{
             fontFamily: "PlusJakartaSans_700Bold",
-            color: touched ? type.accent : undefined,
+            color: accent,
+            fontSize: 10.5,
+            letterSpacing: 2.5,
+            marginHorizontal: 8,
+            textTransform: "uppercase",
           }}
         >
-          {count}
+          Featured
         </Text>
+        <SparkleIcon color={accent} size={11} />
       </View>
-      {showDivider && <View className="h-[1px] bg-border ml-20" />}
+      {/* Right rule — mirrors the left. */}
+      <View
+        style={{
+          flex: 1,
+          height: 1,
+          backgroundColor: hexWithAlpha(accent, 0.35),
+        }}
+      />
     </View>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────
-// Streak section bits
-// ─────────────────────────────────────────────────────────────────
 
 /**
- * A smaller, more compact dot used inside the Streak card. Visually
- * related to the home screen's DayDot but slimmer so the streak card
- * can fit number + 7 dots without becoming a tower.
+ * Cover-mode featured card.
+ *
+ * Renders the book-cover artwork at ~64% screen width, centered.
+ * The cover's own internal palette + framing carry all the visual
+ * weight — no halo, no surrounding chrome, just the artwork.
  */
-function MiniDot({
-  engaged,
-  isToday,
-  label,
+function FeaturedCoverHero({
+  insight,
+  onPress,
 }: {
-  engaged: boolean;
-  isToday: boolean;
-  label: string;
+  insight: Insight;
+  onPress: () => void;
 }) {
+  const { width: screenWidth } = useWindowDimensions();
+  // Capped so it stays sensible on iPad — and small enough on phones
+  // that the start of the Faith Basics rail peeks at the bottom of
+  // the screen, cueing the swipe to read more.
+  const coverWidth = Math.min(280, Math.round(screenWidth * 0.64));
+
   return (
-    <View className="items-center">
-      <View
-        className={`w-6 h-6 rounded-full items-center justify-center ${
-          engaged
-            ? "bg-primary"
-            : isToday
-              ? "border border-primary"
-              : "border border-border-strong"
-        }`}
-      />
-      <Text
-        className={`text-[9.5px] mt-2 ${
-          isToday ? "text-primary" : "text-ink-subtle"
-        }`}
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+    <View className="items-center justify-center">
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
       >
-        {label}
-      </Text>
+        <ArticleHero
+          insight={insight}
+          height={0}
+          coverWidth={coverWidth}
+        />
+      </Pressable>
     </View>
   );
 }
 
-function BookmarkIcon() {
+/**
+ * Fallback featured layout for articles whose cover artwork does NOT
+ * include the title. The original captioned-hero treatment.
+ */
+function FeaturedIllustrativeCard({
+  insight,
+  onPress,
+}: {
+  insight: Insight;
+  onPress: () => void;
+}) {
   return (
-    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
+      className="px-6"
+    >
+      <View
+        className="rounded-3xl overflow-hidden border border-border"
+        style={{ backgroundColor: insight.palette.bg }}
+      >
+        <ArticleHero insight={insight} height={220} />
+        <View className="px-5 py-5" style={{ backgroundColor: "#0F0F0F" }}>
+          <Text
+            className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase"
+            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          >
+            Faith Basics · {insight.readMinutes} min read
+          </Text>
+          <Text
+            className="text-ink text-[22px] leading-[27px] tracking-[-0.3px] mt-2"
+            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          >
+            {insight.title}
+          </Text>
+          <Text
+            className="text-ink-muted text-[13px] leading-[19px] mt-2"
+            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            numberOfLines={2}
+          >
+            {insight.subtitle}
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+/**
+ * A four-pointed sparkle ✦. Matches the cross-glyph weight on the
+ * cover artwork so it reads as related-but-different (a star, not
+ * another cross). Used as the bookend on the Featured header.
+ */
+function SparkleIcon({ color, size = 12 }: { color: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M6 4h12v17l-6-4-6 4z"
-        stroke={colors.inkMuted}
-        strokeWidth={1.6}
-        strokeLinejoin="round"
+        d="M12 2l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"
+        fill={color}
       />
     </Svg>
   );
 }
 
-/**
- * Eyebrow row shared by the Highlights / Notes preview sections.
- * Title on the left, optional count badge in the middle, "See all"
- * on the right. The whole row is tappable when `onSeeAll` is given.
- */
-function SectionHeader({
+// ─────────────────────────────────────────────────────────────────
+// Category rail — eyebrow + a horizontal scroller of cards
+// ─────────────────────────────────────────────────────────────────
+
+function CategoryRail({
+  category,
+  delayMs,
+  onSelect,
+}: {
+  category: InsightCategory;
+  delayMs: number;
+  onSelect: (i: Insight) => void;
+}) {
+  const items = useMemo(() => insightsInCategory(category.id), [category.id]);
+  if (items.length === 0) return null;
+  return (
+    <FadeIn delayMs={delayMs} durationMs={900}>
+      <View className="mt-9">
+        <CategoryHeader title={category.label} subtitle={category.blurb} />
+        <InsightRail insights={items} onSelect={onSelect} />
+      </View>
+    </FadeIn>
+  );
+}
+
+function CategoryHeader({
   title,
+  subtitle,
   count,
-  onSeeAll,
 }: {
   title: string;
+  subtitle?: string;
   count?: number;
-  onSeeAll?: () => void;
 }) {
   return (
-    <View className="flex-row items-baseline justify-between mb-3">
+    <View className="px-6 mb-3">
       <View className="flex-row items-baseline">
         <Text
-          className="text-ink-subtle text-[11px] tracking-[3px] uppercase"
+          className="text-ink text-[18px] tracking-[-0.2px]"
           style={{ fontFamily: "PlusJakartaSans_700Bold" }}
         >
           {title}
         </Text>
-        {typeof count === "number" && count > 0 && (
+        {typeof count === "number" && (
           <Text
-            className="text-ink-muted text-[12px] ml-2"
+            className="text-ink-subtle text-[12.5px] ml-2"
             style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
           >
             {count}
           </Text>
         )}
       </View>
-      {onSeeAll && (
-        <Pressable onPress={onSeeAll} hitSlop={8}>
-          <Text
-            className="text-primary text-[12px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            See all
-          </Text>
-        </Pressable>
+      {subtitle && (
+        <Text
+          className="text-ink-muted text-[12.5px] leading-[18px] mt-1"
+          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+        >
+          {subtitle}
+        </Text>
       )}
     </View>
   );
 }
 
 /**
- * Compact empty-state card used by both annotation previews when
- * the user hasn't created any yet. Tapping still routes through to
- * the full screen so its richer empty state takes over.
+ * Horizontal scroller of article cards.
+ *
+ * Cards are mixed-width: standard "illustrative-hero + caption strip"
+ * cards take one width (~78% of column) so the headline copy is
+ * readable; book-cover thumbnails take a narrower portrait width
+ * (~150pt) so 2½ covers peek on screen at once and the rail reads
+ * like a bookshelf.
+ *
+ * Mixing widths in a single horizontal ScrollView works because each
+ * card knows its own width — we let the cards measure themselves
+ * rather than imposing a uniform width here.
  */
-function AnnotationEmpty({
-  copy,
+function InsightRail({
+  insights,
+  onSelect,
+}: {
+  insights: ReadonlyArray<Insight>;
+  onSelect: (i: Insight) => void;
+}) {
+  const SIDE_GAP = 24;
+  const CARD_GAP = 14;
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{
+        paddingHorizontal: SIDE_GAP,
+        paddingRight: SIDE_GAP,
+        alignItems: "flex-end",
+      }}
+    >
+      {insights.map((insight, idx) => (
+        <View
+          key={insight.id}
+          style={{
+            marginRight: idx === insights.length - 1 ? 0 : CARD_GAP,
+          }}
+        >
+          <InsightCard insight={insight} onPress={() => onSelect(insight)} />
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+/**
+ * Standard card — hero on top, caption beneath. Matches FeaturedCard
+ * stylistically but smaller and used in rails.
+ */
+/**
+ * A single card in the horizontal rail. Two completely different
+ * layouts gate on whether the article's cover artwork is self-titled:
+ *
+ *   • cover-mode: a portrait book-thumbnail (~150pt wide) with NO
+ *     caption strip — the artwork carries everything. Multiple
+ *     thumbs peek on screen so the rail reads as a bookshelf.
+ *   • caption-mode: a wider card (~280pt) with a small hero band on
+ *     top and the title + subtitle in a dark strip beneath, since
+ *     the typographic fallback doesn't carry the title itself.
+ */
+function InsightCard({
+  insight,
   onPress,
 }: {
-  copy: string;
+  insight: Insight;
   onPress: () => void;
 }) {
+  if (insight.coverIncludesTitle === true) {
+    return <CoverThumbCard insight={insight} onPress={onPress} />;
+  }
+  return <CaptionedCard insight={insight} onPress={onPress} />;
+}
+
+/**
+ * Book-cover card for articles with self-titled cover artwork.
+ *
+ * Sized large — ~78% of screen width — so each cover dominates the
+ * rail and reads as a substantial standalone thing the user can
+ * swipe through, not a tiny tile. Roughly 1.1 covers visible at a
+ * time on a standard iPhone, with the next cover peeking in to
+ * cue the swipe affordance.
+ *
+ * Renders without rounded corners or a card border so the cover
+ * artwork (which has its own internal framing) speaks for itself.
+ */
+function CoverThumbCard({
+  insight,
+  onPress,
+}: {
+  insight: Insight;
+  onPress: () => void;
+}) {
+  const { width: screenWidth } = useWindowDimensions();
+  const coverWidth = Math.round(screenWidth * 0.78);
+
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-      className="rounded-2xl border border-border bg-surface px-5 py-5"
+      style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
     >
-      <Text
-        className="text-ink-muted text-[13px] leading-[19px]"
-        style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-      >
-        {copy}
-      </Text>
+      <ArticleHero insight={insight} height={0} coverWidth={coverWidth} />
     </Pressable>
   );
 }
 
-function shortWeekday(iso: string): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  return ["S", "M", "T", "W", "T", "F", "S"][date.getDay()];
+/**
+ * Standard captioned rail card — used for any article that does NOT
+ * have its title baked into the cover artwork.
+ */
+function CaptionedCard({
+  insight,
+  onPress,
+}: {
+  insight: Insight;
+  onPress: () => void;
+}) {
+  const CARD_W = 280;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
+    >
+      <View
+        className="rounded-2xl overflow-hidden border border-border"
+        style={{ backgroundColor: insight.palette.bg, width: CARD_W }}
+      >
+        <ArticleHero insight={insight} height={150} />
+        <View className="px-4 py-4" style={{ backgroundColor: "#0F0F0F" }}>
+          <Text
+            className="text-ink-subtle text-[10px] tracking-[2px] uppercase"
+            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            numberOfLines={1}
+          >
+            {insight.readMinutes} min read
+          </Text>
+          <Text
+            className="text-ink text-[16px] leading-[20px] tracking-[-0.2px] mt-1.5"
+            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            numberOfLines={2}
+          >
+            {insight.title}
+          </Text>
+          <Text
+            className="text-ink-muted text-[12px] leading-[16px] mt-1.5"
+            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            numberOfLines={2}
+          >
+            {insight.subtitle}
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
 }
 
-function formatChapterRef(c: { bookId: string; chapter: number }): string {
-  const book = findBookById(c.bookId);
-  return book ? `${book.name} ${c.chapter}` : `${c.bookId} ${c.chapter}`;
-}

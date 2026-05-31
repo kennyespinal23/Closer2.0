@@ -7,10 +7,11 @@
  * the same scripture twice in a row for the same mood.
  *
  * Design constraints:
- *   • 12 moods on a 3×4 grid — covers most of what shows up in
- *     someone's day without being overwhelming. The 12 are split
- *     into 8 "hard" feelings + 4 "good" ones so the screen reads
- *     as honest, not toxic-positive.
+ *   • 20 moods on a 4×5 grid — broad enough to cover what shows up
+ *     in someone's day across hard / steady / hopeful registers.
+ *     Each mood ships with its own custom head illustration
+ *     (see assets/moods/*.png) sampled from the same art family
+ *     so the grid reads as one set.
  *   • Each mood ships with 4 verses. Verse text is bundled so the
  *     check-in works offline and is instant (no network roundtrip
  *     before the user gets their response).
@@ -24,21 +25,32 @@
  * `text` field becomes dynamic.
  */
 
+import type { ImageSourcePropType } from "react-native";
 import type { VerseRef } from "@/state/annotations";
 
 export type MoodId =
+  // ── Hard feelings ────────────────────────────────────────────
   | "anxious"
   | "sad"
   | "overwhelmed"
   | "lonely"
   | "tired"
-  | "afraid"
-  | "angry"
-  | "lost"
+  | "confused"
+  | "worried"
+  | "overlooked"
+  | "discouraged"
+  | "stressed"
+  // ── Steady / hopeful ─────────────────────────────────────────
   | "grateful"
   | "hopeful"
   | "peaceful"
-  | "joyful";
+  | "forgiven"
+  | "loved"
+  | "determined"
+  | "growing"
+  | "hope-restored"
+  | "letting-go"
+  | "faithful";
 
 /**
  * A verse the check-in flow can deliver. `text` is the actual
@@ -59,15 +71,30 @@ export type Mood = {
   label: string;
   /** Quiet, honest sub-prompt under the label (mood "flavor"). */
   prompt: string;
-  /** Soft accent color for the card border / icon. */
+  /**
+   * Dominant color sampled from the head illustration. Used to tint
+   * mood pills, the verse-delivery halo, and the focused-verse glow
+   * when the user opens the chapter from a check-in.
+   */
   swatch: string;
-  /** Single-glyph emoji-style indicator (renders inside a circle). */
+  /**
+   * Single-glyph fallback indicator (used in dense surfaces where
+   * the image asset would be too small to read, e.g. tiny inline
+   * pills). Optional — the image is the primary visual identity.
+   */
   glyph: string;
+  /**
+   * Head illustration for this mood. PNGs ship in assets/moods/ and
+   * are normalized to a 256×256 transparent square so the check-in
+   * grid renders every mood at identical scale. The asset is the
+   * primary visual identity of a mood (color + form).
+   */
+  image: ImageSourcePropType;
   /**
    * What the verse delivery screen reflects back at the user
    * ("You're feeling ____.") — separated from `label` because
    * the grammatically correct form sometimes differs ("Lonely" →
-   * "lonely"; "Joyful" → "joyful", etc.).
+   * "lonely"; "Hope Restored" → "hope restored", etc.).
    */
   echo: string;
   /** Verse pool the delivery screen picks from. */
@@ -83,9 +110,10 @@ export const MOODS: ReadonlyArray<Mood> = [
   {
     id: "anxious",
     label: "Anxious",
-    prompt: "Worry won't sit still",
-    swatch: "#7BAEDC",
+    prompt: "Worry, nervousness, unease",
+    swatch: "#7B6BB0",
     glyph: "≋",
+    image: require("../assets/moods/anxious.png"),
     echo: "anxious",
     verses: [
       {
@@ -121,9 +149,10 @@ export const MOODS: ReadonlyArray<Mood> = [
   {
     id: "sad",
     label: "Sad",
-    prompt: "Heaviness, sorrow, tears",
-    swatch: "#9F90C7",
+    prompt: "Heavy heart, low mood",
+    swatch: "#4D7AB0",
     glyph: "◌",
+    image: require("../assets/moods/sad.png"),
     echo: "sad",
     verses: [
       {
@@ -159,9 +188,10 @@ export const MOODS: ReadonlyArray<Mood> = [
   {
     id: "overwhelmed",
     label: "Overwhelmed",
-    prompt: "Too much, too fast",
-    swatch: "#E3A06A",
+    prompt: "Too much at once, mental clutter",
+    swatch: "#D14B3F",
     glyph: "⌇",
+    image: require("../assets/moods/overwhelmed.png"),
     echo: "overwhelmed",
     verses: [
       {
@@ -197,9 +227,10 @@ export const MOODS: ReadonlyArray<Mood> = [
   {
     id: "lonely",
     label: "Lonely",
-    prompt: "Disconnected, unseen",
-    swatch: "#7B98C9",
+    prompt: "A sense of isolation, disconnection",
+    swatch: "#4F4790",
     glyph: "◔",
+    image: require("../assets/moods/lonely.png"),
     echo: "lonely",
     verses: [
       {
@@ -235,9 +266,10 @@ export const MOODS: ReadonlyArray<Mood> = [
   {
     id: "tired",
     label: "Tired",
-    prompt: "Weary, depleted",
-    swatch: "#A89A87",
+    prompt: "Physically or mentally drained",
+    swatch: "#E96B3D",
     glyph: "◐",
+    image: require("../assets/moods/tired.png"),
     echo: "tired",
     verses: [
       {
@@ -271,89 +303,21 @@ export const MOODS: ReadonlyArray<Mood> = [
     ],
   },
   {
-    id: "afraid",
-    label: "Afraid",
-    prompt: "Fear, uncertainty",
-    swatch: "#B07A8E",
-    glyph: "◇",
-    echo: "afraid",
+    id: "confused",
+    label: "Confused",
+    prompt: "Unclear, uncertain, seeking answers",
+    swatch: "#6B4B9E",
+    glyph: "◍",
+    image: require("../assets/moods/confused.png"),
+    echo: "confused",
     verses: [
-      {
-        bookId: "isaiah",
-        chapter: 41,
-        verse: 10,
-        reference: "Isaiah 41:10",
-        text: "Don't be afraid, for I am with you. Don't be dismayed, for I am your God. I will strengthen you. I will help you. I will uphold you with the right hand of my righteousness.",
-      },
-      {
-        bookId: "psalms",
-        chapter: 23,
-        verse: 4,
-        reference: "Psalm 23:4",
-        text: "Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me. Your rod and your staff, they comfort me.",
-      },
-      {
-        bookId: "2-timothy",
-        chapter: 1,
-        verse: 7,
-        reference: "2 Timothy 1:7",
-        text: "For God didn't give us a spirit of fear, but of power, love, and self-control.",
-      },
-      {
-        bookId: "joshua",
-        chapter: 1,
-        verse: 9,
-        reference: "Joshua 1:9",
-        text: "Haven't I commanded you? Be strong and courageous. Don't be afraid. Don't be dismayed, for the Lord your God is with you wherever you go.",
-      },
-    ],
-  },
-  {
-    id: "angry",
-    label: "Angry",
-    prompt: "Frustrated, hurt",
-    swatch: "#C97B7B",
-    glyph: "◊",
-    echo: "angry",
-    verses: [
-      {
-        bookId: "ephesians",
-        chapter: 4,
-        verse: 26,
-        reference: "Ephesians 4:26–27",
-        text: "Be angry, and don't sin. Don't let the sun go down on your wrath, and don't give place to the devil.",
-      },
       {
         bookId: "james",
         chapter: 1,
-        verse: 19,
-        reference: "James 1:19–20",
-        text: "Let every man be swift to hear, slow to speak, and slow to anger; for the anger of man doesn't produce the righteousness of God.",
+        verse: 5,
+        reference: "James 1:5",
+        text: "But if any of you lacks wisdom, let him ask of God, who gives to all liberally and without reproach; and it will be given to him.",
       },
-      {
-        bookId: "proverbs",
-        chapter: 15,
-        verse: 1,
-        reference: "Proverbs 15:1",
-        text: "A gentle answer turns away wrath, but a harsh word stirs up anger.",
-      },
-      {
-        bookId: "psalms",
-        chapter: 4,
-        verse: 4,
-        reference: "Psalm 4:4",
-        text: "Stand in awe, and don't sin. Search your own heart on your bed, and be still.",
-      },
-    ],
-  },
-  {
-    id: "lost",
-    label: "Lost",
-    prompt: "Confused, directionless",
-    swatch: "#8FA890",
-    glyph: "◍",
-    echo: "lost",
-    verses: [
       {
         bookId: "proverbs",
         chapter: 3,
@@ -362,18 +326,50 @@ export const MOODS: ReadonlyArray<Mood> = [
         text: "Trust in the Lord with all your heart, and don't lean on your own understanding. In all your ways acknowledge him, and he will make your paths straight.",
       },
       {
-        bookId: "psalms",
-        chapter: 119,
-        verse: 105,
-        reference: "Psalm 119:105",
-        text: "Your word is a lamp to my feet, and a light for my path.",
+        bookId: "1-corinthians",
+        chapter: 14,
+        verse: 33,
+        reference: "1 Corinthians 14:33",
+        text: "For God is not a God of confusion, but of peace.",
       },
       {
         bookId: "isaiah",
-        chapter: 30,
-        verse: 21,
-        reference: "Isaiah 30:21",
-        text: "Your ears will hear a word behind you, saying, 'This is the way. Walk in it,' when you turn to the right, and when you turn to the left.",
+        chapter: 55,
+        verse: 8,
+        reference: "Isaiah 55:8–9",
+        text: "For my thoughts are not your thoughts, neither are your ways my ways, says the Lord. For as the heavens are higher than the earth, so are my ways higher than your ways, and my thoughts than your thoughts.",
+      },
+    ],
+  },
+  {
+    id: "worried",
+    label: "Worried",
+    prompt: "Concerned about the future",
+    swatch: "#E07B3E",
+    glyph: "◇",
+    image: require("../assets/moods/worried.png"),
+    echo: "worried",
+    verses: [
+      {
+        bookId: "matthew",
+        chapter: 6,
+        verse: 34,
+        reference: "Matthew 6:34",
+        text: "Therefore don't be anxious for tomorrow, for tomorrow will be anxious for itself. Each day has enough trouble of its own.",
+      },
+      {
+        bookId: "1-peter",
+        chapter: 5,
+        verse: 7,
+        reference: "1 Peter 5:7",
+        text: "Cast all your worries on him, because he cares for you.",
+      },
+      {
+        bookId: "psalms",
+        chapter: 55,
+        verse: 22,
+        reference: "Psalm 55:22",
+        text: "Cast your burden on the Lord, and he will sustain you. He will never allow the righteous to be moved.",
       },
       {
         bookId: "jeremiah",
@@ -384,14 +380,132 @@ export const MOODS: ReadonlyArray<Mood> = [
       },
     ],
   },
+  {
+    id: "overlooked",
+    label: "Overlooked",
+    prompt: "Feeling unseen, unimportant",
+    swatch: "#4A6B4F",
+    glyph: "◎",
+    image: require("../assets/moods/overlooked.png"),
+    echo: "overlooked",
+    verses: [
+      {
+        bookId: "genesis",
+        chapter: 16,
+        verse: 13,
+        reference: "Genesis 16:13",
+        text: "She called the name of the Lord who spoke to her, 'You are a God who sees,' for she said, 'Have I even stayed alive after seeing him?'",
+      },
+      {
+        bookId: "luke",
+        chapter: 12,
+        verse: 7,
+        reference: "Luke 12:7",
+        text: "But the very hairs of your head are all counted. Therefore don't be afraid. You are of more value than many sparrows.",
+      },
+      {
+        bookId: "psalms",
+        chapter: 139,
+        verse: 1,
+        reference: "Psalm 139:1–3",
+        text: "Lord, you have searched me, and you know me. You know my sitting down and my rising up. You perceive my thoughts from afar. You search out my path and my lying down, and are acquainted with all my ways.",
+      },
+      {
+        bookId: "1-samuel",
+        chapter: 16,
+        verse: 7,
+        reference: "1 Samuel 16:7",
+        text: "For the Lord sees not as man sees; for man looks at the outward appearance, but the Lord looks at the heart.",
+      },
+    ],
+  },
+  {
+    id: "discouraged",
+    label: "Discouraged",
+    prompt: "Lacking motivation, feeling defeated",
+    swatch: "#5E4B96",
+    glyph: "↓",
+    image: require("../assets/moods/discouraged.png"),
+    echo: "discouraged",
+    verses: [
+      {
+        bookId: "galatians",
+        chapter: 6,
+        verse: 9,
+        reference: "Galatians 6:9",
+        text: "Let us not be weary in doing good, for we will reap in due season if we don't give up.",
+      },
+      {
+        bookId: "isaiah",
+        chapter: 40,
+        verse: 31,
+        reference: "Isaiah 40:31",
+        text: "Those who wait for the Lord will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.",
+      },
+      {
+        bookId: "joshua",
+        chapter: 1,
+        verse: 9,
+        reference: "Joshua 1:9",
+        text: "Haven't I commanded you? Be strong and courageous. Don't be afraid. Don't be dismayed, for the Lord your God is with you wherever you go.",
+      },
+      {
+        bookId: "2-corinthians",
+        chapter: 4,
+        verse: 16,
+        reference: "2 Corinthians 4:16–17",
+        text: "Therefore we don't faint, but though our outward person is decaying, yet our inward person is renewed day by day. For our light affliction, which is for the moment, works for us more and more exceedingly an eternal weight of glory.",
+      },
+    ],
+  },
+  {
+    id: "stressed",
+    label: "Stressed",
+    prompt: "Pressure, tension, mental strain",
+    swatch: "#2D5862",
+    glyph: "⌁",
+    image: require("../assets/moods/stressed.png"),
+    echo: "stressed",
+    verses: [
+      {
+        bookId: "matthew",
+        chapter: 11,
+        verse: 28,
+        reference: "Matthew 11:28–29",
+        text: "Come to me, all you who labor and are heavily burdened, and I will give you rest. Take my yoke upon you, and learn from me, for I am gentle and humble in heart; and you will find rest for your souls.",
+      },
+      {
+        bookId: "psalms",
+        chapter: 46,
+        verse: 1,
+        reference: "Psalm 46:1",
+        text: "God is our refuge and strength, a very present help in trouble.",
+      },
+      {
+        bookId: "john",
+        chapter: 14,
+        verse: 27,
+        reference: "John 14:27",
+        text: "Peace I leave with you. My peace I give to you; not as the world gives, I give to you. Don't let your heart be troubled, neither let it be fearful.",
+      },
+      {
+        bookId: "philippians",
+        chapter: 4,
+        verse: 6,
+        reference: "Philippians 4:6–7",
+        text: "Be anxious for nothing, but in everything, by prayer and petition with thanksgiving, let your requests be made known to God. And the peace of God, which surpasses all understanding, will guard your hearts and your thoughts in Christ Jesus.",
+      },
+    ],
+  },
 
-  // ─── Good feelings ──────────────────────────────────────────
+  // ─── Steady / hopeful ───────────────────────────────────────
   {
     id: "grateful",
     label: "Grateful",
-    prompt: "Thankful, full",
-    swatch: "#F4C77B",
+    prompt: "Appreciation, thankfulness, seeing the good",
+    swatch: "#F4A540",
     glyph: "☘",
+    image: require("../assets/moods/grateful.png"),
     echo: "grateful",
     verses: [
       {
@@ -427,9 +541,10 @@ export const MOODS: ReadonlyArray<Mood> = [
   {
     id: "hopeful",
     label: "Hopeful",
-    prompt: "Looking up, expectant",
-    swatch: "#93C572",
+    prompt: "Optimism, trust, looking ahead",
+    swatch: "#5BA15C",
     glyph: "◉",
+    image: require("../assets/moods/hopeful.png"),
     echo: "hopeful",
     verses: [
       {
@@ -465,9 +580,10 @@ export const MOODS: ReadonlyArray<Mood> = [
   {
     id: "peaceful",
     label: "Peaceful",
-    prompt: "Quiet, settled",
-    swatch: "#A8C8B6",
+    prompt: "Calm, quiet mind, inner stillness",
+    swatch: "#4DB3B8",
     glyph: "○",
+    image: require("../assets/moods/peaceful.png"),
     echo: "peaceful",
     verses: [
       {
@@ -501,40 +617,275 @@ export const MOODS: ReadonlyArray<Mood> = [
     ],
   },
   {
-    id: "joyful",
-    label: "Joyful",
-    prompt: "Light, bright",
-    swatch: "#F0B968",
+    id: "forgiven",
+    label: "Forgiven",
+    prompt: "Release, relief, a clean slate",
+    swatch: "#E8B947",
     glyph: "✦",
-    echo: "joyful",
+    image: require("../assets/moods/forgiven.png"),
+    echo: "forgiven",
     verses: [
       {
-        bookId: "nehemiah",
+        bookId: "psalms",
+        chapter: 103,
+        verse: 12,
+        reference: "Psalm 103:12",
+        text: "As far as the east is from the west, so far has he removed our transgressions from us.",
+      },
+      {
+        bookId: "1-john",
+        chapter: 1,
+        verse: 9,
+        reference: "1 John 1:9",
+        text: "If we confess our sins, he is faithful and righteous to forgive us the sins, and to cleanse us from all unrighteousness.",
+      },
+      {
+        bookId: "isaiah",
+        chapter: 1,
+        verse: 18,
+        reference: "Isaiah 1:18",
+        text: "Though your sins be as scarlet, they shall be as white as snow. Though they be red like crimson, they shall be as wool.",
+      },
+      {
+        bookId: "romans",
         chapter: 8,
-        verse: 10,
-        reference: "Nehemiah 8:10",
-        text: "The joy of the Lord is your strength.",
+        verse: 1,
+        reference: "Romans 8:1",
+        text: "There is therefore now no condemnation to those who are in Christ Jesus, who don't walk according to the flesh, but according to the Spirit.",
+      },
+    ],
+  },
+  {
+    id: "loved",
+    label: "Loved",
+    prompt: "Valued, accepted, deep connection",
+    swatch: "#C44339",
+    glyph: "♥",
+    image: require("../assets/moods/loved.png"),
+    echo: "loved",
+    verses: [
+      {
+        bookId: "1-john",
+        chapter: 4,
+        verse: 19,
+        reference: "1 John 4:19",
+        text: "We love him, because he first loved us.",
       },
       {
-        bookId: "psalms",
-        chapter: 16,
-        verse: 11,
-        reference: "Psalm 16:11",
-        text: "You will show me the path of life. In your presence is fullness of joy. In your right hand there are pleasures forever more.",
+        bookId: "romans",
+        chapter: 8,
+        verse: 38,
+        reference: "Romans 8:38–39",
+        text: "For I am persuaded that neither death, nor life, nor angels, nor principalities, nor things present, nor things to come, nor powers, nor height, nor depth, nor any other created thing will be able to separate us from God's love which is in Christ Jesus our Lord.",
       },
       {
-        bookId: "psalms",
-        chapter: 118,
-        verse: 24,
-        reference: "Psalm 118:24",
-        text: "This is the day that the Lord has made. We will rejoice and be glad in it!",
+        bookId: "zephaniah",
+        chapter: 3,
+        verse: 17,
+        reference: "Zephaniah 3:17",
+        text: "The Lord, your God, is in the middle of you, a mighty one who will save. He will rejoice over you with joy. He will calm you in his love. He will rejoice over you with singing.",
+      },
+      {
+        bookId: "ephesians",
+        chapter: 2,
+        verse: 4,
+        reference: "Ephesians 2:4–5",
+        text: "But God, being rich in mercy, for his great love with which he loved us, even when we were dead through our trespasses, made us alive together with Christ — by grace you have been saved.",
+      },
+    ],
+  },
+  {
+    id: "determined",
+    label: "Determined",
+    prompt: "Focused, driven, ready to push forward",
+    swatch: "#8B3641",
+    glyph: "▲",
+    image: require("../assets/moods/determined.png"),
+    echo: "determined",
+    verses: [
+      {
+        bookId: "philippians",
+        chapter: 3,
+        verse: 13,
+        reference: "Philippians 3:13–14",
+        text: "Brothers, I don't regard myself as yet having taken hold, but one thing I do: forgetting the things which are behind, and stretching forward to the things which are before, I press on toward the goal for the prize of the high calling of God in Christ Jesus.",
       },
       {
         bookId: "philippians",
         chapter: 4,
-        verse: 4,
-        reference: "Philippians 4:4",
-        text: "Rejoice in the Lord always! Again I will say, Rejoice!",
+        verse: 13,
+        reference: "Philippians 4:13",
+        text: "I can do all things through Christ, who strengthens me.",
+      },
+      {
+        bookId: "1-corinthians",
+        chapter: 9,
+        verse: 24,
+        reference: "1 Corinthians 9:24",
+        text: "Don't you know that those who run in a race all run, but one receives the prize? Run like that, that you may win.",
+      },
+      {
+        bookId: "isaiah",
+        chapter: 50,
+        verse: 7,
+        reference: "Isaiah 50:7",
+        text: "For the Lord God will help me. Therefore I have not been confounded. Therefore I have set my face like a flint, and I know that I won't be disappointed.",
+      },
+    ],
+  },
+  {
+    id: "growing",
+    label: "Growing",
+    prompt: "Learning, improving, becoming more",
+    swatch: "#3A6B45",
+    glyph: "✧",
+    image: require("../assets/moods/growing.png"),
+    echo: "growing",
+    verses: [
+      {
+        bookId: "2-peter",
+        chapter: 3,
+        verse: 18,
+        reference: "2 Peter 3:18",
+        text: "But grow in the grace and knowledge of our Lord and Savior Jesus Christ. To him be the glory both now and forever.",
+      },
+      {
+        bookId: "philippians",
+        chapter: 1,
+        verse: 6,
+        reference: "Philippians 1:6",
+        text: "Being confident of this very thing, that he who began a good work in you will complete it until the day of Jesus Christ.",
+      },
+      {
+        bookId: "romans",
+        chapter: 5,
+        verse: 3,
+        reference: "Romans 5:3–4",
+        text: "Not only this, but we also rejoice in our sufferings, knowing that suffering produces perseverance; and perseverance, proven character; and proven character, hope.",
+      },
+      {
+        bookId: "colossians",
+        chapter: 2,
+        verse: 6,
+        reference: "Colossians 2:6–7",
+        text: "As therefore you received Christ Jesus, the Lord, walk in him, rooted and built up in him, and established in the faith, even as you were taught, abounding in it in thanksgiving.",
+      },
+    ],
+  },
+  {
+    id: "hope-restored",
+    label: "Hope Restored",
+    prompt: "Renewed faith, new beginnings",
+    swatch: "#B8842F",
+    glyph: "❖",
+    image: require("../assets/moods/hope-restored.png"),
+    echo: "hope restored",
+    verses: [
+      {
+        bookId: "lamentations",
+        chapter: 3,
+        verse: 22,
+        reference: "Lamentations 3:22–23",
+        text: "It is because of the Lord's loving kindnesses that we are not consumed, because his compassion doesn't fail. They are new every morning. Great is your faithfulness.",
+      },
+      {
+        bookId: "isaiah",
+        chapter: 43,
+        verse: 19,
+        reference: "Isaiah 43:19",
+        text: "Behold, I will do a new thing. It springs out now. Don't you know it? I will even make a way in the wilderness, and rivers in the desert.",
+      },
+      {
+        bookId: "romans",
+        chapter: 15,
+        verse: 13,
+        reference: "Romans 15:13",
+        text: "Now may the God of hope fill you with all joy and peace in believing, that you may abound in hope in the power of the Holy Spirit.",
+      },
+      {
+        bookId: "2-corinthians",
+        chapter: 5,
+        verse: 17,
+        reference: "2 Corinthians 5:17",
+        text: "Therefore if anyone is in Christ, he is a new creation. The old things have passed away. Behold, all things have become new.",
+      },
+    ],
+  },
+  {
+    id: "letting-go",
+    label: "Letting Go",
+    prompt: "Release, surrender, moving forward",
+    swatch: "#2A6B7A",
+    glyph: "≈",
+    image: require("../assets/moods/letting-go.png"),
+    echo: "ready to let go",
+    verses: [
+      {
+        bookId: "philippians",
+        chapter: 3,
+        verse: 13,
+        reference: "Philippians 3:13–14",
+        text: "Forgetting the things which are behind, and stretching forward to the things which are before, I press on toward the goal for the prize of the high calling of God in Christ Jesus.",
+      },
+      {
+        bookId: "isaiah",
+        chapter: 43,
+        verse: 18,
+        reference: "Isaiah 43:18–19",
+        text: "Don't remember the former things, and don't consider the things of old. Behold, I will do a new thing. It springs out now. Don't you know it?",
+      },
+      {
+        bookId: "psalms",
+        chapter: 55,
+        verse: 22,
+        reference: "Psalm 55:22",
+        text: "Cast your burden on the Lord, and he will sustain you. He will never allow the righteous to be moved.",
+      },
+      {
+        bookId: "matthew",
+        chapter: 6,
+        verse: 25,
+        reference: "Matthew 6:25",
+        text: "Therefore I tell you, don't be anxious for your life: what you will eat, or what you will drink; nor yet for your body, what you will wear. Isn't life more than food, and the body more than clothing?",
+      },
+    ],
+  },
+  {
+    id: "faithful",
+    label: "Faithful",
+    prompt: "Trusting, believing, holding on",
+    swatch: "#5C2D9E",
+    glyph: "✦",
+    image: require("../assets/moods/faithful.png"),
+    echo: "faithful",
+    verses: [
+      {
+        bookId: "hebrews",
+        chapter: 11,
+        verse: 1,
+        reference: "Hebrews 11:1",
+        text: "Now faith is assurance of things hoped for, proof of things not seen.",
+      },
+      {
+        bookId: "hebrews",
+        chapter: 10,
+        verse: 23,
+        reference: "Hebrews 10:23",
+        text: "Let us hold fast the confession of our hope without wavering; for he who promised is faithful.",
+      },
+      {
+        bookId: "2-timothy",
+        chapter: 4,
+        verse: 7,
+        reference: "2 Timothy 4:7",
+        text: "I have fought the good fight. I have finished the course. I have kept the faith.",
+      },
+      {
+        bookId: "lamentations",
+        chapter: 3,
+        verse: 23,
+        reference: "Lamentations 3:23",
+        text: "His compassions don't fail. They are new every morning. Great is your faithfulness.",
       },
     ],
   },

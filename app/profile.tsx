@@ -16,6 +16,7 @@ import { useAnnotations } from "@/state/annotations";
 import { useOnboarding } from "@/state/onboarding";
 import { usePreferences } from "@/state/preferences";
 import { didCompleteToday, useProgress } from "@/state/progress";
+import { useReadingGoal } from "@/state/readingGoal";
 
 /**
  * Profile (left-side drawer)
@@ -42,6 +43,7 @@ export default function ProfileScreen() {
   const progress = useProgress();
   const { translation } = usePreferences();
   const { counts: annotationCounts } = useAnnotations();
+  const { goalMinutes: readingGoalMinutes } = useReadingGoal();
 
   const firstName = (answers.name || "").trim().split(" ")[0] || "Friend";
   const honoredToday = didCompleteToday(progress);
@@ -207,8 +209,22 @@ export default function ProfileScreen() {
             {/* ─── Personal scripture work ──────────────────────
                 Surfaces direct entry points to the user's accumulated
                 notes and highlights so they're never more than two
-                taps away from anything they've saved. */}
+                taps away from anything they've saved. "Your Practice"
+                lives at the top — it's the rhythm view (streak, total
+                sermons, per-type breakdown) that used to be its own
+                tab before the Insights tab became a content library. */}
             <Section title="Your scripture">
+              <Row
+                icon={<RhythmIcon />}
+                label="Your Practice"
+                value="Streak · Reading"
+                interactive
+                onPress={() => {
+                  close();
+                  setTimeout(() => router.push("/stats"), 240);
+                }}
+                showDivider
+              />
               <Row
                 icon={<NoteRowIcon />}
                 label="Notes"
@@ -239,6 +255,14 @@ export default function ProfileScreen() {
             </Section>
 
             <Section title="Preferences">
+              <Row
+                icon={<TargetIcon />}
+                label="Reading goal"
+                value={`${readingGoalMinutes} min`}
+                interactive
+                onPress={() => router.push("/settings/reading-goal")}
+                showDivider
+              />
               <Row
                 icon={<BellIcon />}
                 label="Notifications"
@@ -474,6 +498,16 @@ function BellIcon() {
         d="M18 16v-5a6 6 0 10-12 0v5l-2 2h16zM10 20a2 2 0 004 0"
         {...ICON_PROPS}
       />
+    </Svg>
+  );
+}
+
+function TargetIcon() {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24">
+      <Path d="M12 21a9 9 0 100-18 9 9 0 000 18z" {...ICON_PROPS} />
+      <Path d="M12 16a4 4 0 100-8 4 4 0 000 8z" {...ICON_PROPS} />
+      <Path d="M12 13a1 1 0 100-2 1 1 0 000 2z" {...ICON_PROPS} />
     </Svg>
   );
 }

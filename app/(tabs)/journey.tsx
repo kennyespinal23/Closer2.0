@@ -19,6 +19,7 @@ import {
   formatDayHeader,
   type ChapterEvent,
   type CheckInEvent,
+  type CheckInStack,
   type HighlightEvent,
   type HighlightStack,
   type JourneyRow,
@@ -222,7 +223,11 @@ function TimelineRow({
   isLast: boolean;
   router: RouterShape;
 }) {
-  if (row.kind === "noteStack" || row.kind === "highlightStack") {
+  if (
+    row.kind === "noteStack" ||
+    row.kind === "highlightStack" ||
+    row.kind === "checkInStack"
+  ) {
     return <StackRow row={row} isLast={isLast} router={router} />;
   }
   return <EventRow event={row} isLast={isLast} router={router} />;
@@ -305,7 +310,7 @@ function StackRow({
   isLast,
   router,
 }: {
-  row: NoteStack | HighlightStack;
+  row: NoteStack | HighlightStack | CheckInStack;
   isLast: boolean;
   router: RouterShape;
 }) {
@@ -318,12 +323,35 @@ function StackRow({
     setOpen((prev) => !prev);
   };
 
-  const dotColor = row.kind === "noteStack" ? NOTE_RED : colors.primary;
-  const count =
-    row.kind === "noteStack" ? row.notes.length : row.highlights.length;
-  const label = row.kind === "noteStack" ? "Notes" : "Highlights";
-  const eyebrowColor =
-    row.kind === "noteStack" ? NOTE_RED : colors.primary;
+  // Per-kind metadata for the header row.
+  //   • Notes  — bright red, matching the reader's note marker
+  //   • Highlights — primary white
+  //   • Check-ins — first child's mood color (or primary if missing),
+  //                 so the stack inherits the day's emotional palette
+  const meta: { dot: string; label: string; eyebrow: string; count: number } =
+    row.kind === "noteStack"
+      ? {
+          dot: NOTE_RED,
+          label: "Notes",
+          eyebrow: NOTE_RED,
+          count: row.notes.length,
+        }
+      : row.kind === "highlightStack"
+      ? {
+          dot: colors.primary,
+          label: "Highlights",
+          eyebrow: colors.primary,
+          count: row.highlights.length,
+        }
+      : {
+          dot:
+            row.checkIns[0]?.mood?.swatch ?? colors.primary,
+          label: "Check-ins",
+          eyebrow:
+            row.checkIns[0]?.mood?.swatch ?? colors.primary,
+          count: row.checkIns.length,
+        };
+  const { dot: dotColor, label, eyebrow: eyebrowColor, count } = meta;
 
   return (
     <DottedRow dotColor={dotColor} isLast={isLast}>
@@ -397,7 +425,8 @@ function StackRow({
                     <NoteChild event={n} />
                   </ChildRow>
                 ))
-              : row.highlights.map((h, i) => (
+              : row.kind === "highlightStack"
+              ? row.highlights.map((h, i) => (
                   <ChildRow
                     key={h.id}
                     showDivider={i < row.highlights.length - 1}
@@ -407,6 +436,19 @@ function StackRow({
                   >
                     <HighlightChild event={h} />
                   </ChildRow>
+                ))
+              : row.checkIns.map((c, i) => (
+                  <ChildRow
+                    key={c.id}
+                    showDivider={i < row.checkIns.length - 1}
+                    onPress={() =>
+                      router.push(
+                        `/check-ins/${c.checkInId}` as never,
+                      )
+                    }
+                  >
+                    <CheckInChild event={c} />
+                  </ChildRow>
                 ))}
           </View>
         ) : null}
@@ -415,17 +457,27 @@ function StackRow({
   );
 }
 
-/** Comma-joined preview of references for a collapsed stack. */
-function stackPreview(row: NoteStack | HighlightStack): string {
-  const refs =
+/** Compact preview text for a collapsed stack — kind-aware. */
+function stackPreview(
+  row: NoteStack | HighlightStack | CheckInStack,
+): string {
+  // For notes/highlights we join the verse references the user has
+  // touched — gives a quick scan of "which scriptures sit in this
+  // stack". For check-ins we join the mood labels instead, since
+  // that's what makes a multi-check-in day distinctive ("Anxious ·
+  // Grateful · Hopeful").
+  const items =
     row.kind === "noteStack"
       ? row.notes.map((n) => n.reference)
-      : row.highlights.map((h) => h.reference);
-  // De-dupe in case the same verse appears more than once in the
-  // bundle (e.g. multiple notes on the same verse in one day).
+      : row.kind === "highlightStack"
+      ? row.highlights.map((h) => h.reference)
+      : row.checkIns.map((c) => c.mood?.label ?? "Check-in");
+  // De-dupe in case the same value appears more than once (e.g.,
+  // multiple notes on the same verse, or two morning + evening
+  // check-ins with the same mood).
   const seen = new Set<string>();
   const unique: string[] = [];
-  for (const r of refs) {
+  for (const r of items) {
     if (!seen.has(r)) {
       seen.add(r);
       unique.push(r);
@@ -512,6 +564,59 @@ function HighlightChild({ event }: { event: HighlightEvent }) {
             &ldquo;{event.verseSnippet}&rdquo;
           </Text>
         ) : null}
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Compact child row for an expanded CheckInStack. Mood label sits
+ * to the left as a small color-tinted pill; the delivered verse
+ * reference + a one-line preview of the verse fill the rest of the
+ * row. Tapping the parent ChildRow routes into the per-check-in
+ * detail page (so the user can edit their journal, share, etc.).
+ */
+function CheckInChild({ event }: { event: CheckInEvent }) {
+  const accent = event.mood?.swatch ?? colors.primary;
+  const moodLabel = event.mood?.label ?? "Check-in";
+  return (
+    <View className="flex-row items-start">
+      <View
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: accent,
+          marginTop: 5,
+          marginRight: 8,
+        }}
+      />
+      <View className="flex-1">
+        <View className="flex-row items-baseline justify-between">
+          <View className="flex-row items-baseline flex-1 pr-2">
+            <Text
+              className="text-ink text-[13.5px]"
+              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            >
+              {moodLabel}
+            </Text>
+            <Text
+              className="text-ink-subtle text-[11.5px] ml-2"
+              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              numberOfLines={1}
+            >
+              · {event.reference}
+            </Text>
+          </View>
+          {timeChipMuted(event.at)}
+        </View>
+        <Text
+          className="text-ink-muted text-[12.5px] mt-1 leading-[18px] italic"
+          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          numberOfLines={2}
+        >
+          &ldquo;{event.verseText}&rdquo;
+        </Text>
       </View>
     </View>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingHeader } from "@/components/OnboardingHeader";
+import { TimePickerModal } from "@/components/TimePickerModal";
 import { progressFor } from "@/constants/onboarding";
 import { useColors } from "@/state/theme";
 import {
@@ -47,6 +48,22 @@ export default function RemindersScreen() {
   const { setAnswer } = useOnboarding();
   const [time, setTime] = useState<DailyReminderTime>(DEFAULT_REMINDER_TIME);
   const [submitting, setSubmitting] = useState(false);
+  // Custom-picker visibility. Open when the user taps the Custom
+  // chip; closes on Save (commits the picked time) or Cancel
+  // (discards the wheel draft without affecting `time`).
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  // True when the active time isn't one of the curated presets —
+  // tells the chip row to highlight the Custom chip instead of
+  // any preset, and lets the Custom chip display the picked
+  // time as its label.
+  const isCustomTime = useMemo(
+    () =>
+      !TIME_PRESETS.some(
+        (p) => p.hour === time.hour && p.minute === time.minute,
+      ),
+    [time],
+  );
 
   const goToPaywall = () => router.push("/onboarding/paywall");
 
@@ -131,8 +148,17 @@ export default function RemindersScreen() {
                 style={{ gap: 8 }}
               >
                 {TIME_PRESETS.map((preset) => {
+                  // A preset chip is "selected" only when the
+                  // active time equals the preset AND the user
+                  // didn't pick a custom time. The custom-time
+                  // case (where `time` happens to coincide with
+                  // a preset is impossible by construction —
+                  // any custom-picked time that matches a preset
+                  // is treated as picking that preset).
                   const selected =
-                    preset.hour === time.hour && preset.minute === time.minute;
+                    !isCustomTime &&
+                    preset.hour === time.hour &&
+                    preset.minute === time.minute;
                   return (
                     <TimeChip
                       key={`${preset.hour}-${preset.minute}`}
@@ -142,6 +168,20 @@ export default function RemindersScreen() {
                     />
                   );
                 })}
+                {/* Custom chip — opens the wheel modal. When the
+                    user has picked a custom time, the chip
+                    displays that time so the picked value is
+                    visible in the row (otherwise nothing tells
+                    the user "I'm set to 8:47 AM"). When no
+                    custom time is set, the chip reads "Custom"
+                    with a small clock glyph hint. */}
+                <CustomTimeChip
+                  selected={isCustomTime}
+                  label={
+                    isCustomTime ? formatReminderTime(time) : "Custom"
+                  }
+                  onPress={() => setPickerOpen(true)}
+                />
               </View>
             </View>
           </FadeIn>
@@ -187,6 +227,20 @@ export default function RemindersScreen() {
           </FadeIn>
         </View>
       </ScrollView>
+
+      {/* Custom time picker — slides up from the bottom when the
+          user taps the Custom chip. Save commits the picked time
+          into local state; the existing CTA picks it up via the
+          `time` value and the label automatically refreshes. */}
+      <TimePickerModal
+        visible={pickerOpen}
+        initial={time}
+        onConfirm={(next) => {
+          setTime(next);
+          setPickerOpen(false);
+        }}
+        onClose={() => setPickerOpen(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -247,6 +301,98 @@ function TimeChip({
         {label}
       </Text>
     </Pressable>
+  );
+}
+
+/**
+ * Variant of TimeChip that opens the bottom-sheet wheel picker
+ * instead of committing a preset.
+ *
+ * When the user hasn't picked a custom time yet, the chip shows
+ * "Custom" with a leading clock glyph so it visually reads as
+ * "this opens something" rather than "this is just another
+ * preset". Once a custom time IS picked, the chip displays the
+ * time itself (e.g. "8:47 AM") and the glyph is replaced with a
+ * small pencil glyph to suggest "tap to change".
+ */
+function CustomTimeChip({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={
+        selected ? `Custom time: ${label}. Tap to change.` : "Pick a custom time"
+      }
+      accessibilityState={{ selected }}
+      className="rounded-full pl-3 pr-4 py-2.5 border flex-row items-center"
+      style={({ pressed }) => ({
+        backgroundColor: selected ? colors.primary : "transparent",
+        borderColor: selected ? colors.primary : colors.borderStrong,
+        opacity: pressed ? 0.85 : 1,
+      })}
+    >
+      {selected ? (
+        <PencilGlyph
+          stroke={selected ? colors.primaryFg : colors.ink}
+        />
+      ) : (
+        <ClockGlyph
+          stroke={selected ? colors.primaryFg : colors.ink}
+        />
+      )}
+      <Text
+        className="text-[14px] tracking-[-0.1px] ml-1.5"
+        style={{
+          fontFamily: "PlusJakartaSans_700Bold",
+          color: selected ? colors.primaryFg : colors.ink,
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function ClockGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 21a9 9 0 100-18 9 9 0 000 18z"
+        stroke={stroke}
+        strokeWidth={1.7}
+      />
+      <Path
+        d="M12 7v5l3 2"
+        stroke={stroke}
+        strokeWidth={1.7}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function PencilGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M4 20l4-1 11-11-3-3L5 16zM14 5l3 3"
+        stroke={stroke}
+        strokeWidth={1.7}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
   );
 }
 

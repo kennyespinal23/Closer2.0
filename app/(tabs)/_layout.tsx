@@ -1,6 +1,11 @@
-import { Tabs, useRouter } from "expo-router";
+import { View } from "react-native";
+import { Tabs, useRouter, useSegments } from "expo-router";
 import Svg, { Circle, Path } from "react-native-svg";
 import { GlassTabBar } from "@/components/GlassTabBar";
+import {
+  GlobalFocusBanner,
+  isGlobalBannerHiddenForRoute,
+} from "@/components/GlobalFocusBanner";
 
 /**
  * Bottom-tab layout for the main app.
@@ -24,63 +29,86 @@ import { GlassTabBar } from "@/components/GlassTabBar";
  */
 export default function TabsLayout() {
   const router = useRouter();
+  // Track which tab is currently active so we can suppress the
+  // global floating focus banner on Today (which has its own
+  // inline FocusToggle pill and shouldn't double up). useSegments
+  // returns the path segments under the current router state —
+  // inside this layout, segments[1] is the active tab name
+  // ("today", "journey", "library", "insights", or "checkin").
+  const segments = useSegments();
+  const activeTab = segments[1];
+  const hideGlobalBanner = isGlobalBannerHiddenForRoute(activeTab);
 
   return (
-    <Tabs
-      screenOptions={{ headerShown: false }}
-      tabBar={(props) => <GlassTabBar {...props} />}
-    >
-      <Tabs.Screen
-        name="today"
-        options={{
-          title: "Today",
-          tabBarIcon: ({ color }) => <TodayIcon color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="journey"
-        options={{
-          title: "Journey",
-          tabBarIcon: ({ color }) => <JourneyIcon color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="checkin"
-        options={{
-          // Title isn't shown on the FAB cell, but accessibility
-          // tools and the default tab bar (if ever surfaced) need
-          // a meaningful label.
-          title: "Check-in",
-          // Icon isn't shown either (the FAB has its own glyph),
-          // but provided so the type contract is satisfied.
-          tabBarIcon: ({ color }) => <PlusIcon color={color} />,
-        }}
-        listeners={{
-          // Open the modal instead of switching tabs. preventDefault
-          // stops React Navigation from updating state.index, which
-          // would otherwise cause the GlassTabBar bubble to slide to
-          // a tab that should never be "focused".
-          tabPress: (e) => {
-            e.preventDefault();
-            router.push("/check-in");
-          },
-        }}
-      />
-      <Tabs.Screen
-        name="library"
-        options={{
-          title: "Library",
-          tabBarIcon: ({ color }) => <LibraryIcon color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="insights"
-        options={{
-          title: "Insights",
-          tabBarIcon: ({ color }) => <InsightsIcon color={color} />,
-        }}
-      />
-    </Tabs>
+    // The wrapping View hosts the Tabs navigator AND the floating
+    // GlobalFocusBanner side by side. The banner is absolute-
+    // positioned and uses pointerEvents="box-none" internally so
+    // taps that miss the pill pass through to the tab's content.
+    <View style={{ flex: 1 }}>
+      <Tabs
+        screenOptions={{ headerShown: false }}
+        tabBar={(props) => <GlassTabBar {...props} />}
+      >
+        <Tabs.Screen
+          name="today"
+          options={{
+            title: "Today",
+            tabBarIcon: ({ color }) => <TodayIcon color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="journey"
+          options={{
+            title: "Journey",
+            tabBarIcon: ({ color }) => <JourneyIcon color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="checkin"
+          options={{
+            // Title isn't shown on the FAB cell, but accessibility
+            // tools and the default tab bar (if ever surfaced) need
+            // a meaningful label.
+            title: "Check-in",
+            // Icon isn't shown either (the FAB has its own glyph),
+            // but provided so the type contract is satisfied.
+            tabBarIcon: ({ color }) => <PlusIcon color={color} />,
+          }}
+          listeners={{
+            // Open the modal instead of switching tabs. preventDefault
+            // stops React Navigation from updating state.index, which
+            // would otherwise cause the GlassTabBar bubble to slide to
+            // a tab that should never be "focused".
+            tabPress: (e) => {
+              e.preventDefault();
+              router.push("/check-in");
+            },
+          }}
+        />
+        <Tabs.Screen
+          name="library"
+          options={{
+            title: "Library",
+            tabBarIcon: ({ color }) => <LibraryIcon color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="insights"
+          options={{
+            title: "Insights",
+            tabBarIcon: ({ color }) => <InsightsIcon color={color} />,
+          }}
+        />
+      </Tabs>
+      {/* Global focus banner — floats at the top of the active
+          tab when a focus session is in progress. Mounted after
+          <Tabs /> so it sits above the tab content in the z-order
+          (RN stacks later siblings on top). The banner's own
+          conditional render handles the "no session" case, and
+          we additionally suppress it on Today to avoid stacking
+          with the inline FocusToggle pill. */}
+      {!hideGlobalBanner && <GlobalFocusBanner />}
+    </View>
   );
 }
 

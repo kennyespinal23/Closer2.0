@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import {
@@ -6,6 +6,7 @@ import {
   SettingsSection,
   SettingsToggleRow,
 } from "@/components/SettingsScaffold";
+import { TimePickerModal } from "@/components/TimePickerModal";
 import { useColors } from "@/state/theme";
 import {
   BEFORE_THE_NOISE,
@@ -47,9 +48,24 @@ export default function NotificationsScreen() {
   const [permission, setPermission] =
     useState<NotificationPermissionStatus>("undetermined");
   const [busy, setBusy] = useState(false);
+  // Custom-time picker visibility. Opens via the Custom chip in
+  // the Time row; closes on Save (commits the picked time) or
+  // Cancel (no-op).
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const enabled = answers.notificationsEnabled ?? false;
   const time = answers.dailyReminderTime ?? DEFAULT_REMINDER_TIME;
+
+  // True when the active time isn't one of the chip presets —
+  // tells the chip row to highlight the Custom chip and surface
+  // the picked time as its label.
+  const isCustomTime = useMemo(
+    () =>
+      !ALL_PRESETS.some(
+        (p) => p.hour === time.hour && p.minute === time.minute,
+      ),
+    [time],
+  );
 
   // Read permission on mount so the disabled / "Open Settings"
   // state on the toggle is accurate even before the user interacts.
@@ -179,8 +195,15 @@ export default function NotificationsScreen() {
             </Text>
             <View className="flex-row flex-wrap" style={{ gap: 8 }}>
               {ALL_PRESETS.map((preset) => {
+                // A preset chip is "selected" only when the active
+                // time matches the preset AND no custom time is
+                // active. (Custom times that happen to equal a
+                // preset are treated as that preset by isCustomTime,
+                // so this check is redundant-safe but explicit.)
                 const selected =
-                  preset.hour === time.hour && preset.minute === time.minute;
+                  !isCustomTime &&
+                  preset.hour === time.hour &&
+                  preset.minute === time.minute;
                 return (
                   <TimeChip
                     key={`${preset.hour}-${preset.minute}`}
@@ -190,6 +213,16 @@ export default function NotificationsScreen() {
                   />
                 );
               })}
+              {/* Custom chip — opens the wheel modal. Same
+                  pattern as the onboarding screen so the picker
+                  feels like the same affordance in both places. */}
+              <CustomTimeChip
+                selected={isCustomTime}
+                label={
+                  isCustomTime ? formatReminderTime(time) : "Custom"
+                }
+                onPress={() => setPickerOpen(true)}
+              />
             </View>
           </View>
         )}
@@ -239,6 +272,18 @@ export default function NotificationsScreen() {
           You can mute everything from your phone&apos;s Settings app at any time.
         </Text>
       </View>
+
+      {/* Custom time picker. Mounted at the scaffold root so the
+          sheet floats over the entire settings surface. */}
+      <TimePickerModal
+        visible={pickerOpen}
+        initial={time}
+        onConfirm={(next) => {
+          handlePickTime(next);
+          setPickerOpen(false);
+        }}
+        onClose={() => setPickerOpen(false)}
+      />
     </SettingsScaffold>
   );
 }
@@ -298,6 +343,91 @@ function TimeChip({
         {label}
       </Text>
     </Pressable>
+  );
+}
+
+/**
+ * Custom-time chip — opens the bottom-sheet wheel picker. When
+ * a custom time has been picked, the chip shows that time so the
+ * user can see what they've set; otherwise it reads "Custom" with
+ * a leading clock glyph hinting "this opens a chooser". Mirrors
+ * the same component on the onboarding screen for visual + interaction
+ * consistency across the two surfaces that own this setting.
+ */
+function CustomTimeChip({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={
+        selected ? `Custom time: ${label}. Tap to change.` : "Pick a custom time"
+      }
+      accessibilityState={{ selected }}
+      className="rounded-full pl-2.5 pr-3.5 py-2 border flex-row items-center"
+      style={({ pressed }) => ({
+        backgroundColor: selected ? colors.primary : "transparent",
+        borderColor: selected ? colors.primary : colors.borderStrong,
+        opacity: pressed ? 0.85 : 1,
+      })}
+    >
+      {selected ? (
+        <PencilGlyph stroke={selected ? colors.primaryFg : colors.ink} />
+      ) : (
+        <ClockGlyph stroke={selected ? colors.primaryFg : colors.ink} />
+      )}
+      <Text
+        className="text-[13px] tracking-[-0.1px] ml-1.5"
+        style={{
+          fontFamily: "PlusJakartaSans_700Bold",
+          color: selected ? colors.primaryFg : colors.ink,
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function ClockGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 21a9 9 0 100-18 9 9 0 000 18z"
+        stroke={stroke}
+        strokeWidth={1.7}
+      />
+      <Path
+        d="M12 7v5l3 2"
+        stroke={stroke}
+        strokeWidth={1.7}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function PencilGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={11} height={11} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M4 20l4-1 11-11-3-3L5 16zM14 5l3 3"
+        stroke={stroke}
+        strokeWidth={1.7}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
   );
 }
 

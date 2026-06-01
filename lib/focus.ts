@@ -56,7 +56,14 @@ export type SocialAppId =
   | "x"
   | "reddit"
   | "facebook"
-  | "snapchat";
+  | "snapchat"
+  | "messages"
+  | "whatsapp"
+  | "discord"
+  | "telegram"
+  | "signal"
+  | "gmail"
+  | "chrome";
 
 export type SocialApp = {
   id: SocialAppId;
@@ -147,19 +154,102 @@ export const SOCIAL_APPS: ReadonlyArray<SocialApp> = [
     quietMessage:
       "Pause the moment. Let this sermon be the only conversation that has your attention right now.",
   },
+  {
+    id: "messages",
+    name: "Messages",
+    // The iMessage send-bubble green. Recognizable as "the Messages
+    // app" without needing the speech-bubble icon glyph.
+    color: "#34DA58",
+    initial: "M",
+    // Messages is qualitatively different from the social feeds —
+    // it's a one-to-one channel, often a lifeline. The copy
+    // acknowledges that ("anything urgent will keep") so the user
+    // doesn't feel like they're being told to ignore real people;
+    // they're being invited to give themselves permission to be
+    // unreachable for the few minutes the sermon takes.
+    quietMessage:
+      "Pause replies. Anything urgent will keep for the few minutes you're here — give yourself permission to be unreachable.",
+  },
+  {
+    id: "whatsapp",
+    name: "WhatsApp",
+    color: "#25D366",
+    initial: "W",
+    quietMessage:
+      "Pause the chats. Group threads will keep — let your phone be quiet for these few minutes.",
+  },
+  {
+    id: "discord",
+    name: "Discord",
+    color: "#5865F2",
+    initial: "D",
+    quietMessage:
+      "Pause Discord. The servers will keep without you — give your attention to the verse instead.",
+  },
+  {
+    id: "telegram",
+    name: "Telegram",
+    // Telegram's signature sky-blue. The 'T' initial duplicates
+    // TikTok's, but the colors (black vs blue) carry the distinction
+    // visually — same way Snapchat 'S' and Signal 'S' coexist below.
+    color: "#229ED9",
+    initial: "T",
+    quietMessage:
+      "Pause the chats. Any reply can wait until you're done — give yourself this small window of stillness.",
+  },
+  {
+    id: "signal",
+    name: "Signal",
+    color: "#3A76F0",
+    initial: "S",
+    quietMessage:
+      "Pause replies. You're choosing to be present here — Signal will hold your messages.",
+  },
+  {
+    id: "gmail",
+    name: "Gmail",
+    color: "#EA4335",
+    initial: "G",
+    // Email is the trickiest category — work emails feel urgent in
+    // a way feeds don't. We lead with "the inbox will keep" to
+    // disarm that "what if something important?" reflex, then
+    // frame the trade as a deliberate choice rather than a sacrifice.
+    quietMessage:
+      "The inbox will keep. Nothing in there is more urgent than the next few minutes with the Word.",
+  },
+  {
+    id: "chrome",
+    name: "Chrome",
+    // Chrome's brand color is technically the four-color logo, but
+    // its dominant single-color signature is the blue ring. Using
+    // the blue avoids forcing a custom multi-color glyph chip
+    // pattern just for one row.
+    color: "#4285F4",
+    initial: "C",
+    quietMessage:
+      "Close the tabs. The internet will be exactly where you left it once the sermon is done.",
+  },
 ];
 
 /**
- * The "default checked" set the picker starts with — Instagram,
- * TikTok, YouTube, X, Reddit, Facebook, Snapchat. The product
- * decision was the extended seven, not just the big four, so we
- * include the full list and let the user pare back if they want.
+ * The "default checked" set the picker starts with for new installs.
+ *
+ * Two tiers of opinionation:
+ *   • Default-checked: the social feeds and one-to-one chat apps —
+ *     everything that's primarily about catching attention. The
+ *     user can pare back from this list any time.
+ *   • Default-unchecked (but available): Gmail and Chrome. Email
+ *     and the browser have legitimate utility (work emails, looking
+ *     something up) where a hard block during reading would be
+ *     friction rather than focus. Users who want to commit those
+ *     too can opt in explicitly.
  *
  * The session state stores its own snapshot of `blockedAppIds` (not
  * a reference to this constant), so changing this default later
- * doesn't retroactively affect a user's saved preference.
+ * doesn't retroactively affect existing users' saved preferences.
  */
 export const DEFAULT_BLOCKED_APP_IDS: ReadonlyArray<SocialAppId> = [
+  // Feeds
   "instagram",
   "tiktok",
   "youtube",
@@ -167,6 +257,13 @@ export const DEFAULT_BLOCKED_APP_IDS: ReadonlyArray<SocialAppId> = [
   "reddit",
   "facebook",
   "snapchat",
+  // Chat
+  "messages",
+  "whatsapp",
+  "discord",
+  "telegram",
+  "signal",
+  // Gmail + Chrome intentionally OMITTED from defaults — see header.
 ];
 
 /**

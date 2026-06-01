@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 type OptionCardProps = {
   label: string;
@@ -17,6 +17,7 @@ type OptionCardProps = {
  *   needing a separate label
  */
 export function OptionCard({ label, selected, onPress }: OptionCardProps) {
+  const colors = useColors();
   return (
     <Pressable
       onPress={onPress}

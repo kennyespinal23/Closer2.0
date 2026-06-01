@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import Svg, { Path, Circle } from "react-native-svg";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 type BrandMarkProps = {
   size?: number;
@@ -11,6 +11,7 @@ type BrandMarkProps = {
  * Reads as "scripture + light" without being literal or kitschy.
  */
 export function BrandMark({ size = 56 }: BrandMarkProps) {
+  const colors = useColors();
   return (
     <View
       style={{

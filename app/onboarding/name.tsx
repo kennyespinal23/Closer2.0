@@ -11,11 +11,12 @@ import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { OnboardingHeader } from "@/components/OnboardingHeader";
 import { useOnboarding } from "@/state/onboarding";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 import { progressFor } from "@/constants/onboarding";
 
 export default function NameStep() {
   const router = useRouter();
+  const colors = useColors();
   const { answers, setAnswer } = useOnboarding();
   const [name, setName] = useState(answers.name);
   const [focused, setFocused] = useState(false);

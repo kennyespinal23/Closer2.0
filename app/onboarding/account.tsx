@@ -12,8 +12,8 @@ import { useRouter } from "expo-router";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingHeader } from "@/components/OnboardingHeader";
 import { SocialButton } from "@/components/SocialButton";
-import { colors } from "@/constants/theme";
 import { progressFor } from "@/constants/onboarding";
+import { useColors } from "@/state/theme";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
@@ -152,14 +152,15 @@ export default function AccountScreen() {
 // ─────────────────────────────────────────────────────────────────
 
 function CenteredHalo() {
+  const { accent } = useColors();
   const SIZE = 520;
   return (
     <Svg width={SIZE} height={SIZE} style={{ opacity: 0.7 }}>
       <Defs>
         <RadialGradient id="halo" cx="50%" cy="50%" rx="50%" ry="50%">
-          <Stop offset="0%" stopColor={colors.accent} stopOpacity={0.32} />
-          <Stop offset="40%" stopColor={colors.accent} stopOpacity={0.12} />
-          <Stop offset="100%" stopColor={colors.accent} stopOpacity={0} />
+          <Stop offset="0%" stopColor={accent} stopOpacity={0.32} />
+          <Stop offset="40%" stopColor={accent} stopOpacity={0.12} />
+          <Stop offset="100%" stopColor={accent} stopOpacity={0} />
         </RadialGradient>
       </Defs>
       <Rect x={0} y={0} width={SIZE} height={SIZE} fill="url(#halo)" />
@@ -180,6 +181,7 @@ type OrbProps = {
 };
 
 function FloatingOrb({ x, y, size, opacity, phase }: OrbProps) {
+  const { accent } = useColors();
   const translateY = useRef(new Animated.Value(0)).current;
   const fadeOpacity = useRef(new Animated.Value(0)).current;
 
@@ -228,7 +230,7 @@ function FloatingOrb({ x, y, size, opacity, phase }: OrbProps) {
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: colors.accent,
+        backgroundColor: accent,
         opacity: fadeOpacity,
         transform: [{ translateY }],
       }}

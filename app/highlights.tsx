@@ -3,7 +3,6 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import { colors } from "@/constants/theme";
 import {
   formatRef,
   relativeTime,
@@ -15,6 +14,7 @@ import {
   type HighlightColorId,
   useAnnotations,
 } from "@/state/annotations";
+import { useColors } from "@/state/theme";
 
 /**
  * All highlighted verses, newest first. Each card carries:
@@ -114,6 +114,7 @@ function ColorFilterRow({
   active: HighlightColorId | null;
   onChange: (next: HighlightColorId | null) => void;
 }) {
+  const colors = useColors();
   return (
     <View className="px-5 pt-4 pb-1 flex-row items-center">
       {/* "All" pill */}
@@ -288,6 +289,7 @@ function Header({
   countLabel?: string;
 }) {
   const router = useRouter();
+  const colors = useColors();
   return (
     <View className="flex-row items-center px-4 pt-2 pb-3">
       <Pressable

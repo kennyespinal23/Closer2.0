@@ -39,11 +39,30 @@ import { removeKey, STORAGE_KEYS, usePersistence } from "@/lib/storage";
 /** ISO date string (local time) — YYYY-MM-DD. */
 type DateISO = string;
 
+/**
+ * Per-hour ledger for the current day, used to draw the Apple-Fitness
+ * style "when did you read today" bar chart on the reading-goal
+ * detail screen.
+ *
+ * We only keep TODAY's hours (a fresh entry replaces the previous
+ * day's data on the first add() of a new day) so the on-disk payload
+ * stays bounded — ~24 entries instead of unbounded historical hour
+ * detail. If we ever want a yesterday/previous-day-detail view, the
+ * shape will graduate to `Record<DateISO, byHour>` with a TTL.
+ */
+type TodayByHour = {
+  dateISO: DateISO;
+  /** Hour key "0".."23" → minutes accumulated that hour. */
+  hours: Readonly<Record<string, number>>;
+};
+
 export type ReadingGoalState = {
   /** Daily target, in minutes. */
   goalMinutes: number;
   /** Per-day ledger: ISO date → minutes accumulated that day. */
   byDate: Readonly<Record<DateISO, number>>;
+  /** Per-hour breakdown for TODAY only. Reset on date rollover. */
+  todayByHour: TodayByHour | null;
 };
 
 /**
@@ -70,12 +89,23 @@ type ReadingGoalContextValue = ReadingGoalState & {
   /** Convenience: todayMinutes >= goalMinutes. */
   reachedToday: boolean;
   /**
+   * Today's minutes broken down by hour-of-day (0..23). Always
+   * returns a fully-populated array of 24 numbers — hours with no
+   * activity report 0. Convenient for chart renderers that want a
+   * stable axis.
+   */
+  todayByHourArray: number[];
+  /**
    * Add some fractional minutes to today's ledger. Returns the new
    * total + whether this call crossed the goal threshold.
    *
    * Designed to be safe to call at ~1Hz from the reader — passing
    * `1/60` once per second yields one tracked minute per minute on
    * the wall clock. Negative or NaN values are coerced to 0.
+   *
+   * Also rolls the per-hour ledger forward: increments the bucket
+   * for the current hour and resets the entire per-hour ledger on
+   * date rollover.
    */
   addMinutes: (delta: number) => AddMinutesResult;
   /** Replace the daily goal. Clamped to a sensible 1–120 min window. */
@@ -89,6 +119,7 @@ type ReadingGoalContextValue = ReadingGoalState & {
 const DEFAULT: ReadingGoalState = {
   goalMinutes: 10,
   byDate: {},
+  todayByHour: null,
 };
 
 /** Min/max guardrails on the goal-picker. */
@@ -106,6 +137,13 @@ export function ReadingGoalProvider({ children }: { children: ReactNode }) {
     setState({
       goalMinutes: clampGoal(loaded.goalMinutes ?? DEFAULT.goalMinutes),
       byDate: loaded.byDate ?? {},
+      // Drop the saved per-hour ledger if it's from a previous day —
+      // we only ever surface TODAY's per-hour breakdown, so a stale
+      // load would just confuse the chart.
+      todayByHour:
+        loaded.todayByHour && loaded.todayByHour.dateISO === todayISO()
+          ? loaded.todayByHour
+          : null,
     });
   }, []);
 
@@ -141,11 +179,35 @@ export function ReadingGoalProvider({ children }: { children: ReactNode }) {
         };
       }
 
+      // Hour-of-day bucket for the per-hour chart on the detail
+      // screen. We compute this inside the functional setState so
+      // the value is captured at the moment of the actual write
+      // (avoiding stale-closure races with React 18 batching).
+      const hourKey = String(new Date().getHours());
+
       setState((s) => {
         const sToday = s.byDate[today] ?? 0;
+
+        // Determine the per-hour ledger to write back to. If the
+        // saved one is for a previous day (or missing), start a
+        // fresh ledger for today. Otherwise build on what's there.
+        const prevTodayByHour =
+          s.todayByHour && s.todayByHour.dateISO === today
+            ? s.todayByHour
+            : { dateISO: today, hours: {} as Record<string, number> };
+
+        const prevHourTotal = prevTodayByHour.hours[hourKey] ?? 0;
+
         return {
           ...s,
           byDate: { ...s.byDate, [today]: sToday + safeDelta },
+          todayByHour: {
+            dateISO: today,
+            hours: {
+              ...prevTodayByHour.hours,
+              [hourKey]: prevHourTotal + safeDelta,
+            },
+          },
         };
       });
 
@@ -173,11 +235,29 @@ export function ReadingGoalProvider({ children }: { children: ReactNode }) {
   );
   const reachedToday = todayMinutes >= state.goalMinutes;
 
+  // Materialize the per-hour map into a dense 24-slot array so chart
+  // renderers can map straight from index → bar without worrying
+  // about missing keys or stale-day data.
+  const todayByHourArray = useMemo(() => {
+    const out = new Array<number>(24).fill(0);
+    if (!state.todayByHour || state.todayByHour.dateISO !== todayISO()) {
+      return out;
+    }
+    for (const [k, v] of Object.entries(state.todayByHour.hours)) {
+      const h = Number(k);
+      if (Number.isInteger(h) && h >= 0 && h < 24) {
+        out[h] = v;
+      }
+    }
+    return out;
+  }, [state.todayByHour]);
+
   const value = useMemo<ReadingGoalContextValue>(
     () => ({
       ...state,
       todayMinutes,
       reachedToday,
+      todayByHourArray,
       addMinutes,
       setGoalMinutes,
       reset,
@@ -187,6 +267,7 @@ export function ReadingGoalProvider({ children }: { children: ReactNode }) {
       state,
       todayMinutes,
       reachedToday,
+      todayByHourArray,
       addMinutes,
       setGoalMinutes,
       reset,

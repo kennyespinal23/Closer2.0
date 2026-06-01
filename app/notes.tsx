@@ -2,13 +2,13 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import { colors } from "@/constants/theme";
 import {
   formatRef,
   relativeTime,
   routeForVerse,
 } from "@/lib/annotationsFormat";
 import { type Note, useAnnotations } from "@/state/annotations";
+import { useColors } from "@/state/theme";
 
 /**
  * All notes — the user's running journal of reflections, sorted
@@ -115,6 +115,7 @@ function NoteCard({ note, onPress }: { note: Note; onPress: () => void }) {
 // ─────────────────────────────────────────────────────────────────
 
 function EmptyState() {
+  const colors = useColors();
   return (
     <View className="flex-1 items-center justify-center px-10">
       <View className="w-14 h-14 rounded-2xl bg-accent-soft border border-border items-center justify-center">
@@ -163,6 +164,7 @@ function Header({
   countLabel?: string;
 }) {
   const router = useRouter();
+  const colors = useColors();
   return (
     <View className="flex-row items-center px-4 pt-2 pb-3">
       <Pressable

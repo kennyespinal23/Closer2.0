@@ -15,8 +15,8 @@ import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { JournalEditor } from "@/components/JournalEditor";
 import { findMood, pickVerseForMood, type MoodVerse } from "@/constants/moods";
-import { colors } from "@/constants/theme";
 import { useCheckIns } from "@/state/checkIns";
+import { useColors } from "@/state/theme";
 
 /**
  * Step 2 of the check-in: verse delivery.
@@ -39,6 +39,7 @@ import { useCheckIns } from "@/state/checkIns";
  */
 export default function VerseDeliveryScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { mood: moodParam } = useLocalSearchParams<{ mood?: string }>();
   const { record, updateJournal, recentVerseKeys, log } = useCheckIns();
 

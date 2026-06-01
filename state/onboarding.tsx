@@ -8,13 +8,41 @@ import {
 } from "react";
 import { removeKey, STORAGE_KEYS, usePersistence } from "@/lib/storage";
 
+/**
+ * Time-of-day for the daily "Before The Noise" notification, stored
+ * as 24-hour `hour` (0..23) and `minute` (0..59). We persist the
+ * structured pair instead of an ISO string so the scheduler can pass
+ * it straight to `Notifications.scheduleNotificationAsync`'s
+ * `{hour, minute, repeats: true}` trigger without any parsing.
+ */
+export type DailyReminderTime = {
+  hour: number;
+  minute: number;
+};
+
 export type OnboardingAnswers = {
   name: string;
   /** What brings the user to Closer right now — one of the intent options. */
   intent?: string;
-  // future steps will extend this shape, e.g.
-  // notificationsEnabled?: boolean;
-  // dailyReminderTime?: string;
+  /**
+   * Whether the user accepted the daily "Before The Noise"
+   * notification during onboarding (or later in settings).
+   *
+   *   true   → notification is scheduled
+   *   false  → user deliberately turned it off
+   *   undefined → not yet decided (pre-prompt state)
+   *
+   * The tri-state matters so settings can render "Off" vs "Not set
+   * yet" differently without inferring it from time presence.
+   */
+  notificationsEnabled?: boolean;
+  /**
+   * When the daily notification fires. Defaults to 7:00 AM during
+   * onboarding (curated as the early-morning anchor) but the user
+   * can pick from a tight set of preset times or any custom time
+   * via settings.
+   */
+  dailyReminderTime?: DailyReminderTime;
 };
 
 type OnboardingContextValue = {

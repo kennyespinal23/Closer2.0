@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 /**
  * Full-screen modal for editing a note attached to a single verse.
@@ -44,6 +44,7 @@ export function NoteEditor({
   onDelete: () => void;
   onCancel: () => void;
 }) {
+  const colors = useColors();
   const [text, setText] = useState(initialNote);
   const inputRef = useRef<TextInput>(null);
   const hasInitial = initialNote.trim().length > 0;

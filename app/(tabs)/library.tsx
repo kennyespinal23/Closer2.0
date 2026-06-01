@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-  Animated,
   Pressable,
   ScrollView,
   Text,
@@ -14,182 +13,192 @@ import Svg, { Path } from "react-native-svg";
 import { BookCover } from "@/components/BookCover";
 import { FadeIn } from "@/components/FadeIn";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
-import { colors } from "@/constants/theme";
 import {
   type Book,
+  type BookCategory,
   BOOKS,
-  filterBooks,
   findBookById,
-  groupByCategory,
-  type Testament,
+  NT_CATEGORY_ORDER,
+  OT_CATEGORY_ORDER,
 } from "@/constants/books";
 import { hasBookCover } from "@/constants/bookCovers";
 import { useProgress } from "@/state/progress";
+import { useColors } from "@/state/theme";
 
 /**
- * Library — Apple Books-style browse surface for the canon.
+ * Library — Imprint-inspired browse grid.
  *
- * Two modes:
+ * Anatomy (top → bottom):
  *
- *   1. Browse (no search query)
- *      • Continue Reading hero — pulled from progress.lastVisited
- *        when present. Big cover, picks up at the last chapter.
- *      • Illustrated Editions rail — books with hand-painted art
- *        (currently Job; grows as we ship more covers).
- *      • Testament switcher (Old / New) — pill with a sliding
- *        bubble. Drives the rails below.
- *      • Per-category rails — one per BookCategory in the active
- *        testament. Each rail is a horizontal scroller of portrait
- *        3:4 cover tiles, with the book's name + chapter count
- *        beneath. Reads like flipping through a shelf.
+ *   ┌──────────────────────────────────────────┐
+ *   │  Explore All 66 Books        (big title) │
+ *   │                                          │
+ *   │  [ search field ]                        │
+ *   │                                          │
+ *   │  ( All ) ( The Law ) ( Wisdom ) …        │ ← horizontal pill rail
+ *   │                                          │
+ *   │  All (66 books)                          │ ← section title for active filter
+ *   │  ┌─────────┐  ┌─────────┐                │
+ *   │  │  cover  │  │  cover  │                │ ← 2-col grid of book tiles
+ *   │  │  GEN    │  │  EX     │                │
+ *   │  └─────────┘  └─────────┘                │
+ *   │   Genesis     Exodus                     │
+ *   │   50 chapters 40 chapters                │
+ *   │  …                                       │
+ *   └──────────────────────────────────────────┘
  *
- *   2. Search (query present)
- *      • Hides hero + rails entirely.
- *      • Shows a flat grid of matching covers across BOTH
- *        testaments — when the user knows what they want, the
- *        testament filter is friction, not help.
+ * Why this shape (vs. the old curated rails):
+ *   Imprint's library is a flat browsable surface. One filter
+ *   axis (here: canon category instead of academic topic), one
+ *   grid. Easier to scan, fewer modes, no testament toggle to
+ *   pre-filter the rails. The Continue Reading hero from the
+ *   old layout moved to the Today screen — Library is now pure
+ *   discovery.
  *
- * The grid uses portrait 3:4 covers throughout (matching Apple
- * Books' Library tab) — `BookCover` already handles real art vs.
- * the gradient placeholder per book.
+ * Filter semantics:
+ *   • "all"          → every book in canonical order
+ *   • "Old"          → all OT books
+ *   • "New"          → all NT books
+ *   • <BookCategory> → just that grouping (Wisdom & Poetry, etc.)
+ *
+ * Search overrides the filter — when the user types, we ignore
+ * the active pill and search across the full canon. (Matches
+ * Apple Books' behavior: search is a mode, not a filter.)
  */
+type LibraryFilter = "all" | "old" | "new" | BookCategory;
+
+/**
+ * Ordered list of filters surfaced as pills. "All" first, then
+ * the two testaments, then every category in canonical order
+ * (OT first, then NT — same order the user encounters them
+ * cracking open the book).
+ */
+const FILTERS: ReadonlyArray<LibraryFilter> = [
+  "all",
+  "old",
+  "new",
+  ...OT_CATEGORY_ORDER,
+  ...NT_CATEGORY_ORDER,
+];
+
+function labelForFilter(f: LibraryFilter): string {
+  if (f === "all") return "All";
+  if (f === "old") return "Old Testament";
+  if (f === "new") return "New Testament";
+  return f;
+}
+
 export default function LibraryScreen() {
   const router = useRouter();
-  const [testament, setTestament] = useState<Testament>("old");
+  const [filter, setFilter] = useState<LibraryFilter>("all");
   const [query, setQuery] = useState("");
-  const { lastVisited } = useProgress();
+  const { lastVisited, hasReadChapter } = useProgress();
 
-  // Browse data — only computed when the user isn't searching.
-  const groups = useMemo(
-    () => groupByCategory(filterBooks(testament, ""), testament),
-    [testament],
-  );
-
-  // Search data — flat list across both testaments.
-  const searchResults = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return BOOKS.filter(
-      (b) =>
-        b.name.toLowerCase().includes(q) ||
-        b.abbr.toLowerCase().includes(q),
-    );
-  }, [query]);
-
+  // Search takes precedence over the active filter — when the user
+  // types we hide the section header and surface a flat match grid.
   const isSearching = query.trim().length > 0;
 
-  // Illustrated rail — every book that has a hand-painted cover.
-  // As the catalog of art grows this rail automatically grows with it.
-  const illustrated = useMemo(
-    () => BOOKS.filter((b) => hasBookCover(b.id)),
-    [],
-  );
+  const filteredBooks = useMemo(() => {
+    if (isSearching) {
+      const q = query.trim().toLowerCase();
+      return BOOKS.filter(
+        (b) =>
+          b.name.toLowerCase().includes(q) ||
+          b.abbr.toLowerCase().includes(q),
+      );
+    }
+    if (filter === "all") return BOOKS;
+    if (filter === "old") return BOOKS.filter((b) => b.testament === "old");
+    if (filter === "new") return BOOKS.filter((b) => b.testament === "new");
+    return BOOKS.filter((b) => b.category === filter);
+  }, [filter, query, isSearching]);
 
-  // Continue reading — resolve the lastVisited id back to a Book so
-  // we can render its cover/name without coupling the hero to the
-  // shape of the progress state.
-  const continueBook = lastVisited ? findBookById(lastVisited.bookId) : null;
+  // Continue Reading — moved here from the Home screen. Surfaces
+  // the user's most recent reader visit so they can pick up exactly
+  // where they left off, OR roll naturally into the next chapter
+  // if they already finished what they last opened. Hidden when
+  // there's nothing fresh to point at (stale > 14 days, or end of
+  // book with no next chapter), so the Library doesn't grow a
+  // permanent "ghost" hero.
+  const continueReading = useMemo(
+    () => computeContinueReading(lastVisited, hasReadChapter),
+    [lastVisited, hasReadChapter],
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: TAB_BAR_TOTAL_HEIGHT + 24 }}
+        contentContainerStyle={{
+          paddingBottom: TAB_BAR_TOTAL_HEIGHT + 24,
+        }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
-        {/* ─── Header ─────────────────────────────────────────── */}
+        {/* ─── Big title ──────────────────────────────────────── */}
         <FadeIn delayMs={0} durationMs={700}>
-          <View className="px-6 pt-2">
+          <View className="px-6 pt-2 pb-1">
             <Text
-              className="text-ink-subtle text-[11px] uppercase tracking-[2.5px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              className="text-ink text-[28px] leading-[34px] tracking-[-0.5px]"
+              style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
             >
-              Library
-            </Text>
-            <Text
-              className="text-ink text-[34px] leading-[40px] tracking-[-0.6px] mt-1.5"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-            >
-              The Word
-            </Text>
-            <Text
-              className="text-ink-muted text-[14px] leading-[20px] mt-2"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-            >
-              Sixty-six books. One quiet, unbroken story.
+              Explore All {BOOKS.length} Books
             </Text>
           </View>
         </FadeIn>
 
+        {/* ─── Continue Reading hero (conditional) ────────────────
+            Sits between the title and search so the user lands on
+            either "what I was just reading" or "what's available
+            to read" — never both fighting for the first scroll. */}
+        {continueReading && (
+          <FadeIn delayMs={70} durationMs={800}>
+            <View className="px-6 mt-5">
+              <ContinueReadingHero
+                book={continueReading.book}
+                chapter={continueReading.chapter}
+                hint={continueReading.hint}
+                onPress={() =>
+                  router.push(
+                    `/book/${continueReading.book.id}/${continueReading.chapter}`,
+                  )
+                }
+              />
+            </View>
+          </FadeIn>
+        )}
+
         {/* ─── Search ─────────────────────────────────────────── */}
         <SearchField value={query} onChangeText={setQuery} />
 
-        {isSearching ? (
-          /* ─── Search results ─── */
-          <SearchResults
-            results={searchResults}
-            query={query}
+        {/* ─── Filter pills — horizontal scroll ───────────────── */}
+        <FilterPills
+          value={filter}
+          onChange={(next) => {
+            setFilter(next);
+            // Clear search when the user picks a filter so the new
+            // section reflects the pill they just tapped, not the
+            // search residue.
+            if (query.length > 0) setQuery("");
+          }}
+          disabled={isSearching}
+        />
+
+        {/* ─── Section header (current filter or search count) ── */}
+        <SectionHeader
+          title={isSearching ? "Search" : labelForFilter(filter)}
+          count={filteredBooks.length}
+          isSearch={isSearching}
+        />
+
+        {/* ─── Grid ───────────────────────────────────────────── */}
+        {filteredBooks.length === 0 ? (
+          <EmptyState query={query} />
+        ) : (
+          <BookGrid
+            books={filteredBooks}
             onPick={(b) => router.push(`/book/${b.id}`)}
           />
-        ) : (
-          <>
-            {/* ─── Continue Reading hero ────────────────────── */}
-            {continueBook && lastVisited && (
-              <FadeIn delayMs={150} durationMs={900}>
-                <ContinueReadingHero
-                  book={continueBook}
-                  chapter={lastVisited.chapter}
-                  visitedAt={lastVisited.visitedAt}
-                  onPress={() =>
-                    router.push(
-                      `/book/${continueBook.id}/${lastVisited.chapter}` as never,
-                    )
-                  }
-                />
-              </FadeIn>
-            )}
-
-            {/* ─── Illustrated rail ─────────────────────────── */}
-            {illustrated.length > 0 && (
-              <FadeIn delayMs={250} durationMs={900}>
-                <IllustratedRail
-                  books={illustrated}
-                  onPick={(b) => router.push(`/book/${b.id}`)}
-                />
-              </FadeIn>
-            )}
-
-            {/* ─── Testament switcher ──────────────────────── */}
-            <FadeIn delayMs={350} durationMs={900}>
-              <TestamentSegments value={testament} onChange={setTestament} />
-            </FadeIn>
-
-            {/* ─── Per-category rails ──────────────────────── */}
-            {groups.map(({ category, books }, idx) => (
-              <FadeIn
-                key={category}
-                delayMs={450 + idx * 60}
-                durationMs={900}
-              >
-                <CategoryRail
-                  title={category}
-                  books={books}
-                  onPick={(b) => router.push(`/book/${b.id}`)}
-                />
-              </FadeIn>
-            ))}
-
-            <FadeIn delayMs={800} durationMs={900}>
-              <View className="px-6 mt-12">
-                <Text
-                  className="text-ink-muted text-[12.5px] leading-[19px] text-center"
-                  style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-                >
-                  Every chapter is a doorway.{"\n"}Walk through one tonight.
-                </Text>
-              </View>
-            </FadeIn>
-          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -197,259 +206,253 @@ export default function LibraryScreen() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Continue Reading hero — the "Reading Now" anchor of the page
+// Filter pills — horizontal rail
 // ─────────────────────────────────────────────────────────────────
 
 /**
- * Large cover + chapter info + CTA. Mirrors Apple Books' "Reading
- * Now" hero — when the user has an in-progress book the app's first
- * job is to make resuming it one tap away.
- *
- * Hits the chapter route directly (not the book overview) so a tap
- * really IS resuming, not navigating-then-navigating.
+ * Imprint-style filter pills. Active = primary outline + ink text;
+ * inactive = surface fill + muted text. Disabled (during search)
+ * dims the whole rail so it reads as inert.
  */
-function ContinueReadingHero({
-  book,
-  chapter,
-  visitedAt,
-  onPress,
+function FilterPills({
+  value,
+  onChange,
+  disabled,
 }: {
-  book: Book;
-  chapter: number;
-  visitedAt: number;
-  onPress: () => void;
+  value: LibraryFilter;
+  onChange: (next: LibraryFilter) => void;
+  disabled: boolean;
 }) {
-  const { width: screenWidth } = useWindowDimensions();
-  // Cover is bounded so the hero never dominates the screen — the
-  // rails beneath need to peek so the user understands the page
-  // keeps going.
-  const COVER_W = Math.min(110, Math.round(screenWidth * 0.28));
-  const COVER_H = Math.round((COVER_W * 4) / 3); // 3:4 portrait
-
   return (
-    <View className="px-6 mt-7">
-      <Text
-        className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3 ml-1"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-      >
-        Continue Reading
-      </Text>
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
-      >
-        <View className="rounded-3xl border border-border bg-surface p-5 flex-row">
-          <View style={{ width: COVER_W, height: COVER_H }}>
-            <BookCover book={book} variant="card" />
-          </View>
-          <View className="flex-1 ml-5 justify-between py-1">
-            <View>
-              <Text
-                className="text-ink-subtle text-[10.5px] tracking-[2px] uppercase"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-              >
-                {book.category}
-              </Text>
-              <Text
-                className="text-ink text-[20px] leading-[24px] tracking-[-0.3px] mt-1.5"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-                numberOfLines={1}
-              >
-                {book.name}
-              </Text>
-              <Text
-                className="text-ink-muted text-[13px] mt-1"
-                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-                numberOfLines={1}
-              >
-                Picking up at chapter {chapter}
-              </Text>
-            </View>
-            <View className="flex-row items-center mt-3">
-              <Text
-                className="text-primary text-[12.5px] mr-1.5"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-              >
-                Open chapter
-              </Text>
-              <PlayChevronIcon />
-              <Text
-                className="text-ink-subtle text-[11px] ml-auto"
-                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-              >
-                {relativeMoment(visitedAt)}
-              </Text>
-            </View>
-          </View>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: 4,
+      }}
+      style={{ opacity: disabled ? 0.45 : 1 }}
+      scrollEnabled={!disabled}
+    >
+      {FILTERS.map((f, i) => (
+        <View key={f} style={{ marginRight: i === FILTERS.length - 1 ? 0 : 8 }}>
+          <FilterPill
+            label={labelForFilter(f)}
+            active={value === f}
+            onPress={() => !disabled && onChange(f)}
+          />
         </View>
-      </Pressable>
-    </View>
+      ))}
+    </ScrollView>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Illustrated rail — books that ship with hand-painted covers
-// ─────────────────────────────────────────────────────────────────
-
-/**
- * Apple Books "Featured" rail equivalent — but tuned to OUR
- * library, where the bespoke covers are the marketing. Books with
- * real art get a bigger treatment than the catalog rails below
- * (they're literally the point of the curated shelf).
- */
-function IllustratedRail({
-  books,
-  onPick,
+function FilterPill({
+  label,
+  active,
+  onPress,
 }: {
-  books: ReadonlyArray<Book>;
-  onPick: (b: Book) => void;
+  label: string;
+  active: boolean;
+  onPress: () => void;
 }) {
+  const colors = useColors();
   return (
-    <View className="mt-9">
-      <View className="px-6 mb-3">
-        <View className="flex-row items-baseline justify-between">
-          <Text
-            className="text-ink text-[18px] tracking-[-0.2px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            Illustrated Editions
-          </Text>
-          <Text
-            className="text-ink-subtle text-[11px] tracking-[2px] uppercase"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            {books.length}
-          </Text>
-        </View>
-        <Text
-          className="text-ink-muted text-[12.5px] mt-1"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-        >
-          Books with covers painted just for Closer.
-        </Text>
-      </View>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: 24,
-          paddingRight: 24,
+    <Pressable
+      onPress={onPress}
+      hitSlop={6}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+    >
+      <View
+        style={{
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          borderRadius: 999,
+          borderWidth: 1.5,
+          // Active = surface backdrop with primary (ink) outline,
+          // mirroring Imprint's selected chip. Inactive = same
+          // surface with a neutral border that fades into the bg.
+          backgroundColor: colors.surface,
+          borderColor: active ? colors.primary : colors.border,
         }}
       >
-        {books.map((book, i) => (
-          <View
-            key={book.id}
-            style={{ marginRight: i === books.length - 1 ? 0 : 14 }}
-          >
-            <BookTile book={book} size="lg" onPress={() => onPick(book)} />
-          </View>
-        ))}
-      </ScrollView>
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Category rail — one rail per category in the active testament
-// ─────────────────────────────────────────────────────────────────
-
-function CategoryRail({
-  title,
-  books,
-  onPick,
-}: {
-  title: string;
-  books: ReadonlyArray<Book>;
-  onPick: (b: Book) => void;
-}) {
-  return (
-    <View className="mt-9">
-      <View className="px-6 mb-3 flex-row items-baseline justify-between">
         <Text
-          className="text-ink text-[17px] tracking-[-0.2px]"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{
+            fontFamily: active
+              ? "PlusJakartaSans_700Bold"
+              : "PlusJakartaSans_600SemiBold",
+            fontSize: 13.5,
+            color: active ? colors.ink : colors.inkMuted,
+            letterSpacing: -0.1,
+          }}
+          numberOfLines={1}
         >
-          {title}
-        </Text>
-        <Text
-          className="text-ink-subtle text-[11px] tracking-[2px] uppercase"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-        >
-          {books.length} {books.length === 1 ? "book" : "books"}
+          {label}
         </Text>
       </View>
+    </Pressable>
+  );
+}
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingRight: 24 }}
+// ─────────────────────────────────────────────────────────────────
+// Section header — title of the active filter + book count
+// ─────────────────────────────────────────────────────────────────
+
+function SectionHeader({
+  title,
+  count,
+  isSearch,
+}: {
+  title: string;
+  count: number;
+  isSearch: boolean;
+}) {
+  return (
+    <View className="px-6 mt-7 mb-4 flex-row items-baseline justify-between">
+      <Text
+        className="text-ink text-[22px] tracking-[-0.3px]"
+        style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
       >
-        {books.map((book, i) => (
-          <View
-            key={book.id}
-            style={{ marginRight: i === books.length - 1 ? 0 : 12 }}
-          >
-            <BookTile book={book} size="md" onPress={() => onPick(book)} />
-          </View>
-        ))}
-      </ScrollView>
+        {title}
+      </Text>
+      <Text
+        className="text-ink-subtle text-[12px] tracking-[1.5px] uppercase"
+        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+      >
+        {count} {isSearch ? (count === 1 ? "match" : "matches") : count === 1 ? "book" : "books"}
+      </Text>
     </View>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Book tile — the unit of the rails
+// Book grid — 2-column vertical grid of cover tiles
 // ─────────────────────────────────────────────────────────────────
 
 /**
- * A single tappable book cover with its name + chapter count below.
- * Two sizes:
- *   • md (96pt)  — used in category rails (3+ visible at once)
- *   • lg (136pt) — used in the Illustrated rail (~2.5 visible)
- *
- * Covers always render at 3:4 portrait via the shared `BookCover`
- * component, so a real cover sits next to a placeholder seamlessly.
+ * Two-column grid (matching Imprint's courses layout). Each tile
+ * renders a 3:4 portrait cover plus title and chapter count. We
+ * compute the column width from the screen so the grid stays
+ * symmetric on every device without hardcoding.
  */
-function BookTile({
+function BookGrid({
+  books,
+  onPick,
+}: {
+  books: ReadonlyArray<Book>;
+  onPick: (b: Book) => void;
+}) {
+  const { width: screenWidth } = useWindowDimensions();
+  const SIDE = 24;
+  const GAP = 16;
+  const COLS = 2;
+  const colWidth = Math.floor(
+    (screenWidth - SIDE * 2 - GAP * (COLS - 1)) / COLS,
+  );
+
+  return (
+    <View
+      style={{
+        paddingHorizontal: SIDE,
+        flexDirection: "row",
+        flexWrap: "wrap",
+      }}
+    >
+      {books.map((book, i) => {
+        // Right column = every odd index → no right margin so the
+        // row clips flush against the screen edge inset.
+        const isRight = i % COLS === COLS - 1;
+        return (
+          <View
+            key={book.id}
+            style={{
+              width: colWidth,
+              marginRight: isRight ? 0 : GAP,
+              marginBottom: 22,
+            }}
+          >
+            <BookGridTile book={book} onPress={() => onPick(book)} />
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+/**
+ * Single grid cell — cover artwork on top, name + chapter count
+ * underneath. Books with hand-painted covers get a small "ART"
+ * badge in the top-right (Imprint surfaces "NEW" the same way).
+ */
+function BookGridTile({
   book,
-  size,
   onPress,
 }: {
   book: Book;
-  size: "md" | "lg";
   onPress: () => void;
 }) {
-  const WIDTH = size === "lg" ? 136 : 96;
-  const HEIGHT = Math.round((WIDTH * 4) / 3);
+  const colors = useColors();
+  const illustrated = hasBookCover(book.id);
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+      accessibilityRole="button"
+      accessibilityLabel={`Open ${book.name}`}
     >
-      <View style={{ width: WIDTH }}>
-        <View style={{ width: WIDTH, height: HEIGHT }}>
-          <BookCover book={book} variant={size === "lg" ? "card" : "thumb"} />
-        </View>
-        <Text
-          className="text-ink text-[12.5px] mt-2"
-          style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            letterSpacing: -0.1,
-          }}
-          numberOfLines={1}
-        >
-          {book.name}
-        </Text>
-        <Text
-          className="text-ink-subtle text-[10.5px] mt-0.5"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-          numberOfLines={1}
-        >
-          {book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}
-        </Text>
+      <View style={{ position: "relative" }}>
+        <BookCover book={book} variant="card" />
+        {illustrated && (
+          <View
+            style={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              borderRadius: 999,
+              backgroundColor: "rgba(255,255,255,0.92)",
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_800ExtraBold",
+                fontSize: 9.5,
+                color: "#0F0F10",
+                letterSpacing: 1,
+              }}
+            >
+              ART
+            </Text>
+          </View>
+        )}
       </View>
+      <Text
+        style={{
+          fontFamily: "PlusJakartaSans_700Bold",
+          fontSize: 14.5,
+          color: colors.ink,
+          letterSpacing: -0.2,
+          marginTop: 10,
+        }}
+        numberOfLines={1}
+      >
+        {book.name}
+      </Text>
+      <Text
+        style={{
+          fontFamily: "PlusJakartaSans_500Medium",
+          fontSize: 11.5,
+          color: colors.inkSubtle,
+          marginTop: 2,
+        }}
+        numberOfLines={1}
+      >
+        {book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}
+      </Text>
     </Pressable>
   );
 }
@@ -465,9 +468,12 @@ function SearchField({
   value: string;
   onChangeText: (next: string) => void;
 }) {
+  const colors = useColors();
   return (
-    <View className="mx-5 mt-6 flex-row items-center bg-surface border border-border rounded-2xl px-4 py-3">
-      <SearchIcon />
+    <View
+      className="mx-5 mt-5 flex-row items-center bg-surface border border-border rounded-2xl px-4 py-3"
+    >
+      <SearchIcon stroke={colors.inkSubtle} />
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -486,7 +492,7 @@ function SearchField({
       />
       {value.length > 0 && (
         <Pressable onPress={() => onChangeText("")} hitSlop={10}>
-          <ClearIcon />
+          <ClearIcon stroke={colors.inkSubtle} />
         </Pressable>
       )}
     </View>
@@ -494,179 +500,15 @@ function SearchField({
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Search results — a 3-column grid of matching covers
-// ─────────────────────────────────────────────────────────────────
-
-/**
- * When the user has a search query, hide the curated browse layout
- * and render a flat grid. Apple Books does the same — search is a
- * different mode, not a filter over the browse view.
- *
- * Grid is 3 columns of 3:4 portrait covers with names beneath.
- */
-function SearchResults({
-  results,
-  query,
-  onPick,
-}: {
-  results: ReadonlyArray<Book>;
-  query: string;
-  onPick: (b: Book) => void;
-}) {
-  const { width: screenWidth } = useWindowDimensions();
-  const COLS = 3;
-  const SIDE = 24;
-  const GAP = 14;
-  const colWidth = Math.floor(
-    (screenWidth - SIDE * 2 - GAP * (COLS - 1)) / COLS,
-  );
-
-  if (results.length === 0) {
-    return <EmptyState query={query} />;
-  }
-
-  return (
-    <View className="mt-7 px-6">
-      <Text
-        className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3 ml-1"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-      >
-        {results.length} {results.length === 1 ? "match" : "matches"}
-      </Text>
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          marginHorizontal: -GAP / 2,
-        }}
-      >
-        {results.map((book) => (
-          <View
-            key={book.id}
-            style={{
-              width: colWidth,
-              marginHorizontal: GAP / 2,
-              marginBottom: 18,
-            }}
-          >
-            <BookTile book={book} size="md" onPress={() => onPick(book)} />
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Testament segmented control — sliding bubble, two slots
-// ─────────────────────────────────────────────────────────────────
-
-function TestamentSegments({
-  value,
-  onChange,
-}: {
-  value: Testament;
-  onChange: (next: Testament) => void;
-}) {
-  const [trackWidth, setTrackWidth] = useState(0);
-  const slotWidth = trackWidth / 2;
-  const bubbleX = useMemo(() => new Animated.Value(0), []);
-
-  const handle = (next: Testament) => {
-    if (next === value) return;
-    onChange(next);
-    Animated.spring(bubbleX, {
-      toValue: next === "old" ? 0 : slotWidth,
-      useNativeDriver: true,
-      tension: 100,
-      friction: 14,
-    }).start();
-  };
-
-  return (
-    <View
-      className="mx-5 mt-9 rounded-2xl border border-border bg-surface p-1"
-      onLayout={(e) => {
-        const w = e.nativeEvent.layout.width - 8;
-        setTrackWidth(w);
-        bubbleX.setValue(value === "old" ? 0 : w / 2);
-      }}
-    >
-      <View style={{ position: "relative", height: 38 }}>
-        {slotWidth > 0 && (
-          <Animated.View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: slotWidth,
-              height: 38,
-              backgroundColor: colors.accentSoft,
-              borderRadius: 12,
-              transform: [{ translateX: bubbleX }],
-            }}
-          />
-        )}
-        <View style={{ flexDirection: "row" }}>
-          <Segment
-            label="Old Testament"
-            active={value === "old"}
-            onPress={() => handle("old")}
-          />
-          <Segment
-            label="New Testament"
-            active={value === "new"}
-            onPress={() => handle("new")}
-          />
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function Segment({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} style={{ flex: 1 }}>
-      <View
-        style={{
-          height: 38,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text
-          style={{
-            fontFamily: "PlusJakartaSans_600SemiBold",
-            fontSize: 13,
-            color: active ? colors.ink : colors.inkMuted,
-            letterSpacing: 0.1,
-          }}
-        >
-          {label}
-        </Text>
-      </View>
-    </Pressable>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Empty state for searches that match nothing
+// Empty state — shown when a search yields nothing
 // ─────────────────────────────────────────────────────────────────
 
 function EmptyState({ query }: { query: string }) {
+  const colors = useColors();
   return (
-    <View className="px-6 mt-16 items-center">
+    <View className="px-6 mt-12 items-center">
       <View className="w-12 h-12 rounded-2xl bg-surface border border-border items-center justify-center mb-4">
-        <SearchIcon size={18} />
+        <SearchIcon size={18} stroke={colors.inkSubtle} />
       </View>
       <Text
         className="text-ink text-[16px]"
@@ -687,42 +529,157 @@ function EmptyState({ query }: { query: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Helpers
+// Continue Reading hero — moved here from the Home screen
 // ─────────────────────────────────────────────────────────────────
 
 /**
- * Friendly relative time used by the Continue Reading hero. Goes
- * down to "Just now" within a minute, then minutes, hours, "Yesterday",
- * days; falls back to a date label past a week.
+ * Compact "pick up where you left off" hero. A small portrait
+ * cover on the left, the chapter reference + a kind hint line on
+ * the right, plus a chevron. Sits at the very top of the Library
+ * tab when the user has a fresh recent visit — replaces the home
+ * screen's old ContinueReadingCard now that Home is sermon + feel
+ * + activity only.
+ *
+ * Three states the consumer should know about:
+ *   • visited chapter unread       → "Pick up where you left off"
+ *   • visited chapter read, has +1 → "You finished <book> <ch>"
+ *   • too old / end-of-book        → consumer hides the hero
+ *
+ * Display is identical for the first two states (the hint string
+ * carries the difference), so this component stays dumb.
  */
-function relativeMoment(epochMs: number): string {
-  const now = Date.now();
-  const diff = Math.max(0, now - epochMs);
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "Just now";
-  if (m < 60) return `${m} min ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  if (d === 1) return "Yesterday";
-  if (d < 7) return `${d} days ago`;
-  const date = new Date(epochMs);
-  return date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
+function ContinueReadingHero({
+  book,
+  chapter,
+  hint,
+  onPress,
+}: {
+  book: Book;
+  chapter: number;
+  hint: string;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  const { width: screenWidth } = useWindowDimensions();
+  // Bound the cover so the hero never dominates — the grid below
+  // needs to peek for the page to read as a list, not a takeover.
+  const COVER_W = Math.min(96, Math.round(screenWidth * 0.24));
+  const COVER_H = Math.round((COVER_W * 4) / 3);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Continue reading ${book.name} ${chapter}`}
+      className="rounded-3xl border border-border bg-surface p-4 flex-row items-center"
+      style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
+    >
+      <View style={{ width: COVER_W, height: COVER_H }}>
+        <BookCover book={book} variant="card" />
+      </View>
+      <View className="flex-1 ml-4 justify-center">
+        <Text
+          className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase"
+          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        >
+          Continue Reading
+        </Text>
+        <Text
+          className="text-ink text-[18px] leading-[22px] tracking-[-0.3px] mt-1"
+          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          numberOfLines={1}
+        >
+          {book.name} {chapter}
+        </Text>
+        <Text
+          className="text-ink-muted text-[12.5px] mt-1.5"
+          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          numberOfLines={1}
+        >
+          {hint}
+        </Text>
+      </View>
+      <View className="pl-2 items-center justify-center">
+        <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M9 6l6 6-6 6"
+            stroke={colors.ink}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+      </View>
+    </Pressable>
+  );
+}
+
+/**
+ * Decide whether (and what) to surface in the Continue Reading
+ * hero. Mirrors the rules the old Home-screen helper used, minus
+ * the "today's curated reading" de-dupe — the Library tab doesn't
+ * surface today's reading, so there's nothing to clash with here.
+ *
+ * Rules:
+ *   • Need a last visit, within the last 14 days (older than that
+ *     and "continue" stops feeling honest — slightly more forgiving
+ *     than the 7-day home cutoff because Library is browse-first).
+ *   • If the visited chapter ISN'T marked as read → resume there.
+ *   • If it IS read → suggest the next chapter (the natural flow).
+ *   • Hidden entirely when there's no fresh visit, no resolvable
+ *     book, or the user is sitting at the last chapter of the
+ *     book (nothing forward to point at).
+ */
+function computeContinueReading(
+  lastVisited: {
+    bookId: string;
+    chapter: number;
+    visitedAt: number;
+  } | null,
+  hasReadChapter: (bookId: string, chapter: number) => boolean,
+): { book: Book; chapter: number; hint: string } | null {
+  if (!lastVisited) return null;
+
+  const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+  if (Date.now() - lastVisited.visitedAt > FOURTEEN_DAYS_MS) return null;
+
+  const book = findBookById(lastVisited.bookId);
+  if (!book) return null;
+
+  const lastRead = hasReadChapter(lastVisited.bookId, lastVisited.chapter);
+  if (!lastRead) {
+    return {
+      book,
+      chapter: lastVisited.chapter,
+      hint: "Pick up where you left off",
+    };
+  }
+
+  const nextChapter = lastVisited.chapter + 1;
+  if (nextChapter > book.chapters) return null;
+  return {
+    book,
+    chapter: nextChapter,
+    hint: `You finished ${book.name} ${lastVisited.chapter}`,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────
 // Icons
 // ─────────────────────────────────────────────────────────────────
 
-function SearchIcon({ size = 16 }: { size?: number }) {
+function SearchIcon({
+  size = 16,
+  stroke,
+}: {
+  size?: number;
+  stroke: string;
+}) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
         d="M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4-4"
-        stroke={colors.inkSubtle}
+        stroke={stroke}
         strokeWidth={1.8}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -731,27 +688,13 @@ function SearchIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-function ClearIcon() {
+function ClearIcon({ stroke }: { stroke: string }) {
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
       <Path
         d="M12 22a10 10 0 100-20 10 10 0 000 20zM9 9l6 6M15 9l-6 6"
-        stroke={colors.inkSubtle}
+        stroke={stroke}
         strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function PlayChevronIcon() {
-  return (
-    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M9 6l6 6-6 6"
-        stroke={colors.primary}
-        strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
       />

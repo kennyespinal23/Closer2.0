@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
@@ -5,23 +6,79 @@ import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingHeader } from "@/components/OnboardingHeader";
-import { colors } from "@/constants/theme";
 import { progressFor } from "@/constants/onboarding";
+import { useColors } from "@/state/theme";
+import {
+  DEFAULT_REMINDER_TIME,
+  formatReminderTime,
+  requestNotificationPermission,
+  scheduleDailyReminder,
+  type DailyReminderTime,
+} from "@/lib/notifications";
+import { useOnboarding } from "@/state/onboarding";
 
+/**
+ * Onboarding — "Before The Noise" notification opt-in.
+ *
+ * This is where the user picks the time their daily ritual fires.
+ * The whole product positioning rests on this moment: the notification
+ * isn't a reminder, it's the trigger that opens the sermon. So the
+ * screen treats "pick a time" as the primary action, not the
+ * permission ask itself.
+ *
+ * Flow:
+ *   1. User picks a preset morning time (6:00 → 8:00 AM in 30-min
+ *      steps). 7:00 AM is selected by default — landing for most
+ *      people before the social-feed pull starts.
+ *   2. They tap the primary CTA, labeled with the chosen time.
+ *      That triggers the system permission dialog (first time).
+ *   3. On grant: we schedule the daily notification + persist the
+ *      time + notificationsEnabled=true, then continue to paywall.
+ *   4. On denial / "Maybe later": we persist notificationsEnabled=false
+ *      so settings can render the right CTA, then continue.
+ *
+ * Why preset chips instead of a full time wheel?
+ *   Speed. Onboarding is the moment a user is least patient with
+ *   pickers. A 5-chip row is one tap; a time wheel is several. They
+ *   can fine-tune to any minute in /settings/notifications later.
+ */
 export default function RemindersScreen() {
   const router = useRouter();
+  const { setAnswer } = useOnboarding();
+  const [time, setTime] = useState<DailyReminderTime>(DEFAULT_REMINDER_TIME);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Both buttons land at the paywall — the permission ask itself
-  // (or its skip) is incidental to whether the user upgrades.
   const goToPaywall = () => router.push("/onboarding/paywall");
 
-  const handleEnable = () => {
-    // Wire expo-notifications permission request here.
-    // On grant or denial, proceed to the paywall.
-    goToPaywall();
+  const handleEnable = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const status = await requestNotificationPermission();
+      if (status === "granted") {
+        await scheduleDailyReminder(time);
+        setAnswer("notificationsEnabled", true);
+        setAnswer("dailyReminderTime", time);
+      } else {
+        // Permission denied (or undetermined on a re-prompt that
+        // can't surface the dialog). We still record their chosen
+        // time so /settings/notifications can show it pre-populated
+        // when they come back to enable manually.
+        setAnswer("notificationsEnabled", false);
+        setAnswer("dailyReminderTime", time);
+      }
+    } finally {
+      // Always advance — the permission flow is incidental to
+      // whether we keep moving through onboarding. The settings
+      // screen is the recovery surface if they want to opt in later.
+      setSubmitting(false);
+      goToPaywall();
+    }
   };
 
   const handleMaybeLater = () => {
+    setAnswer("notificationsEnabled", false);
+    setAnswer("dailyReminderTime", time);
     goToPaywall();
   };
 
@@ -36,51 +93,96 @@ export default function RemindersScreen() {
         <View className="flex-1 px-6">
           {/* Moon hero — fades in slowly like the moon "rising" */}
           <FadeIn delayMs={0} durationMs={1500}>
-            <View className="items-center mt-10">
+            <View className="items-center mt-6">
               <MoonWithGlow />
             </View>
           </FadeIn>
 
           <FadeIn delayMs={400}>
             <Text
-              className="text-ink text-[28px] leading-[36px] tracking-[-0.5px] text-center mt-10"
+              className="text-ink text-[28px] leading-[36px] tracking-[-0.5px] text-center mt-8"
               style={{ fontFamily: "PlusJakartaSans_700Bold" }}
             >
-              Don&apos;t let the noise steal every quiet moment.
+              Begin before the noise.
             </Text>
           </FadeIn>
 
-          <FadeIn delayMs={1200}>
+          <FadeIn delayMs={1000}>
             <Text
-              className="text-ink-muted text-[16px] leading-[24px] text-center mt-5 px-2"
+              className="text-ink-muted text-[16px] leading-[24px] text-center mt-4 px-2"
               style={{ fontFamily: "PlusJakartaSans_400Regular" }}
             >
-              Enable gentle reminders to pause, breathe, and reconnect with God
-              throughout your day.
+              One quiet moment, every morning. Pick when you&apos;d like
+              your word delivered.
             </Text>
           </FadeIn>
 
-          <View className="flex-1 min-h-[40px]" />
+          {/* Time picker chips */}
+          <FadeIn delayMs={1600}>
+            <View className="mt-9">
+              <Text
+                className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase text-center mb-3"
+                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              >
+                Your time
+              </Text>
+              <View
+                className="flex-row flex-wrap justify-center"
+                style={{ gap: 8 }}
+              >
+                {TIME_PRESETS.map((preset) => {
+                  const selected =
+                    preset.hour === time.hour && preset.minute === time.minute;
+                  return (
+                    <TimeChip
+                      key={`${preset.hour}-${preset.minute}`}
+                      label={formatReminderTime(preset)}
+                      selected={selected}
+                      onPress={() => setTime(preset)}
+                    />
+                  );
+                })}
+              </View>
+            </View>
+          </FadeIn>
+
+          <View className="flex-1 min-h-[24px]" />
 
           <FadeIn delayMs={2000}>
             <View className="pb-2">
               <Button
-                label="Enable Gentle Reminders"
+                label={
+                  submitting
+                    ? "Setting up\u2026"
+                    : `Send my word at ${formatReminderTime(time)}`
+                }
                 onPress={handleEnable}
               />
 
               <Pressable
                 hitSlop={12}
                 onPress={handleMaybeLater}
+                disabled={submitting}
                 className="self-center mt-5 py-2 px-4"
+                style={({ pressed }) => ({
+                  opacity: pressed || submitting ? 0.5 : 1,
+                })}
               >
                 <Text
                   className="text-ink-muted text-[15px]"
                   style={{ fontFamily: "PlusJakartaSans_500Medium" }}
                 >
-                  Maybe Later
+                  Maybe later
                 </Text>
               </Pressable>
+
+              <Text
+                className="text-ink-subtle text-[11.5px] text-center mt-4 leading-[17px]"
+                style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              >
+                One notification a day. Never more. Tap it and the
+                sermon is already waiting.
+              </Text>
             </View>
           </FadeIn>
         </View>
@@ -90,13 +192,73 @@ export default function RemindersScreen() {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// Preset time chips for the onboarding picker
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * The curated set of "morning anchor" times the user can pick in
+ * onboarding. 30-minute steps from 6:00 → 8:00 AM — the band that
+ * lands "before the noise" for most readers without crowding the
+ * picker with options that nobody picks.
+ *
+ * Custom times (any minute, any hour) are available in
+ * /settings/notifications for users whose mornings start outside
+ * this band.
+ */
+const TIME_PRESETS: ReadonlyArray<DailyReminderTime> = [
+  { hour: 6, minute: 0 },
+  { hour: 6, minute: 30 },
+  { hour: 7, minute: 0 },
+  { hour: 7, minute: 30 },
+  { hour: 8, minute: 0 },
+];
+
+function TimeChip({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={`Pick ${label}`}
+      accessibilityState={{ selected }}
+      className="rounded-full px-4 py-2.5 border"
+      style={({ pressed }) => ({
+        backgroundColor: selected ? colors.primary : "transparent",
+        borderColor: selected ? colors.primary : colors.borderStrong,
+        opacity: pressed ? 0.85 : 1,
+      })}
+    >
+      <Text
+        className="text-[14px] tracking-[-0.1px]"
+        style={{
+          fontFamily: "PlusJakartaSans_700Bold",
+          color: selected ? colors.primaryFg : colors.ink,
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
 // Moon with a soft halo behind it. The crescent itself is a single
 // path; the glow is a radial gradient sitting underneath.
 // ─────────────────────────────────────────────────────────────────
 
 function MoonWithGlow() {
-  const GLOW_SIZE = 280;
-  const MOON_SIZE = 110;
+  const colors = useColors();
+  const GLOW_SIZE = 240;
+  const MOON_SIZE = 96;
 
   return (
     <View

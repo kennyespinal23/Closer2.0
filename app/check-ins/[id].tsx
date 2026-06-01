@@ -21,8 +21,8 @@ import Svg, {
 import { Button } from "@/components/Button";
 import { JournalEditor } from "@/components/JournalEditor";
 import { findMood } from "@/constants/moods";
-import { colors } from "@/constants/theme";
 import { useCheckIns } from "@/state/checkIns";
+import { useColors } from "@/state/theme";
 
 /**
  * Detail page for a single check-in.
@@ -52,6 +52,7 @@ import { useCheckIns } from "@/state/checkIns";
  */
 export default function CheckInDetailScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { findById, updateJournal, remove } = useCheckIns();
 
@@ -431,6 +432,7 @@ export default function CheckInDetailScreen() {
 // ─────────────────────────────────────────────────────────────────
 
 function Header({ onBack }: { onBack: () => void }) {
+  const colors = useColors();
   return (
     <View className="flex-row items-center px-4 pt-2 pb-3">
       <Pressable

@@ -1,17 +1,19 @@
-import { Alert, Linking, Text, View } from "react-native";
+import { Alert, Linking, Share, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import {
   SettingsLinkRow,
   SettingsScaffold,
   SettingsSection,
+  SettingsStaticRow,
 } from "@/components/SettingsScaffold";
-import { colors } from "@/constants/theme";
 import { useAnnotations } from "@/state/annotations";
 import { useCheckIns } from "@/state/checkIns";
 import { useOnboarding } from "@/state/onboarding";
 import { usePreferences } from "@/state/preferences";
 import { useProgress } from "@/state/progress";
+import { useReadingGoal } from "@/state/readingGoal";
+import { useColors } from "@/state/theme";
 
 const PRIVACY_URL = "https://closer.app/privacy";
 const TERMS_URL = "https://closer.app/terms";
@@ -35,6 +37,7 @@ export default function PrivacyScreen() {
   const preferences = usePreferences();
   const annotations = useAnnotations();
   const checkIns = useCheckIns();
+  const readingGoal = useReadingGoal();
 
   const confirmResetOnboarding = () => {
     Alert.alert(
@@ -47,7 +50,7 @@ export default function PrivacyScreen() {
           style: "destructive",
           onPress: () => {
             onboarding.reset();
-            router.replace("/start");
+            router.replace("/");
           },
         },
       ],
@@ -71,11 +74,83 @@ export default function PrivacyScreen() {
             preferences.reset();
             annotations.reset();
             checkIns.reset();
-            router.replace("/start");
+            router.replace("/");
           },
         },
       ],
     );
+  };
+
+  /**
+   * Bundle every persisted user-facing field into a JSON snapshot
+   * and hand it to the OS share sheet. The user can drop it into
+   * Mail, Notes, Files — anywhere they'd archive personal data.
+   *
+   * Why JSON and not CSV/PDF? Three reasons:
+   *   1. It's lossless — nested structures (notes per verse,
+   *      check-in journal entries) survive round-trips.
+   *   2. It's the same shape AsyncStorage holds, so if we ever
+   *      add an "Import" feature the file plugs straight back in.
+   *   3. It's self-describing enough that a non-developer can
+   *      open it in Notes and see what's there.
+   *
+   * Internal-only fields (rotation indices, hydration flags) are
+   * intentionally excluded — the user shouldn't see plumbing.
+   */
+  const handleExportData = async () => {
+    const snapshot = {
+      exportedAt: new Date().toISOString(),
+      app: { name: "Closer", version: "0.1.0" },
+      onboarding: {
+        name: onboarding.answers.name,
+        intent: onboarding.answers.intent ?? null,
+        notificationsEnabled: onboarding.answers.notificationsEnabled ?? null,
+        dailyReminderTime: onboarding.answers.dailyReminderTime ?? null,
+      },
+      preferences: {
+        translationId: preferences.translationId,
+        textSizeId: preferences.textSizeId,
+      },
+      progress: {
+        totalCompletions: progress.totalCompletions,
+        completionsByType: progress.completionsByType,
+        lastCompletionDateISO: progress.lastCompletionDateISO,
+        engagedDates: progress.engagedDates,
+        sermonCompletions: progress.sermonCompletions,
+        chaptersRead: progress.chaptersRead,
+        lastVisited: progress.lastVisited,
+      },
+      readingGoal: {
+        goalMinutes: readingGoal.goalMinutes,
+        byDate: readingGoal.byDate,
+      },
+      annotations: {
+        highlights: annotations.highlights,
+        notes: annotations.notes,
+        verseSnippets: annotations.verseSnippets,
+        timestamps: annotations.timestamps,
+      },
+      checkIns: { log: checkIns.log },
+    };
+
+    try {
+      // RN's Share API takes `message` as the payload on iOS and
+      // both `message` + `title` on Android. The pretty-printed
+      // JSON makes the file readable as-is in Notes / Mail.
+      await Share.share({
+        title: "Closer — your data",
+        message: JSON.stringify(snapshot, null, 2),
+      });
+    } catch (err) {
+      // Share sheet was dismissed or failed — both are user-visible
+      // already (the sheet just closes), so we surface a tiny
+      // fallback only when something genuinely went wrong.
+      const message = err instanceof Error ? err.message : "Unknown error";
+      Alert.alert(
+        "Couldn't export",
+        `Something interrupted the share. (${message})`,
+      );
+    }
   };
 
   return (
@@ -109,23 +184,30 @@ export default function PrivacyScreen() {
         </View>
       </View>
 
+      {/* ─── What We Collect ────────────────────────────────────
+          These rows are informational only — no chevron, no press.
+          Earlier they used SettingsLinkRow which renders a chevron
+          and implies tapability; SettingsStaticRow renders the same
+          icon + label + sublabel shape WITHOUT the chevron so the
+          card honestly reads as "here's what we collect" rather
+          than promising a destination behind each row. */}
       <SettingsSection
         title="What We Collect"
         footer="Stored locally on this device. Nothing leaves your phone without your sign-in."
       >
-        <SettingsLinkRow
+        <SettingsStaticRow
           icon={<JournalIcon />}
           label="Sermons Completed"
           sublabel="To show your rhythm and unlock the Library"
           showDivider
         />
-        <SettingsLinkRow
+        <SettingsStaticRow
           icon={<NameIcon />}
           label="Your Name"
           sublabel="So we can greet you each morning"
           showDivider
         />
-        <SettingsLinkRow
+        <SettingsStaticRow
           icon={<DeviceIcon />}
           label="Device Identifier"
           sublabel="Used only for crash diagnostics"
@@ -160,8 +242,8 @@ export default function PrivacyScreen() {
         <SettingsLinkRow
           icon={<DownloadIcon />}
           label="Export My Data"
-          sublabel="Coming soon"
-          onPress={() => {}}
+          sublabel="Share a JSON snapshot of everything Closer knows"
+          onPress={handleExportData}
           showDivider
         />
         <SettingsLinkRow
@@ -189,65 +271,77 @@ export default function PrivacyScreen() {
 // Icons
 // ─────────────────────────────────────────────────────────────────
 
-const ICON_PROPS = {
+const ICON_PROPS_BASE = {
   strokeWidth: 1.7,
-  stroke: colors.ink,
   fill: "none",
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
 };
 
 function JournalIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M6 3h12v18H6zM9 7h6M9 11h6M9 15h4" {...ICON_PROPS} />
+      <Path d="M6 3h12v18H6zM9 7h6M9 11h6M9 15h4" {...props} />
     </Svg>
   );
 }
 
 function NameIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 4-7 8-7s8 3 8 7" {...ICON_PROPS} />
+      <Path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 4-7 8-7s8 3 8 7" {...props} />
     </Svg>
   );
 }
 
 function DeviceIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M7 3h10v18H7zM10 18h4" {...ICON_PROPS} />
+      <Path d="M7 3h10v18H7zM10 18h4" {...props} />
     </Svg>
   );
 }
 
 function DocIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M6 3h9l3 3v15H6zM15 3v3h3" {...ICON_PROPS} />
+      <Path d="M6 3h9l3 3v15H6zM15 3v3h3" {...props} />
     </Svg>
   );
 }
 
 function RefreshIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M4 4v6h6M20 20v-6h-6" {...ICON_PROPS} />
-      <Path d="M5 13a8 8 0 0014-4M19 11a8 8 0 00-14 4" {...ICON_PROPS} />
+      <Path d="M4 4v6h6M20 20v-6h-6" {...props} />
+      <Path d="M5 13a8 8 0 0014-4M19 11a8 8 0 00-14 4" {...props} />
     </Svg>
   );
 }
 
 function DownloadIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M12 4v12M7 11l5 5 5-5M4 20h16" {...ICON_PROPS} />
+      <Path d="M12 4v12M7 11l5 5 5-5M4 20h16" {...props} />
     </Svg>
   );
 }
 
 function TrashIcon({ destructive }: { destructive?: boolean }) {
-  const stroke = destructive ? "#FF6B6B" : colors.ink;
+  const { ink } = useColors();
+  const stroke = destructive ? "#FF6B6B" : ink;
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
       <Path

@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 /**
  * Check-in modal stack.
@@ -17,11 +17,12 @@ import { colors } from "@/constants/theme";
  * across two surfaces.
  */
 export default function CheckInLayout() {
+  const { bg } = useColors();
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.bg },
+        contentStyle: { backgroundColor: bg },
         animation: "slide_from_right",
       }}
     >

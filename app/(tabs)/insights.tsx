@@ -17,13 +17,11 @@ import {
 } from "@/components/insight/ArticleHero";
 import {
   INSIGHT_CATEGORIES,
-  findInsight,
   insightsInCategory,
   type Insight,
   type InsightCategory,
 } from "@/constants/insights";
-import { useSavedInsights } from "@/state/savedInsights";
-
+import { useColors } from "@/state/theme";
 /**
  * Insights — content library.
  *
@@ -33,7 +31,6 @@ import { useSavedInsights } from "@/state/savedInsights";
  *
  *   • Page eyebrow + title at the top
  *   • Featured rail — the first article in each category, full-bleed
- *   • Saved rail — only renders when the user has saved at least one
  *   • One rail per category below — horizontal scroll of all entries
  *
  * What this tab is NOT:
@@ -44,6 +41,12 @@ import { useSavedInsights } from "@/state/savedInsights";
  *     both. The drawer entry preserves the path for users who want
  *     to check their numbers.
  *
+ * Saved articles: the bookmark action on a detail page still
+ * persists into SavedInsightsProvider — the data is there for a
+ * future "Saved" list — but we don't surface a Saved rail here.
+ * The index feels calmer without it on day one when most users
+ * have zero or one save.
+ *
  * Why no search/filter yet:
  *   • The catalog is small (single digits). When it grows past a
  *     dozen entries we'll add a search bar at the top + tags. Until
@@ -51,7 +54,6 @@ import { useSavedInsights } from "@/state/savedInsights";
  */
 export default function InsightsScreen() {
   const router = useRouter();
-  const { saved, count: savedCount } = useSavedInsights();
 
   // Featured = the first insight in the first category. Stable while
   // the catalog has a single entry per category; later this can be
@@ -61,14 +63,6 @@ export default function InsightsScreen() {
     if (!first) return null;
     return insightsInCategory(first.id)[0] ?? null;
   }, []);
-
-  const savedInsights = useMemo(
-    () =>
-      saved
-        .map((id) => findInsight(id))
-        .filter((i): i is Insight => i !== null),
-    [saved],
-  );
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
@@ -111,19 +105,6 @@ export default function InsightsScreen() {
               insight={featured}
               onPress={() => router.push(`/insight/${featured.id}`)}
             />
-          </FadeIn>
-        )}
-
-        {/* ─── Saved (only when the user has at least one) ───── */}
-        {savedCount > 0 && (
-          <FadeIn delayMs={250} durationMs={900}>
-            <View className="mt-9">
-              <CategoryHeader title="Saved" count={savedCount} />
-              <InsightRail
-                insights={savedInsights}
-                onSelect={(i) => router.push(`/insight/${i.id}`)}
-              />
-            </View>
           </FadeIn>
         )}
 
@@ -296,6 +277,7 @@ function FeaturedIllustrativeCard({
   insight: Insight;
   onPress: () => void;
 }) {
+  const colors = useColors();
   return (
     <Pressable
       onPress={onPress}
@@ -307,7 +289,13 @@ function FeaturedIllustrativeCard({
         style={{ backgroundColor: insight.palette.bg }}
       >
         <ArticleHero insight={insight} height={220} />
-        <View className="px-5 py-5" style={{ backgroundColor: "#0F0F0F" }}>
+        {/* Caption strip flips with the theme so the body copy
+            (text-ink, text-ink-muted) stays legible. Was hardcoded
+            #0F0F0F which became black-on-black in light mode. */}
+        <View
+          className="px-5 py-5"
+          style={{ backgroundColor: colors.surface }}
+        >
           <Text
             className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase"
             style={{ fontFamily: "PlusJakartaSans_700Bold" }}
@@ -531,6 +519,7 @@ function CaptionedCard({
   insight: Insight;
   onPress: () => void;
 }) {
+  const colors = useColors();
   const CARD_W = 280;
 
   return (
@@ -543,7 +532,11 @@ function CaptionedCard({
         style={{ backgroundColor: insight.palette.bg, width: CARD_W }}
       >
         <ArticleHero insight={insight} height={150} />
-        <View className="px-4 py-4" style={{ backgroundColor: "#0F0F0F" }}>
+        {/* Same theme-flip as FeaturedIllustrativeCard above. */}
+        <View
+          className="px-4 py-4"
+          style={{ backgroundColor: colors.surface }}
+        >
           <Text
             className="text-ink-subtle text-[10px] tracking-[2px] uppercase"
             style={{ fontFamily: "PlusJakartaSans_700Bold" }}

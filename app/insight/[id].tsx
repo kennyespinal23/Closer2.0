@@ -22,8 +22,8 @@ import {
   type Insight,
   type InsightBlock,
 } from "@/constants/insights";
-import { colors } from "@/constants/theme";
 import { useSavedInsights } from "@/state/savedInsights";
+import { useColors } from "@/state/theme";
 
 /**
  * Insight (article) detail screen.
@@ -321,6 +321,7 @@ function BlockRenderer({
     b: Extract<InsightBlock, { kind: "scriptureRef" }>,
   ) => void;
 }) {
+  const colors = useColors();
   switch (block.kind) {
     case "paragraph":
       return (
@@ -478,6 +479,7 @@ function RelatedRow({
   onPress: () => void;
   showDivider?: boolean;
 }) {
+  const colors = useColors();
   return (
     <View>
       <Pressable
@@ -565,6 +567,7 @@ function BottomActionBar({
   onToggleSave: () => void;
   onShare: () => void;
 }) {
+  const colors = useColors();
   return (
     <View
       pointerEvents="box-none"
@@ -629,6 +632,7 @@ function ActionPill({
   tint?: string;
   flex?: boolean;
 }) {
+  const colors = useColors();
   return (
     <Pressable onPress={onPress} style={flex ? { flex: 1 } : undefined}>
       <View
@@ -775,6 +779,7 @@ function extractInitial(title: string): string {
 // ─────────────────────────────────────────────────────────────────
 
 function BackChevronIcon() {
+  const colors = useColors();
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
       <Path
@@ -795,6 +800,7 @@ function BookmarkIcon({
   filled?: boolean;
   size?: number;
 }) {
+  const colors = useColors();
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
@@ -809,6 +815,7 @@ function BookmarkIcon({
 }
 
 function ShareIcon() {
+  const colors = useColors();
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
       <Path
@@ -837,6 +844,7 @@ function OpenIcon({ color }: { color: string }) {
 }
 
 function ChevronIcon() {
+  const colors = useColors();
   return (
     <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
       <Path

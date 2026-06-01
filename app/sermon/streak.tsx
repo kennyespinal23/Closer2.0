@@ -4,7 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/components/Button";
-import { FadeIn } from "@/components/FadeIn";
 import { milestoneCopy } from "@/lib/journey";
 
 /**
@@ -107,92 +106,80 @@ export default function StreakScreen() {
             <StreakHalo />
           </Animated.View>
 
-          <FadeIn delayMs={300} durationMs={1200}>
-            <FlameMark />
-          </FadeIn>
+          <FlameMark />
         </View>
 
         {/* Milestone badge — only present when this advance crossed
             a threshold. Sits just above the number so the eye reads
             it before settling on the count. */}
         {isMilestone && (
-          <FadeIn delayMs={550} durationMs={900}>
-            <View
-              className="flex-row items-center px-3 py-1.5 rounded-full mt-5"
-              style={{
-                backgroundColor: "rgba(255, 182, 114, 0.12)",
-                borderWidth: 1,
-                borderColor: "rgba(255, 182, 114, 0.35)",
-              }}
-            >
-              <Svg width={10} height={10} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M12 2l2.5 7H22l-6 4.5L18 22l-6-4.5L6 22l2-8.5L2 9h7.5z"
-                  fill={STREAK_AMBER}
-                />
-              </Svg>
-              <Text
-                className="text-[10.5px] tracking-[2.5px] uppercase ml-2"
-                style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  color: STREAK_AMBER,
-                }}
-              >
-                {milestone}-day milestone
-              </Text>
-            </View>
-          </FadeIn>
-        )}
-
-        {/* The number itself — biggest type on the screen. Springs
-            in slightly after the halo settles. */}
-        <Animated.View style={{ transform: [{ scale: numberScale }] }}>
-          <FadeIn delayMs={700} durationMs={900}>
+          <View
+            className="flex-row items-center px-3 py-1.5 rounded-full mt-5"
+            style={{
+              backgroundColor: "rgba(255, 182, 114, 0.12)",
+              borderWidth: 1,
+              borderColor: "rgba(255, 182, 114, 0.35)",
+            }}
+          >
+            <Svg width={10} height={10} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M12 2l2.5 7H22l-6 4.5L18 22l-6-4.5L6 22l2-8.5L2 9h7.5z"
+                fill={STREAK_AMBER}
+              />
+            </Svg>
             <Text
-              className={isMilestone ? "text-[88px] leading-[88px] tracking-[-2px] mt-4 text-center" : "text-[88px] leading-[88px] tracking-[-2px] mt-7 text-center"}
+              className="text-[10.5px] tracking-[2.5px] uppercase ml-2"
               style={{
-                fontFamily: "PlusJakartaSans_800ExtraBold",
+                fontFamily: "PlusJakartaSans_700Bold",
                 color: STREAK_AMBER,
               }}
             >
-              {days}
+              {milestone}-day milestone
             </Text>
-          </FadeIn>
+          </View>
+        )}
+
+        {/* The number itself — biggest type on the screen. The
+            spring-scale Animated.View stays because it's pure
+            transform (no opacity gating) and lands the count
+            with a small, satisfying bounce. */}
+        <Animated.View style={{ transform: [{ scale: numberScale }] }}>
+          <Text
+            className={isMilestone ? "text-[88px] leading-[88px] tracking-[-2px] mt-4 text-center" : "text-[88px] leading-[88px] tracking-[-2px] mt-7 text-center"}
+            style={{
+              fontFamily: "PlusJakartaSans_800ExtraBold",
+              color: STREAK_AMBER,
+            }}
+          >
+            {days}
+          </Text>
         </Animated.View>
 
-        <FadeIn delayMs={1200} durationMs={900}>
-          <Text
-            className="text-ink-subtle text-[12px] tracking-[3px] uppercase text-center mt-2"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            {days === 1 ? "DAY STREAK" : `${days}-DAY STREAK`}
-          </Text>
-        </FadeIn>
+        <Text
+          className="text-ink-subtle text-[12px] tracking-[3px] uppercase text-center mt-2"
+          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        >
+          {days === 1 ? "DAY STREAK" : `${days}-DAY STREAK`}
+        </Text>
 
-        <FadeIn delayMs={1600} durationMs={1100}>
-          <Text
-            className="text-ink text-[26px] leading-[32px] tracking-[-0.3px] text-center mt-7 px-4"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            {streakHeadline(days, isMilestone)}
-          </Text>
-        </FadeIn>
+        <Text
+          className="text-ink text-[26px] leading-[32px] tracking-[-0.3px] text-center mt-7 px-4"
+          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        >
+          {streakHeadline(days, isMilestone)}
+        </Text>
 
-        <FadeIn delayMs={2100} durationMs={1100}>
-          <Text
-            className="text-ink-muted text-[14.5px] leading-[22px] text-center mt-3.5 px-4"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-          >
-            {streakSubcopy(days, isMilestone)}
-          </Text>
-        </FadeIn>
+        <Text
+          className="text-ink-muted text-[14.5px] leading-[22px] text-center mt-3.5 px-4"
+          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+        >
+          {streakSubcopy(days, isMilestone)}
+        </Text>
       </View>
 
-      <FadeIn delayMs={2800} durationMs={900}>
-        <View className="px-6 pb-2">
-          <Button label="Continue" onPress={handleContinue} />
-        </View>
-      </FadeIn>
+      <View className="px-6 pb-2">
+        <Button label="Continue" onPress={handleContinue} />
+      </View>
     </SafeAreaView>
   );
 }

@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 type Provider = "apple" | "google" | "email";
 
@@ -16,6 +16,7 @@ const labelByProvider: Record<Provider, string> = {
 };
 
 function ProviderGlyph({ provider }: { provider: Provider }) {
+  const colors = useColors();
   if (provider === "apple") {
     return (
       <Svg width={18} height={20} viewBox="0 0 18 20" fill="none">

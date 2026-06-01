@@ -12,7 +12,7 @@ import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import Svg, { Path } from "react-native-svg";
-import { colors } from "@/constants/theme";
+import { useColors, useResolvedScheme } from "@/state/theme";
 
 const SIDE_INSET = 16;
 const ROW_PADDING_H = 6;
@@ -53,6 +53,40 @@ const FAB_SIZE = 52;
 export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
+  const colors = useColors();
+  const scheme = useResolvedScheme();
+  const isDark = scheme === "dark";
+
+  // Theme-aware glass treatment. In dark mode we keep the original
+  // black blur + faint-white edge highlight. In light mode we flip
+  // to a light blur + faint-ink edge so the bar reads as a frosted
+  // panel on a bright canvas (instead of looking like a dim grey
+  // smear that washes out the inactive labels).
+  //
+  // Critically, we render a near-opaque themed backing UNDERNEATH
+  // the BlurView so colorful scroll content (book covers in the
+  // Library, hero images in Insights) can't bleed through and
+  // murk up the bar. Without the backing, BlurView averages
+  // whatever's beneath it — which on the Library screen turned
+  // the bar purple and ate the inactive labels.
+  const pillBorderColor = isDark
+    ? "rgba(255, 255, 255, 0.08)"
+    : "rgba(15, 15, 15, 0.10)";
+  const backingColor = isDark
+    ? "rgba(12, 12, 14, 0.78)"
+    : "rgba(255, 255, 255, 0.82)";
+  const androidFillColor = isDark
+    ? "rgba(20, 20, 20, 0.96)"
+    : "rgba(255, 255, 255, 0.96)";
+  const bubbleBg = isDark
+    ? "rgba(255, 255, 255, 0.18)"
+    : "rgba(15, 15, 15, 0.08)";
+  const bubbleBorder = isDark
+    ? "rgba(255, 255, 255, 0.10)"
+    : "rgba(15, 15, 15, 0.10)";
+  const fabBorder = isDark
+    ? "rgba(255, 255, 255, 0.18)"
+    : "rgba(255, 255, 255, 0.65)";
 
   const pillWidth = screenWidth - SIDE_INSET * 2;
   const cellCount = state.routes.length;
@@ -91,19 +125,31 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
         { bottom: Math.max(insets.bottom, 12) },
       ]}
     >
-      <View style={styles.pill}>
-        {/* BlurView paints the translucent background only. Layout
-            lives in the inner row so it's unambiguous to RN's flexbox. */}
+      <View style={[styles.pill, { borderColor: pillBorderColor }]}>
+        {/* Solid themed backing — rendered FIRST so it sits beneath
+            the BlurView. Keeps the bar from picking up colored
+            scroll content (book covers, hero images) on screens
+            like Library / Insights. Without it the blur averages
+            whatever's beneath it and the labels become unreadable. */}
+        <View
+          style={[StyleSheet.absoluteFill, { backgroundColor: backingColor }]}
+        />
+        {/* BlurView adds the frosted texture on top of the backing.
+            iOS only — Android has no reliable real-time blur, so
+            we already have the opaque android fill above. */}
         {Platform.OS === "ios" ? (
           <BlurView
-            intensity={70}
-            tint="dark"
+            intensity={40}
+            tint={isDark ? "dark" : "light"}
             style={StyleSheet.absoluteFill}
           />
         ) : (
-          // Android has no reliable real-time blur — fall back to a
-          // near-opaque dark fill that still feels distinct from bg.
-          <View style={[StyleSheet.absoluteFill, styles.androidFill]} />
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: androidFillColor },
+            ]}
+          />
         )}
 
         <View style={styles.row}>
@@ -118,6 +164,8 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
                 top: BUBBLE_TOP,
                 left: bubbleLeft,
                 width: bubbleWidth,
+                backgroundColor: bubbleBg,
+                borderColor: bubbleBorder,
                 transform: [{ translateX: slide }],
               },
             ]}
@@ -165,7 +213,15 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
                   onLongPress={onLongPress}
                   style={styles.cell}
                 >
-                  <View style={styles.fab}>
+                  <View
+                    style={[
+                      styles.fab,
+                      {
+                        backgroundColor: colors.primary,
+                        borderColor: fabBorder,
+                      },
+                    ]}
+                  >
                     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
                       <Path
                         d="M12 5v14M5 12h14"
@@ -180,7 +236,11 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
             }
 
             // ─── Normal cell — icon + label ───────────────────
-            const tint = isFocused ? colors.ink : colors.inkSubtle;
+            // Inactive uses inkMuted (not inkSubtle) so labels stay
+            // legible against the bright blur in light mode — the
+            // subtle gray we use elsewhere reads as "barely there"
+            // through the frosted panel.
+            const tint = isFocused ? colors.ink : colors.inkMuted;
 
             return (
               <Pressable
@@ -229,10 +289,9 @@ const styles = StyleSheet.create({
     height: PILL_HEIGHT,
     borderRadius: PILL_HEIGHT / 2,
     overflow: "hidden",
-    // Hairline white border at very low opacity reads as a glass edge
-    // highlight without becoming chrome.
+    // Hairline glass-edge border (color comes from the theme-aware
+    // `pillBorderColor` inline so it flips with the scheme).
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
     // Subtle lift — the bar should feel like it's resting *above*
     // the content, not painted onto it.
     shadowColor: "#000",
@@ -240,9 +299,6 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 12 },
     elevation: 16,
-  },
-  androidFill: {
-    backgroundColor: "rgba(20, 20, 20, 0.94)",
   },
   row: {
     flex: 1,
@@ -264,10 +320,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     height: CELL_HEIGHT,
     borderRadius: CELL_HEIGHT / 2,
-    backgroundColor: "rgba(255, 255, 255, 0.18)",
-    // Faint highlight ring around the bubble — sells the "glass" feel.
+    // bg + border come from the theme-aware values inline.
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.10)",
   },
   label: {
     fontSize: 10.5,
@@ -278,13 +332,12 @@ const styles = StyleSheet.create({
     width: FAB_SIZE,
     height: FAB_SIZE,
     borderRadius: FAB_SIZE / 2,
-    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
     // Faint inner ring + lift shadow so the FAB reads as a raised
-    // accent on top of the glass bar, not painted into it.
+    // accent on top of the glass bar, not painted into it. Border
+    // color comes from the theme-aware `fabBorder` inline.
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.18)",
     shadowColor: "#000",
     shadowOpacity: 0.35,
     shadowRadius: 10,

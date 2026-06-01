@@ -22,7 +22,6 @@ import { NoteEditor } from "@/components/NoteEditor";
 import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
 import { BOOKS, findBookById } from "@/constants/books";
-import { colors } from "@/constants/theme";
 import {
   type Chapter,
   fetchChapter,
@@ -43,6 +42,7 @@ import {
 } from "@/state/preferences";
 import { useProgress } from "@/state/progress";
 import { useReadingGoal } from "@/state/readingGoal";
+import { useColors } from "@/state/theme";
 
 /**
  * Color of the inline note marker drawn next to verse numbers that
@@ -151,6 +151,7 @@ export default function ChapterReaderScreen() {
     tint?: string;
   }>();
   const router = useRouter();
+  const colors = useColors();
   const book = id ? findBookById(id) : undefined;
   const chapter = parseInt(chapterParam ?? "", 10);
 
@@ -1088,6 +1089,7 @@ function VerseFlow({
   selectedSet?: ReadonlySet<number>;
 }) {
   const annotations = useAnnotations();
+  const colors = useColors();
 
   const baseFontSize = 18 * scale;
   const baseLineHeight = 30 * scale;
@@ -1227,9 +1229,12 @@ function VerseFlow({
         // highlight while the verse is selected — a clear, dense
         // tint so the user can see at a glance what they're about
         // to act on. Highlight returns once the verse leaves the
-        // selection set.
+        // selection set. Tinted with the theme's `ink` so the wash
+        // is white-over-black in dark mode and ink-over-white in
+        // light mode (rather than a fixed white tint that becomes
+        // invisible against the light background).
         const baseBg = isSelected
-          ? "rgba(255,255,255,0.18)"
+          ? `${colors.ink}2E`
           : v.highlight?.fill ?? "transparent";
 
         // Branch the wrapper element instead of computing a union
@@ -1285,6 +1290,7 @@ function VerseFlow({
 }
 
 function LoadingView() {
+  const colors = useColors();
   return (
     <View className="items-center justify-center py-12">
       <ActivityIndicator size="small" color={colors.inkMuted} />
@@ -1444,6 +1450,7 @@ function ChapterHeading({
   chapter: number;
   scale: number;
 }) {
+  const colors = useColors();
   return (
     <View style={{ alignItems: "center", marginBottom: 14 }}>
       <Text
@@ -1705,6 +1712,7 @@ function Header({
   progress: number;
 }) {
   const router = useRouter();
+  const colors = useColors();
   const widthAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -1813,6 +1821,7 @@ function pagesLeftLabel(pagesLeft: number): string {
 // ─────────────────────────────────────────────────────────────────
 
 function ChapterOrnament() {
+  const colors = useColors();
   return (
     <View
       style={{
@@ -1848,6 +1857,7 @@ function ChapterOrnament() {
 }
 
 function Diamond() {
+  const colors = useColors();
   return (
     <Svg width={6} height={6} viewBox="0 0 10 10">
       <Path d="M5 0L10 5L5 10L0 5Z" fill={colors.inkSubtle} />
@@ -1893,6 +1903,7 @@ function ReaderToolbar({
   goalMinutes: number;
   onOpenReadingGoal: () => void;
 }) {
+  const colors = useColors();
   const [section, setSection] = useState<ToolbarSection>(null);
   const goalReached = todayMinutes >= goalMinutes;
 
@@ -2029,6 +2040,7 @@ function ToolbarIconButton({
   accessibilityLabel: string;
   active: boolean;
 }) {
+  const colors = useColors();
   return (
     <Pressable
       onPress={onPress}
@@ -2050,6 +2062,7 @@ function ToolbarIconButton({
 }
 
 function ToolbarPipDivider() {
+  const colors = useColors();
   return (
     <View
       style={{
@@ -2062,6 +2075,7 @@ function ToolbarPipDivider() {
 }
 
 function ContentsListIcon() {
+  const colors = useColors();
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
       <Path
@@ -2077,6 +2091,7 @@ function ContentsListIcon() {
 function GoalIconWithDot({ reached }: { reached: boolean }) {
   // A flame-y target glyph that fills in amber the moment today's
   // goal is met — same visual language as the Journey week strip.
+  const colors = useColors();
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
       <Path
@@ -2105,6 +2120,7 @@ function ThemesPopover({
   translationTag: string;
   onChangeTranslation: () => void;
 }) {
+  const colors = useColors();
   return (
     <View
       style={{
@@ -2190,6 +2206,7 @@ function TextSizeChip({
   active: boolean;
   onPress: () => void;
 }) {
+  const colors = useColors();
   const fontSize = Math.round(11 + (size.scale - 0.88) * 10);
   return (
     <Pressable
@@ -2232,6 +2249,7 @@ function GoalPopover({
   goalMinutes: number;
   onOpen: () => void;
 }) {
+  const colors = useColors();
   const pct = Math.min(100, Math.round((todayMinutes / goalMinutes) * 100));
   const reached = todayMinutes >= goalMinutes;
   return (
@@ -2393,6 +2411,7 @@ function SelectionBar({
   onShare: () => void;
   onDone: () => void;
 }) {
+  const colors = useColors();
   // Geometry locked to absolute pixel sizes so the bar renders
   // identically on every screen width and React Native version.
   // No flex-`gap`, no `flex: 1` siblings — every pip and button is
@@ -2559,6 +2578,7 @@ function ColorSwatch({
   size: number;
   marginLeft?: number;
 }) {
+  const colors = useColors();
   // Wrap the visual disc in a plain <View> so RN always gives it an
   // explicit box regardless of children. When Pressable's `style`
   // is a function and the only child is `null`, iOS occasionally
@@ -2614,6 +2634,7 @@ function SelectionAction({
   onPress: () => void;
   width: number;
 }) {
+  const colors = useColors();
   // Same shape-isolation trick as ColorSwatch: put the laid-out
   // contents inside a plain <View> so the explicit width/height
   // and flexDirection always apply, regardless of how Pressable's
@@ -2646,6 +2667,7 @@ function SelectionAction({
 }
 
 function NoteActionIcon() {
+  const colors = useColors();
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
       <Path
@@ -2665,6 +2687,7 @@ function NoteActionIcon() {
 }
 
 function ShareActionIcon() {
+  const colors = useColors();
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
       <Path
@@ -2701,6 +2724,7 @@ function ContentsModal({
   hasReadChapter: (bookId: string, chapter: number) => boolean;
   onSelect: (chapter: number) => void;
 }) {
+  const colors = useColors();
   const book = findBookById(bookId);
 
   return (
@@ -2832,6 +2856,7 @@ function GoalToast({
   anim: Animated.Value;
   goalMinutes: number;
 }) {
+  const colors = useColors();
   const translateY = anim.interpolate({
     inputRange: [0, 1],
     outputRange: [60, 0],
@@ -2880,6 +2905,7 @@ function GoalToast({
 }
 
 function CheckBadgeIcon() {
+  const colors = useColors();
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
       <Path
@@ -2898,6 +2924,7 @@ function CheckBadgeIcon() {
 }
 
 function Chevron({ direction }: { direction: "prev" | "next" }) {
+  const colors = useColors();
   const d = direction === "prev" ? "M15 6l-6 6 6 6" : "M9 6l6 6-6 6";
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
@@ -2913,6 +2940,7 @@ function Chevron({ direction }: { direction: "prev" | "next" }) {
 }
 
 function CheckIcon() {
+  const colors = useColors();
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
       <Path

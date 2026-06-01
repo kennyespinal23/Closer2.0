@@ -12,8 +12,8 @@ import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingHeader } from "@/components/OnboardingHeader";
-import { colors } from "@/constants/theme";
 import { progressFor } from "@/constants/onboarding";
+import { useColors } from "@/state/theme";
 
 /**
  * Each figure is paired with an abstract emotional symbol that
@@ -147,14 +147,15 @@ export default function ScriptureScreen() {
 // ─────────────────────────────────────────────────────────────────
 
 function SoftGlow() {
+  const { accent } = useColors();
   const SIZE = 420;
   return (
     <Svg width={SIZE} height={SIZE} style={{ opacity: 0.55 }}>
       <Defs>
         <RadialGradient id="glow" cx="50%" cy="50%" rx="50%" ry="50%">
-          <Stop offset="0%" stopColor={colors.accent} stopOpacity={0.45} />
-          <Stop offset="60%" stopColor={colors.accent} stopOpacity={0.08} />
-          <Stop offset="100%" stopColor={colors.accent} stopOpacity={0} />
+          <Stop offset="0%" stopColor={accent} stopOpacity={0.45} />
+          <Stop offset="60%" stopColor={accent} stopOpacity={0.08} />
+          <Stop offset="100%" stopColor={accent} stopOpacity={0} />
         </RadialGradient>
       </Defs>
       <Rect x={0} y={0} width={SIZE} height={SIZE} fill="url(#glow)" />
@@ -168,10 +169,10 @@ function SoftGlow() {
 // ─────────────────────────────────────────────────────────────────
 
 const ICON_SIZE = 22;
-const STROKE = colors.inkMuted;
 const STROKE_W = 1.6;
 
 function FlameIcon() {
+  const { inkMuted: STROKE } = useColors();
   // Elijah — a small flame, slightly bowed (burnout, not absence)
   return (
     <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">
@@ -186,6 +187,7 @@ function FlameIcon() {
 }
 
 function BrokenHeartIcon() {
+  const { inkMuted: STROKE } = useColors();
   // David — heart with a jagged crack down the middle
   return (
     <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">
@@ -207,6 +209,7 @@ function BrokenHeartIcon() {
 }
 
 function StormCloudIcon() {
+  const { inkMuted: STROKE } = useColors();
   // Peter — cloud with a small bolt below
   return (
     <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">
@@ -228,6 +231,7 @@ function StormCloudIcon() {
 }
 
 function QuestionIcon() {
+  const { inkMuted: STROKE } = useColors();
   // Thomas — question mark inside a soft circle
   return (
     <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">
@@ -244,6 +248,7 @@ function QuestionIcon() {
 }
 
 function StackedFormsIcon() {
+  const { inkMuted: STROKE } = useColors();
   // Martha — three stacked bars, suggesting things piling up
   return (
     <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">

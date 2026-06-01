@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 /**
  * Shared chrome for everything reachable from the profile drawer
@@ -133,6 +133,7 @@ export function SettingsLinkRow({
   /** Tinted red. Used for irreversible actions (Delete, Reset). */
   destructive?: boolean;
 }) {
+  const colors = useColors();
   const labelColor = destructive ? "#FF6B6B" : colors.ink;
   return (
     <View>
@@ -193,6 +194,13 @@ export function SettingsToggleRow({
   value: boolean;
   onValueChange: (next: boolean) => void;
 }) {
+  const colors = useColors();
+  // The "off" track / iOS background need different alpha against
+  // a light vs dark canvas — a 10%-white wash disappears on white.
+  // We pick a calm 8% ink-over-bg in both modes so the switch reads
+  // as a soft pill regardless of theme.
+  const trackOff = withAlpha(colors.ink, 0.1);
+  const trackBg = withAlpha(colors.ink, 0.08);
   return (
     <View>
       <View className="flex-row items-center px-4 py-3.5">
@@ -220,9 +228,9 @@ export function SettingsToggleRow({
         <Switch
           value={value}
           onValueChange={onValueChange}
-          trackColor={{ false: "rgba(255,255,255,0.10)", true: "#3D8B6A" }}
+          trackColor={{ false: trackOff, true: "#3D8B6A" }}
           thumbColor="#F4F4F5"
-          ios_backgroundColor="rgba(255,255,255,0.08)"
+          ios_backgroundColor={trackBg}
         />
       </View>
       {showDivider && <View className="h-[1px] bg-border ml-[60px]" />}
@@ -231,12 +239,30 @@ export function SettingsToggleRow({
 }
 
 /**
- * Static row — read-only display of a key/value pair. No chevron, no
- * press feedback. Used for Version, Email, etc.
+ * Compose an alpha into a `#RRGGBB` hex string, returning a CSS
+ * `rgba(r, g, b, a)` string usable by RN's color props. Falls back
+ * to the input untouched when the hex doesn't parse cleanly.
+ */
+function withAlpha(hex: string, alpha: number): string {
+  const cleaned = hex.replace("#", "");
+  if (cleaned.length !== 6) return hex;
+  const r = parseInt(cleaned.slice(0, 2), 16);
+  const g = parseInt(cleaned.slice(2, 4), 16);
+  const b = parseInt(cleaned.slice(4, 6), 16);
+  if ([r, g, b].some((n) => Number.isNaN(n))) return hex;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Static row — read-only display of a label, optional sublabel, and
+ * optional trailing value. No chevron, no press feedback. Used for
+ * Version, "What We Collect" rows, and anything else informational
+ * that shouldn't suggest navigation.
  */
 export function SettingsStaticRow({
   icon,
   label,
+  sublabel,
   value,
   showDivider,
 }: BaseRowProps & { value?: string }) {
@@ -248,12 +274,22 @@ export function SettingsStaticRow({
             {icon}
           </View>
         )}
-        <Text
-          className="text-ink text-[14.5px] flex-1 pr-2"
-          style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-        >
-          {label}
-        </Text>
+        <View className="flex-1 pr-2">
+          <Text
+            className="text-ink text-[14.5px]"
+            style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+          >
+            {label}
+          </Text>
+          {sublabel && (
+            <Text
+              className="text-ink-subtle text-[12px] mt-0.5"
+              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            >
+              {sublabel}
+            </Text>
+          )}
+        </View>
         {value && (
           <Text
             className="text-ink-muted text-[13px]"
@@ -321,6 +357,7 @@ export function SettingsChoiceRow({
 // ─────────────────────────────────────────────────────────────────
 
 function BackChevronIcon() {
+  const colors = useColors();
   return (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
       <Path
@@ -335,6 +372,7 @@ function BackChevronIcon() {
 }
 
 function ChevronIcon() {
+  const colors = useColors();
   return (
     <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
       <Path
@@ -349,6 +387,7 @@ function ChevronIcon() {
 }
 
 function CheckIcon() {
+  const colors = useColors();
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
       <Path

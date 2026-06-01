@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 /**
  * Full-screen modal for writing down how you feel after a check-in.
@@ -57,6 +57,7 @@ export function JournalEditor({
   onDelete: () => void;
   onCancel: () => void;
 }) {
+  const colors = useColors();
   const [text, setText] = useState(initialText);
   const inputRef = useRef<TextInput>(null);
   const hasInitial = initialText.trim().length > 0;

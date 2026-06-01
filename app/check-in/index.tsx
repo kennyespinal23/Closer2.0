@@ -15,7 +15,7 @@ import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { FadeIn } from "@/components/FadeIn";
 import { MOODS, type Mood } from "@/constants/moods";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 // ─────────────────────────────────────────────────────────────────
 // Grid geometry
@@ -56,6 +56,7 @@ const PANEL_HEIGHT_PX = 220;
  */
 export default function MoodSelectScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
@@ -204,6 +205,7 @@ function MoodCard({
   delayMs: number;
   onPress: () => void;
 }) {
+  const colors = useColors();
   // Scale the image to most of the card width but leave room for
   // the label underneath. The 10pt floor keeps it readable when the
   // card lands on a very narrow device.
@@ -275,6 +277,7 @@ function ConfirmationPanel({
   onConfirm: () => void;
   onDismiss: () => void;
 }) {
+  const colors = useColors();
   // We keep a "last mood" buffer so the panel can finish its exit
   // animation showing the previous mood's content (otherwise the
   // contents would flash blank on dismiss).

@@ -13,7 +13,6 @@ import { useRouter } from "expo-router";
 import Svg, { Circle, Path } from "react-native-svg";
 import { FadeIn } from "@/components/FadeIn";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
-import { colors } from "@/constants/theme";
 import {
   buildJourney,
   formatDayHeader,
@@ -31,6 +30,7 @@ import {
 import { useAnnotations } from "@/state/annotations";
 import { useCheckIns } from "@/state/checkIns";
 import { useProgress } from "@/state/progress";
+import { useColors } from "@/state/theme";
 
 // Android requires a one-time opt-in to use LayoutAnimation. Safe
 // to call repeatedly — internally guards itself.
@@ -77,6 +77,7 @@ export default function JourneyScreen() {
   const { sermonCompletions, chaptersRead, engagedDates } = useProgress();
   const { notes, highlights, verseSnippets, timestamps } = useAnnotations();
   const { log: checkInLog } = useCheckIns();
+  const { border } = useColors();
 
   const days = useMemo(
     () =>
@@ -159,7 +160,7 @@ export default function JourneyScreen() {
                         top: 6,
                         bottom: 6,
                         width: 1,
-                        backgroundColor: colors.border,
+                        backgroundColor: border,
                       }}
                     />
                     {day.rows.map((row, i) => (
@@ -252,12 +253,13 @@ function EventRow({
   isLast: boolean;
   router: RouterShape;
 }) {
+  const { primary } = useColors();
   // Dot color is chosen per event kind. For highlights we use the
   // actual highlight color so the timeline literally carries the
   // user's color coding. Milestones get the warm "streak" amber.
   // Notes use the bright marker red, matching the reader indicator.
   // Check-ins inherit the mood's swatch.
-  let dotColor: string = colors.primary;
+  let dotColor: string = primary;
   if (event.kind === "highlight") {
     dotColor = event.color.swatch;
   } else if (event.kind === "milestone") {
@@ -265,7 +267,7 @@ function EventRow({
   } else if (event.kind === "note") {
     dotColor = NOTE_RED;
   } else if (event.kind === "checkIn") {
-    dotColor = event.mood?.swatch ?? colors.primary;
+    dotColor = event.mood?.swatch ?? primary;
   }
 
   const handlePress = () => {
@@ -314,6 +316,7 @@ function StackRow({
   isLast: boolean;
   router: RouterShape;
 }) {
+  const { primary } = useColors();
   const [open, setOpen] = useState(false);
 
   const toggle = () => {
@@ -338,17 +341,15 @@ function StackRow({
         }
       : row.kind === "highlightStack"
       ? {
-          dot: colors.primary,
+          dot: primary,
           label: "Highlights",
-          eyebrow: colors.primary,
+          eyebrow: primary,
           count: row.highlights.length,
         }
       : {
-          dot:
-            row.checkIns[0]?.mood?.swatch ?? colors.primary,
+          dot: row.checkIns[0]?.mood?.swatch ?? primary,
           label: "Check-ins",
-          eyebrow:
-            row.checkIns[0]?.mood?.swatch ?? colors.primary,
+          eyebrow: row.checkIns[0]?.mood?.swatch ?? primary,
           count: row.checkIns.length,
         };
   const { dot: dotColor, label, eyebrow: eyebrowColor, count } = meta;
@@ -577,7 +578,8 @@ function HighlightChild({ event }: { event: HighlightEvent }) {
  * detail page (so the user can edit their journal, share, etc.).
  */
 function CheckInChild({ event }: { event: CheckInEvent }) {
-  const accent = event.mood?.swatch ?? colors.primary;
+  const { primary } = useColors();
+  const accent = event.mood?.swatch ?? primary;
   const moodLabel = event.mood?.label ?? "Check-in";
   return (
     <View className="flex-row items-start">
@@ -664,6 +666,7 @@ function CardShell({
   children: React.ReactNode;
   rightChip?: React.ReactNode;
 }) {
+  const { primary } = useColors();
   return (
     <View className="rounded-2xl border border-border bg-surface px-4 py-3.5">
       <View className="flex-row items-baseline justify-between">
@@ -671,7 +674,7 @@ function CardShell({
           className="text-[10px] tracking-[2.5px] uppercase"
           style={{
             fontFamily: "PlusJakartaSans_700Bold",
-            color: eyebrowColor ?? colors.primary,
+            color: eyebrowColor ?? primary,
           }}
         >
           {eyebrow}
@@ -737,6 +740,7 @@ function NoteCard({ event }: { event: NoteEvent }) {
 // ─── Highlight ──────────────────────────────────────────
 
 function HighlightCard({ event }: { event: HighlightEvent }) {
+  const { primary } = useColors();
   return (
     <View className="rounded-2xl border border-border bg-surface overflow-hidden flex-row">
       <View style={{ width: 4, backgroundColor: event.color.swatch }} />
@@ -746,7 +750,7 @@ function HighlightCard({ event }: { event: HighlightEvent }) {
             className="text-[10px] tracking-[2.5px] uppercase"
             style={{
               fontFamily: "PlusJakartaSans_700Bold",
-              color: colors.primary,
+              color: primary,
             }}
           >
             Highlighted · {event.reference}
@@ -816,10 +820,11 @@ function SermonCard({ event }: { event: SermonEvent }) {
 // ─── Chapter read ───────────────────────────────────────
 
 function ChapterCard({ event }: { event: ChapterEvent }) {
+  const { ink } = useColors();
   return (
     <CardShell eyebrow="Read" rightChip={timeChip(event.at)}>
       <View className="flex-row items-center">
-        <BookmarkIcon />
+        <BookmarkIcon stroke={ink} />
         <Text
           className="text-ink text-[14.5px] ml-2"
           style={{ fontFamily: "PlusJakartaSans_700Bold" }}
@@ -835,7 +840,8 @@ function ChapterCard({ event }: { event: ChapterEvent }) {
 
 function CheckInCard({ event }: { event: CheckInEvent }) {
   const router = useRouter();
-  const accent = event.mood?.swatch ?? colors.primary;
+  const { primary } = useColors();
+  const accent = event.mood?.swatch ?? primary;
   const moodLabel = event.mood?.label ?? "Check-in";
   return (
     <Pressable
@@ -960,6 +966,7 @@ function DottedRow({
   isLast: boolean;
   children: React.ReactNode;
 }) {
+  const { bg } = useColors();
   return (
     <View style={{ flexDirection: "row" }} className={isLast ? "" : "pb-4"}>
       <View
@@ -976,7 +983,7 @@ function DottedRow({
             borderRadius: 6,
             backgroundColor: dotColor,
             borderWidth: 2,
-            borderColor: colors.bg,
+            borderColor: bg,
           }}
         />
       </View>
@@ -990,14 +997,15 @@ function DottedRow({
 // ─────────────────────────────────────────────────────────────────
 
 function EmptyState() {
+  const { ink } = useColors();
   return (
     <View className="px-6 mt-16 items-center">
       <View className="w-16 h-16 rounded-2xl bg-accent-soft border border-border items-center justify-center">
         <Svg width={26} height={26} viewBox="0 0 24 24" fill="none">
-          <Circle cx={12} cy={12} r={9} stroke={colors.ink} strokeWidth={1.5} />
+          <Circle cx={12} cy={12} r={9} stroke={ink} strokeWidth={1.5} />
           <Path
             d="M12 8v4l3 2"
-            stroke={colors.ink}
+            stroke={ink}
             strokeWidth={1.7}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -1025,12 +1033,12 @@ function EmptyState() {
 // Glyphs
 // ─────────────────────────────────────────────────────────────────
 
-function BookmarkIcon() {
+function BookmarkIcon({ stroke }: { stroke: string }) {
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
       <Path
         d="M6 3h12v18l-6-4-6 4z"
-        stroke={colors.ink}
+        stroke={stroke}
         strokeWidth={1.6}
         strokeLinejoin="round"
       />
@@ -1056,12 +1064,13 @@ function Chevron({ open }: { open: boolean }) {
   // 12px chevron, rotates between down (collapsed) and up (open).
   // Drawn as a pure path so the rotation is just a transform on the
   // SVG container — cheap and keeps the row from re-laying out.
+  const { inkSubtle } = useColors();
   return (
     <View style={{ transform: [{ rotate: open ? "180deg" : "0deg" }] }}>
       <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
         <Path
           d="M6 9l6 6 6-6"
-          stroke={colors.inkSubtle}
+          stroke={inkSubtle}
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"

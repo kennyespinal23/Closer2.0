@@ -6,10 +6,10 @@ import Svg, { Path } from "react-native-svg";
 import { FadeIn } from "@/components/FadeIn";
 import { findBookById } from "@/constants/books";
 import { SERMON_TYPES, type SermonType } from "@/constants/sermonTypes";
-import { colors } from "@/constants/theme";
 import { formatRef, relativeTime } from "@/lib/annotationsFormat";
 import { useAnnotations } from "@/state/annotations";
 import { didCompleteToday, useProgress } from "@/state/progress";
+import { useColors } from "@/state/theme";
 
 /**
  * Your Practice — the personal rhythm / stats view.
@@ -399,6 +399,7 @@ function TypeRow({
   count: number;
   showDivider: boolean;
 }) {
+  const colors = useColors();
   const touched = count > 0;
   return (
     <View>
@@ -406,9 +407,12 @@ function TypeRow({
         <View
           className="w-12 h-12 rounded-2xl items-center justify-center mr-4"
           style={{
+            // Untouched tile gets a near-transparent ink wash so it
+            // reads as "empty" in both themes (white-only fills
+            // disappear on the light theme's near-white surface).
             backgroundColor: touched
               ? `${type.accent}1F`
-              : "rgba(255, 255, 255, 0.03)",
+              : `${colors.ink}0A`,
           }}
         >
           <Image
@@ -493,6 +497,7 @@ function MiniDot({
 }
 
 function BookmarkIcon() {
+  const colors = useColors();
   return (
     <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
       <Path
@@ -585,6 +590,7 @@ function formatChapterRef(c: { bookId: string; chapter: number }): string {
 }
 
 function BackChevronIcon() {
+  const colors = useColors();
   return (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
       <Path

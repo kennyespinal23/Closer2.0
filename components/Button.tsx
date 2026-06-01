@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import type { PressableProps } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 type Variant = "primary" | "secondary" | "ghost";
 
@@ -35,6 +35,7 @@ export function Button({
   leadingIcon,
   fullWidth = true,
 }: ButtonProps) {
+  const colors = useColors();
   const isDisabled = disabled || loading;
 
   return (

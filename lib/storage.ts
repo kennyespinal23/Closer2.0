@@ -65,6 +65,48 @@ export const STORAGE_KEYS = {
   checkIns: "closer.checkIns.v1",
   readingGoal: "closer.readingGoal.v1",
   savedInsights: "closer.savedInsights.v1",
+  /**
+   * Daily-moment provider state — last assignment (date + 1-based
+   * catalog day). See state/moments.tsx for the shape. Bumped
+   * separately from the rest because the moment-rotation logic
+   * has churned the most as we tune the content system.
+   *
+   * v1 → v2: dropped per-pool no-repeat cursor + emotion routing
+   * after the catalog moved to a single ordered 90-sermon vault.
+   * The persisted moment id was a string ("g017") in v1 and is
+   * now an integer day (1..90) in v2 — incompatible at the value
+   * level, hence a fresh key so old saves are ignored cleanly.
+   */
+  moments: "closer.moments.v2",
+  /**
+   * User's appearance preference: `"system" | "dark" | "light"`.
+   * Lives in its own key so a future palette migration can be a
+   * one-line bump without touching unrelated preferences.
+   */
+  theme: "closer.theme.v1",
+  /**
+   * The notification id of the currently-scheduled daily "Before The
+   * Noise" reminder. We persist it so that when the user reschedules
+   * (changes time / toggles off and on) we can cancel the old one by
+   * id instead of cancelling everything and risking a clobber of
+   * unrelated notifications.
+   */
+  beforeNoiseNotificationId: "closer.beforeNoise.notificationId.v1",
+  /**
+   * Focus-mode state — the Opal-style "social media is blocked while
+   * I read scripture" feature. Persists both the user's preferences
+   * (which apps to block, whether focus is enabled at all) and the
+   * currently-active session if any. Persisting the session means a
+   * crash mid-sermon doesn't strand the user in a "blocked"-looking
+   * state with no way to end it.
+   *
+   * v1 is a Phase-1 in-app stub — the actual OS-level shield arrives
+   * in a Phase-2 module bump and may or may not require a schema
+   * change. Keeping the version separate from preferences/onboarding
+   * means we can iterate on the focus shape without bumping unrelated
+   * data.
+   */
+  focus: "closer.focus.v1",
 } as const;
 
 /**

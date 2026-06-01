@@ -1,12 +1,13 @@
 import { useRef, useState } from "react";
 import { Animated, Easing, Linking, Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import {
   SettingsLinkRow,
   SettingsScaffold,
   SettingsSection,
 } from "@/components/SettingsScaffold";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 const SUPPORT_EMAIL = "hello@closer.app";
 
@@ -34,6 +35,7 @@ const FAQS: { q: string; a: string }[] = [
 ];
 
 export default function HelpScreen() {
+  const router = useRouter();
   return (
     <SettingsScaffold title="Help & Support">
       {/* ─── Hero ────────────────────────────────────────────────
@@ -90,14 +92,14 @@ export default function HelpScreen() {
           icon={<BookIcon />}
           label="User Guide"
           sublabel="A quiet walkthrough of every screen"
-          onPress={() => {}}
+          onPress={() => router.push("/settings/user-guide")}
           showDivider
         />
         <SettingsLinkRow
           icon={<CommunityIcon />}
           label="Community"
           sublabel="Meet others on the same rhythm"
-          onPress={() => {}}
+          onPress={() => router.push("/settings/community")}
         />
       </SettingsSection>
 
@@ -126,6 +128,7 @@ function FAQRow({
   answer: string;
   showDivider: boolean;
 }) {
+  const colors = useColors();
   const [open, setOpen] = useState(false);
   // Single 0→1 progress drives both rotation and the body's opacity +
   // coarse height. We don't measure the answer's height, so we lean
@@ -200,43 +203,50 @@ function FAQRow({
 // Icons
 // ─────────────────────────────────────────────────────────────────
 
-const ICON_PROPS = {
+const ICON_PROPS_BASE = {
   strokeWidth: 1.7,
-  stroke: colors.ink,
   fill: "none",
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
 };
 
 function MailIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M3 6h18v12H3z" {...ICON_PROPS} />
-      <Path d="M3 7l9 7 9-7" {...ICON_PROPS} />
+      <Path d="M3 6h18v12H3z" {...props} />
+      <Path d="M3 7l9 7 9-7" {...props} />
     </Svg>
   );
 }
 
 function FeedbackIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M21 12a8 8 0 11-3.2-6.4L21 4v8z" {...ICON_PROPS} />
+      <Path d="M21 12a8 8 0 11-3.2-6.4L21 4v8z" {...props} />
     </Svg>
   );
 }
 
 function BookIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M4 5a2 2 0 012-2h12v18H6a2 2 0 01-2-2zM8 7h6" {...ICON_PROPS} />
+      <Path d="M4 5a2 2 0 012-2h12v18H6a2 2 0 01-2-2zM8 7h6" {...props} />
     </Svg>
   );
 }
 
 function CommunityIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M8 12a3 3 0 100-6 3 3 0 000 6zM16 12a3 3 0 100-6 3 3 0 000 6zM3 20c0-3 2-5 5-5s5 2 5 5M14 20c0-3 1-5 4-5s4 2 4 5" {...ICON_PROPS} />
+      <Path d="M8 12a3 3 0 100-6 3 3 0 000 6zM16 12a3 3 0 100-6 3 3 0 000 6zM3 20c0-3 2-5 5-5s5 2 5 5M14 20c0-3 1-5 4-5s4 2 4 5" {...props} />
     </Svg>
   );
 }

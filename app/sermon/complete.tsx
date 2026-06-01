@@ -4,8 +4,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/components/Button";
-import { FadeIn } from "@/components/FadeIn";
-import { getTodaysSermonType } from "@/constants/sermonTypes";
+import { resolveSermonType } from "@/lib/moments";
+import { useFocus } from "@/state/focus";
+import { useMoments } from "@/state/moments";
 import { completionOrdinal } from "@/state/progress";
 
 /**
@@ -30,7 +31,27 @@ import { completionOrdinal } from "@/state/progress";
  */
 export default function CompleteScreen() {
   const router = useRouter();
-  const type = useMemo(() => getTodaysSermonType(), []);
+  const { todaysMoment } = useMoments();
+  const { endSession: endFocusSession } = useFocus();
+  const type = useMemo(
+    () => resolveSermonType(todaysMoment.type),
+    [todaysMoment.type],
+  );
+
+  // Tear the focus session down the moment the completion screen
+  // mounts. This is the canonical "session over" trigger — the
+  // user reached the Amen → completion celebration, so the
+  // commitment is fulfilled and any shield (real or honor-mode)
+  // should come down. Effect runs once; endSession is idempotent
+  // so re-mounts on hot-reload don't double-fire anything.
+  useEffect(() => {
+    endFocusSession().catch(() => {
+      /* session teardown is best-effort */
+    });
+    // We want this effect to fire exactly once on mount, and
+    // endFocusSession is stable across renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Snapshot params from closing.tsx — fall back to 1 so the screen
   // is still renderable if someone deep-links here for design QA.
@@ -119,63 +140,51 @@ export default function CompleteScreen() {
             <CelebrationHalo color={type.accent} />
           </Animated.View>
 
-          <FadeIn delayMs={200} durationMs={1100}>
-            <Image
-              source={type.hero}
-              style={{ width: 180, height: 150 }}
-              resizeMode="contain"
-            />
-          </FadeIn>
+          <Image
+            source={type.hero}
+            style={{ width: 180, height: 150 }}
+            resizeMode="contain"
+          />
         </View>
 
         {/* Big ordinal numeral — visual anchor of the screen */}
-        <FadeIn delayMs={900} durationMs={1100}>
-          <Text
-            className="text-[64px] leading-[64px] tracking-[-1px] mt-2"
-            style={{
-              fontFamily: "PlusJakartaSans_800ExtraBold",
-              color: type.accent,
-            }}
-          >
-            {formatOrdinalNumeral(typeCount)}
-          </Text>
-        </FadeIn>
+        <Text
+          className="text-[64px] leading-[64px] tracking-[-1px] mt-2"
+          style={{
+            fontFamily: "PlusJakartaSans_800ExtraBold",
+            color: type.accent,
+          }}
+        >
+          {formatOrdinalNumeral(typeCount)}
+        </Text>
 
-        <FadeIn delayMs={1400} durationMs={1000}>
-          <Text
-            className="text-ink text-[30px] leading-[36px] tracking-[-0.4px] text-center mt-6"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            {headline}
-          </Text>
-        </FadeIn>
+        <Text
+          className="text-ink text-[30px] leading-[36px] tracking-[-0.4px] text-center mt-6"
+          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        >
+          {headline}
+        </Text>
 
         {/* Milestone sentence — with the type name highlighted */}
-        <FadeIn delayMs={1900} durationMs={1100}>
-          <Text
-            className="text-ink-muted text-[16px] leading-[24px] text-center mt-4 px-4"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-          >
-            You completed your {ordinal}{" "}
-            <Text style={{ color: type.accent }}>{type.name}</Text> sermon.
-          </Text>
-        </FadeIn>
+        <Text
+          className="text-ink-muted text-[16px] leading-[24px] text-center mt-4 px-4"
+          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+        >
+          You completed your {ordinal}{" "}
+          <Text style={{ color: type.accent }}>{type.name}</Text> sermon.
+        </Text>
 
-        <FadeIn delayMs={2500} durationMs={1100}>
-          <Text
-            className="text-ink-subtle text-[13px] text-center mt-7 italic px-6"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-          >
-            {grounding(isFirstEver, typeCount)}
-          </Text>
-        </FadeIn>
+        <Text
+          className="text-ink-subtle text-[13px] text-center mt-7 italic px-6"
+          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+        >
+          {grounding(isFirstEver, typeCount)}
+        </Text>
       </View>
 
-      <FadeIn delayMs={3000} durationMs={900}>
-        <View className="px-6 pb-2">
-          <Button label="Continue" onPress={handleContinue} />
-        </View>
-      </FadeIn>
+      <View className="px-6 pb-2">
+        <Button label="Continue" onPress={handleContinue} />
+      </View>
     </SafeAreaView>
   );
 }

@@ -15,7 +15,7 @@ import {
   type HighlightColorId,
   type NoteEntry,
 } from "@/state/annotations";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 /**
  * Bottom action sheet shown when the user taps a verse.
@@ -68,6 +68,7 @@ export function VerseActionSheet({
   onShare: () => void;
   onClose: () => void;
 }) {
+  const colors = useColors();
   const translateY = useRef(new Animated.Value(500)).current;
   const backdrop = useRef(new Animated.Value(0)).current;
 
@@ -387,11 +388,12 @@ function ActionButton({
 }
 
 function CheckGlyph({ dark }: { dark?: boolean }) {
+  const { ink } = useColors();
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
       <Path
         d="M5 12l5 5L20 7"
-        stroke={dark ? "#0E0E10" : colors.ink}
+        stroke={dark ? "#0E0E10" : ink}
         strokeWidth={2.6}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -401,11 +403,12 @@ function CheckGlyph({ dark }: { dark?: boolean }) {
 }
 
 function ClearGlyph() {
+  const { inkSubtle } = useColors();
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
       <Path
         d="M6 6l12 12M18 6l-12 12"
-        stroke={colors.inkSubtle}
+        stroke={inkSubtle}
         strokeWidth={2}
         strokeLinecap="round"
       />
@@ -414,11 +417,12 @@ function ClearGlyph() {
 }
 
 function PlusIcon() {
+  const { ink } = useColors();
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
       <Path
         d="M12 5v14M5 12h14"
-        stroke={colors.ink}
+        stroke={ink}
         strokeWidth={2}
         strokeLinecap="round"
       />
@@ -427,11 +431,12 @@ function PlusIcon() {
 }
 
 function ShareIcon() {
+  const { ink } = useColors();
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
       <Path
         d="M12 4v12M12 4l-4 4M12 4l4 4M5 13v6h14v-6"
-        stroke={colors.ink}
+        stroke={ink}
         strokeWidth={1.7}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -441,11 +446,12 @@ function ShareIcon() {
 }
 
 function ChevronRight() {
+  const { inkSubtle } = useColors();
   return (
     <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
       <Path
         d="M9 6l6 6-6 6"
-        stroke={colors.inkSubtle}
+        stroke={inkSubtle}
         strokeWidth={1.8}
         strokeLinecap="round"
         strokeLinejoin="round"

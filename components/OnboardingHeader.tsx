@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { useRouter } from "expo-router";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 type OnboardingHeaderProps = {
   /** 0..1 fraction of the flow completed */
@@ -10,6 +10,7 @@ type OnboardingHeaderProps = {
 
 export function OnboardingHeader({ progress }: OnboardingHeaderProps) {
   const router = useRouter();
+  const colors = useColors();
   const clamped = Math.max(0, Math.min(1, progress));
 
   return (

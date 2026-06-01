@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { useRouter } from "expo-router";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 type SermonHeaderProps = {
   /** 0..1 fraction of the sermon completed. Omit/undefined for the intro screen. */
@@ -20,6 +20,7 @@ type SermonHeaderProps = {
  */
 export function SermonHeader({ progress, step }: SermonHeaderProps) {
   const router = useRouter();
+  const colors = useColors();
   const showProgress = typeof progress === "number";
   const clamped = showProgress ? Math.max(0, Math.min(1, progress!)) : 0;
 

@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 /**
  * Sermon flow layout.
@@ -10,11 +10,12 @@ import { colors } from "@/constants/theme";
  * reinforce a sense of forward motion through the sermon.
  */
 export default function SermonLayout() {
+  const { bg } = useColors();
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.bg },
+        contentStyle: { backgroundColor: bg },
         animation: "slide_from_right",
       }}
     >

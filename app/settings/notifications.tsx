@@ -1,29 +1,117 @@
-import { useState } from "react";
-import { Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { Linking, Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import {
-  SettingsLinkRow,
   SettingsScaffold,
   SettingsSection,
   SettingsToggleRow,
 } from "@/components/SettingsScaffold";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
+import {
+  BEFORE_THE_NOISE,
+  cancelDailyReminder,
+  DEFAULT_REMINDER_TIME,
+  fireTestReminderNow,
+  formatReminderTime,
+  getNotificationPermission,
+  requestNotificationPermission,
+  scheduleDailyReminder,
+  type DailyReminderTime,
+  type NotificationPermissionStatus,
+} from "@/lib/notifications";
+import { useOnboarding } from "@/state/onboarding";
 
 /**
- * Notification preferences.
+ * Notification preferences — the "Before The Noise" daily ritual.
  *
- * State lives in local component state for now — we don't have a
- * settings store yet, and there's no real notification scheduler
- * wired up either. The toggles are functional UI but persisted to
- * memory only; when we add an AsyncStorage-backed preferences
- * provider, lift this state up unchanged.
+ * The product has exactly ONE notification: a daily morning beacon
+ * that opens straight into the sermon. The settings surface reflects
+ * that — there's no "throughout the day" section, no verse-of-day
+ * toggle, no weekly reflection. Stripping the surface down to a
+ * single toggle + time picker is the design.
+ *
+ * State source of truth lives in OnboardingAnswers (the same place
+ * the onboarding picker writes to). Any change here calls into
+ * `scheduleDailyReminder` / `cancelDailyReminder` so the OS-level
+ * schedule stays in sync with the persisted preference.
+ *
+ * Permission handling:
+ *   • undetermined → "Enable" prompts the system dialog
+ *   • granted      → toggle works, time picker is live
+ *   • denied       → toggle is disabled with a deep link to
+ *                    iOS Settings.app (the only way to recover
+ *                    from a hard deny without uninstalling)
  */
 export default function NotificationsScreen() {
-  const [dailyReminder, setDailyReminder] = useState(true);
-  const [verseOfDay, setVerseOfDay] = useState(true);
-  const [gentleNudges, setGentleNudges] = useState(false);
-  const [streakNudge, setStreakNudge] = useState(true);
-  const [weeklyReflection, setWeeklyReflection] = useState(false);
+  const { answers, setAnswer } = useOnboarding();
+  const [permission, setPermission] =
+    useState<NotificationPermissionStatus>("undetermined");
+  const [busy, setBusy] = useState(false);
+
+  const enabled = answers.notificationsEnabled ?? false;
+  const time = answers.dailyReminderTime ?? DEFAULT_REMINDER_TIME;
+
+  // Read permission on mount so the disabled / "Open Settings"
+  // state on the toggle is accurate even before the user interacts.
+  useEffect(() => {
+    let cancelled = false;
+    getNotificationPermission().then((p) => {
+      if (!cancelled) setPermission(p);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleToggle = useCallback(
+    async (next: boolean) => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        if (next) {
+          const status = await requestNotificationPermission();
+          setPermission(status);
+          if (status !== "granted") {
+            // Don't flip the toggle on if the OS said no — leave the
+            // user with a clear "tap Open Settings" affordance below.
+            setAnswer("notificationsEnabled", false);
+            return;
+          }
+          await scheduleDailyReminder(time);
+          setAnswer("notificationsEnabled", true);
+          // Persist the time too, in case it wasn't set by a prior
+          // onboarding pass (e.g. user "Maybe later"ed and is now
+          // turning it on for the first time from settings).
+          setAnswer("dailyReminderTime", time);
+        } else {
+          await cancelDailyReminder();
+          setAnswer("notificationsEnabled", false);
+        }
+      } finally {
+        setBusy(false);
+      }
+    },
+    [busy, time, setAnswer],
+  );
+
+  const handlePickTime = useCallback(
+    async (next: DailyReminderTime) => {
+      setAnswer("dailyReminderTime", next);
+      // If notifications are already on, immediately reschedule so
+      // the OS schedule matches the new pick — no Save button.
+      if (enabled && permission === "granted") {
+        await scheduleDailyReminder(next);
+      }
+    },
+    [enabled, permission, setAnswer],
+  );
+
+  const handleOpenSystemSettings = useCallback(() => {
+    // iOS will launch the per-app Settings page. From there the
+    // user can re-grant notification permission, which we'll pick
+    // up on next mount via getNotificationPermission().
+    Linking.openSettings().catch(() => {});
+  }, []);
 
   return (
     <SettingsScaffold title="Notifications">
@@ -34,74 +122,116 @@ export default function NotificationsScreen() {
           className="text-ink-muted text-[14px] leading-[21px]"
           style={{ fontFamily: "PlusJakartaSans_400Regular" }}
         >
-          Closer will never buzz you for engagement. Every notification
-          here is a doorway back to stillness — nothing more.
+          One notification a day, at a time you choose. Tap it and the
+          sermon is already waiting. Closer never sends anything else.
         </Text>
       </View>
 
       <SettingsSection
-        title="Daily Rhythm"
-        footer="One reminder a day, at a time that fits your morning."
+        title="Before The Noise"
+        footer={
+          permission === "denied"
+            ? "Notifications are off at the system level. Open Settings to turn them back on."
+            : "Closer will never shame you for missing a day. The notification is an invitation, not a nag."
+        }
       >
         <SettingsToggleRow
           icon={<SunriseIcon />}
-          label="Daily Sermon Reminder"
-          sublabel="A nudge to begin your time today"
-          value={dailyReminder}
-          onValueChange={setDailyReminder}
+          label="Daily reminder"
+          sublabel={
+            enabled
+              ? `Fires every day at ${formatReminderTime(time)}`
+              : "One quiet moment, every morning"
+          }
+          value={enabled}
+          onValueChange={handleToggle}
           showDivider
         />
-        <SettingsLinkRow
-          icon={<ClockIcon />}
-          label="Reminder Time"
-          value="7:30 AM"
-          onPress={() => {}}
-        />
+
+        {/* When notifications are denied at the OS level we surface
+            a soft inline CTA to recover. */}
+        {permission === "denied" && (
+          <Pressable
+            onPress={handleOpenSystemSettings}
+            className="px-4 py-3 flex-row items-center"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            <ExternalIcon />
+            <Text
+              className="text-ink text-[14px] ml-2.5"
+              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            >
+              Open Settings
+            </Text>
+          </Pressable>
+        )}
+
+        {/* Time picker — surfaces inline below the toggle so the
+            user can adjust without drilling into a sub-screen. Only
+            visible when the reminder is actually enabled. */}
+        {enabled && permission === "granted" && (
+          <View className="px-4 pt-4 pb-4">
+            <Text
+              className="text-ink-subtle text-[10.5px] tracking-[2px] uppercase mb-3"
+              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            >
+              Time
+            </Text>
+            <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+              {ALL_PRESETS.map((preset) => {
+                const selected =
+                  preset.hour === time.hour && preset.minute === time.minute;
+                return (
+                  <TimeChip
+                    key={`${preset.hour}-${preset.minute}`}
+                    label={formatReminderTime(preset)}
+                    selected={selected}
+                    onPress={() => handlePickTime(preset)}
+                  />
+                );
+              })}
+            </View>
+          </View>
+        )}
       </SettingsSection>
 
-      <SettingsSection
-        title="Throughout Your Day"
-        footer="Optional — quiet moments to look up from the noise."
-      >
-        <SettingsToggleRow
-          icon={<VerseIcon />}
-          label="Verse of the Day"
-          sublabel="One verse, delivered at noon"
-          value={verseOfDay}
-          onValueChange={setVerseOfDay}
-          showDivider
-        />
-        <SettingsToggleRow
-          icon={<PauseIcon />}
-          label="Gentle Nudges"
-          sublabel="Three short pauses spread across the afternoon"
-          value={gentleNudges}
-          onValueChange={setGentleNudges}
-        />
+      {/* Live preview of the notification copy so the user knows
+          exactly what they'll see. Keeping copy authoritative here
+          (instead of duplicating it) means any future copy tweak
+          in lib/notifications.ts shows up automatically. */}
+      <SettingsSection title="How it looks">
+        <View className="px-4 py-4">
+          <NotificationPreview
+            title={BEFORE_THE_NOISE.title}
+            body={BEFORE_THE_NOISE.body}
+          />
+        </View>
       </SettingsSection>
 
-      <SettingsSection
-        title="Your Journey"
-        footer="Closer will not shame you for missing a day. These are warm-only."
-      >
-        <SettingsToggleRow
-          icon={<FlameIcon />}
-          label="Rhythm Encouragement"
-          sublabel="A note when your week is taking shape"
-          value={streakNudge}
-          onValueChange={setStreakNudge}
-          showDivider
-        />
-        <SettingsToggleRow
-          icon={<ReflectIcon />}
-          label="Weekly Reflection"
-          sublabel="A Sunday-evening look back on your week"
-          value={weeklyReflection}
-          onValueChange={setWeeklyReflection}
-        />
-      </SettingsSection>
+      {__DEV__ && (
+        <SettingsSection
+          title="Dev"
+          footer="Fires a single notification in 2 seconds. Background the app to see the lock-screen banner."
+        >
+          <Pressable
+            onPress={() => {
+              fireTestReminderNow().catch(() => {});
+            }}
+            className="px-4 py-3.5 flex-row items-center"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            <BellIcon />
+            <Text
+              className="text-ink text-[14px] ml-2.5"
+              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            >
+              Fire test notification
+            </Text>
+          </Pressable>
+        </SettingsSection>
+      )}
 
-      <View className="px-6 mt-8">
+      <View className="px-6 mt-6">
         <Text
           className="text-ink-subtle text-[12px] leading-[18px] text-center"
           style={{ fontFamily: "PlusJakartaSans_400Regular" }}
@@ -114,67 +244,188 @@ export default function NotificationsScreen() {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// Time picker chips — a wider set than onboarding (every 30 min
+// from 5:00 AM → 9:30 AM, plus a few late-night times) so settings
+// can accommodate non-morning rhythms onboarding doesn't optimize for.
+// ─────────────────────────────────────────────────────────────────
+
+const ALL_PRESETS: ReadonlyArray<DailyReminderTime> = [
+  { hour: 5, minute: 30 },
+  { hour: 6, minute: 0 },
+  { hour: 6, minute: 30 },
+  { hour: 7, minute: 0 },
+  { hour: 7, minute: 30 },
+  { hour: 8, minute: 0 },
+  { hour: 8, minute: 30 },
+  { hour: 9, minute: 0 },
+  { hour: 9, minute: 30 },
+  { hour: 22, minute: 0 },
+  { hour: 22, minute: 30 },
+  { hour: 23, minute: 0 },
+];
+
+function TimeChip({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={`Set time to ${label}`}
+      accessibilityState={{ selected }}
+      className="rounded-full px-3.5 py-2 border"
+      style={({ pressed }) => ({
+        backgroundColor: selected ? colors.primary : "transparent",
+        borderColor: selected ? colors.primary : colors.borderStrong,
+        opacity: pressed ? 0.85 : 1,
+      })}
+    >
+      <Text
+        className="text-[13px] tracking-[-0.1px]"
+        style={{
+          fontFamily: "PlusJakartaSans_700Bold",
+          color: selected ? colors.primaryFg : colors.ink,
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// NotificationPreview — a tiny mock of the iOS notification UI so
+// the user can see exactly what arrives on their lock screen
+// ─────────────────────────────────────────────────────────────────
+
+function NotificationPreview({
+  title,
+  body,
+}: {
+  title: string;
+  body: string;
+}) {
+  const colors = useColors();
+  return (
+    <View
+      className="rounded-2xl px-4 py-3.5 flex-row items-start"
+      style={{
+        // Quiet wash that reads above colors.surface in both themes.
+        // Ink-tinted (not pure-white) so it still has contrast on
+        // the light theme's near-white surface.
+        backgroundColor: withInkAlpha(colors.ink, 0.05),
+        borderWidth: 1,
+        borderColor: colors.border,
+      }}
+    >
+      {/* "App icon" placeholder — a small filled square with the
+          accent color, mirroring how an actual app icon would sit
+          in the iOS notification stack. */}
+      <View
+        className="w-10 h-10 rounded-xl items-center justify-center mr-3"
+        style={{ backgroundColor: colors.accentSoft }}
+      >
+        <Text
+          className="text-primary text-[14px]"
+          style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
+        >
+          C
+        </Text>
+      </View>
+      <View className="flex-1">
+        <View className="flex-row items-baseline justify-between">
+          <Text
+            className="text-ink text-[13px]"
+            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            numberOfLines={1}
+          >
+            {title}
+          </Text>
+          <Text
+            className="text-ink-subtle text-[11px] ml-2"
+            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          >
+            now
+          </Text>
+        </View>
+        <Text
+          className="text-ink-muted text-[13px] mt-0.5"
+          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          numberOfLines={2}
+        >
+          {body}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Compose an alpha into a `#RRGGBB` hex string, returning a CSS
+ * `rgba(r, g, b, a)` string usable by RN's color props. Falls back
+ * to the input untouched when the hex doesn't parse cleanly. Same
+ * helper SettingsScaffold uses for the off-track switch; duplicated
+ * here to keep this module self-contained for the preview card.
+ */
+function withInkAlpha(hex: string, alpha: number): string {
+  const cleaned = hex.replace("#", "");
+  if (cleaned.length !== 6) return hex;
+  const r = parseInt(cleaned.slice(0, 2), 16);
+  const g = parseInt(cleaned.slice(2, 4), 16);
+  const b = parseInt(cleaned.slice(4, 6), 16);
+  if ([r, g, b].some((n) => Number.isNaN(n))) return hex;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// ─────────────────────────────────────────────────────────────────
 // Icons
 // ─────────────────────────────────────────────────────────────────
 
-const ICON_PROPS = {
+const ICON_PROPS_BASE = {
   strokeWidth: 1.7,
-  stroke: colors.ink,
   fill: "none",
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
 };
 
 function SunriseIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M12 14a4 4 0 014 4H8a4 4 0 014-4z" {...ICON_PROPS} />
-      <Path d="M3 18h18M12 4v2M5 7l1.5 1.5M19 7l-1.5 1.5" {...ICON_PROPS} />
+      <Path d="M12 14a4 4 0 014 4H8a4 4 0 014-4z" {...props} />
+      <Path d="M3 18h18M12 4v2M5 7l1.5 1.5M19 7l-1.5 1.5" {...props} />
     </Svg>
   );
 }
 
-function ClockIcon() {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M12 21a9 9 0 100-18 9 9 0 000 18z" {...ICON_PROPS} />
-      <Path d="M12 7v5l3 2" {...ICON_PROPS} />
-    </Svg>
-  );
-}
-
-function VerseIcon() {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M4 5h6a2 2 0 012 2v12a2 2 0 00-2-2H4zM20 5h-6a2 2 0 00-2 2v12a2 2 0 012-2h6z" {...ICON_PROPS} />
-    </Svg>
-  );
-}
-
-function PauseIcon() {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M9 5v14M15 5v14" {...ICON_PROPS} />
-    </Svg>
-  );
-}
-
-function FlameIcon() {
+function BellIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
       <Path
-        d="M12 3c2 3 5 5 5 9a5 5 0 11-10 0c0-2 1-3 2-4 0 2 1 3 2 3-1-3 0-6 1-8z"
-        {...ICON_PROPS}
+        d="M18 16v-5a6 6 0 10-12 0v5l-2 2h16zM10 21a2 2 0 004 0"
+        {...props}
       />
     </Svg>
   );
 }
 
-function ReflectIcon() {
+function ExternalIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M12 21a9 9 0 100-18 9 9 0 000 18z" {...ICON_PROPS} />
-      <Path d="M12 12a3 3 0 100-6 3 3 0 000 6z" {...ICON_PROPS} />
+      <Path d="M14 4h6v6M10 14L20 4M19 13v6H5V5h6" {...props} />
     </Svg>
   );
 }

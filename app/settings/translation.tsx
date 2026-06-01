@@ -4,8 +4,8 @@ import {
   SettingsScaffold,
   SettingsSection,
 } from "@/components/SettingsScaffold";
-import { colors } from "@/constants/theme";
 import { TRANSLATIONS, usePreferences } from "@/state/preferences";
+import { useColors } from "@/state/theme";
 
 /**
  * Bible version picker.
@@ -60,10 +60,11 @@ export default function TranslationScreen() {
  * surfaces is obvious.
  */
 function TagIcon({ tag }: { tag: string }) {
+  const { ink } = useColors();
   return (
     <Text
       style={{
-        color: colors.ink,
+        color: ink,
         fontFamily: "PlusJakartaSans_700Bold",
         fontSize: 9,
         letterSpacing: 0.5,

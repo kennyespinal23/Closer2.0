@@ -12,8 +12,8 @@ import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingHeader } from "@/components/OnboardingHeader";
-import { colors } from "@/constants/theme";
 import { progressFor } from "@/constants/onboarding";
+import { useColors } from "@/state/theme";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
@@ -112,15 +112,16 @@ export default function QuietScreen() {
 // ─────────────────────────────────────────────────────────────────
 
 function SunriseGlow() {
+  const { accent } = useColors();
   const SIZE = 640;
   return (
     <Svg width={SIZE} height={SIZE}>
       <Defs>
         <RadialGradient id="sunrise" cx="50%" cy="50%" rx="50%" ry="50%">
-          <Stop offset="0%" stopColor={colors.accent} stopOpacity={0.55} />
-          <Stop offset="25%" stopColor={colors.accent} stopOpacity={0.28} />
-          <Stop offset="60%" stopColor={colors.accent} stopOpacity={0.06} />
-          <Stop offset="100%" stopColor={colors.accent} stopOpacity={0} />
+          <Stop offset="0%" stopColor={accent} stopOpacity={0.55} />
+          <Stop offset="25%" stopColor={accent} stopOpacity={0.28} />
+          <Stop offset="60%" stopColor={accent} stopOpacity={0.06} />
+          <Stop offset="100%" stopColor={accent} stopOpacity={0} />
         </RadialGradient>
       </Defs>
       <Rect x={0} y={0} width={SIZE} height={SIZE} fill="url(#sunrise)" />
@@ -142,6 +143,7 @@ type OrbProps = {
 };
 
 function FloatingOrb({ x, y, size, opacity, phase }: OrbProps) {
+  const { accent } = useColors();
   const translateY = useRef(new Animated.Value(0)).current;
   const fadeOpacity = useRef(new Animated.Value(0)).current;
 
@@ -190,7 +192,7 @@ function FloatingOrb({ x, y, size, opacity, phase }: OrbProps) {
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: colors.accent,
+        backgroundColor: accent,
         opacity: fadeOpacity,
         transform: [{ translateY }],
       }}

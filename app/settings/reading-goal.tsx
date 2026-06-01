@@ -5,8 +5,8 @@ import {
   SettingsScaffold,
   SettingsSection,
 } from "@/components/SettingsScaffold";
-import { colors } from "@/constants/theme";
 import { useReadingGoal } from "@/state/readingGoal";
+import { useColors } from "@/state/theme";
 
 /**
  * Daily reading-goal picker.
@@ -40,6 +40,7 @@ const OPTIONS: ReadonlyArray<{
 export default function ReadingGoalScreen() {
   const { goalMinutes, todayMinutes, reachedToday, setGoalMinutes } =
     useReadingGoal();
+  const colors = useColors();
 
   const todayLabel = formatMinutes(todayMinutes);
 
@@ -154,19 +155,20 @@ function minutesLeftCopy(left: number): string {
 // Icons
 // ─────────────────────────────────────────────────────────────────
 
-const ICON_PROPS = {
+const ICON_PROPS_BASE = {
   strokeWidth: 1.7,
-  stroke: colors.ink,
   fill: "none",
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
 };
 
 function ClockIcon() {
+  const { ink } = useColors();
+  const props = { ...ICON_PROPS_BASE, stroke: ink };
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M12 21a9 9 0 100-18 9 9 0 000 18z" {...ICON_PROPS} />
-      <Path d="M12 7v5l3 2" {...ICON_PROPS} />
+      <Path d="M12 21a9 9 0 100-18 9 9 0 000 18z" {...props} />
+      <Path d="M12 7v5l3 2" {...props} />
     </Svg>
   );
 }

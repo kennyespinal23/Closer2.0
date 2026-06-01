@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 /**
  * Nested stack for the `/settings/*` group.
@@ -11,11 +11,12 @@ import { colors } from "@/constants/theme";
  * animation used when entering the group from the profile drawer.
  */
 export default function SettingsLayout() {
+  const { bg } = useColors();
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.bg },
+        contentStyle: { backgroundColor: bg },
         animation: "slide_from_right",
       }}
     />

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TextInput, View, Text, Pressable } from "react-native";
 import type { TextInputProps } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 type InputProps = TextInputProps & {
   label: string;
@@ -17,6 +17,7 @@ export function Input({
   onBlur,
   ...rest
 }: InputProps) {
+  const colors = useColors();
   const [focused, setFocused] = useState(false);
 
   return (

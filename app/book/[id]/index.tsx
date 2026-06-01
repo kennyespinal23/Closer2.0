@@ -27,9 +27,9 @@ import {
   hasBookCover,
 } from "@/constants/bookCovers";
 import { getBookBlurb } from "@/constants/bookBlurbs";
-import { colors } from "@/constants/theme";
 import { prefetchChapter } from "@/lib/bible";
 import { useProgress } from "@/state/progress";
+import { useColors } from "@/state/theme";
 
 /**
  * Book overview — Apple Books–inspired detail page.
@@ -111,6 +111,7 @@ export default function BookOverviewScreen() {
 function BookDetail({ book }: { book: Book }) {
   const router = useRouter();
   const { lastVisited, hasReadChapter, chaptersRead } = useProgress();
+  const { bg, accentSoft, border, primary, ink } = useColors();
   const blurb = useMemo(() => getBookBlurb(book.id), [book.id]);
   const siblings = useMemo(() => siblingBooks(book.id), [book.id]);
 
@@ -149,7 +150,7 @@ function BookDetail({ book }: { book: Book }) {
   const estMinutes = book.chapters * 4;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: bg }}>
       {/* Tinted backdrop sits behind everything and bleeds into the
           status-bar area. When the book has registered cover art,
           the backdrop borrows from the cover's bloom palette so the
@@ -182,9 +183,9 @@ function BookDetail({ book }: { book: Book }) {
             <View
               className="mt-2.5 px-3 py-1 rounded-full"
               style={{
-                backgroundColor: colors.accentSoft,
+                backgroundColor: accentSoft,
                 borderWidth: 1,
-                borderColor: colors.border,
+                borderColor: border,
               }}
             >
               <Text
@@ -241,13 +242,13 @@ function BookDetail({ book }: { book: Book }) {
               {resumeChapter && resumeChapter !== 1 && (
                 <ChipAction
                   label="Start over"
-                  icon={<RewindIcon />}
+                  icon={<RewindIcon stroke={ink} />}
                   onPress={() => openChapter(1)}
                 />
               )}
               <ChipAction
                 label="Random"
-                icon={<DiceIcon />}
+                icon={<DiceIcon stroke={ink} />}
                 onPress={() =>
                   openChapter(
                     1 + Math.floor(Math.random() * book.chapters),
@@ -256,7 +257,7 @@ function BookDetail({ book }: { book: Book }) {
               />
               <ChipAction
                 label="Share"
-                icon={<ShareIcon />}
+                icon={<ShareIcon stroke={ink} />}
                 onPress={async () => {
                   try {
                     await Share.share({
@@ -290,13 +291,13 @@ function BookDetail({ book }: { book: Book }) {
               </View>
               <View
                 className="h-2 rounded-full overflow-hidden"
-                style={{ backgroundColor: colors.border }}
+                style={{ backgroundColor: border }}
               >
                 <View
                   className="h-2"
                   style={{
                     width: `${progressPct}%`,
-                    backgroundColor: colors.primary,
+                    backgroundColor: primary,
                   }}
                 />
               </View>
@@ -391,6 +392,7 @@ function BookDetail({ book }: { book: Book }) {
 
 function PageBackdrop({ book }: { book: Book }) {
   const { width: screenWidth } = useWindowDimensions();
+  const { bg } = useColors();
   const height = 420;
 
   // Prefer the cover's own bloom palette when one is registered,
@@ -418,7 +420,7 @@ function PageBackdrop({ book }: { book: Book }) {
           <LinearGradient id="pageBackdrop" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={top} stopOpacity="0.55" />
             <Stop offset="0.55" stopColor={mid} stopOpacity="0.28" />
-            <Stop offset="1" stopColor={colors.bg} stopOpacity="0" />
+            <Stop offset="1" stopColor={bg} stopOpacity="0" />
           </LinearGradient>
         </Defs>
         <Rect
@@ -649,10 +651,11 @@ function StatTile({
   label: string;
   value: string;
 }) {
+  const { surface } = useColors();
   return (
     <View
       className="flex-1 rounded-2xl border border-border items-center justify-center"
-      style={{ backgroundColor: colors.surface, paddingVertical: 12 }}
+      style={{ backgroundColor: surface, paddingVertical: 12 }}
     >
       <Text
         className="text-ink text-[18px] tracking-[-0.2px]"
@@ -772,6 +775,7 @@ function ChapterTile({
   isResume: boolean;
   onPress: () => void;
 }) {
+  const { primary } = useColors();
   return (
     <View style={{ width: "20%", padding: 3 }}>
       <Pressable
@@ -807,7 +811,7 @@ function ChapterTile({
                 width: 5,
                 height: 5,
                 borderRadius: 3,
-                backgroundColor: colors.primary,
+                backgroundColor: primary,
               }}
             />
           )}
@@ -861,6 +865,7 @@ function SiblingCard({ book, onPress }: { book: Book; onPress: () => void }) {
  */
 function Header({ bookId }: { bookId?: string }) {
   const router = useRouter();
+  const { ink } = useColors();
 
   const handleShare = async () => {
     if (!bookId) return;
@@ -881,7 +886,7 @@ function Header({ bookId }: { bookId?: string }) {
         <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
           <Path
             d="M15 6l-6 6 6 6"
-            stroke={colors.ink}
+            stroke={ink}
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -891,7 +896,7 @@ function Header({ bookId }: { bookId?: string }) {
       <View className="flex-1" />
       {bookId && (
         <RoundChip onPress={handleShare} accessibilityLabel="Share book">
-          <ShareIcon />
+          <ShareIcon stroke={ink} />
         </RoundChip>
       )}
     </View>
@@ -942,12 +947,12 @@ function RoundChip({
 // Inline icons used by the chip actions + header
 // ─────────────────────────────────────────────────────────────────
 
-function ShareIcon() {
+function ShareIcon({ stroke }: { stroke: string }) {
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
       <Path
         d="M12 3v13M8 7l4-4 4 4M5 14v6h14v-6"
-        stroke={colors.ink}
+        stroke={stroke}
         strokeWidth={1.8}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -956,12 +961,12 @@ function ShareIcon() {
   );
 }
 
-function RewindIcon() {
+function RewindIcon({ stroke }: { stroke: string }) {
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
       <Path
         d="M11 6L5 12l6 6M19 6l-6 6 6 6"
-        stroke={colors.ink}
+        stroke={stroke}
         strokeWidth={1.8}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -970,19 +975,19 @@ function RewindIcon() {
   );
 }
 
-function DiceIcon() {
+function DiceIcon({ stroke }: { stroke: string }) {
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
       <Path
         d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2z"
-        stroke={colors.ink}
+        stroke={stroke}
         strokeWidth={1.7}
         strokeLinejoin="round"
         fill="none"
       />
       <Path
         d="M8.5 8.5h0M15.5 8.5h0M12 12h0M8.5 15.5h0M15.5 15.5h0"
-        stroke={colors.ink}
+        stroke={stroke}
         strokeWidth={2.5}
         strokeLinecap="round"
       />

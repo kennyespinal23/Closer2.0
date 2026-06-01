@@ -4,7 +4,7 @@ import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
-import { colors } from "@/constants/theme";
+import { useColors } from "@/state/theme";
 
 const FEATURES = [
   "Personalized daily sermons",
@@ -20,6 +20,7 @@ const TRIAL_DAYS = 7;
 
 export default function PaywallScreen() {
   const router = useRouter();
+  const colors = useColors();
 
   const enterApp = () => {
     // `replace` so the user can't swipe/back into the onboarding stack.
@@ -193,6 +194,7 @@ export default function PaywallScreen() {
 // ─────────────────────────────────────────────────────────────────
 
 function JourneyDots({ total }: { total: number }) {
+  const colors = useColors();
   return (
     <View className="flex-row items-center" style={{ gap: 12 }}>
       {Array.from({ length: total }).map((_, i) => {
@@ -223,6 +225,7 @@ function JourneyDots({ total }: { total: number }) {
 // ─────────────────────────────────────────────────────────────────
 
 function FeatureRow({ label }: { label: string }) {
+  const colors = useColors();
   return (
     <View className="flex-row items-center">
       <View className="w-6 items-center mr-3">
@@ -251,6 +254,7 @@ function FeatureRow({ label }: { label: string }) {
 // ─────────────────────────────────────────────────────────────────
 
 function PremiumGlow() {
+  const colors = useColors();
   const SIZE = 480;
   return (
     <Svg width={SIZE} height={SIZE} style={{ opacity: 0.7 }}>
@@ -268,6 +272,7 @@ function PremiumGlow() {
 
 // Tiny separator dot for the footer links
 function Dot() {
+  const colors = useColors();
   return (
     <View
       style={{

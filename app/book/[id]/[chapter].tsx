@@ -24,6 +24,7 @@ import { BookCover } from "@/components/BookCover";
 import { BOOKS, findBookById } from "@/constants/books";
 import {
   type Chapter,
+  TranslationNotInstalledError,
   fetchChapter,
   prefetchChapter,
 } from "@/lib/bible";
@@ -76,20 +77,30 @@ type ReaderPage = {
   /** Index of the last measured line on this page (inclusive). */
   endLine: number;
   /**
-   * Y-offset (in the original full-text layout) of the first line.
-   * The renderer uses translateY = -offsetY to shift the page's slice
-   * into view inside a fixed-height clipping View.
+   * Legacy field: y-offset (in the original full-text layout) of the
+   * first line. Was used by an earlier render approach that translated
+   * a full-chapter Text up by this amount inside an `overflow: hidden`
+   * clip box. That approach broke on iOS — the Text renderer would
+   * silently stop drawing past the parent's overflow bounds even
+   * though the transform was visually shifting content INTO view —
+   * symptom: pages past page 1 showed verse text cut off mid-word
+   * with white space below.
+   * Retained for diagnostics + auto-mark math; not consumed by the
+   * renderer anymore.
    */
   offsetY: number;
   /**
-   * Exact pixel height of the rendered slice — i.e. the distance from
-   * the top of startLine to the bottom of endLine. Used as the clip
-   * box height so no content from the NEXT page bleeds into this one.
-   * Without this, a page's clip box would be a constant
-   * `pageContentHeight` and any unused tail room would reveal the
-   * first line of the next verse — the "verse 6 appears twice" bug.
+   * Legacy field: exact pixel height of the rendered slice. See
+   * `offsetY` above. Retained for diagnostics.
    */
   contentHeight: number;
+  /**
+   * 0-indexed range into the chapter's verses array — the slice
+   * that actually renders on this page. Replaces the transform+clip
+   * dance. Both ends inclusive.
+   */
+  startVerseIdx: number;
+  endVerseIdx: number;
   /** True for the very first page — gets the chapter heading on top. */
   isFirst: boolean;
 };
@@ -180,7 +191,13 @@ export default function ChapterReaderScreen() {
   const annotations = useAnnotations();
 
   const [data, setData] = useState<Chapter | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // We keep the full Error object — not just its message — because
+  // `lib/bible.ts` raises a typed `TranslationNotInstalledError` for
+  // local-only translations (NWT and other copyrighted ones the user
+  // supplies themselves). Storing the object lets the body render a
+  // friendly guided empty state for that case while still rendering
+  // a generic network-error view for everything else.
+  const [error, setError] = useState<Error | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
   // Action-sheet / note-editor state ────────────────────────────
@@ -320,7 +337,7 @@ export default function ChapterReaderScreen() {
         if (next) prefetchChapter(next.bookId, next.chapter, translation.id);
       })
       .catch((e: Error) => {
-        if (!cancelled) setError(e.message);
+        if (!cancelled) setError(e);
       });
     return () => {
       cancelled = true;
@@ -493,6 +510,7 @@ export default function ChapterReaderScreen() {
         pageContentHeight,
         FIRST_PAGE_HEADING_HEIGHT,
         verseStartLines,
+        data?.verses.length ?? 0,
       );
       setPages(computed);
     },
@@ -752,10 +770,26 @@ export default function ChapterReaderScreen() {
         {/* ─── Body ─────────────────────────────────────────────── */}
         {error ? (
           <View className="flex-1 items-center justify-center px-6">
-            <ErrorView
-              message={error}
-              onRetry={() => setReloadKey((k) => k + 1)}
-            />
+            {error instanceof TranslationNotInstalledError ? (
+              // Local-only translations (NWT and other copyrighted
+              // ones supplied by the user) raise this typed error
+              // when a chapter isn't bundled. We surface a guided
+              // empty state instead of a generic network error
+              // because there's nothing the network can do — the
+              // user has to either install the translation locally
+              // or pick a different one.
+              <TranslationNotInstalledView
+                translationName={error.translationName}
+                bookName={book.name}
+                chapter={error.chapter}
+                onSwitchTranslation={() => router.push("/settings/translation")}
+              />
+            ) : (
+              <ErrorView
+                message={error.message}
+                onRetry={() => setReloadKey((k) => k + 1)}
+              />
+            )}
           </View>
         ) : !data || !pages ? (
           <View className="flex-1 items-center justify-center">
@@ -781,8 +815,7 @@ export default function ChapterReaderScreen() {
             }}
             initialNumToRender={1}
             maxToRenderPerBatch={2}
-            windowSize={3}
-            removeClippedSubviews
+            windowSize={5}
             renderItem={({ item }) => {
               if (item.kind === "endMatter") {
                 return (
@@ -813,14 +846,13 @@ export default function ChapterReaderScreen() {
                   paddingX={PAGE_PAD_X}
                   paddingTop={PAGE_PAD_Y_TOP}
                   paddingBottom={PAGE_PAD_Y_BOTTOM}
-                  pageContentWidth={pageContentWidth}
-                  offsetY={item.page.offsetY}
-                  contentHeight={item.page.contentHeight}
                   isFirst={item.page.isFirst}
                   bookName={book.name}
                   chapter={chapter}
                   scale={textSize.scale}
                   verses={data.verses}
+                  startVerseIdx={item.page.startVerseIdx}
+                  endVerseIdx={item.page.endVerseIdx}
                   bookId={book.id}
                   onVersePress={(n) => {
                     // While the user is in multi-select mode, a tap
@@ -1334,23 +1366,101 @@ function ErrorView({
   );
 }
 
+/**
+ * Empty state for the local-only-translation case.
+ *
+ * Surfaced when the user picks a translation marked `localOnly` in
+ * `TRANSLATIONS` (currently just NWT) and the requested chapter
+ * isn't bundled at `assets/bibles/<id>/<book>.json`. We deliberately
+ * give the user two actions:
+ *   • Switch translation — direct path back to a working reader
+ *   • (Implicit) keep this translation — the message itself explains
+ *     where to drop their licensed text so a future build picks it up
+ *
+ * No "Try again" affordance — retrying doesn't change anything
+ * because there's no network operation to retry. The data either is
+ * or isn't in the bundle.
+ */
+function TranslationNotInstalledView({
+  translationName,
+  bookName,
+  chapter,
+  onSwitchTranslation,
+}: {
+  translationName: string;
+  bookName: string;
+  chapter: number;
+  onSwitchTranslation: () => void;
+}) {
+  return (
+    <View className="items-center py-8 max-w-[340px]">
+      <Text
+        className="text-ink text-[18px] text-center"
+        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+      >
+        {translationName} isn&apos;t installed yet
+      </Text>
+      <Text
+        className="text-ink-muted text-[14px] text-center mt-3 leading-[21px]"
+        style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+      >
+        {bookName} {chapter} isn&apos;t bundled with the app. {translationName}{" "}
+        is copyrighted, so its text has to come from your own licensed
+        copy. Drop a JSON file at{" "}
+        <Text style={{ fontFamily: "PlusJakartaSans_700Bold" }}>
+          assets/bibles/nwt/{bookName.toLowerCase()}.json
+        </Text>{" "}
+        and rebuild to read it here.
+      </Text>
+      <Pressable
+        onPress={onSwitchTranslation}
+        className="mt-6 px-5 py-3 rounded-full"
+        style={{ backgroundColor: "#0A84FF" }}
+      >
+        <Text
+          className="text-[13px]"
+          style={{
+            fontFamily: "PlusJakartaSans_700Bold",
+            color: "#FFFFFF",
+            letterSpacing: 0.2,
+          }}
+        >
+          Switch translation
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────
 // ReaderPageView — one swipeable page in the horizontal pager
 //
-// The page is a fixed-size column. Inside it:
+// The page is a fixed-width column. Inside it:
 //   • (page 1 only) the chapter heading + ornament sit at the top
-//   • Below that: a clipping View of fixed height that shows the
-//     SAME measured VerseFlow text, shifted up by `offsetY` so this
-//     page's slice of lines is the visible portion. Because the line
-//     breaks for that range are identical to the off-screen
-//     measurement (deterministic for the same content + width),
-//     the visible slice is pixel-aligned with what the measurer saw.
+//   • The slice of `verses` that pagination assigned to this page
+//     is rendered directly through VerseFlow — no transform, no
+//     clip box.
 //
-// Why "render full text, clip a window" instead of "render only this
-// page's verses"? Per-verse reflow would re-break the lines (because
-// what a line wraps to depends on what came BEFORE it). Rendering
-// the same continuous block in every page guarantees the measured
-// page breaks land where we promised — at the same line boundaries.
+// Why render the verse SLICE instead of the full chapter shifted +
+// clipped (the previous approach)? Two reasons:
+//
+//   1. iOS Text rendering inside an `overflow: hidden` View doesn't
+//      respect transforms when deciding how much to draw. Core Text
+//      computes the visible text box BEFORE applying transforms, so
+//      content translated INTO view from outside the bounds gets
+//      silently truncated. Symptom in the prior implementation:
+//      pages past page 1 showed verse text that cut off mid-word
+//      with white space below.
+//
+//   2. The "rendering will re-break lines" concern that originally
+//      motivated the full-chapter approach doesn't apply here. Every
+//      verse is prefixed with a "\n" in VerseFlow, so each verse
+//      starts on a fresh line and within-verse wrapping depends only
+//      on that verse's text and the available width — both of which
+//      are identical between the off-screen measurement pass and the
+//      page render. The slice produces the same per-verse line
+//      breaks the measurer saw, so the height budget from
+//      `paginateLines` still holds.
 // ─────────────────────────────────────────────────────────────────
 
 function ReaderPageView({
@@ -1358,14 +1468,13 @@ function ReaderPageView({
   paddingX,
   paddingTop,
   paddingBottom,
-  pageContentWidth,
-  offsetY,
-  contentHeight,
   isFirst,
   bookName,
   chapter,
   scale,
   verses,
+  startVerseIdx,
+  endVerseIdx,
   bookId,
   onVersePress,
   onVerseLongPress,
@@ -1378,14 +1487,19 @@ function ReaderPageView({
   paddingX: number;
   paddingTop: number;
   paddingBottom: number;
-  pageContentWidth: number;
-  offsetY: number;
-  contentHeight: number;
   isFirst: boolean;
   bookName: string;
   chapter: number;
   scale: number;
   verses: { number: number; text: string }[];
+  /**
+   * Inclusive 0-based slice into `verses` — only the verses in this
+   * range render on this page. Pagination upstream guarantees the
+   * slice fits within `pageContentHeight` (with allowance for the
+   * chapter heading on `isFirst` pages).
+   */
+  startVerseIdx: number;
+  endVerseIdx: number;
   bookId: string;
   onVersePress: (verse: number) => void;
   onVerseLongPress?: (verse: number) => void;
@@ -1394,6 +1508,24 @@ function ReaderPageView({
   focusTint: string;
   focusGlow: Animated.Value;
 }) {
+  // Sliced view of just this page's verses. Because every verse in
+  // VerseFlow is prefixed with a "\n" (except the very first one in
+  // the rendered Text), the slice produces the same per-verse line
+  // breaks as the off-screen measurement pass — within-verse wraps
+  // depend only on that verse's text + the available width, both of
+  // which are identical between measurer and page render.
+  //
+  // We render this slice directly — no transform, no clip box. The
+  // earlier "render full chapter, translateY -offsetY, clip to
+  // contentHeight" approach broke on iOS: Core Text would silently
+  // stop drawing past the clip box's bounds even though the
+  // transform was visually shifting content INTO view, producing
+  // pages that cut off mid-word with white space below.
+  const pageVerses =
+    endVerseIdx >= startVerseIdx
+      ? verses.slice(startVerseIdx, endVerseIdx + 1)
+      : [];
+
   return (
     <View
       style={{
@@ -1403,40 +1535,24 @@ function ReaderPageView({
         paddingBottom,
       }}
     >
-      {isFirst ? <ChapterHeading bookName={bookName} chapter={chapter} scale={scale} /> : null}
-      <View
-        style={{
-          width: pageContentWidth,
-          // Clip box height = EXACT pixel span of this page's verse
-          // slice. Using a constant (e.g. pageContentHeight) here
-          // would leave unused tail room at the bottom of pages whose
-          // last verse ended early — and that unused room would show
-          // the first line of the next verse through the translated
-          // VerseFlow underneath, duplicating it visibly on the next
-          // page too. Sizing the clip to the slice height makes the
-          // page end precisely where the last verse ends.
-          height: contentHeight,
-          overflow: "hidden",
+      {isFirst ? (
+        <ChapterHeading bookName={bookName} chapter={chapter} scale={scale} />
+      ) : null}
+      <VerseFlow
+        verses={pageVerses}
+        bookId={bookId}
+        chapter={chapter}
+        scale={scale}
+        onVersePress={onVersePress}
+        onVerseLongPress={onVerseLongPress}
+        selectedSet={selectedSet}
+        focusVerse={focusVerse}
+        focusTint={focusTint}
+        focusGlow={focusGlow}
+        onAnchors={() => {
+          /* page copies don't need to feed anchors back up */
         }}
-      >
-        <View style={{ transform: [{ translateY: -offsetY }] }}>
-          <VerseFlow
-            verses={verses}
-            bookId={bookId}
-            chapter={chapter}
-            scale={scale}
-            onVersePress={onVersePress}
-            onVerseLongPress={onVerseLongPress}
-            selectedSet={selectedSet}
-            focusVerse={focusVerse}
-            focusTint={focusTint}
-            focusGlow={focusGlow}
-            onAnchors={() => {
-              /* page copies don't need to feed anchors back up */
-            }}
-          />
-        </View>
-      </View>
+      />
     </View>
   );
 }
@@ -3040,6 +3156,7 @@ function paginateLines(
   pageContentHeight: number,
   firstPageHeadingHeight: number,
   verseStartLines: ReadonlyArray<number>,
+  totalVerseCount: number,
 ): ReaderPage[] {
   if (lines.length === 0) {
     return [
@@ -3048,9 +3165,27 @@ function paginateLines(
         endLine: -1,
         offsetY: 0,
         contentHeight: 0,
+        startVerseIdx: 0,
+        endVerseIdx: Math.max(0, totalVerseCount - 1),
         isFirst: true,
       },
     ];
+  }
+
+  /**
+   * Convert a measured line index back to the 0-based verse index it
+   * belongs to. Walks the sorted `verseStartLines` and returns the
+   * index of the last verse whose start line is <= the query line.
+   * Falls back to 0 for queries before the first verse's start (the
+   * theoretical case where a few leading lines precede verse 1).
+   */
+  function verseIdxAtLine(line: number): number {
+    let best = 0;
+    for (let i = 0; i < verseStartLines.length; i++) {
+      if (verseStartLines[i] <= line) best = i;
+      else break;
+    }
+    return best;
   }
 
   /**
@@ -3103,6 +3238,8 @@ function paginateLines(
         endLine: cutAt - 1,
         offsetY: startY,
         contentHeight: sliceHeight(startLine, cutAt - 1),
+        startVerseIdx: verseIdxAtLine(startLine),
+        endVerseIdx: verseIdxAtLine(cutAt - 1),
         isFirst,
       });
       startLine = cutAt;
@@ -3119,6 +3256,8 @@ function paginateLines(
     endLine: lines.length - 1,
     offsetY: startY,
     contentHeight: sliceHeight(startLine, lines.length - 1),
+    startVerseIdx: verseIdxAtLine(startLine),
+    endVerseIdx: Math.max(0, totalVerseCount - 1),
     isFirst,
   });
 

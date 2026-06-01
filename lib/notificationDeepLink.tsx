@@ -74,11 +74,24 @@ export function useNotificationDeepLink(): void {
   }, [router]);
 }
 
+/** Notification kinds this dispatcher knows how to route. New
+ *  kinds get added here AND in the payload-emitting site (see
+ *  lib/notifications.ts). Keeping the allow-list narrow means a
+ *  malformed or untrusted notification payload can never coerce
+ *  the router into navigating to an arbitrary screen. */
+const KNOWN_KINDS = new Set(["before-the-noise", "study-session"]);
+
 /**
  * Read the deep-link route off a notification response's data
  * payload. Returns null when the data shape is unrecognized so the
  * caller can no-op cleanly on stray notifications from older app
  * versions or future kinds we don't know how to handle yet.
+ *
+ * Both supported kinds carry their own `route` string (set at
+ * schedule-time) — that lets a single dispatcher handle multiple
+ * notification types without having to know the route conventions
+ * of each. The kind check is for safety only (reject unknown
+ * payloads), not for routing.
  */
 function extractRoute(
   response: Notifications.NotificationResponse,
@@ -87,7 +100,9 @@ function extractRoute(
     | { kind?: string; route?: string }
     | undefined;
   if (!data) return null;
-  if (data.kind !== "before-the-noise") return null;
+  if (typeof data.kind !== "string" || !KNOWN_KINDS.has(data.kind)) {
+    return null;
+  }
   if (typeof data.route !== "string" || data.route.length === 0) return null;
   // The router accepts string Hrefs at runtime; the cast keeps the
   // typed-routes feature happy without us having to enumerate every

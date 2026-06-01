@@ -1,10 +1,10 @@
 import { View } from "react-native";
-import { Tabs, useRouter, useSegments } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import Svg, { Circle, Path } from "react-native-svg";
 import { GlassTabBar } from "@/components/GlassTabBar";
 import {
   GlobalFocusBanner,
-  isGlobalBannerHiddenForRoute,
+  useGlobalFocusBannerSpacing,
 } from "@/components/GlobalFocusBanner";
 
 /**
@@ -29,26 +29,37 @@ import {
  */
 export default function TabsLayout() {
   const router = useRouter();
-  // Track which tab is currently active so we can suppress the
-  // global floating focus banner on Today (which has its own
-  // inline FocusToggle pill and shouldn't double up). useSegments
-  // returns the path segments under the current router state —
-  // inside this layout, segments[1] is the active tab name
-  // ("today", "journey", "library", "insights", or "checkin").
-  const segments = useSegments();
-  const activeTab = segments[1];
-  const hideGlobalBanner = isGlobalBannerHiddenForRoute(activeTab);
+  // Reserves top-of-screen space for the floating focus banner so
+  // its absolute-positioned pill doesn't overlap whatever the
+  // active tab is rendering at the top of its content. Returns 0
+  // when the banner is hidden (no session, or on Today which has
+  // its own inline FocusToggle) so non-focus-mode UX is unchanged.
+  const bannerSpacing = useGlobalFocusBannerSpacing();
 
   return (
-    // The wrapping View hosts the Tabs navigator AND the floating
-    // GlobalFocusBanner side by side. The banner is absolute-
-    // positioned and uses pointerEvents="box-none" internally so
-    // taps that miss the pill pass through to the tab's content.
+    // Wrapping View hosts the Tabs navigator AND the floating
+    // GlobalFocusBanner as siblings. The banner self-suppresses on
+    // the Today tab (which has its own inline FocusToggle pill)
+    // and renders above Journey/Library/Insights when a focus
+    // session is active. Mounted INSIDE the layout (rather than at
+    // the root) because react-native-screens' native view
+    // controllers occlude React-tree siblings of the root <Stack>
+    // on iOS — only siblings INSIDE a layout's screen container
+    // render reliably above that layout's content.
+    //
+    // The Tabs navigator is wrapped in an inner View whose
+    // paddingTop is reserved for the banner pill (when visible).
+    // Padding goes on the INNER view so the absolutely-positioned
+    // banner — which lives at the outer-View layer — still anchors
+    // to the device's safe-area inset, not to the padded inner
+    // edge. Without this split the banner would slide down with
+    // the padding and we'd be back to it overlapping content.
     <View style={{ flex: 1 }}>
-      <Tabs
-        screenOptions={{ headerShown: false }}
-        tabBar={(props) => <GlassTabBar {...props} />}
-      >
+      <View style={{ flex: 1, paddingTop: bannerSpacing }}>
+        <Tabs
+          screenOptions={{ headerShown: false }}
+          tabBar={(props) => <GlassTabBar {...props} />}
+        >
         <Tabs.Screen
           name="today"
           options={{
@@ -56,11 +67,16 @@ export default function TabsLayout() {
             tabBarIcon: ({ color }) => <TodayIcon color={color} />,
           }}
         />
+        {/* The route file is still `journey.tsx` (we kept the
+            path stable so existing deep-links and routing
+            patterns don't break), but the screen now hosts the
+            "Practice" hub — study sessions + saved verses +
+            notes. Title + icon are updated accordingly. */}
         <Tabs.Screen
           name="journey"
           options={{
-            title: "Journey",
-            tabBarIcon: ({ color }) => <JourneyIcon color={color} />,
+            title: "Practice",
+            tabBarIcon: ({ color }) => <PracticeIcon color={color} />,
           }}
         />
         <Tabs.Screen
@@ -99,15 +115,9 @@ export default function TabsLayout() {
             tabBarIcon: ({ color }) => <InsightsIcon color={color} />,
           }}
         />
-      </Tabs>
-      {/* Global focus banner — floats at the top of the active
-          tab when a focus session is in progress. Mounted after
-          <Tabs /> so it sits above the tab content in the z-order
-          (RN stacks later siblings on top). The banner's own
-          conditional render handles the "no session" case, and
-          we additionally suppress it on Today to avoid stacking
-          with the inline FocusToggle pill. */}
-      {!hideGlobalBanner && <GlobalFocusBanner />}
+        </Tabs>
+      </View>
+      <GlobalFocusBanner />
     </View>
   );
 }
@@ -151,26 +161,26 @@ function PlusIcon({ color }: { color: string }) {
   );
 }
 
-function JourneyIcon({ color }: { color: string }) {
-  // Vertical timeline — three small dots on a single line. Echoes
-  // exactly what the Journey screen draws so the icon reads as a
-  // miniature of the destination.
+function PracticeIcon({ color }: { color: string }) {
+  // Bookmarked-page glyph — a sheet with a small ribbon. Reads as
+  // "the things you've set aside / kept" which is exactly what
+  // the Practice tab contains (study sessions, saved verses, notes).
+  // Picked over a generic checklist or notebook so it doesn't
+  // collide with the Library tab's stacked-books glyph or the
+  // Insights tab's bars.
   return (
     <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M7 4v16"
+        d="M6 4h9l4 4v12H6z"
         stroke={color}
         strokeWidth={STROKE_W}
-        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <Circle cx={7} cy={6} r={2} fill={color} />
-      <Circle cx={7} cy={12} r={2} fill={color} />
-      <Circle cx={7} cy={18} r={2} fill={color} />
       <Path
-        d="M12 6h7M12 12h5M12 18h7"
+        d="M11 4v6l2-1.5L15 10V4"
         stroke={color}
         strokeWidth={STROKE_W}
-        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </Svg>
   );

@@ -1,19 +1,27 @@
 /**
- * Thin wrapper around bible-api.com.
+ * Bible chapter loader.
  *
- * Why this service:
- *   • Free, no API key, no rate-limit gymnastics for our scale
- *   • Public-domain translations (WEB, KJV, BBE, OEB-CW, WEBBE)
- *   • Returns clean JSON with per-verse text
- *
- * Translation choice is now exposed — see the optional `translation`
- * arg on `fetchChapter`. The cache is keyed per-translation so
- * switching versions doesn't trash already-loaded chapters in the
- * other versions.
+ * Resolution order on every `fetchChapter` call:
+ *   1. In-memory cache — chapters never change, so we never re-fetch
+ *      one within the same session.
+ *   2. Local registry (`lib/localBibles.ts`) — chapters bundled as
+ *      JSON in `assets/bibles/<translation>/<book>.json`. Used both
+ *      for offline-ready translations (WEB) AND for translations the
+ *      API can't serve at all (NWT and other copyrighted ones the
+ *      user supplies themselves).
+ *   3. bible-api.com — public-domain translations only (WEB, KJV,
+ *      BBE, OEB-CW, WEBBE). For translations marked `localOnly: true`
+ *      in `TRANSLATIONS`, we skip this step entirely and raise a
+ *      typed "not installed" error so the reader can present a
+ *      friendly empty state instead of a generic network error.
  */
 
 import { findBookById } from "@/constants/books";
-import type { TranslationId } from "@/state/preferences";
+import {
+  loadLocalChapter,
+  loadLocalTranslationName,
+} from "@/lib/localBibles";
+import { findTranslation, type TranslationId } from "@/state/preferences";
 
 export type Verse = {
   /** 1-indexed verse number within the chapter. */
@@ -34,6 +42,38 @@ export type Chapter = {
 
 const API_BASE = "https://bible-api.com";
 const DEFAULT_TRANSLATION: TranslationId = "web";
+
+/**
+ * Error subclass thrown when a local-only translation is requested
+ * for a book/chapter that hasn't been bundled. The reader catches
+ * this class specifically so it can render the "translation needs
+ * install" empty state instead of the generic network-error one.
+ *
+ * We use a named subclass rather than a magic string message so
+ * future error-handling code can pattern-match cleanly.
+ */
+export class TranslationNotInstalledError extends Error {
+  readonly translationId: TranslationId;
+  readonly translationName: string;
+  readonly bookId: string;
+  readonly chapter: number;
+
+  constructor(
+    translationId: TranslationId,
+    translationName: string,
+    bookId: string,
+    chapter: number,
+  ) {
+    super(
+      `${translationName} isn't installed yet for ${bookId} ${chapter}.`,
+    );
+    this.name = "TranslationNotInstalledError";
+    this.translationId = translationId;
+    this.translationName = translationName;
+    this.bookId = bookId;
+    this.chapter = chapter;
+  }
+}
 
 /**
  * Per-book verse counts for the five single-chapter books in the
@@ -87,6 +127,47 @@ export async function fetchChapter(
   if (chapter < 1 || chapter > book.chapters) {
     throw new Error(
       `${book.name} has ${book.chapters} chapters — no chapter ${chapter}.`,
+    );
+  }
+
+  const translationMeta = findTranslation(translation);
+
+  // ─── Step 1: try the local registry ────────────────────────────
+  // Bundled translations beat the API every time — they're faster
+  // (no network) and work offline. For translations the API doesn't
+  // serve at all (NWT), this is the ONLY resolution path.
+  const localChapter = loadLocalChapter(translation, bookId, chapter);
+  if (localChapter) {
+    const localName =
+      loadLocalTranslationName(translation) ?? translationMeta.fullName;
+    const result: Chapter = {
+      reference: `${book.name} ${chapter}`,
+      verses: localChapter.verses.map((v) => ({
+        number: v.number,
+        text: v.text,
+      })),
+      translation: localName,
+      // Local files don't carry a per-source attribution string — we
+      // synthesize one so the reader header has something to render.
+      // Users bundling copyrighted translations can extend the JSON
+      // schema with a `translationNote` field and surface it here in
+      // a future iteration.
+      translationNote: `${localName} (local)`,
+    };
+    cache.set(cacheKey, result);
+    return result;
+  }
+
+  // ─── Step 2: API path (public-domain translations only) ────────
+  // Local-only translations skip the network entirely. Raising a
+  // typed error here lets the reader present a "translation needs
+  // install" empty state instead of a generic network error string.
+  if (translationMeta.localOnly) {
+    throw new TranslationNotInstalledError(
+      translation,
+      translationMeta.fullName,
+      bookId,
+      chapter,
     );
   }
 

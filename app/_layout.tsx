@@ -33,6 +33,10 @@ import {
   SavedInsightsProvider,
   useSavedInsights,
 } from "@/state/savedInsights";
+import {
+  StudySessionsProvider,
+  useStudySessions,
+} from "@/state/studySessions";
 import { ThemeProvider, useTheme, useColors } from "@/state/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -90,9 +94,20 @@ export default function RootLayout() {
                             unrelated providers off its re-render
                             path when a session starts/ends. */}
                         <FocusProvider>
-                          <HydrationGate>
-                            <AppShell />
-                          </HydrationGate>
+                          {/* StudySessionsProvider sits inside
+                              FocusProvider because the study
+                              landing screen reads focus prefs to
+                              decide whether to offer Focus mode
+                              on Begin. The reverse (focus needing
+                              study) is never true. Putting it
+                              here also keeps the daily-providers
+                              tree above unaware of scheduling
+                              concerns. */}
+                          <StudySessionsProvider>
+                            <HydrationGate>
+                              <AppShell />
+                            </HydrationGate>
+                          </StudySessionsProvider>
                         </FocusProvider>
                       </SavedInsightsProvider>
                     </ReadingGoalProvider>
@@ -223,6 +238,20 @@ function AppShell() {
             animation: "slide_from_bottom",
           }}
         />
+        {/* Bible study landing page (app/study/[id].tsx) —
+            the deep-link target for a scheduled study-session
+            notification tap. Presented as a full-screen
+            slide-from-bottom modal so it lands as a
+            "stepping into a quiet moment" beat rather than
+            a stack-drilldown. The screen owns its own
+            "close" affordance that replaces to /(tabs)/today. */}
+        <Stack.Screen
+          name="study/[id]"
+          options={{
+            presentation: "modal",
+            animation: "slide_from_bottom",
+          }}
+        />
       </Stack>
     </>
   );
@@ -251,6 +280,7 @@ function HydrationGate({ children }: { children: React.ReactNode }) {
   const { hydrated: savedInsightsHydrated } = useSavedInsights();
   const { hydrated: themeHydrated } = useTheme();
   const { hydrated: focusHydrated } = useFocus();
+  const { hydrated: studySessionsHydrated } = useStudySessions();
 
   const allReady =
     onboardingHydrated &&
@@ -262,7 +292,8 @@ function HydrationGate({ children }: { children: React.ReactNode }) {
     readingGoalHydrated &&
     savedInsightsHydrated &&
     themeHydrated &&
-    focusHydrated;
+    focusHydrated &&
+    studySessionsHydrated;
 
   useEffect(() => {
     if (allReady) {

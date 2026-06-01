@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { BrandGlyph } from "@/components/BrandGlyph";
 import {
   SettingsScaffold,
   SettingsSection,
@@ -215,25 +216,11 @@ function AppRow({
         style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
       >
         <View className="flex-row items-center px-4 pt-3.5 pb-2">
-          {/* Brand-color chip. Solid color square with a single
-              letter is a robust "this is the app" hint that doesn't
-              require licensed icon assets. */}
-          <View
-            className="w-8 h-8 rounded-xl items-center justify-center mr-3"
-            style={{ backgroundColor: app.color }}
-          >
-            <Text
-              className="text-[13px]"
-              style={{
-                fontFamily: "PlusJakartaSans_800ExtraBold",
-                // White on a brand color works for all seven in the
-                // catalog except Snapchat (yellow), where we drop
-                // to a dark glyph for contrast.
-                color: app.color === "#FFFC00" ? "#000000" : "#FFFFFF",
-              }}
-            >
-              {app.initial}
-            </Text>
+          {/* Real brand glyph chip. Same component used in the
+              ShieldOverlay hero and the home FocusToggle stack — keeps
+              every "this is the app" visual coherent. */}
+          <View className="mr-3">
+            <BrandGlyph appId={app.id} size="sm" />
           </View>
           <Text
             className="text-ink text-[14.5px] flex-1"

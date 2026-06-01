@@ -157,22 +157,41 @@ export default function VerseDeliveryScreen() {
   const verse = verseRef.current;
 
   const handleOpenChapter = () => {
-    // Pop the modal first, then route into the reader. Doing both in
-    // one frame avoids the modal-still-visible flash that happens
-    // when you push on top of a modal.
+    // Two-phase nav: dismiss the modal, then push into the reader.
     //
-    // We pass two query params so the reader can spotlight the verse
-    // that was just delivered:
+    // Why not do both in the same tick (as we used to)?
+    // expo-router's `dismissAll()` and `push()` both schedule
+    // navigation-state updates onto the same render. When fired
+    // synchronously back-to-back the dismiss tears down the
+    // routing context the push needs, and the push is silently
+    // dropped — the modal closes and the user lands on whatever
+    // tab they came from with no reader screen ever appearing.
+    //
+    // Deferring the push to the next event-loop tick lets the
+    // dismiss settle (the navigation tree re-roots back to the
+    // parent stack) before the push tries to add a new route on
+    // top. The 0ms timeout is enough — we just need React Native
+    // to flush the queued nav action before the next one starts.
+    //
+    // We pass two query params so the reader can spotlight the
+    // verse that was just delivered:
     //   • focus  — verse number to scroll to + glow briefly
-    //   • tint   — mood swatch as the glow color, so the highlight
-    //              ties visually back to the mood that surfaced it
+    //   • tint   — mood swatch as the glow color, so the
+    //              highlight ties visually back to the mood
     // The tint hex is URL-encoded because "#" is otherwise the
     // fragment delimiter.
-    router.dismissAll();
     const tint = encodeURIComponent(mood.swatch);
-    router.push(
-      `/book/${verse.bookId}/${verse.chapter}?focus=${verse.verse}&tint=${tint}` as never,
-    );
+    const target =
+      `/book/${verse.bookId}/${verse.chapter}?focus=${verse.verse}&tint=${tint}` as const;
+
+    router.dismissAll();
+    // Tick-deferred push — see comment above for the race
+    // explanation. setTimeout(0) is the right tool here; we
+    // don't actually want any visible delay, just an event-loop
+    // boundary between the two router calls.
+    setTimeout(() => {
+      router.push(target as never);
+    }, 0);
   };
 
   const handleClose = () => {

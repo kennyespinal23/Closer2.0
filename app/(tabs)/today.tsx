@@ -16,7 +16,8 @@ import { ShieldOverlay } from "@/components/ShieldOverlay";
 import { cancelDailyReminder } from "@/lib/notifications";
 import { momentDurationMin, resolveSermonType } from "@/lib/moments";
 import { formatMinutes, formatRemaining } from "@/lib/readingGoalFormat";
-import { SOCIAL_APPS, summarizeBlockedApps } from "@/lib/focus";
+import { SOCIAL_APPS } from "@/lib/focus";
+import { BrandGlyph } from "@/components/BrandGlyph";
 import { findMood } from "@/constants/moods";
 import { type SermonType } from "@/constants/sermonTypes";
 import { useAnnotations } from "@/state/annotations";
@@ -26,6 +27,7 @@ import { useMoments } from "@/state/moments";
 import { useOnboarding } from "@/state/onboarding";
 import { usePreferences } from "@/state/preferences";
 import { useProgress } from "@/state/progress";
+import { type StudySession, useStudySessions } from "@/state/studySessions";
 import { useReadingGoal } from "@/state/readingGoal";
 import { useColors } from "@/state/theme";
 
@@ -64,9 +66,149 @@ export default function TodayScreen() {
     prefs: focusPrefs,
     session: focusSession,
     setEnabled: setFocusEnabled,
+    startSession: startFocusSession,
     endSession: endFocusSession,
     reset: resetFocus,
   } = useFocus();
+  const { sessions: studySessions, reset: resetStudySessions } =
+    useStudySessions();
+
+  // Routines that are CURRENTLY participating in focus mode. The
+  // home pill mentions them by name so the user can see, at a
+  // glance, what's driving focus — answering "okay, the toggle is
+  // on, but on for WHAT?" Two predicates must both hold:
+  //   • session.enabled       — the user hasn't paused it on Practice
+  //   • session.useFocusMode  — the per-session focus opt-in is on
+  // We deliberately don't gate on focusPrefs.enabled here: the home
+  // pill itself reflects that flag separately, and we want to keep
+  // showing the routine names even while the master is off so the
+  // user understands which sessions WILL light up when they flip
+  // the switch back on.
+  // ─── Featured routine for the home Routine card ─────────────
+  //
+  // The card picks ONE thing to feature, in priority order:
+  //
+  //   1. If a focus session is currently running and it was launched
+  //      from a routine, feature THAT routine — it's by far the most
+  //      relevant context.
+  //   2. Otherwise, the single soonest-firing enabled study session
+  //      (regardless of whether the routine opted into focus mode).
+  //      This is the fix for the "I enabled Morning Study and
+  //      nothing shows on home" bug — we surface ANY enabled
+  //      session, not just the focus-opted subset.
+  //   3. Otherwise, no routine — the card collapses to a calm
+  //      "Focus mode" tagline with just the master Switch.
+  //
+  // The `subtitle` slot composes the human-readable status string
+  // (e.g. "Active now" / "Tomorrow 7:15 AM" / "Paused · Tomorrow
+  // 7:15 AM" / "Quiet the noise while you read") so the card body
+  // doesn't have to re-derive it from raw state. `apps` is the
+  // app-icon list to render inline — either the running session's
+  // snapshot, the routine's own per-routine list, or the global
+  // focus-prefs list as a last resort.
+  const featured = useMemo(() => {
+    const now = new Date();
+    const masterOn = focusPrefs.enabled;
+    const sessionOn = focusSession !== null;
+
+    // Helper: format a date the way the human eye expects it on a
+    // home card — Today / Tomorrow / weekday name, plus 12-hour clock.
+    const formatWhen = (when: Date): string => {
+      const time = format12h({
+        hour: when.getHours(),
+        minute: when.getMinutes(),
+      });
+      const sameDay = when.toDateString() === now.toDateString();
+      if (sameDay) return `Today ${time}`;
+      const tomorrow = new Date(now);
+      tomorrow.setDate(now.getDate() + 1);
+      if (when.toDateString() === tomorrow.toDateString()) {
+        return `Tomorrow ${time}`;
+      }
+      const dayName = when.toLocaleDateString("en-US", { weekday: "long" });
+      return `${dayName} ${time}`;
+    };
+
+    // 1) Active session from a known routine — the most informative
+    //    state we can show, full stop. Apps come from the session
+    //    snapshot (not the routine's current settings) because the
+    //    user is in-flight and we shouldn't lie about what's
+    //    currently silenced.
+    if (sessionOn && focusSession?.routineId) {
+      const activeRoutine = studySessions.find(
+        (s) => s.id === focusSession.routineId,
+      );
+      if (activeRoutine) {
+        return {
+          routine: activeRoutine,
+          subtitle: "Focus mode is on now",
+          apps: focusSession.blockedAppIds as ReadonlyArray<string>,
+          isActive: true as const,
+        };
+      }
+    }
+
+    // 2) Active session without a known routine — still show the
+    //    active state, but use the generic "Focus mode" title since
+    //    there's no routine to name. Apps from the session snapshot.
+    if (sessionOn && focusSession) {
+      return {
+        routine: null,
+        subtitle: "Focus mode is on now",
+        apps: focusSession.blockedAppIds as ReadonlyArray<string>,
+        isActive: true as const,
+      };
+    }
+
+    // 3) An enabled study session — feature the soonest upcoming one.
+    //    Title = routine name. Subtitle depends on master toggle:
+    //    "Tomorrow 7:15 AM" when armed; "Paused · Tomorrow 7:15 AM"
+    //    when the master is off (matches Practice tab's PAUSED badge).
+    let best: { session: StudySession; when: Date } | null = null;
+    for (const s of studySessions) {
+      if (!s.enabled) continue;
+      const when = computeNextOccurrence(s.time, s.daysOfWeek, now);
+      if (!when) continue;
+      if (!best || when.getTime() < best.when.getTime()) {
+        best = { session: s, when };
+      }
+    }
+    if (best) {
+      const whenLabel = formatWhen(best.when);
+      const focusOptedIn = best.session.useFocusMode;
+      const paused = focusOptedIn && !masterOn;
+      // Prefer the routine's own per-routine block list when the
+      // routine has focus opted in (that's what would silence on
+      // start). Fall back to the global focus prefs list so the
+      // user always sees something concrete even for "reminder-only"
+      // routines that don't carry their own list.
+      const appsToShow = focusOptedIn
+        ? best.session.blockedAppIds
+        : focusPrefs.blockedAppIds;
+      return {
+        routine: best.session,
+        subtitle: paused ? `Paused · ${whenLabel}` : whenLabel,
+        apps: appsToShow as ReadonlyArray<string>,
+        isActive: false as const,
+      };
+    }
+
+    // 4) No routines configured — the card is just the master toggle
+    //    with its calm marketing line.
+    return {
+      routine: null,
+      subtitle: masterOn
+        ? "On · Apps will be quieted during focus"
+        : "Quiet the noise while you read",
+      apps: focusPrefs.blockedAppIds as ReadonlyArray<string>,
+      isActive: false as const,
+    };
+  }, [
+    focusPrefs.enabled,
+    focusPrefs.blockedAppIds,
+    focusSession,
+    studySessions,
+  ]);
 
   // Dev preview state for the ShieldOverlay. Holds the id of the
   // app whose shield is currently being previewed, or null when no
@@ -137,6 +279,10 @@ export default function TodayScreen() {
     resetReadingGoal();
     resetMoments();
     resetFocus();
+    // resetStudySessions also cancels every OS-level study
+    // notification before clearing the persisted list, so the
+    // wipe doesn't leave stale weekly reminders armed in the OS.
+    resetStudySessions().catch(() => {});
     // Also cancel any scheduled "Before The Noise" notification so a
     // reset doesn't leave a stale OS-level schedule firing every
     // morning long after the user has wiped the app.
@@ -157,6 +303,7 @@ export default function TodayScreen() {
     resetReadingGoal();
     resetMoments();
     resetFocus();
+    resetStudySessions().catch(() => {});
     cancelDailyReminder().catch(() => {});
     router.replace("/onboarding/name");
   };
@@ -173,32 +320,47 @@ export default function TodayScreen() {
             Single greeting line with the profile avatar tucked to
             the right. Imprint shows just a time-of-day greeting
             here — no date, no name — and lets the content below
-            do the talking. */}
-        <FadeIn delayMs={0} durationMs={700}>
-          <View className="px-6 pt-2 flex-row items-center justify-between">
+            do the talking.
+
+            (Historical note: this header used to look "glitched" on
+            top of the greeting — turned out to be the global focus
+            banner from app/(tabs)/_layout.tsx rendering on top of
+            the Today screen, NOT a font/animation issue. The banner's
+            shouldHideForSegments check now correctly excludes the
+            Today route; the greeting is back to a straightforward
+            heading style.) */}
+        {/* The avatar sits on the LEFT so it's spatially consistent
+            with the profile drawer it opens — the drawer slides in
+            from the left edge of the screen, so tapping a left-edge
+            chip and watching a left-edge panel slide out reads as
+            one continuous gesture. (Previously the avatar was
+            top-right but the drawer was top-left, which made the
+            two feel disconnected — tapping right, then the left
+            half of the screen animates.) */}
+        <View className="px-6 pt-2 flex-row items-center">
+          <Pressable
+            hitSlop={12}
+            onPress={handleOpenProfile}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            className="w-10 h-10 rounded-full bg-accent-soft border border-border items-center justify-center"
+          >
             <Text
-              className="text-ink text-[28px] leading-[34px] tracking-[-0.4px]"
+              className="text-primary text-[14px]"
               style={{ fontFamily: "PlusJakartaSans_700Bold" }}
             >
-              {greeting}
+              {firstName.charAt(0).toUpperCase()}
             </Text>
-            <Pressable
-              hitSlop={12}
-              onPress={handleOpenProfile}
-              accessibilityRole="button"
-              accessibilityLabel="Open profile"
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-              className="w-10 h-10 rounded-full bg-accent-soft border border-border items-center justify-center"
-            >
-              <Text
-                className="text-primary text-[14px]"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-              >
-                {firstName.charAt(0).toUpperCase()}
-              </Text>
-            </Pressable>
-          </View>
-        </FadeIn>
+          </Pressable>
+          <Text
+            className="flex-1 ml-3 text-ink text-[28px] leading-[36px] tracking-[-0.4px]"
+            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            numberOfLines={1}
+          >
+            {greeting}
+          </Text>
+        </View>
 
         {/* ─── Streak strip ─────────────────────────────────────────
             Imprint-style compact card: one contextual prompt on top
@@ -232,27 +394,45 @@ export default function TodayScreen() {
           </View>
         </FadeIn>
 
-        {/* ─── Focus mode toggle ───────────────────────────────────
-            Lives right under the reading pill because both are
-            "I'm choosing to be present" intent toggles. Three
-            states, same row:
-              • Off               — quiet pill, switch off
-              • Enabled, no sess. — calm accent + brief sublabel
-              • Session active    — alive blue + End button
-            Tap the body anywhere to drill into settings/focus for
-            the app picker; the inline Switch handles the quick
-            on/off without leaving the home screen. */}
+        {/* ─── Routine / Focus card ────────────────────────────────
+            ONE consolidated card that does the work of two earlier
+            rows (the focus pill + the "Up next" routine card).
+            Inspired by Opal's My Apps panel: a routine name as the
+            title, a one-line context sublabel, and the actual
+            blocked-app icons rendered inline so the user can see at
+            a glance what will be quieted. Trailing control flips
+            between an inline Switch (off / armed) and an "End" pill
+            (active session). Tap the card body to open the right
+            destination for the current state (Practice when a
+            routine exists, focus settings otherwise).
+
+            Critically, this card surfaces the routine for ANY
+            enabled study session — not just sessions that opted
+            into focus mode. That's what makes Morning Study
+            actually show up on home after the user enables it on
+            the Practice tab, which was the missing link in the
+            previous iteration. */}
         <FadeIn delayMs={170} durationMs={800}>
           <View className="px-6 mt-2.5">
-            <FocusToggle
-              enabled={focusPrefs.enabled}
+            <RoutineCard
+              masterEnabled={focusPrefs.enabled}
               sessionActive={focusSession !== null}
-              blockedAppIds={focusSession?.blockedAppIds ?? focusPrefs.blockedAppIds}
+              featured={featured}
               onToggle={setFocusEnabled}
               onEndSession={() => {
                 endFocusSession().catch(() => {});
               }}
-              onOpen={() => router.push("/settings/focus")}
+              onOpen={() => {
+                // Tap routes to where the user expects: the routine
+                // editor when there's a routine to manage, the
+                // global focus settings otherwise. Same shape Opal
+                // uses (tap My Apps card → the app picker).
+                if (featured.routine) {
+                  router.push("/(tabs)/journey");
+                } else {
+                  router.push("/settings/focus");
+                }
+              }}
             />
           </View>
         </FadeIn>
@@ -347,6 +527,38 @@ export default function TodayScreen() {
                   }}
                 />
               </View>
+              {/* Toggle a real focus SESSION without going through
+                  the sermon Begin flow. The session uses the
+                  current pref's blocked-app set + today's moment
+                  day. Lets the reviewer verify the GlobalFocusBanner
+                  appears on Journey/Library/Insights/Settings/etc.
+                  without having to walk through a full sermon each
+                  time. End-state shows "End focus session" so the
+                  pill doubles as a quick teardown affordance. */}
+              <View className="items-center mb-3">
+                <DevSessionPill
+                  active={!!focusSession}
+                  onPress={() => {
+                    if (focusSession) {
+                      endFocusSession().catch(() => {});
+                    } else {
+                      // Auto-enable focus before starting if the
+                      // master toggle is off — otherwise the
+                      // session would be silently dropped at
+                      // surface time (the in-sermon banner and
+                      // global banner both gate on session, but
+                      // the user might be testing without
+                      // having flipped the master switch yet).
+                      if (!focusPrefs.enabled) {
+                        setFocusEnabled(true);
+                      }
+                      startFocusSession(todaysMoment.day).catch(
+                        () => {},
+                      );
+                    }
+                  }}
+                />
+              </View>
               <View className="flex-row items-center gap-3">
                 <DevPill
                   icon={<ResetIcon />}
@@ -388,9 +600,17 @@ export default function TodayScreen() {
  * middle, and a chevron on the right.
  *
  * Three states, same shape:
- *   • Untouched (0 min)  — quiet "Begin today's reading"
- *   • In progress        — accent-orange minutes, "X of Y min today"
- *   • Reached            — white minutes, "Reached today"
+ *   • Untouched (0 min)  — quiet "X min today"
+ *   • In progress        — accent-orange minutes, "X of Y min" + remaining caption
+ *   • Reached            — bold "Completed" headline + "Read for X today"
+ *     subline. Once the goal is honored we deliberately stop showing
+ *     a "X of 10 min" counter that would otherwise read like
+ *     "49:40 of 10 min" — confusing (the goal is 10, not 49) and
+ *     guilt-shaped (rewarding overshooting a daily target works
+ *     against the slow-and-quiet rhythm Closer aims for). The
+ *     actual time spent is still visible in the subline so the user
+ *     can see their day at a glance, and the full hourly breakdown
+ *     is one tap away on /reading-goal.
  *
  * The full detail screen (big ring + hourly bar chart + week
  * strip + edit goal) lives at /reading-goal; this pill is purely
@@ -409,14 +629,25 @@ function ReadingPill({
 }) {
   const colors = useColors();
   const pct = goal > 0 ? Math.min(1, minutes / goal) : 0;
-  const remainingLabel = formatRemaining(minutes, goal, reached);
+  // Headline branches on three states. Reached takes precedence —
+  // we don't want "49:40 of 10 min" or any "X of Y" formulation
+  // once the user has crossed the threshold.
   // formatMinutes returns "4", "4:30", or "0:05" — never the raw
   // float that the underlying state stores (we track minutes as a
   // 1/60-precision number for second-by-second progress).
-  const headline =
-    minutes <= 0
+  const headline = reached
+    ? "Completed"
+    : minutes <= 0
       ? `${goal} min today`
       : `${formatMinutes(minutes)} of ${goal} min`;
+  // Caption mirrors the headline split: when reached, surface the
+  // total time invested so the user gets a small breakdown right on
+  // the home screen (the full detail screen has the hourly chart
+  // and 7-day rhythm strip). Otherwise show the existing "X minutes
+  // to today's goal" / "Spend Y minutes near scripture" copy.
+  const remainingLabel = reached
+    ? `Read for ${formatMinutes(minutes)} today`
+    : formatRemaining(minutes, goal, reached);
 
   return (
     <Pressable
@@ -508,30 +739,19 @@ function SermonCard({
       style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
     >
       {/* Hero strip — the sermon type's icon with a per-type accent glow.
-          The hero PNG bg matches bg-surface so it blends seamlessly. */}
-      <View className="h-40 w-full overflow-hidden items-center justify-center">
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <CardAccentGlow color={type.accent} />
-        </View>
+          The hero PNG bg matches bg-surface so it blends seamlessly.
 
-        <Image
-          source={type.hero}
-          style={{ width: 130, height: 110 }}
-          resizeMode="contain"
-        />
-
-        <View className="absolute top-4 left-5">
+          Layout: the eyebrow row (type name + optional completed badge)
+          owns the top 36pt of the strip in normal flow. The illustration
+          + accent glow live in the flex-1 remainder, centered. This
+          replaces an older absolute-positioned eyebrow that visually
+          collided with the top of the hero PNG when the illustration's
+          opaque ink extended close to the upper edge (clearly visible
+          on the Daily Church sun-arch). Keeping the eyebrow in flow
+          guarantees consistent clearance regardless of which type's
+          hero is rendered. */}
+      <View className="h-44 w-full overflow-hidden">
+        <View className="px-5 pt-4 flex-row items-center justify-between">
           <Text
             className="text-[10px] tracking-[3px] uppercase"
             style={{
@@ -541,16 +761,35 @@ function SermonCard({
           >
             {type.name}
           </Text>
+          {/* Completed badge — sits at the eyebrow's right edge so
+              the row reads as a single header band rather than two
+              floating chips above the hero. Hidden until the user
+              actually finishes today's sermon. */}
+          {completed ? <CompletedBadge /> : null}
         </View>
 
-        {/* Completed badge — top-right of the hero strip so it
-            doesn't fight with the type label on the left. Hidden
-            until the user actually finishes today's sermon. */}
-        {completed && (
-          <View className="absolute top-4 right-5">
-            <CompletedBadge />
+        <View className="flex-1 items-center justify-center relative">
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <CardAccentGlow color={type.accent} />
           </View>
-        )}
+
+          <Image
+            source={type.hero}
+            style={{ width: 130, height: 110 }}
+            resizeMode="contain"
+          />
+        </View>
       </View>
 
       {/* Body */}
@@ -1046,170 +1285,202 @@ function ClockGlyph() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// FocusToggle — home-screen focus-mode pill
+// RoutineCard — Opal-inspired home card
 //
-// Three visual states, all in the same row silhouette so the layout
-// rhythm of the home screen never shifts:
+// One consolidated card that replaces what used to be the Focus
+// pill + a separate "Up next" routine card. Inspired by Opal's My
+// Apps panel: a routine name as the title, a one-line context
+// sublabel, and the actual blocked-app icons rendered inline so
+// the user can see at a glance what will be quieted.
 //
-//   1. Off            — quiet ghost pill, switch off, ChevronIcon
-//                       drills to /settings/focus
-//   2. Enabled, idle  — accent shield chip + "Focus mode" + sublabel
-//                       summarizing the blocked-app set, switch on
-//   3. Session active — alive blue chip + "Active" eyebrow, sublabel
-//                       summarizing what's being quieted, trailing
-//                       "End" pill in place of the chevron (no switch
-//                       — turning the master toggle off mid-session
-//                       would be confusing; user ends the session
-//                       explicitly from here or the in-sermon banner)
+// All the state composition (which routine, which subtitle, which
+// apps) lives in the `featured` memo in TodayScreen — this
+// component is intentionally dumb, taking a single shape and
+// rendering the right variant. That keeps the test for "is the
+// home screen reflecting my routine?" trivial: it's a memo, not a
+// component-tree puzzle.
 //
-// Tap the body anywhere → router.push("/settings/focus"). The body
-// tap is separate from the trailing Switch press so users can
-// flip the master toggle without leaving the home screen.
+// Visual rhythm:
+//   • Header row: 36-pt shield chip · routine name · trailing
+//     control (Switch when off/armed, End pill when active)
+//   • Subtitle row: contextual one-liner ("Tomorrow 7:15 AM" /
+//     "Paused · Tomorrow 7:15 AM" / "Focus mode is on now")
+//   • Apps row (optional): real brand glyphs in a tight stack
+//     followed by a count, only rendered when there's at least
+//     one app to show
+//
+// Critical UX rule that the prior FocusToggle violated: the
+// trailing Switch is a sibling of (NOT a child of) the tap-to-
+// open Pressable. Earlier nested shapes caused parent-onPress to
+// fire on Switch flips, silently navigating users off-screen.
 // ─────────────────────────────────────────────────────────────────
 
 /** Same iOS-system-blue the in-sermon banner uses, so the home
  *  toggle and the in-flight banner read as the same feature. */
 const FOCUS_ACCENT = "#0A84FF";
 
-function FocusToggle({
-  enabled,
+/** Shape the home screen feeds to the card. Pre-composed in the
+ *  parent so this component never has to think about which
+ *  routine to feature or what to call its state — just renders
+ *  the variant. `isActive` is the strongest signal: when true the
+ *  card swaps the Switch for an End pill and tints the chip live. */
+type RoutineCardFeatured = {
+  /** The routine to name in the title, or null when none exists. */
+  routine: { name: string } | null;
+  /** Contextual one-liner — "Tomorrow 7:15 AM" / "Paused · ..." /
+   *  "Focus mode is on now" / off-state marketing tagline. */
+  subtitle: string;
+  /** Apps to render as the inline glyph stack. Pass [] to hide
+   *  the apps row entirely (used when both prefs and routine
+   *  have an empty block list). */
+  apps: ReadonlyArray<string>;
+  /** True when a focus session is currently running. Drives the
+   *  active-state color tier and swaps Switch → End pill. */
+  isActive: boolean;
+};
+
+function RoutineCard({
+  masterEnabled,
   sessionActive,
-  blockedAppIds,
+  featured,
   onToggle,
   onEndSession,
   onOpen,
 }: {
-  enabled: boolean;
+  masterEnabled: boolean;
   sessionActive: boolean;
-  blockedAppIds: ReadonlyArray<string>;
+  featured: RoutineCardFeatured;
   onToggle: (next: boolean) => void;
   onEndSession: () => void;
   onOpen: () => void;
 }) {
   const colors = useColors();
 
-  // Compose the sublabel based on the current state.
-  let eyebrow = "Focus mode";
-  let sublabel: string;
-  if (sessionActive) {
-    eyebrow = "Focus mode active";
-    sublabel = summarizeBlockedApps(blockedAppIds);
-  } else if (enabled) {
-    sublabel = `On · ${summarizeBlockedApps(blockedAppIds)}`;
-  } else {
-    sublabel = "Quiet the noise while you read";
-  }
+  const title = featured.routine?.name?.trim() || "Focus mode";
+  const hasApps = featured.apps.length > 0;
 
-  // Chip background — three tiers of intensity matching the row's
-  // state. The active session gets the boldest fill; the idle-on
-  // state gets a soft wash; off uses the calm accent-soft surface
-  // so the whole row reads "muted but present".
+  // Three intensity tiers for the shield chip and the card border.
+  // Active sessions get the bold fill so the home screen visibly
+  // "lights up" while focus is engaged; armed (master on, no
+  // session) gets a soft tint; off uses the calm accent-soft
+  // surface so the row stays present without competing with the
+  // sermon hero below.
   const chipBg = sessionActive
     ? FOCUS_ACCENT
-    : enabled
+    : masterEnabled
       ? withAlpha(FOCUS_ACCENT, 0.18)
       : colors.accentSoft;
   const chipFg = sessionActive ? "#FFFFFF" : FOCUS_ACCENT;
+  const borderColor = sessionActive
+    ? withAlpha(FOCUS_ACCENT, 0.4)
+    : colors.border;
 
   return (
-    <Pressable
-      onPress={onOpen}
-      accessibilityRole="button"
-      accessibilityLabel={`${eyebrow}. ${sublabel}. Tap to open focus settings.`}
-      className="rounded-2xl border border-border bg-surface flex-row items-center px-4 py-3"
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.92 : 1,
-        // Subtle accent border tint when a session is active so the
-        // row visually "lights up" without competing with the
-        // sermon hero below it.
-        borderColor: sessionActive
-          ? withAlpha(FOCUS_ACCENT, 0.4)
-          : colors.border,
-      })}
+    <View
+      className="rounded-2xl border bg-surface px-4 py-3.5"
+      style={{ borderColor }}
     >
-      {/* Leading shield chip. The chip color carries the state —
-          the rest of the row stays calm. */}
-      <View
-        className="w-9 h-9 rounded-xl items-center justify-center mr-3"
-        style={{ backgroundColor: chipBg }}
-      >
-        <ShieldGlyph stroke={chipFg} />
-      </View>
-
-      <View className="flex-1 pr-3">
-        <Text
-          className={
-            sessionActive
-              ? "text-[10px] tracking-[2.5px] uppercase"
-              : "text-ink-subtle text-[10px] tracking-[2.5px] uppercase"
-          }
-          style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            // Active state gets a tinted eyebrow so the "live"
-            // status reads at a glance. Off / idle-on stay in the
-            // standard subtle ink for consistency with the
-            // Drawing-Near pill above.
-            color: sessionActive ? FOCUS_ACCENT : colors.inkSubtle,
-          }}
-        >
-          {eyebrow}
-        </Text>
-        <Text
-          className="text-ink text-[14.5px] mt-0.5"
-          style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-          numberOfLines={1}
-        >
-          {sublabel}
-        </Text>
-      </View>
-
-      {sessionActive ? (
-        // Trailing "End" pill, replacing the Switch during an
-        // active session. Tap halts the session immediately — the
-        // FocusBanner inside the sermon flow has the same
-        // affordance with a confirm step; from home we keep the
-        // tap unconfirmed since the user is intentionally NOT
-        // mid-sermon and clearly wants out.
+      {/* Header row — title + trailing control. */}
+      <View className="flex-row items-center">
         <Pressable
-          onPress={(e) => {
-            e.stopPropagation?.();
-            onEndSession();
-          }}
-          hitSlop={10}
+          onPress={onOpen}
           accessibilityRole="button"
-          accessibilityLabel="End focus session"
-          className="rounded-full px-3.5 py-1.5"
-          style={({ pressed }) => ({
-            backgroundColor: withAlpha(colors.ink, 0.08),
-            opacity: pressed ? 0.7 : 1,
-          })}
+          accessibilityLabel={`${title}. ${featured.subtitle}. Tap to manage.`}
+          className="flex-1 flex-row items-center pr-3"
+          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
         >
-          <Text
-            className="text-[12px] tracking-[0.5px]"
-            style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              color: colors.ink,
-            }}
+          <View
+            className="w-9 h-9 rounded-xl items-center justify-center mr-3"
+            style={{ backgroundColor: chipBg }}
           >
-            End
-          </Text>
+            <ShieldGlyph stroke={chipFg} />
+          </View>
+          <View className="flex-1">
+            <Text
+              className="text-ink text-[16px] tracking-[-0.2px]"
+              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              numberOfLines={1}
+            >
+              {title}
+            </Text>
+            <Text
+              className="text-ink-muted text-[12.5px] mt-0.5"
+              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              numberOfLines={1}
+            >
+              {featured.subtitle}
+            </Text>
+          </View>
         </Pressable>
-      ) : (
-        // Inline Switch — the easy-toggle the user asked for. The
-        // onValueChange runs without bubbling to the row's onPress
-        // because RN's Switch swallows its tap events.
-        <Switch
-          value={enabled}
-          onValueChange={onToggle}
-          trackColor={{
-            false: withAlpha(colors.ink, 0.1),
-            true: FOCUS_ACCENT,
+        {sessionActive ? (
+          // End pill replaces the Switch while a session is
+          // running. Tap halts immediately — the FocusBanner inside
+          // the sermon flow asks for confirmation; from home we
+          // assume intent (the user is explicitly not in a sermon).
+          <Pressable
+            onPress={onEndSession}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="End focus session"
+            className="rounded-full px-3.5 py-1.5"
+            style={({ pressed }) => ({
+              backgroundColor: withAlpha(colors.ink, 0.08),
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Text
+              className="text-[12px] tracking-[0.5px]"
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                color: colors.ink,
+              }}
+            >
+              End
+            </Text>
+          </Pressable>
+        ) : (
+          <Switch
+            value={masterEnabled}
+            onValueChange={onToggle}
+            trackColor={{
+              false: withAlpha(colors.ink, 0.1),
+              true: FOCUS_ACCENT,
+            }}
+            thumbColor="#F4F4F5"
+            ios_backgroundColor={withAlpha(colors.ink, 0.08)}
+          />
+        )}
+      </View>
+
+      {/* Apps row — Opal-style "here's what will be quieted" preview.
+          Rendered as real brand glyphs so the user reads "Instagram,
+          TikTok, YouTube" instantly without having to parse a comma-
+          separated string. Sits below the header with a calm divider
+          so the two regions read as related but distinct: identity
+          on top, what-it-affects below. Hidden when there are no
+          apps at all — there's nothing to show, and the divider
+          alone would feel like a half-finished card. */}
+      {hasApps && (
+        <View
+          className="mt-3 pt-3 flex-row items-center"
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: withAlpha(colors.ink, 0.08),
           }}
-          thumbColor="#F4F4F5"
-          ios_backgroundColor={withAlpha(colors.ink, 0.08)}
-        />
+        >
+          <AppGlyphStack ids={featured.apps} maxVisible={5} />
+          <Text
+            className="text-ink-muted text-[12.5px] ml-3 flex-1"
+            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            numberOfLines={1}
+          >
+            {featured.apps.length === 1
+              ? "1 app quieted"
+              : `${featured.apps.length} apps quieted`}
+          </Text>
+        </View>
       )}
-    </Pressable>
+    </View>
   );
 }
 
@@ -1224,6 +1495,88 @@ function ShieldGlyph({ stroke }: { stroke: string }) {
         strokeLinejoin="round"
       />
     </Svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// AppGlyphStack — overlapping brand-chip preview of blocked apps
+//
+// Render the first `maxVisible` brand glyphs in a slight horizontal
+// overlap (iOS Contact-style avatar stack) so the row reads as
+// "here are the apps that'll be quiet" at a glance. Extra apps
+// beyond the cap collapse into a final "+N" chip in neutral tones.
+//
+// Sized to "sm" (32pt chips) to give the home routine card the
+// chunkier, more recognizable feel of Opal's My Apps panel — the
+// xs preset was too small for the icons to read instantly. The
+// overlap pulls the row back to a comfortable width while keeping
+// the glyphs legible.
+// ─────────────────────────────────────────────────────────────────
+
+const APP_GLYPH_CHIP = 32;
+const APP_GLYPH_OVERLAP = 10;
+
+function AppGlyphStack({
+  ids,
+  maxVisible,
+}: {
+  ids: ReadonlyArray<string>;
+  maxVisible: number;
+}) {
+  const colors = useColors();
+  const visible = ids.slice(0, maxVisible);
+  const overflow = Math.max(0, ids.length - visible.length);
+
+  if (ids.length === 0) return null;
+
+  return (
+    <View className="flex-row items-center">
+      {visible.map((id, i) => (
+        <View
+          key={id}
+          style={{
+            // Pull each subsequent chip back over the previous one
+            // — tight enough to read as a stack, loose enough that
+            // the brand glyph inside each chip stays legible.
+            marginLeft: i === 0 ? 0 : -APP_GLYPH_OVERLAP,
+            // Borders the color of the active background give each
+            // chip visual separation from its neighbor — without
+            // this the dark-mode chips would melt into a smear of
+            // color at the overlap point.
+            borderWidth: 1.5,
+            borderColor: colors.bg,
+            borderRadius: 10,
+          }}
+        >
+          <BrandGlyph appId={id} size="sm" />
+        </View>
+      ))}
+      {overflow > 0 && (
+        <View
+          style={{
+            marginLeft: -APP_GLYPH_OVERLAP,
+            borderWidth: 1.5,
+            borderColor: colors.bg,
+            borderRadius: 10,
+            width: APP_GLYPH_CHIP,
+            height: APP_GLYPH_CHIP,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: withAlpha(colors.ink, 0.12),
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              fontSize: 12,
+              color: colors.ink,
+            }}
+          >
+            +{overflow}
+          </Text>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -1263,6 +1616,69 @@ function PreviewShieldPill({ onPress }: { onPress: () => void }) {
         style={{ fontFamily: "PlusJakartaSans_700Bold" }}
       >
         Next App
+      </Text>
+    </Pressable>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// DevSessionPill — manual focus-session toggle
+//
+// Lets a developer/reviewer flip a real focus session on without
+// having to walk through the Begin Sermon flow. Used primarily to
+// verify the GlobalFocusBanner renders on non-sermon, non-today
+// routes (Journey / Library / Insights / Settings / Profile drawer
+// / book reader). Two visual states:
+//
+//   • Off → muted ghost pill, "Start focus session"
+//   • On  → blue-tinted pill, "End focus session"
+//
+// On press the pill flips state immediately so the user gets
+// instant feedback before navigating away to verify the banner.
+// ─────────────────────────────────────────────────────────────────
+
+function DevSessionPill({
+  active,
+  onPress,
+}: {
+  active: boolean;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  // Same iOS-system-blue as the rest of the focus surface.
+  const accent = "#0A84FF";
+  return (
+    <Pressable
+      hitSlop={12}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={
+        active ? "End the active focus session" : "Start a focus session"
+      }
+      className="flex-row items-center px-4 py-3 rounded-full border bg-surface"
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.7 : 1,
+        borderColor: active ? withAlpha(accent, 0.5) : colors.border,
+        backgroundColor: active ? withAlpha(accent, 0.12) : colors.surface,
+      })}
+    >
+      <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+        <Path
+          d="M12 3l8 3v6c0 4-3 7-8 9-5-2-8-5-8-9V6l8-3z"
+          stroke={active ? accent : colors.inkMuted}
+          strokeWidth={1.8}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </Svg>
+      <Text
+        className="text-[13px] ml-2"
+        style={{
+          fontFamily: "PlusJakartaSans_700Bold",
+          color: active ? accent : colors.inkMuted,
+        }}
+      >
+        {active ? "End focus session" : "Start focus session"}
       </Text>
     </Pressable>
   );
@@ -1347,12 +1763,52 @@ function LastCheckInCard({
 // Helpers
 // ─────────────────────────────────────────────────────────────────
 
+/** 12-hour clock format with AM/PM — "7:15 AM", "11:00 PM". Used by
+ *  the `featured` memo when composing the routine card's subtitle.
+ *  Deliberately tiny and inlined so the home screen doesn't pull a
+ *  date library for one call site. */
+function format12h({
+  hour,
+  minute,
+}: {
+  hour: number;
+  minute: number;
+}): string {
+  const period = hour >= 12 ? "PM" : "AM";
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  const mm = minute.toString().padStart(2, "0");
+  return `${h12}:${mm} ${period}`;
+}
+
 /**
- * Compose an alpha into a `#RRGGBB` hex string. Used by the
- * Completed badge to derive a translucent backdrop/border from the
- * active ink color (so the badge keeps its glassy feel in both
- * themes instead of being locked to white).
+ * Compute the next datetime that a (time-of-day, days-of-week) pair
+ * will fire, searching the next 7 days from `now`. Returns null when
+ * the session has no active days at all — that case is treated as
+ * "never fires" upstream and excludes the session from the home
+ * routine card.
+ *
+ * The 7-day window is intentional and sufficient: a session must
+ * have at least one weekday selected to be schedulable, so its next
+ * occurrence is guaranteed to be within 6 days. We test each calendar
+ * day in order so the result is the strictly-soonest matching slot
+ * (we don't just match weekday; we match weekday AND time-in-future).
  */
+function computeNextOccurrence(
+  time: { hour: number; minute: number },
+  daysOfWeek: ReadonlyArray<number>,
+  now: Date,
+): Date | null {
+  if (daysOfWeek.length === 0) return null;
+  for (let offset = 0; offset < 7; offset++) {
+    const candidate = new Date(now);
+    candidate.setDate(now.getDate() + offset);
+    candidate.setHours(time.hour, time.minute, 0, 0);
+    if (!daysOfWeek.includes(candidate.getDay())) continue;
+    if (candidate.getTime() > now.getTime()) return candidate;
+  }
+  return null;
+}
+
 function withAlpha(hex: string, alpha: number): string {
   const cleaned = hex.replace("#", "");
   if (cleaned.length !== 6) return hex;

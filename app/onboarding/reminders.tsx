@@ -65,7 +65,13 @@ export default function RemindersScreen() {
     [time],
   );
 
-  const goToPaywall = () => router.push("/onboarding/paywall");
+  // After reminders we route through the focus step (introduces
+  // social-app quieting) on the way to the paywall. The chain is:
+  //   reminders → focus → paywall
+  // Naming the helper goToNext (rather than goToPaywall) keeps the
+  // call sites honest about what they're doing — they don't care
+  // what comes next, just that the user finished here.
+  const goToNext = () => router.push("/onboarding/focus");
 
   const handleEnable = async () => {
     if (submitting) return;
@@ -89,14 +95,14 @@ export default function RemindersScreen() {
       // whether we keep moving through onboarding. The settings
       // screen is the recovery surface if they want to opt in later.
       setSubmitting(false);
-      goToPaywall();
+      goToNext();
     }
   };
 
   const handleMaybeLater = () => {
     setAnswer("notificationsEnabled", false);
     setAnswer("dailyReminderTime", time);
-    goToPaywall();
+    goToNext();
   };
 
   return (

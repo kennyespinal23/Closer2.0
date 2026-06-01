@@ -33,13 +33,21 @@ export function formatMinutes(m: number): string {
  * One-line copy that contextualizes the metric — encouraging at 0,
  * specific in the middle, celebratory once reached. Designed to fit
  * in a 2-line caption beneath the ring.
+ *
+ * When reached, we also fold the actual total time into the copy so
+ * the user sees their day at a glance ("You read for 12 min today —
+ * goal honored.") rather than a bare congratulation that hides the
+ * stat. Pairs with the home pill's "Completed" headline + the
+ * detail screen's hero ring which already shows raw minutes inside.
  */
 export function formatRemaining(
   minutes: number,
   goal: number,
   reached: boolean,
 ): string {
-  if (reached) return "Today's reading goal honored.";
+  if (reached) {
+    return `You read for ${formatMinutes(minutes)} today — goal honored.`;
+  }
   if (minutes <= 0) {
     return `Spend ${goal} minutes near Scripture today.`;
   }

@@ -35,7 +35,8 @@ export type TranslationId =
   | "kjv"
   | "bbe"
   | "oeb-cw"
-  | "webbe";
+  | "webbe"
+  | "nwt";
 
 export type Translation = {
   id: TranslationId;
@@ -47,6 +48,15 @@ export type Translation = {
   description: string;
   /** Two-letter tag for the "compare" / verse-action affordances. */
   tag: string;
+  /**
+   * Translation is NOT served by bible-api.com — its text must come
+   * from a local bundle (`assets/bibles/<id>/<book>.json`). When this
+   * is true, the loader skips the network entirely and raises a
+   * typed "not installed" error for any chapter that isn't bundled
+   * locally, so the reader can render a guided empty state. Used for
+   * copyrighted translations where the user supplies their own data.
+   */
+  localOnly?: boolean;
 };
 
 export const TRANSLATIONS: ReadonlyArray<Translation> = [
@@ -84,6 +94,21 @@ export const TRANSLATIONS: ReadonlyArray<Translation> = [
     fullName: "World English Bible — British Edition",
     description: "Familiar British spelling and rhythm.",
     tag: "WEBBE",
+  },
+  {
+    // The New World Translation is local-only because its text is
+    // copyrighted by the Watch Tower Bible and Tract Society of
+    // Pennsylvania and isn't served by bible-api.com. Users supply
+    // their own JSON in `assets/bibles/nwt/<book>.json` matching the
+    // shape in `lib/localBibles.ts`. When a chapter isn't bundled,
+    // the reader presents a guided "needs install" empty state
+    // instead of trying to hit the network.
+    id: "nwt",
+    name: "NWT",
+    fullName: "New World Translation",
+    description: "Local-only — supply your own copy in assets/bibles/nwt.",
+    tag: "NWT",
+    localOnly: true,
   },
 ];
 

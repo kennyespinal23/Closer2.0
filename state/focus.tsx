@@ -74,6 +74,13 @@ export type FocusSession = {
   startedAt: number;
   sermonDay: number;
   blockedAppIds: SocialAppId[];
+  /** Id of the study-session routine that launched this focus
+   *  session, when applicable. Absent when focus was started from
+   *  the sermon flow (no routine) or directly from the home toggle.
+   *  Stored so the home pill can name the originating routine
+   *  during an active session — answering "the shield is up — for
+   *  WHAT?" rather than just "12 apps quieted". */
+  routineId?: string;
 };
 
 export type FocusState = {
@@ -122,10 +129,25 @@ type FocusContextValue = {
   setAutoStart: (next: boolean) => void;
 
   // Session mutations
-  /** Begin a focus session for the given sermon day. Uses the
-   *  current `prefs.blockedAppIds` snapshot. Resolves once the
-   *  shield call returns (immediate in Phase 1). */
-  startSession: (sermonDay: number) => Promise<void>;
+  /** Begin a focus session for the given sermon day.
+   *
+   *  By default the session snapshots the current
+   *  `prefs.blockedAppIds`. Callers that want to start a session
+   *  with a CUSTOM app list (e.g. a scheduled study session that
+   *  carries its own per-routine blocked list) can pass
+   *  `customBlockedAppIds` and the snapshot will use that instead
+   *  — leaving the user's global focus prefs untouched.
+   *
+   *  When the session is launched from a scheduled routine, callers
+   *  should also pass `routineId` so the active home pill can name
+   *  the source routine instead of just listing apps.
+   *
+   *  Resolves once the shield call returns (immediate in Phase 1). */
+  startSession: (
+    sermonDay: number,
+    customBlockedAppIds?: ReadonlyArray<SocialAppId>,
+    routineId?: string,
+  ) => Promise<void>;
   /** End the active session (idempotent). The shield is dropped
    *  unconditionally — safe to call even when no session is on. */
   endSession: () => Promise<void>;
@@ -181,6 +203,13 @@ export function FocusProvider({ children }: { children: ReactNode }) {
             blockedAppIds: savedSession.blockedAppIds.filter(
               (x): x is SocialAppId => typeof x === "string",
             ) as SocialAppId[],
+            // Preserve the routineId across cold-start. Stored only
+            // when it's a non-empty string so we don't carry over
+            // stray null/undefined from older payloads.
+            ...(typeof savedSession.routineId === "string" &&
+            savedSession.routineId.length > 0
+              ? { routineId: savedSession.routineId }
+              : {}),
           }
         : null;
     setState({ prefs: safePrefs, session: validSession });
@@ -235,31 +264,46 @@ export function FocusProvider({ children }: { children: ReactNode }) {
 
   // ─── Session mutations ───────────────────────────────────────
 
-  const startSession = useCallback(async (sermonDay: number) => {
-    // Snapshot the current blocked list. If the user edits their
-    // list during the session, that change applies to the NEXT
-    // session — the current one keeps the list it started with.
-    let snapshot: SocialAppId[] = [];
-    setState((cur) => {
-      snapshot = [...cur.prefs.blockedAppIds];
-      return {
-        ...cur,
-        session: {
-          startedAt: Date.now(),
-          sermonDay,
-          blockedAppIds: snapshot,
-        },
-      };
-    });
-    // Fire the (stub) shield. Failures don't block the session —
-    // the UI commits to the focus state regardless, since the
-    // user explicitly opted in.
-    try {
-      await shieldStart(snapshot);
-    } catch {
-      /* shield is best-effort */
-    }
-  }, []);
+  const startSession = useCallback(
+    async (
+      sermonDay: number,
+      customBlockedAppIds?: ReadonlyArray<SocialAppId>,
+      routineId?: string,
+    ) => {
+      // Snapshot the blocked list — either the caller-supplied
+      // custom list (study sessions) or the current global prefs
+      // (sermon flow). If the user edits their global list during
+      // an active session, that change applies to the NEXT
+      // session — the current one keeps the list it started with.
+      let snapshot: SocialAppId[] = [];
+      setState((cur) => {
+        snapshot = customBlockedAppIds
+          ? [...customBlockedAppIds]
+          : [...cur.prefs.blockedAppIds];
+        return {
+          ...cur,
+          session: {
+            startedAt: Date.now(),
+            sermonDay,
+            blockedAppIds: snapshot,
+            // Only carry the routineId when the caller actually
+            // supplied one (omit-when-undefined keeps the persisted
+            // shape minimal for sermon-flow sessions).
+            ...(routineId ? { routineId } : {}),
+          },
+        };
+      });
+      // Fire the (stub) shield. Failures don't block the session —
+      // the UI commits to the focus state regardless, since the
+      // user explicitly opted in.
+      try {
+        await shieldStart(snapshot);
+      } catch {
+        /* shield is best-effort */
+      }
+    },
+    [],
+  );
 
   const endSession = useCallback(async () => {
     setState((cur) => (cur.session ? { ...cur, session: null } : cur));

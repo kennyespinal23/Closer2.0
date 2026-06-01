@@ -14,6 +14,12 @@ export const ONBOARDING_STEPS = [
   "quiet",
   "account",
   "reminders",
+  // "focus" closes the setup chain: the user has just picked their
+  // morning trigger; this screen offers to guard the few minutes
+  // that follow it. Lives between reminders and the paywall so the
+  // story arc reads "we'll wake you → we'll quiet the noise →
+  // here's the deal" without an awkward step shuffle.
+  "focus",
 ] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];

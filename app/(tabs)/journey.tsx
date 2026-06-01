@@ -1,1113 +1,820 @@
 import { useMemo, useState } from "react";
-import {
-  LayoutAnimation,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  UIManager,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import Svg, { Circle, Path } from "react-native-svg";
-import { FadeIn } from "@/components/FadeIn";
+import Svg, { Path } from "react-native-svg";
+import { StudySessionEditor } from "@/components/StudySessionEditor";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
 import {
-  buildJourney,
-  formatDayHeader,
-  type ChapterEvent,
-  type CheckInEvent,
-  type CheckInStack,
-  type HighlightEvent,
-  type HighlightStack,
-  type JourneyRow,
-  type MilestoneEvent,
-  type NoteEvent,
-  type NoteStack,
-  type SermonEvent,
-} from "@/lib/journey";
-import { useAnnotations } from "@/state/annotations";
-import { useCheckIns } from "@/state/checkIns";
-import { useProgress } from "@/state/progress";
+  formatRef,
+  relativeTime,
+  routeForVerse,
+} from "@/lib/annotationsFormat";
+import { formatReminderTime } from "@/lib/notifications";
+import { useFocus } from "@/state/focus";
+import {
+  type Highlight,
+  type Note,
+  useAnnotations,
+} from "@/state/annotations";
+import {
+  formatDaysOfWeek,
+  useStudySessions,
+  type StudySession,
+} from "@/state/studySessions";
 import { useColors } from "@/state/theme";
 
-// Android requires a one-time opt-in to use LayoutAnimation. Safe
-// to call repeatedly — internally guards itself.
-if (
-  Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 /**
- * Journey tab — a chronological timeline of everything the user has
- * done in Closer, grouped by day. New entries land at the top; each
- * day reads like a small spiritual diary entry.
+ * Practice — the user's personal hub.
  *
- *   ──────────────────────────────────────
- *    TODAY
- *   ──────────────────────────────────────
- *   ● 7-day streak                       ← milestone
- *   │
- *   ● Drawing Near in the Noise          ← sermon
- *   │
- *   ● Highlights · 3                  ▾  ← stack (collapsed)
- *   │      └ John 3:16
- *   │      └ Psalm 23:1
- *   │      └ Romans 8:28
- *   │
- *   ● Note · Genesis 1                   ← single (no stack)
- *   ──────────────────────────────────────
+ * This tab used to be "Journey" (a chronological timeline of every
+ * action in the app). That presentation didn't land well in user
+ * testing — it felt like staring at a logbook rather than something
+ * actionable. We've repurposed the slot to host the three personal
+ * artefacts users actually return to:
  *
- * Same-kind chatter is collapsed: when a day has 2+ notes (or 2+
- * highlights), they fuse into a single "Notes · N" / "Highlights · N"
- * stack card that expands inline on tap to reveal each child. Single
- * notes/highlights stay as their own row.
+ *   1. STUDY SESSIONS  — the customizable focus routines (recurring
+ *                        scheduled Bible-reading commitments)
+ *   2. SAVED VERSES    — every highlighted verse, with quick-open
+ *                        cards and a "See all" drill-in
+ *   3. NOTES           — every written reflection, same pattern
  *
- * Tap behavior:
- *   • verse rows + chapter rows → open the reader
- *   • stack header → toggle expansion
- *   • stack child → open the reader at that verse
- *   • sermon + milestone → inert (no replay yet)
+ * Each section is self-contained with its own header, count, and a
+ * single primary affordance. Sections are intentionally NOT cards-
+ * within-cards — the section header acts as the chrome and the
+ * content sits flat below it, mirroring how Settings groups stack
+ * sections without nested borders.
+ *
+ * The previous Journey timeline implementation lives in git history;
+ * the data sources it consumed (sermon completions, check-in log,
+ * chapter reads) are all still available through their providers if
+ * we ever want to resurrect it as a profile-drawer page.
  */
-export default function JourneyScreen() {
+export default function PracticeScreen() {
   const router = useRouter();
-  const { sermonCompletions, chaptersRead, engagedDates } = useProgress();
-  const { notes, highlights, verseSnippets, timestamps } = useAnnotations();
-  const { log: checkInLog } = useCheckIns();
-  const { border } = useColors();
+  const colors = useColors();
 
-  const days = useMemo(
-    () =>
-      buildJourney(
-        { sermonCompletions, chaptersRead, engagedDates },
-        { notes, highlights, verseSnippets, timestamps },
-        { log: checkInLog },
-      ),
-    [
-      sermonCompletions,
-      chaptersRead,
-      engagedDates,
-      notes,
-      highlights,
-      verseSnippets,
-      timestamps,
-      checkInLog,
-    ],
-  );
+  const {
+    sessions: studySessions,
+    addSession,
+    updateSession,
+    toggleSession,
+  } = useStudySessions();
+  const { allHighlights, allNotes, counts } = useAnnotations();
+  // Read the global focus master toggle so the per-session "FOCUS ON"
+  // badge can mirror it. When the master is OFF, sessions opted-in to
+  // focus mode show a "PAUSED" state instead of the active green
+  // badge — the user gets a single visual truth: focus is on globally
+  // OR it isn't, and the per-session opt-in only matters when global
+  // is on. This is what keeps the Practice tab and the home screen's
+  // focus pill perfectly in sync.
+  const { prefs: focusPrefs } = useFocus();
 
-  const totalRows = days.reduce((acc, d) => acc + d.rows.length, 0);
+  // Memoize the (potentially-large) annotation lists so we don't
+  // re-derive them on every parent re-render. They depend on the
+  // annotations state, which is a plain object reference — the
+  // useAnnotations hook returns stable callback identities, so a
+  // useMemo here keyed on the helpers is the cheapest way to
+  // avoid recomputation churn.
+  const highlights = useMemo(() => allHighlights(), [allHighlights]);
+  const notes = useMemo(() => allNotes(), [allNotes]);
+
+  // Recent slices — the preview row shows the freshest 3 entries.
+  // "See all" drills into the full /highlights or /notes screens.
+  const recentHighlights = highlights.slice(0, 3);
+  const recentNotes = notes.slice(0, 3);
+
+  // Editor target: null = closed, "new" = creating, "<id>" = editing.
+  // Single piece of state keeps open/close trivially correct, and
+  // matches the model used on /settings/study-sessions so the editor
+  // component itself doesn't need to know which surface invoked it.
+  const [editorTarget, setEditorTarget] = useState<null | "new" | string>(null);
+  const editingSession =
+    editorTarget && editorTarget !== "new"
+      ? studySessions.find((s) => s.id === editorTarget)
+      : undefined;
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: TAB_BAR_TOTAL_HEIGHT + 32 }}
+        contentContainerStyle={{
+          // Floating tab bar sits over the screen — pad the bottom
+          // enough that the last card clears the bar by ~16pt.
+          paddingBottom: TAB_BAR_TOTAL_HEIGHT + 16,
+        }}
         showsVerticalScrollIndicator={false}
       >
-        {/* ─── Header ───────────────────────────────────────── */}
-        <FadeIn delayMs={0} durationMs={700}>
-          <View className="px-6 pt-2">
-            <Text
-              className="text-ink-subtle text-[12px] uppercase tracking-[3px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-            >
-              Closer
-            </Text>
-            <Text
-              className="text-ink text-[32px] leading-[36px] tracking-[-0.6px] mt-1"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-            >
-              Journey
-            </Text>
-            <Text
-              className="text-ink-muted text-[13.5px] mt-2 leading-[20px]"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-            >
-              {totalRows > 0
-                ? "Every quiet step of your time with Him, one day at a time."
-                : "Your timeline begins the first time you read, highlight, or finish a sermon."}
-            </Text>
-          </View>
-        </FadeIn>
+        {/* Header — single large title, no eyebrow.
+            "Practice" frames the page as the user's spiritual
+            practice in a faith-app context, without leaning into
+            "settings" or "log" vocabulary that would feel clinical. */}
+        <View className="px-6 pt-2">
+          <Text
+            className="text-ink text-[28px] leading-[36px] tracking-[-0.4px]"
+            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          >
+            Practice
+          </Text>
+          <Text
+            className="text-ink-muted text-[14px] mt-1.5 leading-[20px]"
+            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          >
+            The routines you&apos;ve set and the verses you&apos;ve kept.
+          </Text>
+        </View>
 
-        {/* ─── Body ───────────────────────────────────────── */}
-        {totalRows === 0 ? (
-          <EmptyState />
+        {/* ─── Study Sessions ─────────────────────────────────────
+            The "+ New" action sits in the section header ALWAYS
+            (even when the list is empty) so the create affordance
+            is always one tap away — the previous flow buried it
+            inside the empty-state card, which was easy to miss. */}
+        <SectionHeader
+          title="Study sessions"
+          count={studySessions.length}
+          actionLabel="+ New"
+          actionVariant="primary"
+          onAction={() => setEditorTarget("new")}
+        />
+        {studySessions.length === 0 ? (
+          <EmptyStudySessions onCreate={() => setEditorTarget("new")} />
         ) : (
-          <View className="px-6 mt-8">
-            {days.map((day, dayIdx) => (
-              <FadeIn
-                key={day.dateISO}
-                delayMs={150 + dayIdx * 60}
-                durationMs={650}
-              >
-                <View className={dayIdx === 0 ? "" : "mt-7"}>
-                  <DayHeader iso={day.dateISO} />
+          <View className="mx-5 mt-2 rounded-2xl border border-border bg-surface overflow-hidden">
+            {studySessions.map((session, i) => (
+              <StudySessionRow
+                key={session.id}
+                session={session}
+                globalFocusEnabled={focusPrefs.enabled}
+                showDivider={i < studySessions.length - 1}
+                onTap={() => setEditorTarget(session.id)}
+                onToggle={() => toggleSession(session.id)}
+              />
+            ))}
+            <AddSessionFooter onPress={() => setEditorTarget("new")} />
+          </View>
+        )}
 
-                  {/* Vertical-line + dot timeline. The line is drawn
-                      as a single absolutely-positioned column behind
-                      the rows so it stretches the full day height
-                      regardless of how many rows / how many of them
-                      are expanded. */}
-                  <View className="mt-3 relative">
-                    <View
-                      pointerEvents="none"
-                      style={{
-                        position: "absolute",
-                        left: 7,
-                        top: 6,
-                        bottom: 6,
-                        width: 1,
-                        backgroundColor: border,
-                      }}
-                    />
-                    {day.rows.map((row, i) => (
-                      <TimelineRow
-                        key={row.id}
-                        row={row}
-                        isLast={i === day.rows.length - 1}
-                        router={router}
-                      />
-                    ))}
-                  </View>
-                </View>
-              </FadeIn>
+        {/* ─── Saved Verses ─────────────────────────────────────── */}
+        <SectionHeader
+          title="Saved verses"
+          count={counts.highlights}
+          actionLabel={highlights.length > 0 ? "See all" : undefined}
+          onAction={() => router.push("/highlights")}
+        />
+        {highlights.length === 0 ? (
+          <EmptyHighlights />
+        ) : (
+          <View className="mt-1">
+            {recentHighlights.map((h) => (
+              <HighlightPreview
+                key={h.key}
+                highlight={h}
+                onPress={() => router.push(routeForVerse(h))}
+              />
             ))}
           </View>
         )}
+
+        {/* ─── Notes ────────────────────────────────────────────── */}
+        <SectionHeader
+          title="Notes"
+          count={counts.notes}
+          actionLabel={notes.length > 0 ? "See all" : undefined}
+          onAction={() => router.push("/notes")}
+        />
+        {notes.length === 0 ? (
+          <EmptyNotes />
+        ) : (
+          <View className="mt-1">
+            {recentNotes.map((n) => (
+              <NotePreview
+                key={n.noteId}
+                note={n}
+                onPress={() => router.push(routeForVerse(n))}
+              />
+            ))}
+          </View>
+        )}
+
+        {/* A touch of bottom breathing room before the tab bar so
+            the final section header isn't optically pressed to the
+            bar's top edge. */}
+        <View style={{ height: 16 }} />
       </ScrollView>
+
+      {/* Editor modal — shared with /settings/study-sessions so the
+          add/edit flow looks and feels identical regardless of where
+          it was opened from. `key` derived from target so React fully
+          remounts when switching between sessions (cleans draft state). */}
+      <StudySessionEditor
+        key={editorTarget ?? "closed"}
+        visible={editorTarget !== null}
+        existing={editingSession}
+        onClose={() => setEditorTarget(null)}
+        onSubmit={async (draft) => {
+          if (editorTarget === "new") {
+            await addSession(draft);
+          } else if (editorTarget) {
+            await updateSession(editorTarget, draft);
+          }
+          setEditorTarget(null);
+        }}
+      />
     </SafeAreaView>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Day header
+// Section primitives
 // ─────────────────────────────────────────────────────────────────
-
-function DayHeader({ iso }: { iso: string }) {
-  const label = formatDayHeader(iso);
-  return (
-    <View className="flex-row items-center">
-      <Text
-        className="text-ink text-[14px] tracking-[-0.1px]"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-      >
-        {label.primary}
-        {label.secondary ? (
-          <Text
-            className="text-ink-subtle text-[13px]"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-          >
-            {`  ·  ${label.secondary}`}
-          </Text>
-        ) : null}
-      </Text>
-      <View className="flex-1 h-[1px] bg-border ml-3" />
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Row dispatcher — single event vs. stack
-// ─────────────────────────────────────────────────────────────────
-
-type RouterShape = ReturnType<typeof useRouter>;
-
-function TimelineRow({
-  row,
-  isLast,
-  router,
-}: {
-  row: JourneyRow;
-  isLast: boolean;
-  router: RouterShape;
-}) {
-  if (
-    row.kind === "noteStack" ||
-    row.kind === "highlightStack" ||
-    row.kind === "checkInStack"
-  ) {
-    return <StackRow row={row} isLast={isLast} router={router} />;
-  }
-  return <EventRow event={row} isLast={isLast} router={router} />;
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Single-event row — note / highlight / sermon / chapter / milestone
-// ─────────────────────────────────────────────────────────────────
-
-function EventRow({
-  event,
-  isLast,
-  router,
-}: {
-  event:
-    | NoteEvent
-    | HighlightEvent
-    | SermonEvent
-    | ChapterEvent
-    | MilestoneEvent
-    | CheckInEvent;
-  isLast: boolean;
-  router: RouterShape;
-}) {
-  const { primary } = useColors();
-  // Dot color is chosen per event kind. For highlights we use the
-  // actual highlight color so the timeline literally carries the
-  // user's color coding. Milestones get the warm "streak" amber.
-  // Notes use the bright marker red, matching the reader indicator.
-  // Check-ins inherit the mood's swatch.
-  let dotColor: string = primary;
-  if (event.kind === "highlight") {
-    dotColor = event.color.swatch;
-  } else if (event.kind === "milestone") {
-    dotColor = "#FFB672";
-  } else if (event.kind === "note") {
-    dotColor = NOTE_RED;
-  } else if (event.kind === "checkIn") {
-    dotColor = event.mood?.swatch ?? primary;
-  }
-
-  const handlePress = () => {
-    if (event.kind === "note" || event.kind === "highlight") {
-      router.push(`/book/${event.verse.bookId}/${event.verse.chapter}`);
-    } else if (event.kind === "chapter") {
-      router.push(`/book/${event.bookId}/${event.chapter}`);
-    } else if (event.kind === "checkIn") {
-      router.push(`/book/${event.verse.bookId}/${event.verse.chapter}`);
-    }
-  };
-
-  const interactive =
-    event.kind === "note" ||
-    event.kind === "highlight" ||
-    event.kind === "chapter" ||
-    event.kind === "checkIn";
-
-  return (
-    <DottedRow dotColor={dotColor} isLast={isLast}>
-      {interactive ? (
-        <Pressable
-          onPress={handlePress}
-          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-        >
-          <EventCard event={event} />
-        </Pressable>
-      ) : (
-        <EventCard event={event} />
-      )}
-    </DottedRow>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Stack row — collapses 2+ same-kind events into one card that
-// expands inline to reveal children
-// ─────────────────────────────────────────────────────────────────
-
-function StackRow({
-  row,
-  isLast,
-  router,
-}: {
-  row: NoteStack | HighlightStack | CheckInStack;
-  isLast: boolean;
-  router: RouterShape;
-}) {
-  const { primary } = useColors();
-  const [open, setOpen] = useState(false);
-
-  const toggle = () => {
-    // Smooth height transition for the expanding child list. easeInEaseOut
-    // is the calmest preset and matches the rest of the app's motion.
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setOpen((prev) => !prev);
-  };
-
-  // Per-kind metadata for the header row.
-  //   • Notes  — bright red, matching the reader's note marker
-  //   • Highlights — primary white
-  //   • Check-ins — first child's mood color (or primary if missing),
-  //                 so the stack inherits the day's emotional palette
-  const meta: { dot: string; label: string; eyebrow: string; count: number } =
-    row.kind === "noteStack"
-      ? {
-          dot: NOTE_RED,
-          label: "Notes",
-          eyebrow: NOTE_RED,
-          count: row.notes.length,
-        }
-      : row.kind === "highlightStack"
-      ? {
-          dot: primary,
-          label: "Highlights",
-          eyebrow: primary,
-          count: row.highlights.length,
-        }
-      : {
-          dot: row.checkIns[0]?.mood?.swatch ?? primary,
-          label: "Check-ins",
-          eyebrow: row.checkIns[0]?.mood?.swatch ?? primary,
-          count: row.checkIns.length,
-        };
-  const { dot: dotColor, label, eyebrow: eyebrowColor, count } = meta;
-
-  return (
-    <DottedRow dotColor={dotColor} isLast={isLast}>
-      <View className="rounded-2xl border border-border bg-surface overflow-hidden">
-        {/* Header — tap to toggle. Same visual rhythm as other
-            cards but with a count chip and a chevron on the right. */}
-        <Pressable
-          onPress={toggle}
-          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-        >
-          <View className="px-4 py-3.5">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-baseline">
-                <Text
-                  className="text-[10px] tracking-[2.5px] uppercase"
-                  style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
-                    color: eyebrowColor,
-                  }}
-                >
-                  {label}
-                </Text>
-                <View className="ml-2 px-2 py-[2px] rounded-full bg-accent-soft border border-border">
-                  <Text
-                    className="text-ink text-[10.5px]"
-                    style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-                  >
-                    {count}
-                  </Text>
-                </View>
-              </View>
-              <View className="flex-row items-center">
-                <Text
-                  className="text-ink-subtle text-[10.5px] mr-2"
-                  style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-                >
-                  {open ? "Hide" : "Show"}
-                </Text>
-                <Chevron open={open} />
-              </View>
-            </View>
-
-            {/* Collapsed preview — list the references inline so
-                the user knows what's in the stack without opening. */}
-            {!open ? (
-              <Text
-                className="text-ink-muted text-[13px] mt-2 leading-[18px]"
-                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-                numberOfLines={2}
-              >
-                {stackPreview(row)}
-              </Text>
-            ) : null}
-          </View>
-        </Pressable>
-
-        {/* Expanded child list — rendered inside the same card so
-            the day's vertical line is the only thing connecting it
-            back to the dot. Each child is its own pressable row. */}
-        {open ? (
-          <View className="border-t border-border">
-            {row.kind === "noteStack"
-              ? row.notes.map((n, i) => (
-                  <ChildRow
-                    key={n.id}
-                    showDivider={i < row.notes.length - 1}
-                    onPress={() =>
-                      router.push(`/book/${n.verse.bookId}/${n.verse.chapter}`)
-                    }
-                  >
-                    <NoteChild event={n} />
-                  </ChildRow>
-                ))
-              : row.kind === "highlightStack"
-              ? row.highlights.map((h, i) => (
-                  <ChildRow
-                    key={h.id}
-                    showDivider={i < row.highlights.length - 1}
-                    onPress={() =>
-                      router.push(`/book/${h.verse.bookId}/${h.verse.chapter}`)
-                    }
-                  >
-                    <HighlightChild event={h} />
-                  </ChildRow>
-                ))
-              : row.checkIns.map((c, i) => (
-                  <ChildRow
-                    key={c.id}
-                    showDivider={i < row.checkIns.length - 1}
-                    onPress={() =>
-                      router.push(
-                        `/check-ins/${c.checkInId}` as never,
-                      )
-                    }
-                  >
-                    <CheckInChild event={c} />
-                  </ChildRow>
-                ))}
-          </View>
-        ) : null}
-      </View>
-    </DottedRow>
-  );
-}
-
-/** Compact preview text for a collapsed stack — kind-aware. */
-function stackPreview(
-  row: NoteStack | HighlightStack | CheckInStack,
-): string {
-  // For notes/highlights we join the verse references the user has
-  // touched — gives a quick scan of "which scriptures sit in this
-  // stack". For check-ins we join the mood labels instead, since
-  // that's what makes a multi-check-in day distinctive ("Anxious ·
-  // Grateful · Hopeful").
-  const items =
-    row.kind === "noteStack"
-      ? row.notes.map((n) => n.reference)
-      : row.kind === "highlightStack"
-      ? row.highlights.map((h) => h.reference)
-      : row.checkIns.map((c) => c.mood?.label ?? "Check-in");
-  // De-dupe in case the same value appears more than once (e.g.,
-  // multiple notes on the same verse, or two morning + evening
-  // check-ins with the same mood).
-  const seen = new Set<string>();
-  const unique: string[] = [];
-  for (const r of items) {
-    if (!seen.has(r)) {
-      seen.add(r);
-      unique.push(r);
-    }
-  }
-  return unique.join(" · ");
-}
-
-function ChildRow({
-  children,
-  showDivider,
-  onPress,
-}: {
-  children: React.ReactNode;
-  showDivider: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <>
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-      >
-        <View className="px-4 py-3">{children}</View>
-      </Pressable>
-      {showDivider ? <View className="h-[1px] bg-border ml-4" /> : null}
-    </>
-  );
-}
-
-function NoteChild({ event }: { event: NoteEvent }) {
-  return (
-    <>
-      <View className="flex-row items-baseline justify-between">
-        <Text
-          className="text-ink text-[13.5px]"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-        >
-          {event.reference}
-        </Text>
-        {timeChipMuted(event.at)}
-      </View>
-      <Text
-        className="text-ink-muted text-[12.5px] mt-1 leading-[18px]"
-        style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-        numberOfLines={2}
-      >
-        {event.noteText}
-      </Text>
-    </>
-  );
-}
-
-function HighlightChild({ event }: { event: HighlightEvent }) {
-  return (
-    <View className="flex-row items-start">
-      {/* Tiny color swatch dot in the highlight's actual color */}
-      <View
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: event.color.swatch,
-          marginTop: 5,
-          marginRight: 8,
-        }}
-      />
-      <View className="flex-1">
-        <View className="flex-row items-baseline justify-between">
-          <Text
-            className="text-ink text-[13.5px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            {event.reference}
-          </Text>
-          {timeChipMuted(event.at)}
-        </View>
-        {event.verseSnippet ? (
-          <Text
-            className="text-ink-muted text-[12.5px] mt-1 leading-[18px] italic"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-            numberOfLines={2}
-          >
-            &ldquo;{event.verseSnippet}&rdquo;
-          </Text>
-        ) : null}
-      </View>
-    </View>
-  );
-}
 
 /**
- * Compact child row for an expanded CheckInStack. Mood label sits
- * to the left as a small color-tinted pill; the delivered verse
- * reference + a one-line preview of the verse fill the rest of the
- * row. Tapping the parent ChildRow routes into the per-check-in
- * detail page (so the user can edit their journal, share, etc.).
+ * Title + count + optional action button, used to announce each
+ * section. Uses a generous top margin so adjacent sections breathe
+ * — closer spacing would make this read as one uninterrupted scroll
+ * of cards.
+ *
+ * Two action variants:
+ *   • "link"    — quiet text link in the primary color (See all /
+ *                 Manage). Recedes into the header chrome.
+ *   • "primary" — pill button with ink background. Used for the
+ *                 "+ New" affordance on Study Sessions so the
+ *                 create gesture is unmistakably visible even
+ *                 when the section is empty.
  */
-function CheckInChild({ event }: { event: CheckInEvent }) {
-  const { primary } = useColors();
-  const accent = event.mood?.swatch ?? primary;
-  const moodLabel = event.mood?.label ?? "Check-in";
+function SectionHeader({
+  title,
+  count,
+  actionLabel,
+  onAction,
+  actionVariant = "link",
+}: {
+  title: string;
+  count: number;
+  actionLabel?: string;
+  onAction?: () => void;
+  actionVariant?: "link" | "primary";
+}) {
+  const colors = useColors();
   return (
-    <View className="flex-row items-start">
-      <View
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: accent,
-          marginTop: 5,
-          marginRight: 8,
-        }}
-      />
-      <View className="flex-1">
-        <View className="flex-row items-baseline justify-between">
-          <View className="flex-row items-baseline flex-1 pr-2">
+    <View className="flex-row items-center justify-between px-6 mt-9 mb-1.5">
+      <View className="flex-row items-baseline flex-1">
+        <Text
+          className="text-ink text-[19px] leading-[24px] tracking-[-0.2px]"
+          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        >
+          {title}
+        </Text>
+        {count > 0 && (
+          <Text
+            className="text-ink-subtle text-[13px] ml-2"
+            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          >
+            {count}
+          </Text>
+        )}
+      </View>
+      {actionLabel && onAction && actionVariant === "link" && (
+        <Pressable
+          onPress={onAction}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={`${actionLabel} ${title}`}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+        >
+          <Text
+            className="text-[13px]"
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              color: colors.primary,
+            }}
+          >
+            {actionLabel}
+          </Text>
+        </Pressable>
+      )}
+      {actionLabel && onAction && actionVariant === "primary" && (
+        <Pressable
+          onPress={onAction}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={`${actionLabel} ${title}`}
+          style={({ pressed }) => ({
+            // iOS-blue rather than ink so the pill reads as a tap
+            // target in both themes — an ink pill in dark mode is
+            // white-on-black, which technically has contrast but
+            // visually competes with the white section title sitting
+            // next to it (both render as "white text"). A signature
+            // blue pill is unambiguous "this is a button."
+            backgroundColor: PRIMARY_BLUE,
+            paddingHorizontal: 14,
+            paddingVertical: 7,
+            borderRadius: 999,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              fontSize: 12.5,
+              color: "#FFFFFF",
+              letterSpacing: 0.2,
+            }}
+          >
+            {actionLabel}
+          </Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Study session rows
+// ─────────────────────────────────────────────────────────────────
+
+function StudySessionRow({
+  session,
+  globalFocusEnabled,
+  showDivider,
+  onTap,
+  onToggle,
+}: {
+  session: StudySession;
+  /** Master focus toggle from `useFocus().prefs.enabled`. The badge
+   *  reads both this AND `session.useFocusMode` so the visual stays
+   *  in lockstep with the home-screen focus pill. */
+  globalFocusEnabled: boolean;
+  showDivider: boolean;
+  onTap: () => void;
+  onToggle: () => void;
+}) {
+  const colors = useColors();
+  // Three badge states encode the full sync truth:
+  //   • "FOCUS ON"     — session opted in AND global is on  (live)
+  //   • "FOCUS PAUSED" — session opted in but global is off (configured but inactive)
+  //   • (no badge)     — session never opted in             (just a reminder)
+  // This is what makes the Practice tab feel SAME-as the home pill:
+  // turning off global focus immediately greys out every active
+  // badge here, and turning on a session's focus opt-in lights it
+  // up (because the editor auto-enables global focus on opt-in).
+  const focusActive = session.useFocusMode && globalFocusEnabled;
+  const focusPaused = session.useFocusMode && !globalFocusEnabled;
+  return (
+    // Outer wrapper is a non-pressable View so the Switch's tap can
+    // never bubble to the row's "open editor" handler. Previously the
+    // Switch lived INSIDE the row's Pressable — on some RN gesture
+    // configurations the parent's onPress also fires when a child
+    // Switch toggles, which caused the editor to pop up every time
+    // the user tried to flip session.enabled. The user reads this as
+    // "the focus buttons aren't working" because flipping anything
+    // here yanks them into the editor instead of letting the toggle
+    // settle. The fix mirrors the home-pill restructure: an inner
+    // Pressable wraps ONLY the label area, the Switch is a sibling.
+    <View>
+      <View className="flex-row items-center px-4 py-3.5">
+        <Pressable
+          onPress={onTap}
+          accessibilityRole="button"
+          accessibilityLabel={`Edit ${session.name || "study session"}`}
+          className="flex-1 flex-row items-center pr-2"
+          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+        >
+          <View
+            className="w-9 h-9 rounded-xl items-center justify-center mr-3"
+            style={{ backgroundColor: colors.accentSoft }}
+          >
+            <CalendarGlyph stroke={colors.ink} />
+          </View>
+          <View className="flex-1 pr-2">
             <Text
-              className="text-ink text-[13.5px]"
+              className="text-ink text-[15px]"
               style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              numberOfLines={1}
             >
-              {moodLabel}
+              {session.name || "Unnamed study"}
             </Text>
             <Text
-              className="text-ink-subtle text-[11.5px] ml-2"
+              className="text-ink-muted text-[12.5px] mt-0.5"
               style={{ fontFamily: "PlusJakartaSans_500Medium" }}
               numberOfLines={1}
             >
-              · {event.reference}
+              {formatReminderTime(session.time)}
+              {"  ·  "}
+              {formatDaysOfWeek(session.daysOfWeek)}
             </Text>
+            {(focusActive || focusPaused) && (
+              <View className="flex-row items-center mt-1.5">
+                <View
+                  style={{
+                    paddingHorizontal: 7,
+                    paddingVertical: 2,
+                    borderRadius: 999,
+                    backgroundColor: focusActive
+                      ? withAlpha(PRIMARY_BLUE, 0.14)
+                      : withAlpha(colors.ink, 0.06),
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <ShieldDot
+                    stroke={focusActive ? PRIMARY_BLUE : colors.inkSubtle}
+                  />
+                  <Text
+                    style={{
+                      fontFamily: "PlusJakartaSans_700Bold",
+                      fontSize: 10,
+                      color: focusActive ? PRIMARY_BLUE : colors.inkSubtle,
+                      letterSpacing: 0.6,
+                      marginLeft: 4,
+                    }}
+                  >
+                    {focusActive ? "FOCUS ON" : "FOCUS PAUSED"}
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
-          {timeChipMuted(event.at)}
-        </View>
-        <Text
-          className="text-ink-muted text-[12.5px] mt-1 leading-[18px] italic"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-          numberOfLines={2}
-        >
-          &ldquo;{event.verseText}&rdquo;
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Per-kind cards (single-event variant)
-// ─────────────────────────────────────────────────────────────────
-
-function EventCard({
-  event,
-}: {
-  event:
-    | NoteEvent
-    | HighlightEvent
-    | SermonEvent
-    | ChapterEvent
-    | MilestoneEvent
-    | CheckInEvent;
-}) {
-  switch (event.kind) {
-    case "note":
-      return <NoteCard event={event} />;
-    case "highlight":
-      return <HighlightCard event={event} />;
-    case "sermon":
-      return <SermonCard event={event} />;
-    case "chapter":
-      return <ChapterCard event={event} />;
-    case "milestone":
-      return <MilestoneCard event={event} />;
-    case "checkIn":
-      return <CheckInCard event={event} />;
-  }
-}
-
-function CardShell({
-  eyebrow,
-  eyebrowColor,
-  children,
-  rightChip,
-}: {
-  eyebrow: string;
-  eyebrowColor?: string;
-  children: React.ReactNode;
-  rightChip?: React.ReactNode;
-}) {
-  const { primary } = useColors();
-  return (
-    <View className="rounded-2xl border border-border bg-surface px-4 py-3.5">
-      <View className="flex-row items-baseline justify-between">
-        <Text
-          className="text-[10px] tracking-[2.5px] uppercase"
-          style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            color: eyebrowColor ?? primary,
+        </Pressable>
+        {/* Enable/disable Switch — sibling, not child, of the label
+            Pressable. Tap fires onToggle (session.enabled) without
+            triggering the editor. */}
+        <Switch
+          value={session.enabled}
+          onValueChange={onToggle}
+          trackColor={{
+            false: withAlpha(colors.ink, 0.1),
+            true: "#3D8B6A",
           }}
-        >
-          {eyebrow}
-        </Text>
-        {rightChip}
+          thumbColor="#F4F4F5"
+          ios_backgroundColor={withAlpha(colors.ink, 0.08)}
+        />
       </View>
-      <View className="mt-1.5">{children}</View>
+      {showDivider && <View className="h-[1px] bg-border ml-[60px]" />}
     </View>
   );
 }
 
-function timeChip(at: number) {
+/** Tiny shield glyph used only by the row's "FOCUS ON" badge. */
+function ShieldDot({ stroke }: { stroke: string }) {
   return (
-    <Text
-      className="text-ink-subtle text-[10.5px]"
-      style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-    >
-      {formatClock(at)}
-    </Text>
+    <Svg width={9} height={9} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 3l8 3v6c0 4-3 7-8 9-5-2-8-5-8-9V6l8-3z"
+        stroke={stroke}
+        strokeWidth={2.2}
+        strokeLinejoin="round"
+      />
+    </Svg>
   );
 }
 
-function timeChipMuted(at: number) {
+function AddSessionFooter({ onPress }: { onPress: () => void }) {
+  const colors = useColors();
   return (
-    <Text
-      className="text-ink-subtle text-[10px]"
-      style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-    >
-      {formatClock(at)}
-    </Text>
-  );
-}
-
-// ─── Note ───────────────────────────────────────────────
-
-function NoteCard({ event }: { event: NoteEvent }) {
-  return (
-    <CardShell
-      eyebrow={`Note · ${event.reference}`}
-      eyebrowColor={NOTE_RED}
-      rightChip={timeChip(event.at)}
-    >
-      <Text
-        className="text-ink text-[14px] leading-[20px]"
-        style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-        numberOfLines={3}
+    <View>
+      <View className="h-[1px] bg-border" />
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel="Add a new study session"
       >
-        {event.noteText}
-      </Text>
-      {event.verseSnippet ? (
-        <Text
-          className="text-ink-muted text-[11.5px] mt-2 italic leading-[16px]"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-          numberOfLines={2}
-        >
-          &ldquo;{event.verseSnippet}&rdquo;
-        </Text>
-      ) : null}
-    </CardShell>
-  );
-}
-
-// ─── Highlight ──────────────────────────────────────────
-
-function HighlightCard({ event }: { event: HighlightEvent }) {
-  const { primary } = useColors();
-  return (
-    <View className="rounded-2xl border border-border bg-surface overflow-hidden flex-row">
-      <View style={{ width: 4, backgroundColor: event.color.swatch }} />
-      <View className="flex-1 px-4 py-3.5">
-        <View className="flex-row items-baseline justify-between">
+        <View className="flex-row items-center px-4 py-3.5">
+          <View
+            className="w-9 h-9 rounded-xl items-center justify-center mr-3"
+            style={{ backgroundColor: colors.accentSoft }}
+          >
+            <PlusIcon stroke={colors.ink} />
+          </View>
           <Text
-            className="text-[10px] tracking-[2.5px] uppercase"
+            className="flex-1 text-[14.5px]"
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              color: primary,
+              fontFamily: "PlusJakartaSans_600SemiBold",
+              color: colors.primary,
             }}
           >
-            Highlighted · {event.reference}
+            Add a session
           </Text>
-          {timeChip(event.at)}
+          <ChevronIcon stroke={colors.inkSubtle} />
         </View>
-        {event.verseSnippet ? (
-          <Text
-            className="text-ink text-[13.5px] leading-[20px] mt-1.5"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-            numberOfLines={3}
-          >
-            &ldquo;{event.verseSnippet}&rdquo;
-          </Text>
-        ) : (
-          <Text
-            className="text-ink-muted text-[12px] mt-1.5"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-          >
-            Tap to revisit
-          </Text>
-        )}
-      </View>
+      </Pressable>
     </View>
   );
 }
 
-// ─── Sermon ──────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// Verse preview rows
+// ─────────────────────────────────────────────────────────────────
 
-function SermonCard({ event }: { event: SermonEvent }) {
-  return (
-    <View className="rounded-2xl border border-border bg-surface overflow-hidden flex-row">
-      <View style={{ width: 4, backgroundColor: event.accent }} />
-      <View className="flex-1 px-4 py-3.5">
-        <View className="flex-row items-baseline justify-between">
-          <Text
-            className="text-[10px] tracking-[2.5px] uppercase"
-            style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              color: event.accent,
-            }}
-          >
-            Sermon completed
-          </Text>
-          {timeChip(event.at)}
-        </View>
-        <Text
-          className="text-ink text-[15px] mt-1.5 tracking-[-0.1px]"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          numberOfLines={2}
-        >
-          {event.title}
-        </Text>
-        {event.pastor ? (
-          <Text
-            className="text-ink-muted text-[12px] mt-0.5"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-          >
-            {event.pastor}
-          </Text>
-        ) : null}
-      </View>
-    </View>
-  );
-}
-
-// ─── Chapter read ───────────────────────────────────────
-
-function ChapterCard({ event }: { event: ChapterEvent }) {
-  const { ink } = useColors();
-  return (
-    <CardShell eyebrow="Read" rightChip={timeChip(event.at)}>
-      <View className="flex-row items-center">
-        <BookmarkIcon stroke={ink} />
-        <Text
-          className="text-ink text-[14.5px] ml-2"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-        >
-          {event.reference}
-        </Text>
-      </View>
-    </CardShell>
-  );
-}
-
-// ─── Check-in ──────────────────────────────────────────
-
-function CheckInCard({ event }: { event: CheckInEvent }) {
-  const router = useRouter();
-  const { primary } = useColors();
-  const accent = event.mood?.swatch ?? primary;
-  const moodLabel = event.mood?.label ?? "Check-in";
+function HighlightPreview({
+  highlight,
+  onPress,
+}: {
+  highlight: Highlight;
+  onPress: () => void;
+}) {
+  const colors = useColors();
   return (
     <Pressable
-      onPress={() => router.push(`/check-ins/${event.checkInId}` as never)}
-      accessibilityRole="button"
-      accessibilityLabel={`Open ${moodLabel} check-in details`}
+      onPress={onPress}
       style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-      className="rounded-2xl border border-border bg-surface overflow-hidden flex-row"
+      className="mx-5 mt-2 rounded-2xl border border-border bg-surface overflow-hidden flex-row"
     >
-      <View style={{ width: 4, backgroundColor: accent }} />
+      {/* Left stripe in the highlight's color — matches how each
+          card on /highlights opens with its color identity. */}
+      <View
+        style={{
+          width: 4,
+          backgroundColor: highlight.color.swatch,
+        }}
+      />
       <View className="flex-1 px-4 py-3.5">
         <View className="flex-row items-baseline justify-between">
-          <View className="flex-row items-baseline">
-            <Text
-              className="text-[10px] tracking-[2.5px] uppercase"
-              style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                color: accent,
-              }}
-            >
-              Check-in
-            </Text>
-            <Text
-              className="text-ink text-[10px] tracking-[2px] uppercase ml-2"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-            >
-              · {moodLabel}
-            </Text>
-          </View>
-          {timeChip(event.at)}
-        </View>
-        <Text
-          className="text-ink text-[14px] leading-[20px] mt-2 italic"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-          numberOfLines={3}
-        >
-          &ldquo;{event.verseText}&rdquo;
-        </Text>
-        <Text
-          className="text-ink-muted text-[11.5px] mt-2 tracking-[2px] uppercase"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-        >
-          {event.reference}
-        </Text>
-
-        {event.journalText && event.journalText.length > 0 && (
-          <View
-            className="mt-3 pt-3"
+          <Text
+            className="text-[10.5px] tracking-[2.5px] uppercase"
             style={{
-              borderTopWidth: 1,
-              borderTopColor: hexAlpha(accent, 0.18),
+              fontFamily: "PlusJakartaSans_700Bold",
+              color: colors.primary,
             }}
           >
-            <Text
-              className="text-[10px] tracking-[2.5px] uppercase mb-1.5"
-              style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                color: accent,
-              }}
-            >
-              Reflection
-            </Text>
-            <Text
-              className="text-ink text-[13px] leading-[19px]"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-              numberOfLines={4}
-            >
-              {event.journalText}
-            </Text>
-          </View>
-        )}
+            {formatRef(highlight)}
+          </Text>
+          <Text
+            className="text-ink-subtle text-[11px]"
+            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          >
+            {relativeTime(highlight.updatedAt)}
+          </Text>
+        </View>
+        {highlight.verseText ? (
+          <Text
+            className="text-ink-muted text-[13.5px] mt-1.5 leading-[19px]"
+            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            numberOfLines={2}
+          >
+            &ldquo;{highlight.verseText}&rdquo;
+          </Text>
+        ) : null}
       </View>
     </Pressable>
   );
 }
 
-// ─── Milestone ──────────────────────────────────────────
-
-function MilestoneCard({ event }: { event: MilestoneEvent }) {
-  return (
-    <View className="rounded-2xl border border-border overflow-hidden flex-row bg-accent-soft">
-      <View className="flex-1 px-4 py-4">
-        <View className="flex-row items-center">
-          <FlameIcon />
-          <Text
-            className="text-ink text-[10px] tracking-[2.5px] uppercase ml-2"
-            style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              color: "#FFB672",
-            }}
-          >
-            Milestone
-          </Text>
-        </View>
-        <Text
-          className="text-ink text-[16px] mt-1.5 tracking-[-0.2px]"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-        >
-          {event.label}
-        </Text>
-        <Text
-          className="text-ink-muted text-[12.5px] mt-1 leading-[18px]"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-        >
-          {event.copy}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Shared row scaffold — dot column + content
-// ─────────────────────────────────────────────────────────────────
-
-function DottedRow({
-  dotColor,
-  isLast,
-  children,
+function NotePreview({
+  note,
+  onPress,
 }: {
-  dotColor: string;
-  isLast: boolean;
-  children: React.ReactNode;
+  note: Note;
+  onPress: () => void;
 }) {
-  const { bg } = useColors();
+  const colors = useColors();
   return (
-    <View style={{ flexDirection: "row" }} className={isLast ? "" : "pb-4"}>
-      <View
-        style={{
-          width: 15,
-          alignItems: "center",
-          paddingTop: 8,
-        }}
-      >
-        <View
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+      className="mx-5 mt-2 rounded-2xl border border-border bg-surface px-4 py-3.5"
+    >
+      <View className="flex-row items-baseline justify-between">
+        <Text
+          className="text-[10.5px] tracking-[2.5px] uppercase"
           style={{
-            width: 11,
-            height: 11,
-            borderRadius: 6,
-            backgroundColor: dotColor,
-            borderWidth: 2,
-            borderColor: bg,
+            fontFamily: "PlusJakartaSans_700Bold",
+            color: colors.primary,
           }}
-        />
-      </View>
-      <View className="flex-1 ml-3">{children}</View>
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Empty state
-// ─────────────────────────────────────────────────────────────────
-
-function EmptyState() {
-  const { ink } = useColors();
-  return (
-    <View className="px-6 mt-16 items-center">
-      <View className="w-16 h-16 rounded-2xl bg-accent-soft border border-border items-center justify-center">
-        <Svg width={26} height={26} viewBox="0 0 24 24" fill="none">
-          <Circle cx={12} cy={12} r={9} stroke={ink} strokeWidth={1.5} />
-          <Path
-            d="M12 8v4l3 2"
-            stroke={ink}
-            strokeWidth={1.7}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        >
+          {formatRef(note)}
+        </Text>
+        <Text
+          className="text-ink-subtle text-[11px]"
+          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+        >
+          {relativeTime(note.updatedAt)}
+        </Text>
       </View>
       <Text
-        className="text-ink text-[18px] mt-5 text-center"
+        className="text-ink text-[14px] mt-2 leading-[20px]"
+        style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+        numberOfLines={3}
+      >
+        {note.text}
+      </Text>
+    </Pressable>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Empty states — invitations, not apologies
+// ─────────────────────────────────────────────────────────────────
+
+function EmptyStudySessions({ onCreate }: { onCreate: () => void }) {
+  const colors = useColors();
+  return (
+    <View className="mx-5 mt-2 rounded-2xl border border-border bg-surface px-5 py-6 items-center">
+      <View
+        className="w-11 h-11 rounded-full items-center justify-center mb-3"
+        style={{ backgroundColor: colors.accentSoft }}
+      >
+        <CalendarGlyph stroke={colors.inkMuted} size={18} />
+      </View>
+      <Text
+        className="text-ink text-[15px] text-center"
         style={{ fontFamily: "PlusJakartaSans_700Bold" }}
       >
-        Your journey starts soon
+        No sessions yet
       </Text>
       <Text
-        className="text-ink-muted text-[13.5px] mt-2 text-center leading-[20px] px-4"
+        className="text-ink-muted text-[12.5px] text-center mt-1 leading-[18px] px-3"
         style={{ fontFamily: "PlusJakartaSans_400Regular" }}
       >
-        Finish a sermon, mark a chapter, highlight a verse — anything
-        you do will show up here, day by day.
+        Schedule a time to step into the Word. Closer will quiet the
+        noise and meet you there.
+      </Text>
+      <Pressable
+        onPress={onCreate}
+        accessibilityRole="button"
+        accessibilityLabel="Add your first session"
+        className="mt-4 rounded-full"
+        style={({ pressed }) => ({
+          // Match the header pill: iOS-blue + white label so this
+          // button reads as a primary tap target in both themes.
+          backgroundColor: PRIMARY_BLUE,
+          paddingHorizontal: 18,
+          paddingVertical: 10,
+          opacity: pressed ? 0.7 : 1,
+        })}
+      >
+        <Text
+          style={{
+            fontFamily: "PlusJakartaSans_700Bold",
+            fontSize: 13.5,
+            color: "#FFFFFF",
+            letterSpacing: 0.2,
+          }}
+        >
+          Create a session
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function EmptyHighlights() {
+  const colors = useColors();
+  return (
+    <View className="mx-5 mt-2 rounded-2xl border border-border bg-surface px-5 py-6 items-center">
+      <View
+        className="w-11 h-11 rounded-full items-center justify-center mb-3"
+        style={{ backgroundColor: colors.accentSoft }}
+      >
+        <HighlightGlyph stroke={colors.inkMuted} />
+      </View>
+      <Text
+        className="text-ink text-[15px] text-center"
+        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+      >
+        Nothing kept yet
+      </Text>
+      <Text
+        className="text-ink-muted text-[12.5px] text-center mt-1 leading-[18px] px-3"
+        style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+      >
+        Tap and hold a verse while reading to mark it. The ones
+        you keep appear here.
+      </Text>
+    </View>
+  );
+}
+
+function EmptyNotes() {
+  const colors = useColors();
+  return (
+    <View className="mx-5 mt-2 rounded-2xl border border-border bg-surface px-5 py-6 items-center">
+      <View
+        className="w-11 h-11 rounded-full items-center justify-center mb-3"
+        style={{ backgroundColor: colors.accentSoft }}
+      >
+        <NoteGlyph stroke={colors.inkMuted} />
+      </View>
+      <Text
+        className="text-ink text-[15px] text-center"
+        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+      >
+        No notes yet
+      </Text>
+      <Text
+        className="text-ink-muted text-[12.5px] text-center mt-1 leading-[18px] px-3"
+        style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+      >
+        Write a reflection from any verse to anchor what spoke to
+        you. They live here for later.
       </Text>
     </View>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Glyphs
+// Icons
 // ─────────────────────────────────────────────────────────────────
 
-function BookmarkIcon({ stroke }: { stroke: string }) {
+function CalendarGlyph({
+  stroke,
+  size = 16,
+}: {
+  stroke: string;
+  size?: number;
+}) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M4 7h16v12H4zM4 7V5a1 1 0 011-1h14a1 1 0 011 1v2"
+        stroke={stroke}
+        strokeWidth={1.7}
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M8 3v4M16 3v4M9 12h6M9 15h4"
+        stroke={stroke}
+        strokeWidth={1.7}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+function HighlightGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M4 19l3-3h12V5H5a1 1 0 00-1 1z"
+        stroke={stroke}
+        strokeWidth={1.7}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function NoteGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M5 4h11l4 4v12H5zM7 9h8M7 13h8M7 17h5"
+        stroke={stroke}
+        strokeWidth={1.7}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+function PlusIcon({ stroke }: { stroke: string }) {
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M6 3h12v18l-6-4-6 4z"
+        d="M12 5v14M5 12h14"
         stroke={stroke}
-        strokeWidth={1.6}
-        strokeLinejoin="round"
+        strokeWidth={2}
+        strokeLinecap="round"
       />
     </Svg>
   );
 }
 
-function FlameIcon() {
+function ChevronIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M12 3c2 3 5 5 5 9a5 5 0 11-10 0c0-2 1-3 2-4 0 2 1 3 2 3-1-3 0-6 1-8z"
-        fill="#FFB672"
-        stroke="#FFB672"
-        strokeWidth={1.6}
+        d="M9 6l6 6-6 6"
+        stroke={stroke}
+        strokeWidth={1.8}
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </Svg>
   );
 }
 
-function Chevron({ open }: { open: boolean }) {
-  // 12px chevron, rotates between down (collapsed) and up (open).
-  // Drawn as a pure path so the rotation is just a transform on the
-  // SVG container — cheap and keeps the row from re-laying out.
-  const { inkSubtle } = useColors();
-  return (
-    <View style={{ transform: [{ rotate: open ? "180deg" : "0deg" }] }}>
-      <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-        <Path
-          d="M6 9l6 6 6-6"
-          stroke={inkSubtle}
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </Svg>
-    </View>
-  );
-}
-
 // ─────────────────────────────────────────────────────────────────
-// Constants & helpers
+// Helpers
 // ─────────────────────────────────────────────────────────────────
 
 /**
- * Same red used by the reader's inline note marker — keeping these
- * in lock-step so a "note" reads as the same color everywhere it
- * shows up in the product.
+ * iOS-system-blue. Used for the create-session primary CTAs
+ * (section-header pill + empty-state card button). We deliberately
+ * pick a fixed brand color rather than colors.ink so the buttons
+ * read as primary tap targets in both light and dark themes — an
+ * ink-colored button in dark mode is white-on-black which has
+ * sufficient contrast but visually merges with the white section
+ * title sitting beside it.
  */
-const NOTE_RED = "#FF453A";
+const PRIMARY_BLUE = "#0A84FF";
 
-function formatClock(epochMs: number): string {
-  const d = new Date(epochMs);
-  return d.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-/**
- * Append a 0–1 alpha to a 6-digit hex color (e.g. "#FFAA00", 0.2 →
- * "#FFAA0033"). Used for the mood-tinted divider on check-in cards
- * that have a journal reflection attached.
- */
-function hexAlpha(hex: string, alpha: number): string {
-  const a = Math.max(0, Math.min(1, alpha));
-  const hh = Math.round(a * 255)
-    .toString(16)
-    .padStart(2, "0");
-  return `${hex}${hh}`;
+function withAlpha(hex: string, alpha: number): string {
+  const cleaned = hex.replace("#", "");
+  if (cleaned.length !== 6) return hex;
+  const r = parseInt(cleaned.slice(0, 2), 16);
+  const g = parseInt(cleaned.slice(2, 4), 16);
+  const b = parseInt(cleaned.slice(4, 6), 16);
+  if ([r, g, b].some((n) => Number.isNaN(n))) return hex;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }

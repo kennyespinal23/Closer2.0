@@ -248,16 +248,163 @@ export async function fireTestReminderNow(): Promise<string> {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Android channel
+// Bible study sessions — recurring weekly notifications
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Study-session payload constants. Same single-source-of-truth
+ * shape as BEFORE_THE_NOISE so settings preview copy and the actual
+ * fired notification stay 1:1. Title/body are templated per-session
+ * with the user's chosen name.
+ *
+ * `route` resolves to a dynamic route — the deep-link handler
+ * substitutes the session id at tap-time so a single notification
+ * lands the user on the correct study landing page even if they
+ * scheduled multiple recurring sessions.
+ */
+export const STUDY_SESSION = {
+  title: "Closer",
+  /** Build the notification body from the session's name. */
+  body: (name: string) => `Time for ${name}.`,
+  /** Build the deep-link route for a given session id. */
+  route: (sessionId: string): `/study/${string}` => `/study/${sessionId}`,
+} as const;
+
+/** Day-of-week index using JS conventions: 0 = Sunday … 6 = Saturday. */
+export type WeekdayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+/**
+ * Minimal shape `scheduleStudySession` needs. Kept here (rather than
+ * importing from state/) so this module stays free of React-land
+ * dependencies and can be tested in isolation.
+ */
+export type SchedulableStudySession = {
+  id: string;
+  name: string;
+  time: DailyReminderTime;
+  daysOfWeek: WeekdayIndex[];
+  enabled: boolean;
+};
+
+/**
+ * Schedule a recurring local notification for each active day of a
+ * study session. Returns the list of notification ids the OS handed
+ * back so the caller can persist them and cancel precisely later.
+ *
+ * iOS calendar triggers only repeat WEEKLY per (weekday, hour,
+ * minute) tuple — there's no "repeat on Mon+Wed+Fri" in a single
+ * trigger. So if the session covers three days we schedule three
+ * separate notifications, each with `weekday` set and `repeats: true`.
+ * This burns a few notification slots per session but stays within
+ * the 64-pending-notifications iOS cap by a comfortable margin
+ * (a user would need ~9 daily sessions to bump into it).
+ *
+ * If the session is disabled or has no active days, we return an
+ * empty array and schedule nothing. Caller is responsible for
+ * ensuring permission is granted; without it the OS silently
+ * refuses delivery.
+ */
+export async function scheduleStudySession(
+  session: SchedulableStudySession,
+): Promise<string[]> {
+  if (!session.enabled) return [];
+  if (session.daysOfWeek.length === 0) return [];
+
+  const hour = clampHour(session.time.hour);
+  const minute = clampMinute(session.time.minute);
+  const ids: string[] = [];
+
+  for (const day of session.daysOfWeek) {
+    const id = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: STUDY_SESSION.title,
+        body: STUDY_SESSION.body(session.name || "your study"),
+        data: {
+          // `kind` is the discriminator the deep-link handler keys
+          // off. Distinct from "before-the-noise" so the two
+          // notification types route independently.
+          kind: "study-session",
+          sessionId: session.id,
+          route: STUDY_SESSION.route(session.id),
+        },
+        sound: "default",
+      },
+      trigger: {
+        // iOS weekday uses 1=Sunday…7=Saturday; JS Date.getDay()
+        // uses 0=Sunday…6=Saturday. Bridge at the boundary so the
+        // rest of the codebase can stay on JS conventions.
+        weekday: jsWeekdayToIOSWeekday(day),
+        hour,
+        minute,
+        repeats: true,
+        ...(Platform.OS === "android"
+          ? { channelId: STUDY_ANDROID_CHANNEL_ID }
+          : {}),
+      },
+    });
+    ids.push(id);
+  }
+
+  return ids;
+}
+
+/**
+ * Cancel a set of previously-scheduled study-session notifications.
+ * Each id is cancelled independently — failures are swallowed
+ * because a notification may have already been delivered or
+ * cancelled out-of-band (user wiped the app, OS pruning, etc).
+ */
+export async function cancelStudySession(
+  notificationIds: readonly string[],
+): Promise<void> {
+  for (const id of notificationIds) {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(id);
+    } catch {
+      /* notification may have been delivered / cancelled already */
+    }
+  }
+}
+
+/**
+ * Fire a study-session notification immediately. Used by the
+ * __DEV__ "Test fire" affordance on the editor so we can verify
+ * the deep link end-to-end without waiting for the next trigger.
+ */
+export async function fireTestStudySessionNow(
+  session: SchedulableStudySession,
+): Promise<string> {
+  return await Notifications.scheduleNotificationAsync({
+    content: {
+      title: STUDY_SESSION.title,
+      body: STUDY_SESSION.body(session.name || "your study"),
+      data: {
+        kind: "study-session",
+        sessionId: session.id,
+        route: STUDY_SESSION.route(session.id),
+      },
+      sound: "default",
+    },
+    trigger: { seconds: 2 },
+  });
+}
+
+function jsWeekdayToIOSWeekday(jsDay: WeekdayIndex): number {
+  return jsDay + 1;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Android channels
 // ─────────────────────────────────────────────────────────────────
 
 const ANDROID_CHANNEL_ID = "before-the-noise";
+const STUDY_ANDROID_CHANNEL_ID = "study-sessions";
 
 /**
  * Android requires every notification to be associated with a
  * channel. Channels are user-tunable (sound, vibration, importance)
- * via system Settings, so we make one dedicated to the daily
- * reminder and label it accordingly.
+ * via system Settings, so we make one dedicated to each notification
+ * kind and label them accordingly.
  *
  * Safe to call multiple times — creating an existing channel is a
  * no-op. iOS callers can invoke this freely; it's gated internally.
@@ -268,6 +415,14 @@ export async function ensureAndroidChannel(): Promise<void> {
     name: "Before The Noise",
     description:
       "Your daily word — one notification per day at the time you chose.",
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: "default",
+    enableVibrate: true,
+  });
+  await Notifications.setNotificationChannelAsync(STUDY_ANDROID_CHANNEL_ID, {
+    name: "Bible study sessions",
+    description:
+      "Reminders for the study times you scheduled. Tap to begin focused reading.",
     importance: Notifications.AndroidImportance.HIGH,
     sound: "default",
     enableVibrate: true,

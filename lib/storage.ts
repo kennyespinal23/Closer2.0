@@ -107,6 +107,21 @@ export const STORAGE_KEYS = {
    * data.
    */
   focus: "closer.focus.v1",
+  /**
+   * Scheduled "Bible study sessions" — user-configurable, recurring
+   * times when the app schedules a local notification AND offers to
+   * start a focus session for reading. Each session persists:
+   *   • metadata (name, time, days-of-week, enabled flag)
+   *   • the OS notification ids that back it (one per active day)
+   *
+   * The notification ids are persisted so we can cancel them
+   * precisely when a session is edited / disabled / deleted — without
+   * blowing away unrelated scheduled notifications (Before The Noise,
+   * future verse-of-day, etc.). On a re-install or storage wipe we
+   * lose the ids and a few stale notifications may linger until the
+   * OS expires them; that's fine for the first version.
+   */
+  studySessions: "closer.studySessions.v1",
 } as const;
 
 /**

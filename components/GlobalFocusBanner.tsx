@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useSegments } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import {
   isShieldSupported,
@@ -13,24 +13,45 @@ import { useColors } from "@/state/theme";
 /**
  * Global floating focus banner.
  *
- * Mounted at the tabs-layout level so it floats above the active
- * tab's content whenever a focus session is in progress. This is
- * the "you can never forget the session is on" reminder — backing
- * out of the sermon mid-flow lands you on a tab, and the session
- * stays committed (until you reach /sermon/complete or hit End).
+ * Mounted at each layout that wants the banner (the tabs layout,
+ * the settings layout, the book layout). Each mount renders the
+ * banner above its own navigator's content so the user has
+ * consistent "you're in a focus session" chrome regardless of
+ * which surface they're on.
+ *
+ * Why per-layout instead of a single root mount? We tried two
+ * "single mount" patterns and both failed:
+ *   1. Sibling to the root <Stack>: the banner rendered cleanly
+ *      in the React tree but iOS native-stack screens
+ *      (react-native-screens-backed) sit at the UIView level
+ *      above sibling React-tree overlays, so the banner was
+ *      invisible on every screen the navigator owned.
+ *   2. RN <Modal> at the root: the banner became visible but the
+ *      Modal interfered with tab-bar touch handling — tapping
+ *      Journey from Today caused the app to freeze with the new
+ *      tab's content rendered but no interaction allowed.
+ * Per-layout mounting sidesteps both: each mount is a sibling to
+ * the navigator INSIDE the layout's screen container, so iOS
+ * stacking + touch handling both behave normally, and we get the
+ * full session-active coverage by mounting in every navigator
+ * that wraps user-facing routes.
  *
  * Where this lives in the system:
  *
  *   1. /sermon/* screens use the INLINE <FocusBanner /> (same
  *      visual language, but positioned in-flow just under the
  *      sermon header so it's clearly part of the sermon chrome).
- *   2. /today uses the inline <FocusToggle /> in the scroll
- *      content — that's a full controller (Switch + drill-down),
- *      so we hide this global banner on Today specifically to
- *      avoid two "Focus mode active" indicators stacked.
- *   3. /journey, /library, /insights show THIS floating banner.
- *      No inline equivalent there, and the session needs visible
- *      ownership of the screen while it's live.
+ *      The global banner self-suppresses inside sermon routes.
+ *   2. /today (the home tab) uses the inline <FocusToggle /> pill
+ *      — that's a full controller (Switch + drill-down), so the
+ *      global banner self-suppresses on Today to avoid two
+ *      indicators stacked vertically.
+ *   3. Onboarding and the check-in modal self-suppress because
+ *      they're deliberate, time-boxed moments that shouldn't
+ *      carry cross-feature chrome.
+ *   4. Everything else — book reader, settings, Journey / Library
+ *      / Insights tabs — gets the floating banner via its layout
+ *      mount.
  *
  * Behavior:
  *   • Renders nothing when no session is active — safe to mount
@@ -43,12 +64,15 @@ import { useColors } from "@/state/theme";
  *     a one-tap dismiss)
  *
  * Positioning:
- *   • Absolute, floats over the active tab's content
- *   • Anchored to the top safe-area inset + a small breath gap
+ *   • Absolute, anchored to the top safe-area inset + a small
+ *     breath gap. The mount layout owns its own screen container,
+ *     so absolute-positioning inside that container correctly
+ *     overlays whatever screen is currently active.
  *   • Drop shadow on iOS / elevation on Android so it reads as
- *     "above the canvas" rather than "stuck to the wall"
+ *     "above the canvas" rather than "stuck to the wall".
  *   • `pointerEvents="box-none"` on the wrapper so taps that miss
- *     the banner's actual pill still reach the screen below
+ *     the banner's pill pass through to whatever the underlying
+ *     screen is rendering.
  */
 
 /** Same iOS-system-blue used by FocusBanner + FocusToggle + the
@@ -57,12 +81,68 @@ import { useColors } from "@/state/theme";
  *  without dragging in another module's constants. */
 const FOCUS_ACCENT = "#0A84FF";
 
+/**
+ * The vertical space the banner occupies (in points) when it's
+ * visible — i.e. the height that layouts should reserve at the
+ * top of their content so the absolute-positioned banner doesn't
+ * overlap whatever the screen is rendering.
+ *
+ * Composition (matches the actual <Pressable> below):
+ *   • top offset from the safe area:  6   (insets.top + 6 in the
+ *                                          banner's own style)
+ *   • pill internal padding:         10 + 10 (py-2.5 ≈ 10pt each)
+ *   • pill text content:             ~28  (eyebrow + sublabel,
+ *                                          two ~12pt lines with
+ *                                          inter-line spacing)
+ *   • bottom breath gap:              6
+ *   • TOTAL:                        ≈ 60
+ *
+ * Layouts add this (via `useGlobalFocusBannerSpacing()`) to the
+ * paddingTop of the container that wraps their navigator. The
+ * banner itself stays absolutely positioned so it floats above
+ * the layout without affecting flex flow — the spacing here is
+ * just the empty top gutter that keeps screen content from being
+ * occluded.
+ */
+const GLOBAL_FOCUS_BANNER_SPACING = 60;
+
+/**
+ * Hook used by layouts that host the banner to compute how much
+ * top padding their navigator container needs RIGHT NOW. Returns
+ * 0 when:
+ *   • there's no active focus session, OR
+ *   • the current route is in the banner's hide list
+ *     (sermon / onboarding / start / today / check-in).
+ *
+ * Returns `GLOBAL_FOCUS_BANNER_SPACING` otherwise. Using a hook
+ * here (rather than the layout re-implementing the same checks)
+ * keeps the "when does the banner show?" rule in exactly one
+ * place — change the predicate in shouldHideForSegments and every
+ * layout's padding updates automatically.
+ */
+export function useGlobalFocusBannerSpacing(): number {
+  const { session } = useFocus();
+  const segments = useSegments();
+  if (!session) return 0;
+  if (shouldHideForSegments(segments)) return 0;
+  return GLOBAL_FOCUS_BANNER_SPACING;
+}
+
 export function GlobalFocusBanner() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const segments = useSegments();
   const { session, endSession } = useFocus();
   const [ending, setEnding] = useState(false);
+
+  // Suppression check is colocated with the banner itself so any
+  // consumer that mounts it (root layout today, hypothetically a
+  // different layer tomorrow) gets the same exclusion rules
+  // without needing to remember to wire them up. Inline rather
+  // than via a separate helper because the predicate only has one
+  // caller and the rules read cleanly as a flat switch.
+  const hidden = shouldHideForSegments(segments);
 
   const handleEnd = useCallback(() => {
     if (ending) return;
@@ -94,15 +174,15 @@ export function GlobalFocusBanner() {
   }, [router]);
 
   // Conditional render AFTER all hooks above — keeps hook order
-  // stable across renders regardless of session state.
-  if (!session) return null;
+  // stable across renders regardless of session/route state.
+  if (!session || hidden) return null;
 
   const subtitle = summarizeBlockedApps(session.blockedAppIds);
 
   return (
-    // box-none lets taps NOT on the banner fall through to the
-    // tab content beneath — the wrapper is purely a positioning
-    // layer, not a touch interceptor.
+    // box-none lets taps NOT on the pill fall through to the
+    // screen content below. The outer wrapper is purely a
+    // positioning layer, not a touch interceptor.
     <View
       pointerEvents="box-none"
       style={{
@@ -111,11 +191,12 @@ export function GlobalFocusBanner() {
         left: 0,
         right: 0,
         alignItems: "stretch",
-        // High z-index so we sit cleanly above whatever the active
-        // tab is rendering. The tab bar itself has its own
-        // higher z-index (it lives below the screen surface in
-        // RN's Tabs view tree), so the banner never collides
-        // with it visually.
+        // High z-index so we sit cleanly above whatever the
+        // current screen is rendering. We don't try to compete
+        // with native modals (the profile drawer, the check-in
+        // modal) — the per-layout mounting strategy means we
+        // only ever try to draw in layouts where this overlay
+        // belongs, and the hide-rules suppress us in the rest.
         zIndex: 50,
       }}
     >
@@ -238,19 +319,83 @@ function withAlpha(hex: string, alpha: number): string {
 }
 
 /**
- * Re-exported via this module because it's the natural home for
- * a "should this banner show right now?" predicate. Used by the
- * tabs layout to avoid stacking the global banner on top of the
- * Today screen's inline FocusToggle.
+ * Decide whether the global banner should suppress itself on the
+ * current route. Takes the raw `useSegments()` output and folds it
+ * into the exclusion rules below.
  *
- * Kept as a pure function so the tabs layout doesn't need to
- * subscribe to the focus context just to make a layout decision.
+ * IMPORTANT: expo-router populates `segments` from the *qualified*
+ * navigation path, which **preserves group route names** like
+ * `(tabs)`. So:
+ *
+ *   /today        (lives in app/(tabs)/today.tsx)
+ *      → segments = ["(tabs)", "today"]
+ *      → pathname = "/today"        // groups stripped here, but
+ *                                   //  NOT in segments
+ *
+ * (The pathname-vs-segments asymmetry is intentional in expo-router
+ *  3.x — pathname is the "user-facing" URL, segments is the
+ *  navigation-tree position. Easy to get wrong because the field
+ *  names sound similar.)
+ *
+ * Examples of how expo-router populates `segments`:
+ *
+ *   /                       → []
+ *   /today                  → ["(tabs)", "today"]
+ *   /journey                → ["(tabs)", "journey"]
+ *   /library                → ["(tabs)", "library"]
+ *   /insights               → ["(tabs)", "insights"]
+ *   /sermon/intro           → ["sermon", "intro"]
+ *   /sermon/panel/3         → ["sermon", "panel", "[id]"]
+ *   /check-in               → ["check-in"]
+ *   /check-in/anxious       → ["check-in", "[mood]"]
+ *   /onboarding/focus       → ["onboarding", "focus"]
+ *   /book/john/3            → ["book", "[id]", "[chapter]"]
+ *   /settings/focus         → ["settings", "focus"]
+ *   /profile                → ["profile"]
+ *
+ * Hidden categories:
+ *   • Root landing (`/start` or empty) — pre-app surface; banner
+ *     has no useful context.
+ *   • Onboarding — deliberate setup flow; cross-feature chrome
+ *     would be noisy.
+ *   • Sermon flow — has its own inline FocusBanner under the
+ *     header; stacking the global banner on top would double up.
+ *   • Today tab — has the rich inline FocusToggle pill that
+ *     already surfaces session state with controls.
+ *   • Check-in modal — brief sacred moment; we don't pile on
+ *     chrome.
  */
-export function isGlobalBannerHiddenForRoute(routeSegment?: string): boolean {
-  // Today already shows the inline FocusToggle pill which has a
-  // visually richer "active" state (chip color flips, eyebrow
-  // tints, End button replaces the Switch). Adding the floating
-  // banner on top would be redundant noise. Every other tab gets
-  // the floating banner since none of them surface focus state.
-  return routeSegment === "today";
+function shouldHideForSegments(segments: string[]): boolean {
+  // Empty segments == root landing screen. No banner there.
+  if (segments.length === 0) return true;
+
+  const root = segments[0];
+
+  // Sermon flow has its own inline banner.
+  if (root === "sermon") return true;
+
+  // Onboarding is its own world.
+  if (root === "onboarding") return true;
+
+  // Start (pre-launch landing).
+  if (root === "start") return true;
+
+  // Mood check-in modal — brief, focused moment.
+  if (root === "check-in") return true;
+
+  // Study-session landing — same logic as sermon intro: the user
+  // landed here to start a session, so showing a "session active"
+  // banner across the top would be incoherent (you're about to
+  // start one). The landing screen has its own inline cue.
+  if (root === "study") return true;
+
+  // Today tab lives inside the (tabs) group, so the segments
+  // array is ["(tabs)", "today"]. Check both positions defensively
+  // in case expo-router's segments shape changes again in a future
+  // version — we'd rather over-hide on Today than ever stack two
+  // focus indicators on top of each other.
+  if (root === "today") return true;
+  if (root === "(tabs)" && segments[1] === "today") return true;
+
+  return false;
 }

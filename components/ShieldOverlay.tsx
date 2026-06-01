@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
+import { BrandGlyph } from "@/components/BrandGlyph";
 import { findSocialApp, type SocialApp } from "@/lib/focus";
 import { useColors } from "@/state/theme";
 
@@ -65,13 +66,9 @@ export function ShieldOverlay({
   // than blanking the screen.
   const name = app?.name ?? "This app";
   const brandColor = app?.color ?? colors.primary;
-  const initial = app?.initial ?? "·";
   const message =
     app?.quietMessage ??
     "You're in a sermon right now. Come back when you're done.";
-  // Snapchat's bright yellow chip needs dark glyph text for contrast;
-  // every other brand color carries white text comfortably.
-  const initialFg = brandColor === "#FFFC00" ? "#000000" : "#FFFFFF";
 
   return (
     <Modal
@@ -119,20 +116,18 @@ export function ShieldOverlay({
                   <BrandHalo color={brandColor} />
                 </View>
 
-                <View
-                  className="w-24 h-24 rounded-3xl items-center justify-center"
-                  style={{ backgroundColor: brandColor }}
-                >
-                  <Text
-                    className="text-[40px]"
-                    style={{
-                      fontFamily: "PlusJakartaSans_800ExtraBold",
-                      color: initialFg,
-                    }}
-                  >
-                    {initial}
-                  </Text>
-                </View>
+                {/* Real brand glyph on the app's brand-color chip.
+                    Falls back to a neutral chip if the catalog lost
+                    the id between saves — same defensive behavior as
+                    the rest of this screen. */}
+                {app ? (
+                  <BrandGlyph appId={app.id} size="xl" />
+                ) : (
+                  <View
+                    className="w-24 h-24 rounded-3xl items-center justify-center"
+                    style={{ backgroundColor: brandColor }}
+                  />
+                )}
               </View>
 
               {/* ─── Eyebrow ────────────────────────────────── */}

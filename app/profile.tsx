@@ -17,6 +17,7 @@ import { useOnboarding } from "@/state/onboarding";
 import { usePreferences } from "@/state/preferences";
 import { didCompleteToday, useProgress } from "@/state/progress";
 import { useReadingGoal } from "@/state/readingGoal";
+import { useStudySessions } from "@/state/studySessions";
 import { useColors, useTheme, type ThemePref } from "@/state/theme";
 
 /**
@@ -47,6 +48,7 @@ export default function ProfileScreen() {
   const { counts: annotationCounts } = useAnnotations();
   const { goalMinutes: readingGoalMinutes } = useReadingGoal();
   const { prefs: focusPrefs } = useFocus();
+  const { sessions: studySessions } = useStudySessions();
   const colors = useColors();
   const { pref: themePref } = useTheme();
 
@@ -339,6 +341,15 @@ export default function ProfileScreen() {
                 showDivider
               />
               <Row
+                icon={<StudyIcon stroke={colors.ink} />}
+                label="Study sessions"
+                value={studySessionsRowValue(studySessions)}
+                interactive
+                chevronStroke={colors.inkSubtle}
+                onPress={() => navigateTo("/settings/study-sessions")}
+                showDivider
+              />
+              <Row
                 icon={<MoonIcon stroke={colors.ink} />}
                 label="Appearance"
                 value={appearanceValue}
@@ -531,6 +542,36 @@ function Row({
 
 type IconProps = { stroke: string };
 
+/**
+ * Compute the right-hand value shown next to "Study sessions" in
+ * the drawer. Mirrors the "On / Off" pattern used by Focus mode but
+ * carries a slightly richer signal: "None" when there are zero
+ * sessions, the count when there's more than one, and the single
+ * session's time when there's exactly one (so the most common case
+ * — one morning study — shows the user their commitment at a
+ * glance without having to open the screen).
+ */
+function studySessionsRowValue(
+  sessions: ReadonlyArray<{
+    enabled: boolean;
+    time: { hour: number; minute: number };
+  }>,
+): string {
+  const active = sessions.filter((s) => s.enabled);
+  if (sessions.length === 0) return "None";
+  if (sessions.length === 1) {
+    const only = sessions[0];
+    if (!only.enabled) return "Paused";
+    const h = only.time.hour;
+    const m = only.time.minute;
+    const period = h < 12 ? "AM" : "PM";
+    const display = h % 12 === 0 ? 12 : h % 12;
+    return `${display}:${String(m).padStart(2, "0")} ${period}`;
+  }
+  if (active.length === 0) return "All paused";
+  return `${active.length} active`;
+}
+
 const ICON_BASE = {
   strokeWidth: 1.7,
   fill: "none",
@@ -631,6 +672,34 @@ function ShieldRowIcon({ stroke }: IconProps) {
     <Svg width={14} height={14} viewBox="0 0 24 24">
       <Path
         d="M12 3l8 3v6c0 4-3 7-8 9-5-2-8-5-8-9V6l8-3z"
+        {...ICON_BASE}
+        stroke={stroke}
+      />
+    </Svg>
+  );
+}
+
+/**
+ * Calendar-with-a-bookmark icon — visually distinct from BookIcon
+ * (open book) and ClockIcon (round face) so the row reads as
+ * "scheduled study time" at a glance rather than a generic
+ * notifications/clock icon.
+ */
+function StudyIcon({ stroke }: IconProps) {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24">
+      <Path
+        d="M4 7h16v12H4zM4 7V5a1 1 0 011-1h14a1 1 0 011 1v2"
+        {...ICON_BASE}
+        stroke={stroke}
+      />
+      <Path
+        d="M8 3v4M16 3v4"
+        {...ICON_BASE}
+        stroke={stroke}
+      />
+      <Path
+        d="M9 12h6M9 15h4"
         {...ICON_BASE}
         stroke={stroke}
       />

@@ -4,6 +4,7 @@ import {
   SettingsScaffold,
   SettingsSection,
 } from "@/components/SettingsScaffold";
+import { hasLocalBundle } from "@/lib/localBibles";
 import { TRANSLATIONS, usePreferences } from "@/state/preferences";
 import { useColors } from "@/state/theme";
 
@@ -38,17 +39,28 @@ export default function TranslationScreen() {
         title="Available"
         footer="More translations require licensing partnerships. We're working on it."
       >
-        {TRANSLATIONS.map((t, i) => (
-          <SettingsChoiceRow
-            key={t.id}
-            icon={<TagIcon tag={t.tag} />}
-            label={t.fullName}
-            sublabel={t.description}
-            selected={translationId === t.id}
-            onPress={() => setTranslation(t.id)}
-            showDivider={i < TRANSLATIONS.length - 1}
-          />
-        ))}
+        {TRANSLATIONS.map((t, i) => {
+          // Local-only translations (NWT et al.) get a clearer
+          // sublabel telling the user the data needs to be supplied.
+          // We further differentiate "slot exists but no content
+          // bundled yet" from "slot has content" so the picker
+          // doesn't look identical to the public-domain options.
+          const sublabel =
+            t.localOnly && !hasLocalBundle(t.id)
+              ? "Not installed — add JSON to assets/bibles/" + t.id
+              : t.description;
+          return (
+            <SettingsChoiceRow
+              key={t.id}
+              icon={<TagIcon tag={t.tag} />}
+              label={t.fullName}
+              sublabel={sublabel}
+              selected={translationId === t.id}
+              onPress={() => setTranslation(t.id)}
+              showDivider={i < TRANSLATIONS.length - 1}
+            />
+          );
+        })}
       </SettingsSection>
     </SettingsScaffold>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   LayoutAnimation,
@@ -75,6 +75,14 @@ export type StudySessionEditorProps = {
    *  dispatches an update. When absent, the editor starts fresh
    *  and Save creates a new one. */
   existing?: StudySession;
+  /** Optional starting draft for the CREATE flow. Used by the
+   *  Blocks screen's template cards so a fresh editor opens with
+   *  a curated time / days / focus / app list instead of the
+   *  bare NEW_SESSION_BASE defaults. Ignored when `existing` is
+   *  set (an edit always seeds from the row being edited).
+   *  Equivalent to the user typing in every field manually, so
+   *  the prefilled draft is still fully mutable. */
+  prefill?: StudySessionDraft;
   onClose: () => void;
   onSubmit: (draft: StudySessionDraft) => void | Promise<void>;
 };
@@ -157,6 +165,7 @@ const NEW_SESSION_BASE: StudySessionDraft = {
 export function StudySessionEditor({
   visible,
   existing,
+  prefill,
   onClose,
   onSubmit,
 }: StudySessionEditorProps) {
@@ -177,13 +186,29 @@ export function StudySessionEditor({
     return { ...NEW_SESSION_BASE, blockedAppIds: seedApps };
   }, [focusPrefs.blockedAppIds]);
 
+  // Initial-draft chooser. Priority order:
+  //   1. `existing` — editing an already-saved routine. Seed from it.
+  //   2. `prefill`  — creating a routine from a template card. Seed
+  //                   from the template's pre-shaped draft so the
+  //                   user starts with the curated time/days/apps
+  //                   instead of NEW_SESSION_BASE.
+  //   3. defaults   — fresh "+ New" tap with no template. Seed from
+  //                   NEW_SESSION_BASE merged with the user's
+  //                   curated focus-prefs blocked-app list.
+  // Wrapped in a callback so the initial useState computation
+  // matches the reseed effect below — keeps "which draft starts
+  // the editor?" centralized in one helper.
+  const pickInitialDraft = useCallback((): StudySessionDraft => {
+    if (existing) return toDraft(existing);
+    if (prefill) return { ...prefill };
+    return newSessionDefaults;
+  }, [existing, prefill, newSessionDefaults]);
+
   // Draft state — the working copy the user is editing. Commit
-  // happens only on Save (Cancel discards). Seeded from existing
-  // or defaults on every (re-)open so reopening the editor never
-  // shows a stale prior draft.
-  const [draft, setDraft] = useState<StudySessionDraft>(() =>
-    existing ? toDraft(existing) : newSessionDefaults,
-  );
+  // happens only on Save (Cancel discards). Seeded from existing,
+  // prefill, or defaults on every (re-)open so reopening the editor
+  // never shows a stale prior draft.
+  const [draft, setDraft] = useState<StudySessionDraft>(pickInitialDraft);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -193,9 +218,9 @@ export function StudySessionEditor({
   // "close & reopen with different target" case the parent uses.
   useEffect(() => {
     if (!visible) return;
-    setDraft(existing ? toDraft(existing) : newSessionDefaults);
+    setDraft(pickInitialDraft());
     setSubmitting(false);
-  }, [visible, existing, newSessionDefaults]);
+  }, [visible, pickInitialDraft]);
 
   const isEditing = Boolean(existing);
   const canSave = draft.daysOfWeek.length > 0 && !submitting;

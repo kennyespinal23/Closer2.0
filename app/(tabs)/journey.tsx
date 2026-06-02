@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import { StudySessionEditor } from "@/components/StudySessionEditor";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
@@ -21,6 +21,11 @@ import {
   formatReminderTime,
   type WeekdayIndex,
 } from "@/lib/notifications";
+import {
+  groupTemplatesByCategory,
+  templateToDraft,
+  type RoutineTemplate,
+} from "@/lib/routineTemplates";
 import { useFocus } from "@/state/focus";
 import {
   type Highlight,
@@ -151,10 +156,35 @@ export default function PracticeScreen() {
   // matches the model used on /settings/study-sessions so the editor
   // component itself doesn't need to know which surface invoked it.
   const [editorTarget, setEditorTarget] = useState<null | "new" | string>(null);
+  // When the user taps "Add" on a template card we pre-shape the
+  // draft and stash it here. The editor reads `prefill` and seeds
+  // its initial draft from it (instead of the bare NEW_SESSION_BASE
+  // defaults), so the curated time/days/apps land in the form
+  // ready to inspect or tweak. Cleared on editor close so the next
+  // bare "+ New" tap doesn't accidentally reuse a stale template.
+  const [editorPrefill, setEditorPrefill] = useState<
+    ReturnType<typeof templateToDraft> | undefined
+  >(undefined);
   const editingSession =
     editorTarget && editorTarget !== "new"
       ? studySessions.find((s) => s.id === editorTarget)
       : undefined;
+
+  // Open the editor in CREATE mode seeded from the given template.
+  // Centralizes the two state updates so every template card uses
+  // the same gesture wiring — easier to swap later if we decide
+  // tapping a card should skip the editor entirely and write
+  // straight through to the routine list.
+  const handleAddTemplate = (template: RoutineTemplate) => {
+    setEditorPrefill(templateToDraft(template));
+    setEditorTarget("new");
+  };
+
+  // Pre-grouped template list for the Templates section. Memoized
+  // because `groupTemplatesByCategory` walks the catalog every call
+  // and we only need to do that once per mount — the catalog is a
+  // module-level constant, not state, so the result is stable.
+  const templateGroups = useMemo(() => groupTemplatesByCategory(), []);
 
   // The FocusMiniPlayer floats above the GlassTabBar whenever a
   // session is active. When it's visible we reserve a little more
@@ -276,6 +306,58 @@ export default function PracticeScreen() {
           </View>
         )}
 
+        {/* ─── Templates ──────────────────────────────────────────
+            Curated, Christianized presets the user can add to their
+            routines with one tap. Modeled on Opal's preset cards
+            (Laser Focus / Rise & Shine / etc.), but the names and
+            cadences are reframed for a faith app — Morning Devotion,
+            Sabbath Rest, Evening Reflection, etc.
+
+            One horizontal scroller per category so the catalog reads
+            as two distinct invitations: "Deepen your practice" for
+            the committed focus blocks, and "Anchors through the
+            day" for the gentle daily reminders. */}
+        {templateGroups.map((group) => (
+          <View key={group.category} className="mt-2">
+            <TemplatesSectionHeader
+              title={group.label}
+              subtitle={group.subtitle}
+            />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              // contentInset preferred over paddingHorizontal so the
+              // first card aligns with the rest of the screen's
+              // 20pt gutter AND the last card has matching trailing
+              // breathing room. paddingHorizontal alone would cut
+              // the trailing inset since RN's ScrollView treats it
+              // as snap-to-edge on the last item.
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                paddingTop: 4,
+                paddingBottom: 4,
+              }}
+              // Decelerate quickly so flicks feel snappy on shorter
+              // catalogs (4 cards barely span more than 1.5 viewport
+              // widths) — without this, fast scrolls overshoot past
+              // the last card and the rubber-band feels wasteful.
+              decelerationRate="fast"
+            >
+              {group.templates.map((template, i) => (
+                <View
+                  key={template.id}
+                  style={{ marginRight: i < group.templates.length - 1 ? 12 : 0 }}
+                >
+                  <TemplateCard
+                    template={template}
+                    onAdd={() => handleAddTemplate(template)}
+                  />
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        ))}
+
         {/* ─── Saved Verses ─────────────────────────────────────── */}
         <SectionHeader
           title="Saved verses"
@@ -329,10 +411,24 @@ export default function PracticeScreen() {
           it was opened from. `key` derived from target so React fully
           remounts when switching between sessions (cleans draft state). */}
       <StudySessionEditor
-        key={editorTarget ?? "closed"}
+        // Key includes the prefill template name so opening the
+        // editor from "+ New" → template A → Cancel → template B
+        // remounts the editor instead of reusing the previous
+        // template's draft state. Without this, the second open
+        // would briefly flash the first template's name/time
+        // before the visibility-change effect reseeded.
+        key={
+          editorTarget === "new"
+            ? `new-${editorPrefill?.name ?? "blank"}`
+            : (editorTarget ?? "closed")
+        }
         visible={editorTarget !== null}
         existing={editingSession}
-        onClose={() => setEditorTarget(null)}
+        prefill={editorTarget === "new" ? editorPrefill : undefined}
+        onClose={() => {
+          setEditorTarget(null);
+          setEditorPrefill(undefined);
+        }}
         onSubmit={async (draft) => {
           if (editorTarget === "new") {
             await addSession(draft);
@@ -340,6 +436,7 @@ export default function PracticeScreen() {
             await updateSession(editorTarget, draft);
           }
           setEditorTarget(null);
+          setEditorPrefill(undefined);
         }}
       />
     </SafeAreaView>
@@ -1358,4 +1455,264 @@ function formatStartsIn(target: Date, now: Date): string {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
   ][target.getMonth()];
   return `${monthShort} ${target.getDate()}`;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Templates section
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Section header for a templates row — title + supporting subtitle.
+ * Different visual treatment than the main SectionHeader (no count
+ * pill, no action button) because the section's affordance is each
+ * card's own "Add" pill, not a single header CTA.
+ */
+function TemplatesSectionHeader({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <View className="px-6 mt-9 mb-2">
+      <Text
+        className="text-ink text-[19px] leading-[24px] tracking-[-0.2px]"
+        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+      >
+        {title}
+      </Text>
+      <Text
+        className="text-ink-muted text-[12.5px] leading-[18px] mt-0.5"
+        style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+      >
+        {subtitle}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * Card representing a single routine template. Modeled on Opal's
+ * preset cards: tall portrait-shape (160x200) with a colorful
+ * gradient background, the template name in the upper half, a
+ * short description below, and an "Add" pill anchored at the
+ * bottom.
+ *
+ * Card layout (top → bottom):
+ *   ┌──────────────────────┐
+ *   │ ●  (accent dot)      │  ← top accent
+ *   │                      │
+ *   │  Morning Devotion    │  ← title
+ *   │                      │
+ *   │  Open the day in     │  ← description (2 lines)
+ *   │  the Word.           │
+ *   │                      │
+ *   │            + Add    │  ← action pill
+ *   └──────────────────────┘
+ *
+ * Tap target:
+ *   The entire card is tappable for accessibility (so the user
+ *   doesn't have to hit the small "Add" pill). The dedicated pill
+ *   is visual reassurance — it labels the gesture, not gates it.
+ *
+ * Gradient rendering:
+ *   Uses react-native-svg's <LinearGradient> instead of
+ *   `expo-linear-gradient` because the SVG library is already a
+ *   dep here (BookCover.tsx uses the same pattern). No extra
+ *   install needed and no native module compatibility risk.
+ */
+function TemplateCard({
+  template,
+  onAdd,
+}: {
+  template: RoutineTemplate;
+  onAdd: () => void;
+}) {
+  const colors = useColors();
+  const CARD_WIDTH = 168;
+  const CARD_HEIGHT = 196;
+  return (
+    // Outer wrapper owns layout (size + radius for shadow shape) so
+    // the Pressable can keep its style prop to just opacity — same
+    // NativeWind/Pressable workaround we use in ActiveFocusCard and
+    // UpcomingSessionCard above.
+    <View
+      style={{
+        width: CARD_WIDTH,
+        height: CARD_HEIGHT,
+        borderRadius: 22,
+        shadowColor: "#000",
+        shadowOpacity: 0.14,
+        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 4,
+      }}
+    >
+      <Pressable
+        onPress={onAdd}
+        accessibilityRole="button"
+        accessibilityLabel={`Add ${template.name} routine`}
+        accessibilityHint={template.description}
+        style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
+      >
+        <View
+          style={{
+            width: CARD_WIDTH,
+            height: CARD_HEIGHT,
+            borderRadius: 22,
+            overflow: "hidden",
+            // Border picks up the accent tone so the gradient
+            // doesn't bleed into the page bg behind it on dense
+            // scroll feeds.
+            borderWidth: 1,
+            borderColor: withAlpha(template.accent, 0.18),
+          }}
+        >
+          {/* Background gradient — SVG-rendered, sized to fill the
+              card. Two stops, vertical (top→bottom) so the visual
+              weight sits at the foot of the card where the Add
+              pill lives. */}
+          <Svg
+            width={CARD_WIDTH}
+            height={CARD_HEIGHT}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+            }}
+          >
+            <Defs>
+              <LinearGradient
+                id={`tg-${template.id}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2={CARD_HEIGHT}
+                gradientUnits="userSpaceOnUse"
+              >
+                <Stop offset="0" stopColor={template.gradientFrom} stopOpacity={1} />
+                <Stop offset="1" stopColor={template.gradientTo} stopOpacity={1} />
+              </LinearGradient>
+            </Defs>
+            <Rect
+              x={0}
+              y={0}
+              width={CARD_WIDTH}
+              height={CARD_HEIGHT}
+              fill={`url(#tg-${template.id})`}
+            />
+          </Svg>
+
+          {/* Foreground content */}
+          <View
+            style={{
+              flex: 1,
+              padding: 14,
+              justifyContent: "space-between",
+            }}
+          >
+            {/* Top: small accent dot — adds a hint of "live indicator"
+                even though the card is static, mirroring the live
+                dot on the active-session card and the mini-player. */}
+            <View
+              style={{
+                width: 9,
+                height: 9,
+                borderRadius: 5,
+                backgroundColor: template.accent,
+              }}
+            />
+
+            {/* Middle: name + description block */}
+            <View>
+              <Text
+                numberOfLines={2}
+                style={{
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontSize: 17,
+                  color: "#1A1A1F",
+                  letterSpacing: -0.2,
+                  lineHeight: 22,
+                }}
+              >
+                {template.name}
+              </Text>
+              <Text
+                numberOfLines={2}
+                style={{
+                  fontFamily: "PlusJakartaSans_500Medium",
+                  fontSize: 11.5,
+                  color: withAlpha("#1A1A1F", 0.72),
+                  lineHeight: 15,
+                  marginTop: 4,
+                }}
+              >
+                {template.description}
+              </Text>
+            </View>
+
+            {/* Bottom: Add pill — right-anchored. We stop its
+                onPress from bubbling so the body's onAdd doesn't
+                fire twice. The pill IS the same action as the
+                card body, but redundant fires would be wasteful
+                and on shorter cards could even race. */}
+            <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  onAdd();
+                }}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={`Add ${template.name}`}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    borderRadius: 999,
+                    backgroundColor: "rgba(255,255,255,0.9)",
+                    borderWidth: 1,
+                    borderColor: withAlpha(template.accent, 0.18),
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: "PlusJakartaSans_700Bold",
+                      fontSize: 12,
+                      color: template.accent,
+                      marginRight: 4,
+                      lineHeight: 14,
+                    }}
+                  >
+                    +
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "PlusJakartaSans_700Bold",
+                      fontSize: 12,
+                      color: template.accent,
+                      letterSpacing: 0.2,
+                    }}
+                  >
+                    Add
+                  </Text>
+                </View>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Pressable>
+    </View>
+  );
+  // colors is consumed by the surrounding screen chrome (the
+  // SectionHeader's count pill, the ScrollView background) — not
+  // by this card directly. Kept in scope so adding theme-aware
+  // touches later (e.g. a dark-mode "lift" overlay on the gradient)
+  // doesn't require re-plumbing the hook through the props.
+  void colors;
 }

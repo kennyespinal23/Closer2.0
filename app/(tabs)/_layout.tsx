@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { View, type ColorValue } from "react-native";
 import { Tabs, useRouter } from "expo-router";
 import Svg, { Circle, Path } from "react-native-svg";
 import { GlassTabBar } from "@/components/GlassTabBar";
@@ -129,7 +129,7 @@ export default function TabsLayout() {
 const ICON_SIZE = 22;
 const STROKE_W = 1.8;
 
-function TodayIcon({ color }: { color: string }) {
+function TodayIcon({ color }: { color: ColorValue }) {
   // Sunrise — a small sun arc rising over a horizon line.
   // Echoes the brand's "quiet morning" motif.
   return (
@@ -145,7 +145,7 @@ function TodayIcon({ color }: { color: string }) {
   );
 }
 
-function PlusIcon({ color }: { color: string }) {
+function PlusIcon({ color }: { color: ColorValue }) {
   // Fallback icon for the check-in cell — used only by accessibility
   // tools and any non-glass tab bar; the real FAB visual lives in
   // GlassTabBar (white plus on accent disc).
@@ -161,7 +161,7 @@ function PlusIcon({ color }: { color: string }) {
   );
 }
 
-function PracticeIcon({ color }: { color: string }) {
+function PracticeIcon({ color }: { color: ColorValue }) {
   // Bookmarked-page glyph — a sheet with a small ribbon. Reads as
   // "the things you've set aside / kept" which is exactly what
   // the Practice tab contains (study sessions, saved verses, notes).
@@ -186,7 +186,7 @@ function PracticeIcon({ color }: { color: string }) {
   );
 }
 
-function LibraryIcon({ color }: { color: string }) {
+function LibraryIcon({ color }: { color: ColorValue }) {
   // Stacked books — three slim verticals
   return (
     <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">
@@ -200,7 +200,7 @@ function LibraryIcon({ color }: { color: string }) {
   );
 }
 
-function InsightsIcon({ color }: { color: string }) {
+function InsightsIcon({ color }: { color: ColorValue }) {
   // Three ascending bars — reflects "your rhythm" / journey data.
   // Reads cleanly at 22px and pairs visually with the breakdown list.
   return (

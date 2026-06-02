@@ -171,7 +171,7 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
             ]}
           />
 
-          {state.routes.map((route, index) => {
+          {state.routes.map((route: (typeof state.routes)[number], index: number) => {
             const { options } = descriptors[route.key]!;
             const isFocused = state.index === index;
             const isFab = route.name === FAB_ROUTE_NAME;

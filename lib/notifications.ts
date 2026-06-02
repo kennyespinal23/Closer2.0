@@ -1,4 +1,5 @@
 import * as Notifications from "expo-notifications";
+import { SchedulableTriggerInputTypes } from "expo-notifications";
 import { Platform } from "react-native";
 import { loadJSON, removeKey, saveJSON, STORAGE_KEYS } from "@/lib/storage";
 
@@ -53,7 +54,15 @@ import { loadJSON, removeKey, saveJSON, STORAGE_KEYS } from "@/lib/storage";
 export function configureForegroundDisplay(): void {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
+      // `shouldShowAlert` is the legacy combined flag (iOS ≤ 13).
+      // From iOS 14+ Apple split it into "banner at the top of the
+      // screen" and "row in Notification Center" — expo-notifications
+      // mirrored that split as `shouldShowBanner` + `shouldShowList`
+      // in SDK 53+. We surface both so the morning beacon appears
+      // exactly the way the user expects on every supported OS.
       shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
       shouldPlaySound: true,
       shouldSetBadge: false,
     }),
@@ -178,9 +187,13 @@ export async function scheduleDailyReminder(
       sound: "default",
     },
     trigger: {
+      // SDK 53+ requires an explicit trigger `type` discriminator.
+      // DAILY repeats at the given hour/minute every day — exactly
+      // what "Before The Noise" needs. No `repeats: true` required;
+      // DAILY is inherently repeating.
+      type: SchedulableTriggerInputTypes.DAILY,
       hour: clampHour(time.hour),
       minute: clampMinute(time.minute),
-      repeats: true,
       // Android also accepts a channelId — see ensureAndroidChannel.
       ...(Platform.OS === "android"
         ? { channelId: ANDROID_CHANNEL_ID }
@@ -243,7 +256,10 @@ export async function fireTestReminderNow(): Promise<string> {
     },
     // 2-second delay so the user has time to background the app and
     // see the banner / lock-screen behavior, not just an in-app toast.
-    trigger: { seconds: 2 },
+    trigger: {
+      type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: 2,
+    },
   });
 }
 
@@ -330,13 +346,18 @@ export async function scheduleStudySession(
         sound: "default",
       },
       trigger: {
+        // SDK 53+ trigger discriminator. WEEKLY fires once per week
+        // on the chosen weekday at hour:minute and is inherently
+        // repeating (no `repeats: true` needed). One trigger per
+        // active day — iOS still has no "multi-weekday in a single
+        // trigger" primitive.
+        type: SchedulableTriggerInputTypes.WEEKLY,
         // iOS weekday uses 1=Sunday…7=Saturday; JS Date.getDay()
         // uses 0=Sunday…6=Saturday. Bridge at the boundary so the
         // rest of the codebase can stay on JS conventions.
         weekday: jsWeekdayToIOSWeekday(day),
         hour,
         minute,
-        repeats: true,
         ...(Platform.OS === "android"
           ? { channelId: STUDY_ANDROID_CHANNEL_ID }
           : {}),
@@ -385,7 +406,10 @@ export async function fireTestStudySessionNow(
       },
       sound: "default",
     },
-    trigger: { seconds: 2 },
+    trigger: {
+      type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: 2,
+    },
   });
 }
 

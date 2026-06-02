@@ -34,6 +34,16 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2b5a953d-cc0a-4835-8a3b-af05f637a00d"
+      }
+    },
+    "owner": "kennyespinal23",
+    "updates": {
+      "url": "https://u.expo.dev/2b5a953d-cc0a-4835-8a3b-af05f637a00d"
     }
   }
 }

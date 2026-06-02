@@ -52,6 +52,27 @@ import { removeKey, STORAGE_KEYS, usePersistence } from "@/lib/storage";
 // Shapes
 // ─────────────────────────────────────────────────────────────────
 
+/**
+ * Where this routine came from. Affects visual treatment in the
+ * Practice tab and what the user can do with it:
+ *
+ *   • "user"   — created manually via the Practice tab's "Add a
+ *                session" editor. Fully mutable + deletable.
+ *   • "system" — seeded automatically by onboarding (the sermon
+ *                ritual and/or the daily Bible study commitment).
+ *                Still fully editable (time, days, focus) so the
+ *                user can tune Closer's defaults to their rhythm,
+ *                but delete is hidden — disabling via the row
+ *                toggle is the soft-off path. This is the only
+ *                anti-footgun on system routines; everything else
+ *                works identically to user-created.
+ *
+ * The differentiation is purely visual + behavioral (no schema
+ * branching). A user-created routine that happens to have the same
+ * name as a system one is still a user routine.
+ */
+export type StudySessionSource = "user" | "system";
+
 export type StudySession = {
   /** Stable id — never reused, never derived from time/name (those
    *  change). Generated once on creation. */
@@ -59,6 +80,14 @@ export type StudySession = {
   /** Display name. Shown on the list row, in the notification body
    *  ("Time for Morning Study"), and on the landing screen. */
   name: string;
+  /**
+   * Whether this routine was seeded by Closer (onboarding) or
+   * created manually by the user. See StudySessionSource above for
+   * the full UX implications. Defaults to "user" for back-compat:
+   * any pre-existing save (before this field shipped) is a user
+   * routine, because system routines didn't exist before this.
+   */
+  source: StudySessionSource;
   /** Time-of-day the notification should fire. Always interpreted
    *  in the device's local timezone — the OS handles DST so we
    *  don't need to. */
@@ -134,6 +163,22 @@ type StudySessionsContextValue = {
   /** Add a new session. Resolves with the new id once both the OS
    *  scheduling and the state update have completed. */
   addSession: (draft: StudySessionDraft) => Promise<string>;
+
+  /**
+   * Idempotent seed of a system-source routine. Used by the
+   * onboarding flow to create the suggested Bible-study (and any
+   * future suggested) routine without producing duplicates if the
+   * user navigates back and forth or re-runs onboarding.
+   *
+   * Matching key: `source === "system" AND name === draft.name`.
+   * Two distinct system routines can coexist as long as they have
+   * different names ("Morning Study" vs "Evening Reflection").
+   *
+   * Implementation note: forces `source: "system"` regardless of
+   * what the caller passes, so onboarding screens can't accidentally
+   * drop a "user" routine through this entry point.
+   */
+  upsertSystemSession: (draft: StudySessionDraft) => Promise<string>;
 
   /** Replace a session by id. Cancels the previously-scheduled
    *  notifications and (if still enabled) schedules new ones. */
@@ -222,9 +267,16 @@ export function StudySessionsProvider({ children }: { children: ReactNode }) {
       // by routines they configured before the flag existed.
       const useFocusMode =
         typeof raw.useFocusMode === "boolean" ? raw.useFocusMode : false;
+      // `source` was added with the onboarding-seeded system
+      // routines. Any pre-existing save predates the concept, so
+      // it can only have been created manually — migrate to
+      // "user" so existing routines keep their delete affordance.
+      const source: StudySessionSource =
+        raw.source === "system" ? "system" : "user";
       cleaned.push({
         id,
         name,
+        source,
         time,
         daysOfWeek,
         enabled,
@@ -335,6 +387,23 @@ export function StudySessionsProvider({ children }: { children: ReactNode }) {
     [state.sessions, updateSession],
   );
 
+  const upsertSystemSession = useCallback(
+    async (draft: StudySessionDraft): Promise<string> => {
+      // System routines are keyed by (source, name). Onboarding
+      // re-entry should update the existing seed in place rather
+      // than stacking up duplicates the user has to clean up later.
+      const existing = state.sessions.find(
+        (s) => s.source === "system" && s.name === draft.name,
+      );
+      if (existing) {
+        await updateSession(existing.id, { ...draft, source: "system" });
+        return existing.id;
+      }
+      return addSession({ ...draft, source: "system" });
+    },
+    [state.sessions, addSession, updateSession],
+  );
+
   const getSession = useCallback(
     (id: string): StudySession | undefined => {
       return state.sessions.find((s) => s.id === id);
@@ -358,6 +427,7 @@ export function StudySessionsProvider({ children }: { children: ReactNode }) {
       sessions: state.sessions,
       hydrated,
       addSession,
+      upsertSystemSession,
       updateSession,
       removeSession,
       toggleSession,
@@ -368,6 +438,7 @@ export function StudySessionsProvider({ children }: { children: ReactNode }) {
       state.sessions,
       hydrated,
       addSession,
+      upsertSystemSession,
       updateSession,
       removeSession,
       toggleSession,

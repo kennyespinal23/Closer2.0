@@ -13,12 +13,22 @@ export const ONBOARDING_STEPS = [
   "scripture",
   "quiet",
   "account",
+  // The setup chain ends with three connected screens, narrating
+  // the daily ritual end-to-end:
+  //   reminders → study → focus
+  //
+  // 1. "reminders" picks WHEN the daily sermon arrives (passive —
+  //    a notification fires).
+  // 2. "study" picks the active sit-down time the user commits to
+  //    reading on their own. App seeds it as a system routine in
+  //    the Practice tab so the user can tune it from day one.
+  // 3. "focus" introduces the silencing layer that protects the
+  //    minutes both rituals occupy.
+  //
+  // Each screen lays the foundation for the next — by the time the
+  // user reaches paywall, the daily rhythm is fully set up.
   "reminders",
-  // "focus" closes the setup chain: the user has just picked their
-  // morning trigger; this screen offers to guard the few minutes
-  // that follow it. Lives between reminders and the paywall so the
-  // story arc reads "we'll wake you → we'll quiet the noise →
-  // here's the deal" without an awkward step shuffle.
+  "study",
   "focus",
 ] as const;
 

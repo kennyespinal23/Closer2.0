@@ -381,18 +381,58 @@ function StudySessionRow({
         >
           <View
             className="w-9 h-9 rounded-xl items-center justify-center mr-3"
-            style={{ backgroundColor: colors.accentSoft }}
+            style={{
+              // System routines get a soft warm wash to match their
+              // "Closer" badge — visually distinct from user-created
+              // rows but still recognizably the same row type. Picked
+              // accentSoft for system so it reads like a curated
+              // recommendation rather than a generic reminder.
+              backgroundColor:
+                session.source === "system"
+                  ? withAlpha(colors.accent, 0.14)
+                  : colors.accentSoft,
+            }}
           >
-            <CalendarGlyph stroke={colors.ink} />
+            <CalendarGlyph
+              stroke={session.source === "system" ? colors.accent : colors.ink}
+            />
           </View>
           <View className="flex-1 pr-2">
-            <Text
-              className="text-ink text-[15px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-              numberOfLines={1}
-            >
-              {session.name || "Unnamed study"}
-            </Text>
+            <View className="flex-row items-center" style={{ gap: 6 }}>
+              <Text
+                className="text-ink text-[15px]"
+                style={{ fontFamily: "PlusJakartaSans_700Bold", flexShrink: 1 }}
+                numberOfLines={1}
+              >
+                {session.name || "Unnamed study"}
+              </Text>
+              {/* "Closer" badge — only on routines seeded by
+                  onboarding. The cue tells the user "the app set
+                  this up for you; tune it however you like." A
+                  pill rather than an icon so it reads as a label
+                  at a glance even when scanning the list quickly. */}
+              {session.source === "system" && (
+                <View
+                  style={{
+                    paddingHorizontal: 6,
+                    paddingVertical: 1.5,
+                    borderRadius: 999,
+                    backgroundColor: withAlpha(colors.accent, 0.16),
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: "PlusJakartaSans_700Bold",
+                      fontSize: 9.5,
+                      color: colors.accent,
+                      letterSpacing: 0.6,
+                    }}
+                  >
+                    CLOSER
+                  </Text>
+                </View>
+              )}
+            </View>
             <Text
               className="text-ink-muted text-[12.5px] mt-0.5"
               style={{ fontFamily: "PlusJakartaSans_500Medium" }}

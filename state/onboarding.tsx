@@ -43,6 +43,19 @@ export type OnboardingAnswers = {
    * via settings.
    */
   dailyReminderTime?: DailyReminderTime;
+  /**
+   * When the user wants to sit down with the Bible each day. Set on
+   * the /onboarding/study screen and used to seed a "system" study
+   * session via StudySessionsProvider.upsertSystemSession. Undefined
+   * until the user reaches that step (or skips it).
+   *
+   * Persisted in onboarding answers (rather than only on the seeded
+   * session) so re-running onboarding from a clean state can recover
+   * the user's previous pick and pre-fill the picker — and so a
+   * future "edit my onboarding answers" surface has something to
+   * read from.
+   */
+  studyTime?: DailyReminderTime;
 };
 
 type OnboardingContextValue = {

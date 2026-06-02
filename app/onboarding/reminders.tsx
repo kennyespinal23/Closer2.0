@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingHeader } from "@/components/OnboardingHeader";
@@ -21,27 +21,37 @@ import { useOnboarding } from "@/state/onboarding";
 /**
  * Onboarding — "Before The Noise" notification opt-in.
  *
- * This is where the user picks the time their daily ritual fires.
+ * This is where the user picks WHEN their daily sermon arrives.
  * The whole product positioning rests on this moment: the notification
  * isn't a reminder, it's the trigger that opens the sermon. So the
  * screen treats "pick a time" as the primary action, not the
  * permission ask itself.
  *
+ * The page now opens with a short paragraph explaining what the
+ * sermon ritual IS — a single ~5-minute reading delivered once a
+ * day, tied to whichever moment of the day the user wants to anchor.
+ * Without that context the time picker reads like an alarm clock
+ * setup; with it, it reads like "when do you want to meet."
+ *
+ * Time options span both morning AND evening anchors. The default
+ * stays on the morning band ("Before The Noise" was originally a
+ * morning ritual), but the screen now also offers a curated evening
+ * band so users whose mornings are chaotic can pick a night anchor
+ * without having to discover the custom picker.
+ *
  * Flow:
- *   1. User picks a preset morning time (6:00 → 8:00 AM in 30-min
- *      steps). 7:00 AM is selected by default — landing for most
- *      people before the social-feed pull starts.
+ *   1. User picks a time — preset chip or custom wheel.
  *   2. They tap the primary CTA, labeled with the chosen time.
  *      That triggers the system permission dialog (first time).
  *   3. On grant: we schedule the daily notification + persist the
- *      time + notificationsEnabled=true, then continue to paywall.
+ *      time + notificationsEnabled=true, then continue.
  *   4. On denial / "Maybe later": we persist notificationsEnabled=false
  *      so settings can render the right CTA, then continue.
  *
  * Why preset chips instead of a full time wheel?
  *   Speed. Onboarding is the moment a user is least patient with
- *   pickers. A 5-chip row is one tap; a time wheel is several. They
- *   can fine-tune to any minute in /settings/notifications later.
+ *   pickers. A row of chips is one tap; a time wheel is several.
+ *   They can fine-tune to any minute in /settings/notifications later.
  */
 export default function RemindersScreen() {
   const router = useRouter();
@@ -56,22 +66,30 @@ export default function RemindersScreen() {
   // True when the active time isn't one of the curated presets —
   // tells the chip row to highlight the Custom chip instead of
   // any preset, and lets the Custom chip display the picked
-  // time as its label.
+  // time as its label. Checks against ALL bands (morning + evening)
+  // so picking an evening preset still leaves Custom unhighlighted.
   const isCustomTime = useMemo(
     () =>
-      !TIME_PRESETS.some(
+      !ALL_PRESETS.some(
         (p) => p.hour === time.hour && p.minute === time.minute,
       ),
     [time],
   );
 
-  // After reminders we route through the focus step (introduces
-  // social-app quieting) on the way to the paywall. The chain is:
-  //   reminders → focus → paywall
-  // Naming the helper goToNext (rather than goToPaywall) keeps the
+  // After reminders we route through study → focus → paywall. The
+  // sermon time the user just picked anchors the passive ritual;
+  // the study screen then asks for their active sit-down time so
+  // both rituals are seeded by the time the user reaches Practice.
+  // Naming the helper goToNext (rather than goToStudy) keeps the
   // call sites honest about what they're doing — they don't care
   // what comes next, just that the user finished here.
-  const goToNext = () => router.push("/onboarding/focus");
+  //
+  // The cast to `Href` is intentional: typed routes are generated
+  // by Expo Router on metro startup; a newly-added screen isn't in
+  // the generated union until metro regenerates the file. The cast
+  // is harmless once that happens (the route IS registered via
+  // file-based routing) and prevents a stale typecheck blocker.
+  const goToNext = () => router.push("/onboarding/study" as Href);
 
   const handleEnable = async () => {
     if (submitting) return;
@@ -114,77 +132,67 @@ export default function RemindersScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-1 px-6">
-          {/* Moon hero — fades in slowly like the moon "rising" */}
+          {/* Moon hero — fades in slowly like the moon "rising".
+              Sized down vs. the original single-band layout because
+              the page now carries two time bands + an educational
+              paragraph; the previous 240px halo pushed the CTA off
+              the bottom of common iPhone heights. */}
           <FadeIn delayMs={0} durationMs={1500}>
-            <View className="items-center mt-6">
+            <View className="items-center mt-2">
               <MoonWithGlow />
             </View>
           </FadeIn>
 
           <FadeIn delayMs={400}>
             <Text
-              className="text-ink text-[28px] leading-[36px] tracking-[-0.5px] text-center mt-8"
+              className="text-ink text-[26px] leading-[32px] tracking-[-0.5px] text-center mt-4"
               style={{ fontFamily: "PlusJakartaSans_700Bold" }}
             >
-              Begin before the noise.
+              Your daily sermon.
             </Text>
           </FadeIn>
 
           <FadeIn delayMs={1000}>
             <Text
-              className="text-ink-muted text-[16px] leading-[24px] text-center mt-4 px-2"
+              className="text-ink-muted text-[14.5px] leading-[21px] text-center mt-3 px-2"
               style={{ fontFamily: "PlusJakartaSans_400Regular" }}
             >
-              One quiet moment, every morning. Pick when you&apos;d like
-              your word delivered.
+              Every day, Closer delivers one short sermon — a few minutes
+              of Scripture-rooted teaching written for where you are.
+              Pick when you&apos;d like it to arrive.
             </Text>
           </FadeIn>
 
-          {/* Time picker chips */}
+          {/* Time picker — split into Morning and Evening bands so
+              the user can pick whichever anchor matches their day.
+              Morning is the historical "Before The Noise" default;
+              Evening is for users whose mornings won't hold the
+              ritual reliably. Two stacked rows feel like a real
+              choice; one long row of mixed AM/PM times reads as
+              noise on a small screen. */}
           <FadeIn delayMs={1600}>
-            <View className="mt-9">
-              <Text
-                className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase text-center mb-3"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-              >
-                Your time
-              </Text>
-              <View
-                className="flex-row flex-wrap justify-center"
-                style={{ gap: 8 }}
-              >
-                {TIME_PRESETS.map((preset) => {
-                  // A preset chip is "selected" only when the
-                  // active time equals the preset AND the user
-                  // didn't pick a custom time. The custom-time
-                  // case (where `time` happens to coincide with
-                  // a preset is impossible by construction —
-                  // any custom-picked time that matches a preset
-                  // is treated as picking that preset).
-                  const selected =
-                    !isCustomTime &&
-                    preset.hour === time.hour &&
-                    preset.minute === time.minute;
-                  return (
-                    <TimeChip
-                      key={`${preset.hour}-${preset.minute}`}
-                      label={formatReminderTime(preset)}
-                      selected={selected}
-                      onPress={() => setTime(preset)}
-                    />
-                  );
-                })}
-                {/* Custom chip — opens the wheel modal. When the
-                    user has picked a custom time, the chip
-                    displays that time so the picked value is
-                    visible in the row (otherwise nothing tells
-                    the user "I'm set to 8:47 AM"). When no
-                    custom time is set, the chip reads "Custom"
-                    with a small clock glyph hint. */}
+            <View className="mt-5">
+              <TimeBand
+                label="Morning"
+                presets={MORNING_PRESETS}
+                activeTime={time}
+                isCustomTime={isCustomTime}
+                onPick={setTime}
+              />
+              <View className="h-3" />
+              <TimeBand
+                label="Evening"
+                presets={EVENING_PRESETS}
+                activeTime={time}
+                isCustomTime={isCustomTime}
+                onPick={setTime}
+              />
+              <View className="h-2.5" />
+              <View className="items-center">
                 <CustomTimeChip
                   selected={isCustomTime}
                   label={
-                    isCustomTime ? formatReminderTime(time) : "Custom"
+                    isCustomTime ? formatReminderTime(time) : "Custom time"
                   }
                   onPress={() => setPickerOpen(true)}
                 />
@@ -192,7 +200,7 @@ export default function RemindersScreen() {
             </View>
           </FadeIn>
 
-          <View className="flex-1 min-h-[24px]" />
+          <View className="flex-1 min-h-[12px]" />
 
           <FadeIn delayMs={2000}>
             <View className="pb-2">
@@ -209,26 +217,18 @@ export default function RemindersScreen() {
                 hitSlop={12}
                 onPress={handleMaybeLater}
                 disabled={submitting}
-                className="self-center mt-5 py-2 px-4"
+                className="self-center mt-3 py-2 px-4"
                 style={({ pressed }) => ({
                   opacity: pressed || submitting ? 0.5 : 1,
                 })}
               >
                 <Text
-                  className="text-ink-muted text-[15px]"
+                  className="text-ink-muted text-[14px]"
                   style={{ fontFamily: "PlusJakartaSans_500Medium" }}
                 >
                   Maybe later
                 </Text>
               </Pressable>
-
-              <Text
-                className="text-ink-subtle text-[11.5px] text-center mt-4 leading-[17px]"
-                style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-              >
-                One notification a day. Never more. Tap it and the
-                sermon is already waiting.
-              </Text>
             </View>
           </FadeIn>
         </View>
@@ -256,22 +256,87 @@ export default function RemindersScreen() {
 // ─────────────────────────────────────────────────────────────────
 
 /**
- * The curated set of "morning anchor" times the user can pick in
- * onboarding. 30-minute steps from 6:00 → 8:00 AM — the band that
- * lands "before the noise" for most readers without crowding the
- * picker with options that nobody picks.
- *
- * Custom times (any minute, any hour) are available in
- * /settings/notifications for users whose mornings start outside
- * this band.
+ * Curated morning-anchor times. 30-minute steps from 6:00 → 8:00 AM —
+ * the band that lands "before the noise" for most readers without
+ * crowding the picker with options nobody picks.
  */
-const TIME_PRESETS: ReadonlyArray<DailyReminderTime> = [
+const MORNING_PRESETS: ReadonlyArray<DailyReminderTime> = [
   { hour: 6, minute: 0 },
   { hour: 6, minute: 30 },
   { hour: 7, minute: 0 },
   { hour: 7, minute: 30 },
   { hour: 8, minute: 0 },
 ];
+
+/**
+ * Curated evening-anchor times. Mirrors the morning band's cadence
+ * (30-min steps) in the 8:00 → 10:00 PM window — late enough that
+ * the day has wound down, early enough that a 5-minute sermon
+ * doesn't compete with sleep. Users outside this band fall back to
+ * the Custom chip.
+ */
+const EVENING_PRESETS: ReadonlyArray<DailyReminderTime> = [
+  { hour: 20, minute: 0 },
+  { hour: 20, minute: 30 },
+  { hour: 21, minute: 0 },
+  { hour: 21, minute: 30 },
+  { hour: 22, minute: 0 },
+];
+
+/** Combined catalog used to determine "is the active time a preset?" */
+const ALL_PRESETS: ReadonlyArray<DailyReminderTime> = [
+  ...MORNING_PRESETS,
+  ...EVENING_PRESETS,
+];
+
+/**
+ * One labeled row of time-chip presets. The label sits as a small
+ * eyebrow above the row so Morning vs Evening reads at a glance
+ * even when both bands are visible together on the same screen.
+ */
+function TimeBand({
+  label,
+  presets,
+  activeTime,
+  isCustomTime,
+  onPick,
+}: {
+  label: string;
+  presets: ReadonlyArray<DailyReminderTime>;
+  activeTime: DailyReminderTime;
+  isCustomTime: boolean;
+  onPick: (t: DailyReminderTime) => void;
+}) {
+  return (
+    <View>
+      <Text
+        className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase text-center mb-2.5"
+        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+      >
+        {label}
+      </Text>
+      <View
+        className="flex-row flex-wrap justify-center"
+        style={{ gap: 8 }}
+      >
+        {presets.map((preset) => {
+          const selected =
+            !isCustomTime &&
+            preset.hour === activeTime.hour &&
+            preset.minute === activeTime.minute;
+          return (
+            <TimeChip
+              key={`${preset.hour}-${preset.minute}`}
+              label={formatReminderTime(preset)}
+              selected={selected}
+              onPress={() => onPick(preset)}
+            />
+          );
+        })}
+      </View>
+    </View>
+  );
+}
 
 function TimeChip({
   label,
@@ -290,8 +355,15 @@ function TimeChip({
       accessibilityRole="button"
       accessibilityLabel={`Pick ${label}`}
       accessibilityState={{ selected }}
-      className="rounded-full px-4 py-2.5 border"
+      className="rounded-full px-4 py-2.5"
       style={({ pressed }) => ({
+        // Explicit borderWidth here rather than via the NativeWind
+        // `border` class — the class produced an inconsistent
+        // rendering on iOS where the selected pill's white fill
+        // failed to paint (text appeared in isolation against the
+        // page background). Pinning borderWidth in the style prop
+        // alongside the color guarantees both layers paint together.
+        borderWidth: 1,
         backgroundColor: selected ? colors.primary : "transparent",
         borderColor: selected ? colors.primary : colors.borderStrong,
         opacity: pressed ? 0.85 : 1,
@@ -340,8 +412,12 @@ function CustomTimeChip({
         selected ? `Custom time: ${label}. Tap to change.` : "Pick a custom time"
       }
       accessibilityState={{ selected }}
-      className="rounded-full pl-3 pr-4 py-2.5 border flex-row items-center"
+      className="rounded-full pl-3 pr-4 py-2.5 flex-row items-center"
       style={({ pressed }) => ({
+        // See TimeChip above — explicit borderWidth in style ensures
+        // the selected pill's fill paints on iOS instead of leaving
+        // the text floating bare on the page background.
+        borderWidth: 1,
         backgroundColor: selected ? colors.primary : "transparent",
         borderColor: selected ? colors.primary : colors.borderStrong,
         opacity: pressed ? 0.85 : 1,
@@ -409,8 +485,13 @@ function PencilGlyph({ stroke }: { stroke: string }) {
 
 function MoonWithGlow() {
   const colors = useColors();
-  const GLOW_SIZE = 240;
-  const MOON_SIZE = 96;
+  // Shrunk from 240/96 to 180/76 to make room for the two-band
+  // time picker on the new layout — the original sizes were tuned
+  // for a single-band page where the moon could breathe; with the
+  // morning + evening bands, the CTA needs the headroom or it
+  // pushes off-screen on 6.1" devices.
+  const GLOW_SIZE = 180;
+  const MOON_SIZE = 76;
 
   return (
     <View

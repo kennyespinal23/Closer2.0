@@ -88,9 +88,23 @@ export default function StudySessionsScreen() {
 
   const handleDelete = useCallback(
     (session: StudySession) => {
+      // System routines (seeded by onboarding) can't be deleted from
+      // here — only paused via the row toggle. Removing them would
+      // leave the user with a Practice tab they have to manually
+      // re-seed if they ever change their mind. The soft-off path is
+      // friendlier and reversible. Surface the why so the user
+      // doesn't just see a "nothing happened" non-response.
+      if (session.source === "system") {
+        Alert.alert(
+          "Set up by Closer",
+          `"${session.name || "This session"}" was set up during your welcome. Turn it off with the switch to pause it — your notifications will stop and nothing will fire on the days you've chosen.`,
+          [{ text: "Got it", style: "default" }],
+        );
+        return;
+      }
       Alert.alert(
         "Delete this session?",
-        `“${session.name || "Unnamed study"}” will be removed and its reminders cancelled.`,
+        `"${session.name || "Unnamed study"}" will be removed and its reminders cancelled.`,
         [
           { text: "Cancel", style: "cancel" },
           {
@@ -312,6 +326,7 @@ function SessionRow({
   onDelete: () => void;
 }) {
   const colors = useColors();
+  const isSystem = session.source === "system";
   return (
     <View>
       <Pressable
@@ -319,25 +334,62 @@ function SessionRow({
         onLongPress={onDelete}
         accessibilityRole="button"
         accessibilityLabel={`Edit ${session.name || "study session"}`}
-        accessibilityHint="Long-press to delete"
+        accessibilityHint={
+          isSystem
+            ? "Long-press to learn why this one can't be deleted"
+            : "Long-press to delete"
+        }
       >
         <View className="flex-row items-center px-4 py-3.5">
           {/* Icon chip — soft accent square, same chip language as
-              other settings rows. Book glyph signals "scripture." */}
+              other settings rows. Book glyph signals "scripture."
+              System routines get a slightly warmer wash so they
+              read as "set up by Closer" without needing a badge
+              in this denser settings layout. */}
           <View
             className="w-9 h-9 rounded-xl items-center justify-center mr-3"
-            style={{ backgroundColor: colors.accentSoft }}
+            style={{
+              backgroundColor: isSystem
+                ? withAlpha(colors.accent, 0.14)
+                : colors.accentSoft,
+            }}
           >
-            <BookGlyph stroke={colors.ink} />
+            <BookGlyph stroke={isSystem ? colors.accent : colors.ink} />
           </View>
           <View className="flex-1 pr-2">
-            <Text
-              className="text-ink text-[15px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-              numberOfLines={1}
-            >
-              {session.name || "Unnamed study"}
-            </Text>
+            <View className="flex-row items-center" style={{ gap: 6 }}>
+              <Text
+                className="text-ink text-[15px]"
+                style={{
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  flexShrink: 1,
+                }}
+                numberOfLines={1}
+              >
+                {session.name || "Unnamed study"}
+              </Text>
+              {isSystem && (
+                <View
+                  style={{
+                    paddingHorizontal: 6,
+                    paddingVertical: 1.5,
+                    borderRadius: 999,
+                    backgroundColor: withAlpha(colors.accent, 0.16),
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: "PlusJakartaSans_700Bold",
+                      fontSize: 9.5,
+                      color: colors.accent,
+                      letterSpacing: 0.6,
+                    }}
+                  >
+                    CLOSER
+                  </Text>
+                </View>
+              )}
+            </View>
             <Text
               className="text-ink-muted text-[12.5px] mt-0.5"
               style={{ fontFamily: "PlusJakartaSans_500Medium" }}

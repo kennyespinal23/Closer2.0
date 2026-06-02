@@ -143,6 +143,10 @@ const SMOOTH_LAYOUT = {
  *  with (see state/studySessions.tsx migration). */
 const NEW_SESSION_BASE: StudySessionDraft = {
   name: "Morning Study",
+  // `source: "user"` is the right default for the manual editor.
+  // The onboarding flow seeds its own routines with source: "system"
+  // through `upsertSystemSession` — the editor never produces those.
+  source: "user",
   time: { hour: 7, minute: 15 },
   daysOfWeek: [1, 2, 3, 4, 5],
   enabled: true,
@@ -276,6 +280,10 @@ export function StudySessionEditor({
     try {
       await onSubmit({
         name: draft.name.trim(),
+        // Round-trip the source from the draft so editing a system
+        // routine keeps it a system routine. New manual creations
+        // pick up "user" from NEW_SESSION_BASE.
+        source: draft.source,
         time: draft.time,
         daysOfWeek: draft.daysOfWeek,
         // Newly-created sessions are always enabled when the user
@@ -1030,6 +1038,11 @@ function PresetSegment({
 function toDraft(session: StudySession): StudySessionDraft {
   return {
     name: session.name,
+    // Preserve the routine's origin across edits — editing a system
+    // routine keeps it a system routine (so the "Closer" badge stays
+    // and delete stays hidden). Users can only convert by deleting
+    // + recreating manually, which is intentional.
+    source: session.source,
     time: session.time,
     daysOfWeek: [...session.daysOfWeek],
     enabled: session.enabled,

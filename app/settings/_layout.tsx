@@ -1,9 +1,6 @@
 import { View } from "react-native";
 import { Stack } from "expo-router";
-import {
-  GlobalFocusBanner,
-  useGlobalFocusBannerSpacing,
-} from "@/components/GlobalFocusBanner";
+import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
 import { useColors } from "@/state/theme";
 
 /**
@@ -15,19 +12,24 @@ import { useColors } from "@/state/theme";
  * (app/_layout.tsx) is the one that controls the slide-from-right
  * animation used when entering the group from the profile drawer.
  *
- * The GlobalFocusBanner is mounted here so a focus session in
- * progress stays visible while the user is inside any settings
- * screen. The Stack navigator is wrapped in an inner View whose
- * paddingTop reserves room for the banner pill — same per-layout
- * pattern used in (tabs) and book. See GlobalFocusBanner.tsx for
- * why the banner can't live at the root.
+ * The FocusMiniPlayer is mounted here (aboveTabBar={false}, since
+ * the settings stack pushes OVER the tabs and no GlassTabBar is
+ * visible) so an active focus session keeps a persistent "now
+ * playing" strip while the user manages preferences. The
+ * mini-player replaces the top-anchored GlobalFocusBanner that
+ * used to sit here — moving it to the bottom keeps the top of
+ * every settings page free for its own SettingsScaffold header.
+ *
+ * Same per-layout mounting pattern as in (tabs) and book — the
+ * mini-player MUST live inside a layout's screen container (not at
+ * the root) because react-native-screens' native view controllers
+ * occlude root-level React siblings on iOS.
  */
 export default function SettingsLayout() {
   const { bg } = useColors();
-  const bannerSpacing = useGlobalFocusBannerSpacing();
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
-      <View style={{ flex: 1, paddingTop: bannerSpacing }}>
+      <View style={{ flex: 1 }}>
         <Stack
           screenOptions={{
             headerShown: false,
@@ -36,7 +38,7 @@ export default function SettingsLayout() {
           }}
         />
       </View>
-      <GlobalFocusBanner />
+      <FocusMiniPlayer aboveTabBar={false} />
     </View>
   );
 }

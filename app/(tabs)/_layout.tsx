@@ -2,10 +2,7 @@ import { View, type ColorValue } from "react-native";
 import { Tabs, useRouter } from "expo-router";
 import Svg, { Circle, Path } from "react-native-svg";
 import { GlassTabBar } from "@/components/GlassTabBar";
-import {
-  GlobalFocusBanner,
-  useGlobalFocusBannerSpacing,
-} from "@/components/GlobalFocusBanner";
+import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
 
 /**
  * Bottom-tab layout for the main app.
@@ -26,36 +23,30 @@ import {
  *
  * GlassTabBar renders the cell at `name === "checkin"` as a raised
  * accent FAB instead of the standard icon+label cell.
+ *
+ * Focus chrome lives here too: a FocusMiniPlayer floats above the
+ * tab bar whenever a focus session is active, replacing the old
+ * top-anchored GlobalFocusBanner. Bottom-anchoring keeps the top of
+ * every tab free for its own hero content (page titles, scripture
+ * cards, sermon images) while still surfacing a live status + End
+ * control everywhere the user navigates.
  */
 export default function TabsLayout() {
   const router = useRouter();
-  // Reserves top-of-screen space for the floating focus banner so
-  // its absolute-positioned pill doesn't overlap whatever the
-  // active tab is rendering at the top of its content. Returns 0
-  // when the banner is hidden (no session, or on Today which has
-  // its own inline FocusToggle) so non-focus-mode UX is unchanged.
-  const bannerSpacing = useGlobalFocusBannerSpacing();
 
   return (
-    // Wrapping View hosts the Tabs navigator AND the floating
-    // GlobalFocusBanner as siblings. The banner self-suppresses on
-    // the Today tab (which has its own inline FocusToggle pill)
-    // and renders above Journey/Library/Insights when a focus
-    // session is active. Mounted INSIDE the layout (rather than at
-    // the root) because react-native-screens' native view
-    // controllers occlude React-tree siblings of the root <Stack>
-    // on iOS — only siblings INSIDE a layout's screen container
-    // render reliably above that layout's content.
-    //
-    // The Tabs navigator is wrapped in an inner View whose
-    // paddingTop is reserved for the banner pill (when visible).
-    // Padding goes on the INNER view so the absolutely-positioned
-    // banner — which lives at the outer-View layer — still anchors
-    // to the device's safe-area inset, not to the padded inner
-    // edge. Without this split the banner would slide down with
-    // the padding and we'd be back to it overlapping content.
+    // Wrapping View hosts the Tabs navigator and the floating
+    // FocusMiniPlayer as siblings. The mini-player self-suppresses
+    // on routes that have their own focus chrome (sermon flow,
+    // onboarding, check-in modal, study landing) and renders
+    // everywhere else when a focus session is active. Mounted
+    // INSIDE the layout (rather than at the root) because
+    // react-native-screens' native view controllers occlude
+    // React-tree siblings of the root <Stack> on iOS — only
+    // siblings INSIDE a layout's screen container render reliably
+    // above that layout's content.
     <View style={{ flex: 1 }}>
-      <View style={{ flex: 1, paddingTop: bannerSpacing }}>
+      <View style={{ flex: 1 }}>
         <Tabs
           screenOptions={{ headerShown: false }}
           tabBar={(props) => <GlassTabBar {...props} />}
@@ -117,7 +108,7 @@ export default function TabsLayout() {
         />
         </Tabs>
       </View>
-      <GlobalFocusBanner />
+      <FocusMiniPlayer />
     </View>
   );
 }

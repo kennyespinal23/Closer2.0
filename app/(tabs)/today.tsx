@@ -530,8 +530,8 @@ export default function TodayScreen() {
               {/* Toggle a real focus SESSION without going through
                   the sermon Begin flow. The session uses the
                   current pref's blocked-app set + today's moment
-                  day. Lets the reviewer verify the GlobalFocusBanner
-                  appears on Journey/Library/Insights/Settings/etc.
+                  day. Lets the reviewer verify the FocusMiniPlayer
+                  appears on every tab + the book reader + settings
                   without having to walk through a full sermon each
                   time. End-state shows "End focus session" so the
                   pill doubles as a quick teardown affordance. */}
@@ -1626,9 +1626,9 @@ function PreviewShieldPill({ onPress }: { onPress: () => void }) {
 //
 // Lets a developer/reviewer flip a real focus session on without
 // having to walk through the Begin Sermon flow. Used primarily to
-// verify the GlobalFocusBanner renders on non-sermon, non-today
-// routes (Journey / Library / Insights / Settings / Profile drawer
-// / book reader). Two visual states:
+// verify the FocusMiniPlayer renders on every tab + the book
+// reader + settings without walking through a full sermon each
+// time. Two visual states:
 //
 //   • Off → muted ghost pill, "Start focus session"
 //   • On  → blue-tinted pill, "End focus session"

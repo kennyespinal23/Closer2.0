@@ -7,9 +7,7 @@
     "scheme": "closer",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "exposdk:54.0.0",
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#000000"

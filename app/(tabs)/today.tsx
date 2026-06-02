@@ -3,6 +3,7 @@ import { Image, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, {
   Defs,
+  LinearGradient,
   Path,
   RadialGradient,
   Rect,
@@ -747,6 +748,11 @@ function SermonCard({
   completed,
   onPress,
 }: SermonCardProps) {
+  // Surface color drives the bottom fade-out of the full-bleed
+  // hero so the image dissolves into the body section instead
+  // of stopping at a hard edge. Theme-aware so light mode fades
+  // to white-ish surface, dark mode fades to near-black.
+  const colors = useColors();
   return (
     <Pressable
       onPress={onPress}
@@ -817,6 +823,47 @@ function SermonCard({
                 </RadialGradient>
               </Defs>
               <Rect x={0} y={0} width="100%" height={64} fill="url(#sc-top-fade)" />
+            </Svg>
+
+            {/* Bottom dissolve gradient — fades the image's lower
+                edge into the body section's surface color so the
+                transition reads as a soft hand-off instead of a
+                hard line. Theme-aware via colors.surface (matches
+                the card body's `bg-surface` class). 48pt feathers
+                roughly the bottom quarter of the strip — short
+                enough that the focal subject (chapel, hill) stays
+                untouched, long enough that the eye can't pick out
+                a discrete edge.
+
+                Linear top→bottom (not radial like the top fade)
+                because the goal here is a uniform horizontal
+                dissolve, not a vignette. */}
+            <Svg
+              pointerEvents="none"
+              width="100%"
+              height={48}
+              style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}
+            >
+              <Defs>
+                <LinearGradient
+                  id="sc-bottom-fade"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2={48}
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <Stop offset="0" stopColor={colors.surface} stopOpacity={0} />
+                  <Stop offset="1" stopColor={colors.surface} stopOpacity={1} />
+                </LinearGradient>
+              </Defs>
+              <Rect
+                x={0}
+                y={0}
+                width="100%"
+                height={48}
+                fill="url(#sc-bottom-fade)"
+              />
             </Svg>
             {/* Eyebrow overlay — white text so it lifts off the
                 sunset palette. Same row layout as the fallback

@@ -359,7 +359,17 @@ export default function TodayScreen() {
             style={{ fontFamily: "PlusJakartaSans_700Bold" }}
             numberOfLines={1}
           >
-            {greeting}
+            {/*
+              Personalized greeting: time-of-day phrase + first name.
+              The fallback ("friend" lowercase) is intentional — when
+              the onboarding name is missing, "Good evening, friend"
+              feels warmer than capitalizing a placeholder which
+              would read as "Friend" the proper noun. Trimmed and
+              numberOfLines=1 because a very long given name on a
+              narrow phone would push the header into two lines and
+              throw the whole strip off vertically.
+            */}
+            {greeting}, {firstName}
           </Text>
         </View>
 
@@ -651,11 +661,25 @@ function ReadingPill({
   // formatMinutes returns "4", "4:30", or "0:05" — never the raw
   // float that the underlying state stores (we track minutes as a
   // 1/60-precision number for second-by-second progress).
+  // We split the headline into two pieces for the "in progress"
+  // state so the elapsed metric (the part the user actually
+  // cares about — "how am I doing right now?") can be styled
+  // distinctly from the goal suffix. The previous one-string
+  // headline ("0:03 of 10 min") read as a single dim glyph
+  // string and the user couldn't tell at a glance whether they
+  // were close to or far from their goal.
+  //
+  // Layout per state:
+  //   • reached   → "Completed"                 (big, ink color)
+  //   • zero      → "10 min today"              (big, dim — invitation)
+  //   • progress  → "0:03 [/ 10 min]"           (big metric + small suffix)
   const headline = reached
     ? "Completed"
     : minutes <= 0
       ? `${goal} min today`
-      : `${formatMinutes(minutes)} of ${goal} min`;
+      : formatMinutes(minutes);
+  const headlineSuffix =
+    reached || minutes <= 0 ? null : ` / ${goal} min`;
   // Caption mirrors the headline split: when reached, surface the
   // total time invested so the user gets a small breakdown right on
   // the home screen (the full detail screen has the hourly chart
@@ -664,43 +688,70 @@ function ReadingPill({
   const remainingLabel = reached
     ? `Read for ${formatMinutes(minutes)} today`
     : formatRemaining(minutes, goal, reached);
+  const accessibilityHeadline = headlineSuffix
+    ? `${headline}${headlineSuffix}`
+    : headline;
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Reading goal: ${headline}`}
-      className="rounded-2xl border border-border bg-surface flex-row items-center px-4 py-3"
+      accessibilityLabel={`Reading goal: ${accessibilityHeadline}`}
+      // Bumped vertical padding from py-3 → py-3.5 so the larger
+      // 48pt ring breathes — the previous tighter padding made
+      // the bigger ring crowd the headline. Otherwise unchanged.
+      className="rounded-2xl border border-border bg-surface flex-row items-center px-4 py-3.5"
       style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
     >
+      {/* Ring sized up from 36 → 48 with a thicker stroke. Reading
+          progress is one of the few persistent metrics on the home
+          screen and the previous tiny ring made it hard to read
+          from arm's length. 48 still fits comfortably inside the
+          pill's vertical rhythm and matches the visual weight of
+          a small avatar. */}
       <ActivityRing
         pct={pct}
         reached={reached}
-        size={36}
-        stroke={4}
+        size={48}
+        stroke={5}
         showTip={false}
       />
-      <View className="flex-1 ml-3.5">
+      <View className="flex-1 ml-4">
         <Text
           className="text-ink-subtle text-[10px] tracking-[2.5px] uppercase"
           style={{ fontFamily: "PlusJakartaSans_700Bold" }}
         >
           Drawing Near
         </Text>
-        {/* Headline on its own line + caption underneath. The previous
-            row-with-baseline layout was crowding the long remaining
-            copy ("9 minutes to today's goal.") next to the bold
-            metric, which truncated awkwardly on narrow phones. */}
-        <Text
-          className="text-[15px] leading-[18px] tracking-[-0.2px] mt-0.5"
-          style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            color: reached ? colors.ink : minutes > 0 ? RING_ACCENT : colors.ink,
-          }}
-          numberOfLines={1}
-        >
-          {headline}
-        </Text>
+        {/* Headline row — uses baseline alignment so the smaller
+            "/ 10 min" suffix sits on the same line as the bolder
+            elapsed metric. baseline (not center) is what makes
+            "0:03 / 10 min" read like a unit instead of two
+            separate strings. */}
+        <View className="flex-row items-baseline mt-0.5">
+          <Text
+            // Bumped from 15 → 17 to make the elapsed minutes
+            // pop. Still well under any title-style sizing, so
+            // it doesn't compete with section headers.
+            className="text-[17px] leading-[20px] tracking-[-0.3px]"
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              color: reached ? colors.ink : minutes > 0 ? RING_ACCENT : colors.ink,
+            }}
+            numberOfLines={1}
+          >
+            {headline}
+          </Text>
+          {headlineSuffix ? (
+            <Text
+              className="text-ink-subtle text-[13px] leading-[18px]"
+              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              numberOfLines={1}
+            >
+              {headlineSuffix}
+            </Text>
+          ) : null}
+        </View>
         <Text
           className="text-ink-subtle text-[11.5px] mt-0.5"
           style={{ fontFamily: "PlusJakartaSans_500Medium" }}
@@ -866,29 +917,51 @@ function SermonCard({
               />
             </Svg>
             {/* Eyebrow overlay — white text so it lifts off the
-                sunset palette. Same row layout as the fallback
-                so designers can swap homeHero in/out per type
-                without rethinking the chip placement. */}
+                sunset palette. Three pieces in left→right order:
+                  • Type name        ("DAILY CHURCH")
+                  • Today date chip  ("TUE · JUN 2")
+                  • Completed badge  (when applicable)
+
+                The date chip is intentionally subtle (white at
+                ~70% opacity, same caps tracking as the eyebrow)
+                so it reads as supplementary metadata, not a
+                second header. Grounds the hero in "this is
+                today's word" without screaming for attention. */}
             <View
               className="px-5 pt-4 flex-row items-center justify-between"
               pointerEvents="none"
             >
-              <Text
-                className="text-[10px] tracking-[3px] uppercase"
-                style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  color: "#FFFFFF",
-                  // Subtle text shadow gives the eyebrow a
-                  // floor to sit on even when the gradient is
-                  // gentle — covers the rare crop case where
-                  // the top of the photo is unusually bright.
-                  textShadowColor: "rgba(0, 0, 0, 0.4)",
-                  textShadowOffset: { width: 0, height: 1 },
-                  textShadowRadius: 4,
-                }}
-              >
-                {type.name}
-              </Text>
+              <View className="flex-row items-baseline">
+                <Text
+                  className="text-[10px] tracking-[3px] uppercase"
+                  style={{
+                    fontFamily: "PlusJakartaSans_700Bold",
+                    color: "#FFFFFF",
+                    // Subtle text shadow gives the eyebrow a
+                    // floor to sit on even when the gradient is
+                    // gentle — covers the rare crop case where
+                    // the top of the photo is unusually bright.
+                    textShadowColor: "rgba(0, 0, 0, 0.4)",
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 4,
+                  }}
+                >
+                  {type.name}
+                </Text>
+                <Text
+                  className="text-[10px] tracking-[2.5px] uppercase"
+                  style={{
+                    fontFamily: "PlusJakartaSans_500Medium",
+                    color: "rgba(255, 255, 255, 0.72)",
+                    marginLeft: 8,
+                    textShadowColor: "rgba(0, 0, 0, 0.4)",
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 4,
+                  }}
+                >
+                  · {formatHeroDate(new Date())}
+                </Text>
+              </View>
               {completed ? <CompletedBadge /> : null}
             </View>
           </View>
@@ -1966,6 +2039,28 @@ function withAlpha(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+/**
+ * Compact uppercase date for the sermon hero eyebrow.
+ * "TUE · JUN 2" rather than "Tuesday, June 2nd" — short enough
+ * to sit alongside the type name without crowding, long enough
+ * that the user can tell at a glance what day this card is for.
+ *
+ * Reads from the device locale via `toLocaleString` so a non-US
+ * locale gets sensible abbreviations. We don't pad the day
+ * number (e.g. "JUN 2" not "JUN 02") because the eyebrow's
+ * letter-spaced caps already give the digits enough breathing
+ * room and the unpadded form feels less mechanical.
+ */
+function formatHeroDate(now: Date): string {
+  const weekday = now
+    .toLocaleString("en-US", { weekday: "short" })
+    .toUpperCase();
+  const month = now
+    .toLocaleString("en-US", { month: "short" })
+    .toUpperCase();
+  return `${weekday} · ${month} ${now.getDate()}`;
+}
+
 function getGreeting(now: Date = new Date()): string {
   const h = now.getHours();
   if (h < 5) return "Peace to you";
@@ -2374,7 +2469,20 @@ function RhythmRow({
         {/* Trailing status pill / label. Three visuals:
             • "Done" — quiet, dimmed
             • "Now"  — accent-blue pill that mirrors the dot
-            • upcoming — relative time label ("in 3h" etc.) */}
+            • upcoming — relative time label ("in 3h" etc.) + a
+              small caret to signal the whole row is tappable.
+
+            The caret was added because user testing surfaced
+            that upcoming rows didn't read as actionable — the
+            relative-time label alone looked like a passive
+            timestamp ("Today") rather than a "tap to open"
+            affordance. A `›` glyph borrowed from the iOS
+            settings table-view cell is the cheapest, most
+            universally understood signal. We omit it for done
+            and now states because those rows communicate their
+            own affordance: "done" reads as terminal, "now"
+            reads as in-progress (the user already knows where
+            to go to engage). */}
         <View style={{ alignItems: "flex-end", justifyContent: "center" }}>
           {isDone ? (
             <Text
@@ -2409,14 +2517,32 @@ function RhythmRow({
               </Text>
             </View>
           ) : (
-            <Text
-              className="text-ink-subtle text-[11px]"
-              style={{
-                fontFamily: "PlusJakartaSans_500Medium",
-              }}
-            >
-              {formatRelativeUntil(item.at, Date.now())}
-            </Text>
+            <View className="flex-row items-center">
+              <Text
+                className="text-ink-subtle text-[11px]"
+                style={{
+                  fontFamily: "PlusJakartaSans_500Medium",
+                }}
+              >
+                {formatRelativeUntil(item.at, Date.now())}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontSize: 16,
+                  lineHeight: 16,
+                  color: withAlpha(colors.ink, 0.32),
+                  marginLeft: 6,
+                  // Optical centering — the chevron glyph
+                  // sits a hair high in its em-box so we
+                  // nudge it down to align with the time
+                  // label baseline.
+                  marginTop: 1,
+                }}
+              >
+                ›
+              </Text>
+            </View>
           )}
         </View>
       </View>

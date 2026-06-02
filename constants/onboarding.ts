@@ -1,35 +1,54 @@
 /**
  * The canonical order of onboarding steps.
  *
- * Adding a new step here automatically rebalances every screen's
- * progress bar. Each screen reads its own position via `progressFor()`.
+ * The flow is designed in three narrative beats:
+ *
+ *   1. The Audit (Screens 1–5)
+ *      No branding. Black canvas. We name the cost of the morning
+ *      scroll, gather four short data points, and run a fake
+ *      "calculating" beat to set up the reveal.
+ *
+ *   2. The Pivot (Screens 6–10)
+ *      Personalized gut punch using their own data → emotional
+ *      anchor (why) → name → social proof → rating prompt. Still
+ *      pre-brand; we haven't shown the Closer name once.
+ *
+ *   3. The Welcome (Screens 11–17)
+ *      The Closer wordmark appears for the first time on the
+ *      reframe screen. From here the flow narrows to setup:
+ *      attribution → notifications → account → time → paywall →
+ *      first scripture. Each screen advances the user from
+ *      "interested" to "set up to actually use it tomorrow morning."
+ *
+ * The progress bar is hidden for Screens 1–10 (the chrome would
+ * give the brand away) and revealed from Screen 11 onward; each
+ * file controls that locally.
+ *
+ * Adding a new step here automatically rebalances the progress
+ * bar wherever it IS shown. Each screen reads its own position
+ * via `progressFor()`.
  */
 export const ONBOARDING_STEPS = [
+  // The Audit — pre-brand, full-bleed black canvas.
+  "stat",
+  "apps",
+  "scrolltime",
+  "waketime",
+  "calculating",
+  // The Pivot — personalized punch, anchor, name, proof.
+  "punch",
+  "why",
   "name",
-  "world",
-  "faith",
-  "journey",
-  "intent",
-  "scripture",
-  "quiet",
+  "proof",
+  "rating",
+  // The Welcome — Closer is named for the first time.
+  "reframe",
+  "attribution",
+  "notifications",
   "account",
-  // The setup chain ends with three connected screens, narrating
-  // the daily ritual end-to-end:
-  //   reminders → study → focus
-  //
-  // 1. "reminders" picks WHEN the daily sermon arrives (passive —
-  //    a notification fires).
-  // 2. "study" picks the active sit-down time the user commits to
-  //    reading on their own. App seeds it as a system routine in
-  //    the Practice tab so the user can tune it from day one.
-  // 3. "focus" introduces the silencing layer that protects the
-  //    minutes both rituals occupy.
-  //
-  // Each screen lays the foundation for the next — by the time the
-  // user reaches paywall, the daily rhythm is fully set up.
-  "reminders",
-  "study",
-  "focus",
+  "time",
+  "paywall",
+  "welcome",
 ] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];

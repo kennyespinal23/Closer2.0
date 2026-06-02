@@ -20,13 +20,88 @@ export type DailyReminderTime = {
   minute: number;
 };
 
+/**
+ * Pre-bed scroll-time bucket the user picks on the "how long do you
+ * scroll before getting out of bed" screen. Stored as a discrete
+ * enum (rather than free-form minutes) so downstream copy
+ * (the gut-punch screen) can pivot on it categorically — "Over an
+ * hour" hits differently than "Under 15 minutes" even if the
+ * midpoint math came out close.
+ *
+ * The `unknown` bucket is the "I don't even want to know" answer.
+ * We treat it as a soft "30+ min" assumption for any numeric
+ * calculation but keep the original choice around so the gut-punch
+ * screen can soften its tone (the user already self-identified as
+ * not wanting to face the number).
+ */
+export type ScrollBucket =
+  | "under15"
+  | "fifteen30"
+  | "thirty60"
+  | "overHour"
+  | "unknown";
+
+/**
+ * Wake-time bucket. Used to seed a sensible default on the time
+ * picker later in onboarding (Screen 14) and to flavor a few of
+ * the gut-punch copy lines.
+ */
+export type WakeBucket =
+  | "before6"
+  | "six7"
+  | "seven8"
+  | "eight9"
+  | "after9";
+
+/**
+ * "How did you hear about us" answer. Free-form attribution captured
+ * for our own product analytics; never displayed back to the user.
+ * Kept as a discrete enum so we don't drown in typo variants.
+ */
+export type AttributionSource =
+  | "instagram"
+  | "tiktok"
+  | "friend"
+  | "church"
+  | "google"
+  | "other";
+
 export type OnboardingAnswers = {
   name: string;
-  /** What brings the user to Closer right now — one of the intent options. */
-  intent?: string;
   /**
-   * Whether the user accepted the daily "Before The Noise"
-   * notification during onboarding (or later in settings).
+   * IDs of the apps the user admits opening first thing in the
+   * morning. Captured on Screen 2 (multi-select grid). Drives the
+   * personalized gut-punch on Screen 6 ("You're opening Instagram &
+   * TikTok 730 times before God this year") and could later seed
+   * the Focus mode default-blocked list.
+   */
+  morningApps?: string[];
+  /**
+   * How long the user typically scrolls before getting out of bed
+   * (Screen 3). Used by the gut-punch screen to amplify or soften
+   * the personalized stat.
+   */
+  scrollBucket?: ScrollBucket;
+  /**
+   * What time the user typically wakes (Screen 4). Used to pre-pick
+   * the matching option on the morning-time picker (Screen 14).
+   */
+  wakeBucket?: WakeBucket;
+  /**
+   * The user's "why" — their answer on Screen 7 to "Why do you want
+   * to get closer to God?". The home screen / journal could later
+   * surface this back at moments of friction. Free-form for now to
+   * keep options easy to A/B.
+   */
+  whyAnswer?: string;
+  /**
+   * Where the user heard about Closer (Screen 12). Pure product
+   * analytics — never shown back to the user.
+   */
+  hearAboutUs?: AttributionSource;
+  /**
+   * Whether the user accepted the daily morning notification on
+   * Screen 13 (or later in settings).
    *
    *   true   → notification is scheduled
    *   false  → user deliberately turned it off
@@ -37,25 +112,12 @@ export type OnboardingAnswers = {
    */
   notificationsEnabled?: boolean;
   /**
-   * When the daily notification fires. Defaults to 7:00 AM during
-   * onboarding (curated as the early-morning anchor) but the user
-   * can pick from a tight set of preset times or any custom time
-   * via settings.
+   * When the daily notification fires. Picked on Screen 14 (the
+   * 2x2 time picker) and persisted so the settings screen can
+   * pre-populate the user's choice — and so the focus / study
+   * silent-seeding logic can hang scheduling off the same value.
    */
   dailyReminderTime?: DailyReminderTime;
-  /**
-   * When the user wants to sit down with the Bible each day. Set on
-   * the /onboarding/study screen and used to seed a "system" study
-   * session via StudySessionsProvider.upsertSystemSession. Undefined
-   * until the user reaches that step (or skips it).
-   *
-   * Persisted in onboarding answers (rather than only on the seeded
-   * session) so re-running onboarding from a clean state can recover
-   * the user's previous pick and pre-fill the picker — and so a
-   * future "edit my onboarding answers" surface has something to
-   * read from.
-   */
-  studyTime?: DailyReminderTime;
 };
 
 type OnboardingContextValue = {

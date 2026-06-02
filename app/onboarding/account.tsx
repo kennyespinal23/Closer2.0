@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 import { useRouter } from "expo-router";
 import { FadeIn } from "@/components/FadeIn";
-import { OnboardingHeader } from "@/components/OnboardingHeader";
+import { OnboardingChrome } from "@/components/OnboardingChrome";
 import { SocialButton } from "@/components/SocialButton";
 import { progressFor } from "@/constants/onboarding";
 import { useColors } from "@/state/theme";
@@ -31,29 +31,34 @@ const ORBS: OrbProps[] = [
 export default function AccountScreen() {
   const router = useRouter();
 
-  // For now, all three providers land the user at the reminders step
-  // after auth. When real auth is wired, the SDK success callback
-  // will trigger this navigation instead.
-  const goToReminders = () => router.push("/onboarding/reminders");
+  // In the new flow, account sign-in slots between the
+  // notification permission ask and the time picker. Auth itself
+  // is still a no-op stub; the user lands on the time picker
+  // regardless of which provider they pick. When real auth is
+  // wired, the SDK success callback will trigger this navigation.
+  const goToTime = () => router.push("/onboarding/time");
 
   const handleApple = () => {
     // Wire Sign in with Apple SDK here.
-    goToReminders();
+    goToTime();
   };
 
   const handleGoogle = () => {
     // Wire Google Sign-In SDK here.
-    goToReminders();
+    goToTime();
   };
 
   const handleEmail = () => {
     // Will navigate to a dedicated email/password form when wired.
-    goToReminders();
+    goToTime();
   };
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
-      <OnboardingHeader progress={progressFor("account")} />
+      <OnboardingChrome
+        mode="with-progress"
+        progress={progressFor("account")}
+      />
 
       {/* Soft symbolic background — centered warm halo behind the content */}
       <View

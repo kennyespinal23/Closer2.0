@@ -103,7 +103,17 @@ export default function PrivacyScreen() {
       app: { name: "Closer", version: "0.1.0" },
       onboarding: {
         name: onboarding.answers.name,
-        intent: onboarding.answers.intent ?? null,
+        // The new onboarding flow captures a richer profile than
+        // the old "intent" single-pick. We export everything that
+        // could feel personal — the apps the user named, the
+        // scroll/wake buckets, the "why" reason, the attribution
+        // source — so an export-as-Notes still tells the full
+        // story.
+        morningApps: onboarding.answers.morningApps ?? null,
+        scrollBucket: onboarding.answers.scrollBucket ?? null,
+        wakeBucket: onboarding.answers.wakeBucket ?? null,
+        whyAnswer: onboarding.answers.whyAnswer ?? null,
+        hearAboutUs: onboarding.answers.hearAboutUs ?? null,
         notificationsEnabled: onboarding.answers.notificationsEnabled ?? null,
         dailyReminderTime: onboarding.answers.dailyReminderTime ?? null,
       },

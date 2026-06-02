@@ -12,7 +12,10 @@ export default function GetStartedScreen() {
   const router = useRouter();
 
   const handleGetStarted = () => {
-    router.push("/onboarding/name");
+    // The new onboarding opens with the gut-punch stat screen
+    // (Screen 1 in the spec). Branding intentionally doesn't
+    // appear again until the reframe screen ~halfway through.
+    router.push("/onboarding/stat");
   };
 
   const handleSignIn = () => {

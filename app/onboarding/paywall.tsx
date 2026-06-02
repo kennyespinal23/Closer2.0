@@ -1,285 +1,270 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
+import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
-import { useColors } from "@/state/theme";
+import { useOnboarding } from "@/state/onboarding";
 
-const FEATURES = [
-  "Personalized daily sermons",
-  "Prayer nights",
-  "Guided reflections",
-  "Spiritual check-ins",
-  "Journey tracking",
-  "Exclusive content",
-  "Future premium experiences",
+/**
+ * Screen 15 — The Paywall.
+ *
+ * Forced black canvas, intentionally stark. By this point the
+ * user has been through 14 screens; they're fully primed. The
+ * paywall doesn't try to convince — it presents the offer plainly.
+ *
+ * Three value lines, a coffee/scroll comparison, and a single
+ * CTA. No premium glow, no journey-dots filigree — the
+ * narrative drama is doing the heavy lifting; the screen just
+ * needs to deliver the price.
+ *
+ * Mock implementation: tapping "Start my free 7 days" just
+ * advances to the welcome screen. Wiring StoreKit / RevenueCat
+ * is a follow-up; the surface is shaped so the wire-up is a
+ * one-line change inside `handleStart`.
+ */
+
+const VALUE_LINES = [
+  "One verse every morning. Before the noise.",
+  "Today\u2019s Word — a 2 minute thought to carry into your day.",
+  "Check in whenever you drift. We\u2019ll be here.",
 ];
-
-const TRIAL_DAYS = 7;
 
 export default function PaywallScreen() {
   const router = useRouter();
-  const colors = useColors();
+  const { answers } = useOnboarding();
 
-  const enterApp = () => {
-    // `replace` so the user can't swipe/back into the onboarding stack.
-    router.replace("/today");
-  };
+  const firstName = (answers.name || "").trim().split(" ")[0];
 
   const handleStart = () => {
-    // TODO: Wire RevenueCat / StoreKit purchase flow here.
-    // For now, simulate a successful purchase and drop the user into the app.
-    enterApp();
-  };
-
-  const handleClose = () => {
-    // Dismissing the paywall also lands them in the app — we'll
-    // gate premium features inline later instead of blocking entry.
-    enterApp();
-  };
-
-  const handleRestore = () => {
-    // TODO: Wire restore purchases.
+    // TODO: Wire RevenueCat / StoreKit purchase flow here. For
+    // now we just advance to the welcome screen — the mock paywall
+    // unblocks the full onboarding test without the storekit
+    // sandbox dance.
+    router.push("/onboarding/welcome");
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
-      {/* Custom mini-header — just an X. No back button, no progress.
-          This screen is no longer part of the onboarding arc. */}
-      <View className="flex-row justify-end px-5 pt-2 pb-3">
-        <Pressable
-          hitSlop={14}
-          onPress={handleClose}
-          className="w-10 h-10 rounded-full items-center justify-center bg-surface border border-border"
+    <View style={{ flex: 1, backgroundColor: "#000000" }}>
+      <StatusBar style="light" />
+      <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
+          showsVerticalScrollIndicator={false}
         >
-          <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M6 6l12 12M6 18L18 6"
-              stroke={colors.ink}
-              strokeWidth={2}
-              strokeLinecap="round"
-            />
-          </Svg>
-        </Pressable>
-      </View>
-
-      {/* Premium ambient glow behind the offer area */}
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          top: 320,
-          left: 0,
-          right: 0,
-          alignItems: "center",
-        }}
-      >
-        <PremiumGlow />
-      </View>
-
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 16 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View className="flex-1 px-6">
-          {/* Journey progression — 7 dots, one per trial day */}
-          <FadeIn delayMs={0} durationMs={1200}>
-            <View className="items-center pt-2 pb-6">
-              <JourneyDots total={TRIAL_DAYS} />
-            </View>
-          </FadeIn>
-
-          <FadeIn delayMs={300}>
-            <Text
-              className="text-ink text-[30px] leading-[38px] tracking-[-0.6px] text-center"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-            >
-              Build a daily rhythm with God.
-            </Text>
-          </FadeIn>
-
-          <FadeIn delayMs={800}>
-            <Text
-              className="text-ink-muted text-[16px] leading-[24px] text-center mt-3"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-            >
-              Unlock the full Closer experience.
-            </Text>
-          </FadeIn>
-
-          {/* Features list */}
-          <FadeIn delayMs={1300}>
-            <View className="mt-8 gap-3">
-              {FEATURES.map((feature) => (
-                <FeatureRow key={feature} label={feature} />
-              ))}
-            </View>
-          </FadeIn>
-
-          {/* Offer card — the focal point */}
-          <FadeIn delayMs={2000}>
-            <View className="mt-9 rounded-2xl border-2 border-primary bg-accent-soft px-6 py-6 items-center">
+          <View className="flex-1 px-6">
+            <FadeIn delayMs={0}>
               <Text
-                className="text-primary text-[12px] tracking-[3px] uppercase"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                style={{
+                  color: "#FFFFFF",
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontSize: 28,
+                  lineHeight: 36,
+                  letterSpacing: -0.5,
+                  marginTop: 28,
+                }}
               >
-                7-Day Free Trial
+                {firstName ? `${firstName}, you're almost in.` : "You're almost in."}
               </Text>
+            </FadeIn>
+
+            {/* Price line. The number ($7.99) is bigger than the
+                surrounding sentence so the offer is the focal
+                point of the upper half of the screen. */}
+            <FadeIn delayMs={500}>
+              <View style={{ marginTop: 28 }}>
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontFamily: "PlusJakartaSans_600SemiBold",
+                    fontSize: 19,
+                    lineHeight: 28,
+                  }}
+                >
+                  Start free for 7 days.
+                </Text>
+                <Text
+                  style={{
+                    color: "#C2C2C7",
+                    fontFamily: "PlusJakartaSans_500Medium",
+                    fontSize: 17,
+                    lineHeight: 24,
+                    marginTop: 6,
+                  }}
+                >
+                  Then{" "}
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontFamily: "PlusJakartaSans_700Bold",
+                      fontSize: 17,
+                    }}
+                  >
+                    $7.99 a month.
+                  </Text>{" "}
+                  Cancel anytime.
+                </Text>
+              </View>
+            </FadeIn>
+
+            {/* Three value lines. Sparkle glyph + ink-white line.
+                Vertical rhythm of the trio is the whole reason the
+                screen exists between "almost in" and the CTA. */}
+            <FadeIn delayMs={1100}>
+              <View style={{ marginTop: 36, gap: 14 }}>
+                {VALUE_LINES.map((line) => (
+                  <ValueLine key={line} text={line} />
+                ))}
+              </View>
+            </FadeIn>
+
+            {/* Divider + comparison couplet. The "less than a
+                coffee / more than the scroll" beat is the
+                emotional close. */}
+            <FadeIn delayMs={1700}>
+              <View
+                style={{
+                  height: 1,
+                  backgroundColor: "rgba(255,255,255,0.12)",
+                  marginTop: 36,
+                  marginHorizontal: 8,
+                }}
+              />
               <Text
-                className="text-ink text-[18px] mt-3"
-                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                style={{
+                  color: "#FFFFFF",
+                  fontFamily: "PlusJakartaSans_500Medium",
+                  fontSize: 15,
+                  lineHeight: 23,
+                  textAlign: "center",
+                  marginTop: 20,
+                }}
               >
-                Then{" "}
-                <Text style={{ fontFamily: "PlusJakartaSans_700Bold" }}>
-                  $XX/year
+                Less than a coffee a month.{"\n"}
+                <Text
+                  style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                >
+                  More than you&apos;ll get from the scroll.
                 </Text>
               </Text>
-            </View>
-          </FadeIn>
+            </FadeIn>
 
-          {/* CTA + reassurance */}
-          <FadeIn delayMs={2500}>
-            <View className="mt-6">
-              <Button label="Begin Your 7 Days" onPress={handleStart} />
-              <Text
-                className="text-ink-muted text-[13px] text-center mt-4"
-                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-              >
-                Cancel anytime.
-              </Text>
-            </View>
-          </FadeIn>
+            <View className="flex-1 min-h-[24px]" />
 
-          {/* App Store boilerplate links */}
-          <FadeIn delayMs={3000}>
-            <View className="flex-row justify-center items-center mt-6 mb-2 gap-4">
-              <Pressable hitSlop={8} onPress={handleRestore}>
-                <Text
-                  className="text-ink-subtle text-[12px]"
-                  style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            {/* CTA. Solid white pill on black — the visual mirror
+                of the "I know the feeling" link on Screen 1.
+                Where that screen used a quiet text link, this
+                one earns a full button: the user is committing,
+                not just continuing. */}
+            <FadeIn delayMs={2200}>
+              <View className="pt-6 pb-2">
+                <Pressable
+                  onPress={handleStart}
+                  accessibilityRole="button"
+                  accessibilityLabel="Start my free 7 days"
+                  style={({ pressed }) => ({
+                    height: 56,
+                    borderRadius: 16,
+                    backgroundColor: "#FFFFFF",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: pressed ? 0.85 : 1,
+                  })}
                 >
-                  Restore Purchases
-                </Text>
-              </Pressable>
-              <Dot />
-              <Pressable hitSlop={8}>
-                <Text
-                  className="text-ink-subtle text-[12px]"
-                  style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-                >
-                  Terms
-                </Text>
-              </Pressable>
-              <Dot />
-              <Pressable hitSlop={8}>
-                <Text
-                  className="text-ink-subtle text-[12px]"
-                  style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-                >
-                  Privacy
-                </Text>
-              </Pressable>
-            </View>
-          </FadeIn>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
+                  <Text
+                    style={{
+                      color: "#000000",
+                      fontFamily: "PlusJakartaSans_700Bold",
+                      fontSize: 16,
+                      letterSpacing: 0.1,
+                    }}
+                  >
+                    Start my free 7 days
+                  </Text>
+                </Pressable>
 
-// ─────────────────────────────────────────────────────────────────
-// Journey progression — N dots, day 1 brightest, fading right.
-// Visualizes the trial: you start here, the path extends ahead.
-// ─────────────────────────────────────────────────────────────────
-
-function JourneyDots({ total }: { total: number }) {
-  const colors = useColors();
-  return (
-    <View className="flex-row items-center" style={{ gap: 12 }}>
-      {Array.from({ length: total }).map((_, i) => {
-        // First dot: fully lit + slightly larger (today)
-        // Subsequent: progressively dimmer (the journey ahead)
-        const isToday = i === 0;
-        const opacity = isToday ? 1 : Math.max(0.15, 0.85 - i * 0.12);
-        const size = isToday ? 8 : 6;
-        return (
-          <View
-            key={i}
-            style={{
-              width: size,
-              height: size,
-              borderRadius: size / 2,
-              backgroundColor: colors.accent,
-              opacity,
-            }}
-          />
-        );
-      })}
+                {/* Footer links: restore / terms / privacy. Quiet
+                    grey on black — the legal boilerplate row. */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginTop: 18,
+                    gap: 10,
+                  }}
+                >
+                  <FootLink label="Restore purchase" />
+                  <FootDot />
+                  <FootLink label="Terms" />
+                  <FootDot />
+                  <FootLink label="Privacy" />
+                </View>
+              </View>
+            </FadeIn>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Feature row — orange checkmark + label
-// ─────────────────────────────────────────────────────────────────
-
-function FeatureRow({ label }: { label: string }) {
-  const colors = useColors();
+function ValueLine({ text }: { text: string }) {
   return (
-    <View className="flex-row items-center">
-      <View className="w-6 items-center mr-3">
-        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M5 12.5l4.5 4.5L19 7"
-            stroke={colors.accent}
-            strokeWidth={2.4}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
-      </View>
+    <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+      {/* Sparkle glyph rendered as a Unicode dingbat for now —
+          ✦ has the right weight at 16px without needing an SVG
+          file. Spec calls for the four-pointed star explicitly. */}
       <Text
-        className="text-ink text-[16px] leading-[24px] flex-1"
-        style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+        style={{
+          color: "#FFFFFF",
+          fontFamily: "PlusJakartaSans_700Bold",
+          fontSize: 16,
+          marginRight: 12,
+          width: 18,
+          textAlign: "center",
+        }}
       >
-        {label}
+        ✦
+      </Text>
+      <Text
+        style={{
+          color: "#FFFFFF",
+          fontFamily: "PlusJakartaSans_500Medium",
+          fontSize: 15.5,
+          lineHeight: 23,
+          flex: 1,
+        }}
+      >
+        {text}
       </Text>
     </View>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Premium ambient glow — sits behind the offer card area
-// ─────────────────────────────────────────────────────────────────
-
-function PremiumGlow() {
-  const colors = useColors();
-  const SIZE = 480;
+function FootLink({ label }: { label: string }) {
   return (
-    <Svg width={SIZE} height={SIZE} style={{ opacity: 0.7 }}>
-      <Defs>
-        <RadialGradient id="premiumGlow" cx="50%" cy="50%" rx="50%" ry="50%">
-          <Stop offset="0%" stopColor={colors.accent} stopOpacity={0.28} />
-          <Stop offset="50%" stopColor={colors.accent} stopOpacity={0.08} />
-          <Stop offset="100%" stopColor={colors.accent} stopOpacity={0} />
-        </RadialGradient>
-      </Defs>
-      <Rect x={0} y={0} width={SIZE} height={SIZE} fill="url(#premiumGlow)" />
-    </Svg>
+    <Pressable hitSlop={8}>
+      <Text
+        style={{
+          color: "#9B9BA3",
+          fontFamily: "PlusJakartaSans_500Medium",
+          fontSize: 12,
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
-// Tiny separator dot for the footer links
-function Dot() {
-  const colors = useColors();
+function FootDot() {
   return (
     <View
       style={{
-        width: 3,
-        height: 3,
-        borderRadius: 1.5,
-        backgroundColor: colors.inkSubtle,
+        width: 2.5,
+        height: 2.5,
+        borderRadius: 1.25,
+        backgroundColor: "#5C5C62",
       }}
     />
   );

@@ -362,13 +362,71 @@ export default function TodayScreen() {
           </Text>
         </View>
 
+        {/* ─── Today's Sermon — the hero ──────────────────────────
+            Promoted to the FIRST big element below the header. The
+            sermon is the soul of Closer; everything else on home is
+            supporting context. Opal puts its Now Playing card here
+            for the same reason — the hero answers "what should I
+            do right now?" before the user has to scan or scroll.
+
+            (Historical note: this card used to sit fifth in the
+            stack, behind the streak strip, reading pill, and
+            routine card. Promoting it removes three small chips
+            from the user's path-to-engagement; the supporting
+            sections drop below the timeline.) */}
+        <FadeIn delayMs={80} durationMs={900}>
+          <View className="px-6 mt-4">
+            <SermonCard
+              type={sermonType}
+              title={todaysMoment.title}
+              // The subtitle slot is a quiet teaser — the type's
+              // tagline ("A daily anchor in scripture", etc) works
+              // here because the verse itself now lives on the
+              // intro screen and shouldn't be doubled up at home.
+              subtitle={sermonType.tagline}
+              // Voice is the attributed speaker straight from the
+              // catalog ("Matt Chandler", "Jackie Hill Perry", …).
+              // SermonCard renders this as the avatar + name +
+              // duration triplet when non-empty.
+              pastor={todaysMoment.voice}
+              durationMin={sermonDurationMin}
+              completed={hasCompletedSermonToday}
+              onPress={handlePlaySermon}
+            />
+          </View>
+        </FadeIn>
+
+        {/* ─── Today's rhythm — the timeline ──────────────────────
+            Chronological view of every scheduled moment the user
+            has set up for today: the sermon arrival, every enabled
+            study-session routine that fires today, anchors, etc.
+            Each row carries a status (Done / Now / Upcoming) so
+            the user reads the day as a continuous rhythm rather
+            than a pile of unrelated cards.
+
+            This is the section the new system-routine seeding
+            (onboarding's sermon time + Bible study time) and the
+            template-card flow both feed into — adding a routine
+            on Practice immediately surfaces here. */}
+        <FadeIn delayMs={140} durationMs={800}>
+          <View className="mt-6">
+            <TodayRhythm
+              sermonTime={answers.dailyReminderTime}
+              sermonName={todaysMoment.title}
+              sermonCompleted={hasCompletedSermonToday}
+              onSermonPress={handlePlaySermon}
+              studySessions={studySessions}
+              activeFocusSession={focusSession}
+            />
+          </View>
+        </FadeIn>
+
         {/* ─── Streak strip ─────────────────────────────────────────
             Imprint-style compact card: one contextual prompt on top
             and 7 day cells beneath, with today highlighted by an
-            outlined pill. No mini rings, no flames, no tally — the
-            strip is a single-glance "where I am in the week"
-            anchor, nothing more. */}
-        <FadeIn delayMs={80} durationMs={800}>
+            outlined pill. Demoted to a supporting strip under the
+            hero + timeline. */}
+        <FadeIn delayMs={200} durationMs={800}>
           <View className="px-6 mt-6">
             <WeekStrip
               days={weekDays}
@@ -378,12 +436,9 @@ export default function TodayScreen() {
         </FadeIn>
 
         {/* ─── Reading-goal pill ───────────────────────────────────
-            Sits directly beneath the streak strip so the user sees
-            "how am I doing this week + how am I doing today" as a
-            single stacked block, before the sermon hero takes over.
             Slim one-row pill: tiny iOS-blue activity ring + minutes
             label. Tap drills into /reading-goal for the full chart. */}
-        <FadeIn delayMs={140} durationMs={800}>
+        <FadeIn delayMs={240} durationMs={800}>
           <View className="px-6 mt-4">
             <ReadingPill
               minutes={readingMinutes}
@@ -395,24 +450,11 @@ export default function TodayScreen() {
         </FadeIn>
 
         {/* ─── Routine / Focus card ────────────────────────────────
-            ONE consolidated card that does the work of two earlier
-            rows (the focus pill + the "Up next" routine card).
-            Inspired by Opal's My Apps panel: a routine name as the
-            title, a one-line context sublabel, and the actual
-            blocked-app icons rendered inline so the user can see at
-            a glance what will be quieted. Trailing control flips
-            between an inline Switch (off / armed) and an "End" pill
-            (active session). Tap the card body to open the right
-            destination for the current state (Practice when a
-            routine exists, focus settings otherwise).
-
-            Critically, this card surfaces the routine for ANY
-            enabled study session — not just sessions that opted
-            into focus mode. That's what makes Morning Study
-            actually show up on home after the user enables it on
-            the Practice tab, which was the missing link in the
-            previous iteration. */}
-        <FadeIn delayMs={170} durationMs={800}>
+            Master toggle + featured routine. Demoted to support row
+            since the timeline above now surfaces every scheduled
+            routine; this card still owns the master-switch
+            controller affordance, which the timeline doesn't. */}
+        <FadeIn delayMs={280} durationMs={800}>
           <View className="px-6 mt-2.5">
             <RoutineCard
               masterEnabled={focusPrefs.enabled}
@@ -437,33 +479,6 @@ export default function TodayScreen() {
           </View>
         </FadeIn>
 
-        {/* ─── Today's Sermon — the daily anchor ──────────────────
-            The hero. Sits below the metrics block so it stays the
-            "do this now" anchor without competing with the at-a-
-            glance numbers above. Content pulled from the day's
-            moment (assets/data/sermons.js via useMoments). */}
-        <FadeIn delayMs={200} durationMs={900}>
-          <View className="px-6 mt-5">
-            <SermonCard
-              type={sermonType}
-              title={todaysMoment.title}
-              // The subtitle slot is a quiet teaser — the type's
-              // tagline ("A daily anchor in scripture", etc) works
-              // here because the verse itself now lives on the
-              // intro screen and shouldn't be doubled up at home.
-              subtitle={sermonType.tagline}
-              // Voice is the attributed speaker straight from the
-              // catalog ("Matt Chandler", "Jackie Hill Perry", …).
-              // SermonCard renders this as the avatar + name +
-              // duration triplet when non-empty.
-              pastor={todaysMoment.voice}
-              durationMin={sermonDurationMin}
-              completed={hasCompletedSermonToday}
-              onPress={handlePlaySermon}
-            />
-          </View>
-        </FadeIn>
-
         {/* ─── Last check-in (conditional) ────────────────────────
             Took the slot the old chapter-resume Continue-Reading
             card used to occupy. Surfaces the user's most recent
@@ -471,7 +486,7 @@ export default function TodayScreen() {
             verse + journal) on the check-in detail screen. Hidden
             entirely until the user has logged at least one mood. */}
         {lastCheckIn && (
-          <FadeIn delayMs={260} durationMs={800}>
+          <FadeIn delayMs={320} durationMs={800}>
             <View className="px-6 mt-4">
               <LastCheckInCard
                 checkIn={lastCheckIn}
@@ -750,7 +765,12 @@ function SermonCard({
           on the Daily Church sun-arch). Keeping the eyebrow in flow
           guarantees consistent clearance regardless of which type's
           hero is rendered. */}
-      <View className="h-44 w-full overflow-hidden">
+      {/* Hero strip — promoted to 200pt (was 176pt) so the
+          illustration commands more visual weight when the card
+          is the home page hero rather than a mid-stack card. The
+          eyebrow row keeps the same 36pt vertical claim so the
+          extra height all goes to the illustration + glow. */}
+      <View className="h-[200px] w-full overflow-hidden">
         <View className="px-5 pt-4 flex-row items-center justify-between">
           <Text
             className="text-[10px] tracking-[3px] uppercase"
@@ -784,18 +804,24 @@ function SermonCard({
             <CardAccentGlow color={type.accent} />
           </View>
 
+          {/* Illustration sized to 150x128 (was 130x110) — proportional
+              bump to match the taller hero. Heavy-enough that the
+              illustration carries the eye when the user lands on the
+              screen. */}
           <Image
             source={type.hero}
-            style={{ width: 130, height: 110 }}
+            style={{ width: 150, height: 128 }}
             resizeMode="contain"
           />
         </View>
       </View>
 
-      {/* Body */}
+      {/* Body — title bumped to 25px (was 22px) so the sermon's name
+          reads as the focal text in the upper third of the page.
+          Subtitle and meta row unchanged. */}
       <View className="px-5 pt-5 pb-5">
         <Text
-          className="text-ink text-[22px] leading-[28px] tracking-[-0.3px]"
+          className="text-ink text-[25px] leading-[31px] tracking-[-0.4px]"
           style={{ fontFamily: "PlusJakartaSans_700Bold" }}
         >
           {title}
@@ -1852,4 +1878,452 @@ function streakPrompt(streak: {
     return `${streak.current}-day streak — a new personal best`;
   }
   return `${streak.current}-day streak — honored today`;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Today's rhythm — chronological timeline
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Single row in the timeline. Three discrete states drive the
+ * visual treatment:
+ *
+ *   "done"     — Sermon finished today. Checkmark dot, dimmed text,
+ *                "Done" trailing label.
+ *   "now"      — Routine's focus session is currently active.
+ *                Filled blue dot with a soft halo, "Now" pill on
+ *                the trailing edge, full-opacity text.
+ *   "upcoming" — Default. Hollow dot, full-opacity text, relative
+ *                time on the trailing edge ("in 3h", "9:00 PM").
+ *
+ * For routines we deliberately don't model "passed" (scheduled
+ * time has slipped but no focus session ran). Treating them as
+ * "upcoming" of the NEXT occurrence is more honest — the day's
+ * routine slot is over, but the routine itself is still valid;
+ * the same row just refers to tomorrow's instance.
+ */
+type RhythmStatus = "done" | "now" | "upcoming";
+
+type RhythmItem = {
+  /** Stable key for the FlatList-style map. Sermon row uses
+   *  "sermon"; routine rows use the session id. */
+  key: string;
+  /** Epoch ms of the moment this row represents — drives the
+   *  chronological sort. */
+  at: number;
+  /** "7:00 AM" — pre-formatted for the leading column. */
+  timeLabel: string;
+  title: string;
+  /** One-line secondary text: duration, focus indicator,
+   *  routine source, etc. */
+  meta: string;
+  status: RhythmStatus;
+  /** Tap handler. Sermon row plays the sermon; routine rows
+   *  open the routine landing page in /study/[id]. */
+  onPress?: () => void;
+};
+
+function TodayRhythm({
+  sermonTime,
+  sermonName,
+  sermonCompleted,
+  onSermonPress,
+  studySessions,
+  activeFocusSession,
+}: {
+  sermonTime: { hour: number; minute: number } | undefined;
+  sermonName: string;
+  sermonCompleted: boolean;
+  onSermonPress: () => void;
+  studySessions: ReadonlyArray<StudySession>;
+  activeFocusSession: { routineId?: string } | null;
+}) {
+  const router = useRouter();
+  const colors = useColors();
+
+  // Build the timeline in one pass so the section header's count
+  // and the render list stay in lockstep.
+  const items: RhythmItem[] = useMemo(() => {
+    const now = new Date();
+    const todayDow = now.getDay();
+    const out: RhythmItem[] = [];
+
+    // ── Sermon row ──
+    // ALWAYS rendered. When the user hasn't set a sermon time
+    // (legacy install before the onboarding sermon-time picker
+    // shipped) we fall back to 7am — same default the welcome
+    // screen's seeding uses, and the same default the daily
+    // notification scheduler picks up. Showing the row anchored
+    // at the fallback keeps the timeline non-empty for everyone,
+    // and the row's title clearly names today's sermon so the
+    // user can engage even if they never set an explicit time.
+    const SERMON_FALLBACK = { hour: 7, minute: 0 };
+    const resolvedSermonTime = sermonTime ?? SERMON_FALLBACK;
+    const sermonAt = new Date(now);
+    sermonAt.setHours(
+      resolvedSermonTime.hour,
+      resolvedSermonTime.minute,
+      0,
+      0,
+    );
+    out.push({
+      key: "sermon",
+      at: sermonAt.getTime(),
+      timeLabel: format12h(resolvedSermonTime),
+      title: sermonName,
+      meta: sermonCompleted ? "Heard today" : "Today's sermon",
+      status: sermonCompleted ? "done" : "upcoming",
+      onPress: onSermonPress,
+    });
+
+    // ── Routine rows ──
+    // One row per enabled study session that fires today. We
+    // intentionally include routines whose time has already passed
+    // — they still show up under their planned hour so the
+    // chronological reading of the day stays continuous. The
+    // active-session row gets bumped to "now" status; everything
+    // else stays "upcoming". A "passed" status would suggest the
+    // user failed at something they merely deferred — keeping it
+    // upcoming preserves the calm tone.
+    for (const s of studySessions) {
+      if (!s.enabled) continue;
+      if (!s.daysOfWeek.includes(todayDow as 0 | 1 | 2 | 3 | 4 | 5 | 6)) {
+        continue;
+      }
+      const at = new Date(now);
+      at.setHours(s.time.hour, s.time.minute, 0, 0);
+      const isActive = activeFocusSession?.routineId === s.id;
+      const metaParts: string[] = [];
+      if (s.useFocusMode) {
+        metaParts.push("Focus");
+      }
+      if (typeof s.durationMinutes === "number") {
+        metaParts.push(`${s.durationMinutes} min`);
+      }
+      if (s.source === "system") {
+        metaParts.push("Closer routine");
+      }
+      out.push({
+        key: s.id,
+        at: at.getTime(),
+        timeLabel: format12h(s.time),
+        title: s.name,
+        meta: metaParts.join(" · ") || "Reminder",
+        status: isActive ? "now" : "upcoming",
+        onPress: () => router.push(`/study/${s.id}`),
+      });
+    }
+
+    // Sort by time-of-day. Stable JS sort so equal-time rows keep
+    // their insertion order (sermon before routines that happen
+    // to be set to the same minute).
+    out.sort((a, b) => a.at - b.at);
+    return out;
+  }, [
+    sermonTime,
+    sermonName,
+    sermonCompleted,
+    onSermonPress,
+    studySessions,
+    activeFocusSession,
+    router,
+  ]);
+
+  return (
+    <View>
+      {/* Header — Opal-style section label. Title + supporting count
+          pill so the section reads as a discrete unit. */}
+      <View className="px-6 mb-3 flex-row items-baseline justify-between">
+        <Text
+          className="text-ink text-[12px] tracking-[2.5px] uppercase"
+          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        >
+          Today's rhythm
+        </Text>
+        {items.length > 0 ? (
+          <Text
+            className="text-ink-subtle text-[11px]"
+            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          >
+            {items.length} moment{items.length === 1 ? "" : "s"}
+          </Text>
+        ) : null}
+      </View>
+
+      {items.length === 0 ? (
+        <View className="px-6">
+          <View
+            className="rounded-2xl p-5 items-center"
+            style={{
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <Text
+              className="text-ink text-[13.5px] text-center"
+              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            >
+              Nothing scheduled today
+            </Text>
+            <Text
+              className="text-ink-muted text-[12.5px] text-center mt-1.5 leading-[18px]"
+              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            >
+              Add a routine from Practice to start shaping your day.
+            </Text>
+          </View>
+        </View>
+      ) : (
+        <View
+          className="mx-6 rounded-2xl"
+          style={{
+            backgroundColor: colors.surface,
+            borderWidth: 1,
+            borderColor: colors.border,
+            overflow: "hidden",
+          }}
+        >
+          {items.map((item, i) => (
+            <RhythmRow
+              key={item.key}
+              item={item}
+              isFirst={i === 0}
+              isLast={i === items.length - 1}
+            />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+/**
+ * One row in the timeline. Layout (left → right):
+ *
+ *   [ TIME ]  | [ DOT ]  Title              [ STATUS LABEL ]
+ *             |          Meta
+ *             |  (vertical thread to next row)
+ *
+ * The vertical thread is drawn by the dot column having its own
+ * background line that runs between rows. We do this with a sibling
+ * absolutely-positioned View rather than a border on the dot
+ * container so the line can extend ONLY between rows (not above
+ * the first dot or below the last).
+ */
+function RhythmRow({
+  item,
+  isFirst,
+  isLast,
+}: {
+  item: RhythmItem;
+  isFirst: boolean;
+  isLast: boolean;
+}) {
+  const colors = useColors();
+  // Color tokens vary by status — kept in one spot so visual
+  // changes for any state require touching exactly one block.
+  const isDone = item.status === "done";
+  const isNow = item.status === "now";
+  const dotFill = isNow
+    ? "#0A84FF"
+    : isDone
+      ? colors.inkSubtle
+      : "transparent";
+  const dotBorder = isNow
+    ? "#0A84FF"
+    : isDone
+      ? colors.inkSubtle
+      : withAlpha(colors.ink, 0.32);
+  const titleOpacity = isDone ? 0.55 : 1;
+
+  return (
+    <Pressable
+      onPress={item.onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.title}, ${item.timeLabel}, ${item.status}.`}
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.7 : 1,
+      })}
+    >
+      <View
+        className="flex-row items-stretch"
+        style={{
+          paddingTop: isFirst ? 14 : 10,
+          paddingBottom: isLast ? 14 : 10,
+          paddingHorizontal: 14,
+        }}
+      >
+        {/* Time column — fixed width so titles in column two align
+            across all rows regardless of "7:00 AM" vs "12:30 PM". */}
+        <View style={{ width: 62, paddingTop: 2 }}>
+          <Text
+            className="text-ink text-[12px]"
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              opacity: isDone ? 0.55 : 1,
+              letterSpacing: 0.2,
+            }}
+          >
+            {item.timeLabel}
+          </Text>
+        </View>
+
+        {/* Dot + thread column */}
+        <View style={{ width: 24, alignItems: "center" }}>
+          {/* Upper thread — connects this row's dot to the row
+              above. Skipped on the first row. */}
+          {!isFirst ? (
+            <View
+              style={{
+                position: "absolute",
+                top: 0,
+                width: 1.5,
+                height: 12,
+                backgroundColor: withAlpha(colors.ink, 0.1),
+              }}
+            />
+          ) : null}
+          {/* The dot itself */}
+          <View
+            style={{
+              marginTop: 4,
+              width: 12,
+              height: 12,
+              borderRadius: 6,
+              backgroundColor: dotFill,
+              borderWidth: 1.5,
+              borderColor: dotBorder,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {/* Checkmark glyph for the done state — a small white
+                tick inside the filled dot reads as "completed". */}
+            {isDone ? (
+              <Svg width={7} height={7} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M5 12l5 5 9-11"
+                  stroke="#FFFFFF"
+                  strokeWidth={3.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            ) : null}
+          </View>
+          {/* Lower thread — connects this row's dot to the row
+              below. Skipped on the last row. */}
+          {!isLast ? (
+            <View
+              style={{
+                position: "absolute",
+                bottom: 0,
+                top: 22,
+                width: 1.5,
+                backgroundColor: withAlpha(colors.ink, 0.1),
+              }}
+            />
+          ) : null}
+        </View>
+
+        {/* Title + meta — the column that takes the remaining width.
+            opacity-dims under the "done" state so the row reads as
+            finished business without losing legibility. */}
+        <View className="flex-1 pl-3 pr-2" style={{ opacity: titleOpacity }}>
+          <Text
+            className="text-ink text-[14.5px] leading-[19px]"
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              letterSpacing: -0.1,
+            }}
+            numberOfLines={1}
+          >
+            {item.title}
+          </Text>
+          <Text
+            className="text-ink-muted text-[12px] leading-[16px] mt-0.5"
+            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            numberOfLines={1}
+          >
+            {item.meta}
+          </Text>
+        </View>
+
+        {/* Trailing status pill / label. Three visuals:
+            • "Done" — quiet, dimmed
+            • "Now"  — accent-blue pill that mirrors the dot
+            • upcoming — relative time label ("in 3h" etc.) */}
+        <View style={{ alignItems: "flex-end", justifyContent: "center" }}>
+          {isDone ? (
+            <Text
+              className="text-ink-subtle text-[11px]"
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                letterSpacing: 0.4,
+                textTransform: "uppercase",
+              }}
+            >
+              Done
+            </Text>
+          ) : isNow ? (
+            <View
+              style={{
+                paddingHorizontal: 9,
+                paddingVertical: 4,
+                borderRadius: 999,
+                backgroundColor: withAlpha("#0A84FF", 0.14),
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontSize: 10,
+                  color: "#0A84FF",
+                  letterSpacing: 0.4,
+                  textTransform: "uppercase",
+                }}
+              >
+                Now
+              </Text>
+            </View>
+          ) : (
+            <Text
+              className="text-ink-subtle text-[11px]"
+              style={{
+                fontFamily: "PlusJakartaSans_500Medium",
+              }}
+            >
+              {formatRelativeUntil(item.at, Date.now())}
+            </Text>
+          )}
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+/**
+ * Format an absolute future epoch ms as a short relative chip:
+ *   "in 12m"   — under an hour
+ *   "in 3h"    — under a day
+ *   "Today"    — the moment's time has already passed today, but
+ *                the row still represents something valid (the
+ *                sermon is still available; the routine still
+ *                fires tomorrow). "Today" reads neutrally — the
+ *                moment is for today, not yesterday — without
+ *                implying the user failed at anything.
+ *
+ * "Earlier" was an earlier draft of this label; it read slightly
+ * reproachful, like the row was scolding the user for missing it.
+ * "Today" preserves chronology without judgment.
+ */
+function formatRelativeUntil(targetMs: number, nowMs: number): string {
+  const diff = targetMs - nowMs;
+  if (diff < 0) return "Today";
+  const minutes = Math.round(diff / 60_000);
+  if (minutes < 1) return "Now";
+  if (minutes < 60) return `in ${minutes}m`;
+  const hours = Math.round(minutes / 60);
+  return `in ${hours}h`;
 }

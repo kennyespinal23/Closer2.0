@@ -817,30 +817,53 @@ function ActiveFocusCard({
       ? `Blocking · ${summarizeBlockedApps(blockedAppIds)}`
       : "No apps quieted — just a reminder";
 
+  // IMPORTANT: The visual chrome (background, border, padding) lives
+  // on an inner <View>, NOT on the Pressable's function-form style.
+  // NativeWind's CssInterop drops layout + visual props from a
+  // Pressable's `({pressed}) => ({...})` style on iOS (same bug that
+  // broke the StudySessionEditor's day chips), so we keep ONLY the
+  // dynamic opacity in the Pressable and hand all paint to the
+  // inner View. Layout (margins, shadow) goes on the OUTER wrapper
+  // because shadow needs to be on a non-clipping ancestor — the
+  // inner View has `overflow: hidden` so the rounded corners don't
+  // bleed past the radius.
   return (
-    <Pressable
-      onPress={() => router.push("/settings/focus")}
-      accessibilityRole="button"
-      accessibilityLabel={`Active focus session: ${title}. ${elapsedLabel} elapsed. Tap to manage apps.`}
-      style={({ pressed }) => ({
+    <View
+      style={{
         marginHorizontal: 20,
         marginTop: 8,
         borderRadius: 22,
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: withAlpha(PRIMARY_BLUE, 0.32),
-        padding: 16,
-        opacity: pressed ? 0.94 : 1,
-        // Subtle accent glow to mark this card as the "live" one
-        // on the screen — distinguishes it from the Upcoming cards
-        // below at a glance.
+        // Lift the card off the page with a soft accent glow.
+        // Lives on the outer View (no overflow:hidden) so the
+        // shadow can actually render past the card's bounds.
         shadowColor: PRIMARY_BLUE,
-        shadowOpacity: 0.18,
-        shadowRadius: 18,
+        shadowOpacity: 0.22,
+        shadowRadius: 20,
         shadowOffset: { width: 0, height: 8 },
-        elevation: 4,
-      })}
+        elevation: 6,
+      }}
     >
+      <Pressable
+        onPress={() => router.push("/settings/focus")}
+        accessibilityRole="button"
+        accessibilityLabel={`Active focus session: ${title}. ${elapsedLabel} elapsed. Tap to manage apps.`}
+        style={({ pressed }) => ({ opacity: pressed ? 0.94 : 1 })}
+      >
+        <View
+          style={{
+            borderRadius: 22,
+            // Bold blue wash so the live card pops clearly against
+            // both white (light) and near-black (dark) page bgs.
+            // Plain `colors.surface` blended with the page bg in
+            // light mode, and a 6% wash was too subtle to register
+            // as a card. 13% reads clearly on white without
+            // competing with the FocusMiniPlayer's own accent.
+            backgroundColor: withAlpha(PRIMARY_BLUE, 0.13),
+            borderWidth: 1.5,
+            borderColor: withAlpha(PRIMARY_BLUE, 0.5),
+            padding: 16,
+          }}
+        >
       {/* Title row */}
       <View className="flex-row items-start">
         <View className="flex-1 pr-3">
@@ -967,7 +990,9 @@ function ActiveFocusCard({
           ) : null}
         </View>
       ) : null}
-    </Pressable>
+        </View>
+      </Pressable>
+    </View>
   );
 }
 
@@ -999,30 +1024,41 @@ function EmptyUpcoming({ onCreate }: { onCreate: () => void }) {
         All your sessions are paused. Re-enable one from settings, or
         add a new routine to start a rhythm.
       </Text>
-      <Pressable
-        onPress={onCreate}
-        accessibilityRole="button"
-        accessibilityLabel="Add a new study session"
-        style={({ pressed }) => ({
-          marginTop: 14,
-          paddingHorizontal: 18,
-          paddingVertical: 10,
-          borderRadius: 14,
-          backgroundColor: PRIMARY_BLUE,
-          opacity: pressed ? 0.7 : 1,
-        })}
-      >
-        <Text
-          style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            fontSize: 13.5,
-            color: "#FFFFFF",
-            letterSpacing: 0.2,
-          }}
+      {/* Outer wrapping View nails the layout (centered, fixed top
+          margin) so the Pressable inside doesn't need to carry any
+          layout-affecting properties. This dodges the NativeWind
+          CssInterop bug that silently drops layout styles from a
+          Pressable's function-form `style` prop on iOS — the bug
+          that made the editor's day chips render as bare text in
+          a prior iteration. */}
+      <View className="items-center" style={{ marginTop: 14 }}>
+        <Pressable
+          onPress={onCreate}
+          accessibilityRole="button"
+          accessibilityLabel="Add a new study session"
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
-          New routine
-        </Text>
-      </Pressable>
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingVertical: 11,
+              borderRadius: 14,
+              backgroundColor: PRIMARY_BLUE,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                fontSize: 13.5,
+                color: "#FFFFFF",
+                letterSpacing: 0.3,
+              }}
+            >
+              New routine
+            </Text>
+          </View>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -1059,22 +1095,33 @@ function UpcomingSessionCard({
         : { label: "Focus paused", tone: "paused" as const }
       : null;
 
+  // Same Pressable-style fix as ActiveFocusCard: layout in the outer
+  // View, visual chrome in an inner View, only `opacity` in the
+  // Pressable's function-form style. See ActiveFocusCard for the
+  // full rationale on why this pattern is required.
   return (
-    <Pressable
-      onPress={onTap}
-      accessibilityRole="button"
-      accessibilityLabel={`Edit ${session.name}`}
-      style={({ pressed }) => ({
+    <View
+      style={{
         marginHorizontal: 20,
         marginTop: 10,
         borderRadius: 18,
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-        padding: 14,
-        opacity: pressed ? 0.94 : 1,
-      })}
+      }}
     >
+      <Pressable
+        onPress={onTap}
+        accessibilityRole="button"
+        accessibilityLabel={`Edit ${session.name}`}
+        style={({ pressed }) => ({ opacity: pressed ? 0.94 : 1 })}
+      >
+        <View
+          style={{
+            borderRadius: 18,
+            backgroundColor: colors.surface,
+            borderWidth: 1,
+            borderColor: colors.border,
+            padding: 14,
+          }}
+        >
       <View className="flex-row items-start">
         <View className="flex-1 pr-3">
           {/* Source tag — "Closer" badge differentiates system-seeded
@@ -1193,7 +1240,9 @@ function UpcomingSessionCard({
           </Text>
         </View>
       ) : null}
-    </Pressable>
+        </View>
+      </Pressable>
+    </View>
   );
 }
 

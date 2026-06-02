@@ -109,31 +109,48 @@ export default function PunchScreen() {
           {/* The big number. Single line. Massive. The screen exists
               for this glyph. Tabular numerals would be nicer here
               but the font doesn't ship that variant; the small
-              jitter on punctuation is acceptable. */}
+              jitter on punctuation is acceptable.
+
+              Layout: baseline-aligned flex row instead of a single
+              <Text> with a nested span. iOS inherits letterSpacing
+              from the parent <Text> into child <Text> elements,
+              which collapses the leading space before "times" — the
+              big number and the unit end up visually fused. Pulling
+              the unit out into its own sibling Text lets the
+              negative letterSpacing apply only where we want it
+              (the headline glyph) and gives us an explicit
+              marginLeft to control the gap. */}
           <FadeIn delayMs={2200} durationMs={1100}>
-            <Text
+            <View
               style={{
-                color: "#FFFFFF",
-                fontFamily: "PlusJakartaSans_700Bold",
-                fontSize: 76,
-                lineHeight: 80,
-                letterSpacing: -3,
+                flexDirection: "row",
+                alignItems: "baseline",
                 marginTop: 20,
                 marginBottom: 12,
               }}
             >
-              {punch.timesPerYear.toLocaleString()}
+              <Text
+                style={{
+                  color: "#FFFFFF",
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontSize: 76,
+                  lineHeight: 80,
+                  letterSpacing: -3,
+                }}
+              >
+                {punch.timesPerYear.toLocaleString()}
+              </Text>
               <Text
                 style={{
                   fontSize: 22,
                   fontFamily: "PlusJakartaSans_600SemiBold",
                   color: "#C2C2C7",
+                  marginLeft: 10,
                 }}
               >
-                {" "}
                 times
               </Text>
-            </Text>
+            </View>
           </FadeIn>
 
           {/* The reframe — "before God this year." Same column,
@@ -192,16 +209,21 @@ export default function PunchScreen() {
 
         {/* CTA — quiet link, not a fat button. The screen wants the
             user to sit with the number for a second, not bounce off
-            it. */}
+            it.
+
+            `alignSelf: "center"` inside Pressable's function-form
+            style doesn't apply reliably on iOS (the link renders
+            flush-left), so the centering lives on the wrapper
+            View instead — see notifications.tsx for the same
+            workaround. */}
         <FadeIn delayMs={6300} durationMs={800}>
-          <View className="px-6 pb-4">
+          <View className="px-6 pb-4 items-center">
             <Pressable
               hitSlop={14}
               onPress={() => router.push("/onboarding/why")}
               accessibilityRole="button"
               accessibilityLabel="Continue"
               style={({ pressed }) => ({
-                alignSelf: "center",
                 paddingVertical: 14,
                 paddingHorizontal: 28,
                 opacity: pressed ? 0.6 : 1,

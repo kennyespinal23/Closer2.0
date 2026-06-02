@@ -119,16 +119,21 @@ export default function StatScreen() {
 
         {/* Single CTA — "I know the feeling →". Underlined chevron-
             style link instead of a fat primary button. The screen
-            is contemplative; a bold pill would shatter the mood. */}
+            is contemplative; a bold pill would shatter the mood.
+
+            Centering lives on the wrapper View (`items-center`)
+            because `alignSelf: "center"` set inside the
+            Pressable's function-form style doesn't reliably apply
+            on iOS — same workaround as punch / notifications /
+            rating screens. */}
         <FadeIn delayMs={6200} durationMs={900}>
-          <View className="px-6 pb-4">
+          <View className="px-6 pb-4 items-center">
             <Pressable
               hitSlop={14}
               onPress={() => router.push("/onboarding/apps")}
               accessibilityRole="button"
               accessibilityLabel="Continue to next step"
               style={({ pressed }) => ({
-                alignSelf: "center",
                 paddingVertical: 14,
                 paddingHorizontal: 28,
                 opacity: pressed ? 0.6 : 1,

@@ -82,7 +82,7 @@ export default function RatingScreen() {
       <OnboardingChrome mode="back-only" />
 
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-1 px-6">
@@ -134,33 +134,38 @@ export default function RatingScreen() {
 
           <View className="flex-1 min-h-[24px]" />
 
+          {/* Bottom block. `pb-8` (vs the prior `pb-2`) keeps
+              "Maybe later" off the home indicator on smaller
+              devices. The centering wrapper around the link is the
+              same workaround used on punch/notifications — see the
+              note in notifications.tsx. */}
           <FadeIn delayMs={2200}>
-            <View className="pt-6 pb-2">
+            <View className="pt-6 pb-8">
               <Button
                 label={requesting ? "Opening…" : "Rate Closer"}
                 onPress={handleRate}
                 disabled={requesting}
               />
 
-              <Pressable
-                hitSlop={12}
-                onPress={handleSkip}
-                disabled={requesting}
-                style={({ pressed }) => ({
-                  alignSelf: "center",
-                  marginTop: 14,
-                  paddingVertical: 10,
-                  paddingHorizontal: 16,
-                  opacity: pressed || requesting ? 0.5 : 1,
-                })}
-              >
-                <Text
-                  className="text-ink-muted text-[14px]"
-                  style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              <View className="items-center mt-3">
+                <Pressable
+                  hitSlop={12}
+                  onPress={handleSkip}
+                  disabled={requesting}
+                  style={({ pressed }) => ({
+                    paddingVertical: 10,
+                    paddingHorizontal: 16,
+                    opacity: pressed || requesting ? 0.5 : 1,
+                  })}
                 >
-                  Maybe later
-                </Text>
-              </Pressable>
+                  <Text
+                    className="text-ink-muted text-[14px]"
+                    style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                  >
+                    Maybe later
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           </FadeIn>
         </View>

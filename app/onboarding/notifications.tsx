@@ -72,7 +72,7 @@ export default function NotificationsScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-1 px-6">
@@ -115,33 +115,44 @@ export default function NotificationsScreen() {
 
           <View className="flex-1 min-h-[24px]" />
 
+          {/* Bottom block. Originally `pt-6 pb-2`, which on smaller
+              iPhones left "I'll do this later" sitting right on
+              top of the home indicator (the SafeAreaView's bottom
+              inset accounts for the indicator itself, but the link
+              had no breathing room above it). Bumped to `pb-8` so
+              there's a comfortable gutter on every screen size. */}
           <FadeIn delayMs={2200}>
-            <View className="pt-6 pb-2">
+            <View className="pt-6 pb-8">
               <Button
                 label={submitting ? "Asking…" : "Turn on notifications"}
                 onPress={handleTurnOn}
                 disabled={submitting}
               />
 
-              <Pressable
-                hitSlop={12}
-                onPress={handleSkip}
-                disabled={submitting}
-                style={({ pressed }) => ({
-                  alignSelf: "center",
-                  marginTop: 14,
-                  paddingVertical: 10,
-                  paddingHorizontal: 16,
-                  opacity: pressed || submitting ? 0.5 : 1,
-                })}
-              >
-                <Text
-                  className="text-ink-muted text-[14px]"
-                  style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              {/* `alignSelf: "center"` set inside Pressable's
+                  function-form style isn't reliably honoured (the
+                  link rendered flush-left on iOS), so we lift the
+                  centering onto a dedicated wrapper View, which
+                  always wins. */}
+              <View className="items-center mt-3">
+                <Pressable
+                  hitSlop={12}
+                  onPress={handleSkip}
+                  disabled={submitting}
+                  style={({ pressed }) => ({
+                    paddingVertical: 10,
+                    paddingHorizontal: 16,
+                    opacity: pressed || submitting ? 0.5 : 1,
+                  })}
                 >
-                  I&apos;ll do this later
-                </Text>
-              </Pressable>
+                  <Text
+                    className="text-ink-muted text-[14px]"
+                    style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                  >
+                    I&apos;ll do this later
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           </FadeIn>
         </View>

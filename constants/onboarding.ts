@@ -46,7 +46,12 @@ export const ONBOARDING_STEPS = [
   "attribution",
   "notifications",
   "account",
+  // Two consecutive time pickers — the first ("time") schedules
+  // the daily sermon arrival; the second ("studytime") schedules
+  // the deeper Bible-study commitment. Both seed system routines
+  // visible in the Practice/Blocks tab from day one.
   "time",
+  "studytime",
   "paywall",
   "welcome",
 ] as const;

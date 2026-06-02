@@ -116,8 +116,27 @@ export type OnboardingAnswers = {
    * 2x2 time picker) and persisted so the settings screen can
    * pre-populate the user's choice — and so the focus / study
    * silent-seeding logic can hang scheduling off the same value.
+   *
+   * Semantically: this is when the SERMON delivery arrives — the
+   * "your morning starts at X" screen frames it that way and the
+   * welcome screen seeds a "Daily Sermon" system routine off it.
    */
   dailyReminderTime?: DailyReminderTime;
+  /**
+   * When the user wants their Bible-study commitment to fire.
+   * Picked on the new "studytime" screen (right after the sermon
+   * time picker). Separate field from dailyReminderTime because
+   * the two routines are intentionally distinct in the user's
+   * day — sermon delivery is a short notification, Bible study
+   * is a longer focus block.
+   *
+   * Used by welcome.tsx's silent-seeding logic to create a
+   * system "Bible Study" study session at the chosen hour/minute.
+   * Editable later from /settings/study-sessions or the Blocks
+   * tab itself (tap the routine → editor opens pre-filled with
+   * the seeded values).
+   */
+  bibleStudyTime?: DailyReminderTime;
 };
 
 type OnboardingContextValue = {

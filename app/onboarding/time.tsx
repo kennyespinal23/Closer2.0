@@ -15,10 +15,16 @@ import {
 /**
  * Screen 14 — "What time does your morning start, [Name]?"
  *
- * The time picker, simplified to a 2x2 grid of four curated
- * options. The new flow trades the old custom-time wheel for
- * speed — onboarding momentum matters more than minute-perfect
- * personalization, and the user can always refine the time on
+ * The SERMON delivery time picker. This screen's pick determines
+ * when the user receives their daily sermon notification — a
+ * one-tap "open the app to today's word" nudge. The next screen
+ * (studytime) handles the separate, deeper Bible-study
+ * commitment, but THIS screen is the sermon-arrival anchor.
+ *
+ * Simplified to a 2x2 grid of four curated options. The new
+ * flow trades the old custom-time wheel for speed — onboarding
+ * momentum matters more than minute-perfect personalization,
+ * and the user can always refine the time on
  * /settings/notifications later.
  *
  * Each option carries a small subtitle ("Early riser", "Most
@@ -35,6 +41,9 @@ import {
  * their time. If they declined, we still persist the time so
  * the settings screen knows what to pre-fill if they enable
  * notifications later.
+ *
+ * After confirming, the user advances to the studytime screen
+ * to pick their Bible-study commitment time.
  */
 
 type TimeOption = {
@@ -103,7 +112,11 @@ export default function TimeScreen() {
       // rather advance than block the user; settings can retry.
     } finally {
       setSubmitting(false);
-      router.push("/onboarding/paywall");
+      // Sermon time captured — hand off to the Bible-study time
+      // picker. The paywall comes after both time picks so the
+      // user has finished sketching their day before they're
+      // asked to commit financially.
+      router.push("/onboarding/studytime");
     }
   };
 
@@ -124,7 +137,7 @@ export default function TimeScreen() {
               className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-4"
               style={{ fontFamily: "PlusJakartaSans_700Bold" }}
             >
-              What time does your morning start
+              When should your sermon arrive
               {firstName ? `, ${firstName}?` : "?"}
             </Text>
           </FadeIn>
@@ -134,7 +147,8 @@ export default function TimeScreen() {
               className="text-ink-muted text-[15px] leading-[22px] mt-3"
               style={{ fontFamily: "PlusJakartaSans_400Regular" }}
             >
-              We&apos;ll be there waiting{"\n"}before you reach for your phone.
+              A short daily word, delivered straight to your
+              phone — before you reach for the noise.
             </Text>
           </FadeIn>
 

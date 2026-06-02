@@ -6,43 +6,82 @@ import { useRouter } from "expo-router";
 import { FadeIn } from "@/components/FadeIn";
 import { useOnboarding } from "@/state/onboarding";
 import { useStudySessions } from "@/state/studySessions";
-import { DEFAULT_BLOCKED_APP_IDS } from "@/lib/focus";
+import {
+  DEFAULT_BLOCKED_APP_IDS,
+  SOCIAL_APPS,
+  type SocialAppId,
+} from "@/lib/focus";
 
 /**
- * Screen 16 — The Welcome.
+ * Screen 17 — The Welcome.
  *
  * The payoff. Eight screens of no scripture, no church language —
  * and now this. Black canvas, red scripture, the user's name on
  * the page, and a single forward CTA that drops them into the
  * app.
  *
- * Two side-effects happen on this screen, in the background:
+ * Background side-effects on mount:
  *
- *   1. We silently seed a "Daily Bible Study" routine in the
- *      Practice tab — 8:00 AM, Mon–Fri, focus mode on, default
- *      blocked app list. The user can edit, disable, or delete
- *      it from /settings/study-sessions later. This is the
- *      "background seed" path the user picked during planning —
- *      no onboarding screen for it, but a sensible default lives
- *      in their Practice tab from day one.
+ *   1. SEED "Bible Study" system routine. Uses the time the user
+ *      picked on /onboarding/studytime, falls back to 7:00 AM if
+ *      they somehow skipped it. Focus mode ON, weekday cadence,
+ *      blocked-app list lifted from the morningApps they admitted
+ *      to on Screen 2 (so the routine silences the exact apps
+ *      they self-identified as scroll traps). Editable later from
+ *      the Blocks tab or /settings/study-sessions.
  *
- *   2. We could also schedule a system-default focus session
- *      tied to the morning notification time, but Phase 1's
- *      focus shielding is honor-mode anyway — the silent study
- *      session already brings focus into the schedule. We'll
- *      revisit when Phase 2 (real ManagedSettings) lands.
+ *   2. SEED "Daily Sermon" system routine. Uses the time the user
+ *      picked on /onboarding/time, falls back to 7:00 AM. Focus
+ *      mode OFF — the daily sermon is a short notification, not
+ *      a focus block. This routine ALSO appears in the Practice
+ *      tab so the user has one clear list of every recurring
+ *      moment Closer touches their day.
+ *
+ *   3. The actual OS-level sermon notification was already
+ *      scheduled by /onboarding/time when the user confirmed
+ *      their pick. We don't re-schedule it here — would just
+ *      double-up the notifications.
  *
  * Seeding runs once on mount with an idempotency key (the
  * studySessions provider's `upsertSystemSession` matches by name)
- * so re-entering this screen — e.g. via the dev "reset
- * onboarding" affordance — doesn't multiply routines.
+ * so re-entering this screen — e.g. via the dev "reset onboarding"
+ * affordance — doesn't multiply routines.
+ *
+ * Why upsertSystemSession (not addSession)?
+ *   The provider's upsert matches by (source: "system", name) so
+ *   re-running this seed updates the existing system row in place
+ *   instead of stacking duplicates. Critical for the dev
+ *   "reset and re-onboard" flow but also matters for production —
+ *   a user who walks through onboarding and then resets later
+ *   shouldn't end up with two "Bible Study" rows.
  */
 
-const SYSTEM_STUDY_NAME = "Daily Bible Study";
-const SYSTEM_STUDY_TIME = { hour: 8, minute: 0 };
+const SYSTEM_STUDY_NAME = "Bible Study";
+const SYSTEM_SERMON_NAME = "Daily Sermon";
 // Mon..Fri — the most common cadence per the existing study
 // session model. WeekdayIndex is 0=Sun..6=Sat.
-const SYSTEM_STUDY_DAYS = [1, 2, 3, 4, 5] as const;
+const WEEKDAY_DAYS = [1, 2, 3, 4, 5] as const;
+// Daily — sermon arrives every day, including weekends. The
+// sermon is a passive notification (low effort) so daily makes
+// sense; the study commitment stays weekday because asking for
+// a daily focus block out of the gate is too much.
+const DAILY_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
+const FALLBACK_TIME = { hour: 7, minute: 0 } as const;
+
+/**
+ * Map the morning-apps multi-select (which uses string ids that
+ * happen to align with the focus SocialAppId catalog) into the
+ * blocked-app list shape. Filters out anything that isn't a
+ * known catalog id — defensive in case a future onboarding screen
+ * captures additional apps that don't have a focus entry yet.
+ */
+function morningAppsToBlockedList(
+  morningApps: string[] | undefined,
+): SocialAppId[] {
+  if (!morningApps || morningApps.length === 0) return [];
+  const valid = new Set(SOCIAL_APPS.map((a) => a.id));
+  return morningApps.filter((id): id is SocialAppId => valid.has(id as SocialAppId));
+}
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -60,23 +99,61 @@ export default function WelcomeScreen() {
   useEffect(() => {
     if (seededRef.current) return;
     seededRef.current = true;
+    // Resolve final values up front so the IIFE below is just
+    // two flat upsert calls — easier to read than two chained
+    // ternaries inside the upsert payloads.
+    const studyTime = answers.bibleStudyTime ?? FALLBACK_TIME;
+    const sermonTime = answers.dailyReminderTime ?? FALLBACK_TIME;
+    const blockedApps = morningAppsToBlockedList(answers.morningApps);
+    // Prefer the user's morning-app admission as the focus block
+    // list (it's their own self-identified scroll set) but fall
+    // back to the catalog default if they skipped that screen or
+    // chose none — empty list would silently mean "block nothing"
+    // and the routine would be missing its primary value prop.
+    const studyBlocked =
+      blockedApps.length > 0
+        ? blockedApps
+        : [...DEFAULT_BLOCKED_APP_IDS];
+
     // Fire-and-forget. The user's already on the screen; we don't
     // want to block the welcome animation on storage writes or
     // notification scheduling.
     void upsertSystemSession({
       name: SYSTEM_STUDY_NAME,
       source: "system",
-      time: SYSTEM_STUDY_TIME,
-      daysOfWeek: [...SYSTEM_STUDY_DAYS],
+      time: studyTime,
+      daysOfWeek: [...WEEKDAY_DAYS],
       enabled: true,
       useFocusMode: true,
-      blockedAppIds: [...DEFAULT_BLOCKED_APP_IDS],
+      blockedAppIds: studyBlocked,
     }).catch(() => {
       // Non-fatal: even if seeding fails, the user can create a
-      // routine manually from the Practice tab. We just don't
+      // routine manually from the Blocks tab. We just don't
       // surface the failure during the welcome moment.
     });
-  }, [upsertSystemSession]);
+
+    // Sermon-arrival routine. Focus mode OFF — the sermon is a
+    // notification-driven moment, not a block. Daily cadence
+    // (including weekends) since the sermon is passive and
+    // forming a daily habit is the whole point.
+    void upsertSystemSession({
+      name: SYSTEM_SERMON_NAME,
+      source: "system",
+      time: sermonTime,
+      daysOfWeek: [...DAILY_DAYS],
+      enabled: true,
+      useFocusMode: false,
+      blockedAppIds: [],
+    }).catch(() => {
+      // Same rationale as above — onboarding completion shouldn't
+      // hinge on background seeding success.
+    });
+  }, [
+    upsertSystemSession,
+    answers.bibleStudyTime,
+    answers.dailyReminderTime,
+    answers.morningApps,
+  ]);
 
   const handleEnterApp = () => {
     // Replace so the user can't swipe-back into the paywall or

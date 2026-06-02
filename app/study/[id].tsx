@@ -110,7 +110,20 @@ export default function StudyLandingScreen() {
       // sermonDay is 0 because study sessions aren't sermon-scoped
       // (the field on FocusSession is a back-compat scalar used
       // by analytics).
-      await startFocusSession(0, sessionApps, session.id);
+      await startFocusSession(0, {
+        customBlockedAppIds: sessionApps,
+        routineId: session.id,
+        // Propagate the routine's chosen length into the focus
+        // session so the mini-player and Now card render a
+        // countdown + progress bar for time-boxed routines.
+        // Legacy routines without a durationMinutes leave this
+        // undefined and the focus session runs open-ended (the
+        // pre-Phase-C behavior).
+        ...(typeof session.durationMinutes === "number" &&
+        session.durationMinutes > 0
+          ? { durationMs: session.durationMinutes * 60_000 }
+          : {}),
+      });
     }
     // Two-phase nav, same pattern as the check-in modal flow:
     //   • The landing screen is presented as a `modal` in the root

@@ -26,7 +26,7 @@ import {
   templateToDraft,
   type RoutineTemplate,
 } from "@/lib/routineTemplates";
-import { useFocus } from "@/state/focus";
+import { useFocus, type FocusSession } from "@/state/focus";
 import {
   type Highlight,
   type Note,
@@ -85,8 +85,13 @@ export default function PracticeScreen() {
   //     — the hero card only renders when a session is in flight.
   //   • `endSession` for the End button inside the Now card so the
   //     user can stop the session without leaving this surface.
-  const { prefs: focusPrefs, session: activeSession, endSession } =
-    useFocus();
+  const {
+    prefs: focusPrefs,
+    session: activeSession,
+    endSession,
+    pauseSession: pauseFocusSession,
+    resumeSession: resumeFocusSession,
+  } = useFocus();
 
   // Memoize the (potentially-large) annotation lists so we don't
   // re-derive them on every parent re-render. They depend on the
@@ -259,9 +264,15 @@ export default function PracticeScreen() {
             <SectionHeader title="Now" count={0} />
             <ActiveFocusCard
               title={activeRoutineName ?? "Focus Mode"}
-              startedAt={activeSession.startedAt}
-              blockedAppIds={activeSession.blockedAppIds}
+              session={activeSession}
               onEnd={handleEndActive}
+              onTogglePause={() => {
+                if (activeSession.pausedAt) {
+                  resumeFocusSession();
+                } else {
+                  pauseFocusSession();
+                }
+              }}
             />
           </View>
         ) : null}
@@ -883,23 +894,48 @@ function withAlpha(hex: string, alpha: number): string {
  */
 function ActiveFocusCard({
   title,
-  startedAt,
-  blockedAppIds,
+  session,
   onEnd,
+  onTogglePause,
 }: {
   title: string;
-  startedAt: number;
-  blockedAppIds: ReadonlyArray<string>;
+  session: FocusSession;
   onEnd: () => void;
+  onTogglePause: () => void;
 }) {
   const router = useRouter();
   const colors = useColors();
 
-  // Live elapsed re-derives on each parent tick. Cheap — just a
-  // subtraction and a formatter call. We don't memoize: render
-  // already happens once per second from the parent's ticker.
-  const elapsedMs = Math.max(0, Date.now() - startedAt);
-  const elapsedLabel = formatElapsedLong(elapsedMs);
+  const blockedAppIds = session.blockedAppIds;
+
+  // Effective elapsed = wall-clock age minus all pause time. Same
+  // formula as FocusMiniPlayer and the stale-session sweeper.
+  // Re-derived each parent tick (the parent screen rebroadcasts a
+  // 1s `now` value to all session-aware cards).
+  const accumPaused = session.accumulatedPausedMs ?? 0;
+  const openPause = session.pausedAt
+    ? Math.max(0, Date.now() - session.pausedAt)
+    : 0;
+  const elapsedMs = Math.max(
+    0,
+    Date.now() - session.startedAt - accumPaused - openPause,
+  );
+  const hasDuration =
+    typeof session.durationMs === "number" && session.durationMs > 0;
+  const remainingMs = hasDuration
+    ? Math.max(0, (session.durationMs ?? 0) - elapsedMs)
+    : 0;
+  const timeLabel = hasDuration
+    ? formatElapsedLong(remainingMs)
+    : formatElapsedLong(elapsedMs);
+  const timeMetaLabel = hasDuration ? "Left" : "Elapsed";
+  const isPaused = Boolean(session.pausedAt);
+  // Progress = how far through the timebox we are, clamped [0,1].
+  // Only meaningful for time-boxed sessions; for open-ended we
+  // hide the bar entirely.
+  const progress = hasDuration
+    ? Math.min(1, Math.max(0, elapsedMs / (session.durationMs ?? 1)))
+    : 0;
 
   // First N blocked apps render as glyph chips; the remainder
   // collapses to "+M". Keeps the row scannable on narrow widths
@@ -943,7 +979,7 @@ function ActiveFocusCard({
       <Pressable
         onPress={() => router.push("/settings/focus")}
         accessibilityRole="button"
-        accessibilityLabel={`Active focus session: ${title}. ${elapsedLabel} elapsed. Tap to manage apps.`}
+        accessibilityLabel={`Active focus session: ${title}. ${timeLabel} ${timeMetaLabel.toLowerCase()}.${isPaused ? " Paused." : ""} Tap to manage apps.`}
         style={({ pressed }) => ({ opacity: pressed ? 0.94 : 1 })}
       >
         <View
@@ -961,7 +997,10 @@ function ActiveFocusCard({
             padding: 16,
           }}
         >
-      {/* Title row */}
+      {/* Title row — Break/Resume + End buttons clustered on the
+          right. Break only renders for time-boxed sessions (no
+          meaningful "pause" on an open-ended counter); End is
+          always present. */}
       <View className="flex-row items-start">
         <View className="flex-1 pr-3">
           <Text
@@ -982,6 +1021,40 @@ function ActiveFocusCard({
             {subtitle}
           </Text>
         </View>
+
+        {hasDuration ? (
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation?.();
+              onTogglePause();
+            }}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={
+              isPaused ? "Resume focus session" : "Pause focus session"
+            }
+            style={({ pressed }) => ({
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              borderRadius: 14,
+              backgroundColor: withAlpha(PRIMARY_BLUE, 0.14),
+              opacity: pressed ? 0.6 : 1,
+              marginRight: 8,
+            })}
+          >
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                fontSize: 12.5,
+                color: PRIMARY_BLUE,
+                letterSpacing: 0.3,
+              }}
+            >
+              {isPaused ? "Resume" : "Break"}
+            </Text>
+          </Pressable>
+        ) : null}
+
         <Pressable
           onPress={(e) => {
             e.stopPropagation?.();
@@ -1011,9 +1084,15 @@ function ActiveFocusCard({
         </Pressable>
       </View>
 
-      {/* Elapsed counter — the focal number on the card. Tabular
-          digits so the width is stable second-to-second. */}
-      <View className="flex-row items-baseline mt-3">
+      {/* Focal number row — countdown or elapsed. Tabular digits so
+          the width is stable second-to-second. Dims while paused
+          so the user sees the frozen-timer state at a glance
+          (combined with the META label flip and the Break button
+          swap to Resume). */}
+      <View
+        className="flex-row items-baseline mt-3"
+        style={{ opacity: isPaused ? 0.55 : 1 }}
+      >
         <Text
           style={{
             fontFamily: "PlusJakartaSans_700Bold",
@@ -1024,15 +1103,44 @@ function ActiveFocusCard({
             lineHeight: 40,
           }}
         >
-          {elapsedLabel}
+          {timeLabel}
         </Text>
         <Text
           className="text-ink-subtle text-[11px] tracking-[1.6px] uppercase ml-2"
           style={{ fontFamily: "PlusJakartaSans_700Bold" }}
         >
-          Elapsed
+          {timeMetaLabel}
         </Text>
       </View>
+
+      {/* Progress bar — only for time-boxed sessions. Single track
+          + filled bar (same construction as a horizontal HUD bar
+          on iOS). The fill width is a percentage so the bar
+          self-sizes to the parent card width. Capped at 100% via
+          the `progress` clamp above so a session that has run
+          past its planned duration shows a full bar rather than
+          overflowing. */}
+      {hasDuration ? (
+        <View
+          className="mt-3"
+          style={{
+            height: 4,
+            borderRadius: 2,
+            overflow: "hidden",
+            backgroundColor: withAlpha(PRIMARY_BLUE, 0.18),
+          }}
+        >
+          <View
+            style={{
+              height: "100%",
+              width: `${progress * 100}%`,
+              backgroundColor: PRIMARY_BLUE,
+              borderRadius: 2,
+              opacity: isPaused ? 0.55 : 1,
+            }}
+          />
+        </View>
+      ) : null}
 
       {/* App glyph row — gives the user a visual confirmation of
           which apps are currently in their shield. Tapping a

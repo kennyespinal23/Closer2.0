@@ -151,6 +151,15 @@ const SMOOTH_LAYOUT = {
  *  with (see state/studySessions.tsx migration). */
 const NEW_SESSION_BASE: StudySessionDraft = {
   name: "Morning Study",
+  // 25 minutes — long enough for a chapter and a short reflection,
+  // short enough not to feel like an intimidating commitment. The
+  // routine landing screen reads this and passes a matching
+  // durationMs to startSession, which puts the mini-player and
+  // Now card into countdown mode. Users who want open-ended
+  // sessions can clear this in a future duration picker on the
+  // editor (not yet shipped — current users get the 25-min
+  // default unless they customize via the templates).
+  durationMinutes: 25,
   // `source: "user"` is the right default for the manual editor.
   // The onboarding flow seeds its own routines with source: "system"
   // through `upsertSystemSession` — the editor never produces those.
@@ -1095,6 +1104,14 @@ function toDraft(session: StudySession): StudySessionDraft {
     enabled: session.enabled,
     useFocusMode: session.useFocusMode,
     blockedAppIds: [...session.blockedAppIds],
+    // Preserve duration across edits so the user's chosen timebox
+    // survives a round-trip through the editor even though there's
+    // no visible picker for it yet. Spread instead of always-set
+    // so undefined stays undefined (legacy open-ended routines
+    // don't suddenly become time-boxed because of a save).
+    ...(typeof session.durationMinutes === "number"
+      ? { durationMinutes: session.durationMinutes }
+      : {}),
   };
 }
 

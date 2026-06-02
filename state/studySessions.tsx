@@ -135,6 +135,21 @@ export type StudySession = {
    * agnostic of how the default is sourced.
    */
   blockedAppIds: SocialAppId[];
+  /**
+   * Planned length (in minutes) of the focus session this routine
+   * starts when the user taps Begin. When set, the launched focus
+   * session becomes TIME-BOXED — the mini-player and Now card
+   * render a countdown + progress bar instead of an elapsed timer.
+   *
+   * Optional + back-compat: legacy routines saved before this
+   * field shipped have it undefined and launch open-ended focus
+   * sessions (the old behavior). NEW_SESSION_BASE in the editor
+   * picks 25 as the default for fresh routines, and the curated
+   * templates in lib/routineTemplates.ts each carry their own
+   * intentional duration (Morning Devotion → 25, Sabbath Rest →
+   * 60, etc.). Only consulted when `useFocusMode === true`.
+   */
+  durationMinutes?: number;
   /** OS-level notification ids backing this session (one per active
    *  day-of-week). Populated by the scheduler; used to cancel
    *  precisely when the session is edited / disabled / deleted. */

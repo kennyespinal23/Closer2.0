@@ -110,6 +110,11 @@ const DAILY: WeekdayIndex[] = [0, 1, 2, 3, 4, 5, 6];
 
 export const TEMPLATES: ReadonlyArray<RoutineTemplate> = [
   // ── Practice ──────────────────────────────────────────────────
+  // Each "practice" template carries an explicit durationMinutes
+  // so the launched focus session becomes time-boxed and the
+  // mini-player / Now card switch into countdown mode. Anchors
+  // (below) leave duration unset since they're notification-only
+  // reminders, not focus blocks.
   {
     id: "morning-devotion",
     name: "Morning Devotion",
@@ -125,6 +130,7 @@ export const TEMPLATES: ReadonlyArray<RoutineTemplate> = [
       enabled: true,
       useFocusMode: true,
       blockedAppIds: ALL_FEEDS,
+      durationMinutes: 25,
     },
   },
   {
@@ -142,6 +148,7 @@ export const TEMPLATES: ReadonlyArray<RoutineTemplate> = [
       enabled: true,
       useFocusMode: true,
       blockedAppIds: FEEDS_AND_CHATS,
+      durationMinutes: 60,
     },
   },
   {
@@ -159,6 +166,7 @@ export const TEMPLATES: ReadonlyArray<RoutineTemplate> = [
       enabled: true,
       useFocusMode: true,
       blockedAppIds: ALL_SCATTERS,
+      durationMinutes: 60,
     },
   },
   {
@@ -176,6 +184,7 @@ export const TEMPLATES: ReadonlyArray<RoutineTemplate> = [
       enabled: true,
       useFocusMode: true,
       blockedAppIds: ALL_SCATTERS,
+      durationMinutes: 45,
     },
   },
   // ── Anchors ───────────────────────────────────────────────────
@@ -194,6 +203,7 @@ export const TEMPLATES: ReadonlyArray<RoutineTemplate> = [
       enabled: true,
       useFocusMode: false,
       blockedAppIds: ALL_FEEDS,
+      durationMinutes: 10,
     },
   },
   {
@@ -293,6 +303,14 @@ export function templateToDraft(
     enabled: template.draft.enabled,
     useFocusMode: template.draft.useFocusMode,
     blockedAppIds: [...template.draft.blockedAppIds],
+    // Carry the template's chosen duration into the draft only
+    // when the template actually defines one — leaving it
+    // undefined keeps anchor templates as open-ended reminders
+    // (no time-boxed focus) while practice templates land in the
+    // editor with their preset length already filled in.
+    ...(typeof template.draft.durationMinutes === "number"
+      ? { durationMinutes: template.draft.durationMinutes }
+      : {}),
   };
 }
 

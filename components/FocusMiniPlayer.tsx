@@ -130,7 +130,7 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
   const segments = useSegments();
   const scheme = useResolvedScheme();
   const isDark = scheme === "dark";
-  const { session, endSession } = useFocus();
+  const { session, endSession, pauseSession, resumeSession } = useFocus();
   const { sessions: studySessions } = useStudySessions();
   const [ending, setEnding] = useState(false);
 
@@ -138,6 +138,12 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
   // the number updates without us having to push state on every
   // render of the surrounding tree. Cleared whenever the session
   // goes away so we don't keep firing after teardown.
+  //
+  // Also paused: we keep ticking even when the session is paused
+  // so the (frozen) timer label STILL reflects "the moment the
+  // user paused" — without the tick the label would freeze at
+  // whatever value the JS thread last computed, which can drift
+  // a few hundred ms behind the pause action.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!session) return;
@@ -149,9 +155,15 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
   // that signals "this is live, not a stale frame." Restarts on every
   // session change so closing + reopening a session resets the rhythm
   // cleanly. Native-driven so it never competes with JS for frames.
+  //
+  // When the session is PAUSED we stop the loop and leave the halo
+  // dim — the dot itself stays opaque but the breathing motion is
+  // exactly what communicates "live", so freezing it is the
+  // strongest visual cue we have that the session is on hold.
   const pulse = useRef(new Animated.Value(0)).current;
+  const isPaused = Boolean(session?.pausedAt);
   useEffect(() => {
-    if (!session) return;
+    if (!session || isPaused) return;
     pulse.setValue(0);
     const loop = Animated.loop(
       Animated.sequence([
@@ -171,7 +183,7 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
     );
     loop.start();
     return () => loop.stop();
-  }, [session, pulse]);
+  }, [session, pulse, isPaused]);
 
   const hidden = shouldHideForSegments(segments);
 
@@ -207,6 +219,20 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
     router.push("/journey");
   }, [router]);
 
+  const handleTogglePause = useCallback(() => {
+    if (!session) return;
+    // Idempotent on both sides — pauseSession is a no-op when
+    // already paused, resumeSession is a no-op when not paused.
+    // Reading from session.pausedAt at click time keeps the
+    // dispatch correct even if the user spam-taps the button
+    // faster than the state update can re-render the icon.
+    if (session.pausedAt) {
+      resumeSession();
+    } else {
+      pauseSession();
+    }
+  }, [session, pauseSession, resumeSession]);
+
   if (!session || hidden) return null;
 
   // Resolve a display name for the strip. Priority:
@@ -221,8 +247,31 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
   const title = routineName ?? "Focus Mode";
   const subtitle = summarizeBlockedApps(session.blockedAppIds);
 
-  const elapsedMs = Math.max(0, now - session.startedAt);
-  const elapsedLabel = formatElapsed(elapsedMs);
+  // Effective elapsed math:
+  //   raw  = now - startedAt                 (wall-clock age)
+  //   eff  = raw - accumulatedPausedMs       (minus prior pauses)
+  //          - (paused ? now - pausedAt : 0) (minus current pause)
+  // This is the same formula used by ActiveFocusCard and the
+  // stale-session sweeper — kept in sync by being short enough to
+  // not warrant extracting a shared util.
+  const accumPaused = session.accumulatedPausedMs ?? 0;
+  const openPause = session.pausedAt ? Math.max(0, now - session.pausedAt) : 0;
+  const elapsedMs = Math.max(0, now - session.startedAt - accumPaused - openPause);
+
+  // Display mode:
+  //   • durationMs set  → countdown (max(0, duration - elapsed))
+  //   • durationMs unset → elapsed counter (legacy / sermon mode)
+  // The label under the time string changes too ("LEFT" vs
+  // "ELAPSED") so the user reads the number correctly at a glance.
+  const hasDuration =
+    typeof session.durationMs === "number" && session.durationMs > 0;
+  const remainingMs = hasDuration
+    ? Math.max(0, (session.durationMs ?? 0) - elapsedMs)
+    : 0;
+  const timeLabel = hasDuration
+    ? formatElapsed(remainingMs)
+    : formatElapsed(elapsedMs);
+  const timeMetaLabel = hasDuration ? "Left" : "Elapsed";
 
   // Theme-aware glass. Mirrors GlassTabBar's treatment so the two
   // pills read as a stacked pair under all backgrounds. The
@@ -271,7 +320,7 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
       <Pressable
         onPress={handleOpen}
         accessibilityRole="button"
-        accessibilityLabel={`Focus mode active. ${title}. ${elapsedLabel} elapsed. Tap to manage.`}
+        accessibilityLabel={`Focus mode active. ${title}. ${timeLabel} ${timeMetaLabel.toLowerCase()}.${isPaused ? " Paused." : ""} Tap to manage.`}
         style={({ pressed }) => ({
           marginHorizontal: 16,
           height: PILL_HEIGHT,
@@ -387,9 +436,14 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
             </Text>
           </View>
 
-          {/* Tabular-spaced elapsed time so the digits don't jiggle
-              as they tick (1:09 → 1:10 wouldn't shift width). */}
-          <View className="pr-2 pl-1 items-end">
+          {/* Tabular-spaced time so the digits don't jiggle as they
+              tick (1:09 → 1:10 wouldn't shift width). Dims slightly
+              while paused so the user sees the frozen-timer state
+              even before they read the LEFT/ELAPSED label. */}
+          <View
+            className="pr-2 pl-1 items-end"
+            style={{ opacity: isPaused ? 0.55 : 1 }}
+          >
             <Text
               className="text-[13px]"
               style={{
@@ -399,7 +453,7 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
                 letterSpacing: 0.2,
               }}
             >
-              {elapsedLabel}
+              {timeLabel}
             </Text>
             <Text
               className="text-[9.5px] tracking-[1px] uppercase"
@@ -409,9 +463,58 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
                 marginTop: 1,
               }}
             >
-              Elapsed
+              {timeMetaLabel}
             </Text>
           </View>
+
+          {/* Pause / Resume — icon-only round button. Only rendered
+              for time-boxed sessions (hasDuration). Open-ended
+              sessions skip pause since "pausing an elapsed counter
+              that has no target" has no clear meaning. The icon
+              swaps based on session.pausedAt. Wrapping View+Pressable
+              keeps event bubbling contained to the body's onOpen. */}
+          {hasDuration ? (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation?.();
+                handleTogglePause();
+              }}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isPaused ? "Resume focus session" : "Pause focus session"
+              }
+              style={({ pressed }) => ({
+                width: 30,
+                height: 30,
+                borderRadius: 15,
+                backgroundColor: endBg,
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 6,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              {isPaused ? (
+                // Play triangle — single Path so the geometry stays
+                // crisp at 11pt. Slight rightward x offset (1.2)
+                // optically centers the triangle in the round
+                // button since the visual mass leans left.
+                <Svg width={11} height={11} viewBox="0 0 24 24" fill="none">
+                  <Path d="M6 4l14 8-14 8V4z" fill={endLabelColor} />
+                </Svg>
+              ) : (
+                // Pause icon — two rounded bars. Rendered as two
+                // narrow Paths so we get the rounded ends without
+                // needing an Rx attribute (which SVG paths support
+                // but is finicky to compute by hand for tiny bars).
+                <Svg width={11} height={11} viewBox="0 0 24 24" fill="none">
+                  <Path d="M6 4h4v16H6z" fill={endLabelColor} />
+                  <Path d="M14 4h4v16h-4z" fill={endLabelColor} />
+                </Svg>
+              )}
+            </Pressable>
+          ) : null}
 
           {/* End pill — wrapped in a View+Pressable so the inner
               Pressable's onPress stops bubbling to the body. Same

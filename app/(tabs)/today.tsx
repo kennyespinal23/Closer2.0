@@ -753,67 +753,141 @@ function SermonCard({
       className="rounded-3xl overflow-hidden border border-border bg-surface"
       style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
     >
-      {/* Hero strip — the sermon type's icon with a per-type accent glow.
-          The hero PNG bg matches bg-surface so it blends seamlessly.
+      {/*
+        Hero strip. Two render modes — choice is driven entirely by
+        whether the sermon type ships a `homeHero` landscape asset:
 
-          Layout: the eyebrow row (type name + optional completed badge)
-          owns the top 36pt of the strip in normal flow. The illustration
-          + accent glow live in the flex-1 remainder, centered. This
-          replaces an older absolute-positioned eyebrow that visually
-          collided with the top of the hero PNG when the illustration's
-          opaque ink extended close to the upper edge (clearly visible
-          on the Daily Church sun-arch). Keeping the eyebrow in flow
-          guarantees consistent clearance regardless of which type's
-          hero is rendered. */}
-      {/* Hero strip — promoted to 200pt (was 176pt) so the
-          illustration commands more visual weight when the card
-          is the home page hero rather than a mid-stack card. The
-          eyebrow row keeps the same 36pt vertical claim so the
-          extra height all goes to the illustration + glow. */}
+          • homeHero PRESENT (currently Daily Church):
+              Full-bleed landscape image fills the entire strip
+              edge-to-edge. The eyebrow (type name) and the
+              optional Completed badge overlay the image, with a
+              soft top gradient to guarantee legibility on the
+              bright sunset tones. No accent-glow / centered glyph
+              — the photo IS the illustration.
+
+          • homeHero ABSENT (every other type, for now):
+              Classic compact treatment — eyebrow row in normal
+              flow, then the small `hero` glyph centered with the
+              per-type accent glow behind it. This is the legacy
+              look every sermon type currently has, kept as the
+              fallback so adding a homeHero to a new type is an
+              additive change (no risk of regressing the others).
+
+        Strip height is 200pt for both modes so card height stays
+        stable as types acquire their own homeHero assets over time.
+      */}
       <View className="h-[200px] w-full overflow-hidden">
-        <View className="px-5 pt-4 flex-row items-center justify-between">
-          <Text
-            className="text-[10px] tracking-[3px] uppercase"
-            style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              color: type.accent,
-            }}
-          >
-            {type.name}
-          </Text>
-          {/* Completed badge — sits at the eyebrow's right edge so
-              the row reads as a single header band rather than two
-              floating chips above the hero. Hidden until the user
-              actually finishes today's sermon. */}
-          {completed ? <CompletedBadge /> : null}
-        </View>
-
-        <View className="flex-1 items-center justify-center relative">
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <CardAccentGlow color={type.accent} />
+        {type.homeHero ? (
+          // ── Full-bleed landscape ────────────────────────────
+          <View style={{ flex: 1, position: "relative" }}>
+            <Image
+              source={type.homeHero}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: "100%",
+                height: "100%",
+              }}
+              // `cover` not `contain` — we want the photo to fill
+              // the strip with whatever crop the aspect ratio
+              // requires, instead of letterboxing. The source
+              // assets are composed to keep the focal subject in
+              // the middle so cover-crop is safe.
+              resizeMode="cover"
+              accessibilityIgnoresInvertColors
+            />
+            {/* Top legibility gradient — short fade so the
+                eyebrow + completed badge sit on a darker band
+                without darkening the focal subject below. SVG
+                gradient (same lib BookCover and the template
+                cards use) so we don't pull in a new dep. */}
+            <Svg
+              pointerEvents="none"
+              width="100%"
+              height={64}
+              style={{ position: "absolute", top: 0, left: 0, right: 0 }}
+            >
+              <Defs>
+                <RadialGradient id="sc-top-fade" cx="50%" cy="0%" rx="100%" ry="100%">
+                  <Stop offset="0" stopColor="#000000" stopOpacity={0.35} />
+                  <Stop offset="1" stopColor="#000000" stopOpacity={0} />
+                </RadialGradient>
+              </Defs>
+              <Rect x={0} y={0} width="100%" height={64} fill="url(#sc-top-fade)" />
+            </Svg>
+            {/* Eyebrow overlay — white text so it lifts off the
+                sunset palette. Same row layout as the fallback
+                so designers can swap homeHero in/out per type
+                without rethinking the chip placement. */}
+            <View
+              className="px-5 pt-4 flex-row items-center justify-between"
+              pointerEvents="none"
+            >
+              <Text
+                className="text-[10px] tracking-[3px] uppercase"
+                style={{
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  color: "#FFFFFF",
+                  // Subtle text shadow gives the eyebrow a
+                  // floor to sit on even when the gradient is
+                  // gentle — covers the rare crop case where
+                  // the top of the photo is unusually bright.
+                  textShadowColor: "rgba(0, 0, 0, 0.4)",
+                  textShadowOffset: { width: 0, height: 1 },
+                  textShadowRadius: 4,
+                }}
+              >
+                {type.name}
+              </Text>
+              {completed ? <CompletedBadge /> : null}
+            </View>
           </View>
+        ) : (
+          // ── Compact icon + accent-glow (legacy) ────────────
+          <>
+            <View className="px-5 pt-4 flex-row items-center justify-between">
+              <Text
+                className="text-[10px] tracking-[3px] uppercase"
+                style={{
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  color: type.accent,
+                }}
+              >
+                {type.name}
+              </Text>
+              {completed ? <CompletedBadge /> : null}
+            </View>
 
-          {/* Illustration sized to 150x128 (was 130x110) — proportional
-              bump to match the taller hero. Heavy-enough that the
-              illustration carries the eye when the user lands on the
-              screen. */}
-          <Image
-            source={type.hero}
-            style={{ width: 150, height: 128 }}
-            resizeMode="contain"
-          />
-        </View>
+            <View className="flex-1 items-center justify-center relative">
+              <View
+                pointerEvents="none"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <CardAccentGlow color={type.accent} />
+              </View>
+
+              {/* Illustration sized to 150x128 — heavy enough
+                  that the icon carries the eye when the user
+                  lands on the screen. */}
+              <Image
+                source={type.hero}
+                style={{ width: 150, height: 128 }}
+                resizeMode="contain"
+              />
+            </View>
+          </>
+        )}
       </View>
 
       {/* Body — title bumped to 25px (was 22px) so the sermon's name

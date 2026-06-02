@@ -15,7 +15,21 @@ import type { ImageSourcePropType } from "react-native";
  *   - accent:     a hex color sampled from the icon, used to
  *                 tint the soft glow behind the hero so each
  *                 sermon intro feels distinct.
- *   - hero:       require()'d PNG cropped from the composite.
+ *   - hero:       The compact glyph illustration. This is the
+ *                 "icon" version — small composition cropped from
+ *                 the composite plate, intended for tight spots:
+ *                 notification thumbnails, milestone summaries,
+ *                 small list rows. Rendered CENTERED and CONTAINED
+ *                 (not full-bleed) on whatever surface it appears.
+ *   - homeHero:   OPTIONAL larger landscape artwork meant to be
+ *                 rendered FULL-BLEED behind the home-screen
+ *                 hero card. Wider/atmospheric where `hero` is
+ *                 dense/glyphic. When absent, the home SermonCard
+ *                 falls back to the centered `hero` icon with the
+ *                 colored accent-glow treatment.
+ *                 First type to ship this is Daily Church; each
+ *                 other type can add its own here over time
+ *                 without any call-site changes.
  *
  * Keep this list ordered to match the design plate — the daily
  * rotation indexes into it directly.
@@ -28,6 +42,7 @@ export type SermonType = {
   description: string;
   accent: string;
   hero: ImageSourcePropType;
+  homeHero?: ImageSourcePropType;
 };
 
 export const SERMON_TYPES: readonly SermonType[] = [
@@ -40,6 +55,13 @@ export const SERMON_TYPES: readonly SermonType[] = [
       "A short, daily teaching to draw you near. The kind of word you'd hear on a Sunday morning — but for the middle of your week.",
     accent: "#FF8B3D",
     hero: require("../assets/sermon-types/daily-church.png"),
+    // Landscape sunset with a chapel on a distant hill and a
+    // winding road leading up to it. Visually evokes "the path
+    // toward Sunday in the middle of your week" — the same line
+    // the type's description carries. Used full-bleed behind the
+    // home hero card; the small `hero` glyph above stays the
+    // notification + milestone-screen asset.
+    homeHero: require("../assets/sermon-types/daily-church-home-hero.png"),
   },
   {
     id: "jesus-only",

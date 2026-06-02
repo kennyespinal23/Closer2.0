@@ -828,45 +828,51 @@ function AppChip({
   onPress: () => void;
 }) {
   const colors = useColors();
+  // See DayChip — NativeWind interop drops `width: "25%"` from
+  // Pressable, so the wrap-grid was packing 7 per row instead of
+  // 4 and the names ran together ("FacebookSnapchat",
+  // "MessagesWhatsApp"). The wrapper View enforces the column
+  // width; the Pressable handles inner padding + tap-state opacity.
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`Toggle ${name}`}
-      accessibilityState={{ selected }}
-      style={({ pressed }) => ({
-        width: "25%", // 4 chips per row on phones
-        paddingHorizontal: 6,
-        paddingVertical: 8,
-        alignItems: "center",
-        opacity: pressed ? 0.6 : 1,
-      })}
-    >
-      <View
-        style={{
-          borderRadius: 14,
-          padding: 3,
-          borderWidth: 2,
-          borderColor: selected ? colors.ink : "transparent",
-          opacity: selected ? 1 : 0.32,
-        }}
+    <View style={{ width: "25%" }}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`Toggle ${name}`}
+        accessibilityState={{ selected }}
+        style={({ pressed }) => ({
+          paddingHorizontal: 6,
+          paddingVertical: 8,
+          alignItems: "center",
+          opacity: pressed ? 0.6 : 1,
+        })}
       >
-        <BrandGlyph appId={appId} size="md" />
-      </View>
-      <Text
-        numberOfLines={1}
-        style={{
-          fontFamily: "PlusJakartaSans_600SemiBold",
-          fontSize: 11,
-          marginTop: 6,
-          color: selected ? colors.ink : colors.inkSubtle,
-          textAlign: "center",
-          maxWidth: 64,
-        }}
-      >
-        {name}
-      </Text>
-    </Pressable>
+        <View
+          style={{
+            borderRadius: 14,
+            padding: 3,
+            borderWidth: 2,
+            borderColor: selected ? colors.ink : "transparent",
+            opacity: selected ? 1 : 0.32,
+          }}
+        >
+          <BrandGlyph appId={appId} size="md" />
+        </View>
+        <Text
+          numberOfLines={1}
+          style={{
+            fontFamily: "PlusJakartaSans_600SemiBold",
+            fontSize: 11,
+            marginTop: 6,
+            color: selected ? colors.ink : colors.inkSubtle,
+            textAlign: "center",
+            maxWidth: 64,
+          }}
+        >
+          {name}
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -896,37 +902,47 @@ function DayChip({
   accessibilityLabel: string;
 }) {
   const colors = useColors();
+  // NativeWind's CSS interop wraps Pressable and reliably drops
+  // `flex: 1` and visual style props (backgroundColor / borderColor)
+  // when they're passed inline on the Pressable itself. Wrapping
+  // the Pressable in a plain View that owns the layout (flex / margin)
+  // and giving the Pressable just its visual chrome restores both:
+  // the chips lay out evenly across the row, and the selected blue
+  // pill / faint unselected wash both paint correctly.
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ selected }}
-      style={({ pressed }) => ({
-        flex: 1,
-        marginHorizontal: 3,
-        height: 44,
-        borderRadius: 22,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: selected
-          ? PRIMARY_BLUE
-          : withAlphaHex(colors.ink, 0.06),
-        borderWidth: selected ? 0 : 1,
-        borderColor: withAlphaHex(colors.ink, 0.12),
-        opacity: pressed ? 0.7 : 1,
-      })}
-    >
-      <Text
-        style={{
-          fontFamily: "PlusJakartaSans_700Bold",
-          fontSize: 14,
-          color: selected ? "#FFFFFF" : colors.ink,
-        }}
+    <View style={{ flex: 1, marginHorizontal: 3 }}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityState={{ selected }}
+        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
       >
-        {label}
-      </Text>
-    </Pressable>
+        <View
+          style={{
+            height: 44,
+            borderRadius: 22,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: selected
+              ? PRIMARY_BLUE
+              : withAlphaHex(colors.ink, 0.06),
+            borderWidth: selected ? 0 : 1,
+            borderColor: withAlphaHex(colors.ink, 0.12),
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              fontSize: 14,
+              color: selected ? "#FFFFFF" : colors.ink,
+            }}
+          >
+            {label}
+          </Text>
+        </View>
+      </Pressable>
+    </View>
   );
 }
 
@@ -994,36 +1010,42 @@ function PresetSegment({
   onPress: () => void;
 }) {
   const colors = useColors();
+  // See DayChip — NativeWind CSS interop drops `flex: 1` on
+  // Pressable, which made the three segments collapse to content
+  // width and bunch up at the left ("WeekdaysWeekendsEvery day"
+  // as one mashed line). A flex-1 wrapper View owns the row
+  // distribution; the Pressable just paints its segment chrome.
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ selected: active }}
-      style={({ pressed }) => ({
-        flex: 1,
-        paddingVertical: 7,
-        borderRadius: 8,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: active ? colors.surface : "transparent",
-        borderWidth: active ? 1 : 0,
-        borderColor: withAlphaHex(colors.ink, 0.08),
-        opacity: pressed ? 0.7 : 1,
-      })}
-    >
-      <Text
-        style={{
-          fontFamily: active
-            ? "PlusJakartaSans_700Bold"
-            : "PlusJakartaSans_600SemiBold",
-          fontSize: 12.5,
-          color: active ? colors.ink : colors.inkMuted,
-        }}
+    <View style={{ flex: 1 }}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ selected: active }}
+        style={({ pressed }) => ({
+          paddingVertical: 7,
+          borderRadius: 8,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: active ? colors.surface : "transparent",
+          borderWidth: active ? 1 : 0,
+          borderColor: withAlphaHex(colors.ink, 0.08),
+          opacity: pressed ? 0.7 : 1,
+        })}
       >
-        {label}
-      </Text>
-    </Pressable>
+        <Text
+          style={{
+            fontFamily: active
+              ? "PlusJakartaSans_700Bold"
+              : "PlusJakartaSans_600SemiBold",
+            fontSize: 12.5,
+            color: active ? colors.ink : colors.inkMuted,
+          }}
+        >
+          {label}
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 

@@ -17,6 +17,7 @@ import { ShieldOverlay } from "@/components/ShieldOverlay";
 import { cancelDailyReminder } from "@/lib/notifications";
 import { momentDurationMin, resolveSermonType } from "@/lib/moments";
 import { formatMinutes, formatRemaining } from "@/lib/readingGoalFormat";
+import { getVerseOfDay } from "@/lib/verseOfDay";
 import { SOCIAL_APPS } from "@/lib/focus";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import { findMood } from "@/constants/moods";
@@ -407,6 +408,22 @@ export default function TodayScreen() {
           </View>
         </FadeIn>
 
+        {/* ─── Verse for today ─────────────────────────────────────
+            A slim scripture mini-card that lives between the
+            sermon hero and the rhythm timeline. Same width as
+            the sermon and a touch slimmer in vertical height
+            so it reads as a related quiet companion (devotional
+            flavor) rather than a competing feature.
+
+            The accent color is pulled from the current sermon
+            type so the verse, hero, and any per-type chrome
+            feel like one composition. */}
+        <FadeIn delayMs={110} durationMs={800}>
+          <View className="px-6 mt-4">
+            <VerseOfDay accent={sermonType.accent} />
+          </View>
+        </FadeIn>
+
         {/* ─── Today's rhythm — the timeline ──────────────────────
             Chronological view of every scheduled moment the user
             has set up for today: the sermon arrival, every enabled
@@ -770,6 +787,94 @@ function ReadingPill({
         />
       </Svg>
     </Pressable>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// VerseOfDay — slim scripture mini-card under the sermon hero
+// ─────────────────────────────────────────────────────────────────
+//
+// Sits in a narrow visual lane: same width as the sermon card,
+// noticeably less vertical mass. Three pieces:
+//
+//   • Small "VERSE FOR TODAY" eyebrow (uppercase, tracked, accent-colored)
+//   • The verse text itself (the only piece the eye should rest on)
+//   • Reference line ("PSALM 46:10") in the same caps style as the eyebrow
+//
+// We deliberately do NOT make this card pressable. Tapping it
+// would open… what? A standalone verse screen would feel like
+// invented surface area, and routing it into the sermon player
+// would be a confusing detour. Calm static content is the point.
+// If we ever want a "share" or "save" affordance, that gets
+// added as an explicit icon button, not the whole card.
+//
+// Themeing: pulls the per-sermon-type accent so the verse,
+// hero eyebrow, and any future per-type chrome read as one
+// composition. The accent only colors the small typographic
+// elements — never the background — so dark mode stays dark.
+
+function VerseOfDay({ accent }: { accent: string }) {
+  const colors = useColors();
+  // useMemo against the calendar date string (not the Date
+  // instance) so re-renders within the same day return the same
+  // verse without recomputing. Crossing midnight in the
+  // background would normally re-trigger but the screen
+  // remounts on tab change so the verse refreshes naturally
+  // when the user returns the next day.
+  const verse = useMemo(() => getVerseOfDay(), []);
+  return (
+    <View
+      className="rounded-2xl border border-border bg-surface px-5 py-4"
+      accessibilityRole="summary"
+      accessibilityLabel={`Verse for today: ${verse.text} — ${verse.reference}`}
+    >
+      {/* Eyebrow row — accent-colored small caps. The accent is
+          the brightest pixel in the card by design, signaling
+          "this is the topic" before the eye drops to the verse
+          body. */}
+      <Text
+        className="text-[10px] tracking-[2.5px] uppercase"
+        style={{
+          fontFamily: "PlusJakartaSans_700Bold",
+          color: accent,
+        }}
+      >
+        Verse for Today
+      </Text>
+
+      {/* Verse body. 15.5pt at line-height 22 reads well across
+          1–3 lines without feeling cramped. Letter-spacing
+          slightly negative (−0.2) tightens the verse copy enough
+          that long pulls (Isaiah 40:31, Jeremiah 29:11) fit in
+          three lines instead of spilling to four. We use curly
+          quotes around the verse — small touch that signals
+          "this is a quotation" without leaning on italics (the
+          Plus Jakarta italic isn't loaded, and faux-italic on
+          iOS looks rough). */}
+      <Text
+        className="text-[15.5px] leading-[22px] mt-1.5"
+        style={{
+          fontFamily: "PlusJakartaSans_500Medium",
+          color: colors.ink,
+          letterSpacing: -0.2,
+        }}
+      >
+        “{verse.text}”
+      </Text>
+
+      {/* Reference — small caps, same tracking as the eyebrow,
+          dimmed so it sits as metadata rather than competing
+          with the verse copy. */}
+      <Text
+        className="text-[10.5px] tracking-[1.8px] uppercase mt-2"
+        style={{
+          fontFamily: "PlusJakartaSans_700Bold",
+          color: colors.inkSubtle,
+        }}
+      >
+        {verse.reference}
+      </Text>
+    </View>
   );
 }
 

@@ -513,6 +513,24 @@ export default function TodayScreen() {
               onSermonPress={handlePlaySermon}
               studySessions={studySessions}
               activeFocusSession={focusSession}
+              // Quick-focus button: only rendered when no session
+              // is active (the takeover hero is the manage surface
+              // during a live session, so adding a "start new"
+              // affordance there would be confusing). Open-ended
+              // session — no duration cap, no routineId — so the
+              // user can decide on the fly when to End. Uses
+              // today's sermonDay so the persisted session still
+              // anchors to the day for stale-session cleanup math.
+              onStartQuickFocus={
+                focusSession
+                  ? undefined
+                  : () => {
+                      startFocusSession(todaysMoment.day).catch(() => {
+                        /* shield start is best-effort; persistence
+                           wrote regardless */
+                      });
+                    }
+              }
             />
           </View>
         </FadeIn>
@@ -551,34 +569,46 @@ export default function TodayScreen() {
         </FadeIn>
 
         {/* ─── Routine / Focus card ────────────────────────────────
-            Master toggle + featured routine. Demoted to support row
-            since the timeline above now surfaces every scheduled
-            routine; this card still owns the master-switch
-            controller affordance, which the timeline doesn't. */}
-        <FadeIn delayMs={280} durationMs={800}>
-          <View className="px-6 mt-2.5">
-            <RoutineCard
-              masterEnabled={focusPrefs.enabled}
-              sessionActive={focusSession !== null}
-              featured={featured}
-              onToggle={setFocusEnabled}
-              onEndSession={() => {
-                endFocusSession().catch(() => {});
-              }}
-              onOpen={() => {
-                // Tap routes to where the user expects: the routine
-                // editor when there's a routine to manage, the
-                // global focus settings otherwise. Same shape Opal
-                // uses (tap My Apps card → the app picker).
-                if (featured.routine) {
-                  router.push("/(tabs)/journey");
-                } else {
-                  router.push("/settings/focus");
-                }
-              }}
-            />
-          </View>
-        </FadeIn>
+            Master toggle + featured routine. Hidden when an active
+            focus session exists — at that point the ActiveFocusHero
+            up top owns the "what is focus doing right now?" surface,
+            and the mini-player at the tab bar owns the always-on
+            end-control. Leaving this card visible during an active
+            session would create THREE simultaneous focus surfaces
+            on home (hero + this + pill), which is the redundancy
+            the consolidation phase was meant to retire.
+
+            When no session is active this card stays — it's the
+            ONLY surface that exposes the master enable/disable
+            and the "next scheduled routine" preview, neither of
+            which the timeline or pill cover. */}
+        {!focusSession ? (
+          <FadeIn delayMs={280} durationMs={800}>
+            <View className="px-6 mt-2.5">
+              <RoutineCard
+                masterEnabled={focusPrefs.enabled}
+                sessionActive={focusSession !== null}
+                featured={featured}
+                onToggle={setFocusEnabled}
+                onEndSession={() => {
+                  endFocusSession().catch(() => {});
+                }}
+                onOpen={() => {
+                  // Tap routes to where the user expects: the
+                  // routine editor when there's a routine to
+                  // manage, the global focus settings otherwise.
+                  // Same shape Opal uses (tap My Apps card → the
+                  // app picker).
+                  if (featured.routine) {
+                    router.push("/(tabs)/journey");
+                  } else {
+                    router.push("/settings/focus");
+                  }
+                }}
+              />
+            </View>
+          </FadeIn>
+        ) : null}
 
         {/* ─── Last check-in (conditional) ────────────────────────
             Took the slot the old chapter-resume Continue-Reading
@@ -2827,6 +2857,7 @@ function TodayRhythm({
   onSermonPress,
   studySessions,
   activeFocusSession,
+  onStartQuickFocus,
 }: {
   sermonTime: { hour: number; minute: number } | undefined;
   sermonName: string;
@@ -2834,6 +2865,11 @@ function TodayRhythm({
   onSermonPress: () => void;
   studySessions: ReadonlyArray<StudySession>;
   activeFocusSession: { routineId?: string } | null;
+  /** Quick-focus CTA. When provided, the section header renders a
+   *  small "+ Focus" pill on the right. Parent decides when to
+   *  pass this in (we hide it during an active session — see the
+   *  parent's call site for the rationale). */
+  onStartQuickFocus?: () => void;
 }) {
   const router = useRouter();
   const colors = useColors();
@@ -2928,16 +2964,70 @@ function TodayRhythm({
 
   return (
     <View>
-      {/* Header — Opal-style section label. Title + supporting count
-          pill so the section reads as a discrete unit. */}
-      <View className="px-6 mb-3 flex-row items-baseline justify-between">
+      {/* Header — Opal-style section label. Title on the left,
+          quick-focus CTA (when offered) on the right. The CTA
+          replaces the previous "N moments" count because:
+            (a) the count is low-information — the user can see
+                the rows below and arrive at the same number;
+            (b) the right-side slot is the most reachable thumb
+                target for an action attached to the section;
+            (c) ad-hoc focus is the only "do something new"
+                affordance our home lacked relative to Opal,
+                so giving it pride of place here matters.
+          When `onStartQuickFocus` is undefined (during an active
+          session) we omit the pill — the hero takeover above is
+          already the manage surface, and a "start new" button
+          would let the user accidentally double-launch. */}
+      <View className="px-6 mb-3 flex-row items-center justify-between">
         <Text
           className="text-ink text-[12px] tracking-[2.5px] uppercase"
           style={{ fontFamily: "PlusJakartaSans_700Bold" }}
         >
           Today's rhythm
         </Text>
-        {items.length > 0 ? (
+        {onStartQuickFocus ? (
+          <Pressable
+            onPress={onStartQuickFocus}
+            accessibilityRole="button"
+            accessibilityLabel="Start a focus session"
+            style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+          >
+            <View
+              className="flex-row items-center rounded-full"
+              style={{
+                paddingLeft: 9,
+                paddingRight: 12,
+                paddingVertical: 5,
+                backgroundColor: withAlpha(FOCUS_HERO_ACCENT, 0.14),
+              }}
+            >
+              {/* Plus glyph — same caps-tracked style as the
+                  label so the pill reads as one unit. Drawn as
+                  text (not SVG) to dodge an extra import; the
+                  Plus Jakarta "+" sits well in the cap height. */}
+              <Text
+                style={{
+                  fontFamily: "PlusJakartaSans_800ExtraBold",
+                  fontSize: 14,
+                  lineHeight: 14,
+                  color: FOCUS_HERO_ACCENT,
+                  marginRight: 5,
+                }}
+              >
+                +
+              </Text>
+              <Text
+                className="text-[10.5px] tracking-[1.5px] uppercase"
+                style={{
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  color: FOCUS_HERO_ACCENT,
+                }}
+              >
+                Focus
+              </Text>
+            </View>
+          </Pressable>
+        ) : items.length > 0 ? (
           <Text
             className="text-ink-subtle text-[11px]"
             style={{ fontFamily: "PlusJakartaSans_500Medium" }}

@@ -565,13 +565,39 @@ export default function TodayScreen() {
           </View>
         </FadeIn>
 
+        {/* ─── "Your practice" section header ─────────────────────
+            Magazine-style chapter divider above the streak strip,
+            reading pill, and routine card — the three surfaces
+            that form the user's personal practice block (as
+            opposed to today's content above). Same treatment as
+            Practice's "Deepen your practice" header (19pt bold
+            mixed-case + 12.5pt subtitle), so the two tabs share
+            a section-heading rhythm and home stops reading as a
+            flat stack of disconnected widgets. */}
+        <FadeIn delayMs={180} durationMs={800}>
+          <View className="px-6 mt-9 mb-4">
+            <Text
+              className="text-ink text-[19px] leading-[24px] tracking-[-0.2px]"
+              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            >
+              Your practice
+            </Text>
+            <Text
+              className="text-ink-muted text-[12.5px] leading-[18px] mt-0.5"
+              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            >
+              The small anchors that keep you returning.
+            </Text>
+          </View>
+        </FadeIn>
+
         {/* ─── Streak strip ─────────────────────────────────────────
             Imprint-style compact card: one contextual prompt on top
             and 7 day cells beneath, with today highlighted by an
             outlined pill. Demoted to a supporting strip under the
             hero + timeline. */}
         <FadeIn delayMs={200} durationMs={800}>
-          <View className="px-6 mt-9">
+          <View className="px-6">
             <WeekStrip
               days={weekDays}
               prompt={streakPrompt(streak)}
@@ -3024,33 +3050,43 @@ function TodayRhythm({
 
   return (
     <View>
-      {/* Header — Opal-style section label. Title on the left,
-          quick-focus CTA (when offered) on the right. The CTA
-          replaces the previous "N moments" count because:
-            (a) the count is low-information — the user can see
-                the rows below and arrive at the same number;
-            (b) the right-side slot is the most reachable thumb
-                target for an action attached to the section;
-            (c) ad-hoc focus is the only "do something new"
-                affordance our home lacked relative to Opal,
-                so giving it pride of place here matters.
-          When `onStartQuickFocus` is undefined (during an active
-          session) we omit the pill — the hero takeover above is
-          already the manage surface, and a "start new" button
-          would let the user accidentally double-launch. */}
-      <View className="px-6 mb-3 flex-row items-center justify-between">
-        <Text
-          className="text-ink text-[12px] tracking-[2.5px] uppercase"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-        >
-          Today's rhythm
-        </Text>
+      {/* Header — editorial section label, modeled on Practice's
+          TemplatesSectionHeader: 19pt mixed-case title with a
+          12.5pt poetic subtitle below. Replaces the older
+          all-caps "TODAY'S RHYTHM" eyebrow that read like a
+          settings label. The right-side "+ Focus" pill stays in
+          the same slot but now top-aligns with the title (not
+          the subtitle) so the pill anchors to the line that
+          users actually read first.
+
+          The previous "{N} moments" count is gone: the subtitle
+          ("What's planned, what's done.") does the same framing
+          job with more voice, and the user can count the rows
+          themselves if they care. */}
+      <View className="px-6 mb-4 flex-row items-start justify-between">
+        <View className="flex-1 pr-3">
+          <Text
+            className="text-ink text-[19px] leading-[24px] tracking-[-0.2px]"
+            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          >
+            Today's rhythm
+          </Text>
+          <Text
+            className="text-ink-muted text-[12.5px] leading-[18px] mt-0.5"
+            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          >
+            What&apos;s planned, what&apos;s done.
+          </Text>
+        </View>
         {onStartQuickFocus ? (
           <Pressable
             onPress={onStartQuickFocus}
             accessibilityRole="button"
             accessibilityLabel="Start a focus session"
-            style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.88 : 1,
+              marginTop: 3,
+            })}
           >
             <View
               className="flex-row items-center rounded-full"
@@ -3087,13 +3123,6 @@ function TodayRhythm({
               </Text>
             </View>
           </Pressable>
-        ) : items.length > 0 ? (
-          <Text
-            className="text-ink-subtle text-[11px]"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-          >
-            {items.length} moment{items.length === 1 ? "" : "s"}
-          </Text>
         ) : null}
       </View>
 

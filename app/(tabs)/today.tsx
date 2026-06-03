@@ -527,6 +527,11 @@ export default function TodayScreen() {
             <WeekStrip
               days={weekDays}
               prompt={streakPrompt(streak)}
+              streakCount={streak.current}
+              // Today's sermon-type accent doubles as the streak
+              // strip's accent. See WeekStrip header for why per-day
+              // accents would require data we don't currently track.
+              accent={sermonType.accent}
             />
           </View>
         </FadeIn>
@@ -1806,18 +1811,76 @@ type WeekDay = {
 function WeekStrip({
   days,
   prompt,
+  streakCount,
+  accent,
 }: {
   days: ReadonlyArray<WeekDay>;
   prompt: string;
+  /** Current streak length. When > 0 we render a bold count
+   *  badge above the day cells; when 0 we render the prompt
+   *  text instead so the strip never sits empty-feeling. */
+  streakCount: number;
+  /** Current sermon-type accent (warm orange for Daily Church,
+   *  violet for Sabbath Rest, etc). All engaged-day dots use
+   *  this color, so the strip visually ties to today's hero.
+   *
+   *  Why not per-day-type accents? Historical "what type was
+   *  played on date X" data isn't tracked — we'd need to either
+   *  re-derive sermon-day-for-date from rotation logic (fragile
+   *  to content changes) or extend the progress store with a
+   *  migration. Using today's accent for every engaged dot is
+   *  a clean, intentional simplification: the strip becomes a
+   *  small reflection of "this week's color", refreshed daily
+   *  as the sermon rotates. */
+  accent: string;
 }) {
+  // Streak count display swaps in over the prompt when > 0. The
+  // count itself gets the accent color and a big bold treatment
+  // so the user reads it as a small reward, not a stat. We keep
+  // the prompt for the empty state because the count would be
+  // "0 day streak" which is visually deflating.
+  const hasStreak = streakCount > 0;
   return (
     <View className="rounded-2xl border border-border bg-surface px-5 py-4">
-      <Text
-        className="text-ink text-[13px] leading-[18px] text-center"
-        style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-      >
-        {prompt}
-      </Text>
+      {hasStreak ? (
+        <View className="items-center">
+          <View className="flex-row items-baseline">
+            <Text
+              className="text-[28px] leading-[32px] tracking-[-0.6px]"
+              style={{
+                fontFamily: "PlusJakartaSans_800ExtraBold",
+                color: accent,
+              }}
+            >
+              {streakCount}
+            </Text>
+            <Text
+              className="text-ink text-[14px] leading-[18px] ml-1.5"
+              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            >
+              {streakCount === 1 ? "day streak" : "day streak"}
+            </Text>
+          </View>
+          {/* Quiet secondary line — keeps the original prompt
+              copy ("3-day streak — honored today" etc.) as
+              context under the count. Useful for distinguishing
+              "honored today" vs "today is still waiting", which
+              the number alone can't communicate. */}
+          <Text
+            className="text-ink-subtle text-[11.5px] leading-[16px] mt-0.5"
+            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          >
+            {prompt}
+          </Text>
+        </View>
+      ) : (
+        <Text
+          className="text-ink text-[13px] leading-[18px] text-center"
+          style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+        >
+          {prompt}
+        </Text>
+      )}
       <View className="flex-row justify-between mt-3">
         {days.map((day, i) => (
           <DayDot
@@ -1825,6 +1888,7 @@ function WeekStrip({
             dateISO={day.dateISO}
             engaged={day.engaged}
             isToday={i === days.length - 1}
+            accent={accent}
           />
         ))}
       </View>
@@ -1842,10 +1906,14 @@ function DayDot({
   dateISO,
   engaged,
   isToday,
+  accent,
 }: {
   dateISO: string;
   engaged: boolean;
   isToday: boolean;
+  /** Color to use for engaged days + the today-outline. Sermon
+   *  type accent passed down from WeekStrip → parent. */
+  accent: string;
 }) {
   const colors = useColors();
   // Parse the ISO date as a local date — never `new Date(iso)`,
@@ -1855,20 +1923,32 @@ function DayDot({
   const date = new Date(y!, (m ?? 1) - 1, d ?? 1);
   const weekday = ["S", "M", "T", "W", "T", "F", "S"][date.getDay()];
 
+  // Three visual states (mutually exclusive):
+  //   • engaged       — filled accent dot
+  //   • today, unengaged — hollow dot with accent border
+  //   • neither       — small muted dot (the baseline)
   let dotBg: string = colors.border;
   let dotBorder: string | undefined;
   if (engaged) {
-    dotBg = colors.primary;
+    dotBg = accent;
   } else if (isToday) {
     dotBg = "transparent";
-    dotBorder = colors.primary;
+    dotBorder = accent;
   }
+
+  // Engaged days get a slightly bigger dot (10 vs 8) so they
+  // visually outweigh empty days — small reward each time the
+  // user looks at the strip. Today-not-engaged stays at the
+  // baseline 8 so the row doesn't visually jump if the user
+  // hasn't honored today yet (which would otherwise read as
+  // "complete" before the work is done).
+  const dotSize = engaged ? 10 : 8;
 
   return (
     <View
       style={{
         borderWidth: 1.5,
-        borderColor: isToday ? colors.primary : "transparent",
+        borderColor: isToday ? accent : "transparent",
         borderRadius: 14,
         paddingHorizontal: 5,
         paddingVertical: 4,
@@ -1876,19 +1956,25 @@ function DayDot({
       }}
     >
       <Text
-        className={`text-[11px] tracking-[0.5px] ${
-          isToday ? "text-primary" : "text-ink-muted"
-        }`}
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        className="text-[11px] tracking-[0.5px]"
+        style={{
+          fontFamily: "PlusJakartaSans_700Bold",
+          // Engaged days get the accent on their letter too so
+          // the "we did it" visual is read by the eye in two
+          // places (letter + dot) instead of one. Today (without
+          // engagement) still uses accent to mark "you are here".
+          // Other days stay muted.
+          color: engaged || isToday ? accent : colors.inkMuted,
+        }}
       >
         {weekday}
       </Text>
       <View
         style={{
           marginTop: 6,
-          width: 8,
-          height: 8,
-          borderRadius: 4,
+          width: dotSize,
+          height: dotSize,
+          borderRadius: dotSize / 2,
           backgroundColor: dotBg,
           borderWidth: dotBorder ? 1.5 : 0,
           borderColor: dotBorder,

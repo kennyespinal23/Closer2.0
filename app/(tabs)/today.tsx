@@ -351,38 +351,68 @@ export default function TodayScreen() {
             top-right but the drawer was top-left, which made the
             two feel disconnected — tapping right, then the left
             half of the screen animates.) */}
-        <View className="px-6 pt-2 flex-row items-center">
-          <Pressable
-            hitSlop={12}
-            onPress={handleOpenProfile}
-            accessibilityRole="button"
-            accessibilityLabel="Open profile"
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-            className="w-10 h-10 rounded-full bg-accent-soft border border-border items-center justify-center"
-          >
-            <Text
-              className="text-primary text-[14px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        {/* ─── Editorial header ──────────────────────────────────────
+            Matches Practice's framing pattern: big title + warm
+            tagline. The title here is the personalized greeting
+            ("Good evening, friend"), and the tagline is a one-line
+            time-of-day-aware devotional invitation ("Wind down with
+            today's word."). The avatar sits inline at the start of
+            the title row so the layout reads as one editorial unit
+            instead of an avatar floating above a separate title.
+
+            Why a separate tagline rather than packing the greeting?
+            The greeting alone reads as a "header bar". A tagline
+            below — same as Practice — turns it into a magazine page
+            opener: name + framing line. Costs nothing visually, but
+            sets the tone before the user reaches the sermon. */}
+        <View className="px-6 pt-2">
+          <View className="flex-row items-center">
+            <Pressable
+              hitSlop={12}
+              onPress={handleOpenProfile}
+              accessibilityRole="button"
+              accessibilityLabel="Open profile"
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              className="w-10 h-10 rounded-full bg-accent-soft border border-border items-center justify-center"
             >
-              {firstName.charAt(0).toUpperCase()}
+              <Text
+                className="text-primary text-[14px]"
+                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              >
+                {firstName.charAt(0).toUpperCase()}
+              </Text>
+            </Pressable>
+            <Text
+              className="flex-1 ml-3 text-ink text-[28px] leading-[36px] tracking-[-0.4px]"
+              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              numberOfLines={1}
+            >
+              {/*
+                Personalized greeting: time-of-day phrase + first name.
+                The fallback ("friend" lowercase) is intentional — when
+                the onboarding name is missing, "Good evening, friend"
+                feels warmer than capitalizing a placeholder which
+                would read as "Friend" the proper noun. Trimmed and
+                numberOfLines=1 because a very long given name on a
+                narrow phone would push the header into two lines and
+                throw the whole strip off vertically.
+              */}
+              {greeting}, {firstName}
             </Text>
-          </Pressable>
+          </View>
+          {/* Tagline — sits under the title with the same left inset
+              as the title text (40pt avatar + 12pt ml-3 ≈ 52pt). The
+              indent keeps the tagline visually attached to the title
+              rather than the avatar, which makes the avatar feel
+              like an anchor rather than a floating chip. */}
           <Text
-            className="flex-1 ml-3 text-ink text-[28px] leading-[36px] tracking-[-0.4px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-            numberOfLines={1}
+            className="text-ink-muted text-[14px] leading-[20px] mt-2"
+            style={{
+              fontFamily: "PlusJakartaSans_400Regular",
+              marginLeft: 52,
+            }}
           >
-            {/*
-              Personalized greeting: time-of-day phrase + first name.
-              The fallback ("friend" lowercase) is intentional — when
-              the onboarding name is missing, "Good evening, friend"
-              feels warmer than capitalizing a placeholder which
-              would read as "Friend" the proper noun. Trimmed and
-              numberOfLines=1 because a very long given name on a
-              narrow phone would push the header into two lines and
-              throw the whole strip off vertically.
-            */}
-            {greeting}, {firstName}
+            {getHomeTagline()}
           </Text>
         </View>
 
@@ -399,7 +429,7 @@ export default function TodayScreen() {
             from the user's path-to-engagement; the supporting
             sections drop below the timeline.) */}
         <FadeIn delayMs={80} durationMs={900}>
-          <View className="px-6 mt-4">
+          <View className="px-6 mt-6">
             {/* Hero is state-driven. Three modes:
                   1. focusSession active  → ActiveFocusHero
                      The user is currently in a focus session — the
@@ -487,7 +517,7 @@ export default function TodayScreen() {
             type so the verse, hero, and any per-type chrome
             feel like one composition. */}
         <FadeIn delayMs={110} durationMs={800}>
-          <View className="px-6 mt-4">
+          <View className="px-6 mt-7">
             <VerseOfDay accent={sermonType.accent} />
           </View>
         </FadeIn>
@@ -505,7 +535,7 @@ export default function TodayScreen() {
             template-card flow both feed into — adding a routine
             on Practice immediately surfaces here. */}
         <FadeIn delayMs={140} durationMs={800}>
-          <View className="mt-6">
+          <View className="mt-9">
             <TodayRhythm
               sermonTime={answers.dailyReminderTime}
               sermonName={todaysMoment.title}
@@ -541,7 +571,7 @@ export default function TodayScreen() {
             outlined pill. Demoted to a supporting strip under the
             hero + timeline. */}
         <FadeIn delayMs={200} durationMs={800}>
-          <View className="px-6 mt-6">
+          <View className="px-6 mt-9">
             <WeekStrip
               days={weekDays}
               prompt={streakPrompt(streak)}
@@ -558,7 +588,7 @@ export default function TodayScreen() {
             Slim one-row pill: tiny iOS-blue activity ring + minutes
             label. Tap drills into /reading-goal for the full chart. */}
         <FadeIn delayMs={240} durationMs={800}>
-          <View className="px-6 mt-4">
+          <View className="px-6 mt-4 mb-2">
             <ReadingPill
               minutes={readingMinutes}
               goal={readingGoal}
@@ -584,7 +614,7 @@ export default function TodayScreen() {
             which the timeline or pill cover. */}
         {!focusSession ? (
           <FadeIn delayMs={280} durationMs={800}>
-            <View className="px-6 mt-2.5">
+            <View className="px-6 mt-4">
               <RoutineCard
                 masterEnabled={focusPrefs.enabled}
                 sessionActive={focusSession !== null}
@@ -2779,6 +2809,36 @@ function getGreeting(now: Date = new Date()): string {
   if (h < 17) return "Good afternoon";
   if (h < 21) return "Good evening";
   return "Peace to you";
+}
+
+/**
+ * Tagline that sits under the greeting on the home title row.
+ *
+ * Modeled on Practice's header pattern (page title + a single
+ * editorial line). Mirrors the time-of-day branching the
+ * greeting already does, so the two lines read as one
+ * intentional voice: "Good morning, friend / Begin the day in
+ * the Word."
+ *
+ * Tone notes:
+ *   • Short. One line, max ~7 words. Anything longer pushes
+ *     the title block past where the sermon hero should start.
+ *   • Verb-first. Each line nudges the user toward an action
+ *     (Begin / Return / Wind down / Rest) without sounding
+ *     prescriptive.
+ *   • Avoids "you" — feels like a quiet invitation, not a
+ *     command. Same restraint Imprint and Opal use.
+ *
+ * Defaults to evening when given an out-of-range hour so
+ * SSR/JSI clock skew never blanks the line.
+ */
+function getHomeTagline(now: Date = new Date()): string {
+  const h = now.getHours();
+  if (h < 5) return "Late grace. The Word is still here.";
+  if (h < 12) return "Begin the day in the Word.";
+  if (h < 17) return "Pause. Return. Be still.";
+  if (h < 21) return "Wind down with today's word.";
+  return "End the day in scripture.";
 }
 
 /**

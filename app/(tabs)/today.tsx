@@ -1,5 +1,15 @@
-import { useMemo, useState } from "react";
-import { Image, Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Alert,
+  Animated,
+  Easing,
+  Image,
+  Pressable,
+  ScrollView,
+  Switch,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, {
   Defs,
@@ -70,6 +80,8 @@ export default function TodayScreen() {
     setEnabled: setFocusEnabled,
     startSession: startFocusSession,
     endSession: endFocusSession,
+    pauseSession: pauseFocusSession,
+    resumeSession: resumeFocusSession,
     reset: resetFocus,
   } = useFocus();
   const { sessions: studySessions, reset: resetStudySessions } =
@@ -388,23 +400,79 @@ export default function TodayScreen() {
             sections drop below the timeline.) */}
         <FadeIn delayMs={80} durationMs={900}>
           <View className="px-6 mt-4">
-            <SermonCard
-              type={sermonType}
-              title={todaysMoment.title}
-              // The subtitle slot is a quiet teaser — the type's
-              // tagline ("A daily anchor in scripture", etc) works
-              // here because the verse itself now lives on the
-              // intro screen and shouldn't be doubled up at home.
-              subtitle={sermonType.tagline}
-              // Voice is the attributed speaker straight from the
-              // catalog ("Matt Chandler", "Jackie Hill Perry", …).
-              // SermonCard renders this as the avatar + name +
-              // duration triplet when non-empty.
-              pastor={todaysMoment.voice}
-              durationMin={sermonDurationMin}
-              completed={hasCompletedSermonToday}
-              onPress={handlePlaySermon}
-            />
+            {/* Hero is state-driven. Three modes:
+                  1. focusSession active  → ActiveFocusHero
+                     The user is currently in a focus session — the
+                     control surface for that session is the most
+                     important thing on the screen.
+                  2. focusSession null    → SermonCard
+                     Default state: today's sermon is the hero.
+                     SermonCard handles its own completed-vs-unheard
+                     branching internally (forward-look subtitle when
+                     completed, "Begin" pill when not).
+                The mini-player at the tab bar still renders in
+                mode 1 — the hero and the pill are different views
+                of the same state (control surface vs. ambient
+                strip), see ActiveFocusHero header for the
+                rationale. */}
+            {focusSession ? (
+              <ActiveFocusHero
+                session={focusSession}
+                routineName={
+                  focusSession.routineId
+                    ? studySessions.find((s) => s.id === focusSession.routineId)?.name
+                    : undefined
+                }
+                appsSummary={`${focusSession.blockedAppIds.length} apps quieted`}
+                onPause={pauseFocusSession}
+                onResume={resumeFocusSession}
+                onEnd={() => {
+                  // Confirm before tear-down — mirrors the mini-player
+                  // and the legacy GlobalFocusBanner. End is a
+                  // commitment exit, not a casual dismiss.
+                  Alert.alert(
+                    "End focus session?",
+                    "The shield will come down and notifications will return.",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "End",
+                        style: "destructive",
+                        onPress: () => endFocusSession(),
+                      },
+                    ],
+                  );
+                }}
+              />
+            ) : (
+              <SermonCard
+                type={sermonType}
+                title={todaysMoment.title}
+                // The subtitle slot is a quiet teaser — the type's
+                // tagline ("A daily anchor in scripture", etc) works
+                // here because the verse itself now lives on the
+                // intro screen and shouldn't be doubled up at home.
+                subtitle={sermonType.tagline}
+                // Voice is the attributed speaker straight from the
+                // catalog ("Matt Chandler", "Jackie Hill Perry", …).
+                // SermonCard renders this as the avatar + name +
+                // duration triplet when non-empty.
+                pastor={todaysMoment.voice}
+                durationMin={sermonDurationMin}
+                completed={hasCompletedSermonToday}
+                // Forward-look label, only used when `completed`.
+                // We compute it here (parent owns the reminder-time
+                // preference) so the card stays a pure presenter.
+                // Falls back to the 7am default that the timeline and
+                // the welcome-screen seeding both use, so an installed
+                // user without an explicit preference still gets a
+                // grounded "Tomorrow at 7:00 AM" rather than nothing.
+                nextSermonLabel={formatNextSermonLabel(
+                  answers.dailyReminderTime ?? { hour: 7, minute: 0 },
+                )}
+                onPress={handlePlaySermon}
+              />
+            )}
           </View>
         </FadeIn>
 
@@ -892,6 +960,19 @@ type SermonCardProps = {
    *  into a "Completed · Read again" state — same content, different
    *  affordance. */
   completed: boolean;
+  /** When `completed` is true, a pre-formatted human string that
+   *  tells the user when their next sermon will arrive — e.g.
+   *  "Tomorrow at 7:00 AM" or "Sunday at 9:00 AM" if their reminder
+   *  time skips weekends.
+   *
+   *  Why a string rather than a Date? Two reasons. (1) Parent
+   *  already owns the user's reminder-time preferences and can
+   *  format with the correct day-of-week math without exposing
+   *  those internals to the card. (2) The string is the entire UI
+   *  contract — making it a string keeps the card a pure
+   *  presenter. Absent or empty → the card falls back to the type
+   *  tagline subtitle, same as before. */
+  nextSermonLabel?: string;
   onPress: () => void;
 };
 
@@ -902,6 +983,7 @@ function SermonCard({
   pastor,
   durationMin,
   completed,
+  nextSermonLabel,
   onPress,
 }: SermonCardProps) {
   // Surface color drives the bottom fade-out of the full-bleed
@@ -1117,7 +1199,14 @@ function SermonCard({
 
       {/* Body — title bumped to 25px (was 22px) so the sermon's name
           reads as the focal text in the upper third of the page.
-          Subtitle and meta row unchanged. */}
+          Subtitle pivots when `completed`: instead of repeating the
+          static type tagline (which adds no information once the
+          sermon has been heard), we surface a forward-looking
+          line ("Tomorrow at 7:00 AM") so the card always answers
+          "what's next?" — no dead-end "Completed" state. If a
+          forward label wasn't passed (legacy callers, or no
+          sermon-time pref), we still fall back to the tagline so
+          the layout never collapses. */}
       <View className="px-5 pt-5 pb-5">
         <Text
           className="text-ink text-[25px] leading-[31px] tracking-[-0.4px]"
@@ -1129,7 +1218,16 @@ function SermonCard({
           className="text-ink-muted text-[14px] leading-[20px] mt-2"
           style={{ fontFamily: "PlusJakartaSans_400Regular" }}
         >
-          {subtitle}
+          {completed && nextSermonLabel
+            ? // "Your next word arrives ${label}." reads cleanly
+              // because the formatter prefixes the label with
+              // "tomorrow at" or "later today at" — saying
+              // "Tomorrow's word arrives tomorrow at 7 AM" would
+              // double-count "tomorrow". This phrasing also keeps
+              // a softer tone than "Next sermon at…" which feels
+              // mechanical for a devotional product.
+              `Your next word arrives ${nextSermonLabel}.`
+            : subtitle}
         </Text>
 
         <View className="flex-row items-center justify-between mt-5">
@@ -1186,6 +1284,365 @@ function SermonCard({
           </View>
 
           {completed ? <ReadAgainPill /> : <PlayPill />}
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ActiveFocusHero — replaces SermonCard while a focus session runs
+// ─────────────────────────────────────────────────────────────────
+//
+// Opal pattern, applied to Closer: when the user has a live focus
+// session, the home hero becomes a "Now Focusing" card so the
+// state is unmissable the instant they land on Today. The bottom
+// FocusMiniPlayer still floats above the tab bar (handles every
+// other screen), so on home there's intentional redundancy — but
+// the hero gives a destination tap, a generous countdown, and
+// quick Break/End access without a scroll.
+//
+// Why takeover the hero vs. stack it above the sermon?
+//   The sermon is also tied to a focus state during the sermon
+//   intro flow, but here on home the user has already chosen to
+//   be IN a session — putting the sermon hero above a separate
+//   focus card would force the user to scroll past the sermon
+//   to manage their session, which inverts the priority of the
+//   moment. Hero takeover is the simplest "what matters most
+//   right now" affordance.
+//
+// Why not stack the mini-player AND the hero on home?
+//   We keep the mini-player visible (consistency across screens)
+//   AND the hero. The two are different products of the same
+//   state: the pill is a glanceable strip, the hero is a control
+//   surface. Removing the pill on home only would create a
+//   "where's my session?" moment if the user scrolls past the
+//   hero into the lower cards.
+
+const FOCUS_HERO_ACCENT = "#0A84FF"; // matches FocusMiniPlayer
+
+type ActiveFocusHeroProps = {
+  session: import("@/state/focus").FocusSession;
+  /** Name of the routine that launched this session, if any.
+   *  When absent we fall back to "Focus session" — same logic the
+   *  mini-player uses. */
+  routineName?: string;
+  /** Visible on the bottom-left as small text — "12 apps quieted",
+   *  pre-formatted by the parent so this component stays presentational. */
+  appsSummary: string;
+  onPause: () => void;
+  onResume: () => void;
+  /** End is a "confirm before tearing down" action. The parent owns
+   *  the Alert.alert; we just fire the intent. */
+  onEnd: () => void;
+};
+
+function ActiveFocusHero({
+  session,
+  routineName,
+  appsSummary,
+  onPause,
+  onResume,
+  onEnd,
+}: ActiveFocusHeroProps) {
+  const colors = useColors();
+  const router = useRouter();
+
+  // 1s tick. We re-render the time display once per second so the
+  // countdown/elapsed counter ticks smoothly. The interval is torn
+  // down on unmount or when session changes identity, so the
+  // listener can't leak across screens.
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [session.startedAt]);
+
+  // Pulsing dot — same value-based loop the mini-player uses.
+  // Stops when the session is paused, so the visual rest state
+  // matches the logical "I've stopped the clock" intent.
+  const pulse = useRef(new Animated.Value(0)).current;
+  const isPaused = Boolean(session.pausedAt);
+  useEffect(() => {
+    if (isPaused) return;
+    pulse.setValue(0);
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 1100,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0,
+          duration: 1100,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [isPaused, pulse]);
+
+  // Effective elapsed math — same formula as FocusMiniPlayer and
+  // ActiveFocusCard. Kept inline (rather than extracted to a
+  // shared util) because the three usages all want different
+  // surrounding state and abstracting it would be premature.
+  const accumPaused = session.accumulatedPausedMs ?? 0;
+  const openPause = session.pausedAt ? Math.max(0, now - session.pausedAt) : 0;
+  const elapsedMs = Math.max(
+    0,
+    now - session.startedAt - accumPaused - openPause,
+  );
+
+  const hasDuration =
+    typeof session.durationMs === "number" && session.durationMs > 0;
+  const remainingMs = hasDuration
+    ? Math.max(0, (session.durationMs as number) - elapsedMs)
+    : 0;
+  const progress = hasDuration
+    ? Math.min(1, elapsedMs / (session.durationMs as number))
+    : 0;
+
+  // mm:ss / h:mm:ss formatter. Identical output to the mini-player
+  // so the user reads the same string in both surfaces — no
+  // "12:34" here and "12m 34s" there mid-session.
+  const formatClock = (ms: number): string => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    if (hours > 0) return `${hours}:${pad(minutes)}:${pad(seconds)}`;
+    return `${minutes}:${pad(seconds)}`;
+  };
+
+  const timeLabel = hasDuration ? formatClock(remainingMs) : formatClock(elapsedMs);
+  const timeMetaLabel = hasDuration ? "LEFT" : "ELAPSED";
+  const titleLabel = routineName || "Focus session";
+
+  // Pause toggles between Break / Resume. Only meaningful for
+  // time-boxed sessions — open-ended sermon focus is "elapsed
+  // counter only" with no clear pause semantics, so the button
+  // hides entirely in that mode (same rule as the mini-player).
+  const handleTogglePause = useCallback(() => {
+    if (isPaused) onResume();
+    else onPause();
+  }, [isPaused, onPause, onResume]);
+
+  return (
+    <Pressable
+      onPress={() => router.push("/settings/focus")}
+      accessibilityRole="button"
+      accessibilityLabel={`Focus session: ${titleLabel}. ${timeLabel} ${timeMetaLabel.toLowerCase()}.${
+        isPaused ? " Paused." : ""
+      } Tap to manage.`}
+      className="rounded-3xl overflow-hidden border bg-surface"
+      // Accent border so the card visually announces "this is a
+      // different state". Subtle (~24% accent) so it doesn't
+      // shout — the goal is recognition, not alarm.
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.94 : 1,
+        borderColor: withAlpha(FOCUS_HERO_ACCENT, 0.32),
+      })}
+    >
+      {/* Body — no hero-image strip on this state; the focus card
+          is about presence, not scenery. Single padded block. */}
+      <View className="px-5 pt-5 pb-5">
+        {/* Eyebrow row: pulsing dot + "FOCUS SESSION" + the live
+            metadata chip. The dot lives in the same accent blue
+            as the bottom mini-player so the two surfaces feel
+            like one product showing the same state two ways. */}
+        <View className="flex-row items-center">
+          <Animated.View
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: FOCUS_HERO_ACCENT,
+              marginRight: 8,
+              opacity: isPaused
+                ? 0.35
+                : pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }),
+              transform: [
+                {
+                  scale: isPaused
+                    ? 1
+                    : pulse.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.85, 1.15],
+                      }),
+                },
+              ],
+            }}
+          />
+          <Text
+            className="text-[10px] tracking-[3px] uppercase"
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              color: FOCUS_HERO_ACCENT,
+            }}
+          >
+            {isPaused ? "Focus paused" : "Focus session"}
+          </Text>
+        </View>
+
+        {/* Title + apps summary. Title takes the visual weight of
+            the SermonCard title (25px / leading 31) so the two
+            cards swap one-for-one without a vertical jump when
+            focus starts/ends. */}
+        <Text
+          className="text-ink text-[25px] leading-[31px] tracking-[-0.4px] mt-3"
+          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          numberOfLines={1}
+        >
+          {titleLabel}
+        </Text>
+        <Text
+          className="text-ink-muted text-[14px] leading-[20px] mt-1"
+          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          numberOfLines={1}
+        >
+          {appsSummary}
+        </Text>
+
+        {/* Time display — the big number is the focal element. We
+            center it because it's not anchored to any other column
+            (no left-rail meta, no right-rail badge). The "LEFT"
+            label below is intentionally small + caps + tracked,
+            same treatment as the eyebrow, so the eye reads
+            "[big number] [tiny caption]" as a unit. */}
+        <View className="items-center mt-5">
+          <Text
+            className="text-ink text-[44px] leading-[48px] tracking-[-1px]"
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              // Dim the number when paused so the pause state
+              // reads visually before the user processes the
+              // word. Same treatment as the mini-player.
+              opacity: isPaused ? 0.55 : 1,
+            }}
+            // Tabular nums avoids the 0:00→0:01 width shift that
+            // proportional digits cause; the number sits steady
+            // in place as it ticks. iOS exposes this via the
+            // `fontVariant` array.
+            // @ts-expect-error — RN types accept this string but
+            // TypeScript's typing for fontVariant is narrow.
+            // The runtime correctly applies "tabular-nums".
+            fontVariant={["tabular-nums"]}
+          >
+            {timeLabel}
+          </Text>
+          <Text
+            className="text-ink-subtle text-[10px] tracking-[3px] uppercase mt-1"
+            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          >
+            {timeMetaLabel}
+          </Text>
+        </View>
+
+        {/* Progress bar — only meaningful for time-boxed
+            sessions. Animated implicitly via re-render (no
+            Animated value needed for a 1Hz width tick). The
+            track sits in a `border` color so light/dark each
+            get a sensible faint groove. */}
+        {hasDuration ? (
+          <View
+            className="mt-4 rounded-full overflow-hidden"
+            style={{
+              height: 6,
+              backgroundColor: withAlpha(colors.ink, 0.08),
+            }}
+          >
+            <View
+              style={{
+                height: "100%",
+                width: `${progress * 100}%`,
+                backgroundColor: FOCUS_HERO_ACCENT,
+                borderRadius: 999,
+                // Soften the leading edge a hair so a 0%-to-3%
+                // jump (first tick) doesn't look like a glitch.
+                opacity: isPaused ? 0.55 : 1,
+              }}
+            />
+          </View>
+        ) : null}
+
+        {/* Action row: Break/Resume + End. Wrapped View+Pressable
+            so the outer card's onPress doesn't fire when the user
+            taps a button (stopPropagation isn't reliable across
+            platforms for nested Pressables; we rely on visually
+            distinct hit areas and clearly-labeled buttons to
+            avoid mistaps).
+
+            Order: secondary action on the left, primary
+            destructive on the right — matches iOS button-row
+            convention so users find End where their thumb expects. */}
+        <View className="flex-row mt-5" style={{ gap: 10 }}>
+          {/* Only render Break/Resume for time-boxed sessions —
+              an open-ended elapsed counter has no useful pause
+              semantics, so the button would do nothing
+              meaningful. Same rule as the mini-player. */}
+          {hasDuration ? (
+            <View style={{ flex: 1 }}>
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  handleTogglePause();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={isPaused ? "Resume session" : "Pause session"}
+                style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+              >
+                <View
+                  className="items-center justify-center rounded-2xl"
+                  style={{
+                    height: 48,
+                    backgroundColor: withAlpha(colors.ink, 0.06),
+                  }}
+                >
+                  <Text
+                    className="text-ink text-[15px]"
+                    style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                  >
+                    {isPaused ? "Resume" : "Break"}
+                  </Text>
+                </View>
+              </Pressable>
+            </View>
+          ) : null}
+          <View style={{ flex: 1 }}>
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation?.();
+                onEnd();
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="End focus session"
+              style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+            >
+              <View
+                className="items-center justify-center rounded-2xl"
+                style={{
+                  height: 48,
+                  backgroundColor: FOCUS_HERO_ACCENT,
+                }}
+              >
+                <Text
+                  className="text-[15px]"
+                  style={{
+                    fontFamily: "PlusJakartaSans_700Bold",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  End
+                </Text>
+              </View>
+            </Pressable>
+          </View>
         </View>
       </View>
     </Pressable>
@@ -2142,6 +2599,39 @@ function withAlpha(hex: string, alpha: number): string {
   const b = parseInt(cleaned.slice(4, 6), 16);
   if ([r, g, b].some((n) => Number.isNaN(n))) return hex;
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Format the next-sermon arrival time as a human phrase.
+ *
+ * Returns one of:
+ *   • "tomorrow at 7:00 AM"   — most common case (24-hour cadence)
+ *   • "later today at 9:00 PM" — sermon time hasn't passed yet today
+ *
+ * We branch on whether the supplied reminder time has already
+ * occurred today: if not, "later today" is the truth; if yes,
+ * "tomorrow" is the next firing. The lowercase phrasing is
+ * intentional — this label gets stitched into a sentence
+ * ("Tomorrow's word arrives ${label}.") so a capital "T" would
+ * read as a comma-spliced fragment.
+ *
+ * Locale: en-US time formatting via format12h to match the
+ * "7:00 AM" style used everywhere else in the app — the timeline,
+ * the reminder-picker, the notification copy. Keeping that one
+ * style across surfaces means the user only ever has to parse
+ * one time format.
+ */
+function formatNextSermonLabel(time: {
+  hour: number;
+  minute: number;
+}): string {
+  const now = new Date();
+  const todayAt = new Date(now);
+  todayAt.setHours(time.hour, time.minute, 0, 0);
+  const formatted = format12h(time);
+  return todayAt.getTime() > now.getTime()
+    ? `later today at ${formatted}`
+    : `tomorrow at ${formatted}`;
 }
 
 /**

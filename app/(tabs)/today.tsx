@@ -982,8 +982,20 @@ function VerseOfDay({ accent }: { accent: string }) {
   // when the user returns the next day.
   const verse = useMemo(() => getVerseOfDay(), []);
   return (
+    // Subtle accent-tinted background — the card wash carries
+    // ~6% of the sermon-type accent so the verse visually
+    // belongs to the same color family as the sermon hero
+    // above. Border tint matches so the seam between
+    // background and edge isn't broken by a neutral line.
+    // Effect is intentionally barely-there: it should read
+    // as "warm" not "colored", and dark mode stays dark.
     <View
-      className="rounded-2xl border border-border bg-surface px-5 py-4"
+      className="rounded-2xl px-5 py-4"
+      style={{
+        backgroundColor: withAlpha(accent, 0.07),
+        borderWidth: 1,
+        borderColor: withAlpha(accent, 0.14),
+      }}
       accessibilityRole="summary"
       accessibilityLabel={`Verse for today: ${verse.text} — ${verse.reference}`}
     >
@@ -1244,47 +1256,110 @@ function SermonCard({
             </View>
           </View>
         ) : (
-          // ── Compact icon + accent-glow (legacy) ────────────
-          <>
-            <View className="px-5 pt-4 flex-row items-center justify-between">
-              <Text
-                className="text-[10px] tracking-[3px] uppercase"
-                style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  color: type.accent,
-                }}
-              >
-                {type.name}
-              </Text>
+          // ── Accent-gradient wash + centered icon ───────────
+          // Before: flat bg-surface with a small radial glow
+          // behind the icon. That treatment made every sermon
+          // type EXCEPT Daily Church (the only one shipping a
+          // homeHero) feel low-energy compared to the Practice
+          // page's bold gradient template cards.
+          //
+          // Now: every type renders a top-to-bottom accent wash
+          // using its own accent color, with the icon centered
+          // on top and the eyebrow in white (matching the
+          // homeHero overlay style). The wash dissolves into
+          // the body's surface color at the bottom so the card
+          // still has a soft handoff into the body section,
+          // identical visual rhythm to the homeHero variant.
+          //
+          // Result: home's sermon hero always has color
+          // personality — violet for Letters, blue for
+          // Questions, peach for Hope, etc. — instead of
+          // collapsing to a flat icon-in-a-box for 9 of 10
+          // sermon types.
+          <View style={{ flex: 1, position: "relative", backgroundColor: colors.surface }}>
+            {/* Accent wash — vertical linear gradient from a
+                punchy band of the accent color at the top to
+                the body surface at the bottom. Three stops
+                shape the curve so the top reads as a saturated
+                color band, the middle holds a gentler tint, and
+                the bottom matches the body card so the eye
+                doesn't catch a hard edge before the title. */}
+            <Svg
+              pointerEvents="none"
+              width="100%"
+              height="100%"
+              style={{ position: "absolute", top: 0, left: 0 }}
+            >
+              <Defs>
+                <LinearGradient
+                  id="sc-accent-wash"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="200"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <Stop offset="0" stopColor={type.accent} stopOpacity={0.45} />
+                  <Stop offset="0.55" stopColor={type.accent} stopOpacity={0.18} />
+                  <Stop offset="1" stopColor={colors.surface} stopOpacity={1} />
+                </LinearGradient>
+              </Defs>
+              <Rect x={0} y={0} width="100%" height="100%" fill="url(#sc-accent-wash)" />
+            </Svg>
+
+            {/* Eyebrow + date chip — same overlay format as
+                the homeHero variant for visual consistency.
+                White text with a subtle shadow lifts off the
+                color wash regardless of which accent is in
+                play. */}
+            <View
+              className="px-5 pt-4 flex-row items-center justify-between"
+              pointerEvents="none"
+            >
+              <View className="flex-row items-baseline">
+                <Text
+                  className="text-[10px] tracking-[3px] uppercase"
+                  style={{
+                    fontFamily: "PlusJakartaSans_700Bold",
+                    color: "#FFFFFF",
+                    textShadowColor: "rgba(0, 0, 0, 0.35)",
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 4,
+                  }}
+                >
+                  {type.name}
+                </Text>
+                <Text
+                  className="text-[10px] tracking-[2.5px] uppercase"
+                  style={{
+                    fontFamily: "PlusJakartaSans_500Medium",
+                    color: "rgba(255, 255, 255, 0.72)",
+                    marginLeft: 8,
+                    textShadowColor: "rgba(0, 0, 0, 0.35)",
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 4,
+                  }}
+                >
+                  · {formatHeroDate(new Date())}
+                </Text>
+              </View>
               {completed ? <CompletedBadge /> : null}
             </View>
 
-            <View className="flex-1 items-center justify-center relative">
-              <View
-                pointerEvents="none"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <CardAccentGlow color={type.accent} />
-              </View>
-
-              {/* Illustration sized to 150x128 — heavy enough
-                  that the icon carries the eye when the user
-                  lands on the screen. */}
+            {/* Centered illustration — sized down to 132x112
+                (was 150x128) so the icon sits centered on the
+                wash with breathing room around it, rather than
+                filling the strip and competing with the
+                gradient for visual weight. The wash IS the
+                background; the icon punctuates it. */}
+            <View className="flex-1 items-center justify-center">
               <Image
                 source={type.hero}
-                style={{ width: 150, height: 128 }}
+                style={{ width: 132, height: 112 }}
                 resizeMode="contain"
               />
             </View>
-          </>
+          </View>
         )}
       </View>
 

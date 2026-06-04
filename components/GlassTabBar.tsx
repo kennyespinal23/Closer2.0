@@ -14,11 +14,16 @@ import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import Svg, { Path } from "react-native-svg";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
-const SIDE_INSET = 16;
-const ROW_PADDING_H = 6;
+const SIDE_INSET = 24;
+const ROW_PADDING_H = 8;
 const CELL_MARGIN_H = 2;
-const PILL_HEIGHT = 62;
-const CELL_HEIGHT = 50;
+// Opal-style minimal floating bar: icon-only cells, slimmer pill,
+// muted glass. The bar is now an unobtrusive floating affordance
+// rather than a chunky labeled toolbar — the user knows what
+// "Today / Practice / Library / Insights" are by now and the icons
+// carry recognition on their own.
+const PILL_HEIGHT = 56;
+const CELL_HEIGHT = 44;
 const BUBBLE_TOP = (PILL_HEIGHT - CELL_HEIGHT) / 2;
 /**
  * Route name marker for the "+" FAB cell. The tabs layout registers
@@ -28,7 +33,7 @@ const BUBBLE_TOP = (PILL_HEIGHT - CELL_HEIGHT) / 2;
  * the cell renderer.
  */
 const FAB_ROUTE_NAME = "checkin";
-const FAB_SIZE = 52;
+const FAB_SIZE = 48;
 
 /**
  * GlassTabBar
@@ -69,21 +74,26 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
   // murk up the bar. Without the backing, BlurView averages
   // whatever's beneath it — which on the Library screen turned
   // the bar purple and ate the inactive labels.
+  // Glass treatment is now significantly more transparent so the
+  // page beneath shows through (Opal's bar appears to float above
+  // the content rather than carve a strip out of it). The opaque
+  // backing dropped from 0.78 / 0.82 to 0.45 / 0.55, and the
+  // pill border is barely visible — just a hairline glass edge.
   const pillBorderColor = isDark
-    ? "rgba(255, 255, 255, 0.08)"
-    : "rgba(15, 15, 15, 0.10)";
+    ? "rgba(255, 255, 255, 0.05)"
+    : "rgba(15, 15, 15, 0.06)";
   const backingColor = isDark
-    ? "rgba(12, 12, 14, 0.78)"
-    : "rgba(255, 255, 255, 0.82)";
+    ? "rgba(12, 12, 14, 0.45)"
+    : "rgba(255, 255, 255, 0.55)";
   const androidFillColor = isDark
-    ? "rgba(20, 20, 20, 0.96)"
-    : "rgba(255, 255, 255, 0.96)";
+    ? "rgba(20, 20, 20, 0.82)"
+    : "rgba(255, 255, 255, 0.88)";
   const bubbleBg = isDark
-    ? "rgba(255, 255, 255, 0.18)"
-    : "rgba(15, 15, 15, 0.08)";
+    ? "rgba(255, 255, 255, 0.12)"
+    : "rgba(15, 15, 15, 0.06)";
   const bubbleBorder = isDark
-    ? "rgba(255, 255, 255, 0.10)"
-    : "rgba(15, 15, 15, 0.10)";
+    ? "rgba(255, 255, 255, 0.06)"
+    : "rgba(15, 15, 15, 0.08)";
   const fabBorder = isDark
     ? "rgba(255, 255, 255, 0.18)"
     : "rgba(255, 255, 255, 0.65)";
@@ -235,12 +245,20 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
               );
             }
 
-            // ─── Normal cell — icon + label ───────────────────
-            // Inactive uses inkMuted (not inkSubtle) so labels stay
-            // legible against the bright blur in light mode — the
-            // subtle gray we use elsewhere reads as "barely there"
-            // through the frosted panel.
-            const tint = isFocused ? colors.ink : colors.inkMuted;
+            // ─── Normal cell — icon-only ──────────────────────
+            // Labels were removed for Phase 7C's Opal-style pass.
+            // Recognition is now carried by the icons alone (sun /
+            // page / books / chart). Focused icons go to full ink
+            // and a slightly larger size; inactive icons sit at
+            // inkSubtle so the active state has clear contrast.
+            // The accessibilityLabel still passes through so VoiceOver
+            // users get "Today, Tab 1 of 5" — the visual label is
+            // gone but the semantic label isn't.
+            const tint = isFocused ? colors.ink : colors.inkSubtle;
+            const iconSize = isFocused ? 24 : 22;
+            // Keep the unused label variable typed so future
+            // re-add doesn't require re-plumbing descriptors.
+            void label;
 
             return (
               <Pressable
@@ -255,21 +273,8 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
                 {options.tabBarIcon?.({
                   focused: isFocused,
                   color: tint,
-                  size: 22,
+                  size: iconSize,
                 })}
-                <Text
-                  style={[
-                    styles.label,
-                    {
-                      color: tint,
-                      fontFamily: isFocused
-                        ? "PlusJakartaSans_700Bold"
-                        : "PlusJakartaSans_600SemiBold",
-                    },
-                  ]}
-                >
-                  {label}
-                </Text>
               </Pressable>
             );
           })}
@@ -290,15 +295,18 @@ const styles = StyleSheet.create({
     borderRadius: PILL_HEIGHT / 2,
     overflow: "hidden",
     // Hairline glass-edge border (color comes from the theme-aware
-    // `pillBorderColor` inline so it flips with the scheme).
-    borderWidth: 1,
+    // `pillBorderColor` inline so it flips with the scheme). Now
+    // hairline-width to be even more subtle.
+    borderWidth: StyleSheet.hairlineWidth,
     // Subtle lift — the bar should feel like it's resting *above*
-    // the content, not painted onto it.
+    // the content, not painted onto it. Shadow gentled now that
+    // the bar itself is more transparent — heavy shadow on a
+    // glass surface read as inconsistent depth.
     shadowColor: "#000",
-    shadowOpacity: 0.45,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 16,
+    shadowOpacity: 0.3,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 10,
   },
   row: {
     flex: 1,
@@ -323,11 +331,8 @@ const styles = StyleSheet.create({
     // bg + border come from the theme-aware values inline.
     borderWidth: 1,
   },
-  label: {
-    fontSize: 10.5,
-    letterSpacing: 0.3,
-    marginTop: 3,
-  },
+  // (Cell labels removed in Phase 7C — icons carry recognition
+  // on their own now, matching Opal's icon-only floating bar.)
   fab: {
     width: FAB_SIZE,
     height: FAB_SIZE,
@@ -350,6 +355,6 @@ const styles = StyleSheet.create({
  * Total vertical footprint a screen should reserve at the bottom of
  * its scroll content so nothing hides under the floating glass bar.
  *
- * Pill (62) + outer margin (12) + a small visual gap (16) = 90.
+ * Pill (56) + outer margin (12) + a small visual gap (16) = 84.
  */
-export const TAB_BAR_TOTAL_HEIGHT = 90;
+export const TAB_BAR_TOTAL_HEIGHT = 84;

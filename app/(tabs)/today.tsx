@@ -6,6 +6,7 @@ import {
   Image,
   Pressable,
   ScrollView,
+  StyleSheet,
   Switch,
   Text,
   View,
@@ -516,6 +517,36 @@ export default function TodayScreen() {
           </View>
         </FadeIn>
 
+        {/* ─── 3-stat row ──────────────────────────────────────────
+            Opal-style stats triplet directly below the hero. Three
+            columns separated by hairline dividers, hairlines top
+            and bottom so the row reads as a discrete dashboard
+            band the way Opal's FOCUS / SCREEN TIME / CULPRITS
+            row does on its home screen.
+
+            Stats are tied to data the user actually feels:
+              • STREAK — current day-streak, the momentum number
+              • READING — today's minutes against the goal
+              • BEST — longest historical streak, the aspirational
+                         "personal best" the current streak chases
+
+            We picked BEST rather than a generic "TOTAL SERMONS"
+            count because the streak loop is what brings people
+            back daily; surfacing the personal best gives the
+            current streak a target to chase even on days the
+            sermon plays without ceremony.
+
+            Each value is rendered as a bold number + small unit
+            so the eye scans down the row at a glance. */}
+        <FadeIn delayMs={100} durationMs={800}>
+          <StatRow
+            streakCurrent={streak.current}
+            streakLongest={streak.longest}
+            readingMinutes={readingMinutes}
+            readingGoal={readingGoal}
+          />
+        </FadeIn>
+
         {/* ─── Verse for today ─────────────────────────────────────
             A slim scripture mini-card that lives between the
             sermon hero and the rhythm timeline. Same width as
@@ -526,7 +557,7 @@ export default function TodayScreen() {
             The accent color is pulled from the current sermon
             type so the verse, hero, and any per-type chrome
             feel like one composition. */}
-        <FadeIn delayMs={110} durationMs={800}>
+        <FadeIn delayMs={130} durationMs={800}>
           <View className="px-6 mt-7">
             <VerseOfDay accent={sermonType.accent} />
           </View>
@@ -1964,6 +1995,173 @@ function PlayPill() {
         Begin
       </Text>
     </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// StatRow — Opal-style 3-column stat triplet under the hero
+// ─────────────────────────────────────────────────────────────────
+//
+// Three quick numbers separated by hairline dividers, with the
+// row itself topped and tailed by a hairline so it reads as a
+// distinct dashboard band. Each column stacks a small caps-tracked
+// label over a bold value + small unit suffix.
+//
+// Layout (top → bottom):
+//   ──────────────────────────────────────
+//      STREAK      READING      BEST
+//      4  days     12  min      12  days
+//   ──────────────────────────────────────
+//
+// Why these three:
+//   • STREAK    — momentum number (what brings users back today)
+//   • READING   — today's engagement (against the goal)
+//   • BEST      — personal best the streak chases (aspiration)
+//
+// Why a number + tiny unit:
+//   The unit ("days", "min") rendered at ~60% the value size,
+//   ink-subtle color, gives the number visual primacy without
+//   losing the unit context. Same pattern Opal uses for "3m 21s".
+//
+// Why divider lines:
+//   Opal frames its stats row with thin top/bottom rules. The
+//   horizontal lines act as a magazine-style "stat band"
+//   delimiter, distinct from the cards above (hero) and below
+//   (verse). Without them the row would float without a sense
+//   of its own region.
+
+type StatRowProps = {
+  streakCurrent: number;
+  streakLongest: number;
+  readingMinutes: number;
+  readingGoal: number;
+};
+
+function StatRow({
+  streakCurrent,
+  streakLongest,
+  readingMinutes,
+}: StatRowProps) {
+  const colors = useColors();
+  return (
+    <View
+      style={{
+        marginHorizontal: 24,
+        marginTop: 26,
+      }}
+    >
+      {/* Top hairline. Subtle border-color so it reads as
+          structure not chrome. */}
+      <View
+        style={{
+          height: StyleSheet.hairlineWidth,
+          backgroundColor: colors.border,
+        }}
+      />
+
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingVertical: 16,
+        }}
+      >
+        <Stat
+          label="Streak"
+          value={String(streakCurrent)}
+          unit={streakCurrent === 1 ? "day" : "days"}
+        />
+        <StatDivider />
+        <Stat
+          label="Reading"
+          value={String(readingMinutes)}
+          unit="min"
+        />
+        <StatDivider />
+        <Stat
+          label="Best"
+          value={String(streakLongest)}
+          unit={streakLongest === 1 ? "day" : "days"}
+        />
+      </View>
+
+      {/* Bottom hairline mirrors the top. */}
+      <View
+        style={{
+          height: StyleSheet.hairlineWidth,
+          backgroundColor: colors.border,
+        }}
+      />
+    </View>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  unit,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+}) {
+  const colors = useColors();
+  return (
+    <View style={{ flex: 1, alignItems: "center" }}>
+      <Text
+        style={{
+          fontFamily: "PlusJakartaSans_700Bold",
+          color: colors.inkSubtle,
+          fontSize: 10,
+          letterSpacing: 2,
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </Text>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "baseline",
+          marginTop: 5,
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: "PlusJakartaSans_700Bold",
+            color: colors.ink,
+            fontSize: 22,
+            lineHeight: 26,
+            letterSpacing: -0.4,
+          }}
+        >
+          {value}
+        </Text>
+        <Text
+          style={{
+            fontFamily: "PlusJakartaSans_500Medium",
+            color: colors.inkSubtle,
+            fontSize: 12,
+            marginLeft: 4,
+          }}
+        >
+          {unit}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function StatDivider() {
+  const colors = useColors();
+  return (
+    <View
+      style={{
+        width: StyleSheet.hairlineWidth,
+        height: 32,
+        backgroundColor: colors.border,
+      }}
+    />
   );
 }
 

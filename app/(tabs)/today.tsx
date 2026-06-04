@@ -27,6 +27,7 @@ import { FadeIn } from "@/components/FadeIn";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
 import { ShieldOverlay } from "@/components/ShieldOverlay";
 import { cancelDailyReminder } from "@/lib/notifications";
+import * as haptics from "@/lib/haptics";
 import { momentDurationMin, resolveSermonType } from "@/lib/moments";
 import { formatMinutes, formatRemaining } from "@/lib/readingGoalFormat";
 import { getVerseOfDay } from "@/lib/verseOfDay";
@@ -268,16 +269,22 @@ export default function TodayScreen() {
   );
 
   const handlePlaySermon = () => {
+    // Medium-impact haptic on the primary CTA — the begin tap
+    // is the moment the user commits to today's sermon, so it
+    // gets a more noticeable tactile pulse than a generic row.
+    haptics.tap();
     router.push("/sermon/intro");
   };
 
   const handleOpenLastCheckIn = () => {
     if (!lastCheckIn) return;
+    haptics.soft();
     router.push(`/check-ins/${lastCheckIn.id}` as never);
   };
 
   const handleOpenProfile = () => {
     // Presented modally from the root stack — see app/_layout.tsx.
+    haptics.soft();
     router.push("/profile");
   };
 
@@ -681,6 +688,7 @@ export default function TodayScreen() {
                 focusSession
                   ? undefined
                   : () => {
+                      haptics.tap();
                       startFocusSession(todaysMoment.day).catch(() => {
                         /* shield start is best-effort; persistence
                            wrote regardless */
@@ -2249,19 +2257,19 @@ function StatRow({
       >
         <Stat
           label="Streak"
-          value={String(streakCurrent)}
+          value={streakCurrent}
           unit={streakCurrent === 1 ? "day" : "days"}
         />
         <StatDivider />
         <Stat
           label="Reading"
-          value={String(readingMinutes)}
+          value={readingMinutes}
           unit="min"
         />
         <StatDivider />
         <Stat
           label="Best"
-          value={String(streakLongest)}
+          value={streakLongest}
           unit={streakLongest === 1 ? "day" : "days"}
         />
       </View>
@@ -2277,16 +2285,55 @@ function StatRow({
   );
 }
 
+/**
+ * useTickedNumber — animates a number from 0 up to `target` over
+ * `duration` ms using ease-out-cubic. Same effect Apple's Fitness
+ * rings use when the percentage counter spins up — the value
+ * feels "earned" rather than just appearing.
+ *
+ * Implementation uses requestAnimationFrame (not Animated.Value
+ * + listener, which would trigger an extra render per frame on
+ * the JS thread). The hook only re-renders when the rounded
+ * integer changes, so a tick from 0 → 30 fires ~30 re-renders
+ * total — cheap enough to not need useNativeDriver.
+ *
+ * Triggers on every change to `target` so a streak increment
+ * mid-session re-ticks from 0 → new value.
+ */
+function useTickedNumber(target: number, duration = 800): number {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (target <= 0) {
+      setValue(0);
+      return;
+    }
+    let start: number | null = null;
+    let raf = 0;
+    const step = (timestamp: number) => {
+      if (start === null) start = timestamp;
+      const progress = Math.min((timestamp - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(target * eased));
+      if (progress < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return value;
+}
+
 function Stat({
   label,
   value,
   unit,
 }: {
   label: string;
-  value: string;
+  /** Numeric value to display. Animated from 0 → value on mount. */
+  value: number;
   unit: string;
 }) {
   const colors = useColors();
+  const ticked = useTickedNumber(value, 900);
   return (
     <View style={{ flex: 1, alignItems: "center" }}>
       <Text
@@ -2316,7 +2363,7 @@ function Stat({
             letterSpacing: -0.4,
           }}
         >
-          {value}
+          {ticked}
         </Text>
         <Text
           style={{

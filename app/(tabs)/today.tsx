@@ -457,6 +457,26 @@ export default function TodayScreen() {
               */}
               {greeting}, {firstName}
             </Text>
+            {/* Streak chip — Opal pattern. The flame + day count
+                pill at the top-right of the greeting row gives the
+                header a brand-surface quality the same way Opal's
+                top bar carries the streak fire icon. Even when the
+                rest of the page is calm, this chip keeps the
+                momentum number visible above the fold so the user
+                sees their streak the instant they open the app.
+
+                Tapping the chip scrolls to / opens the WeekStrip
+                so the user can see the calendar of engaged days —
+                same affordance Opal's flame uses (it opens the
+                streak detail sheet). For now we keep it
+                non-interactive; wiring the scroll handler is a
+                follow-up. */}
+            {streak.current > 0 ? (
+              <StreakChip
+                count={streak.current}
+                accent={sermonType.accent}
+              />
+            ) : null}
           </View>
           {/* Tagline — sits under the title with the same left inset
               as the title text (40pt avatar + 12pt ml-3 ≈ 52pt). The
@@ -2212,6 +2232,65 @@ function StatDivider() {
         backgroundColor: colors.border,
       }}
     />
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// StreakChip — Opal-style top-bar streak pill (🔥 4)
+// ─────────────────────────────────────────────────────────────────
+//
+// A small flame + count pill that lives at the top-right of the
+// greeting row. Mirrors Opal's home-bar streak fire icon — keeps
+// the momentum number visible above the fold the moment the user
+// opens the app, even before they read the greeting.
+//
+// Visual specs:
+//   • Hairline accent-tinted border, 10% accent fill — the chip
+//     should harmonize with the per-sermon accent (the rest of
+//     the page is also accent-tinted) rather than introduce a
+//     separate color.
+//   • Stylized flame SVG (not emoji — emoji renders inconsistently
+//     across iOS versions and the colors clash with our accent
+//     palette). The flame uses the per-sermon accent so the chip
+//     reads as part of the today-state, not a global fixture.
+//   • Bold sans count — the number is the point of the chip.
+
+function StreakChip({ count, accent }: { count: number; accent: string }) {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 999,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: withAlpha(accent, 0.32),
+        backgroundColor: withAlpha(accent, 0.12),
+      }}
+      accessibilityRole="text"
+      accessibilityLabel={`${count} day streak`}
+    >
+      {/* Stylized flame — simple two-curve outline. Filled with
+          the per-sermon accent so the icon participates in the
+          page's color story. */}
+      <Svg width={11} height={13} viewBox="0 0 24 28">
+        <Path
+          d="M12 0c-2 4 1 6-2 9-2 2-4 4-4 8a8 8 0 0016 0c0-3-1-5-3-7-2-2 0-4-2-7-1 2-2 3-3 3 0-2 0-4-2-6z"
+          fill={accent}
+        />
+      </Svg>
+      <Text
+        style={{
+          fontFamily: "PlusJakartaSans_700Bold",
+          color: accent,
+          fontSize: 12.5,
+          marginLeft: 5,
+        }}
+      >
+        {count}
+      </Text>
+    </View>
   );
 }
 

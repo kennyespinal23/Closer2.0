@@ -325,6 +325,63 @@ export default function TodayScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+      {/* ─── Page-level ambient atmosphere ───────────────────────
+          Absolutely positioned radial gradient painted BEHIND
+          everything in the scroll view. The per-sermon-type
+          accent (violet for Letters, blue for Questions, peach
+          for Hope…) becomes the ambient lighting of the upper
+          page — bleeds into the safe area above the greeting,
+          surrounds the sermon hero, and fades out by the time
+          the eye reaches the verse card.
+
+          Why at the SafeAreaView level rather than inside the
+          ScrollView contents:
+            • The gradient stays visually stationary as the user
+              scrolls (it's anchored to the screen, not the
+              scroll content). That makes the page feel like a
+              lit stage with the content scrolling THROUGH it,
+              not a single canvas that moves wholesale. Same
+              parallax-y trick Opal uses for its background tint.
+            • It can bleed into the status-bar area (above the
+              SafeAreaView's content inset) without being clipped
+              by a scroll content boundary.
+
+          Falloff is wider and shallower than the previous
+          in-card halo: starts at accent @ 0.35 at center,
+          fades through 0.12 at the midpoint, fully transparent
+          at the edges. The result is a gentle wash rather than
+          a discrete pool of color. */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 520,
+        }}
+      >
+        <Svg width="100%" height="100%">
+          <Defs>
+            <RadialGradient
+              id="page-ambient"
+              cx="50%"
+              cy="32%"
+              rx="95%"
+              ry="65%"
+              fx="50%"
+              fy="32%"
+            >
+              <Stop offset="0" stopColor={sermonType.accent} stopOpacity={0.35} />
+              <Stop offset="0.35" stopColor={sermonType.accent} stopOpacity={0.14} />
+              <Stop offset="0.7" stopColor={sermonType.accent} stopOpacity={0.04} />
+              <Stop offset="1" stopColor={sermonType.accent} stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Rect x={0} y={0} width="100%" height="100%" fill="url(#page-ambient)" />
+        </Svg>
+      </View>
+
       <ScrollView
         // Floating glass tab bar sits over the screen — pad the bottom
         // of the scroll so the last sections aren't hidden beneath it.
@@ -1349,42 +1406,15 @@ function SermonCard({
               overflow: "hidden",
             }}
           >
-            {/* Ambient page halo. Wide radial gradient centered
-                behind the icon, fading to fully transparent at
-                the edges so it blends into whatever the page
-                background is. Painted INSIDE the SermonCard
-                wrapper because it visually belongs to the
-                sermon and shouldn't pollute the rest of the
-                page. Height 360pt covers icon + eyebrow + title
-                + meta + button comfortably.
-
-                rx/ry sized larger than 100% so the gradient
-                center is the brightest point and the falloff
-                feels like atmospheric light, not a hard disk. */}
-            <Svg
-              pointerEvents="none"
-              width="100%"
-              height={360}
-              style={{ position: "absolute", top: 0, left: 0, right: 0 }}
-            >
-              <Defs>
-                <RadialGradient
-                  id="sc-ambient-halo"
-                  cx="50%"
-                  cy="30%"
-                  rx="85%"
-                  ry="60%"
-                  fx="50%"
-                  fy="30%"
-                >
-                  <Stop offset="0" stopColor={type.accent} stopOpacity={0.42} />
-                  <Stop offset="0.35" stopColor={type.accent} stopOpacity={0.18} />
-                  <Stop offset="0.7" stopColor={type.accent} stopOpacity={0.05} />
-                  <Stop offset="1" stopColor={type.accent} stopOpacity={0} />
-                </RadialGradient>
-              </Defs>
-              <Rect x={0} y={0} width="100%" height={360} fill="url(#sc-ambient-halo)" />
-            </Svg>
+            {/* Note: the in-card ambient halo was removed in
+                Phase 8B — the page-level ambient gradient
+                (painted at the SafeAreaView level in
+                app/(tabs)/today.tsx) now provides the
+                atmosphere for the whole upper screen, not just
+                the area inside this card. The CardAccentGlow
+                behind the icon below still handles the tight
+                inner halo that lifts the illustration off the
+                background. */}
 
             {/* Eyebrow — sermon type name only, centered above
                 the icon. We dropped the date chip in this layout

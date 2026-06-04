@@ -74,9 +74,27 @@ type ThemeContextValue = ThemeState & {
 };
 
 const DEFAULT: ThemeState = {
-  // System-follow is the default for new installs — matches the
-  // behavior most iOS users expect from a polished app.
-  pref: "system",
+  // Dark is the default for new installs — Closer is a night-first
+  // app and the entire design language (Opal-style ambient glow,
+  // glassy floating tab bar, the per-type sermon illustrations
+  // which were authored with baked-in dark backdrops, white text
+  // on a dark canvas, etc) was calibrated against a dark surface.
+  //
+  // Light mode is still WIRED UP (LIGHT_COLORS palette exists,
+  // setPref("light") works, the Profile theme toggle still lets a
+  // user opt in), but it doesn't ship as the default because the
+  // current asset library and ambient gradient stops don't render
+  // gracefully on a light canvas. Until we re-author the sermon
+  // illustrations with transparent backdrops and re-tune the
+  // ambient glow opacity stops for light, opting in is an
+  // explicit choice the user makes — not the unintentional
+  // outcome of having their iOS system appearance on light when
+  // they install Closer.
+  //
+  // The Profile setting still exposes "System / Dark / Light" so
+  // a user can pick "system" themselves if they want; this just
+  // changes what NEW installs land on.
+  pref: "dark",
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);

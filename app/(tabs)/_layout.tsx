@@ -1,8 +1,12 @@
 import { View, type ColorValue } from "react-native";
 import { Tabs, useRouter } from "expo-router";
 import Svg, { Circle, Path } from "react-native-svg";
+import { AmbientAtmosphere } from "@/components/AmbientAtmosphere";
 import { GlassTabBar } from "@/components/GlassTabBar";
 import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
+import { resolveSermonType } from "@/lib/moments";
+import { useMoments } from "@/state/moments";
+import { useColors } from "@/state/theme";
 
 /**
  * Bottom-tab layout for the main app.
@@ -33,19 +37,35 @@ import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
  */
 export default function TabsLayout() {
   const router = useRouter();
+  const colors = useColors();
+  // Pull today's sermon type so the ambient atmosphere can pick
+  // up the day's accent — the WHOLE tabs experience (Today,
+  // Practice, Library, Insights) now glows with the same per-day
+  // color, so the app reads as one continuous lit space rather
+  // than four flat-black tabs. Re-evaluates when the day changes.
+  const { todaysMoment } = useMoments();
+  const sermonType = resolveSermonType(todaysMoment.type);
 
   return (
-    // Wrapping View hosts the Tabs navigator and the floating
-    // FocusMiniPlayer as siblings. The mini-player self-suppresses
-    // on routes that have their own focus chrome (sermon flow,
-    // onboarding, check-in modal, study landing) and renders
-    // everywhere else when a focus session is active. Mounted
-    // INSIDE the layout (rather than at the root) because
-    // react-native-screens' native view controllers occlude
-    // React-tree siblings of the root <Stack> on iOS — only
-    // siblings INSIDE a layout's screen container render reliably
-    // above that layout's content.
-    <View style={{ flex: 1 }}>
+    // Layered structure (back → front):
+    //   1. Outer View with backgroundColor=colors.bg — this is
+    //      now the page bg paint surface. (Previously each tab's
+    //      SafeAreaView painted its own bg-bg; we moved it here
+    //      so the AmbientAtmosphere can sit between the bg and
+    //      the tab content.)
+    //   2. AmbientAtmosphere — per-day accent wash anchored to
+    //      the top of the screen. Behind every tab.
+    //   3. Tabs container — the actual tab screens. Each tab's
+    //      SafeAreaView is now TRANSPARENT (no bg-bg) so the
+    //      atmosphere bleeds through.
+    //   4. FocusMiniPlayer — floats above tabs when active.
+    //
+    // FocusMiniPlayer + mini-player rationale stays the same as
+    // the previous comment: mounted INSIDE the layout (rather
+    // than at the root) so react-native-screens' native view
+    // controllers don't occlude the sibling on iOS.
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <AmbientAtmosphere accent={sermonType.accent} />
       <View style={{ flex: 1 }}>
         <Tabs
           screenOptions={{ headerShown: false }}

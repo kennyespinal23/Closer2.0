@@ -223,7 +223,12 @@ export default function PracticeScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+    // SafeAreaView is intentionally transparent (no bg-bg) so the
+    // AmbientAtmosphere mounted at the (tabs) layout level paints
+    // through. The day's sermon accent now washes the top of
+    // every tab, including Practice. See AmbientAtmosphere.tsx
+    // and (tabs)/_layout.tsx for the shared atmosphere.
+    <SafeAreaView className="flex-1" edges={["top"]}>
       <ScrollView
         contentContainerStyle={{
           // Floating tab bar sits over the screen — pad the bottom

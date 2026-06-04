@@ -126,7 +126,10 @@ export default function LibraryScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+    // SafeAreaView transparent (no bg-bg) so the layout-level
+    // AmbientAtmosphere bleeds through and the Library tab glows
+    // with the day's accent the same way Today does.
+    <SafeAreaView className="flex-1" edges={["top"]}>
       <ScrollView
         contentContainerStyle={{
           paddingBottom: TAB_BAR_TOTAL_HEIGHT + 24,

@@ -332,64 +332,17 @@ export default function TodayScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
-      {/* ─── Page-level ambient atmosphere ───────────────────────
-          Absolutely positioned radial gradient painted BEHIND
-          everything in the scroll view. The per-sermon-type
-          accent (violet for Letters, blue for Questions, peach
-          for Hope…) becomes the ambient lighting of the upper
-          page — bleeds into the safe area above the greeting,
-          surrounds the sermon hero, and fades out by the time
-          the eye reaches the verse card.
-
-          Why at the SafeAreaView level rather than inside the
-          ScrollView contents:
-            • The gradient stays visually stationary as the user
-              scrolls (it's anchored to the screen, not the
-              scroll content). That makes the page feel like a
-              lit stage with the content scrolling THROUGH it,
-              not a single canvas that moves wholesale. Same
-              parallax-y trick Opal uses for its background tint.
-            • It can bleed into the status-bar area (above the
-              SafeAreaView's content inset) without being clipped
-              by a scroll content boundary.
-
-          Falloff is wider and shallower than the previous
-          in-card halo: starts at accent @ 0.35 at center,
-          fades through 0.12 at the midpoint, fully transparent
-          at the edges. The result is a gentle wash rather than
-          a discrete pool of color. */}
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 520,
-        }}
-      >
-        <Svg width="100%" height="100%">
-          <Defs>
-            <RadialGradient
-              id="page-ambient"
-              cx="50%"
-              cy="32%"
-              rx="95%"
-              ry="65%"
-              fx="50%"
-              fy="32%"
-            >
-              <Stop offset="0" stopColor={sermonType.accent} stopOpacity={0.35} />
-              <Stop offset="0.35" stopColor={sermonType.accent} stopOpacity={0.14} />
-              <Stop offset="0.7" stopColor={sermonType.accent} stopOpacity={0.04} />
-              <Stop offset="1" stopColor={sermonType.accent} stopOpacity={0} />
-            </RadialGradient>
-          </Defs>
-          <Rect x={0} y={0} width="100%" height="100%" fill="url(#page-ambient)" />
-        </Svg>
-      </View>
-
+    // SafeAreaView is now TRANSPARENT (no bg-bg) so the
+    // AmbientAtmosphere painted at the (tabs) layout level shows
+    // through. The previous per-screen radial gradient was
+    // hoisted into the shared AmbientAtmosphere component and
+    // mounted in app/(tabs)/_layout.tsx so every tab (Today,
+    // Practice, Library, Insights) glows with the same per-day
+    // accent — the whole app reads as one continuous lit space
+    // rather than four flat-black tabs. See AmbientAtmosphere.tsx
+    // and the comments in (tabs)/_layout.tsx for the full
+    // architecture.
+    <SafeAreaView className="flex-1" edges={["top"]}>
       <ScrollView
         // Floating glass tab bar sits over the screen — pad the bottom
         // of the scroll so the last sections aren't hidden beneath it.

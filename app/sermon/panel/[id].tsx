@@ -247,33 +247,28 @@ export default function SermonPanelScreen() {
           )}
 
           {/* ─── Body ──────────────────────────────────────────
-              SERMON PROSE in EB Garamond — the single most
-              impactful typographic move in the app. Sermon body
-              is editorial / sacred text and deserves the same
-              literary serif treatment a printed devotional or a
-              study Bible would give it. Sans-serif sermon bodies
-              read as content management; serif sermon bodies
-              read as printed page.
+              SERMON PROSE in UPRIGHT EB Garamond — the single
+              most impactful typographic move in the app. Sermon
+              body is editorial / sacred text and deserves the
+              same literary serif treatment a printed devotional
+              or a study Bible would give it. Sans-serif sermon
+              bodies read as content management; upright serif
+              sermon bodies read as printed page.
 
-              Treatment varies by panel:
-                • NARRATIVE panels (Hook / Story / Turn / Landing)
-                  use EB Garamond Regular at 19/30. Slightly bigger
-                  than the previous 17/28 because serif reads
-                  smaller optically than sans at the same point
-                  size. Letter-spacing nudged positive (0.1) — serif
-                  letters don't want the negative tracking sans
-                  needs to look tight.
-                • PRAYER panel uses EB Garamond Italic at 21/32 with
-                  text-align center. Italic Garamond is one of the
-                  most beautiful display italics ever cut; using it
-                  for the prayer makes the closing breath of the
-                  sermon feel hand-set rather than rendered.
+              Both narrative and prayer panels use the same
+              UPRIGHT Garamond Regular (the earlier italic prayer
+              variant was elegant in isolation but italics fatigue
+              the eye and reduced legibility — a sin in the most
+              sacred moment of the flow). Prayer panels still get
+              the bigger size (21/32 vs 19/30) and text-align
+              center so the ceremonial framing remains; the
+              voicing is uprightness + spacing now, not italic.
 
               Eyebrow, title, and "Amen" tracked-caps all stay in
               Plus Jakarta Sans — they're navigation chrome and
               landmarks, not editorial copy. The split between
-              "what's UI" (sans) and "what's text" (serif) is the
-              whole reason the pairing works. */}
+              "what's UI" (sans) and "what's text" (upright serif)
+              is the whole reason the pairing works. */}
           <View className={isPrayer ? "mt-2" : "mt-7"}>
             {paragraphs.map((p, i) =>
               isPrayer ? (
@@ -281,8 +276,7 @@ export default function SermonPanelScreen() {
                   key={i}
                   className="text-ink text-[21px] leading-[32px] text-center mb-5"
                   style={{
-                    fontFamily: "EBGaramond_400Regular_Italic",
-                    letterSpacing: 0.1,
+                    fontFamily: "EBGaramond_400Regular",
                   }}
                 >
                   {p}
@@ -293,7 +287,6 @@ export default function SermonPanelScreen() {
                   className="text-ink text-[19px] leading-[30px] mb-5"
                   style={{
                     fontFamily: "EBGaramond_400Regular",
-                    letterSpacing: 0.1,
                   }}
                 >
                   {p}

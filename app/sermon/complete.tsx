@@ -194,20 +194,16 @@ export default function CompleteScreen() {
           <Text style={{ color: type.accent }}>{type.name}</Text> sermon.
         </Text>
 
-        {/* Grounding line — set in EB Garamond italic. The
-            previous treatment used PlusJakartaSans_400Regular
-            with the italic className, which falls back to
-            faux-italic and reads rough on iOS. Real italic
-            Garamond turns the grounding line into a printed-page
-            epigraph — same editorial voice as the home tagline
-            and the verse-of-day card. Bumped 13 → 14 (serif
-            reads smaller optically). */}
+        {/* Grounding line — kept in sans (Plus Jakarta Sans
+            Medium). This is short framing copy that punctuates
+            the celebration; sans keeps it scannable and trusts
+            the milestone sentence above to carry the warmth.
+            Italic serif on this single line was the kind of
+            "applied flourish" that called attention to typography
+            instead of the message. */}
         <Text
-          className="text-ink-subtle text-[14px] leading-[22px] text-center mt-7 px-6"
-          style={{
-            fontFamily: "EBGaramond_400Regular_Italic",
-            letterSpacing: 0.1,
-          }}
+          className="text-ink-subtle text-[13px] leading-[20px] text-center mt-7 px-6"
+          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
         >
           {grounding(isFirstEver, typeCount)}
         </Text>

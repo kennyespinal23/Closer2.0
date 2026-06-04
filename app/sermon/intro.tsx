@@ -207,13 +207,15 @@ export default function SermonIntroScreen() {
               left accent bar in the type color ties it visually to
               the rest of the moment's identity.
 
-              Scripture body is now set in EB Garamond italic —
-              same editorial-serif treatment used by the home's
-              Verse for Today card. The verse is the most sacred
-              text on this screen; sans-serif reads as UI label,
-              serif italic reads as scripture pulled from a
-              printed page. Size bumped 19→21 because Garamond
-              reads smaller optically than Plus Jakarta Sans. */}
+              Scripture body in UPRIGHT EB Garamond Regular —
+              same printed-Bible voice the Verse for Today card
+              uses on home. The earlier italic version was
+              elegant but italics fatigue the eye on multi-line
+              scripture; upright Garamond reads like a study
+              Bible page and stays legible regardless of verse
+              length. Size 21 / leading 31 keeps generous
+              breathing for a passage that's meant to be sat
+              with, not skimmed. */}
           <View
             className="w-full mt-7 rounded-2xl px-5 py-5"
             style={{
@@ -241,8 +243,7 @@ export default function SermonIntroScreen() {
                   <Text
                     className="text-ink text-[21px] leading-[31px] mt-2.5"
                     style={{
-                      fontFamily: "EBGaramond_400Regular_Italic",
-                      letterSpacing: 0.1,
+                      fontFamily: "EBGaramond_400Regular",
                     }}
                   >
                     &ldquo;{scripture.text}&rdquo;
@@ -260,15 +261,14 @@ export default function SermonIntroScreen() {
 
           {/* Description of what this *type* of sermon is —
               quieter than the title + scripture, just orienting
-              context for someone new to this kind of beat. Set
-              in serif italic so it reads as an editorial
-              epigraph rather than UI copy, matching the
-              sermon-hero subtitle voice on home. */}
+              context for someone new to this kind of beat. Kept
+              in sans (Plus Jakarta Sans Regular) because this is
+              short framing copy, not editorial text meant to be
+              read slowly. */}
           <Text
-            className="text-ink-subtle text-[14px] leading-[22px] text-center mt-5 px-4"
+            className="text-ink-subtle text-[13px] leading-[20px] text-center mt-5 px-4"
             style={{
-              fontFamily: "EBGaramond_400Regular_Italic",
-              letterSpacing: 0.1,
+              fontFamily: "PlusJakartaSans_400Regular",
             }}
           >
             {type.description}
@@ -292,11 +292,8 @@ export default function SermonIntroScreen() {
         )}
         <Button label="Begin" onPress={handleStart} />
         <Text
-          className="text-ink-subtle text-[13px] leading-[20px] text-center mt-3 px-2"
-          style={{
-            fontFamily: "EBGaramond_400Regular_Italic",
-            letterSpacing: 0.1,
-          }}
+          className="text-ink-subtle text-[12px] text-center mt-3"
+          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
         >
           {focusOffered
             ? "Focus mode will quiet the noise while you read."

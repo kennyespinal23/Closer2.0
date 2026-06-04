@@ -429,7 +429,11 @@ export default function TodayScreen() {
             from the user's path-to-engagement; the supporting
             sections drop below the timeline.) */}
         <FadeIn delayMs={80} durationMs={900}>
-          <View className="px-6 mt-6">
+          {/* No px-6 here — the SermonCard now paints an
+              ambient radial halo that needs to bleed edge-to-
+              edge of the screen. The card's internal content
+              manages its own horizontal padding. */}
+          <View className="mt-4">
             {/* Hero is state-driven. Three modes:
                   1. focusSession active  → ActiveFocusHero
                      The user is currently in a focus session — the
@@ -446,6 +450,11 @@ export default function TodayScreen() {
                 strip), see ActiveFocusHero header for the
                 rationale. */}
             {focusSession ? (
+              // ActiveFocusHero is still a card-style component
+              // and needs its own horizontal padding (the parent
+              // wrapper above is intentionally edge-to-edge for
+              // the SermonCard's ambient halo).
+              <View className="px-6">
               <ActiveFocusHero
                 session={focusSession}
                 routineName={
@@ -474,6 +483,7 @@ export default function TodayScreen() {
                   );
                 }}
               />
+              </View>
             ) : (
               <SermonCard
                 type={sermonType}
@@ -1094,39 +1104,50 @@ function SermonCard({
   // of stopping at a hard edge. Theme-aware so light mode fades
   // to white-ish surface, dark mode fades to near-black.
   const colors = useColors();
+  // OBJECT-FORWARD layout (Opal-inspired): we removed the rounded
+  // card chrome (border / bg-surface / rounded-3xl / overflow-hidden)
+  // so the hero icon + accent glow read as a glowing OBJECT sitting
+  // in the page rather than a flat illustration trapped inside a
+  // card. The Pressable still wraps the whole thing for tap, just
+  // without visual chrome. opacity-on-press stays for tactile
+  // feedback. All horizontal padding now lives on the inner content
+  // blocks so the ambient radial halo can paint edge-to-edge.
   return (
     <Pressable
       onPress={onPress}
-      className="rounded-3xl overflow-hidden border border-border bg-surface"
       style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
     >
       {/*
-        Hero strip. Two render modes — choice is driven entirely by
+        Hero block. Two render modes — choice is driven entirely by
         whether the sermon type ships a `homeHero` landscape asset:
 
           • homeHero PRESENT (currently Daily Church):
-              Full-bleed landscape image fills the entire strip
-              edge-to-edge. The eyebrow (type name) and the
-              optional Completed badge overlay the image, with a
-              soft top gradient to guarantee legibility on the
-              bright sunset tones. No accent-glow / centered glyph
-              — the photo IS the illustration.
+              Rounded landscape panel at the top of the hero
+              region — the photo IS the illustration. Eyebrow +
+              date chip + optional Completed badge overlay the
+              image. Fixed 200pt height so the panel reads as a
+              distinct "scene" object floating above the title.
 
-          • homeHero ABSENT (every other type, for now):
-              Classic compact treatment — eyebrow row in normal
-              flow, then the small `hero` glyph centered with the
-              per-type accent glow behind it. This is the legacy
-              look every sermon type currently has, kept as the
-              fallback so adding a homeHero to a new type is an
-              additive change (no risk of regressing the others).
+          • homeHero ABSENT (every other type):
+              Object-forward icon hero: large centered
+              illustration with an ambient accent halo painted
+              behind it. The icon lives in the page space (no
+              card chrome), so the per-type accent reads as the
+              atmosphere of the upper screen.
 
-        Strip height is 200pt for both modes so card height stays
-        stable as types acquire their own homeHero assets over time.
+        Both variants then share the centered title + meta + CTA
+        block underneath.
       */}
-      <View className="h-[200px] w-full overflow-hidden">
-        {type.homeHero ? (
-          // ── Full-bleed landscape ────────────────────────────
-          <View style={{ flex: 1, position: "relative" }}>
+      {type.homeHero ? (
+          // ── Full-bleed landscape (rounded panel) ──────────
+          <View
+            style={{
+              height: 200,
+              marginHorizontal: 24,
+              borderRadius: 24,
+              overflow: "hidden",
+              position: "relative",
+            }}>
             <Image
               source={type.homeHero}
               style={{
@@ -1256,117 +1277,112 @@ function SermonCard({
             </View>
           </View>
         ) : (
-          // ── Accent-gradient wash + centered icon ───────────
-          // Before: flat bg-surface with a small radial glow
-          // behind the icon. That treatment made every sermon
-          // type EXCEPT Daily Church (the only one shipping a
-          // homeHero) feel low-energy compared to the Practice
-          // page's bold gradient template cards.
+          // ── OBJECT-FORWARD HERO (Opal-style) ────────────────
+          // The sermon icon is rendered as a glowing centerpiece
+          // that lives in the page space — no card border, no
+          // surface backplate. A wide ambient radial halo paints
+          // behind the icon and bleeds into the page background,
+          // so the per-type accent (violet, blue, peach…)
+          // becomes the atmosphere of the upper screen instead
+          // of being trapped inside a 200pt strip.
           //
-          // Now: every type renders a top-to-bottom accent wash
-          // using its own accent color, with the icon centered
-          // on top and the eyebrow in white (matching the
-          // homeHero overlay style). The wash dissolves into
-          // the body's surface color at the bottom so the card
-          // still has a soft handoff into the body section,
-          // identical visual rhythm to the homeHero variant.
+          // Compositional shift from the earlier card-bound
+          // approach:
+          //   was: card frame → strip → icon
+          //   now: page → ambient glow → icon (no frame)
           //
-          // Result: home's sermon hero always has color
-          // personality — violet for Letters, blue for
-          // Questions, peach for Hope, etc. — instead of
-          // collapsing to a flat icon-in-a-box for 9 of 10
-          // sermon types.
-          <View style={{ flex: 1, position: "relative", backgroundColor: colors.surface }}>
-            {/* Accent wash — vertical linear gradient that
-                concentrates the saturated color band in the top
-                ~30% of the strip, then transitions briskly to
-                the body surface so the icon sits on a clean
-                dark backdrop. (An earlier iteration spread the
-                tint across the full 200pt strip, which made
-                violet/red/blue icons disappear against their
-                own wash colors. Pulling the dissolve point up
-                to 0.45 fixes that.)
+          // The hero strip height is gone too — the icon size
+          // and surrounding paddings drive layout. The
+          // CardAccentGlow underneath the icon adds a tight
+          // inner halo so the illustration lifts off the
+          // ambient wash with extra contrast.
+          <View
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              paddingTop: 8,
+              paddingBottom: 4,
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {/* Ambient page halo. Wide radial gradient centered
+                behind the icon, fading to fully transparent at
+                the edges so it blends into whatever the page
+                background is. Painted INSIDE the SermonCard
+                wrapper because it visually belongs to the
+                sermon and shouldn't pollute the rest of the
+                page. Height 360pt covers icon + eyebrow + title
+                + meta + button comfortably.
 
-                Stops:
-                  0.00  accent @ 0.55  — bold band at top
-                  0.30  accent @ 0.22  — band still readable
-                  0.45  surface @ 1.0  — clean dark backdrop
-                  1.00  surface @ 1.0  — body match */}
+                rx/ry sized larger than 100% so the gradient
+                center is the brightest point and the falloff
+                feels like atmospheric light, not a hard disk. */}
             <Svg
               pointerEvents="none"
               width="100%"
-              height="100%"
-              style={{ position: "absolute", top: 0, left: 0 }}
+              height={360}
+              style={{ position: "absolute", top: 0, left: 0, right: 0 }}
             >
               <Defs>
-                <LinearGradient
-                  id="sc-accent-wash"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="200"
-                  gradientUnits="userSpaceOnUse"
+                <RadialGradient
+                  id="sc-ambient-halo"
+                  cx="50%"
+                  cy="30%"
+                  rx="85%"
+                  ry="60%"
+                  fx="50%"
+                  fy="30%"
                 >
-                  <Stop offset="0" stopColor={type.accent} stopOpacity={0.55} />
-                  <Stop offset="0.30" stopColor={type.accent} stopOpacity={0.22} />
-                  <Stop offset="0.45" stopColor={colors.surface} stopOpacity={1} />
-                  <Stop offset="1" stopColor={colors.surface} stopOpacity={1} />
-                </LinearGradient>
+                  <Stop offset="0" stopColor={type.accent} stopOpacity={0.42} />
+                  <Stop offset="0.35" stopColor={type.accent} stopOpacity={0.18} />
+                  <Stop offset="0.7" stopColor={type.accent} stopOpacity={0.05} />
+                  <Stop offset="1" stopColor={type.accent} stopOpacity={0} />
+                </RadialGradient>
               </Defs>
-              <Rect x={0} y={0} width="100%" height="100%" fill="url(#sc-accent-wash)" />
+              <Rect x={0} y={0} width="100%" height={360} fill="url(#sc-ambient-halo)" />
             </Svg>
 
-            {/* Eyebrow + date chip — same overlay format as
-                the homeHero variant for visual consistency.
-                White text with a subtle shadow lifts off the
-                color wash regardless of which accent is in
-                play. */}
+            {/* Eyebrow — sermon type name only, centered above
+                the icon. We dropped the date chip in this layout
+                because long type names ("Letters From A
+                Struggling Christian") + date pushed the centered
+                row past the 32pt side gutters and got truncated.
+                The date is implied by "today's sermon" framing
+                and the system status bar — the eyebrow's job is
+                category identity, not calendar grounding.
+
+                Type name uses the accent color rather than white
+                so it harmonizes with the ambient halo and signals
+                "this is the today's sermon brand" the way a chapter
+                heading would in a magazine. */}
             <View
-              className="px-5 pt-4 flex-row items-center justify-between"
+              className="items-center"
               pointerEvents="none"
+              style={{ paddingHorizontal: 24 }}
             >
-              <View className="flex-row items-baseline">
-                <Text
-                  className="text-[10px] tracking-[3px] uppercase"
-                  style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
-                    color: "#FFFFFF",
-                    textShadowColor: "rgba(0, 0, 0, 0.35)",
-                    textShadowOffset: { width: 0, height: 1 },
-                    textShadowRadius: 4,
-                  }}
-                >
-                  {type.name}
-                </Text>
-                <Text
-                  className="text-[10px] tracking-[2.5px] uppercase"
-                  style={{
-                    fontFamily: "PlusJakartaSans_500Medium",
-                    color: "rgba(255, 255, 255, 0.72)",
-                    marginLeft: 8,
-                    textShadowColor: "rgba(0, 0, 0, 0.35)",
-                    textShadowOffset: { width: 0, height: 1 },
-                    textShadowRadius: 4,
-                  }}
-                >
-                  · {formatHeroDate(new Date())}
-                </Text>
-              </View>
-              {completed ? <CompletedBadge /> : null}
+              <Text
+                className="text-[10.5px] tracking-[3px] uppercase"
+                style={{
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  color: type.accent,
+                  textAlign: "center",
+                }}
+                numberOfLines={1}
+              >
+                {type.name}
+              </Text>
             </View>
 
-            {/* Centered illustration — sized down to 132x112
-                (was 150x128) so the icon sits centered on the
-                clean dark backdrop below the wash, with
-                breathing room around it. The wash IS the
-                background; the icon punctuates it.
-
-                CardAccentGlow sits behind the icon (same as the
-                legacy fallback) so the per-type accent halos
-                outward from the illustration. Without it the
-                dark icons (Letters, Questions, Misconceptions)
-                lose contrast against the dark backdrop. */}
-            <View className="flex-1 items-center justify-center relative">
+            {/* Centered illustration — scaled up from 132x112 to
+                184x156. This is the focal "object" of the upper
+                screen and needs to carry the eye on landing.
+                Tight CardAccentGlow sits directly behind it for
+                that just-emerging-from-the-mist quality. */}
+            <View
+              className="items-center justify-center relative"
+              style={{ marginTop: 14, marginBottom: 6 }}
+            >
               <View
                 pointerEvents="none"
                 style={{
@@ -1383,100 +1399,88 @@ function SermonCard({
               </View>
               <Image
                 source={type.hero}
-                style={{ width: 132, height: 112 }}
+                style={{ width: 184, height: 156 }}
                 resizeMode="contain"
               />
             </View>
+
+            {/* Completed badge — top-right overlay (same slot it
+                occupied in the legacy card variant). Floats over
+                the ambient halo. */}
+            {completed ? (
+              <View style={{ position: "absolute", top: 8, right: 16 }}>
+                <CompletedBadge />
+              </View>
+            ) : null}
           </View>
         )}
-      </View>
 
-      {/* Body — title bumped to 25px (was 22px) so the sermon's name
-          reads as the focal text in the upper third of the page.
-          Subtitle pivots when `completed`: instead of repeating the
-          static type tagline (which adds no information once the
-          sermon has been heard), we surface a forward-looking
-          line ("Tomorrow at 7:00 AM") so the card always answers
-          "what's next?" — no dead-end "Completed" state. If a
-          forward label wasn't passed (legacy callers, or no
-          sermon-time pref), we still fall back to the tagline so
-          the layout never collapses. */}
-      <View className="px-5 pt-5 pb-5">
+      {/* Body — centered, no card chrome. Title is the focal
+          text; the line below is the subtitle (tagline normally,
+          forward-look when completed); the small meta pulls
+          pastor + duration into one calm caps-tracked line. The
+          Begin pill floats centered below.
+
+          Layout deliberately mirrors the Opal "object →
+          headline → meta → action" rhythm: each piece of text
+          stacks vertically aligned to the icon above, so the
+          eye reads top-to-bottom in a single column. */}
+      <View
+        style={{
+          alignItems: "center",
+          paddingHorizontal: 32,
+          paddingTop: 4,
+          paddingBottom: 8,
+        }}
+      >
         <Text
-          className="text-ink text-[25px] leading-[31px] tracking-[-0.4px]"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          className="text-ink text-[26px] leading-[32px] tracking-[-0.4px]"
+          style={{
+            fontFamily: "PlusJakartaSans_700Bold",
+            textAlign: "center",
+          }}
         >
           {title}
         </Text>
         <Text
           className="text-ink-muted text-[14px] leading-[20px] mt-2"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{
+            fontFamily: "PlusJakartaSans_400Regular",
+            textAlign: "center",
+          }}
         >
           {completed && nextSermonLabel
-            ? // "Your next word arrives ${label}." reads cleanly
-              // because the formatter prefixes the label with
-              // "tomorrow at" or "later today at" — saying
-              // "Tomorrow's word arrives tomorrow at 7 AM" would
-              // double-count "tomorrow". This phrasing also keeps
-              // a softer tone than "Next sermon at…" which feels
-              // mechanical for a devotional product.
-              `Your next word arrives ${nextSermonLabel}.`
+            ? `Your next word arrives ${nextSermonLabel}.`
             : subtitle}
         </Text>
 
-        <View className="flex-row items-center justify-between mt-5">
-          {/* Left-side meta. When a pastor IS attributed we render
-              the avatar + name + duration triplet; when there's no
-              pastor (current state — moments don't ship a pastor
-              attribution) we fall back to a single, calmer
-              duration chip so the row doesn't feel half-empty. */}
-          <View className="flex-row items-center flex-1 pr-3">
-            {pastor ? (
-              <>
-                <View className="w-7 h-7 rounded-full bg-accent-soft items-center justify-center mr-3">
-                  <Text
-                    className="text-primary text-[12px]"
-                    style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-                  >
-                    {pastor
-                      .split(" ")
-                      .slice(-1)[0]
-                      ?.charAt(0) ?? ""}
-                  </Text>
-                </View>
-                <View className="flex-1">
-                  <Text
-                    className="text-ink text-[13px]"
-                    style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-                    numberOfLines={1}
-                  >
-                    {pastor}
-                  </Text>
-                  <Text
-                    className="text-ink-subtle text-[12px] mt-0.5"
-                    style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-                  >
-                    {completed
-                      ? `Heard today · ${durationMin} min`
-                      : `${durationMin} min listen`}
-                  </Text>
-                </View>
-              </>
-            ) : (
-              <View className="flex-row items-center">
-                <ClockGlyph />
-                <Text
-                  className="text-ink-muted text-[13px] ml-2"
-                  style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-                >
-                  {completed
-                    ? `Heard today · ${durationMin} min`
-                    : `${durationMin} min listen`}
-                </Text>
-              </View>
-            )}
-          </View>
+        {/* Single-line meta: pastor (when present) + duration,
+            joined by a middot. Caps-tracked so it reads as
+            credit metadata rather than headline text. */}
+        <Text
+          className="text-ink-subtle text-[10.5px] tracking-[2px] uppercase mt-3.5"
+          style={{
+            fontFamily: "PlusJakartaSans_600SemiBold",
+            textAlign: "center",
+          }}
+        >
+          {pastor
+            ? `${pastor} · ${durationMin} min`
+            : `${durationMin} min listen`}
+        </Text>
 
+        {/* Begin button — glass pill on the accent halo. Solid
+            white when not completed (primary CTA); subtle "Read
+            again" outline when completed (the action is no
+            longer urgent). Floats below the meta line.
+
+            Tap target is the surrounding SermonCard Pressable
+            anyway, so this is a visual affordance — not a
+            separate hit zone. */}
+        <View
+          pointerEvents="none"
+          style={{ marginTop: 18, alignItems: "center" }}
+        >
           {completed ? <ReadAgainPill /> : <PlayPill />}
         </View>
       </View>

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Animated, Image, Text, View } from "react-native";
+import { Animated, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/components/Button";
+import { LivingHeroIcon } from "@/components/LivingHeroIcon";
+import * as haptics from "@/lib/haptics";
 import { resolveSermonType } from "@/lib/moments";
 import { useFocus } from "@/state/focus";
 import { useMoments } from "@/state/moments";
@@ -123,7 +125,20 @@ export default function CompleteScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
       <View className="flex-1 px-6 items-center justify-center">
-        {/* Hero with animated halo */}
+        {/* Hero with animated entrance halo + LIVING icon.
+            Two layered systems:
+              • External CelebrationHalo wrapped in Animated.View
+                handles the ONE-SHOT entrance — a slow exhale of
+                color expanding outward as the screen mounts.
+                That entrance is the celebratory beat.
+              • LivingHeroIcon (haloScale=0 to suppress its own
+                halo since we have the external one) gives the
+                ICON itself continuous float + breath so it doesn't
+                go static after the entrance lands.
+
+            Result: the screen blooms on arrival, then the icon
+            keeps gently breathing — same alive-object quality
+            as the home and intro heroes. */}
         <View className="items-center justify-center mb-6">
           <Animated.View
             pointerEvents="none"
@@ -140,10 +155,12 @@ export default function CompleteScreen() {
             <CelebrationHalo color={type.accent} />
           </Animated.View>
 
-          <Image
+          <LivingHeroIcon
             source={type.hero}
-            style={{ width: 180, height: 150 }}
-            resizeMode="contain"
+            accent={type.accent}
+            width={180}
+            height={150}
+            haloScale={0}
           />
         </View>
 
@@ -165,7 +182,10 @@ export default function CompleteScreen() {
           {headline}
         </Text>
 
-        {/* Milestone sentence — with the type name highlighted */}
+        {/* Milestone sentence — with the type name highlighted.
+            Kept in sans because the phrasing is informational
+            ("You completed your 3rd Daily Church sermon."),
+            not editorial. */}
         <Text
           className="text-ink-muted text-[16px] leading-[24px] text-center mt-4 px-4"
           style={{ fontFamily: "PlusJakartaSans_400Regular" }}
@@ -174,16 +194,33 @@ export default function CompleteScreen() {
           <Text style={{ color: type.accent }}>{type.name}</Text> sermon.
         </Text>
 
+        {/* Grounding line — set in EB Garamond italic. The
+            previous treatment used PlusJakartaSans_400Regular
+            with the italic className, which falls back to
+            faux-italic and reads rough on iOS. Real italic
+            Garamond turns the grounding line into a printed-page
+            epigraph — same editorial voice as the home tagline
+            and the verse-of-day card. Bumped 13 → 14 (serif
+            reads smaller optically). */}
         <Text
-          className="text-ink-subtle text-[13px] text-center mt-7 italic px-6"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          className="text-ink-subtle text-[14px] leading-[22px] text-center mt-7 px-6"
+          style={{
+            fontFamily: "EBGaramond_400Regular_Italic",
+            letterSpacing: 0.1,
+          }}
         >
           {grounding(isFirstEver, typeCount)}
         </Text>
       </View>
 
       <View className="px-6 pb-2">
-        <Button label="Continue" onPress={handleContinue} />
+        <Button
+          label="Continue"
+          onPress={() => {
+            haptics.soft();
+            handleContinue();
+          }}
+        />
       </View>
     </SafeAreaView>
   );

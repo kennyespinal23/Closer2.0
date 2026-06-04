@@ -12,6 +12,7 @@ import {
   sermonStepNumber,
   stepForPanelId,
 } from "@/constants/sermon";
+import * as haptics from "@/lib/haptics";
 import { resolveSermonType } from "@/lib/moments";
 import { useMoments } from "@/state/moments";
 import { useProgress } from "@/state/progress";
@@ -85,6 +86,15 @@ export default function SermonPanelScreen() {
   const accent = isPrayer ? PRAYER_BLUE : type.accent;
 
   const handleContinue = () => {
+    // Continue advances the sermon; Amen on the prayer panel
+    // celebrates completion. Both deserve haptic confirmation —
+    // success notification on the final Amen (it's a celebration),
+    // medium tap on Continue (committed forward step).
+    if (isPrayer && isLastPanel) {
+      haptics.success();
+    } else {
+      haptics.tap();
+    }
     if (!isLastPanel) {
       router.push(`/sermon/panel/${panelId + 1}` as const);
       return;
@@ -237,25 +247,54 @@ export default function SermonPanelScreen() {
           )}
 
           {/* ─── Body ──────────────────────────────────────────
-              Narrative panels render their paragraphs in standard
-              reader typography. The prayer panel renders the same
-              paragraphs centered, slightly larger, with italic
-              treatment so the ear hears it as prayed words. */}
+              SERMON PROSE in EB Garamond — the single most
+              impactful typographic move in the app. Sermon body
+              is editorial / sacred text and deserves the same
+              literary serif treatment a printed devotional or a
+              study Bible would give it. Sans-serif sermon bodies
+              read as content management; serif sermon bodies
+              read as printed page.
+
+              Treatment varies by panel:
+                • NARRATIVE panels (Hook / Story / Turn / Landing)
+                  use EB Garamond Regular at 19/30. Slightly bigger
+                  than the previous 17/28 because serif reads
+                  smaller optically than sans at the same point
+                  size. Letter-spacing nudged positive (0.1) — serif
+                  letters don't want the negative tracking sans
+                  needs to look tight.
+                • PRAYER panel uses EB Garamond Italic at 21/32 with
+                  text-align center. Italic Garamond is one of the
+                  most beautiful display italics ever cut; using it
+                  for the prayer makes the closing breath of the
+                  sermon feel hand-set rather than rendered.
+
+              Eyebrow, title, and "Amen" tracked-caps all stay in
+              Plus Jakarta Sans — they're navigation chrome and
+              landmarks, not editorial copy. The split between
+              "what's UI" (sans) and "what's text" (serif) is the
+              whole reason the pairing works. */}
           <View className={isPrayer ? "mt-2" : "mt-7"}>
             {paragraphs.map((p, i) =>
               isPrayer ? (
                 <Text
                   key={i}
-                  className="text-ink text-[19px] leading-[30px] text-center mb-5 tracking-[-0.2px]"
-                  style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                  className="text-ink text-[21px] leading-[32px] text-center mb-5"
+                  style={{
+                    fontFamily: "EBGaramond_400Regular_Italic",
+                    letterSpacing: 0.1,
+                  }}
                 >
                   {p}
                 </Text>
               ) : (
                 <Text
                   key={i}
-                  className="text-ink text-[17px] leading-[28px] opacity-90 mb-5"
-                  style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                  className="text-ink text-[19px] leading-[30px] mb-5"
+                  style={{
+                    fontFamily: "EBGaramond_400Regular",
+                    letterSpacing: 0.1,
+                  }}
                 >
                   {p}
                 </Text>

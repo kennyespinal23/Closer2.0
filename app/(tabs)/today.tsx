@@ -405,12 +405,19 @@ export default function TodayScreen() {
               as the title text (40pt avatar + 12pt ml-3 ≈ 52pt). The
               indent keeps the tagline visually attached to the title
               rather than the avatar, which makes the avatar feel
-              like an anchor rather than a floating chip. */}
+              like an anchor rather than a floating chip.
+
+              Set in EB Garamond italic — the serif voicing reframes
+              the tagline as a quiet editorial note ("Wind down with
+              today's word.") rather than UI copy. Same typographic
+              pairing the Verse for Today card uses, so the editorial
+              voice is consistent across the page. */}
           <Text
-            className="text-ink-muted text-[14px] leading-[20px] mt-2"
+            className="text-ink-muted text-[15px] leading-[22px] mt-2"
             style={{
-              fontFamily: "PlusJakartaSans_400Regular",
+              fontFamily: "EBGaramond_400Regular_Italic",
               marginLeft: 52,
+              letterSpacing: 0.1,
             }}
           >
             {getHomeTagline()}
@@ -1054,21 +1061,26 @@ function VerseOfDay({ accent }: { accent: string }) {
         Verse for Today
       </Text>
 
-      {/* Verse body. 15.5pt at line-height 22 reads well across
-          1–3 lines without feeling cramped. Letter-spacing
-          slightly negative (−0.2) tightens the verse copy enough
-          that long pulls (Isaiah 40:31, Jeremiah 29:11) fit in
-          three lines instead of spilling to four. We use curly
-          quotes around the verse — small touch that signals
-          "this is a quotation" without leaning on italics (the
-          Plus Jakarta italic isn't loaded, and faux-italic on
-          iOS looks rough). */}
+      {/* Verse body. Set in EB Garamond Italic — the editorial
+          serif pairing signals "this is sacred text" the way a
+          chapter epigraph does in a printed devotional. Garamond
+          italic is one of the most beautiful display italics
+          ever cut; using it here is a deliberate typographic
+          flourish that the rest of the UI's sans pairing
+          can't deliver.
+
+          Size bumped 15.5 → 17 (serif reads smaller optically
+          than sans at the same size), line-height 22 → 25 for
+          the airier classical feel, letter-spacing reset to
+          near-zero (serifs don't want tightening). Curly quotes
+          remain — they're part of the typographic identity
+          and they kern beautifully against Garamond italic. */}
       <Text
-        className="text-[15.5px] leading-[22px] mt-1.5"
+        className="text-[17px] leading-[25px] mt-2"
         style={{
-          fontFamily: "PlusJakartaSans_500Medium",
+          fontFamily: "EBGaramond_400Regular_Italic",
           color: colors.ink,
-          letterSpacing: -0.2,
+          letterSpacing: 0.1,
         }}
       >
         “{verse.text}”
@@ -1473,11 +1485,19 @@ function SermonCard({
         >
           {title}
         </Text>
+        {/* Subtitle in EB Garamond italic — gives the sermon
+            tagline ("A letter found in someone's journal.") an
+            editorial epigraph feel, matching the literary voice
+            of the Verse for Today card and the home tagline. The
+            sans Begin pill below keeps the action chrome
+            unmistakably UI; the italic serif handles only the
+            evocative narrative text. */}
         <Text
-          className="text-ink-muted text-[14px] leading-[20px] mt-2"
+          className="text-ink-muted text-[15px] leading-[22px] mt-2"
           style={{
-            fontFamily: "PlusJakartaSans_400Regular",
+            fontFamily: "EBGaramond_400Regular_Italic",
             textAlign: "center",
+            letterSpacing: 0.1,
           }}
         >
           {completed && nextSermonLabel

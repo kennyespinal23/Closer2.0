@@ -12,6 +12,18 @@ import {
   PlusJakartaSans_700Bold,
   PlusJakartaSans_800ExtraBold,
 } from "@expo-google-fonts/plus-jakarta-sans";
+// Editorial serif. Paired with Plus Jakarta Sans (UI) for
+// scripture and sermon tagline — Garamond's literary warmth
+// signals "this is the sacred / editorial text" vs the
+// interface text around it. Premium devotional apps (Hallow,
+// Glorify, Lectio) all lean on a serif pairing for the same
+// reason. We load Regular + Italic so quoted scripture can
+// render in italic for a classic typographic flourish.
+import {
+  EBGaramond_400Regular,
+  EBGaramond_500Medium,
+  EBGaramond_400Regular_Italic,
+} from "@expo-google-fonts/eb-garamond";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   configureForegroundDisplay,
@@ -60,6 +72,9 @@ export default function RootLayout() {
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
     PlusJakartaSans_800ExtraBold,
+    EBGaramond_400Regular,
+    EBGaramond_500Medium,
+    EBGaramond_400Regular_Italic,
   });
 
   if (!fontsLoaded && !fontError) {

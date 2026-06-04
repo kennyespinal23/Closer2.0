@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Switch,
   Text,
+  useColorScheme as useRNColorScheme,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -44,7 +45,7 @@ import { usePreferences } from "@/state/preferences";
 import { useProgress } from "@/state/progress";
 import { type StudySession, useStudySessions } from "@/state/studySessions";
 import { useReadingGoal } from "@/state/readingGoal";
-import { useColors } from "@/state/theme";
+import { useColors, useTheme } from "@/state/theme";
 
 // Home — the Imprint pass.
 //
@@ -673,6 +674,16 @@ export default function TodayScreen() {
               >
                 Dev
               </Text>
+              {/* Theme debug readout. Shows the persisted pref AND
+                  the resolved scheme AND what iOS is currently
+                  reporting, so we can tell at a glance why the
+                  app is rendering light vs dark. Added after the
+                  "I'm in dark mode but seeing light mode"
+                  incident — the screenshot evidence (dark status
+                  bar icons + cream page) only happens when
+                  scheme==="light" at render time, regardless of
+                  what the user *thinks* the setting is. */}
+              <ThemeDebugReadout />
               <View className="items-center mb-3">
                 <NextSermonPill
                   position={catalogPosition.position}
@@ -2428,6 +2439,56 @@ function RestartIcon() {
  * own component so Reset / Restart (and any future dev shortcuts)
  * stay visually consistent without copy-paste.
  */
+// ─────────────────────────────────────────────────────────────────
+// ThemeDebugReadout — dev-only theme diagnostics
+// ─────────────────────────────────────────────────────────────────
+//
+// Surfaces three pieces of state in one tiny line so we can tell at
+// a glance why the app is rendering light vs dark:
+//
+//   • pref:    what's persisted in AsyncStorage ("system" / "dark"
+//              / "light"). This is what the Appearance picker writes.
+//   • scheme:  what the theme provider actually resolved to right
+//              now ("dark" or "light") — i.e. what the palette is
+//              keyed off of for this render.
+//   • iOS:     what React Native's useColorScheme() is reporting
+//              for the device this very moment. When pref==="system"
+//              this is the source of scheme; when pref is explicit,
+//              this just tells us what the device WOULD have said.
+//
+// Why three values: the question is always "where did the light
+// mode rendering come from?" — either (a) pref is explicit "light"
+// (override), (b) pref is "system" and iOS reports "light", or
+// (c) something else weird. Showing all three pins down the cause
+// in 5 seconds without me needing to wire up a remote logger.
+
+function ThemeDebugReadout() {
+  const { pref, scheme } = useTheme();
+  const iosScheme = useRNColorScheme();
+  return (
+    <View
+      style={{
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 8,
+        backgroundColor: "rgba(255, 0, 0, 0.12)",
+        marginBottom: 12,
+      }}
+    >
+      <Text
+        style={{
+          fontFamily: "PlusJakartaSans_500Medium",
+          fontSize: 11,
+          color: "#FF8888",
+          letterSpacing: 0.2,
+        }}
+      >
+        theme · pref={pref} · scheme={scheme} · iOS={iosScheme ?? "null"}
+      </Text>
+    </View>
+  );
+}
+
 function DevPill({
   icon,
   label,

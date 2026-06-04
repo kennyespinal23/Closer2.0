@@ -101,21 +101,45 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ThemeState>(DEFAULT);
-  const systemScheme = useRNColorScheme();
+  // We still SUBSCRIBE to useRNColorScheme so the component
+  // re-renders if the device flips, even though we ignore the
+  // value below. Leaves the subscription hot for the day we
+  // re-enable proper light-mode support.
+  useRNColorScheme();
 
-  // Resolve: explicit pref wins; "system" → follow the device.
-  // Default to "dark" when the device scheme is null (some early
-  // RN frames return null before the bridge resolves it). This
-  // matches Closer's identity as a night-first app.
-  const scheme: ResolvedScheme =
-    state.pref === "system"
-      ? systemScheme === "light"
-        ? "light"
-        : "dark"
-      : state.pref;
-
-  const palette: ColorPalette =
-    scheme === "dark" ? DARK_COLORS : LIGHT_COLORS;
+  // ═══════════════════════════════════════════════════════════════
+  // CLOSER IS LOCKED TO DARK MODE.
+  //
+  // We saw a real user incident where pages were rendering in a
+  // mix of light and dark (some screens followed iOS system,
+  // some had stale palette captures, hero PNG assets with baked-in
+  // dark backdrops slammed against a cream page when iOS reported
+  // light). The whole asset library + ambient atmosphere + glassy
+  // tab bar + per-day accent stops were all calibrated for a dark
+  // canvas; until we re-author the sermon illustrations with
+  // transparent backdrops and re-tune every gradient opacity for
+  // a light surface (1–2 days of work), light mode is structurally
+  // broken.
+  //
+  // Rather than ship a half-broken light mode behind a setting
+  // (where a user accidentally enabling it gets a junky UI), we
+  // FORCE scheme to "dark" here regardless of pref / system /
+  // anything. The pref/setPref/Appearance picker stays wired up
+  // so the path back is small (just delete this comment and
+  // restore the prior resolution logic) — but in shipped builds
+  // it's a no-op.
+  //
+  // If you're reverting this lock: also restore the system-follow
+  // branch above (commented out below for reference), and revisit
+  // Settings → Appearance which currently shows a "Coming soon"
+  // explanation instead of the picker.
+  // ═══════════════════════════════════════════════════════════════
+  const scheme: ResolvedScheme = "dark";
+  const palette: ColorPalette = DARK_COLORS;
+  // Reference the import so TS/ESLint don't flag it as unused while
+  // light mode is shelved. We'll need LIGHT_COLORS again the moment
+  // light mode comes back, and the import path is non-obvious.
+  void LIGHT_COLORS;
 
   // Memoize the vars() payload so we only re-create the style object
   // when the palette actually changes (not on every render).

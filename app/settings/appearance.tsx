@@ -3,77 +3,95 @@ import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import {
-  SettingsChoiceRow,
   SettingsLinkRow,
   SettingsScaffold,
   SettingsSection,
   SettingsToggleRow,
 } from "@/components/SettingsScaffold";
 import { TEXT_SIZES, usePreferences } from "@/state/preferences";
-import { useColors, useTheme, type ThemePref } from "@/state/theme";
+import { useColors } from "@/state/theme";
 
 /**
  * Appearance preferences.
  *
- * The Theme section is now live — picking Dark / Light / Match
- * System updates the active palette across every screen that
- * consumes the design tokens (Tailwind classes + the `useColors`
- * hook). The choice persists across launches.
+ * THEME PICKER IS CURRENTLY DISABLED. Closer is locked to dark
+ * mode at the provider level (see state/theme.tsx). The choice
+ * row is replaced with a single read-only "Dark" status row + a
+ * "Light mode coming soon" footer so users understand why there's
+ * no choice rather than wondering if it's broken.
  *
- * Text size still drives scripture rendering via
- * `usePreferences().textSize.scale` in the reader; the other rows
- * are stubs ready for their behavior.
+ * When light mode ships (sermon illustrations re-authored with
+ * transparent backdrops, ambient gradient stops re-tuned for a
+ * light canvas), restore the previous Match System / Dark / Light
+ * picker block from git history and remove the lock in
+ * state/theme.tsx.
+ *
+ * Text size is still live — drives scripture rendering via
+ * `usePreferences().textSize.scale` in the reader.
  */
 export default function AppearanceScreen() {
   const router = useRouter();
   const [reduceMotion, setReduceMotion] = useState(false);
   const { textSizeId, setTextSize } = usePreferences();
-  const { pref: themePref, setPref: setThemePref } = useTheme();
   const colors = useColors();
-
-  const themeChoices: ReadonlyArray<{
-    id: ThemePref;
-    icon: React.ReactNode;
-    label: string;
-    sublabel: string;
-  }> = [
-    {
-      id: "system",
-      icon: <DeviceIcon stroke={colors.ink} />,
-      label: "Match System",
-      sublabel: "Follows your device's appearance setting",
-    },
-    {
-      id: "dark",
-      icon: <MoonIcon stroke={colors.ink} />,
-      label: "Dark",
-      sublabel: "Easy on the eyes, even at 5 in the morning",
-    },
-    {
-      id: "light",
-      icon: <SunIcon stroke={colors.ink} />,
-      label: "Light",
-      sublabel: "Bright surfaces, deep ink — for daylight reading",
-    },
-  ];
 
   return (
     <SettingsScaffold title="Appearance">
       <SettingsSection
         title="Theme"
-        footer="Match System follows your device's dark / light mode automatically."
+        footer="Closer is currently dark-only. Light mode is coming once the sermon artwork and ambient lighting are tuned for a bright canvas."
       >
-        {themeChoices.map((choice, i) => (
-          <SettingsChoiceRow
-            key={choice.id}
-            icon={choice.icon}
-            label={choice.label}
-            sublabel={choice.sublabel}
-            selected={themePref === choice.id}
-            onPress={() => setThemePref(choice.id)}
-            showDivider={i < themeChoices.length - 1}
-          />
-        ))}
+        {/* Read-only status row — looks like the rest of the
+            settings rows so it slots into the existing visual
+            language, but it's a passive Text/View pair (no
+            Pressable, no chevron, no onPress). The eye still reads
+            "Theme: Dark" the same way as if it were the selected
+            row in the old picker. */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+          }}
+        >
+          <View
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              backgroundColor: colors.surface,
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+            }}
+          >
+            <MoonIcon stroke={colors.ink} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                color: colors.ink,
+                fontFamily: "PlusJakartaSans_600SemiBold",
+                fontSize: 15,
+                lineHeight: 20,
+              }}
+            >
+              Dark
+            </Text>
+            <Text
+              style={{
+                color: colors.inkSubtle,
+                fontFamily: "PlusJakartaSans_400Regular",
+                fontSize: 12.5,
+                lineHeight: 17,
+                marginTop: 1,
+              }}
+            >
+              Easy on the eyes, day or night
+            </Text>
+          </View>
+        </View>
       </SettingsSection>
 
       <SettingsSection
@@ -150,22 +168,9 @@ function MoonIcon({ stroke }: { stroke: string }) {
   );
 }
 
-function SunIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M12 16a4 4 0 100-8 4 4 0 000 8z" {...ICON_BASE} stroke={stroke} />
-      <Path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
-}
-
-function DeviceIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M3 5h18v12H3zM8 21h8M12 17v4" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
-}
+// SunIcon and DeviceIcon were removed along with the disabled
+// Match System / Light picker rows. They'll come back when light
+// mode ships — restore from git history (see header comment).
 
 /**
  * A single "Aa" glyph sized proportionally to the scale it represents.

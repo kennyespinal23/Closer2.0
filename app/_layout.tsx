@@ -25,6 +25,7 @@ import {
   EBGaramond_500Medium,
 } from "@expo-google-fonts/eb-garamond";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { UpdatesGate } from "@/components/UpdatesGate";
 import {
   configureForegroundDisplay,
   ensureAndroidChannel,
@@ -84,8 +85,18 @@ export default function RootLayout() {
   // variables it sets via `vars()` reach every Tailwind class in
   // the tree. The flex:1 root keeps the canvas painted with the
   // active background while children mount.
+  //
+  // UpdatesGate sits at the very top so EAS Updates are applied
+  // SYNCHRONOUSLY on launch instead of the default "download in
+  // background, apply on next launch" behavior. Critical for
+  // shipping fixes — without this, every hotfix took two cold
+  // launches to actually run on the user's device (the first
+  // launch downloads the bundle; the second launch boots into
+  // it). With this in place, one launch = latest bundle. See
+  // components/UpdatesGate.tsx for the trade-offs.
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <UpdatesGate>
       <ThemeProvider>
         <OnboardingProvider>
           <PreferencesProvider>
@@ -132,6 +143,7 @@ export default function RootLayout() {
           </PreferencesProvider>
         </OnboardingProvider>
       </ThemeProvider>
+      </UpdatesGate>
     </GestureHandlerRootView>
   );
 }

@@ -1277,13 +1277,21 @@ function SermonCard({
           // collapsing to a flat icon-in-a-box for 9 of 10
           // sermon types.
           <View style={{ flex: 1, position: "relative", backgroundColor: colors.surface }}>
-            {/* Accent wash — vertical linear gradient from a
-                punchy band of the accent color at the top to
-                the body surface at the bottom. Three stops
-                shape the curve so the top reads as a saturated
-                color band, the middle holds a gentler tint, and
-                the bottom matches the body card so the eye
-                doesn't catch a hard edge before the title. */}
+            {/* Accent wash — vertical linear gradient that
+                concentrates the saturated color band in the top
+                ~30% of the strip, then transitions briskly to
+                the body surface so the icon sits on a clean
+                dark backdrop. (An earlier iteration spread the
+                tint across the full 200pt strip, which made
+                violet/red/blue icons disappear against their
+                own wash colors. Pulling the dissolve point up
+                to 0.45 fixes that.)
+
+                Stops:
+                  0.00  accent @ 0.55  — bold band at top
+                  0.30  accent @ 0.22  — band still readable
+                  0.45  surface @ 1.0  — clean dark backdrop
+                  1.00  surface @ 1.0  — body match */}
             <Svg
               pointerEvents="none"
               width="100%"
@@ -1299,8 +1307,9 @@ function SermonCard({
                   y2="200"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <Stop offset="0" stopColor={type.accent} stopOpacity={0.45} />
-                  <Stop offset="0.55" stopColor={type.accent} stopOpacity={0.18} />
+                  <Stop offset="0" stopColor={type.accent} stopOpacity={0.55} />
+                  <Stop offset="0.30" stopColor={type.accent} stopOpacity={0.22} />
+                  <Stop offset="0.45" stopColor={colors.surface} stopOpacity={1} />
                   <Stop offset="1" stopColor={colors.surface} stopOpacity={1} />
                 </LinearGradient>
               </Defs>
@@ -1348,11 +1357,30 @@ function SermonCard({
 
             {/* Centered illustration — sized down to 132x112
                 (was 150x128) so the icon sits centered on the
-                wash with breathing room around it, rather than
-                filling the strip and competing with the
-                gradient for visual weight. The wash IS the
-                background; the icon punctuates it. */}
-            <View className="flex-1 items-center justify-center">
+                clean dark backdrop below the wash, with
+                breathing room around it. The wash IS the
+                background; the icon punctuates it.
+
+                CardAccentGlow sits behind the icon (same as the
+                legacy fallback) so the per-type accent halos
+                outward from the illustration. Without it the
+                dark icons (Letters, Questions, Misconceptions)
+                lose contrast against the dark backdrop. */}
+            <View className="flex-1 items-center justify-center relative">
+              <View
+                pointerEvents="none"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <CardAccentGlow color={type.accent} />
+              </View>
               <Image
                 source={type.hero}
                 style={{ width: 132, height: 112 }}

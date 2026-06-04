@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
+import { LivingHeroIcon } from "@/components/LivingHeroIcon";
 import { SermonHeader } from "@/components/SermonHeader";
+import * as haptics from "@/lib/haptics";
 import { summarizeBlockedApps } from "@/lib/focus";
 import {
   momentDurationMin,
@@ -73,6 +75,9 @@ export default function SermonIntroScreen() {
   const showFocusRow = focusOffered && !focusPrefs.autoStart;
 
   const handleStart = async () => {
+    // Medium-impact haptic — Begin is the moment the user
+    // commits to today's sermon, so it gets a noticeable pulse.
+    haptics.tap();
     if (focusOffered) {
       // Stamp the session BEFORE navigating so the FocusBanner is
       // already armed on the first panel render. Fire-and-forget
@@ -87,6 +92,45 @@ export default function SermonIntroScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+      {/* ─── Page-level ambient atmosphere ───────────────────────
+          Same Opal-style stage treatment as the home screen — the
+          per-sermon-type accent paints a wide radial wash anchored
+          to the screen (not the scroll content) so it bleeds into
+          the status-bar area and gives the whole intro a lit-stage
+          quality. Wider falloff than the home version because the
+          intro hero is centered lower (icon ~280pt from top of
+          screen vs ~200pt on home). */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 560,
+        }}
+      >
+        <Svg width="100%" height="100%">
+          <Defs>
+            <RadialGradient
+              id="intro-ambient"
+              cx="50%"
+              cy="38%"
+              rx="95%"
+              ry="60%"
+              fx="50%"
+              fy="38%"
+            >
+              <Stop offset="0" stopColor={type.accent} stopOpacity={0.32} />
+              <Stop offset="0.4" stopColor={type.accent} stopOpacity={0.12} />
+              <Stop offset="0.75" stopColor={type.accent} stopOpacity={0.03} />
+              <Stop offset="1" stopColor={type.accent} stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Rect x={0} y={0} width="100%" height="100%" fill="url(#intro-ambient)" />
+        </Svg>
+      </View>
+
       <SermonHeader />
 
       <ScrollView
@@ -115,26 +159,20 @@ export default function SermonIntroScreen() {
             />
           </View>
 
-          {/* Hero — type icon with an accent-colored ambient glow behind it */}
+          {/* Hero — living sermon icon. The shared LivingHeroIcon
+              gives the icon the same float + breathing halo we use
+              on the home screen, so the transition from home →
+              intro carries one consistent "alive object" treatment
+              rather than home's living icon → intro's static icon.
+              haloScale=1.5 gives the intro a roomier glow because
+              the icon sits in more open space than home. */}
           <View className="items-center justify-center mt-6 mb-2">
-            <View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                width: 320,
-                height: 320,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <AccentGlow color={type.accent} />
-            </View>
-
-            <Image
+            <LivingHeroIcon
               source={type.hero}
-              style={{ width: 200, height: 170 }}
-              resizeMode="contain"
-              accessibilityLabel={`${type.name} hero illustration`}
+              accent={type.accent}
+              width={200}
+              height={170}
+              haloScale={1.5}
             />
           </View>
 
@@ -167,7 +205,15 @@ export default function SermonIntroScreen() {
               Set apart in its own pillared card so it reads as a
               quiet preview, not just another body paragraph. The
               left accent bar in the type color ties it visually to
-              the rest of the moment's identity. */}
+              the rest of the moment's identity.
+
+              Scripture body is now set in EB Garamond italic —
+              same editorial-serif treatment used by the home's
+              Verse for Today card. The verse is the most sacred
+              text on this screen; sans-serif reads as UI label,
+              serif italic reads as scripture pulled from a
+              printed page. Size bumped 19→21 because Garamond
+              reads smaller optically than Plus Jakarta Sans. */}
           <View
             className="w-full mt-7 rounded-2xl px-5 py-5"
             style={{
@@ -193,8 +239,11 @@ export default function SermonIntroScreen() {
                 </Text>
                 {scripture.text ? (
                   <Text
-                    className="text-ink text-[19px] leading-[28px] tracking-[-0.2px] mt-2.5"
-                    style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                    className="text-ink text-[21px] leading-[31px] mt-2.5"
+                    style={{
+                      fontFamily: "EBGaramond_400Regular_Italic",
+                      letterSpacing: 0.1,
+                    }}
                   >
                     &ldquo;{scripture.text}&rdquo;
                   </Text>
@@ -211,10 +260,16 @@ export default function SermonIntroScreen() {
 
           {/* Description of what this *type* of sermon is —
               quieter than the title + scripture, just orienting
-              context for someone new to this kind of beat. */}
+              context for someone new to this kind of beat. Set
+              in serif italic so it reads as an editorial
+              epigraph rather than UI copy, matching the
+              sermon-hero subtitle voice on home. */}
           <Text
-            className="text-ink-subtle text-[13px] leading-[20px] text-center mt-5 px-4"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            className="text-ink-subtle text-[14px] leading-[22px] text-center mt-5 px-4"
+            style={{
+              fontFamily: "EBGaramond_400Regular_Italic",
+              letterSpacing: 0.1,
+            }}
           >
             {type.description}
           </Text>
@@ -229,13 +284,19 @@ export default function SermonIntroScreen() {
         {showFocusRow && (
           <FocusRow
             apps={focusPrefs.blockedAppIds}
-            onSkip={() => setSkipFocusOnce(true)}
+            onSkip={() => {
+              haptics.soft();
+              setSkipFocusOnce(true);
+            }}
           />
         )}
         <Button label="Begin" onPress={handleStart} />
         <Text
-          className="text-ink-subtle text-[12px] text-center mt-3"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          className="text-ink-subtle text-[13px] leading-[20px] text-center mt-3 px-2"
+          style={{
+            fontFamily: "EBGaramond_400Regular_Italic",
+            letterSpacing: 0.1,
+          }}
         >
           {focusOffered
             ? "Focus mode will quiet the noise while you read."
@@ -357,23 +418,6 @@ function withAlpha(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-/**
- * Soft circular halo behind the hero, tinted to match the sermon type.
- * Same warm-glow language as the rest of the app, but the color
- * varies per type — Daily Church glows orange, Prayer Nights glows
- * deep blue, Testimonies glows green, etc.
- */
-function AccentGlow({ color }: { color: string }) {
-  return (
-    <Svg width={320} height={320} viewBox="0 0 320 320">
-      <Defs>
-        <RadialGradient id="accentGlow" cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor={color} stopOpacity={0.28} />
-          <Stop offset="50%" stopColor={color} stopOpacity={0.08} />
-          <Stop offset="100%" stopColor="#000000" stopOpacity={0} />
-        </RadialGradient>
-      </Defs>
-      <Rect width={320} height={320} fill="url(#accentGlow)" />
-    </Svg>
-  );
-}
+// (Legacy AccentGlow was removed when LivingHeroIcon took over
+// the hero rendering; the page-level radial gradient at the top
+// of the screen now provides the ambient atmosphere.)

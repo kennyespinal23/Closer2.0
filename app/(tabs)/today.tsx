@@ -4,7 +4,6 @@ import {
   Animated,
   Easing,
   Image,
-  type ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,6 +24,7 @@ import { useRouter } from "expo-router";
 import { ActivityRing, RING_ACCENT } from "@/components/ActivityRing";
 import { FadeIn } from "@/components/FadeIn";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
+import { LivingHeroIcon } from "@/components/LivingHeroIcon";
 import { ShieldOverlay } from "@/components/ShieldOverlay";
 import { cancelDailyReminder } from "@/lib/notifications";
 import * as haptics from "@/lib/haptics";
@@ -2044,131 +2044,9 @@ function CardAccentGlow({ color }: { color: string }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// LivingHeroIcon — animated sermon hero illustration
-// ─────────────────────────────────────────────────────────────────
-//
-// Wraps the SermonCard's accent halo + illustration in two
-// looping animations so the hero feels alive (the static asset
-// problem that made the page feel less premium than Opal):
-//
-//   1. FLOAT  — the icon drifts vertically ±4pt over ~5s in a
-//               sine-eased loop. Subtle enough not to distract,
-//               obvious enough that the eye picks up the motion
-//               on a glance. Same mechanism Opal uses to give
-//               its stones their "alive" presence.
-//
-//   2. BREATH — the accent halo behind the icon pulses between
-//               80% and 100% opacity over ~5s, offset from the
-//               float so the two curves don't synchronize. Reads
-//               as ambient light brightening and dimming.
-//
-// Both animations use native driver (useNativeDriver: true) so
-// they run on the UI thread and don't compete with JS work
-// (gestures, scroll, navigation). Both loop indefinitely.
-//
-// We deliberately don't pause when the screen is off-focus —
-// the cost is negligible (two interpolated values per frame)
-// and pausing would require navigation focus listeners that
-// would add code surface for a non-issue.
-
-function LivingHeroIcon({
-  source,
-  accent,
-}: {
-  source: ImageSourcePropType;
-  accent: string;
-}) {
-  // Two separate Animated.Values so the curves run on
-  // independent timelines (float is 5s sine, breath is 5.4s
-  // sine — the offset prevents synchronization).
-  const float = useRef(new Animated.Value(0)).current;
-  const breath = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const floatLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(float, {
-          toValue: 1,
-          duration: 2500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(float, {
-          toValue: 0,
-          duration: 2500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    const breathLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(breath, {
-          toValue: 1,
-          duration: 2700,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(breath, {
-          toValue: 0,
-          duration: 2700,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    floatLoop.start();
-    breathLoop.start();
-    return () => {
-      floatLoop.stop();
-      breathLoop.stop();
-    };
-  }, [float, breath]);
-
-  // Float interpolation: 0 → -5pt drift up at the apex, 1 → +5pt
-  // drift down at the trough. ±4-5pt is the sweet spot — enough
-  // to be perceptible, small enough not to feel jittery.
-  const translateY = float.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-4, 4],
-  });
-
-  // Breath interpolation: 80% → 100% halo opacity. The halo never
-  // fully fades (lower bound 0.8) so the icon always has a
-  // grounded glow; we just modulate intensity.
-  const haloOpacity = breath.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.8, 1],
-  });
-
-  return (
-    <>
-      <Animated.View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          alignItems: "center",
-          justifyContent: "center",
-          opacity: haloOpacity,
-        }}
-      >
-        <CardAccentGlow color={accent} />
-      </Animated.View>
-      <Animated.View style={{ transform: [{ translateY }] }}>
-        <Image
-          source={source}
-          style={{ width: 184, height: 156 }}
-          resizeMode="contain"
-        />
-      </Animated.View>
-    </>
-  );
-}
+// (LivingHeroIcon was extracted to components/LivingHeroIcon.tsx so
+// the sermon intro and complete screens can share it. The home
+// screen imports it from there at the top of this file.)
 
 function PlayPill() {
   const colors = useColors();

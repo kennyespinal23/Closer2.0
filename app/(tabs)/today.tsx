@@ -608,167 +608,46 @@ export default function TodayScreen() {
           </View>
         </FadeIn>
 
-        {/* ─── Today's rhythm — the timeline ──────────────────────
-            Chronological view of every scheduled moment the user
-            has set up for today: the sermon arrival, every enabled
-            study-session routine that fires today, anchors, etc.
-            Each row carries a status (Done / Now / Upcoming) so
-            the user reads the day as a continuous rhythm rather
-            than a pile of unrelated cards.
+        {/*
+            ═══════════════════════════════════════════════════════════
+            HOME PAGE STOPS HERE.
 
-            This is the section the new system-routine seeding
-            (onboarding's sermon time + Bible study time) and the
-            template-card flow both feed into — adding a routine
-            on Practice immediately surfaces here. */}
-        <FadeIn delayMs={140} durationMs={800}>
-          <View className="mt-9">
-            <TodayRhythm
-              sermonTime={answers.dailyReminderTime}
-              sermonName={todaysMoment.title}
-              sermonCompleted={hasCompletedSermonToday}
-              onSermonPress={handlePlaySermon}
-              studySessions={studySessions}
-              activeFocusSession={focusSession}
-              // Quick-focus button: only rendered when no session
-              // is active (the takeover hero is the manage surface
-              // during a live session, so adding a "start new"
-              // affordance there would be confusing). Open-ended
-              // session — no duration cap, no routineId — so the
-              // user can decide on the fly when to End. Uses
-              // today's sermonDay so the persisted session still
-              // anchors to the day for stale-session cleanup math.
-              onStartQuickFocus={
-                focusSession
-                  ? undefined
-                  : () => {
-                      haptics.tap();
-                      startFocusSession(todaysMoment.day).catch(() => {
-                        /* shield start is best-effort; persistence
-                           wrote regardless */
-                      });
-                    }
-              }
-            />
-          </View>
-        </FadeIn>
+            Phase 10C declutter: removed Today's rhythm timeline,
+            "Your practice" section header, WeekStrip, ReadingPill,
+            RoutineCard, and LastCheckInCard from the home screen.
 
-        {/* ─── "Your practice" section header ─────────────────────
-            Magazine-style chapter divider above the streak strip,
-            reading pill, and routine card — the three surfaces
-            that form the user's personal practice block (as
-            opposed to today's content above). Same treatment as
-            Practice's "Deepen your practice" header (19pt bold
-            mixed-case + 12.5pt subtitle), so the two tabs share
-            a section-heading rhythm and home stops reading as a
-            flat stack of disconnected widgets. */}
-        <FadeIn delayMs={180} durationMs={800}>
-          <View className="px-6 mt-9 mb-4">
-            <Text
-              className="text-ink text-[19px] leading-[24px] tracking-[-0.2px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-            >
-              Your practice
-            </Text>
-            <Text
-              className="text-ink-muted text-[12.5px] leading-[18px] mt-0.5"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-            >
-              The small anchors that keep you returning.
-            </Text>
-          </View>
-        </FadeIn>
+            Why — the user feedback was clear: the home was reading
+            like a "put everything next to each other for the sake
+            of it" stack. Opal's home is comparatively bare — a hero
+            object and one or two supporting strips, then it ENDS.
+            The rest of the app lives in dedicated tabs (My Apps,
+            Insights, etc).
 
-        {/* ─── Streak strip ─────────────────────────────────────────
-            Imprint-style compact card: one contextual prompt on top
-            and 7 day cells beneath, with today highlighted by an
-            outlined pill. Demoted to a supporting strip under the
-            hero + timeline. */}
-        <FadeIn delayMs={200} durationMs={800}>
-          <View className="px-6">
-            <WeekStrip
-              days={weekDays}
-              prompt={streakPrompt(streak)}
-              streakCount={streak.current}
-              // Today's sermon-type accent doubles as the streak
-              // strip's accent. See WeekStrip header for why per-day
-              // accents would require data we don't currently track.
-              accent={sermonType.accent}
-            />
-          </View>
-        </FadeIn>
+            Closer's home is now the same posture:
+              1. Greeting + streak chip + tagline    (top-of-page personality)
+              2. Sermon hero                          (the day's invitation)
+              3. 3-stat row                           (gentle progress signal)
+              4. Verse for today                      (the second sacred moment)
+            …and that's it.
 
-        {/* ─── Reading-goal pill ───────────────────────────────────
-            Slim one-row pill: tiny iOS-blue activity ring + minutes
-            label. Tap drills into /reading-goal for the full chart. */}
-        <FadeIn delayMs={240} durationMs={800}>
-          <View className="px-6 mt-4 mb-2">
-            <ReadingPill
-              minutes={readingMinutes}
-              goal={readingGoal}
-              reached={readingGoalReached}
-              onPress={() => router.push("/reading-goal")}
-            />
-          </View>
-        </FadeIn>
+            The cut sections aren't deleted from the app — they live
+            on more appropriate tabs:
+              • Today's rhythm / RoutineCard → Practice tab (which
+                already has the routines + study sessions).
+              • WeekStrip                    → Insights tab (which
+                already has the deep streak/history visualizations
+                — the chip in the header keeps the streak signal on
+                home for emotional continuity).
+              • ReadingPill                  → Practice tab (paired
+                with the Bible-study routine that drives it).
+              • LastCheckInCard              → already accessible from
+                the check-in flow / Insights timeline; cutting it
+                from home reduces a "yesterday's history" feel from
+                a screen meant to invite today's practice.
 
-        {/* ─── Routine / Focus card ────────────────────────────────
-            Master toggle + featured routine. Hidden when an active
-            focus session exists — at that point the ActiveFocusHero
-            up top owns the "what is focus doing right now?" surface,
-            and the mini-player at the tab bar owns the always-on
-            end-control. Leaving this card visible during an active
-            session would create THREE simultaneous focus surfaces
-            on home (hero + this + pill), which is the redundancy
-            the consolidation phase was meant to retire.
-
-            When no session is active this card stays — it's the
-            ONLY surface that exposes the master enable/disable
-            and the "next scheduled routine" preview, neither of
-            which the timeline or pill cover. */}
-        {!focusSession ? (
-          <FadeIn delayMs={280} durationMs={800}>
-            <View className="px-6 mt-4">
-              <RoutineCard
-                masterEnabled={focusPrefs.enabled}
-                sessionActive={focusSession !== null}
-                featured={featured}
-                onToggle={setFocusEnabled}
-                onEndSession={() => {
-                  endFocusSession().catch(() => {});
-                }}
-                onOpen={() => {
-                  // Tap routes to where the user expects: the
-                  // routine editor when there's a routine to
-                  // manage, the global focus settings otherwise.
-                  // Same shape Opal uses (tap My Apps card → the
-                  // app picker).
-                  if (featured.routine) {
-                    router.push("/(tabs)/journey");
-                  } else {
-                    router.push("/settings/focus");
-                  }
-                }}
-              />
-            </View>
-          </FadeIn>
-        ) : null}
-
-        {/* ─── Last check-in (conditional) ────────────────────────
-            Took the slot the old chapter-resume Continue-Reading
-            card used to occupy. Surfaces the user's most recent
-            mood log as a memory card — tap to revisit it (and its
-            verse + journal) on the check-in detail screen. Hidden
-            entirely until the user has logged at least one mood. */}
-        {lastCheckIn && (
-          <FadeIn delayMs={320} durationMs={800}>
-            <View className="px-6 mt-4">
-              <LastCheckInCard
-                checkIn={lastCheckIn}
-                onPress={handleOpenLastCheckIn}
-              />
-            </View>
-          </FadeIn>
-        )}
+            The dev tools section below stays (it's already gated by
+            __DEV__ so it's stripped from production builds).
+            ═══════════════════════════════════════════════════════════ */}
 
         {/* ─── Dev tools ────────────────────────────────────────────
             Gated behind __DEV__ so the entire subtree is stripped from

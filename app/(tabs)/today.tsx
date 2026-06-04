@@ -4,6 +4,7 @@ import {
   Animated,
   Easing,
   Image,
+  type ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -1467,34 +1468,18 @@ function SermonCard({
               </Text>
             </View>
 
-            {/* Centered illustration — scaled up from 132x112 to
-                184x156. This is the focal "object" of the upper
-                screen and needs to carry the eye on landing.
-                Tight CardAccentGlow sits directly behind it for
-                that just-emerging-from-the-mist quality. */}
+            {/* Living centered illustration — the icon never sits
+                still. A gentle float (vertical drift) + breathing
+                halo (opacity pulse on the accent glow behind it)
+                give the hero a sense of presence, matching the
+                "alive object" quality of Opal's rotating gemstone.
+                See LivingHeroIcon for the animation curves and
+                rationale. */}
             <View
               className="items-center justify-center relative"
               style={{ marginTop: 14, marginBottom: 6 }}
             >
-              <View
-                pointerEvents="none"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <CardAccentGlow color={type.accent} />
-              </View>
-              <Image
-                source={type.hero}
-                style={{ width: 184, height: 156 }}
-                resizeMode="contain"
-              />
+              <LivingHeroIcon source={type.hero} accent={type.accent} />
             </View>
 
             {/* Completed badge — top-right overlay (same slot it
@@ -2048,6 +2033,132 @@ function CardAccentGlow({ color }: { color: string }) {
       </Defs>
       <Rect width={360} height={180} fill="url(#cardGlow)" />
     </Svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// LivingHeroIcon — animated sermon hero illustration
+// ─────────────────────────────────────────────────────────────────
+//
+// Wraps the SermonCard's accent halo + illustration in two
+// looping animations so the hero feels alive (the static asset
+// problem that made the page feel less premium than Opal):
+//
+//   1. FLOAT  — the icon drifts vertically ±4pt over ~5s in a
+//               sine-eased loop. Subtle enough not to distract,
+//               obvious enough that the eye picks up the motion
+//               on a glance. Same mechanism Opal uses to give
+//               its stones their "alive" presence.
+//
+//   2. BREATH — the accent halo behind the icon pulses between
+//               80% and 100% opacity over ~5s, offset from the
+//               float so the two curves don't synchronize. Reads
+//               as ambient light brightening and dimming.
+//
+// Both animations use native driver (useNativeDriver: true) so
+// they run on the UI thread and don't compete with JS work
+// (gestures, scroll, navigation). Both loop indefinitely.
+//
+// We deliberately don't pause when the screen is off-focus —
+// the cost is negligible (two interpolated values per frame)
+// and pausing would require navigation focus listeners that
+// would add code surface for a non-issue.
+
+function LivingHeroIcon({
+  source,
+  accent,
+}: {
+  source: ImageSourcePropType;
+  accent: string;
+}) {
+  // Two separate Animated.Values so the curves run on
+  // independent timelines (float is 5s sine, breath is 5.4s
+  // sine — the offset prevents synchronization).
+  const float = useRef(new Animated.Value(0)).current;
+  const breath = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const floatLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(float, {
+          toValue: 1,
+          duration: 2500,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(float, {
+          toValue: 0,
+          duration: 2500,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    const breathLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breath, {
+          toValue: 1,
+          duration: 2700,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(breath, {
+          toValue: 0,
+          duration: 2700,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    floatLoop.start();
+    breathLoop.start();
+    return () => {
+      floatLoop.stop();
+      breathLoop.stop();
+    };
+  }, [float, breath]);
+
+  // Float interpolation: 0 → -5pt drift up at the apex, 1 → +5pt
+  // drift down at the trough. ±4-5pt is the sweet spot — enough
+  // to be perceptible, small enough not to feel jittery.
+  const translateY = float.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-4, 4],
+  });
+
+  // Breath interpolation: 80% → 100% halo opacity. The halo never
+  // fully fades (lower bound 0.8) so the icon always has a
+  // grounded glow; we just modulate intensity.
+  const haloOpacity = breath.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.8, 1],
+  });
+
+  return (
+    <>
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: haloOpacity,
+        }}
+      >
+        <CardAccentGlow color={accent} />
+      </Animated.View>
+      <Animated.View style={{ transform: [{ translateY }] }}>
+        <Image
+          source={source}
+          style={{ width: 184, height: 156 }}
+          resizeMode="contain"
+        />
+      </Animated.View>
+    </>
   );
 }
 

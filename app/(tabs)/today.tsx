@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -336,50 +336,58 @@ export default function TodayScreen() {
     [streak.lastSevenDays],
   );
 
-  const handlePlaySermon = async () => {
-    // Medium-impact haptic on the primary CTA — the begin tap
-    // is the moment the user commits to today's sermon, so it
-    // gets a more noticeable tactile pulse than a generic row.
+  // useCallback so the SermonCard / ImprintSermonCard / GentlerStreak
+  // hero (all React.memo-wrapped) don't re-render when an unrelated
+  // bit of TodayScreen state changes. Deps cover every reactive value
+  // the closure reads — re-creating the handler is acceptable cost
+  // because it only happens when focus prefs or today's moment day
+  // actually change, both of which already imply the hero card props
+  // changed too.
+  const handlePlaySermon = useCallback(async () => {
     haptics.tap();
-    // Focus-session bring-up was previously the responsibility
-    // of the sermon intro screen (the antechamber). When the
-    // user removed the intro from the flow we moved that
-    // responsibility here so the "Begin → focus engaged →
-    // scripture" sequencing still happens BEFORE the
-    // FocusBanner / panel surfaces mount and read the
-    // session. Conditions match the old intro:
-    //   • focus is enabled
-    //   • the user has at least one app on the blocked list
-    // No "skip once" affordance here — that surface lived on
-    // the intro page and is gone with it. If users miss it,
-    // we'll add a long-press fallback on this button.
     const focusOffered =
       focusPrefs.enabled && focusPrefs.blockedAppIds.length > 0;
     if (focusOffered) {
-      // Fire-and-forget the shield call — we don't want to
-      // block the user's tap on a network/permission round-
-      // trip. The session is committed in local state
-      // synchronously, so the navigation below safely lands
-      // on a screen that already sees the active session.
+      // Fire-and-forget — local state commits synchronously so
+      // the navigation below lands on a screen that already
+      // sees the active session.
       await startFocusSession(todaysMoment.day);
     }
-    // Skip the legacy intro/antechamber and go straight to
-    // the scripture quote screen. The verse IS the first beat
-    // of the sermon now — the intro page's metadata (READ
-    // 5 min, description, focus row) was demoted as redundant
-    // when the home page already shows the duration and the
-    // App Blocks section right below the hero handles the
-    // focus surface.
     router.push("/sermon/scripture");
-  };
+  }, [
+    focusPrefs.enabled,
+    focusPrefs.blockedAppIds,
+    todaysMoment.day,
+    startFocusSession,
+    router,
+  ]);
 
-  const handleOpenLastCheckIn = () => {
+  // Stable refs for the AppBlocksList + RhythmGrid children, which
+  // are React.memo'd downstream. Without these the parent re-creates
+  // the closures on every render and defeats the memo entirely.
+  const handleToggleStudySession = useCallback(
+    (id: string) => {
+      haptics.tap();
+      void toggleStudySession(id);
+    },
+    [toggleStudySession],
+  );
+  const handleOpenStudySessions = useCallback(() => {
+    haptics.soft();
+    router.push("/settings/study-sessions");
+  }, [router]);
+  const handleOpenRhythm = useCallback(() => {
+    haptics.soft();
+    router.push("/rhythm");
+  }, [router]);
+
+  const handleOpenLastCheckIn = useCallback(() => {
     if (!lastCheckIn) return;
     haptics.soft();
     router.push(`/check-ins/${lastCheckIn.id}` as never);
-  };
+  }, [lastCheckIn, router]);
 
-  const handleOpenProfile = () => {
+  const handleOpenProfile = useCallback(() => {
     // Profile is now a first-class TAB (see app/(tabs)/_layout.tsx)
     // rather than a presented drawer. The avatar tap remains as a
     // shortcut for users who learned the drawer pattern; under the
@@ -387,7 +395,7 @@ export default function TodayScreen() {
     // selection state stays in sync with where the user actually is.
     haptics.soft();
     router.navigate("/profile");
-  };
+  }, [router]);
 
   const handleResetApp = () => {
     // Dev shortcut: wipe ALL persisted state (onboarding, progress,
@@ -776,18 +784,8 @@ export default function TodayScreen() {
             </View>
             <AppBlocksList
               sessions={studySessions}
-              onToggle={(id) => {
-                // Fire-and-forget — toggleSession is async because
-                // it reschedules the OS notification, but the local
-                // state update is synchronous so the switch feels
-                // instant. Errors are swallowed inside the provider.
-                haptics.tap();
-                void toggleStudySession(id);
-              }}
-              onAdd={() => {
-                haptics.soft();
-                router.push("/settings/study-sessions");
-              }}
+              onToggle={handleToggleStudySession}
+              onAdd={handleOpenStudySessions}
             />
           </View>
         </FadeIn>
@@ -844,10 +842,7 @@ export default function TodayScreen() {
                 behind the tap → /rhythm detail page. */}
             <RhythmGrid
               engagedDates={engagedDates}
-              onOpenDetail={() => {
-                haptics.soft();
-                router.push("/rhythm");
-              }}
+              onOpenDetail={handleOpenRhythm}
             />
           </View>
         </FadeIn>
@@ -1244,7 +1239,7 @@ function ReadingPill({
 // invitation with more presence.
 // ─────────────────────────────────────────────────────────────────
 
-function AppBlocksList({
+const AppBlocksList = memo(function AppBlocksList({
   sessions,
   onToggle,
   onAdd,
@@ -1275,10 +1270,14 @@ function AppBlocksList({
         }}
       >
         {sessions.map((session) => (
+          // onToggle is the same stable ref for every row; AppBlockRow
+          // calls it internally with its own session.id so we don't
+          // need a per-row closure here. Lets React.memo on the row
+          // actually short-circuit when neighbours change.
           <AppBlockRow
             key={session.id}
             session={session}
-            onToggle={() => onToggle(session.id)}
+            onToggle={onToggle}
           />
         ))}
         {/* Only show the "Add a time" row when there's NO time
@@ -1294,14 +1293,17 @@ function AppBlocksList({
       </View>
     </View>
   );
-}
+});
 
-function AppBlockRow({
+const AppBlockRow = memo(function AppBlockRow({
   session,
   onToggle,
 }: {
   session: StudySession;
-  onToggle: () => void;
+  // (id) signature lets the parent pass one stable ref shared across
+  // every row instead of allocating a per-row closure on each render.
+  // Memo can then actually short-circuit when other rows change.
+  onToggle: (id: string) => void;
 }) {
   const colors = useColors();
   return (
@@ -1351,9 +1353,14 @@ function AppBlockRow({
       </View>
       <Switch
         value={session.enabled}
-        onValueChange={(next) => {
+        onValueChange={() => {
+          // Switch passes the new boolean but we ignore it — the
+          // parent's onToggle is an id-based toggle, not a setter,
+          // and the local optimistic state in the provider drives
+          // the value display so this stays correct without a
+          // round-trip.
           haptics.tick();
-          onToggle(next);
+          onToggle(session.id);
         }}
         // iOS-style green track for on, neutral surface for off —
         // matches Settings.app affordance so the toggle reads as
@@ -1363,7 +1370,7 @@ function AppBlockRow({
       />
     </View>
   );
-}
+});
 
 /**
  * AppBlockAddRow — the always-present "+ Add a time" footer row.
@@ -1373,7 +1380,7 @@ function AppBlockRow({
  * it creates. Tap → opens the existing study-session editor
  * where the user picks a time + the apps to quiet.
  */
-function AppBlockAddRow({
+const AppBlockAddRow = memo(function AppBlockAddRow({
   onPress,
   hasItems,
 }: {
@@ -1430,7 +1437,7 @@ function AppBlockAddRow({
       </View>
     </Pressable>
   );
-}
+});
 
 function formatTimeOfDay(t: { hour: number; minute: number }): string {
   const h12 = t.hour === 0 ? 12 : t.hour > 12 ? t.hour - 12 : t.hour;
@@ -1465,7 +1472,7 @@ function formatAppCount(n: number): string {
   return `${n} apps`;
 }
 
-function VerseOfDay({ accent }: { accent: string }) {
+const VerseOfDay = memo(function VerseOfDay({ accent }: { accent: string }) {
   const colors = useColors();
   // useMemo against the calendar date string (not the Date
   // instance) so re-renders within the same day return the same
@@ -1609,7 +1616,7 @@ function VerseOfDay({ accent }: { accent: string }) {
       </Text>
     </View>
   );
-}
+});
 
 // BrowseRail + BrowseTile were removed when the user dropped the
 // "Browse all" section from the home page. The Library tab is now
@@ -1692,7 +1699,7 @@ const GENTLER_STREAK_TEST_BLURB =
 const GENTLER_STREAK_TEST_CLOSER =
   "Today's devotional is for anyone who has ever sat in that silence.";
 
-function GentlerStreakSermonCard({
+const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
   illustration,
   title,
   blurb,
@@ -2107,9 +2114,9 @@ function GentlerStreakSermonCard({
       </Pressable>
     </View>
   );
-}
+});
 
-function SermonCard({
+const SermonCard = memo(function SermonCard({
   type,
   title,
   subtitle,
@@ -2521,7 +2528,7 @@ function SermonCard({
       </View>
     </Pressable>
   );
-}
+});
 
 // ─────────────────────────────────────────────────────────────────
 // ImprintSermonCard — v2 self-contained Imprint-style hero
@@ -2677,7 +2684,7 @@ const COMPLETED_GREEN = "#34C759";
  *     NOT navigate to tomorrow's intro (that would be misleading
  *     since the content isn't unlocked yet).
  */
-function ImprintSermonCard({
+const ImprintSermonCard = memo(function ImprintSermonCard({
   type,
   title,
   subtitle,
@@ -2873,7 +2880,7 @@ function ImprintSermonCard({
       </View>
     </View>
   );
-}
+});
 
 /**
  * previewDayLabel — turns an offset of days into a short user-
@@ -4135,7 +4142,7 @@ type StatRowProps = {
  *     which carries the full year heatmap, monthly chart, and
  *     streak stats.
  */
-function RhythmGrid({
+const RhythmGrid = memo(function RhythmGrid({
   engagedDates,
   onOpenDetail,
 }: {
@@ -4268,13 +4275,16 @@ function RhythmGrid({
               }}
             >
               {row.map((cell, cIdx) => (
+                // RhythmCell pulls colors from context itself so the
+                // grid doesn't have to thread a fresh-on-each-render
+                // colors prop into 35–42 cells (which would defeat the
+                // cell-level React.memo wrapper).
                 <RhythmCell
                   key={`${rIdx}-${cIdx}`}
                   size={cellSize}
                   marginLeft={cIdx === 0 ? 0 : GAP}
                   state={cell.state}
                   isToday={cell.isToday}
-                  colors={colors}
                 />
               ))}
             </View>
@@ -4327,7 +4337,7 @@ function RhythmGrid({
       </View>
     </Pressable>
   );
-}
+});
 
 /** Single-letter weekday strip — US locale (Sun → Sat). */
 const WEEKDAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"] as const;
@@ -4350,19 +4360,22 @@ const WEEKDAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"] as const;
  *                  underneath so the user can locate "now"
  *                  at a glance, engaged or not
  */
-function RhythmCell({
+const RhythmCell = memo(function RhythmCell({
   size,
   marginLeft,
   state,
   isToday,
-  colors,
 }: {
   size: number;
   marginLeft: number;
   state: RhythmCellState;
   isToday: boolean;
-  colors: { border: string };
 }) {
+  // Pull colors from context rather than props so memo's shallow
+  // equality on (size, marginLeft, state, isToday) — all primitives —
+  // can actually short-circuit. With colors as a prop the grid would
+  // pass a fresh ref into every cell on each render and bust memo.
+  const colors = useColors();
   const radius = Math.max(2, Math.floor(size / 4));
   let backgroundColor = "transparent";
   let opacity = 1;
@@ -4407,7 +4420,7 @@ function RhythmCell({
       }}
     />
   );
-}
+});
 
 function StatRow({
   streakCurrent,

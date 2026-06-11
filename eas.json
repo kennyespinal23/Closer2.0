@@ -22,6 +22,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "kennyespinal23@gmail.com",
+        "appleTeamId": "7ZKDS4X5B9",
+        "ascAppId": "6779004238"
+      }
+    }
   }
 }

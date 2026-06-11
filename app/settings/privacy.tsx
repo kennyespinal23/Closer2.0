@@ -1,4 +1,4 @@
-import { Alert, Linking, Share, Text, View } from "react-native";
+import { Alert, Linking, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import {
@@ -7,6 +7,7 @@ import {
   SettingsSection,
   SettingsStaticRow,
 } from "@/components/SettingsScaffold";
+import { shareRaw } from "@/lib/share";
 import { useAnnotations } from "@/state/annotations";
 import { useCheckIns } from "@/state/checkIns";
 import { useOnboarding } from "@/state/onboarding";
@@ -144,13 +145,17 @@ export default function PrivacyScreen() {
     };
 
     try {
-      // RN's Share API takes `message` as the payload on iOS and
-      // both `message` + `title` on Android. The pretty-printed
-      // JSON makes the file readable as-is in Notes / Mail.
-      await Share.share({
+      // Funneled through lib/share's `shareRaw` (vs the verse /
+      // insight helpers) so the JSON payload is shared as-is with
+      // no "via Closer" attribution glued on. Subject line still
+      // becomes the iOS Mail subject via the `title` prop.
+      const result = await shareRaw({
         title: "Closer — your data",
         message: JSON.stringify(snapshot, null, 2),
       });
+      if (result.status === "error") {
+        throw new Error(result.message);
+      }
     } catch (err) {
       // Share sheet was dismissed or failed — both are user-visible
       // already (the sheet just closes), so we surface a tiny

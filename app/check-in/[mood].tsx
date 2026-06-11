@@ -4,7 +4,6 @@ import {
   Image,
   Pressable,
   ScrollView,
-  Share,
   Text,
   View,
 } from "react-native";
@@ -14,6 +13,7 @@ import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { JournalEditor } from "@/components/JournalEditor";
+import { shareVerse } from "@/lib/share";
 import { findMood, pickVerseForMood, type MoodVerse } from "@/constants/moods";
 import { useCheckIns } from "@/state/checkIns";
 import { useColors } from "@/state/theme";
@@ -99,11 +99,12 @@ export default function VerseDeliveryScreen() {
     if (!verseRef.current) return;
     const v = verseRef.current;
     try {
-      // System share sheet — works for iMessage, Mail, copy, etc.
-      // The message format is intentionally plain so it pastes well
-      // anywhere; the reference goes on its own line for readability.
-      await Share.share({
-        message: `"${v.text}"\n— ${v.reference}`,
+      // Funneled through lib/share so the iMessage / Mail subject
+      // line, attribution, and citation read identically to every
+      // other verse-share in the app.
+      await shareVerse({
+        text: v.text,
+        reference: v.reference,
       });
     } catch {
       // User cancelled or share unavailable — no-op.

@@ -10,7 +10,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   type TextLayoutEventData,
@@ -29,6 +28,7 @@ import Svg, {
 } from "react-native-svg";
 import { BlurView } from "expo-blur";
 import * as haptics from "@/lib/haptics";
+import { shareVerse, sharePassage } from "@/lib/share";
 import { NoteEditor } from "@/components/NoteEditor";
 import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
@@ -301,13 +301,13 @@ export default function ChapterReaderScreen() {
       if (v) lines.push(`${n} ${v.text}`);
     }
     const range = formatVerseRange(book.name, chapter, selectedVerses);
-    try {
-      await Share.share({
-        message: `${lines.join(" ")}\n\n— ${range} (${translation.tag})`,
-      });
-    } catch {
-      /* user cancelled — no-op */
-    }
+    // Funneled through lib/share for consistent "via Closer"
+    // attribution + Mail subject + future Universal Link slot.
+    await sharePassage({
+      text: lines.join(" "),
+      reference: range,
+      translation: translation.tag,
+    });
     exitSelection();
   }, [
     selectedVerses,
@@ -420,13 +420,11 @@ export default function ChapterReaderScreen() {
   const handleShare = async () => {
     if (!activeVerseData) return;
     const ref = `${book.name} ${chapter}:${activeVerseData.number}`;
-    try {
-      await Share.share({
-        message: `"${activeVerseData.text}"\n\n— ${ref} (${translation.name})`,
-      });
-    } catch {
-      /* user-dismissed shares are non-fatal */
-    }
+    await shareVerse({
+      text: activeVerseData.text,
+      reference: ref,
+      translation: translation.name,
+    });
   };
 
   // ─── Real pagination — measurement + page state ─────────────────

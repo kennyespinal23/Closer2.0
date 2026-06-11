@@ -3,7 +3,6 @@ import {
   Animated,
   Easing,
   Pressable,
-  Share,
   StyleSheet,
   Text,
   View,
@@ -12,6 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { useRouter } from "expo-router";
 import * as haptics from "@/lib/haptics";
+import { shareVerse } from "@/lib/share";
 import { splitScripture } from "@/lib/moments";
 import { getDailyImage } from "@/services/unsplashService";
 import { useMoments } from "@/state/moments";
@@ -188,13 +188,14 @@ export default function SermonScriptureScreen() {
   const handleShare = async () => {
     haptics.soft();
     if (!scripture.text) return;
-    try {
-      await Share.share({
-        message: `"${scripture.text}"\n\n— ${scripture.reference}\n\nShared from Closer`,
-      });
-    } catch {
-      // Swallow — share is a soft action, no error surface needed.
-    }
+    // Centralized in lib/share so the verse footer ("via Closer"),
+    // citation format, and Mail subject line are identical to every
+    // other verse-share surface (chapter reader, check-ins, mood
+    // delivery). Future Universal Link lands here in one place.
+    await shareVerse({
+      text: scripture.text,
+      reference: scripture.reference,
+    });
   };
 
   return (

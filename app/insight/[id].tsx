@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import {
   Pressable,
   ScrollView,
-  Share,
   Text,
   useWindowDimensions,
   View,
@@ -11,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { FadeIn } from "@/components/FadeIn";
+import { shareInsight } from "@/lib/share";
 import {
   ArticleHero,
   hexWithAlpha,
@@ -71,13 +71,10 @@ export default function InsightDetailScreen() {
   const saved = isSaved(insight.id);
 
   const handleShare = async () => {
-    try {
-      await Share.share({
-        message: `${insight.title} — ${insight.subtitle}\n\nRead more in Closer.`,
-      });
-    } catch {
-      // User dismissed the share sheet — non-fatal.
-    }
+    await shareInsight({
+      title: insight.title,
+      subtitle: insight.subtitle,
+    });
   };
 
   const openScripture = (

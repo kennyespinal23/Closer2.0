@@ -5,12 +5,12 @@ import {
   Image,
   Pressable,
   ScrollView,
-  Share,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { shareVerse } from "@/lib/share";
 import Svg, {
   Defs,
   Path,
@@ -118,13 +118,10 @@ export default function CheckInDetailScreen() {
   // ─── Actions ─────────────────────────────────────────────────
   const handleShare = useCallback(async () => {
     if (!checkIn) return;
-    try {
-      await Share.share({
-        message: `"${checkIn.verse.text}"\n— ${checkIn.verse.reference}`,
-      });
-    } catch {
-      // Cancel / unavailable — silent.
-    }
+    await shareVerse({
+      text: checkIn.verse.text,
+      reference: checkIn.verse.reference,
+    });
   }, [checkIn]);
 
   const handleOpenChapter = useCallback(() => {

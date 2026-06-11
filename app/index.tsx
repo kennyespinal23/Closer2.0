@@ -382,7 +382,7 @@ export default function GetStartedScreen() {
           </FadeIn>
 
           <FadeIn delayMs={1700} durationMs={800}>
-            <Button label="Get Started" onPress={handleGetStarted} />
+            <Button label="Get Started" onPress={handleGetStarted} heavy />
           </FadeIn>
 
           <FadeIn delayMs={2100} durationMs={700}>

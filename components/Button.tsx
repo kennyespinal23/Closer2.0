@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import type { PressableProps } from "react-native";
 import * as haptics from "@/lib/haptics";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useColors } from "@/state/theme";
 
 type Variant = "primary" | "secondary" | "ghost";
@@ -20,6 +21,15 @@ type ButtonProps = {
   disabled?: boolean;
   leadingIcon?: React.ReactNode;
   fullWidth?: boolean;
+  /**
+   * Upgrade the press haptic from the variant default to a heavy
+   * "thud" (UIImpactFeedbackStyle.Heavy). Reserve for marquee CTAs
+   * where the press itself is the moment of commitment — Begin
+   * Sermon, Start Focus Session, the onboarding "Get Started" tap.
+   * Don't use it on routine secondaries; the heavier haptic loses
+   * its meaning the more often it fires.
+   */
+  heavy?: boolean;
 };
 
 const containerByVariant: Record<Variant, string> = {
@@ -65,12 +75,22 @@ export function Button({
   disabled = false,
   leadingIcon,
   fullWidth = true,
+  heavy = false,
 }: ButtonProps) {
   const colors = useColors();
   const isDisabled = disabled || loading;
+  const reducedMotion = useReducedMotion();
   const scale = useRef(new Animated.Value(1)).current;
 
   const animateTo = (target: number) => {
+    // Reduce Motion: skip the squish spring. The button still
+    // gives haptic + tint feedback (active:bg-primary-pressed
+    // from the className), so the press is still tactile and
+    // visible — just without geometry change.
+    if (reducedMotion) {
+      scale.setValue(1);
+      return;
+    }
     Animated.spring(scale, {
       toValue: target,
       useNativeDriver: true,
@@ -81,7 +101,17 @@ export function Button({
 
   const handlePressIn = () => {
     if (isDisabled) return;
-    if (variant !== "ghost") haptics.soft();
+    // Haptic weight mirrors iOS system buttons, which fire a light
+    // impact on press across the OS (Settings rows, Music play
+    // buttons, etc.). The `heavy` opt-in upgrades to a body-felt
+    // thud — reserved for marquee "I am committing" CTAs like Get
+    // Started, Begin reading. Ghost buttons stay silent so text
+    // links don't buzz.
+    if (heavy) {
+      haptics.thud();
+    } else if (variant !== "ghost") {
+      haptics.soft();
+    }
     animateTo(0.965);
   };
 

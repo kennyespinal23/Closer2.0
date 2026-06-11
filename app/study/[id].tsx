@@ -283,7 +283,7 @@ export default function StudyLandingScreen() {
             onSkip={() => setSkipFocusOnce(true)}
           />
         )}
-        <Button label="Begin reading" onPress={handleBegin} />
+        <Button label="Begin reading" onPress={handleBegin} heavy />
         <View className="mt-2.5">
           <Button
             label="Not right now"

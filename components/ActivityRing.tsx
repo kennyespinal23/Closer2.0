@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 import Svg, { Circle, G, Path } from "react-native-svg";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useColors } from "@/state/theme";
 
 /**
@@ -91,6 +92,12 @@ export function ActivityRing({
   animate = true,
 }: ActivityRingProps) {
   const colors = useColors();
+  const reducedMotion = useReducedMotion();
+  // Reduce-Motion in iOS Settings disables the fill draw entirely
+  // — the ring snaps straight to its target so a vestibular-
+  // sensitive user never sees the arc sweep. Same behavior Apple
+  // Fitness uses when the user has the OS toggle on.
+  const shouldAnimate = animate && !reducedMotion;
   const targetPct = Math.max(0, Math.min(1, pct));
 
   // We keep two values in lockstep:
@@ -102,12 +109,15 @@ export function ActivityRing({
   //     each frame. JS-driven animation isn't free, but a single
   //     value pumping at 60fps for 900ms is well under a frame
   //     budget on any device this app targets.
-  const animatedValue = useRef(new Animated.Value(animate ? 0 : targetPct))
-    .current;
-  const [displayPct, setDisplayPct] = useState(animate ? 0 : targetPct);
+  const animatedValue = useRef(
+    new Animated.Value(shouldAnimate ? 0 : targetPct),
+  ).current;
+  const [displayPct, setDisplayPct] = useState(
+    shouldAnimate ? 0 : targetPct,
+  );
 
   useEffect(() => {
-    if (!animate) {
+    if (!shouldAnimate) {
       animatedValue.setValue(targetPct);
       setDisplayPct(targetPct);
       return;
@@ -128,7 +138,7 @@ export function ActivityRing({
     return () => {
       animatedValue.removeListener(id);
     };
-  }, [targetPct, animate, animatedValue]);
+  }, [targetPct, shouldAnimate, animatedValue]);
 
   const clampedPct = Math.max(0, Math.min(1, displayPct));
   const cx = size / 2;

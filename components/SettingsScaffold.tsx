@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
+import * as haptics from "@/lib/haptics";
 import { useColors } from "@/state/theme";
 
 /**
@@ -227,7 +228,16 @@ export function SettingsToggleRow({
         </View>
         <Switch
           value={value}
-          onValueChange={onValueChange}
+          // Selection-feedback haptic on every toggle, same primitive
+          // (UISelectionFeedbackGenerator) Apple uses for Settings.app
+          // switches — the toggle is half visual and half haptic, and
+          // RN's <Switch> does NOT call it for us. One source-of-truth
+          // wiring here means every settings page picks it up for
+          // free, with no per-screen `haptics.tick()` sprinkling.
+          onValueChange={(next) => {
+            haptics.tick();
+            onValueChange(next);
+          }}
           trackColor={{ false: trackOff, true: "#3D8B6A" }}
           thumbColor="#F4F4F5"
           ios_backgroundColor={trackBg}

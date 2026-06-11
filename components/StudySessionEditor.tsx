@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import { TimePickerModal } from "@/components/TimePickerModal";
+import * as haptics from "@/lib/haptics";
 import {
   DEFAULT_BLOCKED_APP_IDS,
   SOCIAL_APPS,
@@ -724,7 +725,10 @@ export function StudySessionEditor({
                     </View>
                     <Switch
                       value={draft.useFocusMode}
-                      onValueChange={toggleFocusMode}
+                      onValueChange={(next) => {
+                        haptics.tick();
+                        toggleFocusMode(next);
+                      }}
                       trackColor={{
                         false: withAlphaHex(colors.ink, 0.1),
                         true: PRIMARY_BLUE,

@@ -757,7 +757,10 @@ function TimeRow({
         </View>
         <Switch
           value={session.enabled}
-          onValueChange={onToggle}
+          onValueChange={(next) => {
+            haptics.tick();
+            onToggle(next);
+          }}
           ios_backgroundColor={colors.border as string}
           accessibilityLabel={`Toggle block at ${formatReminderTime(session.time)}`}
         />

@@ -111,18 +111,18 @@ const PILL_HEIGHT = 82;
  *  visually touch. */
 const PILL_GAP = 8;
 
-/** Visible portion of the GlassTabBar above the safe-area inset —
- *  must stay in sync with `PILL_VISIBLE_HEIGHT` in
- *  components/GlassTabBar.tsx (62, as of the flush-bar refactor).
- *  Kept as a local constant rather than imported so a future
- *  tab-bar swap doesn't silently break the mini-player's vertical
- *  anchoring; the trade-off is that the two values must be
- *  hand-synced when the bar geometry changes.
+/** Visible portion of the bottom tab bar above the safe-area inset.
+ *  Updated to 49 — the native iOS UITabBar height that React
+ *  Navigation's stock bottom tab bar renders at, now that the
+ *  custom GlassTabBar wrapper has been dropped from
+ *  app/(tabs)/_layout.tsx (the layout no longer passes a
+ *  `tabBar={...}` prop, so the stock bar runs instead).
  *
- *  The full bar height the mini-player sits above is
- *  `insets.bottom + TAB_BAR_PILL_HEIGHT` — the bar bakes the
- *  safe-area zone into its bottom padding now (flush layout). */
-const TAB_BAR_PILL_HEIGHT = 62;
+ *  The full bar footprint the mini-player must clear is
+ *  `insets.bottom + TAB_BAR_PILL_HEIGHT` — the stock bar adds its
+ *  own safe-area inset baked into its bottom padding, same
+ *  pattern the previous flush GlassTabBar used. */
+const TAB_BAR_PILL_HEIGHT = 49;
 
 export type FocusMiniPlayerProps = {
   /**

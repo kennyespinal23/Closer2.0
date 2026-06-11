@@ -489,21 +489,27 @@ const styles = StyleSheet.create({
 
 /**
  * Total vertical footprint a screen should reserve at the bottom of
- * its scroll content so nothing hides under the flush bottom bar.
+ * its scroll content so nothing hides under the bottom bar.
  *
- * Flush bar layout:
- *   • PILL_VISIBLE_HEIGHT (62) — icons + labels area above safe area
- *   • insets.bottom (~34 on iPhones with home indicator, 0 otherwise)
+ * NOTE — value is now sized for the NATIVE React Navigation bottom
+ * tab bar (the GlassTabBar component is no longer mounted; the
+ * tabs layout dropped its `tabBar={...}` override). Native iOS
+ * tab bars are 49pt of content above the bottom safe area inset:
+ *   • 49pt — Apple's canonical tab bar visible height (Health,
+ *            Fitness, News, Notes all use this)
+ *   • ~34pt — bottom safe area on iPhones with the home indicator
  *
- * Worst case (iPhone with home indicator): 62 + 34 = 96. We export
- * a flat upper-bound constant rather than a hook so existing
- * consumers (today / library / profile) stay one-line additions:
- * `paddingBottom: TAB_BAR_TOTAL_HEIGHT + 16`. The over-reserve on
- * older iPhones (~34pt of extra bottom whitespace) is acceptable —
- * those devices are a tiny share of the user base and the cost is
- * just empty scroll space, not visible chrome.
+ * Worst case (iPhone with home indicator): 49 + 34 = 83pt. Older
+ * iPhones with no home indicator over-reserve by ~34pt; that cost
+ * is just empty scroll whitespace beneath the bar, not visible
+ * chrome, and avoids a hook in every consumer.
+ *
+ * The GlassTabBar component below is retained in this file ONLY
+ * because we may want to revert. If we keep the native bar long-
+ * term, delete the component + its sub-helpers and reduce this
+ * file to the exported constant.
  */
-export const TAB_BAR_TOTAL_HEIGHT = 96;
+export const TAB_BAR_TOTAL_HEIGHT = 83;
 
 /**
  * hexToRgba — accepts `#RRGGBB` / `#RGB` / `rgb(…)` / `rgba(…)` and

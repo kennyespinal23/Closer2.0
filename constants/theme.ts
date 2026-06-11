@@ -217,7 +217,19 @@ export const DARK_COLORS: ColorPalette = {
  * universal Apple recipe.
  */
 export const LIGHT_COLORS: ColorPalette = {
-  bg: "#F4F1EB",
+  // "Gentler Streak tuned." Iteration history:
+  //   • v1 #F4F1EB cream — too yellow against photo content
+  //   • v2 #F6F4F0 (Apple Books Library family) — still warmer
+  //         than the Gentler Streak reference; the photo
+  //         illustrations and the editorial-red accent fought
+  //         the cream cast a hair.
+  //   • v3 (this) #F8F7F4 — pulls almost all the yellow out
+  //         while keeping enough warmth that pure-white cards
+  //         still lift perceptibly above the page. Reads as a
+  //         soft daylight white the way Gentler Streak's body
+  //         sheet does, and lets the editorial red pop without
+  //         competing chroma in the canvas itself.
+  bg: "#F8F7F4",
   surface: "#FFFFFF",
   ink: "#0F0F0F",
   inkMuted: "#6B6B72",
@@ -226,9 +238,11 @@ export const LIGHT_COLORS: ColorPalette = {
   primaryPressed: "#2A2A2A",
   primaryFg: "#FFFFFF",
   accent: "#0F0F0F",
-  accentSoft: "#F0EDE7",
-  border: "#E8E4DB",
-  borderStrong: "#D8D2C5",
+  // Accent-soft mirrors the bg warmth — used by avatar wells and
+  // chip backdrops which should feel inset rather than floating.
+  accentSoft: "#F0EDE8",
+  border: "#E8E4DD",
+  borderStrong: "#D8D3CA",
   // Apple's systemBlue in light mode.
   select: "#007AFF",
   selectSoft: "rgba(0, 122, 255, 0.12)",

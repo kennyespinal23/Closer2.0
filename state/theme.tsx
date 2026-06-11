@@ -101,45 +101,39 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ThemeState>(DEFAULT);
-  // We still SUBSCRIBE to useRNColorScheme so the component
-  // re-renders if the device flips, even though we ignore the
-  // value below. Leaves the subscription hot for the day we
-  // re-enable proper light-mode support.
-  useRNColorScheme();
+  // Subscribe to the device's color scheme so the component
+  // re-renders whenever the user flips iOS Light/Dark from
+  // Control Center. We only consume this value when
+  // pref === "system"; explicit "dark" / "light" overrides it.
+  const systemScheme = useRNColorScheme();
 
-  // ═══════════════════════════════════════════════════════════════
-  // CLOSER IS LOCKED TO DARK MODE.
+  // Resolve the active scheme from the user pref + device scheme.
   //
-  // We saw a real user incident where pages were rendering in a
-  // mix of light and dark (some screens followed iOS system,
-  // some had stale palette captures, hero PNG assets with baked-in
-  // dark backdrops slammed against a cream page when iOS reported
-  // light). The whole asset library + ambient atmosphere + glassy
-  // tab bar + per-day accent stops were all calibrated for a dark
-  // canvas; until we re-author the sermon illustrations with
-  // transparent backdrops and re-tune every gradient opacity for
-  // a light surface (1–2 days of work), light mode is structurally
-  // broken.
+  //   pref === "system"  → follow iOS (dark if undetermined; iOS
+  //                        returns null briefly during launch,
+  //                        which we treat as dark to avoid a
+  //                        white flash on the splash → first-paint
+  //                        transition for the typical night-first
+  //                        user).
+  //   pref === "dark"    → DARK_COLORS regardless of device
+  //   pref === "light"   → LIGHT_COLORS regardless of device
   //
-  // Rather than ship a half-broken light mode behind a setting
-  // (where a user accidentally enabling it gets a junky UI), we
-  // FORCE scheme to "dark" here regardless of pref / system /
-  // anything. The pref/setPref/Appearance picker stays wired up
-  // so the path back is small (just delete this comment and
-  // restore the prior resolution logic) — but in shipped builds
-  // it's a no-op.
-  //
-  // If you're reverting this lock: also restore the system-follow
-  // branch above (commented out below for reference), and revisit
-  // Settings → Appearance which currently shows a "Coming soon"
-  // explanation instead of the picker.
-  // ═══════════════════════════════════════════════════════════════
-  const scheme: ResolvedScheme = "dark";
-  const palette: ColorPalette = DARK_COLORS;
-  // Reference the import so TS/ESLint don't flag it as unused while
-  // light mode is shelved. We'll need LIGHT_COLORS again the moment
-  // light mode comes back, and the import path is non-obvious.
-  void LIGHT_COLORS;
+  // NOTE on the light-mode rough edges: a handful of sermon
+  // illustration JPEGs (added 6/7 — Heknewhername, Youhavetofix…,
+  // WhenGodFeelsSilent, etc.) ship with baked-in dark backgrounds
+  // and will read as floating dark cards against the light canvas.
+  // Ambient gradient stops are also calibrated for a dark surface
+  // and may bloom too brightly on a cream bg. Both are visual
+  // refinements, not crashes — light mode is functionally correct
+  // and every Tailwind-classed surface flips cleanly. We're
+  // shipping the option and tuning the rough edges in follow-up.
+  const scheme: ResolvedScheme =
+    state.pref === "system"
+      ? systemScheme === "light"
+        ? "light"
+        : "dark"
+      : state.pref;
+  const palette: ColorPalette = scheme === "light" ? LIGHT_COLORS : DARK_COLORS;
 
   // Memoize the vars() payload so we only re-create the style object
   // when the palette actually changes (not on every render).

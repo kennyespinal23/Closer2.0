@@ -59,6 +59,22 @@ export type SermonCompletion = {
   completedAt: number;
   /** ISO date (YYYY-MM-DD) for day-bucket grouping. */
   dateISO: string;
+  /**
+   * 1-based catalog `day` that was completed (the `day` field on the
+   * Moment we recorded against). Persisted so the home card can ask
+   * "did the user finish THIS specific moment today?" rather than
+   * "did the user finish ANY moment today?" — without that
+   * distinction, the dev "Next Sermon" pill would leave the card
+   * stuck in its "Read again" state for the newly-shown moment
+   * because the date-only check would still match.
+   *
+   * Nullable for forward-compat with completions persisted before
+   * this field existed: legacy records hydrate without it, and the
+   * `hasCompletedSermonForDay(day)` selector treats them as "we
+   * don't know what was completed" → returns false for the lookup,
+   * which self-heals the moment the user finishes a fresh sermon.
+   */
+  day: number | null;
 };
 
 /**
@@ -132,10 +148,18 @@ export type RecordResult = {
  * completion. Required when present, but defaulted on the read
  * side so the older zero-arg style still compiles (we just lose
  * the rich title/pastor on the timeline for legacy callers).
+ *
+ * `day` is the 1-based catalog day the sermon was authored as. It
+ * gets stamped onto the persisted SermonCompletion so the home
+ * card can ask "did the user finish THIS specific day?" instead
+ * of just "did the user finish anything today?" — see the
+ * `hasCompletedSermonForDay` selector below for the bug this
+ * field fixes.
  */
 export type SermonCompletionDetails = {
   title: string;
   pastor: string;
+  day: number;
 };
 
 type ProgressContextValue = ProgressState & {
@@ -154,11 +178,35 @@ type ProgressContextValue = ProgressState & {
    */
   recordChapterVisit: (bookId: string, chapter: number) => void;
   /**
-   * True iff the user has completed a sermon today. Used by the
-   * home screen's sermon card to flip into a "Completed · Read
-   * again" state without consumers re-implementing the date math.
+   * True iff the user has completed a sermon on ANY day today. Kept
+   * for the streak / engagement signals that don't care which moment
+   * was finished (e.g. ActiveFocusHero's "apps unlocked because the
+   * user did their daily reading" gate — the daily anchor is
+   * fulfilled regardless of whether the dev tool advanced to a
+   * different catalog moment).
+   *
+   * For the home sermon card use `hasCompletedSermonForDay(day)`
+   * instead — that question needs to be moment-specific so the dev
+   * "Next Sermon" pill doesn't leave the new moment stuck reading
+   * as "Read again" when the user hasn't actually heard it.
    */
   hasCompletedSermonToday: boolean;
+  /**
+   * Did the user complete the sermon for catalog `day` today?
+   *
+   * Filters today's completions and looks for a `day === day` match.
+   * Returns `false` for legacy completions that hydrate without a
+   * `day` field — the home card just shows the pre-completion CTA
+   * until the user finishes a fresh sermon, which self-heals.
+   *
+   * This is the function the home sermon card should consult when
+   * picking between Begin / Read Again. The bare
+   * `hasCompletedSermonToday` is too coarse for that decision
+   * because it goes true the moment ANY sermon is finished today
+   * — including ones that were swapped in by the dev shortcut
+   * AFTER the user finished a different moment earlier.
+   */
+  hasCompletedSermonForDay: (day: number) => boolean;
   /** Derived streak info — recomputed on every state change. */
   streak: StreakInfo;
   reset: () => void;
@@ -238,6 +286,10 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       // Log the discrete completion event so the Journey timeline
       // can show "you finished [sermon] at [time]". Falls back to
       // empty strings for legacy callers that don't pass details.
+      // `day` falls back to null for callers that haven't been
+      // updated to pass it — the day-specific selector treats
+      // null-day records as "unknown" so the home card simply
+      // shows Begin until a fresh completion lands.
       const now = Date.now();
       const completion: SermonCompletion = {
         id: makeEventId("sermon"),
@@ -246,6 +298,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         pastor: details?.pastor ?? "",
         completedAt: now,
         dateISO: todayISO(),
+        day: details?.day ?? null,
       };
 
       // Compute streak BEFORE and AFTER this completion so callers
@@ -356,13 +409,34 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     [state.engagedDates],
   );
 
-  // Has the user completed today's sermon? Looking at the most
-  // recent completion date is sufficient: only one sermon is shown
-  // per day, so any completion stamped with today's ISO means today's
-  // sermon has been finished.
+  // Has the user completed A sermon today (any catalog day)? Used
+  // by surfaces that only care about the daily-engagement signal —
+  // e.g. the focus-hero's "apps unlocked because you did your
+  // reading today" gate. Cheap date compare against the most
+  // recent completion.
   const hasCompletedSermonToday = useMemo(
     () => state.lastCompletionDateISO === todayISO(),
     [state.lastCompletionDateISO],
+  );
+
+  // Has the user completed the sermon for THIS catalog day today?
+  // The home sermon card asks this so the dev "Next Sermon" pill
+  // can advance the moment without leaving the card stuck reading
+  // as "Read Again" for a moment the user hasn't actually heard.
+  //
+  // We walk today's completions (typically 1 entry, very rarely
+  // more) and check for a matching `day`. Legacy completions that
+  // hydrate with `day: null` never match — the card shows Begin
+  // and self-heals on the next completion.
+  const hasCompletedSermonForDay = useCallback(
+    (day: number): boolean => {
+      const today = todayISO();
+      for (const c of state.sermonCompletions) {
+        if (c.dateISO === today && c.day === day) return true;
+      }
+      return false;
+    },
+    [state.sermonCompletions],
   );
 
   const value = useMemo<ProgressContextValue>(
@@ -373,6 +447,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       hasReadChapter,
       recordChapterVisit,
       hasCompletedSermonToday,
+      hasCompletedSermonForDay,
       streak,
       reset,
       hydrated,
@@ -384,6 +459,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       hasReadChapter,
       recordChapterVisit,
       hasCompletedSermonToday,
+      hasCompletedSermonForDay,
       streak,
       reset,
       hydrated,

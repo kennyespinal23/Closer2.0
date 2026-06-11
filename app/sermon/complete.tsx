@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Animated, Text, View } from "react-native";
+import { Animated, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
+import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { LivingHeroIcon } from "@/components/LivingHeroIcon";
@@ -10,6 +10,8 @@ import { resolveSermonType } from "@/lib/moments";
 import { useFocus } from "@/state/focus";
 import { useMoments } from "@/state/moments";
 import { completionOrdinal } from "@/state/progress";
+import { useSavedSermons } from "@/state/savedSermons";
+import { useColors } from "@/state/theme";
 
 /**
  * Celebration screen — shown after the user taps "Amen" on the
@@ -33,12 +35,24 @@ import { completionOrdinal } from "@/state/progress";
  */
 export default function CompleteScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { todaysMoment } = useMoments();
   const { endSession: endFocusSession } = useFocus();
+  const { isSaved, toggle: toggleSaved } = useSavedSermons();
   const type = useMemo(
     () => resolveSermonType(todaysMoment.type),
     [todaysMoment.type],
   );
+  const saved = isSaved(todaysMoment.day);
+
+  const handleToggleSave = () => {
+    // Light haptic on save, soft tap on unsave — matches the
+    // bookmark interactions elsewhere in the app (saved
+    // insights). Toggle is local-only; no nav side effect so
+    // the user can keep tapping until they're sure.
+    haptics.soft();
+    toggleSaved(todaysMoment.day);
+  };
 
   // Tear the focus session down the moment the completion screen
   // mounts. This is the canonical "session over" trigger — the
@@ -210,6 +224,31 @@ export default function CompleteScreen() {
       </View>
 
       <View className="px-6 pb-2">
+        {/* Save toggle — secondary action above the primary
+            Continue button. Lets the user keep today's sermon in
+            their Library "Saved" rail for re-reading later. The
+            row reads as a subtle pill (no fill, hairline outline
+            in the type's accent) so it sits one tier below the
+            solid Continue button — the saving is OPT-IN, not the
+            expected next tap. Filled state flips the bookmark
+            icon to its solid form and the label to "Saved" in
+            the accent color so the toggle's state is
+            immediately legible.
+
+            Lives in the bottom CTA block (above Continue) so the
+            two actions read as a clear stack: "keep this for
+            later → move on". Putting save inline with the
+            celebration copy felt premature; the user has just
+            finished the sermon, save is something they decide
+            on the way out. */}
+        <SaveToggle
+          saved={saved}
+          accent={type.accent}
+          inkColor={colors.ink}
+          mutedColor={colors.inkMuted}
+          onPress={handleToggleSave}
+        />
+        <View style={{ height: 12 }} />
         <Button
           label="Continue"
           onPress={() => {
@@ -220,6 +259,114 @@ export default function CompleteScreen() {
       </View>
     </SafeAreaView>
   );
+}
+
+/**
+ * SaveToggle — the bookmark pill above the Continue CTA.
+ *
+ * Visual rhythm:
+ *   • unsaved → outlined ghost pill, neutral ink label, hollow
+ *               bookmark icon. Reads as a quiet invitation.
+ *   • saved   → accent-tinted soft fill, accent-colored
+ *               "Saved" label, filled bookmark glyph. Reads as
+ *               a clear "this is in your collection now"
+ *               confirmation.
+ *
+ * Lives in this file (rather than a shared component) because
+ * the only consumer is the celebration screen and the pill is
+ * tuned to that screen's accent palette + spacing.
+ */
+function SaveToggle({
+  saved,
+  accent,
+  inkColor,
+  mutedColor,
+  onPress,
+}: {
+  saved: boolean;
+  accent: string;
+  inkColor: string;
+  mutedColor: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={saved ? "Remove from saved" : "Save sermon"}
+      accessibilityState={{ selected: saved }}
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.85 : 1,
+      })}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          paddingVertical: 14,
+          paddingHorizontal: 20,
+          borderRadius: 999,
+          borderWidth: 1,
+          borderColor: saved ? withAlpha(accent, 0.55) : withAlpha(inkColor, 0.18),
+          backgroundColor: saved ? withAlpha(accent, 0.16) : "transparent",
+        }}
+      >
+        <BookmarkGlyph
+          filled={saved}
+          stroke={saved ? accent : mutedColor}
+          fill={saved ? accent : "none"}
+        />
+        <Text
+          style={{
+            fontFamily: "PlusJakartaSans_700Bold",
+            color: saved ? accent : inkColor,
+            fontSize: 15,
+            letterSpacing: -0.1,
+            marginLeft: 10,
+          }}
+        >
+          {saved ? "Saved" : "Save sermon"}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function BookmarkGlyph({
+  filled,
+  stroke,
+  fill,
+}: {
+  filled: boolean;
+  stroke: string;
+  fill: string;
+}) {
+  return (
+    <Svg width={15} height={15} viewBox="0 0 24 24">
+      <Path
+        d="M6 3h12a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z"
+        stroke={stroke}
+        strokeWidth={filled ? 0 : 1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill={fill}
+      />
+    </Svg>
+  );
+}
+
+/**
+ * Adds an alpha channel to a hex color (`#RRGGBB`). Returns a
+ * `rgba(...)` string. Same helper pattern used elsewhere in the
+ * app for translucent tint plates; duplicated here so this file
+ * doesn't pull in the color util just for one wash.
+ */
+function withAlpha(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 /**

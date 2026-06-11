@@ -3,7 +3,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Share,
   Text,
   useWindowDimensions,
   View,
@@ -226,8 +225,15 @@ function BookDetail({ book }: { book: Book }) {
 
           {/* ─── Action row ───────────────────────────────────
               Apple Books pattern: one prominent primary CTA, then a
-              quieter row of icon chips beneath. Removes the chunky
-              two-up card layout that used to dominate this section. */}
+              quieter secondary affordance beneath. We previously had
+              a 3-up chip row (Start over / Random / Share); the
+              Random + Share chips were removed at the user's
+              request to keep the page focused on the canonical
+              "what should I open right now" decision. "Start over"
+              survives because it's the only secondary that responds
+              to the user's actual reading state — it appears
+              exclusively when they have a resume position past
+              chapter 1. */}
           <View className="px-5 mt-5">
             <PrimaryReadButton
               label={resumeChapter ? "Continue Reading" : "Start Reading"}
@@ -238,37 +244,15 @@ function BookDetail({ book }: { book: Book }) {
               }
               onPress={() => openChapter(resumeChapter ?? 1)}
             />
-            <View className="flex-row mt-3" style={{ gap: 8 }}>
-              {resumeChapter && resumeChapter !== 1 && (
+            {resumeChapter && resumeChapter !== 1 && (
+              <View className="flex-row mt-3" style={{ gap: 8 }}>
                 <ChipAction
                   label="Start over"
                   icon={<RewindIcon stroke={ink} />}
                   onPress={() => openChapter(1)}
                 />
-              )}
-              <ChipAction
-                label="Random"
-                icon={<DiceIcon stroke={ink} />}
-                onPress={() =>
-                  openChapter(
-                    1 + Math.floor(Math.random() * book.chapters),
-                  )
-                }
-              />
-              <ChipAction
-                label="Share"
-                icon={<ShareIcon stroke={ink} />}
-                onPress={async () => {
-                  try {
-                    await Share.share({
-                      message: `${book.name} — reading it in Closer.`,
-                    });
-                  } catch {
-                    /* user dismissed the share sheet */
-                  }
-                }}
-              />
-            </View>
+              </View>
+            )}
           </View>
 
           {/* ─── Reading progress pill ──────────────────────── */}
@@ -372,8 +356,17 @@ function BookDetail({ book }: { book: Book }) {
                   <SiblingCard
                     key={sibling.id}
                     book={sibling}
+                    // `replace`, not `push`: hopping between books
+                    // from "More from {category}" should never grow
+                    // the back stack. Otherwise tapping through 3
+                    // siblings means 3 back presses to escape the
+                    // Library detail, which feels broken (the user
+                    // experienced it as "back is broken").
+                    // With replace, one back-press always returns
+                    // the user to wherever they entered the book
+                    // detail flow (Library, Continue Reading, etc.).
                     onPress={() =>
-                      router.push(`/book/${sibling.id}`)
+                      router.replace(`/book/${sibling.id}`)
                     }
                   />
                 ))}
@@ -857,28 +850,17 @@ function SiblingCard({ book, onPress }: { book: Book; onPress: () => void }) {
 // ─────────────────────────────────────────────────────────────────
 
 /**
- * Top chrome floats over the backdrop. Back chip on the left,
- * Share + Library shortcut on the right. All buttons use a dark
- * translucent disc so they read against any backdrop color. Mirrors
- * the Insights detail chrome so the two detail screens feel cousin
- * to each other.
+ * Top chrome floats over the backdrop. Just a back chip on the
+ * left now — the share affordance that used to sit on the right
+ * was removed alongside the bottom Random/Share chips so the
+ * detail page reads as a single "open the book" surface without
+ * competing actions. The `bookId` prop is kept for API stability
+ * with the page (and any future header chrome we might add) even
+ * though Header itself no longer needs it.
  */
-function Header({ bookId }: { bookId?: string }) {
+function Header({ bookId: _bookId }: { bookId?: string }) {
   const router = useRouter();
   const { ink } = useColors();
-
-  const handleShare = async () => {
-    if (!bookId) return;
-    const book = findBookById(bookId);
-    if (!book) return;
-    try {
-      await Share.share({
-        message: `${book.name} — reading it in Closer.`,
-      });
-    } catch {
-      /* user dismissed the share sheet */
-    }
-  };
 
   return (
     <View className="flex-row items-center px-4 pt-2 pb-3">
@@ -894,11 +876,6 @@ function Header({ bookId }: { bookId?: string }) {
         </Svg>
       </RoundChip>
       <View className="flex-1" />
-      {bookId && (
-        <RoundChip onPress={handleShare} accessibilityLabel="Share book">
-          <ShareIcon stroke={ink} />
-        </RoundChip>
-      )}
     </View>
   );
 }
@@ -947,20 +924,6 @@ function RoundChip({
 // Inline icons used by the chip actions + header
 // ─────────────────────────────────────────────────────────────────
 
-function ShareIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 3v13M8 7l4-4 4 4M5 14v6h14v-6"
-        stroke={stroke}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
 function RewindIcon({ stroke }: { stroke: string }) {
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
@@ -970,26 +933,6 @@ function RewindIcon({ stroke }: { stroke: string }) {
         strokeWidth={1.8}
         strokeLinecap="round"
         strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function DiceIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2z"
-        stroke={stroke}
-        strokeWidth={1.7}
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <Path
-        d="M8.5 8.5h0M15.5 8.5h0M12 12h0M8.5 15.5h0M15.5 15.5h0"
-        stroke={stroke}
-        strokeWidth={2.5}
-        strokeLinecap="round"
       />
     </Svg>
   );

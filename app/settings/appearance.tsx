@@ -1,97 +1,86 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import {
+  SettingsChoiceRow,
   SettingsLinkRow,
   SettingsScaffold,
   SettingsSection,
   SettingsToggleRow,
 } from "@/components/SettingsScaffold";
 import { TEXT_SIZES, usePreferences } from "@/state/preferences";
-import { useColors } from "@/state/theme";
+import { useColors, useTheme, type ThemePref } from "@/state/theme";
 
 /**
  * Appearance preferences.
  *
- * THEME PICKER IS CURRENTLY DISABLED. Closer is locked to dark
- * mode at the provider level (see state/theme.tsx). The choice
- * row is replaced with a single read-only "Dark" status row + a
- * "Light mode coming soon" footer so users understand why there's
- * no choice rather than wondering if it's broken.
+ * Theme picker:
+ *   • Match System — follow the iOS Light/Dark setting (flips
+ *     live when the user toggles iOS Control Center).
+ *   • Dark — force dark regardless of device.
+ *   • Light — force light regardless of device.
  *
- * When light mode ships (sermon illustrations re-authored with
- * transparent backdrops, ambient gradient stops re-tuned for a
- * light canvas), restore the previous Match System / Dark / Light
- * picker block from git history and remove the lock in
- * state/theme.tsx.
+ * The chosen pref is persisted via the theme provider, so it
+ * survives launches and across the whole app's UI.
  *
- * Text size is still live — drives scripture rendering via
+ * Text size is also live — drives scripture rendering via
  * `usePreferences().textSize.scale` in the reader.
  */
 export default function AppearanceScreen() {
   const router = useRouter();
   const [reduceMotion, setReduceMotion] = useState(false);
   const { textSizeId, setTextSize } = usePreferences();
+  const { pref, setPref } = useTheme();
   const colors = useColors();
+
+  // Theme picker options — order is intentional (System first as
+  // the default-ish path, then Dark/Light as the two manual
+  // overrides). Each row's icon doubles as the visual cue for
+  // the choice (device / moon / sun).
+  const themeOptions: Array<{
+    id: ThemePref;
+    label: string;
+    sublabel: string;
+    icon: ReactNode;
+  }> = [
+    {
+      id: "system",
+      label: "Match System",
+      sublabel: "Follow your iOS Light / Dark setting",
+      icon: <DeviceIcon stroke={colors.ink} />,
+    },
+    {
+      id: "dark",
+      label: "Dark",
+      sublabel: "Easy on the eyes, day or night",
+      icon: <MoonIcon stroke={colors.ink} />,
+    },
+    {
+      id: "light",
+      label: "Light",
+      sublabel: "Bright canvas for daytime reading",
+      icon: <SunIcon stroke={colors.ink} />,
+    },
+  ];
 
   return (
     <SettingsScaffold title="Appearance">
       <SettingsSection
         title="Theme"
-        footer="Closer is currently dark-only. Light mode is coming once the sermon artwork and ambient lighting are tuned for a bright canvas."
+        footer="A handful of sermon illustrations were authored against a dark backdrop and may read as floating cards on the light canvas — we're refining those in follow-ups."
       >
-        {/* Read-only status row — looks like the rest of the
-            settings rows so it slots into the existing visual
-            language, but it's a passive Text/View pair (no
-            Pressable, no chevron, no onPress). The eye still reads
-            "Theme: Dark" the same way as if it were the selected
-            row in the old picker. */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            paddingVertical: 14,
-            paddingHorizontal: 16,
-          }}
-        >
-          <View
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: 8,
-              backgroundColor: colors.surface,
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 12,
-            }}
-          >
-            <MoonIcon stroke={colors.ink} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                color: colors.ink,
-                fontFamily: "PlusJakartaSans_600SemiBold",
-                fontSize: 15,
-                lineHeight: 20,
-              }}
-            >
-              Dark
-            </Text>
-            <Text
-              style={{
-                color: colors.inkSubtle,
-                fontFamily: "PlusJakartaSans_400Regular",
-                fontSize: 12.5,
-                lineHeight: 17,
-                marginTop: 1,
-              }}
-            >
-              Easy on the eyes, day or night
-            </Text>
-          </View>
-        </View>
+        {themeOptions.map((opt, i) => (
+          <SettingsChoiceRow
+            key={opt.id}
+            icon={opt.icon}
+            label={opt.label}
+            sublabel={opt.sublabel}
+            selected={pref === opt.id}
+            onPress={() => setPref(opt.id)}
+            showDivider={i < themeOptions.length - 1}
+          />
+        ))}
       </SettingsSection>
 
       <SettingsSection
@@ -168,9 +157,39 @@ function MoonIcon({ stroke }: { stroke: string }) {
   );
 }
 
-// SunIcon and DeviceIcon were removed along with the disabled
-// Match System / Light picker rows. They'll come back when light
-// mode ships — restore from git history (see header comment).
+function SunIcon({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24">
+      {/* Center disc */}
+      <Path
+        d="M12 8a4 4 0 100 8 4 4 0 000-8z"
+        {...ICON_BASE}
+        stroke={stroke}
+      />
+      {/* Eight rays */}
+      <Path
+        d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"
+        {...ICON_BASE}
+        stroke={stroke}
+      />
+    </Svg>
+  );
+}
+
+function DeviceIcon({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24">
+      {/* Phone outline */}
+      <Path
+        d="M8 3h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2z"
+        {...ICON_BASE}
+        stroke={stroke}
+      />
+      {/* Home indicator */}
+      <Path d="M11 18h2" {...ICON_BASE} stroke={stroke} />
+    </Svg>
+  );
+}
 
 /**
  * A single "Aa" glyph sized proportionally to the scale it represents.

@@ -50,6 +50,10 @@ module.exports = {
           DEFAULT: "var(--color-border)",
           strong: "var(--color-border-strong)",
         },
+        select: {
+          DEFAULT: "var(--color-select)",
+          soft: "var(--color-select-soft)",
+        },
       },
       fontFamily: {
         sans: ["PlusJakartaSans_400Regular"],

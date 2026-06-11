@@ -327,12 +327,23 @@ export default function VerseDeliveryScreen() {
           </FadeIn>
         </View>
 
-        {/* ─── Reflection prompt ───────────────────────────── */}
+        {/* ─── Reflection prompt ───────────────────────────────
+            Set in UPRIGHT EB Garamond so the reflective line
+            shares the same "printed devotional" voice as the
+            verse above. Earlier this was Plus Jakarta Sans with
+            an `italic` flag; italics in this app are reserved
+            for ornamental moments and they fatigue the eye even
+            at small sizes. Upright Garamond gives the line the
+            literary, contemplative quality the words are asking
+            for without the legibility cost. */}
         <FadeIn delayMs={1100} durationMs={1100}>
           <View className="px-8 mt-12">
             <Text
-              className="text-ink-subtle text-[13px] text-center italic leading-[20px]"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              className="text-ink-muted text-[14.5px] text-center leading-[22px]"
+              style={{
+                fontFamily: "PlusJakartaSans_500Medium",
+                letterSpacing: -0.1,
+              }}
             >
               {reflection(mood.echo)}
             </Text>

@@ -34,6 +34,12 @@ export const ONBOARDING_STEPS = [
   "apps",
   "scrolltime",
   "waketime",
+  // The Pattern — spiritual diagnosis of what the user just
+  // admitted. Sits between the last audit input and the fake-
+  // loader, so the calculating screen frames "your numbers" as a
+  // diagnosis we already named, not just stats we pulled out of
+  // a hat.
+  "pattern",
   "calculating",
   // The Pivot — personalized punch, anchor, name, proof.
   "punch",
@@ -43,6 +49,14 @@ export const ONBOARDING_STEPS = [
   "rating",
   // The Welcome — Closer is named for the first time.
   "reframe",
+  // How it works — interactive 3-step walkthrough of the
+  // block → read → unlock loop. Modeled after Opal / Forest /
+  // One Sec's mechanism explainers. Lives RIGHT AFTER the reframe
+  // (which named the brand) and BEFORE attribution (which begins
+  // the practical setup half) — so the user finishes the
+  // emotional half with the mechanism in their hands, not just
+  // the value prop.
+  "howitworks",
   "attribution",
   "notifications",
   "account",

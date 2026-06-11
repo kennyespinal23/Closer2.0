@@ -12,8 +12,9 @@ import {
 import type { ImageSourcePropType } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import { FadeIn } from "@/components/FadeIn";
+import * as haptics from "@/lib/haptics";
 import { MOODS, type Mood } from "@/constants/moods";
 import { useColors } from "@/state/theme";
 
@@ -71,6 +72,12 @@ export default function MoodSelectScreen() {
   const [selected, setSelected] = useState<Mood | null>(null);
 
   const handlePick = (mood: Mood) => {
+    // Soft haptic on every pick — the selection IS the moment of
+    // self-honesty, so the tap deserves a tactile cue. We use
+    // `soft` (not `tap`) because it's a contemplative selection,
+    // not a committing action — the commit comes when they tap
+    // "Receive your verse" in the panel below.
+    haptics.soft();
     setSelected(mood);
   };
 
@@ -89,6 +96,16 @@ export default function MoodSelectScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+      {/* Mood-tinted ambient atmosphere — the WHOLE screen takes
+          on the chosen mood's color as soon as the user picks one.
+          When no mood is selected, the canvas is bare black. When
+          a mood is picked, MoodAtmosphere crossfades its radial
+          gradient to that mood's swatch so the room itself feels
+          like it's responding to what they said.
+          Sits behind everything (absolute, pointerEvents none) so
+          taps still go to the grid + panel. */}
+      <MoodAtmosphere mood={selected} />
+
       <ScrollView
         contentContainerStyle={{
           // Pad the bottom enough that the last row of cards stays
@@ -471,6 +488,141 @@ function ConfirmationPanel({
         </Pressable>
       </View>
     </Animated.View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// MoodAtmosphere — full-bleed wash that morphs to the selected mood
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Renders TWO stacked SVG washes:
+ *   • A neutral idle wash (very faint white-ink glow) that's
+ *     always visible at low opacity — gives the empty-state grid
+ *     a tiny bit of "lit space" so the screen never reads as a
+ *     flat black canvas.
+ *   • An accent wash tinted to the currently-selected mood that
+ *     crossfades in when a mood is picked and crossfades out when
+ *     the selection is cleared. The accent wash STAYS PAINTED in
+ *     the most-recently-selected color during the fade-out so the
+ *     transition feels like a dimming light, not a swap to black.
+ *
+ * Why two layers instead of one re-tinted layer:
+ *   SVG doesn't smoothly interpolate `stopColor` across re-renders.
+ *   Crossfading via opacity is the reliable way to morph between
+ *   two colors without seeing a hard hex swap mid-animation.
+ *   We swap the underlying color only AFTER the old wash has
+ *   crossfaded out, so each mood lands cleanly on the canvas.
+ */
+function MoodAtmosphere({ mood }: { mood: Mood | null }) {
+  // Buffered color so the wash can keep painting the last-picked
+  // mood while the panel is animating out. We only swap to a new
+  // color when a NEW mood arrives; clearing the selection just
+  // fades the existing color out.
+  const [lastMoodColor, setLastMoodColor] = useState<string | null>(null);
+  useEffect(() => {
+    if (mood) setLastMoodColor(mood.swatch);
+  }, [mood]);
+
+  // 0..1 fade for the accent wash. When mood is set → fade IN to
+  // 1.0 (full presence); when cleared → fade OUT to 0 (room goes
+  // back to bare). The neutral wash is always at 0.10 so the
+  // canvas never feels truly empty.
+  const accentFade = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(accentFade, {
+      toValue: mood ? 1 : 0,
+      duration: mood ? 520 : 380,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, [mood, accentFade]);
+
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 720,
+      }}
+    >
+      {/* Neutral idle wash — barely-there white halo so the
+          unpicked state has presence. Sits behind the accent
+          wash; never animates, always at constant low opacity. */}
+      <Svg width="100%" height="100%" style={{ position: "absolute" }}>
+        <Defs>
+          <RadialGradient
+            id="moodIdleHalo"
+            cx="50%"
+            cy="28%"
+            rx="95%"
+            ry="60%"
+            fx="50%"
+            fy="28%"
+          >
+            <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.06} />
+            <Stop offset="0.5" stopColor="#FFFFFF" stopOpacity={0.02} />
+            <Stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Rect x={0} y={0} width="100%" height="100%" fill="url(#moodIdleHalo)" />
+      </Svg>
+
+      {/* Accent wash — tinted to the chosen mood's swatch. Fades
+          in on selection, out on clear. */}
+      {lastMoodColor && (
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            opacity: accentFade,
+          }}
+        >
+          <Svg width="100%" height="100%">
+            <Defs>
+              <RadialGradient
+                id="moodAccentHalo"
+                cx="50%"
+                cy="28%"
+                rx="100%"
+                ry="65%"
+                fx="50%"
+                fy="28%"
+              >
+                <Stop
+                  offset="0"
+                  stopColor={lastMoodColor}
+                  stopOpacity={0.28}
+                />
+                <Stop
+                  offset="0.45"
+                  stopColor={lastMoodColor}
+                  stopOpacity={0.1}
+                />
+                <Stop
+                  offset="1"
+                  stopColor={lastMoodColor}
+                  stopOpacity={0}
+                />
+              </RadialGradient>
+            </Defs>
+            <Rect
+              x={0}
+              y={0}
+              width="100%"
+              height="100%"
+              fill="url(#moodAccentHalo)"
+            />
+          </Svg>
+        </Animated.View>
+      )}
+    </View>
   );
 }
 

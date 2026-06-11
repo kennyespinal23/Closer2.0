@@ -6,9 +6,12 @@ import {
   type AppStateStatus,
   FlatList,
   Modal,
+  PanResponder,
+  Platform,
   Pressable,
   ScrollView,
   Share,
+  StyleSheet,
   Text,
   type TextLayoutEventData,
   type NativeSyntheticEvent,
@@ -17,11 +20,23 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import Svg, { Path } from "react-native-svg";
+import Svg, {
+  Defs,
+  LinearGradient as SvgLinearGradient,
+  Path,
+  Rect,
+  Stop,
+} from "react-native-svg";
+import { BlurView } from "expo-blur";
+import * as haptics from "@/lib/haptics";
 import { NoteEditor } from "@/components/NoteEditor";
 import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
 import { BOOKS, findBookById } from "@/constants/books";
+import {
+  CATEGORY_COVER_PALETTE,
+  getCoverBloom,
+} from "@/constants/bookCovers";
 import {
   type Chapter,
   TranslationNotInstalledError,
@@ -37,13 +52,13 @@ import {
 } from "@/state/annotations";
 import {
   TEXT_SIZES,
-  type TextSize,
   type TextSizeId,
+  type Translation,
   usePreferences,
 } from "@/state/preferences";
 import { useProgress } from "@/state/progress";
 import { useReadingGoal } from "@/state/readingGoal";
-import { useColors } from "@/state/theme";
+import { useColors, useResolvedScheme } from "@/state/theme";
 
 /**
  * Color of the inline note marker drawn next to verse numbers that
@@ -728,14 +743,22 @@ export default function ChapterReaderScreen() {
   }, [data, pages]);
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
-      <Header
-        translationTag={translation.tag}
-        pagesLeftLabel={data && pages ? pagesLeftLabel(pagesLeft) : ""}
-        progress={pageProgress}
-      />
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      {/* Per-book bloom backdrop — a very soft wash tinted to the
+          cover's palette, anchored to the top of the screen. The
+          reading area below stays on the clean page bg so serif
+          text never has to fight a colored field. Sits behind
+          everything; pointer-events off. */}
+      <ChapterBackdrop book={book} />
 
-      <View style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+        <Header
+          translationTag={translation.tag}
+          pagesLeftLabel={data && pages ? pagesLeftLabel(pagesLeft) : ""}
+          progress={pageProgress}
+        />
+
+        <View style={{ flex: 1 }}>
         {/* ─── Off-screen measurement view ─────────────────────────
             Renders the full chapter once at the page width so we can
             grab onTextLayout's `lines` array and compute page breaks.
@@ -920,7 +943,7 @@ export default function ChapterReaderScreen() {
             onContents={() => setContentsOpen(true)}
             textSizeId={textSize.id}
             onChangeTextSize={setTextSize}
-            translationTag={translation.tag}
+            translation={translation}
             onChangeTranslation={() => router.push("/settings/translation")}
             todayMinutes={readingGoal.todayMinutes}
             goalMinutes={readingGoal.goalMinutes}
@@ -1046,7 +1069,127 @@ export default function ChapterReaderScreen() {
         }}
         onCancel={() => setEditingNote(null)}
       />
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Chapter backdrop — per-book bloom wash at the top of the reader
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Subtle top-anchored gradient that tints the reading screen with
+ * the current book's bloom palette. The effect should feel like
+ * the book's color quietly leaning into the page — not a stain
+ * the eye fights while reading.
+ *
+ * Design constraints (the reading screen is the longest-dwell
+ * surface in the entire app):
+ *   • Peak opacity is INTENTIONALLY low (~16%). Anything stronger
+ *     gives serif body text a tinted ground that the eye has to
+ *     do extra work against — even in peripheral vision.
+ *   • Anchored to the very top and fades to fully transparent
+ *     by ~280px down. The chapter body lives well below that, so
+ *     the bloom stays in the chrome region (status bar, header,
+ *     progress indicator) and never touches the verse text.
+ *   • Always uses the bloom's OUTER color (the deeper, atmospheric
+ *     stop), never the inner highlight. The highlight is meant to
+ *     glow behind the cover artwork; on a flat reading page it
+ *     would read as "saturated band" instead of "atmosphere."
+ *   • Falls back to the book's category palette when no bloom is
+ *     registered, so placeholder-covered books still get a tinted
+ *     wash that differentiates them from each other.
+ *   • pointerEvents: "none" — never intercepts taps on the header
+ *     or first page chrome.
+ */
+function ChapterBackdrop({ book }: { book: { id: string; category: string } }) {
+  const { width: screenWidth } = useWindowDimensions();
+  const colors = useColors();
+
+  // 360px gives the wash enough vertical run to read as a real
+  // "page warming with the book's color," not a thin ribbon at
+  // the top. We still fade to fully transparent before the wash
+  // could reach the verse column on any phone size — verse text
+  // always sits on the clean page background.
+  const HEIGHT = 360;
+
+  const coverBloom = getCoverBloom(book.id);
+  const palette =
+    CATEGORY_COVER_PALETTE[book.category as keyof typeof CATEGORY_COVER_PALETTE];
+  const tint = coverBloom?.outer ?? palette?.top ?? colors.bg;
+  // Layer a quieter inner-color stop on top of the outer wash so
+  // the gradient has visible depth (a touch of the cover's
+  // highlight peeking through) instead of reading as a single
+  // flat tint. Falls back to the same outer color when no inner
+  // is available so the rendering stays safe.
+  const innerTint = coverBloom?.inner ?? palette?.accent ?? tint;
+
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: HEIGHT,
+      }}
+    >
+      <Svg width={screenWidth} height={HEIGHT}>
+        <Defs>
+          {/* Primary wash — the cover's deep atmospheric color
+              bleeding down from the status bar. */}
+          <SvgLinearGradient
+            id="chapterBackdrop"
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
+            {/* Top stop: clearly perceptible now (~30%) so the
+                book's color story actually lands on the reader's
+                eye when the chapter opens. */}
+            <Stop offset="0" stopColor={tint} stopOpacity="0.32" />
+            {/* Mid stop carries the wash about halfway down. */}
+            <Stop offset="0.55" stopColor={tint} stopOpacity="0.14" />
+            {/* Fully transparent before we reach the reading
+                column so verse text always sits on the clean
+                page background. */}
+            <Stop offset="1" stopColor={tint} stopOpacity="0" />
+          </SvgLinearGradient>
+          {/* Highlight overlay — a quieter inner-color stop that
+              gives the wash dimension. Without this the backdrop
+              reads as a single flat color; with it the gradient
+              shimmers with the cover's actual palette. */}
+          <SvgLinearGradient
+            id="chapterBackdropHighlight"
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
+            <Stop offset="0" stopColor={innerTint} stopOpacity="0.12" />
+            <Stop offset="0.6" stopColor={innerTint} stopOpacity="0.04" />
+            <Stop offset="1" stopColor={innerTint} stopOpacity="0" />
+          </SvgLinearGradient>
+        </Defs>
+        <Rect
+          x={0}
+          y={0}
+          width={screenWidth}
+          height={HEIGHT}
+          fill="url(#chapterBackdrop)"
+        />
+        <Rect
+          x={0}
+          y={0}
+          width={screenWidth}
+          height={HEIGHT}
+          fill="url(#chapterBackdropHighlight)"
+        />
+      </Svg>
+    </View>
   );
 }
 
@@ -1597,6 +1740,34 @@ function ChapterHeading({
 // End-matter page — final card after the verses
 // ─────────────────────────────────────────────────────────────────
 
+/**
+ * End-matter page — the final "page" the user swipes to after the
+ * last verse. Designed as a single-decision moment:
+ *
+ *   "Mark as Read" → tap → confirmation pulse → auto-advance to the
+ *   next chapter in the same canonical sequence.
+ *
+ * The old end matter showed a Mark-as-Read button AND a separate
+ * Next nav tile, so the user had to take two actions to keep
+ * reading. We collapsed that to a single primary CTA so finishing a
+ * chapter feels like one continuous gesture (read → mark → next).
+ *
+ * Four states drive the primary CTA copy:
+ *   • !alreadyRead + next  → "Mark as Read" / "Up next: {next}"
+ *   • !alreadyRead + !next → "Mark as Read" / "End of {book}"
+ *   •  alreadyRead + next  → "Continue Reading" / "{next}"
+ *   •  alreadyRead + !next → "Back to {book}" / "You've finished {book}"
+ *
+ * The alreadyRead branch exists because the dwell-based auto-mark
+ * (≥70% pages + 30s) often fires before the user reaches the end
+ * matter — the page should ferry them forward, not nag them to
+ * re-mark something already recorded.
+ *
+ * `advancing` is a brief local state (220–600ms) that lets the CTA
+ * pulse a confirmation ("Marked as Read ✓") before the next
+ * chapter replaces the screen, so the action doesn't feel like a
+ * dropped frame.
+ */
 function EndMatterPage({
   width,
   paddingX,
@@ -1624,70 +1795,216 @@ function EndMatterPage({
   next: { bookId: string; chapter: number } | null;
   onGoto: (target: { bookId: string; chapter: number }) => void;
 }) {
+  const colors = useColors();
+  const router = useRouter();
+  const [advancing, setAdvancing] = useState(false);
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear the pending advance if the user swipes away or the page
+  // unmounts — otherwise navigation could fire after the reader has
+  // already moved on for some other reason (translation switch,
+  // route replace, etc.).
+  useEffect(() => {
+    return () => {
+      if (advanceTimerRef.current) {
+        clearTimeout(advanceTimerRef.current);
+        advanceTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  const nextBook = next ? findBookById(next.bookId) : null;
+  const prevBook = prev ? findBookById(prev.bookId) : null;
+
+  // Resolve CTA copy from the 4 states above. Kept as plain locals
+  // (not a switch) so each branch's label + sublabel sit next to
+  // each other and are easy to tweak in copy review.
+  let primaryLabel: string;
+  let primarySublabel: string;
+  if (!alreadyRead) {
+    primaryLabel = "Mark as Read";
+    primarySublabel =
+      next && nextBook
+        ? `Up next · ${nextBook.name} ${next.chapter}`
+        : `You've reached the end of ${book.name}`;
+  } else if (next && nextBook) {
+    primaryLabel = "Continue Reading";
+    primarySublabel = `${nextBook.name} ${next.chapter}`;
+  } else {
+    primaryLabel = `Back to ${book.name}`;
+    primarySublabel = `You've finished ${book.name}`;
+  }
+
+  const handlePrimary = () => {
+    if (advancing) return;
+    setAdvancing(true);
+
+    // Fresh-read taps get a celebration haptic + the explicit
+    // mark; already-read taps are just navigation, so a softer
+    // medium tap is enough.
+    if (!alreadyRead) {
+      haptics.success();
+      onMarkRead();
+    } else {
+      haptics.tap();
+    }
+
+    // Longer pause on a fresh read so the "Marked as Read ✓"
+    // state has time to register before the next chapter swaps in.
+    const delay = alreadyRead ? 220 : 620;
+    advanceTimerRef.current = setTimeout(() => {
+      advanceTimerRef.current = null;
+      if (next) {
+        onGoto(next);
+      } else {
+        // End of the canonical sequence (e.g. Revelation 22). Drop
+        // the user back at the book overview where they can pick a
+        // sibling book from the "More from {category}" rail.
+        router.replace(`/book/${book.id}` as const);
+      }
+    }, delay);
+  };
+
+  // The button shows a transient "Marked as Read ✓" only on the
+  // fresh-read path; already-read taps skip straight to a dim
+  // pressed look since "Marked" would lie ("it was already marked
+  // before you tapped").
+  const showFreshConfirm = advancing && !alreadyRead;
+
   return (
     <ScrollView
       style={{ width }}
       contentContainerStyle={{
         paddingHorizontal: paddingX,
-        paddingTop: 18,
+        paddingTop: 36,
         paddingBottom: 220,
       }}
       showsVerticalScrollIndicator={false}
     >
-      <View className="items-center pt-4 pb-6">
+      <View className="items-center pt-6 pb-8">
         <Text
-          className="text-ink-subtle text-[10.5px] tracking-[3px] uppercase"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          className="text-[10.5px] tracking-[3px] uppercase"
+          style={{
+            fontFamily: "PlusJakartaSans_700Bold",
+            color: alreadyRead ? colors.inkMuted : colors.inkSubtle,
+          }}
         >
-          End of chapter
+          {alreadyRead ? "Chapter complete" : "End of chapter"}
         </Text>
         <Text
-          className="text-ink text-[20px] mt-2"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          className="text-ink mt-3"
+          style={{
+            fontFamily: "PlusJakartaSans_800ExtraBold",
+            fontSize: 32,
+            lineHeight: 36,
+            letterSpacing: -0.6,
+          }}
         >
           {book.name} {chapter}
         </Text>
         <ChapterOrnament />
       </View>
 
-      <View className="items-center mt-2">
-        {alreadyRead ? (
-          <View className="flex-row items-center px-5 py-3 rounded-full border border-border bg-surface">
-            <CheckIcon />
+      <Pressable
+        onPress={handlePrimary}
+        disabled={advancing}
+        accessibilityRole="button"
+        accessibilityLabel={
+          showFreshConfirm ? "Marked as read, advancing" : primaryLabel
+        }
+        style={({ pressed }) => ({
+          backgroundColor: colors.primary,
+          borderRadius: 18,
+          paddingVertical: 18,
+          paddingHorizontal: 22,
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: pressed ? 0.9 : advancing ? 0.92 : 1,
+          shadowColor: "#000000",
+          shadowOpacity: 0.35,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 10 },
+        })}
+      >
+        {showFreshConfirm ? (
+          <View className="flex-row items-center">
+            <PrimaryCheckIcon color={colors.primaryFg} />
             <Text
-              className="text-ink-muted text-[13px] ml-2"
-              style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                color: colors.primaryFg,
+                fontSize: 17,
+                marginLeft: 8,
+              }}
             >
-              Marked as read
+              Marked as Read
             </Text>
           </View>
         ) : (
-          <Pressable
-            onPress={onMarkRead}
-            className="rounded-full px-5 py-3 border border-border-strong bg-surface flex-row items-center"
-            style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-          >
+          <>
             <Text
-              className="text-ink text-[13.5px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                color: colors.primaryFg,
+                fontSize: 17,
+              }}
             >
-              Mark as read
+              {primaryLabel}
             </Text>
-          </Pressable>
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_500Medium",
+                color: colors.primaryFg,
+                fontSize: 12,
+                marginTop: 3,
+                opacity: 0.65,
+              }}
+            >
+              {primarySublabel}
+            </Text>
+          </>
         )}
+      </Pressable>
+
+      {!alreadyRead && (
         <Text
-          className="text-ink-subtle text-[11px] mt-2.5 text-center px-6"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          className="text-center mt-3"
+          style={{
+            fontFamily: "PlusJakartaSans_500Medium",
+            color: colors.inkSubtle,
+            fontSize: 11.5,
+            lineHeight: 16,
+          }}
         >
-          {alreadyRead
-            ? "Today counts toward your rhythm."
-            : "We'll mark this for you as you finish — counts toward your streak."}
+          Counts toward your reading streak
         </Text>
-      </View>
+      )}
+
+      {prev && prevBook && (
+        <Pressable
+          onPress={() => onGoto(prev)}
+          className="mt-7 self-center flex-row items-center"
+          accessibilityRole="button"
+          accessibilityLabel={`Back to ${prevBook.name} ${prev.chapter}`}
+          hitSlop={10}
+        >
+          <Chevron direction="prev" />
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_600SemiBold",
+              color: colors.inkMuted,
+              fontSize: 13,
+              marginLeft: 6,
+            }}
+          >
+            {prevBook.name} {prev.chapter}
+          </Text>
+        </Pressable>
+      )}
 
       <Pressable
         onPress={onChangeTranslation}
-        className="px-6 mt-7 items-center"
+        className="mt-10 items-center"
         accessibilityRole="button"
         accessibilityLabel="Change Bible version"
       >
@@ -1704,72 +2021,27 @@ function EndMatterPage({
           {translationNote} · Tap to change version
         </Text>
       </Pressable>
-
-      <View className="mt-7 flex-row gap-3">
-        <NavTile
-          kind="prev"
-          target={prev}
-          onPress={prev ? () => onGoto(prev) : undefined}
-        />
-        <NavTile
-          kind="next"
-          target={next}
-          onPress={next ? () => onGoto(next) : undefined}
-        />
-      </View>
     </ScrollView>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Prev / Next nav tile
-// ─────────────────────────────────────────────────────────────────
-
-function NavTile({
-  kind,
-  target,
-  onPress,
-}: {
-  kind: "prev" | "next";
-  target: { bookId: string; chapter: number } | null;
-  onPress?: () => void;
-}) {
-  if (!target || !onPress) {
-    return <View style={{ flex: 1 }} />;
-  }
-
-  const book = findBookById(target.bookId);
-  if (!book) return <View style={{ flex: 1 }} />;
-
-  const label = `${book.name} ${target.chapter}`;
-  const eyebrow = kind === "prev" ? "Previous" : "Next";
-
+/**
+ * Checkmark sized + colored for the white primary CTA pill. Sized
+ * 16px so it reads as part of the button label line rather than a
+ * separate icon block, and accepts an arbitrary stroke color so it
+ * inherits whatever primaryFg the active theme resolves to.
+ */
+function PrimaryCheckIcon({ color }: { color: string }) {
   return (
-    <Pressable style={{ flex: 1 }} onPress={onPress}>
-      <View className="rounded-2xl border border-border bg-surface px-4 py-3.5">
-        <View
-          className="flex-row items-center"
-          style={{
-            flexDirection: kind === "prev" ? "row" : "row-reverse",
-          }}
-        >
-          <Chevron direction={kind} />
-          <Text
-            className="text-ink-subtle text-[10.5px] tracking-[2px] uppercase ml-1.5 mr-1.5"
-            style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-          >
-            {eyebrow}
-          </Text>
-        </View>
-        <Text
-          className={`text-ink text-[14px] mt-1 ${kind === "next" ? "text-right" : ""}`}
-          style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-          numberOfLines={1}
-        >
-          {label}
-        </Text>
-      </View>
-    </Pressable>
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M5 12l5 5L20 7"
+        stroke={color}
+        strokeWidth={2.4}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
   );
 }
 
@@ -2004,7 +2276,7 @@ function ReaderToolbar({
   onContents,
   textSizeId,
   onChangeTextSize,
-  translationTag,
+  translation,
   onChangeTranslation,
   todayMinutes,
   goalMinutes,
@@ -2013,7 +2285,7 @@ function ReaderToolbar({
   onContents: () => void;
   textSizeId: TextSizeId;
   onChangeTextSize: (id: TextSizeId) => void;
-  translationTag: string;
+  translation: Translation;
   onChangeTranslation: () => void;
   todayMinutes: number;
   goalMinutes: number;
@@ -2063,7 +2335,7 @@ function ReaderToolbar({
             onChangeTextSize={(id) => {
               onChangeTextSize(id);
             }}
-            translationTag={translationTag}
+            translation={translation}
             onChangeTranslation={() => {
               setSection(null);
               onChangeTranslation();
@@ -2222,133 +2494,483 @@ function GoalIconWithDot({ reached }: { reached: boolean }) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Themes & settings popover — text size picker + translation pill
+// Themes & settings popover — text size picker + translation row
+//
+// Visual intent: Apple-Books-quality glass card. The previous build
+// was a flat dark rectangle with thin gray chips and a tiny tag pill
+// on the right of a row labeled "Translation" — it looked closer to
+// a debug panel than a reader setting. This rebuild:
+//
+//   • Renders on a true `BlurView` material so the popover reads as
+//     glass over the page, not a stamped surface. A translucent dark
+//     fill sits on top of the blur to keep the foreground legible
+//     against any chapter bloom backdrop.
+//
+//   • Replaces the 4 standalone chips with a single segmented
+//     control. Each cell shows "Aa" sized to actually look like
+//     small / default / large / extra-large (10pt → 22pt span), with
+//     a tiny S / M / L / XL label underneath. Selected cell uses the
+//     app's iOS-blue accent (`colors.select`) so the selection reads
+//     instantly.
+//
+//   • Promotes "Translation" from a one-line row with a cramped tag
+//     to a real settings row showing the full translation name on
+//     top, the short tag underneath, and a chevron to indicate it
+//     navigates to a fuller picker. Tappable across the whole row.
+//
+//   • Soft haptic on every interaction so the whole thing feels
+//     alive.
 // ─────────────────────────────────────────────────────────────────
 
 function ThemesPopover({
   textSizeId,
   onChangeTextSize,
-  translationTag,
+  translation,
   onChangeTranslation,
 }: {
   textSizeId: TextSizeId;
   onChangeTextSize: (id: TextSizeId) => void;
-  translationTag: string;
+  translation: Translation;
   onChangeTranslation: () => void;
 }) {
   const colors = useColors();
+  const scheme = useResolvedScheme();
+  // Glass material flips with the active scheme — dark mode keeps
+  // a night-sky tint with a faint white hairline; light mode runs
+  // a milky-white tint with a warm hairline so the popover reads
+  // as Apple-Books-quality glass on the cream canvas instead of
+  // staying as a stamped dark rectangle in the middle of a light
+  // page. The shadow color also flips to a warmer near-black so
+  // the soft drop on cream doesn't pool as a cold grey blob.
+  const isLight = scheme === "light";
+  const glassTint = isLight ? "light" : "dark";
+  const glassFill = isLight
+    ? "rgba(255, 255, 255, 0.78)"
+    : "rgba(14, 14, 16, 0.78)";
+  const glassHairline = isLight
+    ? "rgba(15, 15, 15, 0.08)"
+    : "rgba(255, 255, 255, 0.08)";
+  const glassShadowOpacity = isLight ? 0.18 : 0.45;
   return (
     <View
       style={{
-        width: 300,
-        backgroundColor: colors.surface,
-        borderColor: colors.border,
-        borderWidth: 1,
-        borderRadius: 18,
+        width: 320,
+        borderRadius: 22,
         overflow: "hidden",
+        // Soft outer drop shadow so the popover lifts off the page
+        // — gives the glass material its sense of depth even on
+        // iOS where blur alone is subtle.
+        ...Platform.select({
+          ios: {
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 16 },
+            shadowOpacity: glassShadowOpacity,
+            shadowRadius: 30,
+          },
+          android: { elevation: 18 },
+        }),
       }}
     >
-      <View style={{ paddingHorizontal: 14, paddingTop: 14, paddingBottom: 10 }}>
-        <Text
-          className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-        >
-          Text Size
-        </Text>
-        <View
-          style={{
-            flexDirection: "row",
-            marginTop: 10,
-            gap: 6,
-          }}
-        >
-          {TEXT_SIZES.map((s) => (
-            <TextSizeChip
-              key={s.id}
-              size={s}
-              active={textSizeId === s.id}
-              onPress={() => onChangeTextSize(s.id)}
-            />
-          ))}
-        </View>
-      </View>
-      <View
-        style={{ height: 0.5, backgroundColor: colors.border, marginHorizontal: 14 }}
-      />
-      <Pressable
-        onPress={onChangeTranslation}
-        style={({ pressed }) => ({
-          opacity: pressed ? 0.6 : 1,
-          paddingHorizontal: 14,
-          paddingVertical: 14,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        })}
+      <BlurView
+        // Intensity is platform-tuned (iOS reads `intensity`
+        // directly; Android needs a higher value to reach a
+        // similar opacity) and tint flips with the resolved
+        // scheme so the material reads as the page's own glass
+        // rather than a foreign island.
+        intensity={Platform.OS === "ios" ? 60 : 90}
+        tint={glassTint}
+        style={{
+          // Translucent wash on top of the blur — without it,
+          // page text behind the popover bleeds through enough to
+          // hurt the chip labels' contrast on either canvas.
+          backgroundColor: glassFill,
+          borderRadius: 22,
+          // Subtle hairline keeps the edge crisp against any
+          // chapter bloom color behind it.
+          borderWidth: 1,
+          borderColor: glassHairline,
+        }}
       >
-        <Text
-          className="text-ink text-[14px]"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-        >
-          Translation
-        </Text>
+        {/* ─── Text Size ──────────────────────────────────────── */}
         <View
           style={{
-            paddingHorizontal: 10,
-            paddingVertical: 4,
-            borderRadius: 999,
-            borderColor: colors.border,
-            borderWidth: 1,
+            paddingHorizontal: 18,
+            paddingTop: 18,
+            paddingBottom: 14,
           }}
         >
           <Text
-            className="text-ink-muted text-[10.5px] tracking-[1.5px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              fontSize: 10.5,
+              color: colors.inkSubtle,
+              letterSpacing: 2.5,
+              textTransform: "uppercase",
+            }}
           >
-            {translationTag}
+            Text Size
           </Text>
+          <TextSizeSlider
+            value={textSizeId}
+            onChange={(id) => {
+              onChangeTextSize(id);
+            }}
+          />
         </View>
-      </Pressable>
+
+        {/* Hairline divider — same hairline color the popover
+            border uses so the rule reads as part of the same
+            glass material instead of a separate ink line. */}
+        <View
+          style={{
+            height: StyleSheet.hairlineWidth,
+            backgroundColor: glassHairline,
+            marginHorizontal: 14,
+          }}
+        />
+
+        {/* ─── Translation ────────────────────────────────────── */}
+        <Pressable
+          onPress={() => {
+            haptics.soft();
+            onChangeTranslation();
+          }}
+          style={({ pressed }) => ({
+            opacity: pressed ? 0.7 : 1,
+            paddingHorizontal: 18,
+            paddingTop: 14,
+            paddingBottom: 16,
+            flexDirection: "row",
+            alignItems: "center",
+          })}
+          accessibilityRole="button"
+          accessibilityLabel={`Change translation. Current: ${translation.fullName}`}
+        >
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                fontSize: 10.5,
+                color: colors.inkSubtle,
+                letterSpacing: 2.5,
+                textTransform: "uppercase",
+              }}
+            >
+              Translation
+            </Text>
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                fontSize: 15,
+                color: colors.ink,
+                marginTop: 6,
+              }}
+              numberOfLines={1}
+            >
+              {translation.fullName}
+            </Text>
+          </View>
+          {/* Right-side tag + chevron group reads as "current value
+              + this opens a picker", which is the iOS Settings
+              row idiom users already know. */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <View
+              style={{
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 999,
+                backgroundColor: colors.selectSoft,
+                borderWidth: 1,
+                borderColor: "rgba(10, 132, 255, 0.45)",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontSize: 10.5,
+                  color: colors.select,
+                  letterSpacing: 1.2,
+                }}
+              >
+                {translation.tag}
+              </Text>
+            </View>
+            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M9 6l6 6-6 6"
+                stroke={colors.inkSubtle}
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </View>
+        </Pressable>
+      </BlurView>
     </View>
   );
 }
 
-function TextSizeChip({
-  size,
-  active,
-  onPress,
+/**
+ * Text-size slider — Apple-Books-style horizontal track with an
+ * animated thumb that snaps between the four discrete TEXT_SIZES
+ * positions (Small / Default / Large / Extra-Large).
+ *
+ * Why a slider instead of the old 4-cell segmented control:
+ *   • The segmented control rendered four `Aa` glyphs at four
+ *     wildly different sizes (11 / 15 / 19 / 23 pt) which read
+ *     as visually noisy — especially with a tinted active cell
+ *     dropped in the middle. The user described it as
+ *     "unprofessional."
+ *   • A slider mirrors the affordance every iOS-native reading
+ *     app uses (Apple Books, Hallow, Kindle, Reeder) — a clean
+ *     track with a thumb, tiny "Aa" / big "Aa" bookends. The
+ *     scale is conveyed by the END labels, not by four discrete
+ *     glyphs competing for attention.
+ *   • The control is still discretized to TEXT_SIZES under the
+ *     hood — small / default / large / x-large — so all reader
+ *     code that depends on `TextSizeId` keeps working unchanged.
+ *
+ * Interaction:
+ *   • Tap anywhere on the track → thumb springs to the nearest
+ *     step and emits onChange.
+ *   • Drag the track → thumb follows the touch and snaps to the
+ *     nearest step on every change (haptic per snap, not per
+ *     pixel). On release the thumb settles at the final step.
+ *   • Each snap is a soft haptic so the slider feels "notched"
+ *     rather than continuous.
+ *
+ * Layout math:
+ *   • The interactive container takes the full popover width.
+ *   • The visible track is inset 14pt from each side (THUMB_RADIUS)
+ *     so the thumb has room at the extremes without clipping.
+ *   • Steps are evenly spaced from x=14 to x=(width-14), so for
+ *     N steps the gap between adjacent steps is (width-28)/(N-1).
+ *   • The thumb's `translateX` drives its position — animated on
+ *     spring so taps feel responsive but landings feel iOS-natural.
+ */
+const THUMB_DIAMETER = 28;
+const THUMB_RADIUS = THUMB_DIAMETER / 2;
+
+function TextSizeSlider({
+  value,
+  onChange,
 }: {
-  size: TextSize;
-  active: boolean;
-  onPress: () => void;
+  value: TextSizeId;
+  onChange: (id: TextSizeId) => void;
 }) {
   const colors = useColors();
-  const fontSize = Math.round(11 + (size.scale - 0.88) * 10);
+  const scheme = useResolvedScheme();
+  // Track / tick / thumb tints flip with the glass material —
+  // dark popover gets faint-white parts, light popover gets
+  // faint-ink parts, and the thumb adopts the ink color so it
+  // reads as a deliberate handle on either canvas (a pure-white
+  // thumb on cream glass would float without an edge).
+  const isLight = scheme === "light";
+  const trackColor = isLight
+    ? "rgba(15, 15, 15, 0.12)"
+    : "rgba(255, 255, 255, 0.12)";
+  const tickColor = isLight
+    ? "rgba(15, 15, 15, 0.30)"
+    : "rgba(255, 255, 255, 0.35)";
+  const thumbColor = isLight ? colors.ink : "#FFFFFF";
+  const stepCount = TEXT_SIZES.length;
+  const activeIndex = Math.max(
+    0,
+    TEXT_SIZES.findIndex((s) => s.id === value),
+  );
+
+  // Container width is measured at mount via onLayout. Until the
+  // first layout pass we render the thumb at translateX=0 — the
+  // useEffect below snaps it into the right slot as soon as we
+  // know the width. This avoids a flash of "thumb at left edge"
+  // on first paint because the thumb itself doesn't render until
+  // we know the geometry.
+  const [containerWidth, setContainerWidth] = useState(0);
+  const trackWidth = Math.max(0, containerWidth - THUMB_DIAMETER);
+  const stepWidth = stepCount > 1 ? trackWidth / (stepCount - 1) : 0;
+
+  // Animated thumb position (translateX from container left edge).
+  // We always render the thumb relative to the LEFT padding inset
+  // — translateX of 0 puts the thumb's left edge at x=0, which
+  // means its center sits at x=THUMB_RADIUS, which is exactly
+  // where step 0 lives.
+  const thumbX = useRef(new Animated.Value(0)).current;
+
+  // Spring the thumb whenever the active step changes or the
+  // container width is measured for the first time. We drive
+  // translateX (not `left`) so we can use the native driver.
+  useEffect(() => {
+    Animated.spring(thumbX, {
+      toValue: activeIndex * stepWidth,
+      tension: 110,
+      friction: 13,
+      useNativeDriver: true,
+    }).start();
+  }, [activeIndex, stepWidth, thumbX]);
+
+  // Map a touch x coordinate (in container coordinates) to a step
+  // index. Subtract the THUMB_RADIUS inset so the track origin is
+  // at the visible track's start, then round to the nearest step.
+  const indexFromX = useCallback(
+    (x: number): number => {
+      if (stepWidth <= 0) return activeIndex;
+      const local = x - THUMB_RADIUS;
+      const raw = local / stepWidth;
+      return Math.max(0, Math.min(stepCount - 1, Math.round(raw)));
+    },
+    [stepWidth, activeIndex, stepCount],
+  );
+
+  // PanResponder for tap + drag. Recreated whenever indexFromX
+  // changes (which only happens when the container width or the
+  // active step changes). onChange is captured in the closure;
+  // calling it triggers the parent's state update which re-runs
+  // the spring effect above to advance the thumb.
+  const panHandlers = useMemo(() => {
+    const handleAt = (x: number) => {
+      const idx = indexFromX(x);
+      if (idx !== activeIndex && idx >= 0 && idx < stepCount) {
+        haptics.soft();
+        onChange(TEXT_SIZES[idx]!.id);
+      }
+    };
+    return PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (e) => handleAt(e.nativeEvent.locationX),
+      onPanResponderMove: (e) => handleAt(e.nativeEvent.locationX),
+      onPanResponderTerminationRequest: () => false,
+    }).panHandlers;
+  }, [indexFromX, activeIndex, stepCount, onChange]);
+
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        flex: 1,
-        opacity: pressed ? 0.6 : 1,
-        height: 44,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: active ? colors.ink : colors.border,
-        backgroundColor: active ? colors.accentSoft : "transparent",
-        alignItems: "center",
-        justifyContent: "center",
-      })}
-    >
-      <Text
+    <View style={{ marginTop: 14 }}>
+      {/* End-label bookends — tiny "Aa" on the left to indicate
+          "smaller", larger "Aa" on the right to indicate "bigger".
+          Same visual idiom Apple Books / Hallow use. */}
+      <View
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
-          fontSize,
-          color: colors.ink,
+          flexDirection: "row",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          paddingHorizontal: 2,
+          marginBottom: 10,
+          height: 22,
         }}
       >
-        Aa
-      </Text>
-    </Pressable>
+        <Text
+          style={{
+            fontFamily: "PlusJakartaSans_700Bold",
+            fontSize: 13,
+            lineHeight: 16,
+            color: colors.inkSubtle,
+          }}
+        >
+          Aa
+        </Text>
+        <Text
+          style={{
+            fontFamily: "PlusJakartaSans_700Bold",
+            fontSize: 21,
+            lineHeight: 24,
+            color: colors.inkSubtle,
+          }}
+        >
+          Aa
+        </Text>
+      </View>
+
+      {/* Slider track — full-width touch area; the visible track
+          line lives inset by THUMB_RADIUS on either side so the
+          thumb never clips at the extremes. */}
+      <View
+        onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
+        style={{
+          height: THUMB_DIAMETER,
+          justifyContent: "center",
+        }}
+        accessibilityRole="adjustable"
+        accessibilityLabel="Text size"
+        accessibilityValue={{
+          min: 0,
+          max: stepCount - 1,
+          now: activeIndex,
+          text: TEXT_SIZES[activeIndex]?.name ?? "",
+        }}
+        {...panHandlers}
+      >
+        {/* Track line — sits inside the thumb-padded inset so it
+            visually starts/ends at the thumb's center positions. */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: THUMB_RADIUS,
+            right: THUMB_RADIUS,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: trackColor,
+          }}
+        />
+
+        {/* Tick marks — small dots at each step position to show
+            the snap targets. Hidden under the thumb at the active
+            step (the thumb visually replaces the tick). */}
+        {stepWidth > 0
+          ? TEXT_SIZES.map((_, i) => {
+              const isActive = i === activeIndex;
+              return (
+                <View
+                  key={i}
+                  pointerEvents="none"
+                  style={{
+                    position: "absolute",
+                    left: THUMB_RADIUS + i * stepWidth - 3,
+                    top: THUMB_RADIUS - 3,
+                    width: 6,
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: isActive ? "transparent" : tickColor,
+                  }}
+                />
+              );
+            })
+          : null}
+
+        {/* Animated thumb — circle that springs between step
+            positions. translateX is driven by the spring; the
+            base `left: 0` puts the thumb's left edge flush with
+            the container left, so translateX=0 places its center
+            at x=THUMB_RADIUS, which is exactly step 0. */}
+        {containerWidth > 0 ? (
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: THUMB_DIAMETER,
+              height: THUMB_DIAMETER,
+              borderRadius: THUMB_RADIUS,
+              backgroundColor: thumbColor,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: isLight ? 0.18 : 0.35,
+              shadowRadius: 3,
+              elevation: 4,
+              transform: [{ translateX: thumbX }],
+            }}
+          />
+        ) : null}
+      </View>
+    </View>
   );
 }
 
@@ -2366,96 +2988,158 @@ function GoalPopover({
   onOpen: () => void;
 }) {
   const colors = useColors();
+  const scheme = useResolvedScheme();
   const pct = Math.min(100, Math.round((todayMinutes / goalMinutes) * 100));
   const reached = todayMinutes >= goalMinutes;
+  // Same theme-aware glass treatment as ThemesPopover so the two
+  // popovers read as one connected family of reader chrome on
+  // either canvas (dark night-sky glass / light milky glass).
+  const isLight = scheme === "light";
+  const glassTint = isLight ? "light" : "dark";
+  const glassFill = isLight
+    ? "rgba(255, 255, 255, 0.78)"
+    : "rgba(14, 14, 16, 0.78)";
+  const glassHairline = isLight
+    ? "rgba(15, 15, 15, 0.08)"
+    : "rgba(255, 255, 255, 0.08)";
+  const glassTrack = isLight
+    ? "rgba(15, 15, 15, 0.10)"
+    : "rgba(255, 255, 255, 0.10)";
+  const glassShadowOpacity = isLight ? 0.18 : 0.45;
   return (
     <View
       style={{
-        width: 300,
-        backgroundColor: colors.surface,
-        borderColor: colors.border,
-        borderWidth: 1,
-        borderRadius: 18,
+        width: 320,
+        borderRadius: 22,
         overflow: "hidden",
+        ...Platform.select({
+          ios: {
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 16 },
+            shadowOpacity: glassShadowOpacity,
+            shadowRadius: 30,
+          },
+          android: { elevation: 18 },
+        }),
       }}
     >
-      <View style={{ paddingHorizontal: 14, paddingTop: 14, paddingBottom: 10 }}>
+      <BlurView
+        intensity={Platform.OS === "ios" ? 60 : 90}
+        tint={glassTint}
+        style={{
+          backgroundColor: glassFill,
+          borderRadius: 22,
+          borderWidth: 1,
+          borderColor: glassHairline,
+        }}
+      >
         <View
           style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-          }}
-        >
-          <Text
-            className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            Today
-          </Text>
-          <Text
-            className="text-ink-subtle text-[11px]"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-          >
-            {formatGoalMinutes(todayMinutes)} / {goalMinutes} min
-          </Text>
-        </View>
-        <View
-          style={{
-            height: 6,
-            backgroundColor: colors.border,
-            borderRadius: 3,
-            overflow: "hidden",
-            marginTop: 10,
+            paddingHorizontal: 18,
+            paddingTop: 18,
+            paddingBottom: 16,
           }}
         >
           <View
             style={{
-              height: "100%",
-              width: `${pct}%`,
-              backgroundColor: reached ? "#FFB672" : colors.primary,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "baseline",
             }}
-          />
+          >
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                fontSize: 10.5,
+                color: colors.inkSubtle,
+                letterSpacing: 2.5,
+                textTransform: "uppercase",
+              }}
+            >
+              Today
+            </Text>
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_500Medium",
+                fontSize: 11,
+                color: colors.inkSubtle,
+              }}
+            >
+              {formatGoalMinutes(todayMinutes)} / {goalMinutes} min
+            </Text>
+          </View>
+          <View
+            style={{
+              height: 6,
+              backgroundColor: glassTrack,
+              borderRadius: 3,
+              overflow: "hidden",
+              marginTop: 12,
+            }}
+          >
+            <View
+              style={{
+                height: "100%",
+                width: `${pct}%`,
+                backgroundColor: reached ? "#FFB672" : colors.primary,
+              }}
+            />
+          </View>
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_500Medium",
+              fontSize: 12,
+              color: colors.inkMuted,
+              lineHeight: 18,
+              marginTop: 10,
+            }}
+          >
+            {reached
+              ? "Today's reading goal reached."
+              : "Keep reading — your minutes count automatically."}
+          </Text>
         </View>
-        <Text
-          className="text-ink-muted text-[12px] mt-2.5 leading-[18px]"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+        <View
+          style={{
+            height: StyleSheet.hairlineWidth,
+            backgroundColor: glassHairline,
+            marginHorizontal: 14,
+          }}
+        />
+        <Pressable
+          onPress={() => {
+            haptics.soft();
+            onOpen();
+          }}
+          style={({ pressed }) => ({
+            opacity: pressed ? 0.7 : 1,
+            paddingHorizontal: 18,
+            paddingVertical: 14,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          })}
         >
-          {reached
-            ? "Today's reading goal reached."
-            : "Keep reading — your minutes count automatically."}
-        </Text>
-      </View>
-      <View
-        style={{ height: 0.5, backgroundColor: colors.border, marginHorizontal: 14 }}
-      />
-      <Pressable
-        onPress={onOpen}
-        style={({ pressed }) => ({
-          opacity: pressed ? 0.6 : 1,
-          paddingHorizontal: 14,
-          paddingVertical: 14,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        })}
-      >
-        <Text
-          className="text-ink text-[14px]"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-        >
-          Change goal
-        </Text>
-        <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M9 6l6 6-6 6"
-            stroke={colors.inkSubtle}
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
-      </Pressable>
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              fontSize: 14,
+              color: colors.ink,
+            }}
+          >
+            Change goal
+          </Text>
+          <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="M9 6l6 6-6 6"
+              stroke={colors.inkSubtle}
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        </Pressable>
+      </BlurView>
     </View>
   );
 }
@@ -3048,21 +3732,6 @@ function Chevron({ direction }: { direction: "prev" | "next" }) {
         d={d}
         stroke={colors.inkSubtle}
         strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function CheckIcon() {
-  const colors = useColors();
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M5 12l5 5L20 7"
-        stroke={colors.ink}
-        strokeWidth={2.2}
         strokeLinecap="round"
         strokeLinejoin="round"
       />

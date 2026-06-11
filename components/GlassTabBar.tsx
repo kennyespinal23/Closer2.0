@@ -12,19 +12,39 @@ import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import Svg, { Path } from "react-native-svg";
+import * as haptics from "@/lib/haptics";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
-const SIDE_INSET = 24;
-const ROW_PADDING_H = 8;
-const CELL_MARGIN_H = 2;
-// Opal-style minimal floating bar: icon-only cells, slimmer pill,
-// muted glass. The bar is now an unobtrusive floating affordance
-// rather than a chunky labeled toolbar — the user knows what
-// "Today / Practice / Library / Insights" are by now and the icons
-// carry recognition on their own.
-const PILL_HEIGHT = 56;
-const CELL_HEIGHT = 44;
-const BUBBLE_TOP = (PILL_HEIGHT - CELL_HEIGHT) / 2;
+// Flush bottom tab bar (Apple-system style — Notes / Books /
+// Reminders). The bar hugs the screen's bottom edge AND its side
+// edges with rounded TOP corners only; the safe-area / home-
+// indicator zone is baked into the bar's internal padding so
+// scrolling content disappears cleanly behind it instead of
+// peeking through a "floating gap" under a translucent pill.
+//
+// Earlier revisions ran an Opal-style floating glass pill with
+// 24pt side margins and a 12-34pt bottom gap. The user pulled
+// that aesthetic — content scrolling beneath the pill was
+// visible in the gap, which read as a bug. The flush bar treats
+// the entire bottom strip as bar territory, which is the
+// dominant iOS pattern and what every native Apple app uses.
+const ROW_PADDING_H = 16;
+const CELL_MARGIN_H = 4;
+const PILL_TOP_RADIUS = 24;
+const PILL_PADDING_TOP = 8;
+// CELL_HEIGHT is the bubble's footprint — wraps just the icon
+// area at the top of the cell. Labels sit BELOW the bubble so
+// the active state reads as "haloed icon + emphasized label"
+// rather than a big bordered chip wrapping both.
+const CELL_HEIGHT = 38;
+const LABEL_GAP = 4;
+const LABEL_LINE_HEIGHT = 12;
+// Visible portion of the bar above the safe-area inset, sized to
+// fit the cell stack exactly: paddingTop + iconWrap + label gap +
+// label line. Total: 8 + 38 + 4 + 12 = 62.
+const PILL_VISIBLE_HEIGHT =
+  PILL_PADDING_TOP + CELL_HEIGHT + LABEL_GAP + LABEL_LINE_HEIGHT;
+const BUBBLE_TOP = PILL_PADDING_TOP;
 /**
  * Route name marker for the "+" FAB cell. The tabs layout registers
  * a regular Tabs.Screen with this name (see app/(tabs)/_layout.tsx)
@@ -38,24 +58,54 @@ const FAB_SIZE = 48;
 /**
  * GlassTabBar
  *
- * A floating, translucent tab bar inspired by Apple News' "Liquid
- * Glass" navigation. Active state is a SINGLE bubble that physically
- * slides between cells on a spring — not a per-cell background that
- * snaps on and off.
+ * A flush bottom tab bar with a glass / blur surface and a SINGLE
+ * sliding active bubble that physically springs between cells —
+ * not a per-cell background that snaps on and off. Closest visual
+ * cousin is Apple Notes / Books / Reminders on iOS 26: edge-to-
+ * edge, rounded TOP corners, safe-area baked in. Earlier
+ * revisions ran an Opal-style floating pill with side margins
+ * and a bottom gap; the user pulled that aesthetic because
+ * scrolling content was visible in the gap, which read as a bug.
  *
  * Anatomy:
- *   ┌───────────────────────────────────────────────┐
- *   │  (bubble) Today    Library    Insights        │  ← BlurView pill
- *   └───────────────────────────────────────────────┘
- *               └── animated, springs to active cell
+ *   ┌─╮━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╭─┐
+ *   │ ╰     (bubble)                            ╯ │   ← rounded top
+ *   │      Home       Library      Profile        │     edges only
+ *   │      home       library      profile        │   ← labels
+ *   │                                             │   ← safe-area
+ *   └─────────────────────────────────────────────┘     inset (baked)
+ *               └── bubble springs to active cell
  *
  * IMPORTANT (NativeWind quirk): with `nativewind/babel`'s
  * jsxImportSource, every component is wrapped in CssInterop. When
  * Pressable's `style` is the FUNCTION form `({ pressed }) => ({...})`
  * those styles get silently dropped, collapsing the cell to zero
  * width. Always pass a static style/array to Pressable in this codebase.
+ *
+ * Per-day accent (optional):
+ *   The tabs layout passes `accent` — the current sermon-type
+ *   color. We use it for the active icon tint and a faint glow on
+ *   the active bubble border. Apple Fitness uses a vibrant red,
+ *   Apple TV uses red, Apple Games uses neon orange — all three
+ *   pop the active tab with a saturated color against the dark
+ *   chrome. Closer earns the same energy from each day's sermon
+ *   accent (warm orange for Daily Church, royal violet for Jesus
+ *   Only, emerald for Character Studies, etc) so the tab bar
+ *   visually belongs to "today" the way the home hero does.
+ *   When `accent` is absent the bar falls back to pure ink white
+ *   for the active state — the old behavior.
  */
-export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+type GlassTabBarProps = BottomTabBarProps & {
+  /** Per-day accent color. Tints the active icon + bubble border. */
+  accent?: string;
+};
+
+export function GlassTabBar({
+  state,
+  descriptors,
+  navigation,
+  accent,
+}: GlassTabBarProps) {
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const colors = useColors();
@@ -91,14 +141,22 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
   const bubbleBg = isDark
     ? "rgba(255, 255, 255, 0.12)"
     : "rgba(15, 15, 15, 0.06)";
-  const bubbleBorder = isDark
-    ? "rgba(255, 255, 255, 0.06)"
-    : "rgba(15, 15, 15, 0.08)";
+  // Active bubble border picks up the per-day accent at 35% alpha
+  // when present — gives the focused cell a faint colored halo that
+  // mirrors Apple Fitness/TV/Games' vibrant active tint without
+  // turning the whole bubble into a colored slab. Falls back to the
+  // neutral white hairline when no accent is supplied (e.g. screens
+  // outside the daily-sermon flow).
+  const bubbleBorder = accent
+    ? hexToRgba(accent, 0.35)
+    : isDark
+      ? "rgba(255, 255, 255, 0.06)"
+      : "rgba(15, 15, 15, 0.08)";
   const fabBorder = isDark
     ? "rgba(255, 255, 255, 0.18)"
     : "rgba(255, 255, 255, 0.65)";
 
-  const pillWidth = screenWidth - SIDE_INSET * 2;
+  const pillWidth = screenWidth;
   const cellCount = state.routes.length;
   // Each cell takes an equal share of the row content area; the
   // bubble matches one cell's footprint (cell margins on either side).
@@ -130,16 +188,28 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
       pointerEvents="box-none"
       style={[
         styles.anchor,
-        // Hug the safe-area bottom; iPhones with a home indicator get
-        // a small breathing gap, older devices fall back to a flat 12.
-        { bottom: Math.max(insets.bottom, 12) },
+        // Flush bottom: bar hugs the screen's bottom edge so the safe-
+        // area / home-indicator zone is part of bar territory and
+        // scrolling content can't peek through any "gap" beneath.
       ]}
     >
-      <View style={[styles.pill, { borderColor: pillBorderColor }]}>
+      <View
+        style={[
+          styles.pill,
+          {
+            borderColor: pillBorderColor,
+            // Safe-area inset is baked into the bar's bottom padding.
+            // Total visible bar height = PILL_VISIBLE_HEIGHT (icons +
+            // labels area) + insets.bottom (home indicator zone).
+            paddingBottom: insets.bottom,
+            height: PILL_VISIBLE_HEIGHT + insets.bottom,
+          },
+        ]}
+      >
         {/* Solid themed backing — rendered FIRST so it sits beneath
             the BlurView. Keeps the bar from picking up colored
             scroll content (book covers, hero images) on screens
-            like Library / Insights. Without it the blur averages
+            like Library / Profile. Without it the blur averages
             whatever's beneath it and the labels become unreadable. */}
         <View
           style={[StyleSheet.absoluteFill, { backgroundColor: backingColor }]}
@@ -192,6 +262,15 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
                 : (options.title ?? route.name);
 
             const onPress = () => {
+              // Light haptic confirms every tab tap, including the
+              // FAB. We fire BEFORE emitting tabPress so the user
+              // feels the buzz the instant they tap, not after the
+              // bubble starts sliding (haptic latency stacks with
+              // animation latency otherwise). Re-tapping the active
+              // tab still buzzes — that matches iOS Safari / Maps
+              // where a re-tap is a scroll-to-top gesture and
+              // should still register tactilely.
+              haptics.soft();
               const event = navigation.emit({
                 type: "tabPress",
                 target: route.key,
@@ -245,36 +324,68 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
               );
             }
 
-            // ─── Normal cell — icon-only ──────────────────────
-            // Labels were removed for Phase 7C's Opal-style pass.
-            // Recognition is now carried by the icons alone (sun /
-            // page / books / chart). Focused icons go to full ink
-            // and a slightly larger size; inactive icons sit at
-            // inkSubtle so the active state has clear contrast.
-            // The accessibilityLabel still passes through so VoiceOver
-            // users get "Today, Tab 1 of 5" — the visual label is
-            // gone but the semantic label isn't.
-            const tint = isFocused ? colors.ink : colors.inkSubtle;
-            const iconSize = isFocused ? 24 : 22;
-            // Keep the unused label variable typed so future
-            // re-add doesn't require re-plumbing descriptors.
-            void label;
+            // ─── Normal cell — icon + label ───────────────────
+            // Apple-system cell layout: icon on top, label
+            // directly below. Both share the active tint when
+            // focused — the per-day accent if supplied, otherwise
+            // ink white. Inactive cells sit at inkSubtle so the
+            // active state has clear contrast against quiet
+            // monochrome siblings.
+            //
+            // Icon size stays constant whether focused or not —
+            // the active state communicates via (a) the sliding
+            // bubble behind the icon and (b) the accent-tinted
+            // icon + label. Growing the icon on focus made the
+            // layout shift visibly on every tab change, which
+            // read as jittery; constant-size + bubble feels
+            // more iOS-native.
+            //
+            // Icon size bumped 22 → 26 → 30 across two user
+            // requests — the smaller glyphs read too quiet
+            // against the 62pt bar. 30 fits inside CELL_HEIGHT=38
+            // (4pt total breathing) and gives the icons real
+            // visual weight, slightly larger than Apple Music /
+            // Notes — which is what the user is going for.
+            const tint = isFocused
+              ? (accent ?? colors.ink)
+              : colors.inkSubtle;
+            const iconSize = 30;
 
             return (
               <Pressable
                 key={route.key}
                 accessibilityRole="button"
                 accessibilityState={isFocused ? { selected: true } : {}}
-                accessibilityLabel={options.tabBarAccessibilityLabel}
+                accessibilityLabel={options.tabBarAccessibilityLabel ?? label}
                 onPress={onPress}
                 onLongPress={onLongPress}
                 style={styles.cell}
               >
-                {options.tabBarIcon?.({
-                  focused: isFocused,
-                  color: tint,
-                  size: iconSize,
-                })}
+                <View style={styles.iconWrap}>
+                  {options.tabBarIcon?.({
+                    focused: isFocused,
+                    color: tint,
+                    size: iconSize,
+                  })}
+                </View>
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    styles.label,
+                    {
+                      color: tint,
+                      // Active label nudges to SemiBold so the
+                      // focused tab reads with a touch more weight
+                      // even at 10pt. Inactive stays at Medium —
+                      // legible but quiet.
+                      fontFamily: isFocused
+                        ? "PlusJakartaSans_600SemiBold"
+                        : "PlusJakartaSans_500Medium",
+                    },
+                  ]}
+                >
+                  {label}
+                </Text>
               </Pressable>
             );
           })}
@@ -287,12 +398,18 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
 const styles = StyleSheet.create({
   anchor: {
     position: "absolute",
-    left: SIDE_INSET,
-    right: SIDE_INSET,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   pill: {
-    height: PILL_HEIGHT,
-    borderRadius: PILL_HEIGHT / 2,
+    // Flush bottom bar: rounded TOP corners only (the bottom is
+    // hidden against the screen edge). Border radius is on the
+    // top corners explicitly — borderRadius shorthand would
+    // round the bottom too, which we don't want now that the
+    // bar hugs the screen edge.
+    borderTopLeftRadius: PILL_TOP_RADIUS,
+    borderTopRightRadius: PILL_TOP_RADIUS,
     overflow: "hidden",
     // Hairline glass-edge border (color comes from the theme-aware
     // `pillBorderColor` inline so it flips with the scheme). Now
@@ -305,24 +422,45 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.3,
     shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: -4 },
     elevation: 10,
   },
   row: {
-    flex: 1,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     paddingHorizontal: ROW_PADDING_H,
+    paddingTop: PILL_PADDING_TOP,
+    height: PILL_VISIBLE_HEIGHT,
   },
   cell: {
     flex: 1,
-    height: CELL_HEIGHT,
     marginHorizontal: CELL_MARGIN_H,
     alignItems: "center",
-    justifyContent: "center",
-    // Transparent — selection is communicated by the sliding bubble
-    // beneath, not a per-cell background.
+    // Top-aligned: icon sits at the top of the cell so the
+    // sliding bubble below has a fixed origin to lock onto,
+    // and the label sits BELOW the icon with a small gap.
+    justifyContent: "flex-start",
     backgroundColor: "transparent",
+  },
+  iconWrap: {
+    height: CELL_HEIGHT,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  label: {
+    // Tab labels are intentionally tiny — iOS standard is 10pt at
+    // San Francisco's metrics; PlusJakartaSans reads close to the
+    // same proportion. Tight tracking keeps "Library" from
+    // breaking onto two lines on narrow phones. Magic numbers
+    // (fontSize / lineHeight / marginTop) match the constants
+    // (LABEL_LINE_HEIGHT / LABEL_GAP) above so the pill height
+    // math stays consistent.
+    fontSize: 10,
+    lineHeight: LABEL_LINE_HEIGHT,
+    letterSpacing: 0.2,
+    marginTop: LABEL_GAP,
+    textAlign: "center",
   },
   bubble: {
     position: "absolute",
@@ -331,8 +469,6 @@ const styles = StyleSheet.create({
     // bg + border come from the theme-aware values inline.
     borderWidth: 1,
   },
-  // (Cell labels removed in Phase 7C — icons carry recognition
-  // on their own now, matching Opal's icon-only floating bar.)
   fab: {
     width: FAB_SIZE,
     height: FAB_SIZE,
@@ -353,8 +489,48 @@ const styles = StyleSheet.create({
 
 /**
  * Total vertical footprint a screen should reserve at the bottom of
- * its scroll content so nothing hides under the floating glass bar.
+ * its scroll content so nothing hides under the flush bottom bar.
  *
- * Pill (56) + outer margin (12) + a small visual gap (16) = 84.
+ * Flush bar layout:
+ *   • PILL_VISIBLE_HEIGHT (62) — icons + labels area above safe area
+ *   • insets.bottom (~34 on iPhones with home indicator, 0 otherwise)
+ *
+ * Worst case (iPhone with home indicator): 62 + 34 = 96. We export
+ * a flat upper-bound constant rather than a hook so existing
+ * consumers (today / library / profile) stay one-line additions:
+ * `paddingBottom: TAB_BAR_TOTAL_HEIGHT + 16`. The over-reserve on
+ * older iPhones (~34pt of extra bottom whitespace) is acceptable —
+ * those devices are a tiny share of the user base and the cost is
+ * just empty scroll space, not visible chrome.
  */
-export const TAB_BAR_TOTAL_HEIGHT = 84;
+export const TAB_BAR_TOTAL_HEIGHT = 96;
+
+/**
+ * hexToRgba — accepts `#RRGGBB` / `#RGB` / `rgb(…)` / `rgba(…)` and
+ * returns a CSS rgba string with the requested alpha. Safe to call
+ * with already-rgba inputs (we just replace the alpha channel).
+ *
+ * Why a local helper rather than the file-scoped one in today.tsx:
+ * GlassTabBar lives in components/ and shouldn't reach into a
+ * screen file. The sermon-type accents on this project are always
+ * `#RRGGBB` hex literals, so the parsing surface is tiny.
+ */
+function hexToRgba(input: string, alpha: number): string {
+  // Already rgba? Swap its alpha and return.
+  const rgbaMatch = input.match(/^rgba?\(([^)]+)\)$/);
+  if (rgbaMatch) {
+    const parts = rgbaMatch[1]!.split(",").map((s) => s.trim());
+    const [r, g, b] = parts;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  let hex = input.replace("#", "");
+  // Expand `#RGB` shorthand to `#RRGGBB`.
+  if (hex.length === 3) {
+    hex = hex.split("").map((c) => c + c).join("");
+  }
+  if (hex.length !== 6) return `rgba(255, 255, 255, ${alpha})`;
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}

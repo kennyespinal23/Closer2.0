@@ -10,20 +10,20 @@
     "runtimeVersion": "exposdk:54.0.0",
     "splash": {
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#141416"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.closer.app",
+      "bundleIdentifier": "com.espinalcapital.closer",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#000000"
+        "backgroundColor": "#141416"
       },
-      "package": "com.closer.app"
+      "package": "com.espinalcapital.closer"
     },
     "web": {
       "bundler": "metro",

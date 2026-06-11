@@ -1,52 +1,85 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Linking, Pressable, Switch, Text, View } from "react-native";
+import {
+  Alert,
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import { StudySessionEditor } from "@/components/StudySessionEditor";
+import { BlockedAppsEditor } from "@/components/BlockedAppsEditor";
+import { BrandGlyph } from "@/components/BrandGlyph";
+import { TimeBlockEditor } from "@/components/TimeBlockEditor";
+import * as haptics from "@/lib/haptics";
+import { findSocialApp, type SocialAppId } from "@/lib/focus";
 import {
-  SettingsScaffold,
-  SettingsSection,
-} from "@/components/SettingsScaffold";
-import {
-  fireTestStudySessionNow,
   formatReminderTime,
   getNotificationPermission,
   requestNotificationPermission,
   type NotificationPermissionStatus,
+  type WeekdayIndex,
 } from "@/lib/notifications";
+import { useFocus } from "@/state/focus";
 import {
-  formatDaysOfWeek,
   useStudySessions,
   type StudySession,
+  type StudySessionDraft,
 } from "@/state/studySessions";
 import { useColors } from "@/state/theme";
 
+/** Same iOS-system-blue used by the modal editors' Save buttons.
+ *  Reads as the universal "primary tap target" color in both
+ *  themes, and keeps the App Blocks vocabulary consistent (the
+ *  Save buttons, the day chips, and the apps CTA all share one
+ *  accent). */
+const PRIMARY_BLUE = "#0A84FF";
+
 /**
- * Bible-study sessions — list + create/edit/delete UI.
+ * App Blocks — the page the home "Add a time and apps to block" row
+ * lands on.
  *
- * Layout:
- *   1. Quiet preamble explaining what these sessions DO (schedule a
- *      notification + offer to start focus mode)
- *   2. Permission state — if undetermined / denied we surface a CTA
- *      to fix it before any session can fire
- *   3. The list of sessions — empty state OR a card per session with
- *      time, days, and an enabled switch
- *   4. "Add a session" tappable row at the bottom
+ * The screen now follows the two-card pattern of the user's
+ * reference Opal-style "lock settings" mockup. Each card is one
+ * commitment the user is making to themselves:
  *
- * Adding / editing uses a shared bottom-sheet editor (see
- * components/StudySessionEditor.tsx). The list owns no editor state
- * of its own — it just holds the id of the session currently being
- * edited (or "new" for a fresh draft) and passes that to the editor.
+ *   1. Blocked Apps  — WHICH apps should be silenced. One global
+ *                      list (managed via `focusPrefs.blockedAppIds`)
+ *                      shared across every block time. Editing it
+ *                      mirrors into every existing session's
+ *                      `blockedAppIds` so toggling on a new app
+ *                      doesn't require visiting every time block.
+ *
+ *   2. Block Times   — WHEN they should be silenced. One entry per
+ *                      time (8:00 AM weekdays, 6:00 PM daily…) with
+ *                      a switch for pause-without-delete. Add new
+ *                      entries via the section's "+" affordance.
+ *
+ * The old per-session "apps to silence" picker is hidden here — it
+ * still exists in the data model so legacy callers keep working —
+ * but the user's mental model on this page is "one apps list,
+ * many times". When the apps list is updated on this page we
+ * propagate the new list to every existing session in one pass
+ * so the data and the UI stay in sync.
  */
-export default function StudySessionsScreen() {
+export default function AppBlocksScreen() {
   const colors = useColors();
+  const router = useRouter();
   const { sessions, addSession, updateSession, removeSession, toggleSession } =
     useStudySessions();
+  const { prefs: focusPrefs, setBlockedAppIds } = useFocus();
   const [permission, setPermission] =
     useState<NotificationPermissionStatus>("undetermined");
   const [busy, setBusy] = useState(false);
-  // Editor target: null = closed, "new" = new draft, "<id>" = editing.
-  // Single piece of state keeps the open/close flow trivially correct.
-  const [editorTarget, setEditorTarget] = useState<null | "new" | string>(null);
+  // Two independent editor targets — each modal owns its own
+  // visibility so opening one never collides with the other. `null`
+  // means closed; `"new"` means creating; a string id means editing.
+  const [timeTarget, setTimeTarget] = useState<null | "new" | string>(null);
+  const [appsEditorOpen, setAppsEditorOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,7 +91,7 @@ export default function StudySessionsScreen() {
     };
   }, []);
 
-  // ─── Permission CTA ──────────────────────────────────────────────
+  // ─── Permission handling ──────────────────────────────────────
 
   const handleRequestPermission = useCallback(async () => {
     if (busy) return;
@@ -66,13 +99,14 @@ export default function StudySessionsScreen() {
     try {
       const status = await requestNotificationPermission();
       setPermission(status);
-      // If the user permanently denied earlier (canAskAgain === false),
-      // the request resolves immediately as "denied" — gently nudge
-      // them to Settings, since the OS won't show our prompt again.
+      // If permission was previously permanently denied (canAskAgain
+      // === false), the request resolves immediately as "denied" —
+      // nudge the user to the system Settings since the OS won't
+      // show our prompt again.
       if (status === "denied") {
         Alert.alert(
           "Notifications are off",
-          "Open Settings to allow Closer to send your study reminders.",
+          "Open Settings to allow Closer to remind you when each block starts.",
           [
             { text: "Not now", style: "cancel" },
             { text: "Open Settings", onPress: () => Linking.openSettings() },
@@ -84,27 +118,25 @@ export default function StudySessionsScreen() {
     }
   }, [busy]);
 
-  // ─── Delete confirm ──────────────────────────────────────────────
+  // ─── Delete confirm (long-press on a time row) ────────────────
 
   const handleDelete = useCallback(
     (session: StudySession) => {
-      // System routines (seeded by onboarding) can't be deleted from
-      // here — only paused via the row toggle. Removing them would
-      // leave the user with a Practice tab they have to manually
-      // re-seed if they ever change their mind. The soft-off path is
-      // friendlier and reversible. Surface the why so the user
-      // doesn't just see a "nothing happened" non-response.
+      // System routines (seeded by onboarding) can't be deleted —
+      // only paused via the row toggle. See state/studySessions for
+      // the reasoning. Surface why so the user doesn't see a
+      // silent non-response.
       if (session.source === "system") {
         Alert.alert(
           "Set up by Closer",
-          `"${session.name || "This session"}" was set up during your welcome. Turn it off with the switch to pause it — your notifications will stop and nothing will fire on the days you've chosen.`,
+          "This time was set up during your welcome. Use the switch to pause it instead — your notifications stop and nothing fires on the days you've chosen.",
           [{ text: "Got it", style: "default" }],
         );
         return;
       }
       Alert.alert(
-        "Delete this session?",
-        `"${session.name || "Unnamed study"}" will be removed and its reminders cancelled.`,
+        "Delete this time?",
+        `${formatReminderTime(session.time)} will be removed and its reminders cancelled.`,
         [
           { text: "Cancel", style: "cancel" },
           {
@@ -118,432 +150,683 @@ export default function StudySessionsScreen() {
     [removeSession],
   );
 
-  // The editor target's session (if we're editing an existing one).
+  // ─── Save handlers wired into the two modal editors ───────────
+
+  /** Persist a new time block OR update an existing one. Newly-
+   *  created blocks inherit the global blocked-apps list so the
+   *  user doesn't have to set apps twice. */
+  const handleTimeSave = useCallback(
+    async (
+      result: { time: { hour: number; minute: number }; daysOfWeek: WeekdayIndex[] },
+    ) => {
+      if (timeTarget === "new") {
+        const draft: StudySessionDraft = {
+          // Use a friendly auto-name for the row label / notification
+          // body. The user doesn't have a name field in the simplified
+          // editor; this default is good enough for both surfaces.
+          name: defaultBlockName(result.time),
+          source: "user",
+          time: result.time,
+          daysOfWeek: result.daysOfWeek,
+          enabled: true,
+          useFocusMode: true,
+          // Inherit the global app list so this block silences the
+          // user's curated apps from day one.
+          blockedAppIds: [...focusPrefs.blockedAppIds],
+        };
+        await addSession(draft);
+      } else if (timeTarget) {
+        // Editing an existing block — patch only time + days, leave
+        // everything else (name, apps, focus opt-in) intact.
+        await updateSession(timeTarget, {
+          time: result.time,
+          daysOfWeek: result.daysOfWeek,
+        });
+      }
+      setTimeTarget(null);
+    },
+    [timeTarget, addSession, updateSession, focusPrefs.blockedAppIds],
+  );
+
+  /** Persist a new blocked-apps list — writes the global focus
+   *  prefs AND mirrors the list into every existing session so the
+   *  one-app-list-applies-to-all-times mental model holds. */
+  const handleAppsSave = useCallback(
+    async (next: SocialAppId[]) => {
+      setBlockedAppIds(next);
+      // Mirror into every existing session in parallel. Fire-and-
+      // forget — if a single update fails the OS notification just
+      // keeps its previous apps list; the global list is the source
+      // of truth for any future re-creation.
+      await Promise.all(
+        sessions.map((s) =>
+          updateSession(s.id, { blockedAppIds: [...next] }),
+        ),
+      );
+      setAppsEditorOpen(false);
+    },
+    [setBlockedAppIds, sessions, updateSession],
+  );
+
+  // ─── Derived data ────────────────────────────────────────────
+
+  const anyEnabled = sessions.some((s) => s.enabled);
+  const blockedApps = focusPrefs.blockedAppIds
+    .map((id) => findSocialApp(id))
+    .filter((x): x is NonNullable<typeof x> => Boolean(x));
+
+  // The session currently being edited (if any).
   const editingSession =
-    editorTarget && editorTarget !== "new"
-      ? sessions.find((s) => s.id === editorTarget)
+    timeTarget && timeTarget !== "new"
+      ? sessions.find((s) => s.id === timeTarget)
       : undefined;
 
   return (
-    <SettingsScaffold title="Study Sessions">
-      {/* Preamble — explains the feature without selling it. */}
-      <View className="px-6 pt-2 pb-2">
-        <Text
-          className="text-ink-muted text-[14px] leading-[21px]"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
+      {/* Header — back chevron + centered title, same chrome as the
+          rest of the settings stack so this page sits visually in
+          the same family. */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 12,
+          paddingTop: 4,
+          paddingBottom: 6,
+        }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          style={{
+            width: 40,
+            height: 40,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          Schedule recurring times to step into the Word. When the
-          time comes, Closer sends a quiet notification and offers
-          to start Focus mode so you can read without distractions.
-        </Text>
+          <BackChevron stroke={colors.ink} />
+        </Pressable>
+        <View style={{ flex: 1 }} />
+        <View style={{ width: 40, height: 40 }} />
       </View>
 
-      {/* Permission CTA — only shown when we'd actually fail to
-          fire a notification. Hidden once permission is granted so
-          the screen stays uncluttered for the common case. */}
-      {permission !== "granted" && (
-        <View className="px-5 mt-6">
-          <View
-            className="rounded-2xl px-4 py-4 flex-row items-center"
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Title block — large editorial header with a quiet
+            subtitle below. Matches the reference's "lock settings
+            · set prayer reminders & choose apps to block" hierarchy
+            but in our typography. */}
+        <View style={{ paddingHorizontal: 24, paddingTop: 4 }}>
+          <Text
             style={{
-              borderWidth: 1,
+              fontFamily: "PlusJakartaSans_700Bold",
+              color: colors.ink,
+              fontSize: 32,
+              lineHeight: 38,
+              letterSpacing: -0.6,
+            }}
+            accessibilityRole="header"
+          >
+            App Blocks
+          </Text>
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_400Regular",
+              color: colors.inkMuted,
+              fontSize: 15,
+              lineHeight: 21,
+              marginTop: 6,
+            }}
+          >
+            Pick the apps you want quieted and the times to silence them.
+          </Text>
+        </View>
+
+        {/* Permission CTA — only when the user could miss notifications. */}
+        {permission !== "granted" && (
+          <View style={{ paddingHorizontal: 20, marginTop: 18 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+                borderRadius: 16,
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+              }}
+            >
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 12,
+                  backgroundColor: colors.accentSoft,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: 12,
+                }}
+              >
+                <BellGlyph stroke={colors.ink} />
+              </View>
+              <View style={{ flex: 1, paddingRight: 10 }}>
+                <Text
+                  style={{
+                    fontFamily: "PlusJakartaSans_700Bold",
+                    color: colors.ink,
+                    fontSize: 14,
+                  }}
+                >
+                  Allow notifications
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "PlusJakartaSans_400Regular",
+                    color: colors.inkMuted,
+                    fontSize: 12,
+                    lineHeight: 17,
+                    marginTop: 1,
+                  }}
+                >
+                  Required for block reminders.
+                </Text>
+              </View>
+              <Pressable
+                onPress={handleRequestPermission}
+                disabled={busy}
+                accessibilityRole="button"
+                accessibilityLabel="Allow notifications"
+                style={({ pressed }) => ({
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: 999,
+                  backgroundColor: colors.ink,
+                  opacity: pressed || busy ? 0.7 : 1,
+                })}
+              >
+                <Text
+                  style={{
+                    fontFamily: "PlusJakartaSans_700Bold",
+                    fontSize: 12,
+                    color: colors.primaryFg,
+                  }}
+                >
+                  {permission === "denied" ? "Settings" : "Allow"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
+        {/* ─── Card 1: Blocked Apps ─────────────────────────────
+            A single rounded card with: a small section header
+            row (lock icon + "Blocked Apps" + count chip on the
+            right), a horizontal preview of brand glyphs for the
+            currently-selected apps, and a primary CTA pill at
+            the bottom that opens the apps picker.
+            
+            Empty state: no glyph preview, the CTA reads "Pick
+            apps to block". */}
+        <View style={{ paddingHorizontal: 20, marginTop: 22 }}>
+          <View
+            style={{
+              borderRadius: 22,
+              borderWidth: StyleSheet.hairlineWidth,
               borderColor: colors.border,
               backgroundColor: colors.surface,
+              padding: 16,
             }}
           >
             <View
-              className="w-9 h-9 rounded-xl items-center justify-center mr-3"
-              style={{ backgroundColor: colors.accentSoft }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: blockedApps.length === 0 ? 6 : 14,
+              }}
             >
-              <BellIcon stroke={colors.ink} />
-            </View>
-            <View className="flex-1 pr-2">
+              <LockGlyph stroke={colors.ink} />
               <Text
-                className="text-ink text-[14px]"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-              >
-                Allow notifications
-              </Text>
-              <Text
-                className="text-ink-muted text-[12px] mt-0.5 leading-[17px]"
-                style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-              >
-                Required for study session reminders.
-              </Text>
-            </View>
-            <Pressable
-              onPress={handleRequestPermission}
-              disabled={busy}
-              className="rounded-full px-3 py-2"
-              style={({ pressed }) => ({
-                backgroundColor: colors.ink,
-                opacity: pressed || busy ? 0.7 : 1,
-              })}
-            >
-              <Text
-                className="text-[12px]"
                 style={{
+                  flex: 1,
+                  marginLeft: 8,
                   fontFamily: "PlusJakartaSans_700Bold",
-                  color: colors.primaryFg,
+                  color: colors.ink,
+                  fontSize: 16,
+                  letterSpacing: -0.3,
                 }}
+                accessibilityRole="header"
               >
-                {permission === "denied" ? "Settings" : "Allow"}
+                Blocked Apps
               </Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
-
-      {/* Sessions list — empty state or row stack */}
-      <SettingsSection
-        title="Your sessions"
-        footer={
-          sessions.length === 0
-            ? "Create a session to set a recurring time for Scripture."
-            : "Tap a session to edit. Toggle off to pause without losing it."
-        }
-      >
-        {sessions.length === 0 ? (
-          <EmptyState onAdd={() => setEditorTarget("new")} />
-        ) : (
-          sessions.map((session, i) => (
-            <SessionRow
-              key={session.id}
-              session={session}
-              showDivider={i < sessions.length - 1}
-              onTap={() => setEditorTarget(session.id)}
-              onToggle={() => toggleSession(session.id)}
-              onDelete={() => handleDelete(session)}
-            />
-          ))
-        )}
-      </SettingsSection>
-
-      {/* Add session row — separate section so the touch target
-          reads as its own action, not "another session row." */}
-      <View className="px-5 mt-7">
-        <Pressable
-          onPress={() => setEditorTarget("new")}
-          accessibilityRole="button"
-          accessibilityLabel="Add a new study session"
-          className="rounded-2xl border border-border bg-surface overflow-hidden"
-        >
-          <View className="flex-row items-center px-4 py-3.5">
-            <View
-              className="w-8 h-8 rounded-xl items-center justify-center mr-3"
-              style={{ backgroundColor: colors.accentSoft }}
-            >
-              <PlusIcon stroke={colors.ink} />
-            </View>
-            <Text
-              className="flex-1 text-ink text-[14.5px]"
-              style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-            >
-              Add a session
-            </Text>
-            <ChevronIcon stroke={colors.inkSubtle} />
-          </View>
-        </Pressable>
-      </View>
-
-      {/* Dev tools — quick "test fire" for the most recently edited
-          session so we can verify the deep link without waiting for
-          the schedule trigger. Hidden in release builds. */}
-      {__DEV__ && sessions.length > 0 && (
-        <View className="px-5 mt-6">
-          <Pressable
-            onPress={async () => {
-              const target = sessions[0];
-              if (!target) return;
-              await fireTestStudySessionNow({
-                id: target.id,
-                name: target.name,
-                time: target.time,
-                daysOfWeek: target.daysOfWeek,
-                enabled: target.enabled,
-              });
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Fire test notification"
-            className="rounded-2xl border border-border overflow-hidden"
-          >
-            <View className="px-4 py-3.5">
-              <Text
-                className="text-ink-muted text-[12px] tracking-[1.5px] uppercase"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-              >
-                Dev · Fire test notification
-              </Text>
-              <Text
-                className="text-ink-subtle text-[11.5px] mt-1"
-                style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-              >
-                Sends “{sessions[0].name || "first session"}” in 2 seconds.
-                Background the app to see the banner.
-              </Text>
-            </View>
-          </Pressable>
-        </View>
-      )}
-
-      {/* Editor modal — null target means closed.
-          We pass a `key` derived from the target so React fully
-          remounts the editor when switching between sessions, which
-          resets its internal draft state cleanly. */}
-      <StudySessionEditor
-        key={editorTarget ?? "closed"}
-        visible={editorTarget !== null}
-        existing={editingSession}
-        onClose={() => setEditorTarget(null)}
-        onSubmit={async (draft) => {
-          if (editorTarget === "new") {
-            await addSession(draft);
-          } else if (editorTarget) {
-            await updateSession(editorTarget, draft);
-          }
-          setEditorTarget(null);
-        }}
-      />
-    </SettingsScaffold>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Row — one tappable session card
-// ─────────────────────────────────────────────────────────────────
-
-function SessionRow({
-  session,
-  showDivider,
-  onTap,
-  onToggle,
-  onDelete,
-}: {
-  session: StudySession;
-  showDivider: boolean;
-  onTap: () => void;
-  onToggle: () => void;
-  onDelete: () => void;
-}) {
-  const colors = useColors();
-  const isSystem = session.source === "system";
-  return (
-    <View>
-      <Pressable
-        onPress={onTap}
-        onLongPress={onDelete}
-        accessibilityRole="button"
-        accessibilityLabel={`Edit ${session.name || "study session"}`}
-        accessibilityHint={
-          isSystem
-            ? "Long-press to learn why this one can't be deleted"
-            : "Long-press to delete"
-        }
-      >
-        <View className="flex-row items-center px-4 py-3.5">
-          {/* Icon chip — soft accent square, same chip language as
-              other settings rows. Book glyph signals "scripture."
-              System routines get a slightly warmer wash so they
-              read as "set up by Closer" without needing a badge
-              in this denser settings layout. */}
-          <View
-            className="w-9 h-9 rounded-xl items-center justify-center mr-3"
-            style={{
-              backgroundColor: isSystem
-                ? withAlpha(colors.accent, 0.14)
-                : colors.accentSoft,
-            }}
-          >
-            <BookGlyph stroke={isSystem ? colors.accent : colors.ink} />
-          </View>
-          <View className="flex-1 pr-2">
-            <View className="flex-row items-center" style={{ gap: 6 }}>
-              <Text
-                className="text-ink text-[15px]"
-                style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  flexShrink: 1,
-                }}
-                numberOfLines={1}
-              >
-                {session.name || "Unnamed study"}
-              </Text>
-              {isSystem && (
+              {blockedApps.length > 0 ? (
                 <View
                   style={{
-                    paddingHorizontal: 6,
-                    paddingVertical: 1.5,
+                    paddingHorizontal: 9,
+                    paddingVertical: 2,
                     borderRadius: 999,
-                    backgroundColor: withAlpha(colors.accent, 0.16),
+                    backgroundColor: colors.accentSoft,
                   }}
                 >
                   <Text
                     style={{
                       fontFamily: "PlusJakartaSans_700Bold",
-                      fontSize: 9.5,
-                      color: colors.accent,
-                      letterSpacing: 0.6,
+                      fontSize: 12,
+                      color: colors.ink,
                     }}
                   >
-                    CLOSER
+                    {blockedApps.length}
                   </Text>
                 </View>
-              )}
+              ) : null}
             </View>
-            <Text
-              className="text-ink-muted text-[12.5px] mt-0.5"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-              numberOfLines={1}
+
+            {blockedApps.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  paddingVertical: 2,
+                  gap: 10,
+                }}
+                style={{ marginBottom: 16 }}
+              >
+                {blockedApps.map((app) => (
+                  <BrandGlyph key={app.id} appId={app.id} size="md" />
+                ))}
+              </ScrollView>
+            ) : (
+              <Text
+                style={{
+                  fontFamily: "PlusJakartaSans_400Regular",
+                  color: colors.inkMuted,
+                  fontSize: 13,
+                  lineHeight: 18,
+                  marginBottom: 14,
+                }}
+              >
+                Pick the apps you want silenced during every block.
+              </Text>
+            )}
+
+            {/* CTA pill — chrome held on the inner View so the
+                NativeWind/Pressable style-function interop can't
+                drop the backgroundColor. Pressable just owns the
+                tap + opacity feedback; the inner View paints the
+                blue pill. */}
+            <Pressable
+              onPress={() => {
+                haptics.soft();
+                setAppsEditorOpen(true);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={
+                blockedApps.length > 0
+                  ? "Update Blocked Apps"
+                  : "Pick apps to block"
+              }
+              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
             >
-              {formatReminderTime(session.time)}
-              {"  ·  "}
-              {formatDaysOfWeek(session.daysOfWeek)}
-            </Text>
+              <View
+                style={{
+                  borderRadius: 14,
+                  // iOS-system-blue. Using a saturated accent (vs
+                  // the ink swap we use for sermon CTAs) means the
+                  // button reads as a tap target unambiguously in
+                  // both themes — ink-on-bg pairs are technically
+                  // correct but visually blend with white text in
+                  // dark mode. Blue is universally read as "tap
+                  // this" and matches the modal editors' Save
+                  // buttons + the day chips so the App Blocks
+                  // vocabulary is consistent.
+                  backgroundColor: PRIMARY_BLUE,
+                  paddingVertical: 14,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                }}
+              >
+                <LockGlyph stroke="#FFFFFF" />
+                <Text
+                  style={{
+                    fontFamily: "PlusJakartaSans_700Bold",
+                    color: "#FFFFFF",
+                    fontSize: 14.5,
+                    letterSpacing: 0.2,
+                    marginLeft: 8,
+                  }}
+                >
+                  {blockedApps.length > 0
+                    ? "Update Blocked Apps"
+                    : "Pick apps to block"}
+                </Text>
+              </View>
+            </Pressable>
           </View>
-          {/* Native switch sits at the right — flipping it off
-              pauses the session without losing its config. Trapped
-              against the parent press via onPress: false (Switch
-              swallows its own taps), so the row's onTap fires only
-              when the user taps elsewhere. */}
-          <Switch
-            value={session.enabled}
-            onValueChange={onToggle}
-            trackColor={{
-              false: withAlpha(colors.ink, 0.1),
-              true: "#3D8B6A",
-            }}
-            thumbColor="#F4F4F5"
-            ios_backgroundColor={withAlpha(colors.ink, 0.08)}
-          />
         </View>
-      </Pressable>
-      {showDivider && <View className="h-[1px] bg-border ml-[60px]" />}
-    </View>
+
+        {/* ─── Card 2: Block Times ──────────────────────────────
+            A rounded card with: section header (clock icon +
+            "Block Times" + "+" add button on the right), a one-
+            line description, then either an inline empty state
+            ("Add your first time") or a stack of time rows. Each
+            row leads with the time at 17pt SemiBold, then the
+            days summary in a quiet subtitle, then a system Switch
+            on the right for pause-without-delete.
+            
+            Long-press a row to delete (with a confirmation
+            alert). Tap the row body to open the editor for that
+            time. */}
+        <View style={{ paddingHorizontal: 20, marginTop: 18 }}>
+          <View
+            style={{
+              borderRadius: 22,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+              padding: 16,
+              paddingBottom: sessions.length > 0 ? 6 : 16,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 6,
+              }}
+            >
+              <ClockGlyph stroke={colors.ink} />
+              <Text
+                style={{
+                  flex: 1,
+                  marginLeft: 8,
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  color: colors.ink,
+                  fontSize: 16,
+                  letterSpacing: -0.3,
+                }}
+                accessibilityRole="header"
+              >
+                Block Time
+              </Text>
+              {/* Header "+" only renders when there's NO time set
+                  yet — the App Block is capped at a single daily
+                  block, matching the one-sermon-a-day rule. Once
+                  the user has added their time, the only action
+                  is to edit/delete the existing row (tap or
+                  swipe). The "+" returns the moment they delete
+                  the row, so the affordance is never permanently
+                  hidden — just gated by capacity. */}
+              {sessions.length === 0 ? (
+                <Pressable
+                  onPress={() => {
+                    haptics.soft();
+                    setTimeTarget("new");
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add a time"
+                  hitSlop={8}
+                  style={({ pressed }) => ({
+                    width: 30,
+                    height: 30,
+                    borderRadius: 15,
+                    backgroundColor: colors.accentSoft,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <PlusGlyph stroke={colors.ink} />
+                </Pressable>
+              ) : null}
+            </View>
+
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_400Regular",
+                color: colors.inkMuted,
+                fontSize: 13,
+                lineHeight: 18,
+                marginBottom: sessions.length === 0 ? 4 : 8,
+              }}
+            >
+              {sessions.length === 0
+                ? "Your apps will be quieted at the time you add here."
+                : "Your apps will be quieted at this time."}
+            </Text>
+
+            {sessions.length === 0 ? (
+              <Pressable
+                onPress={() => {
+                  haptics.soft();
+                  setTimeTarget("new");
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Add your first time"
+                style={({ pressed }) => ({
+                  opacity: pressed ? 0.85 : 1,
+                  marginTop: 10,
+                  borderRadius: 14,
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: colors.border,
+                  paddingVertical: 12,
+                  alignItems: "center",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                })}
+              >
+                <PlusGlyph stroke={colors.ink} />
+                <Text
+                  style={{
+                    fontFamily: "PlusJakartaSans_700Bold",
+                    color: colors.ink,
+                    fontSize: 14,
+                    marginLeft: 6,
+                  }}
+                >
+                  Add a time
+                </Text>
+              </Pressable>
+            ) : (
+              <View style={{ marginTop: 4 }}>
+                {sessions.map((session, i) => (
+                  <TimeRow
+                    key={session.id}
+                    session={session}
+                    isLast={i === sessions.length - 1}
+                    onTap={() => setTimeTarget(session.id)}
+                    onLongPress={() => handleDelete(session)}
+                    onToggle={() => toggleSession(session.id)}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+
+          {sessions.length > 0 ? (
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_400Regular",
+                color: colors.inkSubtle,
+                fontSize: 12,
+                lineHeight: 17,
+                textAlign: "center",
+                marginTop: 14,
+                paddingHorizontal: 12,
+              }}
+            >
+              {anyEnabled
+                ? "Block time is active."
+                : "Block time is off — your apps won't be blocked."}
+            </Text>
+          ) : null}
+        </View>
+      </ScrollView>
+
+      {/* ─── Editors ───────────────────────────────────────────── */}
+
+      <TimeBlockEditor
+        key={timeTarget ?? "closed-time"}
+        visible={timeTarget !== null}
+        existing={editingSession}
+        onClose={() => setTimeTarget(null)}
+        onSubmit={handleTimeSave}
+      />
+
+      <BlockedAppsEditor
+        visible={appsEditorOpen}
+        initial={focusPrefs.blockedAppIds}
+        onClose={() => setAppsEditorOpen(false)}
+        onSubmit={handleAppsSave}
+      />
+    </SafeAreaView>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────
-// EmptyState — zero-session card with a single inline CTA
+// TimeRow — one tappable block-time row
 // ─────────────────────────────────────────────────────────────────
 
-function EmptyState({ onAdd }: { onAdd: () => void }) {
+function TimeRow({
+  session,
+  isLast,
+  onTap,
+  onLongPress,
+  onToggle,
+}: {
+  session: StudySession;
+  isLast: boolean;
+  onTap: () => void;
+  onLongPress: () => void;
+  onToggle: () => void;
+}) {
   const colors = useColors();
   return (
-    <View className="px-5 py-7 items-center">
+    <Pressable
+      onPress={onTap}
+      onLongPress={onLongPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Edit time at ${formatReminderTime(session.time)}`}
+      accessibilityHint="Long-press to delete"
+      style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+    >
       <View
-        className="w-12 h-12 rounded-full items-center justify-center mb-3.5"
-        style={{ backgroundColor: colors.accentSoft }}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingVertical: 14,
+          paddingHorizontal: 4,
+          borderBottomWidth: isLast ? 0 : StyleSheet.hairlineWidth,
+          borderBottomColor: colors.border,
+        }}
       >
-        <BookGlyph stroke={colors.inkMuted} size={20} />
+        <View style={{ flex: 1, paddingRight: 12 }}>
+          <Text
+            style={{
+              fontFamily: session.enabled
+                ? "PlusJakartaSans_700Bold"
+                : "PlusJakartaSans_600SemiBold",
+              fontSize: 22,
+              lineHeight: 26,
+              letterSpacing: -0.4,
+              // Disabled rows render in the muted ink so the row
+              // visually demotes itself — matches iOS Alarms.
+              color: session.enabled ? colors.ink : colors.inkMuted,
+            }}
+            numberOfLines={1}
+          >
+            {formatReminderTime(session.time)}
+          </Text>
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_400Regular",
+              color: colors.inkMuted,
+              fontSize: 13,
+              lineHeight: 18,
+              marginTop: 1,
+            }}
+            numberOfLines={1}
+          >
+            {summarizeDays(session.daysOfWeek)}
+          </Text>
+        </View>
+        <Switch
+          value={session.enabled}
+          onValueChange={onToggle}
+          ios_backgroundColor={colors.border as string}
+          accessibilityLabel={`Toggle block at ${formatReminderTime(session.time)}`}
+        />
       </View>
-      <Text
-        className="text-ink text-[15px] text-center"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-      >
-        No study sessions yet
-      </Text>
-      <Text
-        className="text-ink-muted text-[12.5px] text-center mt-1 leading-[18px] px-3"
-        style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-      >
-        Pick a time you can keep and a few days that fit your
-        rhythm. We&apos;ll meet you there.
-      </Text>
-      <Pressable
-        onPress={onAdd}
-        accessibilityRole="button"
-        accessibilityLabel="Add your first session"
-        className="mt-4 rounded-full px-4 py-2"
-        style={({ pressed }) => ({
-          backgroundColor: colors.ink,
-          opacity: pressed ? 0.7 : 1,
-        })}
-      >
-        <Text
-          className="text-[12.5px]"
-          style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            color: colors.primaryFg,
-          }}
-        >
-          Create your first session
-        </Text>
-      </Pressable>
-    </View>
+    </Pressable>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Icons
+// Glyphs
 // ─────────────────────────────────────────────────────────────────
 
-function BookGlyph({
-  stroke,
-  size = 16,
-}: {
-  stroke: string;
-  size?: number;
-}) {
+const ICON_BASE = {
+  strokeWidth: 1.8,
+  fill: "none" as const,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
+
+function BackChevron({ stroke }: { stroke: string }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+      <Path d="M15 6l-6 6 6 6" stroke={stroke} {...ICON_BASE} />
+    </Svg>
+  );
+}
+
+function LockGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M4 5a2 2 0 012-2h12v16H6a2 2 0 00-2 2V5z"
+        d="M6 11h12v9H6zM8 11V8a4 4 0 018 0v3"
         stroke={stroke}
-        strokeWidth={1.7}
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M6 3v18"
-        stroke={stroke}
-        strokeWidth={1.7}
-        strokeLinecap="round"
+        {...ICON_BASE}
       />
     </Svg>
   );
 }
 
-function PlusIcon({ stroke }: { stroke: string }) {
+function ClockGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 21a9 9 0 100-18 9 9 0 000 18z"
+        stroke={stroke}
+        {...ICON_BASE}
+      />
+      <Path d="M12 7v5l3 2" stroke={stroke} {...ICON_BASE} />
+    </Svg>
+  );
+}
+
+function PlusGlyph({ stroke }: { stroke: string }) {
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 5v14M5 12h14"
-        stroke={stroke}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
+      <Path d="M12 5v14M5 12h14" stroke={stroke} strokeWidth={2.4} strokeLinecap="round" />
     </Svg>
   );
 }
 
-function BellIcon({ stroke }: { stroke: string }) {
+function BellGlyph({ stroke }: { stroke: string }) {
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
       <Path
         d="M6 17h12l-1.5-2V10a4.5 4.5 0 00-9 0v5L6 17z"
         stroke={stroke}
-        strokeWidth={1.7}
-        strokeLinejoin="round"
+        {...ICON_BASE}
       />
-      <Path
-        d="M10 20a2 2 0 004 0"
-        stroke={stroke}
-        strokeWidth={1.7}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
-function ChevronIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M9 6l6 6-6 6"
-        stroke={stroke}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <Path d="M10 20a2 2 0 004 0" stroke={stroke} {...ICON_BASE} />
     </Svg>
   );
 }
@@ -552,12 +835,31 @@ function ChevronIcon({ stroke }: { stroke: string }) {
 // Helpers
 // ─────────────────────────────────────────────────────────────────
 
-function withAlpha(hex: string, alpha: number): string {
-  const cleaned = hex.replace("#", "");
-  if (cleaned.length !== 6) return hex;
-  const r = parseInt(cleaned.slice(0, 2), 16);
-  const g = parseInt(cleaned.slice(2, 4), 16);
-  const b = parseInt(cleaned.slice(4, 6), 16);
-  if ([r, g, b].some((n) => Number.isNaN(n))) return hex;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+/** Default name for a freshly-created block — used as the
+ *  notification body and the row's accessibility label, never as a
+ *  visible row title (the row leads with the time). The friendly
+ *  default avoids surfacing "Untitled" anywhere. */
+function defaultBlockName(time: { hour: number; minute: number }): string {
+  const h = time.hour;
+  if (h < 5) return "Late Block";
+  if (h < 12) return "Morning Block";
+  if (h < 17) return "Afternoon Block";
+  if (h < 21) return "Evening Block";
+  return "Night Block";
+}
+
+function summarizeDays(days: ReadonlyArray<number>): string {
+  if (days.length === 0) return "Never";
+  if (days.length === 7) return "Every day";
+  const sorted = [...days].sort();
+  const same = (a: number[], b: number[]) =>
+    a.length === b.length && a.every((v, i) => v === b[i]);
+  if (same(sorted, [1, 2, 3, 4, 5])) return "Weekdays";
+  if (same(sorted, [0, 6])) return "Weekends";
+  const shorts = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  return sorted.map((d) => shorts[d]).join(", ");
+}
+
+function countEnabled(sessions: ReadonlyArray<StudySession>): number {
+  return sessions.filter((s) => s.enabled).length;
 }

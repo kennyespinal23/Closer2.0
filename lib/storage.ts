@@ -66,6 +66,15 @@ export const STORAGE_KEYS = {
   readingGoal: "closer.readingGoal.v1",
   savedInsights: "closer.savedInsights.v1",
   /**
+   * Sermons the user has tapped Save on (from the celebration
+   * screen). Persisted across launches so the Library tab's
+   * "Saved" rail reflects everything they've kept for later
+   * re-reading. Stored as an array of 1-based catalog day
+   * numbers (1..90) in save order — same shape pattern as
+   * savedInsights.
+   */
+  savedSermons: "closer.savedSermons.v1",
+  /**
    * Daily-moment provider state — last assignment (date + 1-based
    * catalog day). See state/moments.tsx for the shape. Bumped
    * separately from the rest because the moment-rotation logic
@@ -122,6 +131,16 @@ export const STORAGE_KEYS = {
    * OS expires them; that's fine for the first version.
    */
   studySessions: "closer.studySessions.v1",
+  /**
+   * Whether the "Developer tools" panel on the Today screen is
+   * surfaced for this install. Local-dev (`__DEV__`) builds default
+   * to ON regardless; production builds default to OFF. The toggle
+   * lives in Settings → Developer Tools so internal testers /
+   * teammates on a production-channel install can opt in without
+   * needing a custom build, while real users see a clean Today
+   * screen by default.
+   */
+  devTools: "closer.devTools.v1",
 } as const;
 
 /**

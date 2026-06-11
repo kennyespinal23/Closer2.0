@@ -8,8 +8,18 @@ export const SERMONS = [
     day: 1,
     type: `Daily Church`,
     title: `When God Feels Silent`,
+    imageQuery: `misty fog empty forest morning`,
     voice: `Matt Chandler`,
     scripture: `John 11:21 — 'Lord, if You had been here, my brother would not have died.'`,
+    // Per-sermon illustration override. A pink hand holding a
+    // black rotary phone receiver, with the cord rising up into
+    // a glowing moon-like circle of light against a soft blue
+    // field. Carries the exact emotional weight of this sermon —
+    // calling out, waiting, the silence between you and what you
+    // need to hear — better than the Daily Church type's
+    // generic cross-on-mountain. Renders on the home card,
+    // sermon intro, and narrative panel heroes.
+    illustration: require(`../sermon-types/illustrations/WhenGodFeelsSilent.jpeg`),
     panels: [
       {
         id: 1,
@@ -88,8 +98,17 @@ And it will come for you too.`,
     day: 2,
     type: `Letters - Struggling`,
     title: `I Don't Know How To Pray Anymore`,
+    imageQuery: `rain falling still water ripples`,
     voice: `Jackie Hill Perry`,
     scripture: `Romans 8:26 — 'The Spirit intercedes for us with groanings too deep for words.'`,
+    // Per-sermon illustration. A woman seated cross-legged inside
+    // a golden bell of light on a dark field, holding an open
+    // Bible while a broken rosary lies scattered around her —
+    // sealed in with all the right tools, still aching. Carries
+    // the exact dryness this sermon names ("the words stopped
+    // coming") better than the Letters-Struggling type's
+    // paper-boat default.
+    illustration: require(`../sermon-types/illustrations/i-dont-know-how-to-pray-anymore.jpeg`),
     panels: [
       {
         id: 1,
@@ -158,8 +177,15 @@ And somehow that feels like the most honest thing I've said to God in weeks.`,
     day: 3,
     type: `Jesus Only`,
     title: `He Stopped For One Person`,
+    imageQuery: `single flower field wide open`,
     voice: `Louie Giglio`,
     scripture: `Mark 5:34 — 'Daughter, your faith has healed you. Go in peace.'`,
+    // Per-sermon illustration override. The Mark 5 bleeding-woman
+    // moment is intimate and tactile — Jesus stopping in a
+    // pressing crowd to find the one person who reached for him.
+    // This art captures that singular reach better than the
+    // generic Jesus-Only type default.
+    illustration: require(`../sermon-types/illustrations/he-stopped-for-one-person.jpeg`),
     panels: [
       {
         id: 1,
@@ -242,8 +268,14 @@ He hears yours too.`,
     day: 4,
     type: `Questions`,
     title: `Why Does God Allow Suffering?`,
+    imageQuery: `dark stormy sky dramatic clouds`,
     voice: `Tim Keller`,
     scripture: `Job 38:4 — 'Where were you when I laid the foundations of the earth?'`,
+    // Per-sermon illustration override. The Job 38 voice-from-the-
+    // whirlwind moment is the oldest framing of this question
+    // we have — the scale and weight of that scene fits this
+    // sermon better than the generic Questions type default.
+    illustration: require(`../sermon-types/illustrations/why-does-god-allow-suffering.jpeg`),
     panels: [
       {
         id: 1,
@@ -312,8 +344,15 @@ He answered it with His own suffering before you ever had to ask.`,
     day: 5,
     type: `Character Studies`,
     title: `Peter — The Man Who Failed Out Loud`,
+    imageQuery: `rough ocean waves rocky shore`,
     voice: `T.D. Jakes`,
     scripture: `John 21:17 — 'Do you love me?' Jesus asked him the third time.`,
+    // Per-sermon illustration override. Peter's John 21
+    // beach-restoration moment — fire, fish, the third
+    // question. This art carries the intimate "Jesus found
+    // me where I went to hide" beat better than the generic
+    // Character Studies type default.
+    illustration: require(`../sermon-types/illustrations/peter-the-one-who-failed-out-loud.jpeg`),
     panels: [
       {
         id: 1,
@@ -392,8 +431,18 @@ And the answer you give matters more than the failure you're carrying.`,
     day: 6,
     type: `Misconceptions`,
     title: `You Have To Fix Yourself Before Coming To God`,
+    imageQuery: `dark atmospheric night minimal`,
     voice: `Matt Chandler`,
     scripture: `Romans 5:8 — 'While we were still sinners, Christ died for us.'`,
+    // Per-sermon illustration override. A man in a dim
+    // gray-blue room walking toward an open wooden door
+    // through which warm yellow light spills, revealing a
+    // vibrant landscape of rolling hills, valleys, and sky
+    // on the other side. Carries the whole misconception in
+    // one frame — the "fixing" is on this side of the
+    // door, but you don't have to do it before you step
+    // through. The light is already on. You just walk.
+    illustration: require(`../sermon-types/illustrations/Youhavetofixyourselfbeforecomingtogod.png`),
     panels: [
       {
         id: 1,
@@ -454,6 +503,7 @@ He came specifically for this one.`,
     day: 7,
     type: `Deep Verse Studies`,
     title: `Plans in the Middle of Babylon`,
+    imageQuery: `city lights night fog aerial`,
     voice: `Tim Keller`,
     scripture: `Jeremiah 29:11 — 'For I know the plans I have for you, declares the Lord.'`,
     panels: [
@@ -530,6 +580,7 @@ The promise still stands.`,
     day: 8,
     type: `Testimonies`,
     title: `God Never Stopped Reaching`,
+    imageQuery: `sun rays breaking through clouds`,
     voice: `Steven Furtick`,
     scripture: `Luke 15:20 — 'While he was still a long way off, his father saw him.'`,
     panels: [
@@ -606,6 +657,7 @@ And when you do — at whatever distance, in whatever condition — He is alread
     day: 9,
     type: `Prayer Nights`,
     title: `Be Still`,
+    imageQuery: `calm lake mirror reflection dawn`,
     voice: `Louie Giglio`,
     scripture: `Psalm 46:10 — 'Be still, and know that I am God.'`,
     panels: [
@@ -684,8 +736,17 @@ He is here.`,
     day: 10,
     type: `Jesus Only`,
     title: `He Knew Her Name`,
+    imageQuery: `soft morning light wildflowers`,
     voice: `Louie Giglio`,
     scripture: `John 20:16 — 'Jesus said to her, Mary.'`,
+    // Per-sermon illustration override. A figure in a deep
+    // blue cloak shown from behind, leaning at a low wall
+    // and gazing out into a vast, even-blue sky with two
+    // small birds in the distance. Mary at the garden tomb,
+    // pre-recognition — facing away from the camera, alone
+    // with her grief, before the voice from behind her
+    // speaks the one word that turns her around: "Mary."
+    illustration: require(`../sermon-types/illustrations/Heknewhername.jpeg`),
     panels: [
       {
         id: 1,
@@ -786,6 +847,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 11,
     type: `Deep Verse Studies`,
     title: `The Yoke He Actually Offers`,
+    imageQuery: `open field golden morning light`,
     voice: `Tim Keller`,
     scripture: `Matthew 11:28 — 'Come to me, all who are weary and burdened, and I will give you rest.'`,
     panels: [
@@ -876,6 +938,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 12,
     type: `Character Studies`,
     title: `David — The Worship Leader Who Fell Apart`,
+    imageQuery: `dramatic dark sky single beam light`,
     voice: `T.D. Jakes`,
     scripture: `Psalm 51:10 — 'Create in me a clean heart, O God.'`,
     panels: [
@@ -970,6 +1033,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 13,
     type: `Misconceptions`,
     title: `Doubt Means Weak Faith`,
+    imageQuery: `foggy forest path unclear ahead`,
     voice: `Matt Chandler`,
     scripture: `Mark 9:24 — 'I believe; help my unbelief!'`,
     panels: [
@@ -1066,6 +1130,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 14,
     type: `Daily Church`,
     title: `What Shame Actually Does`,
+    imageQuery: `cave darkness small light entrance`,
     voice: `Matt Chandler`,
     scripture: `Genesis 3:8 — 'They hid from the Lord God among the trees of the garden.'`,
     panels: [
@@ -1162,6 +1227,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 15,
     type: `Jesus Only`,
     title: `The Touch Before the Healing`,
+    imageQuery: `gentle morning dew flower petals`,
     voice: `Louie Giglio`,
     scripture: `Mark 1:41 — 'Jesus reached out his hand and touched the man.'`,
     panels: [
@@ -1278,6 +1344,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 16,
     type: `Testimonies`,
     title: `God Finds People In the Wreckage`,
+    imageQuery: `ruins overgrown sunlight breaking through`,
     voice: `Steven Furtick`,
     scripture: `Psalm 34:18 — 'The Lord is close to the brokenhearted.'`,
     panels: [
@@ -1366,6 +1433,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 17,
     type: `Deep Verse Studies`,
     title: `What Grace Actually Means`,
+    imageQuery: `soft golden sunrise horizon clouds`,
     voice: `Tim Keller`,
     scripture: `Ephesians 2:8-9 — 'For it is by grace you have been saved, through faith — not by works.'`,
     panels: [
@@ -1456,6 +1524,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 18,
     type: `Questions`,
     title: `Why Does God Feel Distant Sometimes?`,
+    imageQuery: `empty road fog distance disappearing`,
     voice: `Tim Keller`,
     scripture: `Psalm 22:1 — 'My God, my God, why have you forsaken me?'`,
     panels: [
@@ -1544,6 +1613,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 19,
     type: `Character Studies`,
     title: `Moses — The Man Who Didn't Think He Was Enough`,
+    imageQuery: `vast desert sky sand dunes`,
     voice: `T.D. Jakes`,
     scripture: `Exodus 3:11 — 'Who am I that I should go to Pharaoh?'`,
     panels: [
@@ -1634,6 +1704,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 20,
     type: `Prayer Nights`,
     title: `When Words Don't Come`,
+    imageQuery: `silent snow falling pine trees night`,
     voice: `Louie Giglio`,
     scripture: `Psalm 62:1 — 'My soul finds rest in God alone.'`,
     panels: [
@@ -1749,6 +1820,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 21,
     type: `Daily Church`,
     title: `The Waiting Room`,
+    imageQuery: `empty bench park autumn leaves`,
     voice: `Matt Chandler`,
     scripture: `Isaiah 40:31 — 'Those who wait on the Lord will renew their strength.'`,
     panels: [
@@ -1835,6 +1907,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 22,
     type: `Jesus Only`,
     title: `He Wept`,
+    imageQuery: `rain drops falling water surface`,
     voice: `Louie Giglio`,
     scripture: `John 11:35 — 'Jesus wept.'`,
     panels: [
@@ -1945,6 +2018,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 23,
     type: `Misconceptions`,
     title: `God Helps Those Who Help Themselves`,
+    imageQuery: `steep mountain path rocky trail`,
     voice: `Matt Chandler`,
     scripture: `2 Corinthians 12:9 — 'My grace is sufficient for you, for my power is made perfect in weakness.'`,
     panels: [
@@ -2045,6 +2119,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 24,
     type: `Testimonies`,
     title: `The Night Everything Changed`,
+    imageQuery: `dark night single candle flame`,
     voice: `Steven Furtick`,
     scripture: `Psalm 40:2 — 'He lifted me out of the slimy pit, out of the mud and mire.'`,
     panels: [
@@ -2129,6 +2204,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 25,
     type: `Letters - Grateful`,
     title: `I Don't Know How To Explain What Happened This Year`,
+    imageQuery: `autumn leaves falling wind change`,
     voice: `Jackie Hill Perry`,
     scripture: `Lamentations 3:22-23 — 'His mercies are new every morning. Great is Your faithfulness.'`,
     panels: [
@@ -2227,6 +2303,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 26,
     type: `Deep Verse Studies`,
     title: `Be Still and Know — What God Was Actually Saying`,
+    imageQuery: `perfectly still lake glassy water`,
     voice: `Tim Keller`,
     scripture: `Psalm 46:10 — 'Be still and know that I am God.'`,
     panels: [
@@ -2317,6 +2394,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 27,
     type: `Character Studies`,
     title: `Ruth — The Woman Who Stayed`,
+    imageQuery: `wheat field golden harvest sunset`,
     voice: `T.D. Jakes`,
     scripture: `Ruth 1:16 — 'Where you go I will go, and where you stay I will stay.'`,
     panels: [
@@ -2411,6 +2489,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 28,
     type: `Questions`,
     title: `Is God Actually Good?`,
+    imageQuery: `storm clouds breaking sunlight rays`,
     voice: `Tim Keller`,
     scripture: `Psalm 34:8 — 'Taste and see that the Lord is good.'`,
     panels: [
@@ -2507,6 +2586,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 29,
     type: `Daily Church`,
     title: `You Are Not Too Far Gone`,
+    imageQuery: `lighthouse fog dark ocean night`,
     voice: `Matt Chandler`,
     scripture: `Luke 15:4 — 'Does he not leave the ninety-nine and go after the lost sheep?'`,
     panels: [
@@ -2597,6 +2677,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 30,
     type: `Jesus Only`,
     title: `He Saw Zacchaeus First`,
+    imageQuery: `tall tree rising above forest`,
     voice: `Louie Giglio`,
     scripture: `Luke 19:5 — 'Zacchaeus, come down immediately. I must stay at your house today.'`,
     panels: [
@@ -2711,6 +2792,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 31,
     type: `Deep Verse Studies`,
     title: `I Can Do All Things — What Paul Actually Meant`,
+    imageQuery: `mountain summit clouds below peak`,
     voice: `Tim Keller`,
     scripture: `Philippians 4:13 — 'I can do all this through him who gives me strength.'`,
     panels: [
@@ -2805,6 +2887,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 32,
     type: `Character Studies`,
     title: `Elijah — The Prophet Who Hit a Wall`,
+    imageQuery: `desert heat haze vast emptiness`,
     voice: `T.D. Jakes`,
     scripture: `1 Kings 19:4 — 'I have had enough, Lord. Take my life.'`,
     panels: [
@@ -2913,6 +2996,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 33,
     type: `Misconceptions`,
     title: `Christians Should Always Be Happy`,
+    imageQuery: `grey overcast sky honest raw`,
     voice: `Matt Chandler`,
     scripture: `Psalm 88:1 — 'Lord, you are the God who saves me; day and night I cry out to you.'`,
     panels: [
@@ -3003,6 +3087,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 34,
     type: `Letters - Struggling`,
     title: `I'm Tired of Feeling Like I'm Failing at This`,
+    imageQuery: `wilting flower dry soil light`,
     voice: `Jackie Hill Perry`,
     scripture: `Hebrews 4:15-16 — 'We do not have a high priest who is unable to empathize with our weakness.'`,
     panels: [
@@ -3105,6 +3190,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 35,
     type: `Testimonies`,
     title: `She Prayed For Ten Years`,
+    imageQuery: `single candle flame dark room`,
     voice: `Steven Furtick`,
     scripture: `James 5:16 — 'The prayer of a righteous person is powerful and effective.'`,
     panels: [
@@ -3205,6 +3291,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 36,
     type: `Prayer Nights`,
     title: `Surrender`,
+    imageQuery: `open palms rain falling sky`,
     voice: `Louie Giglio`,
     scripture: `Matthew 11:28 — 'Come to me, all who are weary and burdened, and I will give you rest.'`,
     panels: [
@@ -3320,6 +3407,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 37,
     type: `Daily Church`,
     title: `The Thing About the Cross`,
+    imageQuery: `dramatic sky dark clouds piercing light`,
     voice: `Matt Chandler`,
     scripture: `1 Corinthians 1:18 — 'The message of the cross is foolishness to those who are perishing.'`,
     panels: [
@@ -3420,6 +3508,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 38,
     type: `Jesus Only`,
     title: `The Woman Who Anointed His Feet`,
+    imageQuery: `rose petals soft warm golden light`,
     voice: `Louie Giglio`,
     scripture: `Luke 7:47 — 'Her many sins have been forgiven — as her great love has shown.'`,
     panels: [
@@ -3534,6 +3623,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 39,
     type: `Deep Verse Studies`,
     title: `Perfect Love Casts Out Fear`,
+    imageQuery: `warm sunrise breaking darkness horizon`,
     voice: `Tim Keller`,
     scripture: `1 John 4:18 — 'Perfect love drives out fear.'`,
     panels: [
@@ -3628,6 +3718,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 40,
     type: `Questions`,
     title: `Why Do Good People Suffer?`,
+    imageQuery: `heavy rain dark street puddles`,
     voice: `Tim Keller`,
     scripture: `Job 1:1 — 'This man was blameless and upright; he feared God and shunned evil.'`,
     panels: [
@@ -3732,6 +3823,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 41,
     type: `Character Studies`,
     title: `Thomas — The Man Who Needed Proof`,
+    imageQuery: `light piercing through dark storm clouds`,
     voice: `T.D. Jakes`,
     scripture: `John 20:27 — 'Put your finger here; see my hands.'`,
     panels: [
@@ -3832,6 +3924,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 42,
     type: `Misconceptions`,
     title: `Waiting Means God Forgot You`,
+    imageQuery: `seed underground soil waiting dark`,
     voice: `Matt Chandler`,
     scripture: `Isaiah 49:15-16 — 'I will not forget you. See, I have engraved you on the palms of my hands.'`,
     panels: [
@@ -3934,6 +4027,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 43,
     type: `Letters - Grateful`,
     title: `The Year I Almost Walked Away`,
+    imageQuery: `cliff edge ocean vast horizon`,
     voice: `Jackie Hill Perry`,
     scripture: `Psalm 73:28 — 'As for me, it is good to be near God.'`,
     panels: [
@@ -4036,6 +4130,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 44,
     type: `Daily Church`,
     title: `When Forgiveness Feels Impossible`,
+    imageQuery: `frozen river thawing spring light`,
     voice: `Matt Chandler`,
     scripture: `Matthew 18:21-22 — 'Not seven times, but seventy-seven times.'`,
     panels: [
@@ -4140,6 +4235,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 45,
     type: `Jesus Only`,
     title: `The Disciples on the Water`,
+    imageQuery: `stormy sea waves crashing dark sky`,
     voice: `Louie Giglio`,
     scripture: `Matthew 14:27 — 'Take courage! It is I. Don't be afraid.'`,
     panels: [
@@ -4250,6 +4346,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 46,
     type: `Testimonies`,
     title: `From the Back of the Church`,
+    imageQuery: `empty cathedral light stained glass`,
     voice: `Steven Furtick`,
     scripture: `Acts 2:47 — 'The Lord added to their number daily those who were being saved.'`,
     panels: [
@@ -4338,6 +4435,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 47,
     type: `Deep Verse Studies`,
     title: `Cast Your Anxiety — What Peter Knew`,
+    imageQuery: `heavy storm cloud releasing rain`,
     voice: `Tim Keller`,
     scripture: `1 Peter 5:7 — 'Cast all your anxiety on him because he cares for you.'`,
     panels: [
@@ -4422,6 +4520,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 48,
     type: `Questions`,
     title: `Does God Hear My Prayers?`,
+    imageQuery: `still forest morning light mist`,
     voice: `Tim Keller`,
     scripture: `Psalm 34:15 — 'The eyes of the Lord are on the righteous, and his ears are attentive to their cry.'`,
     panels: [
@@ -4512,6 +4611,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 49,
     type: `Prayer Nights`,
     title: `Halfway`,
+    imageQuery: `long straight road middle horizon`,
     voice: `Louie Giglio`,
     scripture: `Psalm 23:1 — 'The Lord is my shepherd, I lack nothing.'`,
     panels: [
@@ -4628,6 +4728,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 50,
     type: `Daily Church`,
     title: `The Battle You Can't See`,
+    imageQuery: `dramatic sky dark versus light split`,
     voice: `Matt Chandler`,
     scripture: `Ephesians 6:12 — 'Our struggle is not against flesh and blood.'`,
     panels: [
@@ -4724,6 +4825,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 51,
     type: `Character Studies`,
     title: `Joseph — The Pit Was Not the End`,
+    imageQuery: `deep canyon light above sky`,
     voice: `T.D. Jakes`,
     scripture: `Genesis 50:20 — 'You intended to harm me, but God intended it for good.'`,
     panels: [
@@ -4826,6 +4928,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 52,
     type: `Jesus Only`,
     title: `The Father in the Parable`,
+    imageQuery: `open road home sunset warm`,
     voice: `Louie Giglio`,
     scripture: `Luke 15:20 — 'While he was still a long way off, his father saw him.'`,
     panels: [
@@ -4938,6 +5041,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 53,
     type: `Misconceptions`,
     title: `Faith Means Never Feeling Afraid`,
+    imageQuery: `stormy night small lighthouse beam`,
     voice: `Matt Chandler`,
     scripture: `Psalm 56:3 — 'When I am afraid, I put my trust in you.'`,
     panels: [
@@ -5050,6 +5154,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 54,
     type: `Deep Verse Studies`,
     title: `The Lord Is My Shepherd — What It Actually Means to Lack Nothing`,
+    imageQuery: `green pasture peaceful stream valley`,
     voice: `Tim Keller`,
     scripture: `Psalm 23:1 — 'The Lord is my shepherd, I lack nothing.'`,
     panels: [
@@ -5144,6 +5249,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 55,
     type: `Letters - Struggling`,
     title: `Some Days I Don't Feel Like a Christian`,
+    imageQuery: `ordinary grey morning overcast sky`,
     voice: `Jackie Hill Perry`,
     scripture: `Mark 9:24 — 'I believe; help my unbelief.'`,
     panels: [
@@ -5248,6 +5354,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 56,
     type: `Testimonies`,
     title: `He Prayed the Same Prayer For Two Years`,
+    imageQuery: `same sunrise consistent horizon daily`,
     voice: `Steven Furtick`,
     scripture: `Luke 18:1 — 'Jesus told his disciples a parable to show them they should always pray and not give up.'`,
     panels: [
@@ -5344,6 +5451,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 57,
     type: `Questions`,
     title: `What If I Lose My Faith?`,
+    imageQuery: `crumbling wall moss light through cracks`,
     voice: `Tim Keller`,
     scripture: `John 6:68 — 'Lord, to whom shall we go? You have the words of eternal life.'`,
     panels: [
@@ -5434,6 +5542,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 58,
     type: `Daily Church`,
     title: `Jesus and the Outsider`,
+    imageQuery: `open gate threshold warm light beyond`,
     voice: `Matt Chandler`,
     scripture: `Luke 5:30 — 'Why do you eat and drink with tax collectors and sinners?'`,
     panels: [
@@ -5532,6 +5641,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 59,
     type: `Jesus Only`,
     title: `I Am the Resurrection`,
+    imageQuery: `dawn breaking total darkness into light`,
     voice: `Louie Giglio`,
     scripture: `John 11:25 — 'I am the resurrection and the life.'`,
     panels: [
@@ -5636,6 +5746,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 60,
     type: `Character Studies`,
     title: `Mary Magdalene — The First Witness`,
+    imageQuery: `garden morning dew sunrise empty path`,
     voice: `T.D. Jakes`,
     scripture: `John 20:18 — 'Mary Magdalene went to the disciples with the news: I have seen the Lord.'`,
     panels: [
@@ -5730,6 +5841,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 61,
     type: `Deep Verse Studies`,
     title: `Do Not Be Anxious — What Paul Didn't Mean`,
+    imageQuery: `calm still water morning mist`,
     voice: `Tim Keller`,
     scripture: `Philippians 4:6 — 'Do not be anxious about anything, but in every situation, present your requests to God.'`,
     panels: [
@@ -5820,6 +5932,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 62,
     type: `Misconceptions`,
     title: `God Only Loves the Cleaned-Up Version of You`,
+    imageQuery: `dark atmospheric night minimal`,
     voice: `Matt Chandler`,
     scripture: `Romans 5:8 — 'While we were still sinners, Christ died for us.'`,
     panels: [
@@ -5914,6 +6027,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 63,
     type: `Letters - Grateful`,
     title: `I Used To Think I Was Too Far Gone`,
+    imageQuery: `long winding road returning home sunset`,
     voice: `Jackie Hill Perry`,
     scripture: `Isaiah 43:1 — 'Do not fear, for I have redeemed you; I have summoned you by name; you are mine.'`,
     panels: [
@@ -6020,6 +6134,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 64,
     type: `Prayer Nights`,
     title: `For the Anxious`,
+    imageQuery: `gentle rain window soft blurred light`,
     voice: `Louie Giglio`,
     scripture: `Philippians 4:7 — 'The peace of God, which transcends all understanding, will guard your hearts.'`,
     panels: [
@@ -6131,6 +6246,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 65,
     type: `Daily Church`,
     title: `What Worship Actually Is`,
+    imageQuery: `vast open sky sunset wide`,
     voice: `Matt Chandler`,
     scripture: `Romans 12:1 — 'Offer your bodies as a living sacrifice — this is your true and proper worship.'`,
     panels: [
@@ -6231,6 +6347,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 66,
     type: `Jesus Only`,
     title: `Loaves and Fish`,
+    imageQuery: `simple bread loaves wooden table light`,
     voice: `Louie Giglio`,
     scripture: `John 6:11 — 'Jesus then took the loaves, gave thanks, and distributed to those who were seated.'`,
     panels: [
@@ -6353,6 +6470,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 67,
     type: `Testimonies`,
     title: `He Walked Out of Prison a Different Man`,
+    imageQuery: `open door light freedom green outside`,
     voice: `Steven Furtick`,
     scripture: `2 Corinthians 5:17 — 'If anyone is in Christ, the new creation has come.'`,
     panels: [
@@ -6445,6 +6563,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 68,
     type: `Deep Verse Studies`,
     title: `For God So Loved the World — What You've Been Missing`,
+    imageQuery: `earth clouds aerial view light`,
     voice: `Tim Keller`,
     scripture: `John 3:16 — 'For God so loved the world that he gave his one and only Son.'`,
     panels: [
@@ -6549,6 +6668,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 69,
     type: `Questions`,
     title: `Can God Still Love Me After What I've Done?`,
+    imageQuery: `golden sunset warm path horizon`,
     voice: `Tim Keller`,
     scripture: `Romans 8:38-39 — 'Nothing will be able to separate us from the love of God.'`,
     panels: [
@@ -6649,6 +6769,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 70,
     type: `Character Studies`,
     title: `Paul — The Man God Used Despite Everything`,
+    imageQuery: `road dramatic light breaking through clouds`,
     voice: `T.D. Jakes`,
     scripture: `1 Timothy 1:15 — 'Christ Jesus came into the world to save sinners — of whom I am the worst.'`,
     panels: [
@@ -6745,6 +6866,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 71,
     type: `Daily Church`,
     title: `The Kingdom Is Upside Down`,
+    imageQuery: `inverted reflection lake sky upside down`,
     voice: `Matt Chandler`,
     scripture: `Matthew 5:3 — 'Blessed are the poor in spirit, for theirs is the kingdom of heaven.'`,
     panels: [
@@ -6839,6 +6961,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 72,
     type: `Jesus Only`,
     title: `He Prayed For Us`,
+    imageQuery: `dark garden night stars olive trees`,
     voice: `Louie Giglio`,
     scripture: `John 17:20 — 'I pray also for those who will believe in me through their message.'`,
     panels: [
@@ -6939,6 +7062,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 73,
     type: `Misconceptions`,
     title: `Grace Means Keep Living However You Want`,
+    imageQuery: `wide open field horizon freedom light`,
     voice: `Matt Chandler`,
     scripture: `Romans 6:1-2 — 'Shall we go on sinning so that grace may increase? By no means!'`,
     panels: [
@@ -7027,6 +7151,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 74,
     type: `Letters - Struggling`,
     title: `The Version of Me That Has a Consistent Prayer Life Feels Like a Stranger`,
+    imageQuery: `quiet morning mist still water`,
     voice: `Jackie Hill Perry`,
     scripture: `Philippians 1:6 — 'He who began a good work in you will carry it on to completion.'`,
     panels: [
@@ -7127,6 +7252,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 75,
     type: `Testimonies`,
     title: `She Forgave the Unforgivable`,
+    imageQuery: `two rivers merging flowing together`,
     voice: `Steven Furtick`,
     scripture: `Colossians 3:13 — 'Forgive as the Lord forgave you.'`,
     panels: [
@@ -7233,6 +7359,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 76,
     type: `Deep Verse Studies`,
     title: `Seek First the Kingdom — What Jesus Was Actually Asking`,
+    imageQuery: `sunrise horizon light breaking`,
     voice: `Tim Keller`,
     scripture: `Matthew 6:33 — 'But seek first his kingdom and his righteousness.'`,
     panels: [
@@ -7325,6 +7452,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 77,
     type: `Prayer Nights`,
     title: `For the Grieving`,
+    imageQuery: `empty autumn tree bare branches fog`,
     voice: `Louie Giglio`,
     scripture: `Psalm 34:18 — 'The Lord is close to the brokenhearted.'`,
     panels: [
@@ -7432,6 +7560,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 78,
     type: `Questions`,
     title: `Why Doesn't God Just Fix Everything?`,
+    imageQuery: `broken pottery pieces earth light`,
     voice: `Tim Keller`,
     scripture: `Romans 8:28 — 'In all things God works for the good of those who love him.'`,
     panels: [
@@ -7536,6 +7665,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 79,
     type: `Daily Church`,
     title: `The Posture of Humility`,
+    imageQuery: `small flower growing concrete cracks`,
     voice: `Matt Chandler`,
     scripture: `James 4:6 — 'God opposes the proud but shows favor to the humble.'`,
     panels: [
@@ -7632,6 +7762,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 80,
     type: `Jesus Only`,
     title: `The Triumphal Entry`,
+    imageQuery: `palm trees sunlight bright celebration`,
     voice: `Louie Giglio`,
     scripture: `John 12:13 — 'Blessed is he who comes in the name of the Lord!'`,
     panels: [
@@ -7742,6 +7873,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 81,
     type: `Character Studies`,
     title: `Jonah — The Prophet Who Ran`,
+    imageQuery: `vast ocean storm waves`,
     voice: `T.D. Jakes`,
     scripture: `Jonah 2:1 — 'From inside the fish Jonah prayed to the Lord his God.'`,
     panels: [
@@ -7844,6 +7976,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 82,
     type: `Letters - Grateful`,
     title: `What I Know Now That I Didn't Know Then`,
+    imageQuery: `path behind looking back autumn`,
     voice: `Jackie Hill Perry`,
     scripture: `Psalm 103:2 — 'Praise the Lord, my soul, and forget not all his benefits.'`,
     panels: [
@@ -7950,6 +8083,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 83,
     type: `Misconceptions`,
     title: `You Have To Feel It To Believe It`,
+    imageQuery: `rain on leaves close up texture`,
     voice: `Matt Chandler`,
     scripture: `2 Corinthians 5:7 — 'For we live by faith, not by sight.'`,
     panels: [
@@ -8040,6 +8174,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 84,
     type: `Testimonies`,
     title: `The Month Everything Fell Apart`,
+    imageQuery: `shattered ice frozen lake breaking`,
     voice: `Steven Furtick`,
     scripture: `Psalm 46:1 — 'God is our refuge and strength, an ever-present help in trouble.'`,
     panels: [
@@ -8138,6 +8273,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 85,
     type: `Deep Verse Studies`,
     title: `The Vine and the Branches — What Abiding Actually Means`,
+    imageQuery: `vine branches intertwined growing green`,
     voice: `Tim Keller`,
     scripture: `John 15:5 — 'I am the vine; you are the branches.'`,
     panels: [
@@ -8232,6 +8368,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 86,
     type: `Questions`,
     title: `Is the Bible Actually True?`,
+    imageQuery: `ancient stone carved text light`,
     voice: `Tim Keller`,
     scripture: `2 Timothy 3:16 — 'All Scripture is God-breathed and is useful for teaching.'`,
     panels: [
@@ -8328,6 +8465,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 87,
     type: `Prayer Nights`,
     title: `For Those Who Are Exhausted`,
+    imageQuery: `still water peaceful resting shore`,
     voice: `Louie Giglio`,
     scripture: `Matthew 11:28 — 'Come to me, all who are weary and burdened, and I will give you rest.'`,
     panels: [
@@ -8458,6 +8596,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 88,
     type: `Daily Church`,
     title: `He Is Risen — What That Actually Changes`,
+    imageQuery: `dramatic sunrise dawn breaking light`,
     voice: `Matt Chandler`,
     scripture: `1 Corinthians 15:17 — 'If Christ has not been raised, your faith is futile.'`,
     panels: [
@@ -8560,6 +8699,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 89,
     type: `Character Studies`,
     title: `Job — The Man Who Argued With God and Wasn't Wrong`,
+    imageQuery: `storm sky dramatic vast clouds`,
     voice: `T.D. Jakes`,
     scripture: `Job 42:5 — 'My ears had heard of you but now my eyes have seen you.'`,
     panels: [
@@ -8662,6 +8802,7 @@ I don't come with everything figured out. I come as I am, trusting that You meet
     day: 90,
     type: `Jesus Only`,
     title: `It Is Finished`,
+    imageQuery: `final sunset horizon complete golden`,
     voice: `Louie Giglio`,
     scripture: `John 19:30 — 'It is finished.'`,
     panels: [

@@ -44,7 +44,7 @@ export default function PaywallScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#000000" }}>
+    <View style={{ flex: 1, backgroundColor: "#141416" }}>
       <StatusBar style="light" />
       <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
         <ScrollView
@@ -157,18 +157,20 @@ export default function PaywallScreen() {
                 not just continuing. */}
             <FadeIn delayMs={2200}>
               <View className="pt-6 pb-2">
+                {/* IMPORTANT: chrome MUST be NativeWind classes,
+                    not Pressable function-form `style`. RN 0.81's
+                    iOS Pressable silently drops function-style
+                    chrome props (height / border / bg), which
+                    rendered this CTA as a floating black-on-black
+                    label with no visible pill — same bug we hit on
+                    the apps picker. See the same protection on
+                    AppRow in app/onboarding/apps.tsx. */}
                 <Pressable
                   onPress={handleStart}
                   accessibilityRole="button"
                   accessibilityLabel="Start my free 7 days"
-                  style={({ pressed }) => ({
-                    height: 56,
-                    borderRadius: 16,
-                    backgroundColor: "#FFFFFF",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: pressed ? 0.85 : 1,
-                  })}
+                  className="h-14 rounded-2xl items-center justify-center active:opacity-85"
+                  style={{ backgroundColor: "#FFFFFF" }}
                 >
                   <Text
                     style={{

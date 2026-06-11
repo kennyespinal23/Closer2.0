@@ -117,7 +117,7 @@ export default function StudyTimeScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
       <OnboardingChrome
         mode="with-progress"
         progress={progressFor("studytime")}
@@ -220,6 +220,9 @@ function TimeCard({
   onPress: () => void;
 }) {
   return (
+    // iOS-blue selection — see app/onboarding/time.tsx for the
+    // rationale (dark surface + blue border-and-tint, ink stays
+    // legible across both states without flipping foreground).
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
@@ -229,12 +232,12 @@ function TimeCard({
       className={[
         "rounded-2xl py-5 px-3 items-center border-2 active:opacity-80",
         selected
-          ? "bg-primary border-primary"
+          ? "bg-select-soft border-select"
           : "bg-accent-soft border-border-strong",
       ].join(" ")}
     >
       <Text
-        className={selected ? "text-primary-fg" : "text-ink"}
+        className="text-ink"
         style={{
           fontFamily: "PlusJakartaSans_700Bold",
           fontSize: 22,
@@ -244,12 +247,11 @@ function TimeCard({
         {label}
       </Text>
       <Text
-        className={selected ? "text-primary-fg" : "text-ink-muted"}
+        className="text-ink-muted"
         style={{
           fontFamily: "PlusJakartaSans_500Medium",
           fontSize: 12,
           marginTop: 4,
-          opacity: selected ? 0.85 : 1,
         }}
       >
         {meta}

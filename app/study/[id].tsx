@@ -17,11 +17,15 @@ import { useColors } from "@/state/theme";
  * Bible-study landing — the entry point a scheduled study notification
  * deep-links into.
  *
- * This screen plays the same role for study sessions that
- * `/sermon/intro` plays for the daily sermon: it's the antechamber
- * where the user takes a breath, confirms the commitment, and starts
- * the focused reading block by tapping a single big "Begin reading"
- * button. The notification arrived at the time the user themselves
+ * This screen is the entry point a scheduled study notification
+ * deep-links into — an antechamber where the user takes a breath,
+ * confirms the commitment, and starts the focused reading block
+ * by tapping a single big "Begin reading" button. (Closer's daily
+ * sermon flow used to have an analogous antechamber at
+ * `/sermon/intro`; that page was retired so the sermon now opens
+ * directly on the verse screen. Study sessions still use this
+ * antechamber because they don't have a dedicated scripture
+ * surface to fall into.) The notification arrived at the time the user themselves
  * scheduled, so the tone is "the moment you set aside is here" —
  * not "you have to do this."
  *

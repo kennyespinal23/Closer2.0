@@ -2,54 +2,39 @@ import { useEffect, useRef } from "react";
 import { Animated, Easing, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 import { useRouter } from "expo-router";
 
 /**
- * Screen 5 — "Calculating your morning…"
+ * "Calculating your morning…" — the fake-loading interlude
+ * between the audit (apps / scrolltime / waketime) and the
+ * personalized gut punch.
  *
- * The fake-loading interlude between the audit (Screens 1–4) and
- * the personalized gut punch (Screen 6). Purpose:
+ * NOT built on <HeroOnboardingPage> because this screen's whole
+ * point is a horizontal progress bar + staggered status lines —
+ * a totally different layout from the framed-disc + quote
+ * vocabulary. It DOES inherit the Hallow page's palette though:
+ * the same CRIMSON the punch uses, so the user feels the
+ * calculating beat and the punch reveal as ONE continuous moment
+ * (calculating → punch read as "the bar fills, the wall hits").
  *
- *   1. Give the punch screen time to feel "earned." Showing the
- *      personal stat the instant the user picks their wake-time
- *      reads like "here's some math we did" — showing it after
- *      three seconds of "Running the numbers" reads like "here's
- *      what we discovered about you."
+ * Implementation notes (unchanged from the previous black-canvas
+ * version):
  *
- *   2. Stage the reveal. The slow fill + staggered status lines
- *      build a small narrative arc all on their own. By the time
- *      the bar reaches 100% the user is leaning forward.
- *
- * Implementation notes:
- *
- *   • Bar uses Animated.timing with the native driver so the fill
- *     stays at 60fps even on lower-end devices. Total fill time
- *     is 2800ms — short enough that the screen doesn't feel like
- *     a delay tactic, long enough that the punch screen has a
- *     moment to load behind the scenes.
- *
- *   • Each status line uses a separate Animated.Value for its
- *     opacity, fired on a delay timer relative to mount. The
- *     lines fade in (not type out) to keep the visual rhythm
- *     calm — type-out would feel like "fake terminal output."
- *
- *   • Auto-navigation fires at 3000ms (the bar reaches 100% at
- *     2800ms; the extra 200ms lets the eye register "full" before
- *     the screen swaps). We use router.replace so the user can't
- *     swipe back into the loading screen and re-run the animation.
- *
- *   • The whole screen is forced black regardless of theme. The
- *     thin red progress bar carries the only color on the page —
- *     matching the spec's "thin, red, fills slowly left to right."
+ *   • Bar uses Animated.timing with native driver = false
+ *     (width animations can't use native). 2800ms linear fill —
+ *     reads "computer is working" rather than "almost there."
+ *   • Each status line uses its own Animated.Value for opacity,
+ *     fired on a delay timer. Fade-in (not type-out) keeps the
+ *     visual rhythm calm.
+ *   • Auto-advance at 3000ms via router.replace so the user
+ *     can't swipe back and re-run the animation.
  */
 
+const PAGE_BG = "#8B1F1F"; // matches punch — same room
+const SKY_CRIMSON = "#C44545"; // matches punch's halo + sky
 const BAR_FILL_MS = 2800;
 const ADVANCE_MS = 3000;
-// Spec calls out a thin RED progress bar. Closer's palette is
-// neutral monochrome elsewhere; the loading bar is the one place
-// red appears, because the spec leans into that color choice as
-// a "calculating something serious" signal.
-const RED = "#E53935";
 
 const STATUS_LINES = [
   { label: "Analyzing your scroll habits", appearAt: 250 },
@@ -62,15 +47,11 @@ export default function CalculatingScreen() {
   const fill = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Drive the bar from 0 → 1 over the full duration. Linear
-    // easing reads more "computer is working" than ease-out;
-    // ease-out would suggest "almost there" too early and break
-    // the suspense.
     Animated.timing(fill, {
       toValue: 1,
       duration: BAR_FILL_MS,
       easing: Easing.linear,
-      useNativeDriver: false, // width animation can't use native
+      useNativeDriver: false,
     }).start();
 
     const advance = setTimeout(() => {
@@ -80,22 +61,51 @@ export default function CalculatingScreen() {
     return () => clearTimeout(advance);
   }, [fill, router]);
 
-  // Map fill 0..1 → "0%".."100%" for the inner bar width.
   const widthInterpolation = fill.interpolate({
     inputRange: [0, 1],
     outputRange: ["0%", "100%"],
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#000000" }}>
+    <View style={{ flex: 1, backgroundColor: PAGE_BG }}>
       <StatusBar style="light" />
+
+      {/* Ambient sky radial — same shape as every other Hallow
+          page, so the calculating beat reads as part of the
+          system even though its body layout is unique. */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 520,
+        }}
+      >
+        <Svg width="100%" height="100%">
+          <Defs>
+            <RadialGradient
+              id="calc-sky"
+              cx="50%"
+              cy="20%"
+              rx="95%"
+              ry="70%"
+              fx="50%"
+              fy="20%"
+            >
+              <Stop offset="0" stopColor={SKY_CRIMSON} stopOpacity={0.55} />
+              <Stop offset="0.45" stopColor={SKY_CRIMSON} stopOpacity={0.18} />
+              <Stop offset="0.85" stopColor={SKY_CRIMSON} stopOpacity={0.02} />
+              <Stop offset="1" stopColor={SKY_CRIMSON} stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Rect x={0} y={0} width="100%" height="100%" fill="url(#calc-sky)" />
+        </Svg>
+      </View>
+
       <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
         <View className="flex-1 px-8 items-center justify-center">
-          {/* Title — quiet, neutral. The energy is in the bar
-              below, not in the headline. Slightly smaller than the
-              comfortable hero size (20 vs 22) because at the wider
-              size the ellipsis was clipping on standard 6.1"
-              devices when the horizontal padding pushed in. */}
           <Text
             style={{
               color: "#FFFFFF",
@@ -109,14 +119,15 @@ export default function CalculatingScreen() {
             Calculating your morning…
           </Text>
 
-          {/* Progress bar — thin, red, fills slowly left to right.
-              The track is a faint white so the empty portion of
-              the bar is visible against pure black. */}
+          {/* Thin progress bar — white-on-translucent for the
+              empty portion, full-white for the fill. Previous
+              version used red on black; on crimson bg the red
+              would disappear, so we invert to white-on-tint. */}
           <View
             style={{
               width: "100%",
               height: 4,
-              backgroundColor: "rgba(255,255,255,0.08)",
+              backgroundColor: "rgba(255,255,255,0.18)",
               borderRadius: 999,
               overflow: "hidden",
             }}
@@ -125,15 +136,12 @@ export default function CalculatingScreen() {
               style={{
                 height: "100%",
                 width: widthInterpolation,
-                backgroundColor: RED,
+                backgroundColor: "#FFFFFF",
                 borderRadius: 999,
               }}
             />
           </View>
 
-          {/* Status lines fade in one at a time, in sync with the
-              bar's progress. Each line is a slightly different
-              "step" the loader is supposedly doing. */}
           <View style={{ marginTop: 32, alignItems: "center" }}>
             {STATUS_LINES.map((line) => (
               <StatusLine
@@ -149,11 +157,6 @@ export default function CalculatingScreen() {
   );
 }
 
-/**
- * Single status line. Owns its own opacity animator so each line
- * fades in at its individual delay without the parent needing to
- * orchestrate a sequence of Animateds.
- */
 function StatusLine({ label, appearAt }: { label: string; appearAt: number }) {
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -170,7 +173,7 @@ function StatusLine({ label, appearAt }: { label: string; appearAt: number }) {
     <Animated.View style={{ opacity, marginTop: 10 }}>
       <Text
         style={{
-          color: "#9B9BA3",
+          color: "rgba(255,255,255,0.7)",
           fontFamily: "PlusJakartaSans_500Medium",
           fontSize: 14,
           textAlign: "center",

@@ -78,7 +78,7 @@ export default function RatingScreen() {
   const handleSkip = () => router.push("/onboarding/reframe");
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
       <OnboardingChrome mode="back-only" />
 
       <ScrollView
@@ -148,18 +148,19 @@ export default function RatingScreen() {
               />
 
               <View className="items-center mt-3">
+                {/* Padding via className — Pressable function-form
+                    style is dropped on iOS RN 0.81, leaving the
+                    text link with no visible hit-area padding.
+                    hitSlop adds extra touch tolerance. */}
                 <Pressable
                   hitSlop={12}
                   onPress={handleSkip}
                   disabled={requesting}
-                  style={({ pressed }) => ({
-                    paddingVertical: 10,
-                    paddingHorizontal: 16,
-                    opacity: pressed || requesting ? 0.5 : 1,
-                  })}
+                  className="py-2.5 px-4 active:opacity-50"
+                  style={requesting ? { opacity: 0.5 } : undefined}
                 >
                   <Text
-                    className="text-ink-muted text-[14px]"
+                    className="text-select text-[14px]"
                     style={{ fontFamily: "PlusJakartaSans_500Medium" }}
                   >
                     Maybe later

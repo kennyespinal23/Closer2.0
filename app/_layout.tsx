@@ -12,18 +12,12 @@ import {
   PlusJakartaSans_700Bold,
   PlusJakartaSans_800ExtraBold,
 } from "@expo-google-fonts/plus-jakarta-sans";
-// Editorial serif. Paired with Plus Jakarta Sans (UI) for
-// scripture quotes and long-form sermon prose — Garamond's
-// literary warmth signals "this is text meant to be read
-// slowly" vs the interface text around it. Upright Regular
-// only — earlier italic experiments looked elegant in
-// isolation but italics fatigue the eye on multi-line body
-// text, which is the worst place to lose legibility (it's the
-// most sacred moment of the flow).
-import {
-  EBGaramond_400Regular,
-  EBGaramond_500Medium,
-} from "@expo-google-fonts/eb-garamond";
+// (The editorial serif EB Garamond used to load here for
+// scripture quotes + sermon prose. Removed in the typography
+// unification pass — the whole app now lives on Plus Jakarta
+// Sans, with scripture moments distinguished by weight + size
+// instead of font family. Drops ~5MB of font weight from the
+// bundle and removes the only cross-family voice switch.)
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { UpdatesGate } from "@/components/UpdatesGate";
 import {
@@ -33,6 +27,7 @@ import {
 import { useNotificationDeepLink } from "@/lib/notificationDeepLink";
 import { AnnotationsProvider, useAnnotations } from "@/state/annotations";
 import { CheckInsProvider, useCheckIns } from "@/state/checkIns";
+import { DevToolsProvider, useDevTools } from "@/state/devTools";
 import { FocusProvider, useFocus } from "@/state/focus";
 import { MomentsProvider, useMoments } from "@/state/moments";
 import { OnboardingProvider, useOnboarding } from "@/state/onboarding";
@@ -46,6 +41,7 @@ import {
   SavedInsightsProvider,
   useSavedInsights,
 } from "@/state/savedInsights";
+import { SavedSermonsProvider } from "@/state/savedSermons";
 import {
   StudySessionsProvider,
   useStudySessions,
@@ -73,8 +69,6 @@ export default function RootLayout() {
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
     PlusJakartaSans_800ExtraBold,
-    EBGaramond_400Regular,
-    EBGaramond_500Medium,
   });
 
   if (!fontsLoaded && !fontError) {
@@ -110,6 +104,14 @@ export default function RootLayout() {
                   <MomentsProvider>
                     <ReadingGoalProvider>
                       <SavedInsightsProvider>
+                        {/* SavedSermonsProvider mirrors
+                            SavedInsightsProvider — a thin
+                            persisted-bookmarks store keyed by
+                            catalog day. Sits beside its sibling
+                            so the two saved-content surfaces
+                            (insights / sermons) share the same
+                            tree position. */}
+                        <SavedSermonsProvider>
                         {/* FocusProvider sits inside MomentsProvider
                             because a focus session is conceptually
                             scoped to today's moment (we stamp the
@@ -129,11 +131,22 @@ export default function RootLayout() {
                               tree above unaware of scheduling
                               concerns. */}
                           <StudySessionsProvider>
-                            <HydrationGate>
-                              <AppShell />
-                            </HydrationGate>
+                            {/* DevToolsProvider is the innermost
+                                consumer-side provider: it backs a
+                                single tiny boolean and nothing else
+                                in the tree reads it except the Today
+                                screen + the Developer settings page.
+                                Sitting at the very inside keeps
+                                every other provider's re-render
+                                path off of dev-tools state changes. */}
+                            <DevToolsProvider>
+                              <HydrationGate>
+                                <AppShell />
+                              </HydrationGate>
+                            </DevToolsProvider>
                           </StudySessionsProvider>
                         </FocusProvider>
+                        </SavedSermonsProvider>
                       </SavedInsightsProvider>
                     </ReadingGoalProvider>
                   </MomentsProvider>
@@ -173,35 +186,56 @@ function AppShell() {
           lib/notificationDeepLink.tsx for the three paths
           this handles (cold / warm / foreground). */}
       <NotificationDeepLinkHandler />
+      {/* Default animation is slide_from_right (Apple-standard
+          drill-down). Per-screen overrides below opt routes
+          into other animations (none / fade / slide_from_bottom)
+          where the semantics differ.
+
+          Previously the default was "fade", which is a crossfade
+          — by definition both screens are visible simultaneously
+          during the animation. That read as a "previous page
+          briefly overlapping the new one" ghost frame during
+          every push, especially noticeable on index → onboarding
+          where the warm amber radial from the landing bled into
+          the first onboarding screen for ~200ms.
+
+          Slide gives a clean horizontal hand-off where the new
+          screen covers the old one as it moves into place. The
+          opaque contentStyle below ensures no see-through. */}
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.bg },
-          animation: "fade",
+          animation: "slide_from_right",
         }}
       >
-        {/* Profile renders as a left-side drawer (NOT a bottom
-            sheet). The modal layer is opaque (it inherits the
-            stack-level `contentStyle: { backgroundColor: colors.bg }`),
-            so the home screen behind it isn't visible — the
-            drawer's own backdrop Animated.View handles the dim
-            entirely. animation:"none" lets the drawer's own
-            Animated.spring drive the slide-in.
-            NOTE: an earlier attempt overrode contentStyle to
-            transparent so the home would peek through, but that
-            broke modal touch handling on iOS — taps on the
-            backdrop stopped firing onPress, so the drawer
-            couldn't be dismissed. The opaque modal is the
-            reliable shape; we accept that the home isn't
-            visible behind the drawer in light mode. */}
+        {/* (tabs) is the main app. We arrive here in two ways:
+            1) router.replace("/today") from the landing or after
+               onboarding completes, and
+            2) cold start when onboarding.completed is true (the
+               landing screen redirects us here).
+            Both are "arriving home", not "drilling forward", so
+            we override the default slide with a fade — the home
+            tab paints up softly instead of sliding in from the
+            side. */}
         <Stack.Screen
-          name="profile"
-          options={{
-            presentation: "transparentModal",
-            animation: "none",
-            gestureEnabled: false,
-          }}
+          name="(tabs)"
+          options={{ animation: "fade" }}
         />
+        {/* Onboarding group — explicit drill-in from the landing.
+            Inherits the default slide_from_right, but called out
+            here for clarity. */}
+        <Stack.Screen
+          name="onboarding"
+          options={{ animation: "slide_from_right" }}
+        />
+        {/* Profile used to live here as a transparentModal drawer
+            launched from the home avatar. It was promoted to a
+            first-class TAB (see app/(tabs)/profile.tsx) when the
+            tab bar was consolidated to Home / Library / Profile,
+            so there's no longer a top-level profile route to
+            register — the avatar tap on home now switches the
+            active tab instead of presenting a modal. */}
         {/* Settings + book groups push from the right (Apple
             drill-down). Each has its own inner Stack layout
             inheriting this. */}
@@ -252,6 +286,19 @@ function AppShell() {
         <Stack.Screen
           name="reading-goal"
           options={{ animation: "slide_from_right" }}
+        />
+        {/* Rhythm detail (HabitKit-style). Tap the
+            current-month grid on home → full-year heatmap,
+            monthly chart, streak stats. Presented as a
+            modal so the close affordance is an X (no
+            back chevron) and the screen reads as a stats
+            canvas rather than a drill-down. */}
+        <Stack.Screen
+          name="rhythm"
+          options={{
+            presentation: "modal",
+            animation: "slide_from_bottom",
+          }}
         />
         {/* Mood check-in. Presented as a full-screen modal
             (slide from bottom) so the user feels like
@@ -307,6 +354,7 @@ function HydrationGate({ children }: { children: React.ReactNode }) {
   const { hydrated: themeHydrated } = useTheme();
   const { hydrated: focusHydrated } = useFocus();
   const { hydrated: studySessionsHydrated } = useStudySessions();
+  const { hydrated: devToolsHydrated } = useDevTools();
 
   const allReady =
     onboardingHydrated &&
@@ -319,7 +367,8 @@ function HydrationGate({ children }: { children: React.ReactNode }) {
     savedInsightsHydrated &&
     themeHydrated &&
     focusHydrated &&
-    studySessionsHydrated;
+    studySessionsHydrated &&
+    devToolsHydrated;
 
   useEffect(() => {
     if (allReady) {

@@ -66,6 +66,48 @@ export type AttributionSource =
   | "google"
   | "other";
 
+/**
+ * Denomination / faith background. Captured early in onboarding
+ * so the rest of the flow (and later, content recommendations,
+ * Bible translation defaults, prayer style suggestions) can
+ * meet the user where they are.
+ *
+ *   • `catholic` → Catholic tradition; defaults to NRSV/RSV-style
+ *     translation, Marian-tradition-friendly content
+ *   • `protestant` → mainline / evangelical Protestant; defaults
+ *     to ESV/NIV
+ *   • `orthodox` → Eastern Orthodox; defaults to OSB / NKJV
+ *   • `nondenominational` → modern non-denominational Christian
+ *   • `christianOther` → identifies as Christian but no specific
+ *     denomination (or one not listed)
+ *   • `exploring` → not yet identifying with a denomination —
+ *     curious, deconstructing, returning, or new to faith
+ *
+ * Stored as a discrete enum to keep downstream pattern-matching
+ * tight; the labels shown to the user live in the screen file.
+ */
+export type Denomination =
+  | "catholic"
+  | "protestant"
+  | "orthodox"
+  | "nondenominational"
+  | "christianOther"
+  | "exploring";
+
+/**
+ * Where the user is on their walk. Different from denomination
+ * — denomination is identity, faith stage is RELATIONSHIP at
+ * the time they downloaded the app. The pair lets us think
+ * about, e.g., a "Catholic returning after years away" vs a
+ * "new-to-faith non-denominational" differently in the content
+ * we surface.
+ */
+export type FaithStage =
+  | "lifelong"
+  | "returning"
+  | "newToFaith"
+  | "exploring";
+
 export type OnboardingAnswers = {
   name: string;
   /**
@@ -94,6 +136,26 @@ export type OnboardingAnswers = {
    * keep options easy to A/B.
    */
   whyAnswer?: string;
+  /**
+   * The user's faith background. Captured on /onboarding/denomination
+   * right after name. See `Denomination` for the discrete options
+   * and how each one is intended to influence downstream content
+   * recommendations.
+   */
+  denomination?: Denomination;
+  /**
+   * Where the user is on their walk. Captured on /onboarding/faithstage
+   * right after denomination. See `FaithStage` for options.
+   */
+  faithStage?: FaithStage;
+  /**
+   * Areas the user wants to grow in (Peace, Patience, Faith, etc.).
+   * Multi-select, captured on /onboarding/growth. Becomes the seed
+   * for the home screen's "for you" sermon picks and the verse-of-
+   * the-day topic rotation. IDs (not display labels) so downstream
+   * pattern-matching stays tight even if we rename a label.
+   */
+  growthAreas?: string[];
   /**
    * Where the user heard about Closer (Screen 12). Pure product
    * analytics — never shown back to the user.
@@ -137,6 +199,23 @@ export type OnboardingAnswers = {
    * the seeded values).
    */
   bibleStudyTime?: DailyReminderTime;
+  /**
+   * True once the user has reached the end of the onboarding flow
+   * (the welcome screen) and tapped "I'm ready" to enter the app.
+   *
+   * Drives the launch routing in `app/index.tsx`:
+   *   • `undefined` / `false` → show the Get Started landing
+   *   • `true`               → bypass the landing, route straight
+   *                            to `/today` so returning users
+   *                            never see the onboarding chrome
+   *                            after a cold launch.
+   *
+   * Lives on the persisted answers object (rather than a separate
+   * key) so a full `reset()` clears it alongside the rest of the
+   * onboarding state — preventing the "completed flag stuck true
+   * after dev reset" footgun.
+   */
+  completed?: boolean;
 };
 
 type OnboardingContextValue = {

@@ -15,26 +15,24 @@ import { useOnboarding } from "@/state/onboarding";
 import { useColors } from "@/state/theme";
 
 /**
- * Screen 8 — "Before we go any further — what's your name?"
+ * Screen 2 (new flow) — "Before we go any further — what's your name?"
  *
- * Deliberately positioned AFTER the gut punch and the "why"
- * picker, not as the first screen. Two reasons:
+ * Sits between the "what brings you" picker (screen 1) and the
+ * stat reveal (screen 3). The previous flow placed this screen
+ * much later, after the gut punch; in the new ordering the user
+ * names themselves BEFORE we audit their phone time, so the
+ * stat that lands next reads as personally directed instead of
+ * a billboard at a stranger.
  *
- *   1. Earned intimacy. By Screen 8 the user has agreed (by
- *      tapping forward) with our framing of their mornings and
- *      named what they're searching for. Asking for the name now
- *      reads as a friend taking interest — not a form field at
- *      sign-up.
- *
- *   2. Naming the verse. The closing line on Screen 16 ("Your
- *      first word.") and the personalized notification preview
- *      on Screen 13 both need the name to land. Setting it here
- *      gives us a value to interpolate into both downstream
- *      surfaces without the awkward fallback "[Name]".
+ * Naming the verse: Screens further down (the closing line on
+ * /onboarding/welcome and the personalized notification preview
+ * on /onboarding/notifications) both interpolate `answers.name`,
+ * so capturing it here keeps those surfaces from falling back to
+ * a generic "[Name]" token.
  *
  * Input is the same hero underline style the old name screen
  * used — that pattern is muscle memory in the codebase and reads
- * cleanly. The body copy is rewritten per the new spec.
+ * cleanly.
  */
 export default function NameScreen() {
   const router = useRouter();
@@ -50,11 +48,17 @@ export default function NameScreen() {
   const handleContinue = () => {
     if (!canContinue) return;
     setAnswer("name", trimmed);
-    router.push("/onboarding/proof");
+    // After name we enter the three Christian-identity beats —
+    // denomination → faith stage → growth areas — before the
+    // secular app audit (stat / apps / scrolltime / waketime).
+    // These three screens signal "this is a Christian product
+    // first" inside the first 60 seconds, and they unlock the
+    // personalization that the rest of the app reads from.
+    router.push("/onboarding/denomination");
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
       <OnboardingChrome mode="back-only" />
 
       <KeyboardAvoidingView
@@ -83,7 +87,11 @@ export default function NameScreen() {
                 onBlur={() => setFocused(false)}
                 placeholder="Your name"
                 placeholderTextColor={colors.inkSubtle}
-                selectionColor={colors.primary}
+                // iOS-blue text caret + selection handles match the
+                // rest of the onboarding selection vocabulary and
+                // also match the OS-level iOS convention for any
+                // editable text field.
+                selectionColor={colors.select}
                 autoCapitalize="words"
                 autoComplete="given-name"
                 autoCorrect={false}
@@ -97,8 +105,11 @@ export default function NameScreen() {
               <View
                 className="h-[2px] rounded-full"
                 style={{
+                  // Focused underline lights up in iOS blue — same
+                  // accent as the cursor above, so the input's
+                  // focus state reads as one coherent thing.
                   backgroundColor: focused
-                    ? colors.primary
+                    ? colors.select
                     : colors.borderStrong,
                 }}
               />

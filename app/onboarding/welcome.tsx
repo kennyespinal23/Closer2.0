@@ -1,9 +1,7 @@
 import { useEffect, useRef } from "react";
-import { Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
+import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { FadeIn } from "@/components/FadeIn";
+import { HeroDisc, HeroOnboardingPage } from "@/components/HeroOnboardingPage";
 import { useOnboarding } from "@/state/onboarding";
 import { useStudySessions } from "@/state/studySessions";
 import {
@@ -13,110 +11,87 @@ import {
 } from "@/lib/focus";
 
 /**
- * Screen 17 — The Welcome.
+ * Screen — The Welcome.
  *
- * The payoff. Eight screens of no scripture, no church language —
- * and now this. Black canvas, red scripture, the user's name on
- * the page, and a single forward CTA that drops them into the
- * app.
+ * The payoff. Onboarding has been a series of beats — audit,
+ * diagnosis, punch, proof, brand reveal, mechanism — and this
+ * is the threshold the user crosses to enter the app proper.
  *
- * Background side-effects on mount:
+ * Built on the shared <HeroOnboardingPage> shell with the
+ * WINE palette — deep burgundy, soft burgundy halo. Wine has
+ * sanctuary / Eucharistic weight in Christian tradition, which
+ * is the right note for the "you've stepped into something
+ * sacred" beat. It's also distinct from every other Hallow page
+ * in the flow, so the user feels they've walked into the final
+ * room of the journey.
  *
- *   1. SEED "Bible Study" system routine. Uses the time the user
- *      picked on /onboarding/studytime, falls back to 7:00 AM if
- *      they somehow skipped it. Focus mode ON, weekday cadence,
- *      blocked-app list lifted from the morningApps they admitted
- *      to on Screen 2 (so the routine silences the exact apps
- *      they self-identified as scroll traps). Editable later from
- *      the Blocks tab or /settings/study-sessions.
+ * Subject for this beat: the scripture itself, framed in the
+ * disc. The Word IS the centerpiece — not a number, not a brand
+ * mark, not an icon. The verse becomes the portrait subject the
+ * same way Mother Teresa was on the Hallow reference. The
+ * reference (Psalm 34:18) acts as the "attribution" inside the
+ * disc, parallel to how the source / speaker name appeared on
+ * the reference page.
  *
- *   2. SEED "Daily Sermon" system routine. Uses the time the user
- *      picked on /onboarding/time, falls back to 7:00 AM. Focus
- *      mode OFF — the daily sermon is a short notification, not
- *      a focus block. This routine ALSO appears in the Practice
- *      tab so the user has one clear list of every recurring
- *      moment Closer touches their day.
+ * Side-effects on mount (preserved exactly from the previous
+ * version — the visual is changing, the wiring is not):
  *
- *   3. The actual OS-level sermon notification was already
- *      scheduled by /onboarding/time when the user confirmed
- *      their pick. We don't re-schedule it here — would just
- *      double-up the notifications.
+ *   1. SEED "Bible Study" system routine — uses /studytime time,
+ *      weekday cadence, focus mode ON, blocks the user's
+ *      morning-apps admission.
+ *   2. SEED "Daily Sermon" system routine — uses /time, daily
+ *      cadence, focus mode OFF.
  *
- * Seeding runs once on mount with an idempotency key (the
- * studySessions provider's `upsertSystemSession` matches by name)
- * so re-entering this screen — e.g. via the dev "reset onboarding"
- * affordance — doesn't multiply routines.
- *
- * Why upsertSystemSession (not addSession)?
- *   The provider's upsert matches by (source: "system", name) so
- *   re-running this seed updates the existing system row in place
- *   instead of stacking duplicates. Critical for the dev
- *   "reset and re-onboard" flow but also matters for production —
- *   a user who walks through onboarding and then resets later
- *   shouldn't end up with two "Bible Study" rows.
+ * On CTA tap: sets `completed = true` then router.replace("/today")
+ * so cold launches bypass the onboarding flow.
  */
+
+const PAGE_BG = "#5F1620"; // deep wine
+const SKY_WINE = "#A03342"; // softer burgundy halo + sky
 
 const SYSTEM_STUDY_NAME = "Bible Study";
 const SYSTEM_SERMON_NAME = "Daily Sermon";
-// Mon..Fri — the most common cadence per the existing study
-// session model. WeekdayIndex is 0=Sun..6=Sat.
 const WEEKDAY_DAYS = [1, 2, 3, 4, 5] as const;
-// Daily — sermon arrives every day, including weekends. The
-// sermon is a passive notification (low effort) so daily makes
-// sense; the study commitment stays weekday because asking for
-// a daily focus block out of the gate is too much.
 const DAILY_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 const FALLBACK_TIME = { hour: 7, minute: 0 } as const;
 
-/**
- * Map the morning-apps multi-select (which uses string ids that
- * happen to align with the focus SocialAppId catalog) into the
- * blocked-app list shape. Filters out anything that isn't a
- * known catalog id — defensive in case a future onboarding screen
- * captures additional apps that don't have a focus entry yet.
- */
 function morningAppsToBlockedList(
   morningApps: string[] | undefined,
 ): SocialAppId[] {
   if (!morningApps || morningApps.length === 0) return [];
   const valid = new Set(SOCIAL_APPS.map((a) => a.id));
-  return morningApps.filter((id): id is SocialAppId => valid.has(id as SocialAppId));
+  return morningApps.filter((id): id is SocialAppId =>
+    valid.has(id as SocialAppId),
+  );
 }
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { answers } = useOnboarding();
+  const { answers, setAnswer } = useOnboarding();
   const { upsertSystemSession } = useStudySessions();
 
   const firstName = (answers.name || "").trim().split(" ")[0];
 
-  // Track whether we've already attempted the seed this mount,
-  // so React strict-mode double-invocations don't double-call
-  // upsertSystemSession. The upsert is idempotent by name anyway,
-  // but the ref gives us a clean "exactly-once" surface.
+  // One-shot guard against React strict-mode double-invocation
+  // OR a rapid remount. The upsert is idempotent by name anyway,
+  // but the ref keeps the call surface clean.
   const seededRef = useRef(false);
 
   useEffect(() => {
     if (seededRef.current) return;
     seededRef.current = true;
-    // Resolve final values up front so the IIFE below is just
-    // two flat upsert calls — easier to read than two chained
-    // ternaries inside the upsert payloads.
+
     const studyTime = answers.bibleStudyTime ?? FALLBACK_TIME;
     const sermonTime = answers.dailyReminderTime ?? FALLBACK_TIME;
     const blockedApps = morningAppsToBlockedList(answers.morningApps);
-    // Prefer the user's morning-app admission as the focus block
-    // list (it's their own self-identified scroll set) but fall
-    // back to the catalog default if they skipped that screen or
-    // chose none — empty list would silently mean "block nothing"
-    // and the routine would be missing its primary value prop.
+    // Prefer the user's self-identified scroll set; fall back to
+    // the catalog default so the routine never silently blocks
+    // nothing (which would leave it without its primary value).
     const studyBlocked =
-      blockedApps.length > 0
-        ? blockedApps
-        : [...DEFAULT_BLOCKED_APP_IDS];
+      blockedApps.length > 0 ? blockedApps : [...DEFAULT_BLOCKED_APP_IDS];
 
-    // Fire-and-forget. The user's already on the screen; we don't
-    // want to block the welcome animation on storage writes or
+    // Fire-and-forget. The user is on the welcome screen; we
+    // don't want to block the visuals on storage writes or
     // notification scheduling.
     void upsertSystemSession({
       name: SYSTEM_STUDY_NAME,
@@ -126,16 +101,8 @@ export default function WelcomeScreen() {
       enabled: true,
       useFocusMode: true,
       blockedAppIds: studyBlocked,
-    }).catch(() => {
-      // Non-fatal: even if seeding fails, the user can create a
-      // routine manually from the Blocks tab. We just don't
-      // surface the failure during the welcome moment.
-    });
+    }).catch(() => {});
 
-    // Sermon-arrival routine. Focus mode OFF — the sermon is a
-    // notification-driven moment, not a block. Daily cadence
-    // (including weekends) since the sermon is passive and
-    // forming a daily habit is the whole point.
     void upsertSystemSession({
       name: SYSTEM_SERMON_NAME,
       source: "system",
@@ -144,10 +111,7 @@ export default function WelcomeScreen() {
       enabled: true,
       useFocusMode: false,
       blockedAppIds: [],
-    }).catch(() => {
-      // Same rationale as above — onboarding completion shouldn't
-      // hinge on background seeding success.
-    });
+    }).catch(() => {});
   }, [
     upsertSystemSession,
     answers.bibleStudyTime,
@@ -156,155 +120,65 @@ export default function WelcomeScreen() {
   ]);
 
   const handleEnterApp = () => {
-    // Replace so the user can't swipe-back into the paywall or
-    // welcome from inside the app. This is the final boundary
-    // between onboarding and the app proper.
+    // Set completed BEFORE navigating so the persistence layer
+    // flushes the flag. Next cold launch reads it in
+    // app/index.tsx and routes straight to /today.
+    setAnswer("completed", true);
+    // Replace so back-swipe out of the app proper doesn't land
+    // on the welcome screen.
     router.replace("/today");
   };
 
+  const eyebrow = firstName
+    ? `${firstName.toUpperCase()} — YOU'RE HERE`
+    : "YOU'RE HERE";
+
   return (
-    <View style={{ flex: 1, backgroundColor: "#000000" }}>
-      <StatusBar style="light" />
-      <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
-        <View className="flex-1 px-6 justify-center">
-          {/* Red eyebrow with the user's name. Caps, tracked
-              wide so the type carries weight without going big. */}
-          <FadeIn delayMs={300} durationMs={1000}>
+    <HeroOnboardingPage
+      pageBg={PAGE_BG}
+      ambientGlow={SKY_WINE}
+      eyebrow={eyebrow}
+      // No back button on the welcome — the user has crossed the
+      // threshold; the only direction is into the app.
+      showBack={false}
+      subject={
+        <HeroDisc haloColor={SKY_WINE} size={216} innerPaddingVertical={20}>
+          {/* The verse IS the subject. Centered, white, tight
+              line-height — like a small portrait of the Word. */}
+          <Text
+            style={{
+              color: "#FFFFFF",
+              fontFamily: "PlusJakartaSans_600SemiBold",
+              fontSize: 15.5,
+              lineHeight: 22,
+              letterSpacing: -0.1,
+              textAlign: "center",
+              paddingHorizontal: 18,
+            }}
+          >
+            &ldquo;The Lord is close to the brokenhearted.&rdquo;
+          </Text>
+          <View style={{ marginTop: 10 }}>
             <Text
               style={{
-                color: RED,
+                color: "rgba(255,255,255,0.65)",
                 fontFamily: "PlusJakartaSans_700Bold",
-                fontSize: 13,
-                letterSpacing: 3.5,
-                marginBottom: 18,
+                fontSize: 10,
+                letterSpacing: 1.8,
+                textTransform: "uppercase",
               }}
             >
-              {firstName ? `${firstName.toUpperCase()}, YOU'RE HERE.` : "YOU'RE HERE."}
+              Psalm 34:18
             </Text>
-          </FadeIn>
-
-          <FadeIn delayMs={1200} durationMs={1000}>
-            <Text
-              style={{
-                color: "#FFFFFF",
-                fontFamily: "PlusJakartaSans_500Medium",
-                fontSize: 17,
-                lineHeight: 26,
-              }}
-            >
-              That&apos;s already more than you think.
-            </Text>
-          </FadeIn>
-
-          <FadeIn delayMs={2200} durationMs={900}>
-            <Text
-              style={{
-                color: "#C2C2C7",
-                fontFamily: "PlusJakartaSans_400Regular",
-                fontSize: 16,
-                lineHeight: 25,
-                marginTop: 18,
-              }}
-            >
-              You don&apos;t have to have it together.{"\n"}
-              You just have to show up.
-            </Text>
-          </FadeIn>
-
-          {/* The scripture card. Red left border + ink-white
-              scripture text. The reference is dimmer below. */}
-          <FadeIn delayMs={3500} durationMs={1000}>
-            <View
-              style={{
-                marginTop: 36,
-                paddingLeft: 18,
-                paddingVertical: 4,
-                borderLeftWidth: 3,
-                borderLeftColor: RED,
-              }}
-            >
-              <Text
-                style={{
-                  color: "#FFFFFF",
-                  fontFamily: "PlusJakartaSans_500Medium",
-                  fontStyle: "italic",
-                  fontSize: 18,
-                  lineHeight: 28,
-                  letterSpacing: -0.1,
-                }}
-              >
-                &ldquo;The Lord is close to the brokenhearted{"\n"}
-                and saves those who are crushed in spirit.&rdquo;
-              </Text>
-              <Text
-                style={{
-                  color: RED,
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  fontSize: 13,
-                  letterSpacing: 1.6,
-                  marginTop: 12,
-                }}
-              >
-                — PSALM 34:18
-              </Text>
-            </View>
-          </FadeIn>
-
-          <FadeIn delayMs={5000} durationMs={900}>
-            <Text
-              style={{
-                color: "#C2C2C7",
-                fontFamily: "PlusJakartaSans_500Medium",
-                fontSize: 15,
-                lineHeight: 23,
-                marginTop: 28,
-              }}
-            >
-              Your first word.
-            </Text>
-          </FadeIn>
-        </View>
-
-        {/* Final CTA — wide, ink-white pill. Same visual idiom as
-            the paywall CTA so the user's last two actions on the
-            black canvas feel consistent. */}
-        <FadeIn delayMs={5800} durationMs={900}>
-          <View className="px-6 pb-4">
-            <Pressable
-              onPress={handleEnterApp}
-              accessibilityRole="button"
-              accessibilityLabel="Enter the app"
-              style={({ pressed }) => ({
-                height: 56,
-                borderRadius: 16,
-                backgroundColor: "#FFFFFF",
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: pressed ? 0.85 : 1,
-              })}
-            >
-              <Text
-                style={{
-                  color: "#000000",
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  fontSize: 16,
-                  letterSpacing: 0.1,
-                }}
-              >
-                I&apos;m ready
-              </Text>
-            </Pressable>
           </View>
-        </FadeIn>
-      </SafeAreaView>
-    </View>
+        </HeroDisc>
+      }
+      quoteSetup="You don't have to have it together."
+      quoteEmphasis="You just have to show up."
+      attribution="Your first word."
+      ctaLabel="I'm ready"
+      onContinue={handleEnterApp}
+      ctaTextColor="#1F0407"
+    />
   );
 }
-
-// Single red used on the eyebrow, the scripture card's left
-// border, and the reference label. Matches the spec's "red
-// scripture text" cue. Same RED as the calculating screen's
-// progress bar — it's the only color in the whole onboarding,
-// and it appears at the start (calculating loader) and the end
-// (welcome scripture). Bookends.
-const RED = "#E53935";

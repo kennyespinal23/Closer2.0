@@ -6,6 +6,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   Switch,
   Text,
   TextInput,
@@ -13,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Svg, { Path } from "react-native-svg";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import { TimePickerModal } from "@/components/TimePickerModal";
 import {
@@ -383,57 +385,79 @@ export function StudySessionEditor({
                 />
               </View>
 
-              {/* Header: Cancel | Title | Save */}
-              <View className="flex-row items-center px-5 pt-1 pb-3">
-                <Pressable
-                  onPress={onClose}
-                  hitSlop={10}
-                  accessibilityRole="button"
-                  accessibilityLabel="Cancel"
-                  style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-                >
-                  <Text
-                    className="text-[15px]"
-                    style={{
-                      fontFamily: "PlusJakartaSans_500Medium",
-                      color: colors.inkMuted,
-                    }}
+              {/* Header — two rows:
+                    Row 1: Cancel (left, muted) / nothing centered /
+                           Save (right, accent blue when valid)
+                    Row 2: Eyebrow "ROUTINE" + large editorial title
+                  This replaces the old single-row chrome header (Cancel
+                  / "New session" / Save all jammed onto one tiny line),
+                  which read as a settings form. The two-row treatment
+                  gives the modal a magazine opener: the chrome actions
+                  stay where iOS users expect them, but the title
+                  becomes the page anchor. */}
+              <View className="px-5 pt-1 pb-1">
+                <View className="flex-row items-center justify-between">
+                  <Pressable
+                    onPress={onClose}
+                    hitSlop={10}
+                    accessibilityRole="button"
+                    accessibilityLabel="Cancel"
+                    style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
                   >
-                    Cancel
-                  </Text>
-                </Pressable>
-                <View className="flex-1 items-center px-3">
-                  <Text
-                    className="text-ink text-[15px]"
-                    style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                    <Text
+                      className="text-[15px]"
+                      style={{
+                        fontFamily: "PlusJakartaSans_500Medium",
+                        color: colors.inkMuted,
+                      }}
+                    >
+                      Cancel
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleSave}
+                    disabled={!canSave}
+                    hitSlop={10}
+                    accessibilityRole="button"
+                    accessibilityLabel="Save session"
+                    style={({ pressed }) => ({
+                      opacity: pressed || !canSave ? 0.4 : 1,
+                    })}
                   >
-                    {isEditing ? "Edit session" : "New session"}
-                  </Text>
+                    <Text
+                      className="text-[15px]"
+                      style={{
+                        fontFamily: "PlusJakartaSans_700Bold",
+                        color: PRIMARY_BLUE,
+                      }}
+                    >
+                      Save
+                    </Text>
+                  </Pressable>
                 </View>
-                <Pressable
-                  onPress={handleSave}
-                  disabled={!canSave}
-                  hitSlop={10}
-                  accessibilityRole="button"
-                  accessibilityLabel="Save session"
-                  style={({ pressed }) => ({
-                    opacity: pressed || !canSave ? 0.4 : 1,
-                  })}
+                <Text
+                  className="mt-5 text-[10.5px] tracking-[3px] uppercase"
+                  style={{
+                    fontFamily: "PlusJakartaSans_700Bold",
+                    color: PRIMARY_BLUE,
+                  }}
                 >
-                  <Text
-                    className="text-[15px]"
-                    style={{
-                      fontFamily: "PlusJakartaSans_700Bold",
-                      // Signature iOS-blue so this reads as a tap
-                      // target in both themes (white-on-black ink
-                      // version was visually competing with the
-                      // header title text). Matches the bottom CTA.
-                      color: PRIMARY_BLUE,
-                    }}
-                  >
-                    Save
-                  </Text>
-                </Pressable>
+                  Routine
+                </Text>
+                <Text
+                  className="text-ink text-[28px] leading-[34px] tracking-[-0.4px] mt-1.5"
+                  style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
+                >
+                  {isEditing ? "Edit session" : "New session"}
+                </Text>
+                <Text
+                  className="text-ink-muted text-[13.5px] leading-[20px] mt-2"
+                  style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                >
+                  {isEditing
+                    ? "Tune the time, days, and apps that quiet during this practice."
+                    : "Carve out a recurring moment for the Word. Closer will quiet the noise when it's time."}
+                </Text>
               </View>
 
               <ScrollView
@@ -444,11 +468,13 @@ export function StudySessionEditor({
                 {/* Name */}
                 <FieldGroup title="Name">
                   <View
-                    className="rounded-2xl px-4 py-3"
+                    className="rounded-2xl px-5"
                     style={{
                       backgroundColor: colors.surface,
                       borderWidth: 1,
                       borderColor: colors.border,
+                      minHeight: 60,
+                      justifyContent: "center",
                     }}
                   >
                     <TextInput
@@ -459,18 +485,27 @@ export function StudySessionEditor({
                       placeholder="Morning Study"
                       placeholderTextColor={colors.inkSubtle}
                       maxLength={40}
+                      selectionColor={PRIMARY_BLUE}
                       style={{
                         color: colors.ink,
-                        fontFamily: "PlusJakartaSans_500Medium",
-                        fontSize: 15,
-                        paddingVertical: 6,
+                        fontFamily: "PlusJakartaSans_700Bold",
+                        fontSize: 19,
+                        letterSpacing: -0.2,
+                        paddingVertical: 12,
                       }}
                       returnKeyType="done"
                     />
                   </View>
                 </FieldGroup>
 
-                {/* Time */}
+                {/* Time — large editorial display.
+                    The earlier "small 15pt number + Change link"
+                    row read as a settings list cell. This new
+                    treatment shows the time at headline scale
+                    with the AM/PM separated and a clock-glyph
+                    chip on the right, so the time IS the affordance
+                    rather than something you have to find a Change
+                    button for. */}
                 <FieldGroup
                   title="Time"
                   footer="The notification fires at this time on the days you select."
@@ -479,30 +514,51 @@ export function StudySessionEditor({
                     onPress={() => setPickerOpen(true)}
                     accessibilityRole="button"
                     accessibilityLabel="Change time"
+                    style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
                   >
                     <View
-                      className="rounded-2xl px-4 py-3.5 flex-row items-center"
+                      className="rounded-2xl px-5 py-4 flex-row items-center"
                       style={{
                         backgroundColor: colors.surface,
                         borderWidth: 1,
                         borderColor: colors.border,
+                        minHeight: 76,
                       }}
                     >
-                      <Text
-                        className="flex-1 text-ink text-[15px]"
-                        style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
-                      >
-                        {formatReminderTime(draft.time)}
-                      </Text>
-                      <Text
-                        className="text-[12.5px]"
+                      <View className="flex-1 flex-row items-baseline">
+                        <Text
+                          className="text-ink"
+                          style={{
+                            fontFamily: "PlusJakartaSans_800ExtraBold",
+                            fontSize: 32,
+                            lineHeight: 36,
+                            letterSpacing: -1,
+                          }}
+                        >
+                          {splitTimeNumber(formatReminderTime(draft.time))}
+                        </Text>
+                        <Text
+                          className="ml-2"
+                          style={{
+                            fontFamily: "PlusJakartaSans_700Bold",
+                            fontSize: 13,
+                            letterSpacing: 1.5,
+                            color: colors.inkMuted,
+                          }}
+                        >
+                          {splitTimePeriod(formatReminderTime(draft.time))}
+                        </Text>
+                      </View>
+                      <View
+                        className="w-10 h-10 rounded-full items-center justify-center"
                         style={{
-                          fontFamily: "PlusJakartaSans_700Bold",
-                          color: colors.primary,
+                          backgroundColor: withAlphaHex(PRIMARY_BLUE, 0.14),
+                          borderWidth: 1,
+                          borderColor: withAlphaHex(PRIMARY_BLUE, 0.3),
                         }}
                       >
-                        Change
-                      </Text>
+                        <ClockGlyph stroke={PRIMARY_BLUE} />
+                      </View>
                     </View>
                   </Pressable>
                 </FieldGroup>
@@ -612,35 +668,58 @@ export function StudySessionEditor({
                     only when this toggle is on, so the editor
                     doesn't ask the user to curate a list they
                     aren't going to use. */}
-                <View className="px-5 mt-5">
+                <View className="px-5 mt-7">
                   <Text
-                    className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-2.5 ml-1"
-                    style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                    className="text-[10.5px] tracking-[3px] uppercase mb-3 ml-1"
+                    style={{
+                      fontFamily: "PlusJakartaSans_700Bold",
+                      color: colors.inkSubtle,
+                    }}
                   >
                     Focus mode
                   </Text>
                   <View
-                    className="rounded-2xl px-4 py-3.5 flex-row items-center"
+                    className="rounded-2xl px-4 py-4 flex-row items-center"
                     style={{
                       backgroundColor: colors.surface,
                       borderWidth: 1,
-                      borderColor: colors.border,
+                      borderColor: draft.useFocusMode
+                        ? withAlphaHex(PRIMARY_BLUE, 0.32)
+                        : colors.border,
                     }}
                   >
+                    {/* Shield glyph in an accent-soft circle —
+                        gives the row a visual anchor that ties
+                        the card to the iOS-blue "Focus" identity
+                        used everywhere else in the app (the home
+                        FocusBanner, the intro screen FocusRow). */}
+                    <View
+                      className="w-11 h-11 rounded-full items-center justify-center mr-3.5"
+                      style={{
+                        backgroundColor: withAlphaHex(PRIMARY_BLUE, 0.14),
+                        borderWidth: 1,
+                        borderColor: withAlphaHex(PRIMARY_BLUE, 0.3),
+                      }}
+                    >
+                      <ShieldGlyph stroke={PRIMARY_BLUE} />
+                    </View>
                     <View className="flex-1 pr-3">
                       <Text
-                        className="text-ink text-[15px]"
-                        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                        className="text-ink text-[16px]"
+                        style={{
+                          fontFamily: "PlusJakartaSans_700Bold",
+                          letterSpacing: -0.2,
+                        }}
                       >
-                        Silence apps during this session
+                        Silence the noise
                       </Text>
                       <Text
-                        className="text-ink-muted text-[12.5px] mt-0.5 leading-[18px]"
+                        className="text-ink-muted text-[12.5px] mt-1 leading-[18px]"
                         style={{ fontFamily: "PlusJakartaSans_400Regular" }}
                       >
                         {draft.useFocusMode
                           ? "Tapping Begin will quiet the apps you pick below."
-                          : "Just a reminder — Begin opens straight to the Library."}
+                          : "Just a calendar nudge — no apps will be silenced."}
                       </Text>
                     </View>
                     <Switch
@@ -648,9 +727,9 @@ export function StudySessionEditor({
                       onValueChange={toggleFocusMode}
                       trackColor={{
                         false: withAlphaHex(colors.ink, 0.1),
-                        true: "#3D8B6A",
+                        true: PRIMARY_BLUE,
                       }}
-                      thumbColor="#F4F4F5"
+                      thumbColor="#FFFFFF"
                       ios_backgroundColor={withAlphaHex(colors.ink, 0.08)}
                     />
                   </View>
@@ -680,15 +759,35 @@ export function StudySessionEditor({
                           }. Tap to add or remove.`
                     }
                   >
-                    <View className="flex-row flex-wrap -mx-1.5">
-                      {SOCIAL_APPS.map((app) => {
+                    {/* Single rounded card containing app ROWS.
+                        The previous 4-column tile grid wrapped each
+                        BrandGlyph in a 2pt white border when
+                        selected, which made the colored brand
+                        squares read as sticker labels rather than
+                        app icons. Switching to a card-of-rows
+                        layout (Apple Screen Time / Opal pattern)
+                        gives every app room to breathe and turns
+                        the row itself into the selection target —
+                        a generous tap area + a check accessory on
+                        the right when selected, no white border to
+                        clip the brand color. */}
+                    <View
+                      className="rounded-2xl overflow-hidden"
+                      style={{
+                        backgroundColor: colors.surface,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                      }}
+                    >
+                      {SOCIAL_APPS.map((app, i) => {
                         const selected = draft.blockedAppIds.includes(app.id);
                         return (
-                          <AppChip
+                          <AppRow
                             key={app.id}
                             appId={app.id}
                             name={app.name}
                             selected={selected}
+                            showDivider={i < SOCIAL_APPS.length - 1}
                             onPress={() => toggleApp(app.id)}
                           />
                         );
@@ -702,7 +801,7 @@ export function StudySessionEditor({
                         simple visible pill buttons with clear
                         separation. iOS-blue label so they read as
                         tap targets in both themes. */}
-                    <View className="flex-row mt-3" style={{ gap: 8 }}>
+                    <View className="flex-row mt-3.5" style={{ gap: 8 }}>
                       <AppsPresetPill
                         label="Defaults"
                         onPress={() => {
@@ -745,7 +844,7 @@ export function StudySessionEditor({
                     has contrast but visually merges with the
                     surrounding white text. Blue is universally
                     read as "tap this". */}
-                <View className="px-5 mt-7">
+                <View className="px-5 mt-9">
                   <Pressable
                     onPress={handleSave}
                     disabled={!canSave}
@@ -755,18 +854,23 @@ export function StudySessionEditor({
                     }
                     style={({ pressed }) => ({
                       backgroundColor: PRIMARY_BLUE,
-                      opacity: pressed || !canSave ? 0.5 : 1,
-                      borderRadius: 18,
-                      paddingVertical: 16,
+                      opacity: pressed || !canSave ? 0.55 : 1,
+                      borderRadius: 22,
+                      paddingVertical: 18,
                       alignItems: "center",
+                      shadowColor: PRIMARY_BLUE,
+                      shadowOpacity: canSave ? 0.35 : 0,
+                      shadowRadius: 14,
+                      shadowOffset: { width: 0, height: 6 },
+                      elevation: canSave ? 8 : 0,
                     })}
                   >
                     <Text
                       style={{
                         fontFamily: "PlusJakartaSans_700Bold",
-                        fontSize: 15,
+                        fontSize: 16,
                         color: "#FFFFFF",
-                        letterSpacing: 0.2,
+                        letterSpacing: 0.3,
                       }}
                     >
                       {isEditing ? "Save changes" : "Create session"}
@@ -774,7 +878,7 @@ export function StudySessionEditor({
                   </Pressable>
                   {!canSave && draft.daysOfWeek.length === 0 && (
                     <Text
-                      className="text-ink-subtle text-[12px] mt-2 text-center"
+                      className="text-ink-subtle text-[12.5px] mt-3 text-center"
                       style={{ fontFamily: "PlusJakartaSans_400Regular" }}
                     >
                       Pick at least one day to create the session.
@@ -815,18 +919,22 @@ function FieldGroup({
   footer?: string;
   children: React.ReactNode;
 }) {
+  const colors = useColors();
   return (
-    <View className="px-5 mt-5">
+    <View className="px-5 mt-7">
       <Text
-        className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-2.5 ml-1"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        className="text-[10.5px] tracking-[3px] uppercase mb-3 ml-1"
+        style={{
+          fontFamily: "PlusJakartaSans_700Bold",
+          color: colors.inkSubtle,
+        }}
       >
         {title}
       </Text>
       {children}
       {footer && (
         <Text
-          className="text-ink-subtle text-[12px] leading-[18px] mt-2.5 px-1"
+          className="text-ink-subtle text-[12.5px] leading-[19px] mt-3 px-1"
           style={{ fontFamily: "PlusJakartaSans_400Regular" }}
         >
           {footer}
@@ -837,76 +945,165 @@ function FieldGroup({
 }
 
 /**
- * AppChip — a tappable brand-glyph chip + small caption that
- * represents one entry in the per-session block list.
+ * AppRow — single tappable row in the apps-to-silence card.
  *
- * Visual states:
- *   • selected   — full brand color glyph, ink-color name, faint
- *                  selection outline so it reads as obviously chosen
- *   • unselected — same glyph at reduced opacity, ink-muted name —
- *                  recognizable but visibly "off"
+ * Layout: [brand glyph 40pt] [app name 16pt bold] ……… [✓ check accessory]
  *
- * Fixed item width keeps the wrap-grid columns aligned regardless
- * of name length. The grid uses `flex-wrap` so a long catalog
- * spills naturally onto subsequent rows.
+ * Selected state lights the right-side check accessory with
+ * iOS-blue and gives the row a faint blue wash; unselected state
+ * keeps the brand glyph at FULL saturation (so it's instantly
+ * recognizable) but draws an empty circle accessory. The
+ * "selection is the accessory" pattern is exactly what iOS
+ * Settings → Screen Time → App Limits uses — checked rows
+ * collapse into a clean blue-circle column on the right, while
+ * the brand colors on the left stay vivid regardless of state.
+ *
+ * Why we ditched the previous 4-column tile grid:
+ *   Wrapping each colored BrandGlyph in a 2pt white border when
+ *   selected made the row read as a SEGA-style sticker pack. The
+ *   row treatment gives every app real breathing room (16pt
+ *   vertical padding, full-bleed dividers between rows) and the
+ *   brand colors stay clean.
  */
-function AppChip({
+function AppRow({
   appId,
   name,
   selected,
+  showDivider,
   onPress,
 }: {
   appId: SocialAppId;
   name: string;
   selected: boolean;
+  showDivider: boolean;
   onPress: () => void;
 }) {
   const colors = useColors();
-  // See DayChip — NativeWind interop drops `width: "25%"` from
-  // Pressable, so the wrap-grid was packing 7 per row instead of
-  // 4 and the names ran together ("FacebookSnapchat",
-  // "MessagesWhatsApp"). The wrapper View enforces the column
-  // width; the Pressable handles inner padding + tap-state opacity.
   return (
-    <View style={{ width: "25%" }}>
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={`Toggle ${name}`}
-        accessibilityState={{ selected }}
-        style={({ pressed }) => ({
-          paddingHorizontal: 6,
-          paddingVertical: 8,
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Toggle ${name}`}
+      accessibilityState={{ selected }}
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.7 : 1,
+        backgroundColor: selected
+          ? withAlphaHex(PRIMARY_BLUE, 0.08)
+          : "transparent",
+      })}
+    >
+      <View
+        style={{
+          flexDirection: "row",
           alignItems: "center",
-          opacity: pressed ? 0.6 : 1,
-        })}
+          paddingHorizontal: 14,
+          paddingVertical: 12,
+        }}
       >
-        <View
-          style={{
-            borderRadius: 14,
-            padding: 3,
-            borderWidth: 2,
-            borderColor: selected ? colors.ink : "transparent",
-            opacity: selected ? 1 : 0.32,
-          }}
-        >
-          <BrandGlyph appId={appId} size="md" />
-        </View>
+        <BrandGlyph appId={appId} size="md" />
         <Text
           numberOfLines={1}
           style={{
-            fontFamily: "PlusJakartaSans_600SemiBold",
-            fontSize: 11,
-            marginTop: 6,
-            color: selected ? colors.ink : colors.inkSubtle,
-            textAlign: "center",
-            maxWidth: 64,
+            flex: 1,
+            marginLeft: 14,
+            fontFamily: "PlusJakartaSans_700Bold",
+            fontSize: 16,
+            letterSpacing: -0.2,
+            color: colors.ink,
           }}
         >
           {name}
         </Text>
-      </Pressable>
-    </View>
+        {selected ? (
+          <View
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 12,
+              backgroundColor: PRIMARY_BLUE,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <CheckGlyph stroke="#FFFFFF" />
+          </View>
+        ) : (
+          <View
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 12,
+              borderWidth: 1.5,
+              borderColor: withAlphaHex(colors.ink, 0.18),
+              backgroundColor: "transparent",
+            }}
+          />
+        )}
+      </View>
+      {showDivider ? (
+        <View
+          style={{
+            // Indented divider that starts AFTER the glyph (Apple
+            // pattern) so the row's brand glyph reads as the anchor
+            // of its own row, not the start of a hairline rule.
+            height: StyleSheet.hairlineWidth,
+            backgroundColor: colors.border,
+            marginLeft: 14 + 40 + 14,
+          }}
+        />
+      ) : null}
+    </Pressable>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Glyphs — tiny inline SVGs used by the rebuilt fields
+// ─────────────────────────────────────────────────────────────────
+
+function ClockGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 21a9 9 0 100-18 9 9 0 000 18z"
+        stroke={stroke}
+        strokeWidth={1.8}
+      />
+      <Path
+        d="M12 7v5l3 2"
+        stroke={stroke}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function ShieldGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={17} height={17} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 3l8 3v6c0 4-3 7-8 9-5-2-8-5-8-9V6l8-3z"
+        stroke={stroke}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function CheckGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M5 12l5 5L20 7"
+        stroke={stroke}
+        strokeWidth={2.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
   );
 }
 
@@ -1147,6 +1344,26 @@ function formatDaysFooter(days: WeekdayIndex[]): string {
   if (presetMatchWeekends(days)) return "weekend";
   const sorted = [...days].sort((a, b) => a - b);
   return sorted.map((d) => WEEKDAY_LABELS[d].full).join(", ");
+}
+
+/**
+ * Split a `formatReminderTime` result ("6:00 AM") into its numeric
+ * portion ("6:00") and AM/PM suffix ("AM"). The editor renders the
+ * two halves at different scales so the digits anchor the row at
+ * headline weight while the period stays a quiet uppercase label.
+ *
+ * 24-hour locales pass through as just the numeric string with no
+ * period — `splitTimePeriod` returns "" in that case and the
+ * editor's label slot collapses cleanly.
+ */
+function splitTimeNumber(formatted: string): string {
+  const idx = formatted.search(/\s(AM|PM)$/i);
+  return idx === -1 ? formatted : formatted.slice(0, idx);
+}
+
+function splitTimePeriod(formatted: string): string {
+  const m = formatted.match(/(AM|PM)$/i);
+  return m ? m[1]!.toUpperCase() : "";
 }
 
 /**

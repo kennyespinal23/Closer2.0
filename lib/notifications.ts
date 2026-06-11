@@ -7,9 +7,10 @@ import { loadJSON, removeKey, saveJSON, STORAGE_KEYS } from "@/lib/storage";
  * "Before The Noise" — the daily notification ritual.
  *
  * One notification per day at the user's chosen time. Tap deep-links
- * into the existing sermon (`/sermon/intro` → "Drawing Near in the
- * Noise"). The notification is the product, not a reminder; the copy
- * is always:
+ * straight into today's scripture screen (`/sermon/scripture`) —
+ * the antechamber intro page was retired so the verse IS the first
+ * beat of the day's word. The notification is the product, not a
+ * reminder; the copy is always:
  *
  *   "Your word for today is ready."
  *
@@ -138,8 +139,13 @@ export async function getNotificationPermission(): Promise<NotificationPermissio
 export const BEFORE_THE_NOISE = {
   title: "Closer",
   body: "Your word for today is ready.",
-  /** Route to push when tapped. See app/_layout.tsx response listener. */
-  route: "/sermon/intro" as const,
+  /** Route to push when tapped. See app/_layout.tsx response listener.
+   *  Used to point at `/sermon/intro` (the antechamber page that
+   *  showed READ time, description, and focus row before the
+   *  scripture). That page was retired when the user flattened the
+   *  sermon flow — the verse screen is now the first beat, so we
+   *  deep-link straight there. */
+  route: "/sermon/scripture" as const,
 } as const;
 
 export type DailyReminderTime = {

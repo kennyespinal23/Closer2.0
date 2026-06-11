@@ -173,6 +173,28 @@ export function resolveSermonType(typeName: string): SermonType {
   return getSermonTypeById("daily-church") ?? SERMON_TYPES[0]!;
 }
 
+/**
+ * Resolve a full moment to its rendered SermonType, honoring any
+ * per-sermon `illustration` override declared in the catalog.
+ *
+ * Most sermons inherit their hero art from the SermonType (e.g.
+ * every Daily Church entry shows the cross-on-mountain). For
+ * individual sermons whose topic deserves its own face, the
+ * catalog ships an `illustration` field on the SermonRecord —
+ * this helper overlays that asset onto the resolved type so the
+ * downstream render code (home card, intro, panels) doesn't have
+ * to know whether the image came from the type or the moment.
+ *
+ * Returns the resolved type unchanged when no override is set, so
+ * call sites can switch to this helper without behavior changes
+ * for sermons that haven't opted in yet.
+ */
+export function resolveSermonTypeForMoment(moment: Moment): SermonType {
+  const base = resolveSermonType(moment.type);
+  if (!moment.illustration) return base;
+  return { ...base, illustration: moment.illustration };
+}
+
 // ─────────────────────────────────────────────────────────────────
 // Scripture parsing — "Ref — 'verse text'" → { reference, text }
 // ─────────────────────────────────────────────────────────────────
@@ -259,6 +281,22 @@ export function momentDurationMin(moment: Moment): number {
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+/**
+ * Approximate per-panel reading time in minutes, surfaced under
+ * the panel eyebrow on the sermon flow ("~1 min" / "~2 min").
+ *
+ * Same ~150 wpm reflective-reading pace as `momentDurationMin`
+ * so the per-panel chips sum-ish to the whole-sermon estimate
+ * shown on the home card / intro page (within rounding noise).
+ * No per-panel "settle" beat is added — that friction term lives
+ * at the moment level. Floors at 1 so even the shortest panel
+ * reads as a real commitment, not "0 min".
+ */
+export function panelDurationMin(panel: { body: string }): number {
+  const words = countWords(panel.body);
+  return Math.max(1, Math.round(words / 150));
 }
 
 // ─────────────────────────────────────────────────────────────────

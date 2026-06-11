@@ -30,6 +30,21 @@ import type { ImageSourcePropType } from "react-native";
  *                 First type to ship this is Daily Church; each
  *                 other type can add its own here over time
  *                 without any call-site changes.
+ *   - illustration: OPTIONAL portrait "tarot card" artwork —
+ *                 self-contained illustration on its own background
+ *                 gradient, ~1:1.6 aspect, designed to render as a
+ *                 standalone hero centered on the home screen.
+ *                 Distinct from `hero` (small icon glyph, no
+ *                 background) and `homeHero` (landscape full-bleed
+ *                 strip): when `illustration` is present the home
+ *                 SermonCard renders a third layout — a tall
+ *                 portrait card centered in the hero region. Used
+ *                 to test richer, story-forward art without
+ *                 retiring the existing two slots.
+ *                 First batch to ship this is the 10-card v2
+ *                 illustration set (see assets/sermon-types/
+ *                 illustrations/). Render priority on the home is:
+ *                 illustration > homeHero > hero+accent halo.
  *
  * Keep this list ordered to match the design plate — the daily
  * rotation indexes into it directly.
@@ -43,6 +58,7 @@ export type SermonType = {
   accent: string;
   hero: ImageSourcePropType;
   homeHero?: ImageSourcePropType;
+  illustration?: ImageSourcePropType;
 };
 
 export const SERMON_TYPES: readonly SermonType[] = [
@@ -62,6 +78,12 @@ export const SERMON_TYPES: readonly SermonType[] = [
     // home hero card; the small `hero` glyph above stays the
     // notification + milestone-screen asset.
     homeHero: require("../assets/sermon-types/daily-church-home-hero.png"),
+    // Portrait "playing card" illustration — cross atop a
+    // winding mountain path. Same metaphor as the homeHero (the
+    // climb toward Sunday) but rendered as a self-contained
+    // story-forward card the home screen can show centered when
+    // the illustration render mode is active.
+    illustration: require("../assets/sermon-types/illustrations/cross-mountain.jpg"),
   },
   {
     id: "jesus-only",
@@ -72,6 +94,10 @@ export const SERMON_TYPES: readonly SermonType[] = [
       "No commentary. No application points. Just the words and presence of Jesus, held up to the light.",
     accent: "#7A5CFF",
     hero: require("../assets/sermon-types/jesus-only.png"),
+    // Hands cupped around a rising sun — the only object in
+    // frame. Matches the type's "just His presence, nothing
+    // else" voice line.
+    illustration: require("../assets/sermon-types/illustrations/hands-sun.jpg"),
   },
   {
     id: "letters-struggling",
@@ -82,6 +108,10 @@ export const SERMON_TYPES: readonly SermonType[] = [
       "An unguarded letter from someone in the middle of doubt, exhaustion, or distance. You might recognize the handwriting.",
     accent: "#9C5CE5",
     hero: require("../assets/sermon-types/letters-struggling.png"),
+    // A single paper boat on dark waves — "alone in rough
+    // waters." Reads as the small, fragile voice mid-doubt
+    // that the type's letters narrate.
+    illustration: require("../assets/sermon-types/illustrations/boat-ocean.jpg"),
   },
   {
     id: "letters-grateful",
@@ -92,6 +122,9 @@ export const SERMON_TYPES: readonly SermonType[] = [
       "A letter from someone who made it through. Less polished than a testimony — more like a thank-you note to God.",
     accent: "#E64539",
     hero: require("../assets/sermon-types/letters-grateful.png"),
+    // A heart blooming from a flower — gratitude that grew. The
+    // visual counterpart to the struggling-letters boat.
+    illustration: require("../assets/sermon-types/illustrations/heart-flower.jpg"),
   },
   {
     id: "character-studies",
@@ -102,6 +135,10 @@ export const SERMON_TYPES: readonly SermonType[] = [
       "Step into the life of someone in Scripture — what they felt, what they feared, and how God met them there.",
     accent: "#2FB8A0",
     hero: require("../assets/sermon-types/character-studies.png"),
+    // Group of figures together — "stepping into the life of
+    // someone in Scripture." People in the frame for a people-
+    // forward type.
+    illustration: require("../assets/sermon-types/illustrations/family.jpg"),
   },
   {
     id: "deep-verse",
@@ -112,6 +149,9 @@ export const SERMON_TYPES: readonly SermonType[] = [
       "A single verse you've read a hundred times, opened slowly enough to actually see.",
     accent: "#56C5B7",
     hero: require("../assets/sermon-types/deep-verse.png"),
+    // Open book on warm sky — the most literal pairing in the
+    // batch. The text itself, slowed down.
+    illustration: require("../assets/sermon-types/illustrations/open-book.jpg"),
   },
   {
     id: "misconceptions",
@@ -122,6 +162,9 @@ export const SERMON_TYPES: readonly SermonType[] = [
       "The half-true thing you've believed about God or yourself — held next to what He actually said.",
     accent: "#34BFB1",
     hero: require("../assets/sermon-types/misconceptions.png"),
+    // Lightbulb on deep violet — the "ohhhh" moment, the lie
+    // flipping to truth.
+    illustration: require("../assets/sermon-types/illustrations/lightbulb.jpg"),
   },
   {
     id: "testimonies",
@@ -132,6 +175,10 @@ export const SERMON_TYPES: readonly SermonType[] = [
       "Real stories from real people. Proof that God didn't stop working when the New Testament closed.",
     accent: "#6BCC4D",
     hero: require("../assets/sermon-types/testimonies.png"),
+    // Small chapel on a green hill at sunrise — real places
+    // where real stories happen. Pairs with the type's "God
+    // didn't stop moving" line.
+    illustration: require("../assets/sermon-types/illustrations/chapel-hill.jpg"),
   },
   {
     id: "questions",
@@ -142,6 +189,10 @@ export const SERMON_TYPES: readonly SermonType[] = [
       "The hard, honest question — asked out loud, answered without flinching, treated like the holy thing it is.",
     accent: "#7A5CFF",
     hero: require("../assets/sermon-types/questions.png"),
+    // An open doorway with a path winding off behind it — the
+    // hard question itself, framed as a threshold to walk
+    // through instead of a wall to bounce off.
+    illustration: require("../assets/sermon-types/illustrations/doorway-path.jpg"),
   },
   {
     id: "prayer-nights",
@@ -152,6 +203,10 @@ export const SERMON_TYPES: readonly SermonType[] = [
       "Less reading, more breathing. A guided prayer rhythm to soften your heart before you sleep.",
     accent: "#4F7CFF",
     hero: require("../assets/sermon-types/prayer-nights.png"),
+    // Crescent moon over deep-blue clouds — the literal time of
+    // day this type is meant for. Matches the "before you
+    // sleep" closing line of the description.
+    illustration: require("../assets/sermon-types/illustrations/moon-stars.jpg"),
   },
 ];
 

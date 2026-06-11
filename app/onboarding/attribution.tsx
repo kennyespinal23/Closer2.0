@@ -47,17 +47,17 @@ export default function AttributionScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
       <OnboardingChrome
         mode="with-progress"
         progress={progressFor("attribution")}
       />
 
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
+        contentContainerStyle={{ paddingBottom: 28 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="flex-1 px-6">
+        <View className="px-6">
           <FadeIn delayMs={0}>
             <Text
               className="text-ink-muted text-[13px] tracking-[2px] uppercase mt-4"
@@ -88,18 +88,17 @@ export default function AttributionScreen() {
               ))}
             </View>
           </FadeIn>
-
-          <View className="flex-1 min-h-[16px]" />
-
-          <View className="pt-6 pb-2">
-            <Button
-              label="Continue"
-              onPress={handleContinue}
-              disabled={!selected}
-            />
-          </View>
         </View>
       </ScrollView>
+
+      {/* Sticky Continue bar — see apps.tsx for the rationale. */}
+      <View className="px-6 pt-3 pb-2 bg-bg">
+        <Button
+          label="Continue"
+          onPress={handleContinue}
+          disabled={!selected}
+        />
+      </View>
     </SafeAreaView>
   );
 }

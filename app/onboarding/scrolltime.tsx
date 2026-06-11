@@ -60,21 +60,20 @@ export default function ScrollTimeScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
       <OnboardingChrome mode="back-only" />
 
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
+        contentContainerStyle={{ paddingBottom: 28 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="flex-1 px-6">
+        <View className="px-6">
           <FadeIn delayMs={0}>
             <Text
               className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-4"
               style={{ fontFamily: "PlusJakartaSans_700Bold" }}
             >
-              How long do you usually spend on{"\n"}your phone before you get
-              out of bed?
+              How long do you spend{"\n"}on your phone before{"\n"}you get out of bed?
             </Text>
           </FadeIn>
 
@@ -99,18 +98,17 @@ export default function ScrollTimeScreen() {
               ))}
             </View>
           </FadeIn>
-
-          <View className="flex-1 min-h-[16px]" />
-
-          <View className="pt-6 pb-2">
-            <Button
-              label="Continue"
-              onPress={handleContinue}
-              disabled={!selected}
-            />
-          </View>
         </View>
       </ScrollView>
+
+      {/* Sticky Continue bar — see apps.tsx for the rationale. */}
+      <View className="px-6 pt-3 pb-2 bg-bg">
+        <Button
+          label="Continue"
+          onPress={handleContinue}
+          disabled={!selected}
+        />
+      </View>
     </SafeAreaView>
   );
 }

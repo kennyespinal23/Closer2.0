@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   useWindowDimensions,
@@ -22,7 +23,10 @@ import {
   OT_CATEGORY_ORDER,
 } from "@/constants/books";
 import { hasBookCover } from "@/constants/bookCovers";
+import * as haptics from "@/lib/haptics";
+import { findMomentByDay, resolveSermonType } from "@/lib/moments";
 import { useProgress } from "@/state/progress";
+import { useSavedSermons } from "@/state/savedSermons";
 import { useColors } from "@/state/theme";
 
 /**
@@ -93,6 +97,7 @@ export default function LibraryScreen() {
   const [filter, setFilter] = useState<LibraryFilter>("all");
   const [query, setQuery] = useState("");
   const { lastVisited, hasReadChapter } = useProgress();
+  const { saved: savedSermonDays } = useSavedSermons();
 
   // Search takes precedence over the active filter — when the user
   // types we hide the section header and surface a flat match grid.
@@ -138,14 +143,28 @@ export default function LibraryScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
-        {/* ─── Big title ──────────────────────────────────────── */}
+        {/* ─── Page title ──────────────────────────────────────────
+            Just "Library" — matches the Home tab's title recipe so
+            every tab reads with the same Apple Fitness "Summary"
+            shape (32pt Bold, tight negative tracking, no
+            decoration). The previous "Explore All 66 Books" was
+            descriptive but lengthy; the tab bar already says
+            Library, and the user's reset pass on the home tab
+            established the single-word page label as the
+            convention. */}
         <FadeIn delayMs={0} durationMs={700}>
           <View className="px-6 pt-2 pb-1">
             <Text
-              className="text-ink text-[28px] leading-[34px] tracking-[-0.5px]"
-              style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
+              className="text-ink"
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                fontSize: 32,
+                lineHeight: 36,
+                letterSpacing: -0.8,
+              }}
+              accessibilityRole="header"
             >
-              Explore All {BOOKS.length} Books
+              Library
             </Text>
           </View>
         </FadeIn>
@@ -168,6 +187,26 @@ export default function LibraryScreen() {
                 }
               />
             </View>
+          </FadeIn>
+        )}
+
+        {/* ─── Saved sermons rail ─────────────────────────────────
+            Surfaces every sermon the user has tapped Save on
+            from the celebration screen. A horizontal rail of
+            compact cards (title + voice + accent tint) so the
+            collection reads as a glanceable "library of kept
+            words" rather than a long vertical list. Hidden when
+            the user has zero saves so the Library tab doesn't
+            grow a permanent empty rail. */}
+        {savedSermonDays.length > 0 && (
+          <FadeIn delayMs={90} durationMs={800}>
+            <SavedSermonsRail
+              days={savedSermonDays}
+              onOpen={(day) => {
+                haptics.soft();
+                router.push(`/saved-sermon/${day}` as const);
+              }}
+            />
           </FadeIn>
         )}
 
@@ -665,6 +704,194 @@ function computeContinueReading(
     chapter: nextChapter,
     hint: `You finished ${book.name} ${lastVisited.chapter}`,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Saved sermons rail — horizontal list of bookmarked moments
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Horizontal rail of saved-sermon cards. Each card surfaces the
+ * sermon title, voice, and the type's accent as a left-edge
+ * ribbon — enough to recognize the kept piece at a glance
+ * without overflowing the card with metadata.
+ *
+ * Renders nothing when the catalog can't resolve any of the
+ * saved days (catalog truncation between updates) — the section
+ * caller already guards on `savedSermonDays.length > 0`, but
+ * the per-day filter inside means we don't paint dead cards
+ * for moments that no longer exist.
+ */
+function SavedSermonsRail({
+  days,
+  onOpen,
+}: {
+  days: ReadonlyArray<number>;
+  onOpen: (day: number) => void;
+}) {
+  const colors = useColors();
+  const resolved = useMemo(
+    () =>
+      days
+        .map((day) => {
+          const moment = findMomentByDay(day);
+          if (!moment) return null;
+          return { moment, type: resolveSermonType(moment.type) };
+        })
+        .filter((x): x is { moment: NonNullable<ReturnType<typeof findMomentByDay>>; type: ReturnType<typeof resolveSermonType> } => x !== null),
+    [days],
+  );
+
+  if (resolved.length === 0) return null;
+
+  return (
+    <View style={{ marginTop: 26 }}>
+      <View className="px-6 flex-row items-baseline justify-between">
+        <Text
+          style={{
+            fontFamily: "PlusJakartaSans_700Bold",
+            color: colors.ink,
+            fontSize: 22,
+            lineHeight: 26,
+            letterSpacing: -0.4,
+          }}
+          accessibilityRole="header"
+        >
+          Saved sermons
+        </Text>
+        <Text
+          style={{
+            fontFamily: "PlusJakartaSans_700Bold",
+            color: colors.inkSubtle,
+            fontSize: 11,
+            letterSpacing: 1.6,
+            textTransform: "uppercase",
+          }}
+        >
+          {resolved.length} {resolved.length === 1 ? "kept" : "kept"}
+        </Text>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 14,
+          paddingBottom: 4,
+        }}
+      >
+        {resolved.map(({ moment, type }, i) => (
+          <View
+            key={moment.day}
+            style={{
+              marginRight: i === resolved.length - 1 ? 0 : 12,
+            }}
+          >
+            <SavedSermonCard
+              title={moment.title}
+              voice={moment.voice}
+              typeName={type.name}
+              accent={type.accent}
+              onPress={() => onOpen(moment.day)}
+            />
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+function SavedSermonCard({
+  title,
+  voice,
+  typeName,
+  accent,
+  onPress,
+}: {
+  title: string;
+  voice: string;
+  typeName: string;
+  accent: string;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Open saved sermon ${title}`}
+      style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
+    >
+      <View
+        style={{
+          width: 220,
+          minHeight: 132,
+          borderRadius: 18,
+          backgroundColor: colors.surface,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: colors.border,
+          padding: 16,
+          flexDirection: "row",
+          overflow: "hidden",
+        }}
+      >
+        {/* Left ribbon — paints the sermon-type accent down the
+            left edge so each card is recognizable by color at a
+            glance without leaning on a per-type illustration. */}
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            width: 4,
+            backgroundColor: accent,
+          }}
+        />
+        <View style={{ flex: 1, paddingLeft: 8 }}>
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              color: accent,
+              fontSize: 10.5,
+              letterSpacing: 2,
+              textTransform: "uppercase",
+            }}
+            numberOfLines={1}
+          >
+            {typeName}
+          </Text>
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              color: colors.ink,
+              fontSize: 15.5,
+              lineHeight: 20,
+              letterSpacing: -0.2,
+              marginTop: 8,
+            }}
+            numberOfLines={3}
+          >
+            {title}
+          </Text>
+          {voice ? (
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_500Medium",
+                color: colors.inkMuted,
+                fontSize: 12,
+                marginTop: 10,
+              }}
+              numberOfLines={1}
+            >
+              {voice}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+    </Pressable>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────

@@ -1,10 +1,20 @@
-import { useEffect, useMemo, useRef } from "react";
-import { Animated, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Easing, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
+import LottieView from "lottie-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { milestoneCopy } from "@/lib/journey";
+
+// Hero flame animation. Lottie JSON (500×690 native, portrait
+// aspect) lives in `assets/lottie/` and renders in `FlameMark`
+// below at 140×140 to drop-in-replace the static SVG flame
+// the streak screen shipped with. Lottie autoplays + loops
+// on mount, so the screen has live motion the moment it
+// lands — no separate JS-driven breath needed inside the
+// flame itself.
+const FIRE_STREAK_ANIMATION = require("../../assets/lottie/FireStreakAnimation.json");
 
 /**
  * Streak update screen — the "fire" screen.
@@ -57,6 +67,16 @@ export default function StreakScreen() {
   const haloScale = useRef(new Animated.Value(0.7)).current;
   const haloOpacity = useRef(new Animated.Value(0)).current;
   const numberScale = useRef(new Animated.Value(0.92)).current;
+  // Live "count-up" of the streak number — the displayed value
+  // animates from (days - 1) up to `days` so the user SEES the
+  // +1 land. This is the Apple Watch / Strava trick where the
+  // metric jumps in the rendered UI exactly when the metric
+  // jumps in your real life — the satisfaction comes from
+  // watching the number change, not just seeing the new total.
+  // For day 1 we start from 0 since "subtracting one" would
+  // render -1 for half a second before snapping to 0 → 1.
+  const startCount = Math.max(0, days - 1);
+  const [displayedCount, setDisplayedCount] = useState(startCount);
 
   useEffect(() => {
     Animated.parallel([
@@ -82,6 +102,74 @@ export default function StreakScreen() {
     ]).start();
   }, [haloScale, haloOpacity, numberScale]);
 
+  // Number count-up — drives the JS-side text. We give it a small
+  // delay so it lines up with the spring that scales the numeral
+  // up, then ticks from startCount → days in even steps. The
+  // animation length scales with the delta so a single +1 lands
+  // in ~700ms and a +30 (theoretical) still lands cleanly. The
+  // count uses setTimeout per tick rather than a single Animated
+  // listener because we're updating a Text node and Animated's
+  // native driver can't drive text content directly.
+  useEffect(() => {
+    const delta = days - startCount;
+    if (delta <= 0) {
+      setDisplayedCount(days);
+      return;
+    }
+    const totalDurationMs = Math.min(1100, 320 + delta * 110);
+    const stepMs = Math.max(40, Math.floor(totalDurationMs / delta));
+    const startDelayMs = 700; // line up with the spring landing
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (let i = 1; i <= delta; i += 1) {
+      const t = setTimeout(
+        () => {
+          if (!cancelled) setDisplayedCount(startCount + i);
+        },
+        startDelayMs + i * stepMs,
+      );
+      timers.push(t);
+    }
+    return () => {
+      cancelled = true;
+      timers.forEach((t) => clearTimeout(t));
+    };
+  }, [days, startCount]);
+
+  // Subtle flame breath — gentle scale + opacity oscillation so the
+  // flame reads as "lit" rather than "icon". Loops forever; same
+  // pattern as the LivingHeroIcon halo. Tuned to be calm enough not
+  // to distract while the user reads the headline / subcopy.
+  const flameBreath = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(flameBreath, {
+          toValue: 1,
+          duration: 2400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(flameBreath, {
+          toValue: 0,
+          duration: 2800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [flameBreath]);
+  const flameScale = flameBreath.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.97, 1.05],
+  });
+  const flameOpacity = flameBreath.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.92, 1],
+  });
+
   const handleContinue = () => {
     router.replace("/today");
   };
@@ -106,7 +194,14 @@ export default function StreakScreen() {
             <StreakHalo />
           </Animated.View>
 
-          <FlameMark />
+          <Animated.View
+            style={{
+              transform: [{ scale: flameScale }],
+              opacity: flameOpacity,
+            }}
+          >
+            <FlameMark />
+          </Animated.View>
         </View>
 
         {/* Milestone badge — only present when this advance crossed
@@ -140,9 +235,12 @@ export default function StreakScreen() {
         )}
 
         {/* The number itself — biggest type on the screen. The
-            spring-scale Animated.View stays because it's pure
-            transform (no opacity gating) and lands the count
-            with a small, satisfying bounce. */}
+            spring-scale Animated.View lands the count with a small
+            bounce; the displayed value count-ups from (days - 1)
+            → days so the +1 lands VISIBLY (Apple-Watch-style metric
+            satisfaction).
+            Note: this is `displayedCount`, not `days`. The final
+            frame always shows `days` once the count-up settles. */}
         <Animated.View style={{ transform: [{ scale: numberScale }] }}>
           <Text
             className={isMilestone ? "text-[88px] leading-[88px] tracking-[-2px] mt-4 text-center" : "text-[88px] leading-[88px] tracking-[-2px] mt-7 text-center"}
@@ -151,7 +249,7 @@ export default function StreakScreen() {
               color: STREAK_AMBER,
             }}
           >
-            {days}
+            {displayedCount}
           </Text>
         </Animated.View>
 
@@ -243,26 +341,34 @@ function StreakHalo() {
 }
 
 /**
- * Large glowing flame glyph — visual anchor of the screen. Soft
- * inner highlight so it reads as "alive" rather than as a flat icon.
+ * Large glowing flame — visual anchor of the screen.
+ *
+ * Lottie animation (FireStreakAnimation.json) renders at
+ * 140×140, matching the static SVG slot the screen
+ * shipped with so the surrounding halo / number layout
+ * stays unchanged.
+ *
+ * `autoPlay` + `loop` start the flame the moment the
+ * screen mounts; the wrapping `flameBreath` Animated.View
+ * higher up in the tree continues to layer a slow ambient
+ * scale/opacity pulse on top of the Lottie's own internal
+ * motion, so the flame reads as alive AND "breathing in
+ * the room" rather than just looping in place.
+ *
+ * The asset is intrinsically portrait (500×690). At 140×140
+ * the Lottie engine preserves aspect ratio and centers
+ * horizontally, so the flame fills ~100×140 within the
+ * 140-square box. If a future iteration wants the flame
+ * to read bigger, bump the width/height together — the
+ * Lottie scales cleanly to any size.
  */
 function FlameMark() {
   return (
-    <Svg width={140} height={140} viewBox="0 0 24 24">
-      <Defs>
-        <RadialGradient id="flameFill" cx="50%" cy="60%" r="55%">
-          <Stop offset="0%" stopColor="#FFD9A8" stopOpacity={1} />
-          <Stop offset="55%" stopColor={STREAK_AMBER} stopOpacity={1} />
-          <Stop offset="100%" stopColor={STREAK_DEEP} stopOpacity={1} />
-        </RadialGradient>
-      </Defs>
-      <Path
-        d="M12 3c2 3 5 5 5 9a5 5 0 11-10 0c0-2 1-3 2-4 0 2 1 3 2 3-1-3 0-6 1-8z"
-        fill="url(#flameFill)"
-        stroke={STREAK_DEEP}
-        strokeWidth={0.6}
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <LottieView
+      source={FIRE_STREAK_ANIMATION}
+      autoPlay
+      loop
+      style={{ width: 140, height: 140 }}
+    />
   );
 }

@@ -1,32 +1,47 @@
 import { View, type ColorValue } from "react-native";
-import { Tabs, useRouter } from "expo-router";
-import Svg, { Circle, Path } from "react-native-svg";
-import { AmbientAtmosphere } from "@/components/AmbientAtmosphere";
+import { Tabs } from "expo-router";
+import Svg, { Path } from "react-native-svg";
 import { GlassTabBar } from "@/components/GlassTabBar";
 import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
-import { resolveSermonType } from "@/lib/moments";
-import { useMoments } from "@/state/moments";
 import { useColors } from "@/state/theme";
 
 /**
- * Bottom-tab layout for the main app.
+ * Editorial-red accent. Mirrors the `SERMON_ACCENT` constant used
+ * across the home screen, the scripture opener, every sermon
+ * panel, and the "Complete and unlock apps" button so the active
+ * tab visually belongs to the same color story as the rest of
+ * the app. Earlier builds tinted the tab bar with each day's
+ * per-sermon-type accent (warm orange for Daily Church, royal
+ * violet for Jesus Only, etc.) but the user pulled that — the
+ * one consistent red across every surface reads as the app's
+ * single brand mark, not "today's sermon tinted everything."
+ */
+const TAB_BAR_ACCENT = "#E11D48";
+
+/**
+ * Bottom-tab layout for the main app — consolidated 3-tab shell.
  *
- * Five "cells" in the bar (Today / Journey / + / Library / Insights),
- * but only four of them are real tabs. The center "+" is a
- * full-screen check-in modal — we register it as a Tabs.Screen so
- * the GlassTabBar's row layout reserves a slot for it, then
- * intercept its press via `tabPress` and `router.push("/check-in")`
- * instead of letting React Navigation flip the focused index. The
- * placeholder `checkin.tsx` file redirects home in case the route
- * is ever reached directly.
+ * Home · Library · Profile. The earlier 5-cell layout (Today /
+ * Journey / + Check-in / Library / Insights) was collapsed at
+ * the user's request:
  *
- * Journey sits second so the day-flow reads as "what's today" →
- * "what have I done" → quick check-in → "what to read" → "how am
- * I trending". The old Profile tab was removed — profile lives in
- * a presented sheet opened from the home screen's top-left avatar.
+ *   • Journey (the Practice tab) was removed — its content
+ *     (study-session schedules) now lives as the "App Blocks"
+ *     section directly on the home page.
+ *   • The center "+" check-in FAB was removed — mood/feeling
+ *     check-ins are no longer surfaced from the tab bar.
+ *   • Insights was removed — its rhythm/streak content moved
+ *     under "Your rhythm" on home, and the per-day breakdown is
+ *     reachable from Profile.
+ *   • Profile was promoted from a left-side drawer launcher to
+ *     a first-class tab, with Notes and Highlights surfaced
+ *     inline (Imprint-style) so the user's saved scripture work
+ *     lives one tap away from the bottom bar.
  *
- * GlassTabBar renders the cell at `name === "checkin"` as a raised
- * accent FAB instead of the standard icon+label cell.
+ * The home-page avatar still navigates to the Profile tab (now
+ * via `router.navigate("/profile")` instead of the legacy modal
+ * push) so the visual entry point is preserved for users who
+ * learned the drawer pattern.
  *
  * Focus chrome lives here too: a FocusMiniPlayer floats above the
  * tab bar whenever a focus session is active, replacing the old
@@ -36,80 +51,74 @@ import { useColors } from "@/state/theme";
  * control everywhere the user navigates.
  */
 export default function TabsLayout() {
-  const router = useRouter();
   const colors = useColors();
-  // Pull today's sermon type so the ambient atmosphere can pick
-  // up the day's accent — the WHOLE tabs experience (Today,
-  // Practice, Library, Insights) now glows with the same per-day
-  // color, so the app reads as one continuous lit space rather
-  // than four flat-black tabs. Re-evaluates when the day changes.
-  const { todaysMoment } = useMoments();
-  const sermonType = resolveSermonType(todaysMoment.type);
 
   return (
     // Layered structure (back → front):
-    //   1. Outer View with backgroundColor=colors.bg — this is
-    //      now the page bg paint surface. (Previously each tab's
-    //      SafeAreaView painted its own bg-bg; we moved it here
-    //      so the AmbientAtmosphere can sit between the bg and
-    //      the tab content.)
-    //   2. AmbientAtmosphere — per-day accent wash anchored to
-    //      the top of the screen. Behind every tab.
-    //   3. Tabs container — the actual tab screens. Each tab's
-    //      SafeAreaView is now TRANSPARENT (no bg-bg) so the
-    //      atmosphere bleeds through.
-    //   4. FocusMiniPlayer — floats above tabs when active.
+    //   1. Outer View with backgroundColor=colors.bg — true-black
+    //      Apple dark-app canvas. (Previously each tab's SafeAreaView
+    //      painted its own bg-bg; we moved it up here so the
+    //      whole tabs area shares a single black canvas.)
+    //   2. Tabs container — the actual tab screens. Each tab's
+    //      SafeAreaView is TRANSPARENT (no bg-bg) so the canvas
+    //      bleeds through cleanly.
+    //   3. FocusMiniPlayer — floats above tabs when active.
     //
-    // FocusMiniPlayer + mini-player rationale stays the same as
-    // the previous comment: mounted INSIDE the layout (rather
-    // than at the root) so react-native-screens' native view
-    // controllers don't occlude the sibling on iOS.
+    // Quick-reset note: an earlier iteration mounted an
+    // <AmbientAtmosphere accent={sermonType.accent} /> here that
+    // washed the top of every tab with the day's sermon color.
+    // The user pulled it out for the Apple Fitness pass — the
+    // dark apps land on TRUE black with content carrying all the
+    // color (per-day tint lives in the tab-bar accent and stat
+    // colors instead). Re-adding it is a one-line change if we
+    // ever want the ambient back, but the component import is
+    // removed so the change is visible in a diff.
+    //
+    // FocusMiniPlayer + mini-player rationale stays the same:
+    // mounted INSIDE the layout (rather than at the root) so
+    // react-native-screens' native view controllers don't occlude
+    // the sibling on iOS.
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <AmbientAtmosphere accent={sermonType.accent} />
       <View style={{ flex: 1 }}>
         <Tabs
-          screenOptions={{ headerShown: false }}
-          tabBar={(props) => <GlassTabBar {...props} />}
+          screenOptions={{
+            headerShown: false,
+            // CRITICAL: explicitly set sceneStyle bg to TRANSPARENT
+            // so the outer View's colors.bg + AmbientAtmosphere
+            // bleed through to each tab.
+            //
+            // Expo Router's Tabs (built on react-native-screens via
+            // bottom-tabs) defaults each tab's scene container to a
+            // SYSTEM bg color. On iOS 26 with userInterfaceStyle="dark"
+            // this should be black — but in practice the scene
+            // container paints a SYSTEM LIGHT (cream/white) bg unless
+            // we override it. That white slab sits ON TOP of our
+            // outer View + atmosphere, killing dark mode.
+            //
+            // We saw this as: home shows a cream/lavender bg with
+            // white text fading into it; verse-card bg (7% accent
+            // alpha) reads as lavender instead of dark-purple;
+            // every other tab (Practice, Library, Insights) hit the
+            // same washout. Profile drawer + onboarding screens
+            // weren't affected because they're outside the Tabs
+            // navigator.
+            //
+            // Transparent here means the scene paints nothing of its
+            // own; the parent View's colors.bg + the absolutely-
+            // positioned AmbientAtmosphere are the only things you
+            // see behind tab content. Don't change this without
+            // re-testing every tab in light AND dark mode.
+            sceneStyle: { backgroundColor: "transparent" },
+          }}
+          tabBar={(props) => (
+            <GlassTabBar {...props} accent={TAB_BAR_ACCENT} />
+          )}
         >
         <Tabs.Screen
           name="today"
           options={{
-            title: "Today",
+            title: "Home",
             tabBarIcon: ({ color }) => <TodayIcon color={color} />,
-          }}
-        />
-        {/* The route file is still `journey.tsx` (we kept the
-            path stable so existing deep-links and routing
-            patterns don't break), but the screen now hosts the
-            "Practice" hub — study sessions + saved verses +
-            notes. Title + icon are updated accordingly. */}
-        <Tabs.Screen
-          name="journey"
-          options={{
-            title: "Practice",
-            tabBarIcon: ({ color }) => <PracticeIcon color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="checkin"
-          options={{
-            // Title isn't shown on the FAB cell, but accessibility
-            // tools and the default tab bar (if ever surfaced) need
-            // a meaningful label.
-            title: "Check-in",
-            // Icon isn't shown either (the FAB has its own glyph),
-            // but provided so the type contract is satisfied.
-            tabBarIcon: ({ color }) => <PlusIcon color={color} />,
-          }}
-          listeners={{
-            // Open the modal instead of switching tabs. preventDefault
-            // stops React Navigation from updating state.index, which
-            // would otherwise cause the GlassTabBar bubble to slide to
-            // a tab that should never be "focused".
-            tabPress: (e) => {
-              e.preventDefault();
-              router.push("/check-in");
-            },
           }}
         />
         <Tabs.Screen
@@ -120,10 +129,10 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="insights"
+          name="profile"
           options={{
-            title: "Insights",
-            tabBarIcon: ({ color }) => <InsightsIcon color={color} />,
+            title: "Profile",
+            tabBarIcon: ({ color }) => <ProfileIcon color={color} />,
           }}
         />
         </Tabs>
@@ -141,56 +150,16 @@ const ICON_SIZE = 22;
 const STROKE_W = 1.8;
 
 function TodayIcon({ color }: { color: ColorValue }) {
-  // Sunrise — a small sun arc rising over a horizon line.
-  // Echoes the brand's "quiet morning" motif.
+  // House outline — anchors the "Home" tab. Picked over the older
+  // sunrise glyph after the tab was relabeled Home (sun-over-
+  // horizon read as "daily" / "morning", not a destination).
   return (
     <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">
-      <Circle cx={12} cy={14} r={4} stroke={color} strokeWidth={STROKE_W} />
       <Path
-        d="M3 18h18M12 4v2M5 7l1.5 1.5M19 7l-1.5 1.5"
+        d="M4 11l8-7 8 7v9a1 1 0 01-1 1h-4v-6h-6v6H5a1 1 0 01-1-1v-9z"
         stroke={color}
         strokeWidth={STROKE_W}
         strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
-function PlusIcon({ color }: { color: ColorValue }) {
-  // Fallback icon for the check-in cell — used only by accessibility
-  // tools and any non-glass tab bar; the real FAB visual lives in
-  // GlassTabBar (white plus on accent disc).
-  return (
-    <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 5v14M5 12h14"
-        stroke={color}
-        strokeWidth={STROKE_W}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
-function PracticeIcon({ color }: { color: ColorValue }) {
-  // Bookmarked-page glyph — a sheet with a small ribbon. Reads as
-  // "the things you've set aside / kept" which is exactly what
-  // the Practice tab contains (study sessions, saved verses, notes).
-  // Picked over a generic checklist or notebook so it doesn't
-  // collide with the Library tab's stacked-books glyph or the
-  // Insights tab's bars.
-  return (
-    <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M6 4h9l4 4v12H6z"
-        stroke={color}
-        strokeWidth={STROKE_W}
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M11 4v6l2-1.5L15 10V4"
-        stroke={color}
-        strokeWidth={STROKE_W}
         strokeLinejoin="round"
       />
     </Svg>
@@ -211,16 +180,25 @@ function LibraryIcon({ color }: { color: ColorValue }) {
   );
 }
 
-function InsightsIcon({ color }: { color: ColorValue }) {
-  // Three ascending bars — reflects "your rhythm" / journey data.
-  // Reads cleanly at 22px and pairs visually with the breakdown list.
+function ProfileIcon({ color }: { color: ColorValue }) {
+  // Person — circle head + rounded shoulders. iOS-canonical
+  // "profile" glyph; reads clean at 22pt without competing with
+  // the Library books or the Home house glyph.
   return (
     <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M5 20V13M12 20V8M19 20V4"
+        d="M12 12a4 4 0 100-8 4 4 0 000 8z"
         stroke={color}
         strokeWidth={STROKE_W}
         strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M4 21c0-4 4-7 8-7s8 3 8 7"
+        stroke={color}
+        strokeWidth={STROKE_W}
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </Svg>
   );

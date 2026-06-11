@@ -228,7 +228,7 @@ function AppRow({
           >
             {app.name}
           </Text>
-          {checked ? <CheckIcon stroke={colors.ink} /> : null}
+          {checked ? <CheckIcon stroke={colors.select} /> : null}
         </View>
       </Pressable>
 
@@ -256,7 +256,7 @@ function AppRow({
             className="text-[11.5px] tracking-[1.5px] uppercase"
             style={{
               fontFamily: "PlusJakartaSans_700Bold",
-              color: colors.primary,
+              color: colors.select,
             }}
           >
             Preview

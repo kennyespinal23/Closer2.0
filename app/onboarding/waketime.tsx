@@ -45,18 +45,21 @@ export default function WakeTimeScreen() {
   const handleContinue = () => {
     if (!selected) return;
     setAnswer("wakeBucket", selected);
-    router.push("/onboarding/calculating");
+    // Pattern is the spiritual diagnosis that names what the user
+    // just admitted ("Phone first. Phone last."), before the
+    // calculating screen sets up the personalized punch.
+    router.push("/onboarding/pattern");
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
       <OnboardingChrome mode="back-only" />
 
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
+        contentContainerStyle={{ paddingBottom: 28 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="flex-1 px-6">
+        <View className="px-6">
           <FadeIn delayMs={0}>
             <Text
               className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-4"
@@ -78,18 +81,17 @@ export default function WakeTimeScreen() {
               ))}
             </View>
           </FadeIn>
-
-          <View className="flex-1 min-h-[16px]" />
-
-          <View className="pt-6 pb-2">
-            <Button
-              label="Continue"
-              onPress={handleContinue}
-              disabled={!selected}
-            />
-          </View>
         </View>
       </ScrollView>
+
+      {/* Sticky Continue bar — see apps.tsx for the rationale. */}
+      <View className="px-6 pt-3 pb-2 bg-bg">
+        <Button
+          label="Continue"
+          onPress={handleContinue}
+          disabled={!selected}
+        />
+      </View>
     </SafeAreaView>
   );
 }

@@ -25,19 +25,13 @@ import type { Href } from "expo-router";
  * root <Stack> has mounted (which is true by the time this hook
  * runs, since it's mounted inside the layout itself).
  *
- * Why route to `/sermon/intro` instead of the first panel?
- *   The spec says "open directly to the experience" — the sermon
- *   intro IS the experience entry point (the antechamber with the
- *   sermon title, voice, today's scripture, and a single big
- *   Begin CTA). It's not a navigation hub; it's the first beat
- *   of the ritual. Skipping straight to /sermon/panel/1 would
- *   drop the user into the middle of the flow without the
- *   "today is X" framing.
- *
- *   If we ever want to skip the antechamber on notification-tap
- *   specifically (vs an in-app sermon tap), we can pass a query
- *   param like `?from=notification` and have intro.tsx auto-advance.
- *   For now: same destination either way.
+ * Why route to `/sermon/scripture` instead of the first panel?
+ *   The spec says "open directly to the experience" — the scripture
+ *   screen IS the experience entry point now (the antechamber intro
+ *   page was retired so the verse IS the first beat of the day's
+ *   word). Skipping straight to /sermon/panel/1 would drop the
+ *   user into the middle of the flow without giving the verse its
+ *   moment.
  */
 export function useNotificationDeepLink(): void {
   const router = useRouter();

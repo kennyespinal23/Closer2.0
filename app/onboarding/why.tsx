@@ -9,24 +9,30 @@ import { OptionCard } from "@/components/OptionCard";
 import { useOnboarding } from "@/state/onboarding";
 
 /**
- * Screen 7 — "Why do you want to get closer to God?"
+ * Screen 1 (new flow) — "What brings you to Closer?"
  *
- * The emotional anchor right after the gut punch. The punch
- * exposes a cost; this screen lets the user name a reason. The
- * sequence matters — they're choosing a reason while the number
- * from the previous screen is still in their head.
+ * The opening of onboarding. Was screen 7 in the previous flow
+ * (after the gut punch); promoted to first so the user names
+ * their reason BEFORE we audit their phone time.
  *
- * Options are the rebuilt set from the spec: "I feel distant",
- * "I'm going through something hard", "I grew up in faith and
- * drifted", "Never really had a faith life but curious", "Just
- * feel like something is missing." Each is a real entry point;
- * none feels like the obviously correct one. That ambiguity is
- * the point — the user has to choose for themselves.
+ * Putting "why are you here" up front does two things:
  *
- * The answer gets persisted as `whyAnswer` but isn't used to
- * branch the rest of onboarding. Today it's a single-touch
- * personalization input (the home screen / journal could surface
- * it back later); tomorrow it could feed A/B copy variants.
+ *   1. It opens with the user, not with a number. The previous
+ *      order led with "the average American spends 2:27 on
+ *      socials" — a striking but impersonal stat. Opening with
+ *      "what brings you to Closer?" frames the next 60 seconds
+ *      as a conversation about the user, which makes the stat
+ *      that lands later (now after name) cut deeper because by
+ *      then we know who they are and what they're searching for.
+ *
+ *   2. It gives the rest of the flow a thread to refer back to.
+ *      "You said you grew up in faith and drifted" or "You said
+ *      something feels missing" — having that anchor sentence
+ *      from screen 1 lets later screens echo it.
+ *
+ * Options unchanged from the previous spec — each is a real
+ * entry point with no obviously correct one; that ambiguity is
+ * the point. Persisted as `whyAnswer`.
  */
 
 const OPTIONS = [
@@ -52,20 +58,20 @@ export default function WhyScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
       <OnboardingChrome mode="back-only" />
 
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
+        contentContainerStyle={{ paddingBottom: 28 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="flex-1 px-6">
+        <View className="px-6">
           <FadeIn delayMs={0}>
             <Text
-              className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-4"
+              className="text-ink text-[28px] leading-[36px] tracking-[-0.6px] mt-4"
               style={{ fontFamily: "PlusJakartaSans_700Bold" }}
             >
-              Why do you want to{"\n"}get closer to God?
+              What brings you{"\n"}to Closer?
             </Text>
           </FadeIn>
 
@@ -90,18 +96,17 @@ export default function WhyScreen() {
               ))}
             </View>
           </FadeIn>
-
-          <View className="flex-1 min-h-[16px]" />
-
-          <View className="pt-6 pb-2">
-            <Button
-              label="Continue"
-              onPress={handleContinue}
-              disabled={!selected}
-            />
-          </View>
         </View>
       </ScrollView>
+
+      {/* Sticky Continue bar — see apps.tsx for the rationale. */}
+      <View className="px-6 pt-3 pb-2 bg-bg">
+        <Button
+          label="Continue"
+          onPress={handleContinue}
+          disabled={!selected}
+        />
+      </View>
     </SafeAreaView>
   );
 }

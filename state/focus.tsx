@@ -171,6 +171,10 @@ type FocusContextValue = {
   // Pref mutations
   setEnabled: (next: boolean) => void;
   toggleAppBlocked: (id: SocialAppId) => void;
+  /** Bulk replace the blocked apps list — used by the App Blocks
+   *  page's "Update Blocked Apps" editor where the user picks the
+   *  whole list at once instead of toggling one app at a time. */
+  setBlockedAppIds: (next: ReadonlyArray<SocialAppId>) => void;
   setAutoStart: (next: boolean) => void;
 
   // Session mutations
@@ -365,6 +369,22 @@ export function FocusProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const setBlockedAppIds = useCallback(
+    (next: ReadonlyArray<SocialAppId>) => {
+      // De-dupe defensively — callers shouldn't pass duplicates but
+      // if they do we'd otherwise persist them, which is silently
+      // wasteful (no actual breakage; the lookup ignores duplicates
+      // but the array length is what the UI counts for the "N apps"
+      // chip on the App Blocks page).
+      const deduped = Array.from(new Set(next));
+      setState((cur) => ({
+        ...cur,
+        prefs: { ...cur.prefs, blockedAppIds: deduped },
+      }));
+    },
+    [],
+  );
+
   const setAutoStart = useCallback((next: boolean) => {
     setState((cur) => ({
       ...cur,
@@ -481,6 +501,7 @@ export function FocusProvider({ children }: { children: ReactNode }) {
       active: state.session !== null,
       setEnabled,
       toggleAppBlocked,
+      setBlockedAppIds,
       setAutoStart,
       startSession,
       endSession,
@@ -494,6 +515,7 @@ export function FocusProvider({ children }: { children: ReactNode }) {
       hydrated,
       setEnabled,
       toggleAppBlocked,
+      setBlockedAppIds,
       setAutoStart,
       startSession,
       endSession,

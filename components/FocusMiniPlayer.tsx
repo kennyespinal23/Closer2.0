@@ -4,27 +4,44 @@ import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useSegments } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import { isShieldSupported, summarizeBlockedApps } from "@/lib/focus";
+import { isShieldSupported } from "@/lib/focus";
 import { useFocus } from "@/state/focus";
-import { useStudySessions } from "@/state/studySessions";
+import { useMoments } from "@/state/moments";
+import { didCompleteToday, useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
 /**
  * FocusMiniPlayer
  *
  * Persistent bottom strip that floats above the GlassTabBar while
- * a focus session is active — modeled on Opal's "Now Playing"
- * pattern. Hidden entirely when no session is on, so it doesn't
- * compete for space during normal browsing.
+ * a focus session is active. Hidden entirely when no session is
+ * on, so it doesn't compete for space during normal browsing.
  *
- * Anatomy:
+ * Anatomy (sermon NOT yet read today — primary CTA mode):
  *
- *   ┌─────────────────────────────────────────────────┐
- *   │ ● Work Time            12:34                End │   ← floating pill
- *   └─────────────────────────────────────────────────┘
- *   ┌─────────────────────────────────────────────────┐
- *   │  Today   Practice   +   Library   Insights      │   ← GlassTabBar
- *   └─────────────────────────────────────────────────┘
+ *   ┌────────────────────────────────────────────────────────┐
+ *   │ 🛡  Read your sermon to unlock                          │
+ *   │    Apps locked · 3:13                  [ Read sermon → ]│
+ *   └────────────────────────────────────────────────────────┘
+ *
+ * Anatomy (sermon already completed — quiet status mode):
+ *
+ *   ┌────────────────────────────────────────────────────────┐
+ *   │ ✓  Apps quieted · keep focusing                         │
+ *   │    3:13 elapsed                                    End  │
+ *   └────────────────────────────────────────────────────────┘
+ *
+ *   ┌────────────────────────────────────────────────────────┐
+ *   │  Today   Practice   +   Library   Insights              │   ← GlassTabBar
+ *   └────────────────────────────────────────────────────────┘
+ *
+ * Why a CTA-shaped strip (not a status pill)?
+ *   The core promise of Closer is: your apps are blocked until
+ *   you read today's sermon. Before the sermon is read, the strip
+ *   should be the single most obvious "unlock" action on the
+ *   screen — that's a CTA, not chrome. After the sermon is read,
+ *   the urgency is gone and the strip relaxes into a quiet
+ *   "now focusing" status with End as the only affordance.
  *
  * Visual language:
  *   • Same horizontal inset (16pt) and pill shape as GlassTabBar so
@@ -32,9 +49,9 @@ import { useColors, useResolvedScheme } from "@/state/theme";
  *   • BlurView + themed backing matches the tab bar's frosted-glass
  *     treatment — keeps the pair coherent on colorful scroll
  *     content (book covers, gradient hero images).
- *   • Single accent dot (iOS-system-blue) for the "session active"
- *     state — same color as the FocusBanner and FocusToggle so
- *     focus is a recognizable color anchor across surfaces.
+ *   • Shield glyph in iOS-system-blue (matches FocusBanner /
+ *     FocusToggle / focus session card) is the recurring focus
+ *     color anchor across surfaces.
  *
  * Why a mini-player and not the old top banner?
  *   The previous GlobalFocusBanner floated at the top of every tab
@@ -79,8 +96,13 @@ const FOCUS_ACCENT = "#0A84FF";
 /** The height the mini-player occupies (pill content + internal
  *  padding). Exported via the spacing hook below so layouts can
  *  reserve enough bottom padding in their scroll content to keep
- *  the last item from being permanently occluded by the pill. */
-const PILL_HEIGHT = 56;
+ *  the last item from being permanently occluded by the pill.
+ *  Bumped from 56 → 82 when the pill became the primary
+ *  "read your sermon to unlock" CTA instead of a glanceable
+ *  status strip — the larger surface gives the headline +
+ *  status line room to read AND keeps the iOS-blue Read pill
+ *  tappable with a comfortable thumb target. */
+const PILL_HEIGHT = 82;
 
 /** Gap between the mini-player pill and whatever sits below it
  *  (the GlassTabBar pill on tabbed screens, the safe-area inset
@@ -89,10 +111,17 @@ const PILL_HEIGHT = 56;
  *  visually touch. */
 const PILL_GAP = 8;
 
-/** Approximate GlassTabBar pill height (mirrors the value in
- *  components/GlassTabBar.tsx). Kept as a local constant rather
- *  than imported so a future tab-bar swap doesn't silently break
- *  the mini-player's vertical anchoring. */
+/** Visible portion of the GlassTabBar above the safe-area inset —
+ *  must stay in sync with `PILL_VISIBLE_HEIGHT` in
+ *  components/GlassTabBar.tsx (62, as of the flush-bar refactor).
+ *  Kept as a local constant rather than imported so a future
+ *  tab-bar swap doesn't silently break the mini-player's vertical
+ *  anchoring; the trade-off is that the two values must be
+ *  hand-synced when the bar geometry changes.
+ *
+ *  The full bar height the mini-player sits above is
+ *  `insets.bottom + TAB_BAR_PILL_HEIGHT` — the bar bakes the
+ *  safe-area zone into its bottom padding now (flush layout). */
 const TAB_BAR_PILL_HEIGHT = 62;
 
 export type FocusMiniPlayerProps = {
@@ -130,9 +159,31 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
   const segments = useSegments();
   const scheme = useResolvedScheme();
   const isDark = scheme === "dark";
-  const { session, endSession, pauseSession, resumeSession } = useFocus();
-  const { sessions: studySessions } = useStudySessions();
+  const { session, endSession } = useFocus();
+  // Today's sermon — drives the "now playing"-style title in the
+  // strip. The Moments provider always resolves a current sermon
+  // (it falls back to day 1 if hydration hasn't completed), so
+  // `todaysMoment.title` is always safe to read without nulling.
+  const { todaysMoment } = useMoments();
+  // useProgress() returns the ProgressContextValue directly (state +
+  // mutators flattened together), NOT { progress }. Calling
+  // `didCompleteToday(value)` is the documented usage. Destructuring
+  // `{ progress }` like a wrapper made `progress` undefined and
+  // crashed every render below.
+  const progress = useProgress();
   const [ending, setEnding] = useState(false);
+
+  // Has today's sermon been completed?
+  // Drives the strip's two render modes:
+  //   • false → primary CTA mode ("Read your sermon to unlock")
+  //     this is the core unlock-loop moment. The strip is the
+  //     single most obvious action on the screen.
+  //   • true  → quiet status mode ("Apps quieted · keep focusing")
+  //     the unlock urgency is gone; the strip relaxes into a
+  //     calm "now focusing" status with only End as an affordance.
+  // Read here (not memoized) — progress changes infrequently and
+  // didCompleteToday is a simple set-lookup, not worth memo cost.
+  const sermonCompleted = didCompleteToday(progress);
 
   // Live elapsed time. Ticks once per second from a setInterval so
   // the number updates without us having to push state on every
@@ -213,39 +264,27 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
   }, [ending, endSession]);
 
   const handleOpen = useCallback(() => {
-    // Route to the Blocks screen (the redesigned Practice tab) when
-    // the user taps the pill body. Falls back to /settings/focus on
-    // older builds where the Blocks screen doesn't exist yet.
-    router.push("/journey");
-  }, [router]);
-
-  const handleTogglePause = useCallback(() => {
-    if (!session) return;
-    // Idempotent on both sides — pauseSession is a no-op when
-    // already paused, resumeSession is a no-op when not paused.
-    // Reading from session.pausedAt at click time keeps the
-    // dispatch correct even if the user spam-taps the button
-    // faster than the state update can re-render the icon.
-    if (session.pausedAt) {
-      resumeSession();
+    // Body-tap routing is mode-dependent. The strip has two roles:
+    //   • Sermon NOT read → the strip IS the "Read your sermon to
+    //     unlock" CTA. Tapping anywhere on the body should send the
+    //     user into the sermon flow — that's the primary action.
+    //   • Sermon already read → no unlock CTA; the strip is now a
+    //     status surface. Tapping the body falls back to the App
+    //     Blocks editor so the user can manage the active session.
+    //     (Previously this routed to the legacy Practice tab; that
+    //     tab was removed when the bar consolidated to Home /
+    //     Library / Profile, so we now go straight to the editor.)
+    if (!sermonCompleted) {
+      // Antechamber intro page was removed; scripture is the
+      // first sermon beat now, so the unlock CTA on the mini
+      // player drops the user straight into the verse screen.
+      router.push("/sermon/scripture");
     } else {
-      pauseSession();
+      router.push("/settings/study-sessions");
     }
-  }, [session, pauseSession, resumeSession]);
+  }, [router, sermonCompleted]);
 
   if (!session || hidden) return null;
-
-  // Resolve a display name for the strip. Priority:
-  //   1. The originating study session's name (e.g. "Morning Study")
-  //   2. A generic "Focus Mode" fallback when the session was
-  //      started directly from the home toggle or sermon flow with
-  //      no routine attached.
-  const routineName =
-    session.routineId
-      ? studySessions.find((s) => s.id === session.routineId)?.name
-      : undefined;
-  const title = routineName ?? "Focus Mode";
-  const subtitle = summarizeBlockedApps(session.blockedAppIds);
 
   // Effective elapsed math:
   //   raw  = now - startedAt                 (wall-clock age)
@@ -320,21 +359,27 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
       <Pressable
         onPress={handleOpen}
         accessibilityRole="button"
-        accessibilityLabel={`Focus mode active. ${title}. ${timeLabel} ${timeMetaLabel.toLowerCase()}.${isPaused ? " Paused." : ""} Tap to manage.`}
+        accessibilityLabel={
+          sermonCompleted
+            ? `Focus session active. Apps quieted, keep focusing. ${timeLabel} ${timeMetaLabel.toLowerCase()}.${isPaused ? " Paused." : ""} Tap to manage.`
+            : `Apps locked. Read today's sermon to unlock. ${timeLabel} elapsed.${isPaused ? " Paused." : ""} Tap to read the sermon.`
+        }
         style={({ pressed }) => ({
           marginHorizontal: 16,
           height: PILL_HEIGHT,
-          borderRadius: 22,
+          borderRadius: 24,
           overflow: "hidden",
-          opacity: pressed ? 0.92 : 1,
+          opacity: pressed ? 0.94 : 1,
           // Shadow lifts the pill off the screen contents behind it
           // so it reads as floating chrome rather than embedded
-          // content. Black blur works for both themes.
+          // content. Black blur works for both themes. Slightly
+          // taller pill = slightly heftier shadow so it still
+          // feels appropriately lifted.
           shadowColor: "#000",
-          shadowOpacity: 0.22,
-          shadowRadius: 14,
-          shadowOffset: { width: 0, height: 6 },
-          elevation: 10,
+          shadowOpacity: 0.28,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 8 },
+          elevation: 12,
         })}
       >
         {/* Themed backing — opaque enough that brand colors behind
@@ -354,49 +399,70 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
             style={absoluteFill}
           />
         ) : null}
+        {/* Soft iOS-blue inner glow when the strip is in CTA mode —
+            faint enough not to compete with the headline but
+            present enough to mark the strip as the "primary
+            action of the screen". Skipped in the calm
+            sermon-completed state so the strip relaxes. */}
+        {!sermonCompleted ? (
+          <View
+            pointerEvents="none"
+            style={{
+              ...absoluteFill,
+              borderRadius: 24,
+              backgroundColor: FOCUS_ACCENT,
+              opacity: isDark ? 0.06 : 0.05,
+            }}
+          />
+        ) : null}
         {/* Border — drawn as an absolutely-positioned overlay rather
             than as a borderColor on the Pressable so the inner
-            content padding isn't affected by border width. */}
+            content padding isn't affected by border width. Tinted
+            iOS-blue in CTA mode so the strip's edge picks up the
+            accent the headline copy is pointing toward. */}
         <View
           pointerEvents="none"
           style={{
             ...absoluteFill,
-            borderRadius: 22,
+            borderRadius: 24,
             borderWidth: 1,
-            borderColor: pillBorderColor,
+            borderColor: sermonCompleted
+              ? pillBorderColor
+              : `${FOCUS_ACCENT}55`,
           }}
         />
 
-        <View className="flex-row items-center pl-3 pr-2 h-full">
-          {/* Live dot — accent fill with a soft halo that breathes.
-              The halo (sized larger than the dot, lower opacity) is
-              what gives the dot its "alive" feel without the dot
-              itself flashing distractingly. */}
+        <View className="flex-row items-center pl-3 pr-3 h-full">
+          {/* Shield glyph in a soft iOS-blue halo. The halo
+              breathes (scale + opacity) on the same pulse value
+              that used to drive the live-dot, so the strip still
+              has a "this is live" visual signal — the breath just
+              lives on the shield now instead of a separate dot. */}
           <View
             style={{
-              width: 22,
-              height: 22,
+              width: 42,
+              height: 42,
               alignItems: "center",
               justifyContent: "center",
-              marginRight: 10,
+              marginRight: 12,
             }}
           >
             <Animated.View
               style={{
                 position: "absolute",
-                width: 22,
-                height: 22,
-                borderRadius: 11,
+                width: 42,
+                height: 42,
+                borderRadius: 21,
                 backgroundColor: FOCUS_ACCENT,
                 opacity: pulse.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [0.16, 0.34],
+                  outputRange: [0.14, 0.26],
                 }),
                 transform: [
                   {
                     scale: pulse.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [0.75, 1],
+                      outputRange: [0.88, 1.04],
                     }),
                   },
                 ],
@@ -404,157 +470,191 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
             />
             <View
               style={{
-                width: 10,
-                height: 10,
-                borderRadius: 5,
-                backgroundColor: FOCUS_ACCENT,
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                backgroundColor: `${FOCUS_ACCENT}33`,
+                borderWidth: 1,
+                borderColor: `${FOCUS_ACCENT}66`,
+                alignItems: "center",
+                justifyContent: "center",
               }}
-            />
+            >
+              {sermonCompleted ? (
+                // Check inside a shield — sermon's been read, the
+                // session has fulfilled its purpose, the user is
+                // just riding it out. The icon mirrors that.
+                <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                  <Path
+                    d="M20 6L9 17l-5-5"
+                    stroke={FOCUS_ACCENT}
+                    strokeWidth={2.4}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+              ) : (
+                // Lock — explicit "your apps are locked" metaphor.
+                // The shield→sermon→unlock loop is the core promise
+                // of the app, and the lock makes the locked half
+                // of that loop unmistakable at a glance.
+                <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                  <Path
+                    d="M6 10V8a6 6 0 1112 0v2"
+                    stroke={FOCUS_ACCENT}
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                  />
+                  <Path
+                    d="M5 10h14v10H5z"
+                    fill={FOCUS_ACCENT}
+                    stroke={FOCUS_ACCENT}
+                    strokeWidth={1.5}
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+              )}
+            </View>
           </View>
 
-          <View className="flex-1 pr-2">
+          {/* Title + subline. Reads like Spotify's now-playing
+              strip: bold "track name" on top, quieter "artist +
+              status" line underneath. The title is the actual
+              sermon — gives the strip real context ("you are
+              reading: When God Feels Silent") instead of the
+              generic "Read your sermon to unlock" copy.
+              numberOfLines={1} on both so a long sermon title
+              ellipsises gracefully and never wraps into a third
+              line that pushes the right-column buttons out of
+              the container — which was the source of the
+              earlier overflow bug. */}
+          <View className="flex-1 pr-3 justify-center">
             <Text
               numberOfLines={1}
-              className="text-[13.5px]"
               style={{
                 fontFamily: "PlusJakartaSans_700Bold",
                 color: colors.ink,
-                letterSpacing: 0.1,
+                fontSize: 14.5,
+                letterSpacing: 0.05,
+                lineHeight: 18,
               }}
             >
-              {title}
+              {todaysMoment.title}
             </Text>
             <Text
               numberOfLines={1}
-              className="text-[11px] mt-0.5"
               style={{
                 fontFamily: "PlusJakartaSans_500Medium",
                 color: colors.inkMuted,
+                fontSize: 11.5,
+                marginTop: 2,
+                letterSpacing: 0.05,
+                opacity: isPaused ? 0.65 : 1,
               }}
             >
-              {subtitle}
+              {sermonCompleted
+                ? `Apps quieted · ${timeLabel}${isPaused ? " · paused" : ""}`
+                : `Reading to unlock · ${timeLabel}${isPaused ? " · paused" : ""}`}
             </Text>
           </View>
 
-          {/* Tabular-spaced time so the digits don't jiggle as they
-              tick (1:09 → 1:10 wouldn't shift width). Dims slightly
-              while paused so the user sees the frozen-timer state
-              even before they read the LEFT/ELAPSED label. */}
+          {/* Right column — two side-by-side circular icon
+              buttons, Spotify-style. The previous build stacked a
+              wide "Read →" pill on top of a tiny "END" text link,
+              which (a) overflowed the pill on small phones (the
+              END label visibly bled outside the container) and
+              (b) read as cluttered chrome rather than focused
+              controls. Two equally-sized circles read instantly
+              as "play / dismiss" — the now-playing idiom every
+              user already knows.
+
+              CTA mode (sermon unread):
+                [ End circle ]  [ Play circle, iOS blue, primary ]
+              Status mode (sermon completed):
+                [ End circle ]  — no play; the work is done. */}
           <View
-            className="pr-2 pl-1 items-end"
-            style={{ opacity: isPaused ? 0.55 : 1 }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              // Pad the right edge so the play button has visual
+              // breathing room from the pill's rounded corner.
+              // Without this the button hugs the curve and reads
+              // as cropped.
+              paddingRight: 4,
+            }}
           >
-            <Text
-              className="text-[13px]"
-              style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                color: colors.ink,
-                fontVariant: ["tabular-nums"],
-                letterSpacing: 0.2,
-              }}
-            >
-              {timeLabel}
-            </Text>
-            <Text
-              className="text-[9.5px] tracking-[1px] uppercase"
-              style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                color: colors.inkSubtle,
-                marginTop: 1,
-              }}
-            >
-              {timeMetaLabel}
-            </Text>
-          </View>
-
-          {/* Pause / Resume — icon-only round button. Only rendered
-              for time-boxed sessions (hasDuration). Open-ended
-              sessions skip pause since "pausing an elapsed counter
-              that has no target" has no clear meaning. The icon
-              swaps based on session.pausedAt. Wrapping View+Pressable
-              keeps event bubbling contained to the body's onOpen. */}
-          {hasDuration ? (
             <Pressable
               onPress={(e) => {
                 e.stopPropagation?.();
-                handleTogglePause();
+                handleEnd();
               }}
-              hitSlop={10}
+              hitSlop={6}
               accessibilityRole="button"
-              accessibilityLabel={
-                isPaused ? "Resume focus session" : "Pause focus session"
-              }
+              accessibilityLabel="End focus session"
               style={({ pressed }) => ({
-                width: 30,
-                height: 30,
-                borderRadius: 15,
-                backgroundColor: endBg,
+                width: 38,
+                height: 38,
+                borderRadius: 19,
                 alignItems: "center",
                 justifyContent: "center",
-                marginRight: 6,
-                opacity: pressed ? 0.6 : 1,
+                backgroundColor: endBg,
+                opacity: pressed ? 0.55 : 1,
               })}
             >
-              {isPaused ? (
-                // Play triangle — single Path so the geometry stays
-                // crisp at 11pt. Slight rightward x offset (1.2)
-                // optically centers the triangle in the round
-                // button since the visual mass leans left.
-                <Svg width={11} height={11} viewBox="0 0 24 24" fill="none">
-                  <Path d="M6 4l14 8-14 8V4z" fill={endLabelColor} />
-                </Svg>
-              ) : (
-                // Pause icon — two rounded bars. Rendered as two
-                // narrow Paths so we get the rounded ends without
-                // needing an Rx attribute (which SVG paths support
-                // but is finicky to compute by hand for tiny bars).
-                <Svg width={11} height={11} viewBox="0 0 24 24" fill="none">
-                  <Path d="M6 4h4v16H6z" fill={endLabelColor} />
-                  <Path d="M14 4h4v16h-4z" fill={endLabelColor} />
-                </Svg>
-              )}
+              <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M6 6l12 12M18 6L6 18"
+                  stroke={endLabelColor}
+                  strokeWidth={2.4}
+                  strokeLinecap="round"
+                />
+              </Svg>
             </Pressable>
-          ) : null}
-
-          {/* End pill — wrapped in a View+Pressable so the inner
-              Pressable's onPress stops bubbling to the body. Same
-              event-isolation tactic as GlobalFocusBanner's End. */}
-          <Pressable
-            onPress={(e) => {
-              e.stopPropagation?.();
-              handleEnd();
-            }}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="End focus session"
-            style={({ pressed }) => ({
-              paddingHorizontal: 12,
-              paddingVertical: 7,
-              borderRadius: 14,
-              backgroundColor: endBg,
-              opacity: pressed ? 0.6 : 1,
-              flexDirection: "row",
-              alignItems: "center",
-            })}
-          >
-            <Svg width={11} height={11} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M6 6h12v12H6z"
-                fill={endLabelColor}
-              />
-            </Svg>
-            <Text
-              className="text-[11.5px]"
-              style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                color: endLabelColor,
-                marginLeft: 5,
-                letterSpacing: 0.2,
-              }}
-            >
-              End
-            </Text>
-          </Pressable>
+            {!sermonCompleted ? (
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  handleOpen();
+                }}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel="Read today's sermon to unlock your apps"
+                style={({ pressed }) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: FOCUS_ACCENT,
+                  opacity: pressed ? 0.86 : 1,
+                  // Accent-tinted glow so the primary button
+                  // reads as the focal point of the strip even
+                  // against busy scroll backgrounds.
+                  shadowColor: FOCUS_ACCENT,
+                  shadowOpacity: 0.55,
+                  shadowRadius: 10,
+                  shadowOffset: { width: 0, height: 4 },
+                  elevation: 6,
+                })}
+              >
+                {/* Play triangle — the universal "open / start"
+                    icon. Offset 1pt right of optical center so
+                    the triangle reads as visually centered (a
+                    raw centered triangle looks slightly left-
+                    weighted because the right vertex is alone). */}
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                  <Path
+                    d="M7 5l13 7-13 7V5z"
+                    fill="#FFFFFF"
+                    stroke="#FFFFFF"
+                    strokeWidth={1.5}
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+              </Pressable>
+            ) : null}
+          </View>
         </View>
       </Pressable>
     </View>

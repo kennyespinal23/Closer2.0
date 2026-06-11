@@ -10,6 +10,8 @@
  * field to each sermon or to each panel, mirror it here.
  */
 
+import type { ImageSourcePropType } from "react-native";
+
 /** One in-sermon panel. Five per sermon, in canonical order:
  *  Hook → Story → Turn → Landing → Prayer. */
 export type SermonPanel = {
@@ -39,6 +41,16 @@ export type SermonRecord = {
   type: string;
   /** Title of the sermon, e.g. `"When God Feels Silent"`. */
   title: string;
+  /** Unsplash search query for the daily scripture screen
+   *  backdrop, e.g. `"misty fog empty forest morning"`. Used
+   *  by `services/unsplashService.js`'s `getDailyImage()` to
+   *  fetch a fresh portrait photo per (day, calendar-date)
+   *  pair, replacing the bundled sky.jpg backdrop.
+   *
+   *  Optional defensively — all 90 entries in the current
+   *  catalog have this field, but typing it as required
+   *  would make a single missing entry crash the daily flow. */
+  imageQuery?: string;
   /** Attributed voice (speaker), e.g. `"Matt Chandler"`. */
   voice: string;
   /** Single string that bundles the reference + verse text,
@@ -48,6 +60,19 @@ export type SermonRecord = {
   scripture: string;
   /** Always 5 entries, in the canonical Hook → Prayer order. */
   panels: SermonPanel[];
+  /** OPTIONAL per-sermon hero illustration. When present, the home
+   *  card / intro screen / narrative panels render THIS image
+   *  instead of the sermon-type's default `illustration`. Used to
+   *  give an individual sermon its own face when the generic
+   *  type-level art doesn't carry the topic strongly enough
+   *  (e.g. "When God Feels Silent" — a phone receiver calling
+   *  into a glowing void — works better than the Daily Church
+   *  cross-on-mountain for that specific story).
+   *
+   *  Path conventions live in `assets/sermon-types/illustrations/`
+   *  alongside the type-level art. Same portrait ~1:1.6 shape so
+   *  it can drop into all three render slots without re-cropping. */
+  illustration?: ImageSourcePropType;
 };
 
 /** The catalog. The runtime guarantees:

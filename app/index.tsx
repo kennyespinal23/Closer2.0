@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { SocialAppCard, type SocialAppKind } from "@/components/SocialAppCard";
 import { FadeIn } from "@/components/FadeIn";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useOnboarding } from "@/state/onboarding";
 
 /**
@@ -132,8 +133,20 @@ export default function GetStartedScreen() {
   const sways = useRef(
     PLACEMENTS.map((p) => new Animated.Value(p.swayPhase)),
   ).current;
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
+    if (reducedMotion) {
+      // Reduce Motion: skip the drop-in spring + idle sway loops
+      // entirely. Cards render in their final resting pose, no
+      // continuous motion, no card-drop animation. The scene is
+      // still composed of all the same illustrated cards, just
+      // static — which is exactly the trade Apple makes in the
+      // OS for vestibular-sensitive users.
+      drops.forEach((v) => v.setValue(1));
+      sways.forEach((v) => v.setValue(0));
+      return;
+    }
     // Drop-in: each card waits its delay, then springs into place.
     Animated.stagger(
       0,
@@ -178,7 +191,7 @@ export default function GetStartedScreen() {
     return () => {
       swayLoops.forEach((loop) => loop.stop());
     };
-  }, [drops, sways]);
+  }, [drops, sways, reducedMotion]);
 
   const handleGetStarted = () => {
     // Wipe any persisted onboarding answers before pushing into

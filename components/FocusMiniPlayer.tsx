@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useSegments } from "expo-router";
 import { Symbol } from "@/components/Symbol";
 import { isShieldSupported } from "@/lib/focus";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useFocus } from "@/state/focus";
 import { useMoments } from "@/state/moments";
 import { didCompleteToday, useProgress } from "@/state/progress";
@@ -213,8 +214,18 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
   // strongest visual cue we have that the session is on hold.
   const pulse = useRef(new Animated.Value(0)).current;
   const isPaused = Boolean(session?.pausedAt);
+  const reducedMotion = useReducedMotion();
   useEffect(() => {
     if (!session || isPaused) return;
+    // Reduce Motion: park the pulse halfway through its arc so the
+    // halo reads as "lit" without ever moving. Holding at 0.5 gives
+    // us the midpoint of the breath without the breathing — same
+    // approach Apple uses on the iOS Now-Playing live indicator
+    // when Reduce Motion is enabled.
+    if (reducedMotion) {
+      pulse.setValue(0.5);
+      return;
+    }
     pulse.setValue(0);
     const loop = Animated.loop(
       Animated.sequence([
@@ -234,7 +245,7 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
     );
     loop.start();
     return () => loop.stop();
-  }, [session, pulse, isPaused]);
+  }, [session, pulse, isPaused, reducedMotion]);
 
   const hidden = shouldHideForSegments(segments);
 

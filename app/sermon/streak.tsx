@@ -6,6 +6,7 @@ import LottieView from "lottie-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { milestoneCopy } from "@/lib/journey";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 // Hero flame animation. Lottie JSON (500×690 native, portrait
 // aspect) lives in `assets/lottie/` and renders in `FlameMark`
@@ -141,7 +142,14 @@ export default function StreakScreen() {
   // pattern as the LivingHeroIcon halo. Tuned to be calm enough not
   // to distract while the user reads the headline / subcopy.
   const flameBreath = useRef(new Animated.Value(0)).current;
+  const reducedMotion = useReducedMotion();
   useEffect(() => {
+    if (reducedMotion) {
+      // Reduce Motion: park the flame at its mid-breath pose so
+      // the icon still reads as "lit" without ever pulsing.
+      flameBreath.setValue(0.5);
+      return;
+    }
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(flameBreath, {
@@ -160,7 +168,7 @@ export default function StreakScreen() {
     );
     loop.start();
     return () => loop.stop();
-  }, [flameBreath]);
+  }, [flameBreath, reducedMotion]);
   const flameScale = flameBreath.interpolate({
     inputRange: [0, 1],
     outputRange: [0.97, 1.05],

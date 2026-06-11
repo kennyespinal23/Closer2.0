@@ -13,6 +13,7 @@ import Svg, {
   Rect,
   Stop,
 } from "react-native-svg";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useColors } from "@/state/theme";
 
 /**
@@ -84,8 +85,19 @@ export function LivingHeroIcon({
   // prevents synchronization).
   const float = useRef(new Animated.Value(0)).current;
   const breath = useRef(new Animated.Value(0)).current;
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
+    // Reduce Motion: park both values at the midpoint of their
+    // arcs (0.5) so the icon renders in its visual median pose —
+    // no float bob, no breath pulse, no halo throb. The static
+    // pose still reads "alive" because the lit halo + pedestal
+    // are colored, but motion is fully suppressed.
+    if (reducedMotion) {
+      float.setValue(0.5);
+      breath.setValue(0.5);
+      return;
+    }
     const floatLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(float, {
@@ -124,7 +136,7 @@ export function LivingHeroIcon({
       floatLoop.stop();
       breathLoop.stop();
     };
-  }, [float, breath]);
+  }, [float, breath, reducedMotion]);
 
   // Float interpolation: 0 → -4pt at the apex, 1 → +4pt at the
   // trough. ±4pt is the sweet spot — perceptible without feeling

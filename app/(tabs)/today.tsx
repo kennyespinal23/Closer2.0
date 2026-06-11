@@ -3,9 +3,10 @@ import {
   Alert,
   Animated,
   Easing,
-  Image,
+  type ImageSourcePropType,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,7 +15,8 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Image } from "expo-image";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, {
   Defs,
   LinearGradient,
@@ -32,6 +34,7 @@ import { LivingHeroIcon } from "@/components/LivingHeroIcon";
 import { ShieldOverlay } from "@/components/ShieldOverlay";
 import { cancelDailyReminder } from "@/lib/notifications";
 import * as haptics from "@/lib/haptics";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import { buildMonthGrid, type RhythmCellState } from "@/lib/rhythm";
 import {
   momentDurationMin,
@@ -297,6 +300,15 @@ export default function TodayScreen() {
     () => resolveSermonTypeForMoment(todaysMoment),
     [todaysMoment],
   );
+
+  // TEMP — true when today's sermon is the Gentler-Streak A/B test
+  // ("When God Feels Silent"). Drives a fully restructured top-of-
+  // page layout: header chrome is hidden, the editorial hero takes
+  // over the top of the screen edge-to-edge, and the regular
+  // SermonCard render is skipped. See GentlerStreakSermonCard.
+  const isGentlerStreakTest =
+    todaysMoment.title === GENTLER_STREAK_TEST_TITLE &&
+    Boolean(sermonType.illustration);
   // Used by the sermon card meta line + the intro screen; computed
   // here (rather than re-derived inside SermonCard) so the same
   // number renders in both places.
@@ -462,7 +474,15 @@ export default function TodayScreen() {
             Together this gives the home page a strong typographic
             anchor and reads as a curated daily edition rather than
             a stack of cards. The avatar + streak stay in their
-            existing positions so nothing is functionally lost. */}
+            existing positions so nothing is functionally lost.
+
+            TEMP — when the Gentler-Streak A/B test sermon is the
+            day's moment, the entire header chrome is suppressed
+            so the editorial hero (rendered below) can take over
+            the top of the screen edge-to-edge. The avatar then
+            floats overlaid on the hero image itself, the way
+            Gentler Streak places its profile chip. */}
+        {!isGentlerStreakTest ? (
         <View className="px-6 pt-1">
           {/* Top thin row — purely chrome. ONLY the monogram
               avatar lives here now; the streak chip that used
@@ -604,6 +624,7 @@ export default function TodayScreen() {
               : "Daily Devotional"}
           </Text>
         </View>
+        ) : null}
 
         {/* ─── Today's Sermon — the hero ──────────────────────────
             Promoted to the FIRST big element below the header. The
@@ -617,6 +638,30 @@ export default function TodayScreen() {
             routine card. Promoting it removes three small chips
             from the user's path-to-engagement; the supporting
             sections drop below the timeline.) */}
+        {/* TEMP — Gentler-Streak full-bleed editorial hero.
+            When today is the A/B test sermon ("When God Feels
+            Silent") the card takes over the top of the page
+            edge-to-edge, with the avatar floating overlaid on
+            the image (the regular header was suppressed above).
+            No FadeIn wrapper, no top margin — the image IS the
+            page top. Remove this block (and the
+            GentlerStreakSermonCard component) to revert. */}
+        {isGentlerStreakTest && sermonType.illustration ? (
+          <GentlerStreakSermonCard
+            illustration={sermonType.illustration}
+            title={todaysMoment.title}
+            blurb={GENTLER_STREAK_TEST_BLURB}
+            closer={GENTLER_STREAK_TEST_CLOSER}
+            firstName={firstName}
+            // Drives the "NEW" badge — pill renders only when
+            // today's devotional hasn't been completed yet so
+            // a returning reader doesn't see a permanent label
+            // on a card they've already read.
+            completed={hasCompletedSermonForDay(todaysMoment.day)}
+            onPress={handlePlaySermon}
+            onProfilePress={handleOpenProfile}
+          />
+        ) : (
         <FadeIn delayMs={80} durationMs={900}>
           {/* No px-6 here — the SermonCard now paints an
               ambient radial halo that needs to bleed edge-to-
@@ -689,6 +734,7 @@ export default function TodayScreen() {
               />
           </View>
         </FadeIn>
+        )}
 
         {/* ─── App Blocks — scheduled focus rituals ────────────────
             The user explicitly asked for a list of "the times the
@@ -1305,7 +1351,10 @@ function AppBlockRow({
       </View>
       <Switch
         value={session.enabled}
-        onValueChange={onToggle}
+        onValueChange={(next) => {
+          haptics.tick();
+          onToggle(next);
+        }}
         // iOS-style green track for on, neutral surface for off —
         // matches Settings.app affordance so the toggle reads as
         // "this is the system switch" without any custom learning.
@@ -1606,6 +1655,460 @@ type SermonCardProps = {
   onPress: () => void;
 };
 
+// ─────────────────────────────────────────────────────────────────
+// TEMP: Gentler-Streak-style editorial hero card (test variant)
+//
+// One-off A/B test of an editorial home hero modeled on Gentler
+// Streak's "Day to Rest and Recover" card: a single rounded
+// surface with a full-bleed illustration on top and a soft body
+// section beneath holding a personal greeting, the title, and a
+// 3–4 sentence editorial blurb. The whole card is the tap target
+// (small play affordance in the title row mirrors Gentler
+// Streak's eye glyph) so the layout reads as a "magazine cover"
+// rather than a button stack.
+//
+// Currently gated to the "When God Feels Silent" sermon so we
+// can preview the layout side-by-side with the existing
+// ImprintSermonCard for every other day of the catalog. The copy
+// is hardcoded here for the test — if the layout sticks we'll
+// promote the blurb to a per-sermon `blurb` field on
+// sermons.js and lift this component into its own file.
+// ─────────────────────────────────────────────────────────────────
+
+const GENTLER_STREAK_TEST_TITLE = "When God Feels Silent";
+
+// Editorial blurb shown beneath the title. Split into a quiet
+// "context" paragraph (regular weight, muted ink) and a punchy
+// closing line (heavier weight, full ink) that lands as the
+// real invitation — the same one-two beat Apple News and
+// Gentler Streak use in their hero cards (long calm setup,
+// short bold payoff). The previous draft included a third
+// "There's a man in scripture named Lazarus…" sentence between
+// the two, which broke the rhythm by inserting a scriptural
+// example before the reader was asked to lean in. Removed at
+// the user's request so the closing invitation lands sooner.
+const GENTLER_STREAK_TEST_BLURB =
+  "Many of us have felt God has gone quiet at some point — like our prayers are hitting a ceiling and nothing is coming back.";
+const GENTLER_STREAK_TEST_CLOSER =
+  "Today's devotional is for anyone who has ever sat in that silence.";
+
+function GentlerStreakSermonCard({
+  illustration,
+  title,
+  blurb,
+  closer,
+  firstName,
+  completed,
+  onPress,
+  onProfilePress,
+}: {
+  illustration: ImageSourcePropType;
+  title: string;
+  /** Long-form context paragraph (regular weight, muted ink). */
+  blurb: string;
+  /** Short closing invitation line (heavier weight, full ink) —
+   *  the editorial payoff that justifies the Read Now CTA right
+   *  underneath. */
+  closer: string;
+  firstName: string;
+  /** True if the user has already completed today's devotional —
+   *  drives the "NEW" badge: shown ONLY for unread devotionals so
+   *  the pill reads as "fresh content waiting for you" rather
+   *  than a permanent label on the card. */
+  completed: boolean;
+  onPress: () => void;
+  onProfilePress: () => void;
+}) {
+  const colors = useColors();
+  const { width: screenWidth } = useWindowDimensions();
+  // Safe-area top inset — used to push the hero image UP behind
+  // the status bar so the photo bleeds to the top edge of the
+  // screen (Gentler Streak's pattern). The parent SafeAreaView
+  // adds insets.top of padding to ScrollView content; we negate
+  // it here on the image View so this single card escapes the
+  // safe area while the rest of the page stays safely inside.
+  const insets = useSafeAreaInsets();
+
+  // Time-of-day greeting — Gentler Streak's "Hi Alex," softened
+  // with a part-of-day cue so the card reads as a current,
+  // present-tense address rather than a generic salutation. The
+  // SALUTATION (Good morning, /Good evening,) sits in muted ink;
+  // the NAME pops in the editorial red so the user's own name
+  // becomes the warm anchor of the page — same accent the
+  // "Daily Devotional" header used on the previous home layout
+  // so the brand voice carries through even with that header
+  // dropped.
+  const { salutation, name } = useMemo(() => {
+    const hour = new Date().getHours();
+    const resolvedName =
+      firstName && firstName !== "friend" ? firstName : "friend";
+    let salute: string;
+    if (hour < 12) salute = "Good morning, ";
+    else if (hour < 17) salute = "Good afternoon, ";
+    else if (hour < 22) salute = "Good evening, ";
+    else salute = "Hi, ";
+    return { salutation: salute, name: resolvedName };
+  }, [firstName]);
+
+  // Hero image height tuned to mirror Gentler Streak's
+  // proportion — the illustration takes roughly the upper
+  // third of an iPhone Pro viewport (~35%, not half), so the
+  // body section ("Hi {name}," + title + blurb) gets real room
+  // to breathe beneath it instead of crowding the bottom edge.
+  // 320pt = ~37% of an iPhone 14 Pro (844pt) and ~48% of an
+  // iPhone SE (667pt), keeping the image dominant on small
+  // viewports without overwhelming the body on the standard
+  // Pro size. NOTE: this is the VISIBLE height inside the
+  // safe-area-respecting layout flow. The actual rendered
+  // image View is `heroHeight + insets.top` tall and uses a
+  // negative top margin to reach pixel y=0 of the screen, so
+  // the photo bleeds behind the status bar.
+  const heroHeight = 320;
+
+  return (
+    <View style={{ width: "100%" }}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`Begin ${title}`}
+        style={({ pressed }) => ({ opacity: pressed ? 0.97 : 1 })}
+      >
+        {/* ── Hero illustration — FULL-BLEED, behind status bar ─
+            No card chrome, no rounded corners, no border. The
+            image IS the top of the page (Gentler Streak's
+            "Day to Rest and Recover" pattern). Closer's
+            illustrations ship with baked-in dark backdrops so
+            the hero gets a true-black fallback fill — the photo
+            sits on that without exposing the page bg where the
+            image doesn't fully cover.
+
+            Negative top margin equal to the safe-area inset
+            pulls the View up so its top edge sits at pixel y=0
+            of the screen (behind the iOS status bar). The
+            View's height is grown by the same amount so the
+            visible photo area still measures `heroHeight` from
+            below the status bar down — i.e. layout consumption
+            stays at `heroHeight` while the rendered image
+            extends UPWARD into the inset region. The previous
+            hard horizontal line where the status-bar safe area
+            ended and the image began is gone. */}
+        <View
+          style={{
+            width: screenWidth,
+            height: heroHeight + insets.top,
+            marginTop: -insets.top,
+            backgroundColor: "#000000",
+            position: "relative",
+          }}
+        >
+          <Image
+            source={illustration}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="cover"
+            transition={300}
+            accessibilityIgnoresInvertColors
+          />
+
+          {/* Top legibility fade — dark gradient under the
+              status bar so the iOS time/icons (and our overlaid
+              NEW badge + profile chip) read cleanly against any
+              photo crop. Sized to cover the safe-area inset plus
+              ~64pt below it. */}
+          <Svg
+            pointerEvents="none"
+            width={screenWidth}
+            height={insets.top + 64}
+            style={{ position: "absolute", top: 0, left: 0 }}
+          >
+            <Defs>
+              <LinearGradient
+                id="gentlerHeroTopFade"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2={insets.top + 64}
+                gradientUnits="userSpaceOnUse"
+              >
+                <Stop offset="0" stopColor="#000000" stopOpacity={0.45} />
+                <Stop offset="1" stopColor="#000000" stopOpacity={0} />
+              </LinearGradient>
+            </Defs>
+            <Rect
+              width={screenWidth}
+              height={insets.top + 64}
+              fill="url(#gentlerHeroTopFade)"
+            />
+          </Svg>
+
+          {/* Bottom dissolve — tiny feather that just kisses
+              the lower edge into the page bg without
+              shadowing the focal subject. Iteration history:
+              v1 140pt (heavy blur on lower half), v2 72pt
+              (still felt like a haze), v3 (this) 36pt — only
+              the last ~11% of the hero dissolves, which kills
+              the hard seam without painting any of the image
+              itself. Theme-aware via colors.bg. */}
+          <Svg
+            pointerEvents="none"
+            width={screenWidth}
+            height={36}
+            style={{ position: "absolute", bottom: 0, left: 0 }}
+          >
+            <Defs>
+              <LinearGradient
+                id="gentlerHeroBottomFade"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2={36}
+                gradientUnits="userSpaceOnUse"
+              >
+                <Stop offset="0" stopColor={colors.bg} stopOpacity={0} />
+                <Stop offset="1" stopColor={colors.bg} stopOpacity={1} />
+              </LinearGradient>
+            </Defs>
+            <Rect
+              width={screenWidth}
+              height={36}
+              fill="url(#gentlerHeroBottomFade)"
+            />
+          </Svg>
+
+          {/* "NEW" badge — Gentler-Streak's "Highlight" pill
+              equivalent. Surfaced only when the user has NOT
+              yet completed today's devotional so the pill
+              functions as a "fresh, waiting for you" cue
+              rather than a permanent label. Dark capsule with
+              white uppercase text reads against either a dark
+              illustration or a light one because the
+              top-fade above gives it a guaranteed contrast
+              floor. Offset by insets.top so it lands just
+              below the status bar. */}
+          {!completed ? (
+            <View
+              pointerEvents="none"
+              style={{
+                position: "absolute",
+                top: insets.top + 10,
+                left: 16,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 999,
+                backgroundColor: "rgba(0, 0, 0, 0.78)",
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: "rgba(255, 255, 255, 0.12)",
+              }}
+              accessibilityElementsHidden
+            >
+              <Text
+                style={{
+                  color: "#FFFFFF",
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontSize: 11,
+                  letterSpacing: 1.8,
+                }}
+              >
+                NEW
+              </Text>
+            </View>
+          ) : null}
+
+          {/* Profile avatar overlay — pinned to the image's
+              top-right corner, same monogram chip we use in
+              the regular home header. Offset by insets.top so
+              it clears the status bar. */}
+          <Pressable
+            hitSlop={12}
+            onPress={onProfilePress}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+            style={({ pressed }) => ({
+              position: "absolute",
+              top: insets.top + 8,
+              right: 16,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: "rgba(255, 255, 255, 0.18)",
+              borderWidth: 1,
+              borderColor: "rgba(255, 255, 255, 0.28)",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Text
+              style={{
+                color: "#FFFFFF",
+                fontFamily: "PlusJakartaSans_700Bold",
+                fontSize: 14,
+              }}
+            >
+              {firstName.charAt(0).toUpperCase()}
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* ── Body section — sits flush against page bg ──────
+            No card chrome. Reads as page-native editorial
+            content the way Gentler Streak's body sits flush on
+            the white sheet beneath the illustration band.
+            Generous horizontal padding (22pt) matches the
+            sermon panel's reading rhythm. */}
+        <View style={{ paddingHorizontal: 22, paddingTop: 22, paddingBottom: 26 }}>
+          {/* Personal greeting — quiet salutation in muted ink
+              ("Good morning, ") with the NAME in editorial red
+              so the user's own name becomes the warm anchor at
+              the top of the page. Same #E11D48 the previous
+              "Daily Devotional" section header used so the
+              brand accent carries through even after that
+              header was suppressed. */}
+          <Text
+            style={{
+              fontSize: 15,
+              lineHeight: 20,
+              letterSpacing: -0.1,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_500Medium",
+                color: colors.inkMuted,
+              }}
+            >
+              {salutation}
+            </Text>
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                color: HOME_SECTION_ACCENT,
+              }}
+            >
+              {name}
+            </Text>
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_500Medium",
+                color: colors.inkMuted,
+              }}
+            >
+              .
+            </Text>
+          </Text>
+
+          {/* Editorial title — ExtraBold (heavier than the
+              earlier 700 Bold) and tighter tracking so the
+              page anchor lands with real weight, the way
+              Gentler Streak's "Day to Rest and Recover" does.
+              The standalone play-glyph chip that used to sit
+              to its right was dropped — with a real "Read Now"
+              CTA at the bottom of the card the small chip
+              became a duplicate affordance competing with the
+              primary button for the eye. */}
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_800ExtraBold",
+              color: colors.ink,
+              fontSize: 30,
+              lineHeight: 36,
+              letterSpacing: -0.8,
+              marginTop: 6,
+            }}
+            accessibilityRole="header"
+          >
+            {title}
+          </Text>
+
+          {/* Editorial blurb — long context paragraph in
+              regular weight, muted ink. Same body type as the
+              sermon panels (Plus Jakarta 16/24) so the home
+              preview reads of-a-piece with the prose the
+              reader will meet inside the sermon. */}
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_400Regular",
+              color: colors.inkMuted,
+              fontSize: 16,
+              lineHeight: 24,
+              letterSpacing: -0.1,
+              marginTop: 14,
+            }}
+          >
+            {blurb}
+          </Text>
+
+          {/* Closing line — punchier weight + full ink color so
+              this lands as the real INVITATION at the end of
+              the editorial setup. Apple News pull-quote energy:
+              short, heavier, sits on the reader's mind as the
+              last thing they read before the CTA. */}
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              color: colors.ink,
+              fontSize: 17,
+              lineHeight: 24,
+              letterSpacing: -0.2,
+              marginTop: 14,
+            }}
+          >
+            {closer}
+          </Text>
+
+          {/* Read Now CTA — primary editorial button, editorial
+              red to match the brand accent established by the
+              greeting's name color. Full-width pill consistent
+              with the sermon flow's Continue pill so the visual
+              language of "tap this to begin" is uniform from
+              home → sermon → completion. */}
+          <Pressable
+            onPress={onPress}
+            accessibilityRole="button"
+            accessibilityLabel={completed ? "Read again" : "Read now"}
+            style={({ pressed }) => ({
+              marginTop: 22,
+              backgroundColor: HOME_SECTION_ACCENT,
+              borderRadius: 999,
+              paddingVertical: 16,
+              paddingHorizontal: 24,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: pressed ? 0.92 : 1,
+              shadowColor: HOME_SECTION_ACCENT,
+              shadowOpacity: 0.32,
+              shadowRadius: 16,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 4,
+            })}
+          >
+            <Text
+              style={{
+                color: "#FFFFFF",
+                fontFamily: "PlusJakartaSans_700Bold",
+                fontSize: 15,
+                letterSpacing: 0.2,
+                marginRight: 10,
+              }}
+            >
+              {completed ? "Read Again" : "Read Now"}
+            </Text>
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M5 12h14M13 6l6 6-6 6"
+                stroke="#FFFFFF"
+                strokeWidth={2.4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </Pressable>
+        </View>
+      </Pressable>
+    </View>
+  );
+}
+
 function SermonCard({
   type,
   title,
@@ -1731,7 +2234,8 @@ function SermonCard({
               // requires, instead of letterboxing. The source
               // assets are composed to keep the focal subject in
               // the middle so cover-crop is safe.
-              resizeMode="cover"
+              contentFit="cover"
+              transition={260}
               accessibilityIgnoresInvertColors
             />
             {/* Top legibility gradient — short fade so the
@@ -2473,7 +2977,8 @@ function ImprintCardVisual({
               <Image
                 source={type.illustration}
                 style={{ width: "100%", height: "100%" }}
-                resizeMode="cover"
+                contentFit="cover"
+                transition={260}
                 accessibilityIgnoresInvertColors
               />
               {/* Bottom dissolve into card interior. */}
@@ -2817,8 +3322,13 @@ function ActiveFocusHero({
   // matches the logical "I've stopped the clock" intent.
   const pulse = useRef(new Animated.Value(0)).current;
   const isPaused = Boolean(session.pausedAt);
+  const reducedMotionActive = useReducedMotion();
   useEffect(() => {
     if (isPaused) return;
+    if (reducedMotionActive) {
+      pulse.setValue(0.5);
+      return;
+    }
     pulse.setValue(0);
     const loop = Animated.loop(
       Animated.sequence([
@@ -2838,7 +3348,7 @@ function ActiveFocusHero({
     );
     loop.start();
     return () => loop.stop();
-  }, [isPaused, pulse]);
+  }, [isPaused, pulse, reducedMotionActive]);
 
   // Effective elapsed math — same formula as FocusMiniPlayer and
   // ActiveFocusCard. Kept inline (rather than extracted to a
@@ -3394,7 +3904,12 @@ function ReadAgainPill({ accent }: { accent: string }) {
   // attention but it never lies fully still either, so the eye
   // returns to it after settling on the title above.
   const breath = useRef(new Animated.Value(0)).current;
+  const reducedMotionActive = useReducedMotion();
   useEffect(() => {
+    if (reducedMotionActive) {
+      breath.setValue(0.5);
+      return;
+    }
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(breath, {
@@ -4851,7 +5366,10 @@ function RoutineCard({
         ) : (
           <Switch
             value={masterEnabled}
-            onValueChange={onToggle}
+            onValueChange={(next) => {
+              haptics.tick();
+              onToggle(next);
+            }}
             trackColor={{
               false: withAlpha(colors.ink, 0.1),
               true: FOCUS_ACCENT,

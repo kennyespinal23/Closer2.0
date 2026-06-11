@@ -442,6 +442,11 @@ function WeekRingStrip({ rows }: { rows: ReadonlyArray<WeekRow> }) {
             size={36}
             stroke={4}
             showTip={false}
+            // Mini rings in the 7-day week strip render as a tight
+            // grid — animating all seven in unison is visual noise,
+            // not the deliberate "live" cue the hero ring is doing.
+            // Snap straight to value.
+            animate={false}
           />
           <Text
             className={`text-[10.5px] tracking-[1px] mt-2 ${

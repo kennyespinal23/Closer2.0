@@ -1,4 +1,5 @@
-import { View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Easing, View } from "react-native";
 import Svg, { Circle, G, Path } from "react-native-svg";
 import { useColors } from "@/state/theme";
 
@@ -21,6 +22,18 @@ import { useColors } from "@/state/theme";
  * 12-o'clock position (matching the natural mental model of "the
  * top of the ring"). Without that, fills would start at 3-o'clock.
  *
+ * Animation:
+ *   The ring animates from its previous fill to the new fill on
+ *   every prop change, just like Apple Fitness: each time you
+ *   open the Activity app it redraws the rings from 0 → today's
+ *   value with an ease-out cubic over ~900ms. This is the single
+ *   biggest cue that the ring is "live" rather than a static
+ *   progress badge. The animation is JS-driven (the arc length is
+ *   an SVG stroke-dash prop that can't ride the native driver) —
+ *   that's fine at 60fps because the SVG is tiny. We skip the
+ *   animation when the same value is set back-to-back so we don't
+ *   replay it for unrelated parent re-renders.
+ *
  * `RING_ACCENT` is exported as the canonical color so the home
  * pill, detail screen, and any other ring callers share the same
  * hue. iOS system blue (the dark-mode variant, `#0A84FF`) — picked
@@ -31,6 +44,8 @@ import { useColors } from "@/state/theme";
  * themes without overpowering the brand.
  */
 export const RING_ACCENT = "#0A84FF";
+
+const FILL_DURATION_MS = 900;
 
 export type ActivityRingProps = {
   /** 0..1 — clipped internally. Values >1 cap at 1 (full ring). */
@@ -55,6 +70,14 @@ export type ActivityRingProps = {
   color?: string;
   /** Override the track (unfilled) color. Defaults to the theme border. */
   trackColor?: string;
+  /**
+   * Skip the fill animation and snap straight to `pct`. Used by
+   * mini rings inside dense grids (WeekStrip, RhythmGrid) where
+   * 30+ rings animating in unison would be visual noise rather
+   * than a single "live" cue. The hero ring on Home always
+   * animates.
+   */
+  animate?: boolean;
 };
 
 export function ActivityRing({
@@ -65,9 +88,49 @@ export function ActivityRing({
   showTip = true,
   color,
   trackColor,
+  animate = true,
 }: ActivityRingProps) {
   const colors = useColors();
-  const clampedPct = Math.max(0, Math.min(1, pct));
+  const targetPct = Math.max(0, Math.min(1, pct));
+
+  // We keep two values in lockstep:
+  //   • animatedValue — the actual Animated.Value driving the
+  //     timing; lives in a ref so it survives re-renders without
+  //     restarting from 0.
+  //   • displayPct — a React state mirror of animatedValue, set
+  //     via a listener. We render off this so SVG props re-paint
+  //     each frame. JS-driven animation isn't free, but a single
+  //     value pumping at 60fps for 900ms is well under a frame
+  //     budget on any device this app targets.
+  const animatedValue = useRef(new Animated.Value(animate ? 0 : targetPct))
+    .current;
+  const [displayPct, setDisplayPct] = useState(animate ? 0 : targetPct);
+
+  useEffect(() => {
+    if (!animate) {
+      animatedValue.setValue(targetPct);
+      setDisplayPct(targetPct);
+      return;
+    }
+    const id = animatedValue.addListener(({ value }) => {
+      setDisplayPct(value);
+    });
+    Animated.timing(animatedValue, {
+      toValue: targetPct,
+      duration: FILL_DURATION_MS,
+      // ease-out cubic mirrors the deceleration curve Apple uses
+      // for Fitness ring fills — the arc decelerates as it
+      // approaches its terminal angle so the moment of arrival
+      // feels deliberate rather than mechanical.
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+    return () => {
+      animatedValue.removeListener(id);
+    };
+  }, [targetPct, animate, animatedValue]);
+
+  const clampedPct = Math.max(0, Math.min(1, displayPct));
   const cx = size / 2;
   const cy = size / 2;
   const r = (size - stroke) / 2;

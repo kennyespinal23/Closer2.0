@@ -3,7 +3,7 @@ import { Alert, Animated, Easing, Platform, Pressable, Text, View } from "react-
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useSegments } from "expo-router";
-import Svg, { Path } from "react-native-svg";
+import { Symbol } from "@/components/Symbol";
 import { isShieldSupported } from "@/lib/focus";
 import { useFocus } from "@/state/focus";
 import { useMoments } from "@/state/moments";
@@ -483,36 +483,28 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
               {sermonCompleted ? (
                 // Check inside a shield — sermon's been read, the
                 // session has fulfilled its purpose, the user is
-                // just riding it out. The icon mirrors that.
-                <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M20 6L9 17l-5-5"
-                    stroke={FOCUS_ACCENT}
-                    strokeWidth={2.4}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
+                // just riding it out. Native SF Symbol so the
+                // glyph adopts iOS' system stroke weight + the
+                // exact terminal-cap rounding Apple ships in
+                // first-party apps.
+                <Symbol
+                  name="checkmark"
+                  size={14}
+                  weight="bold"
+                  color={FOCUS_ACCENT}
+                />
               ) : (
                 // Lock — explicit "your apps are locked" metaphor.
                 // The shield→sermon→unlock loop is the core promise
                 // of the app, and the lock makes the locked half
-                // of that loop unmistakable at a glance.
-                <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M6 10V8a6 6 0 1112 0v2"
-                    stroke={FOCUS_ACCENT}
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                  />
-                  <Path
-                    d="M5 10h14v10H5z"
-                    fill={FOCUS_ACCENT}
-                    stroke={FOCUS_ACCENT}
-                    strokeWidth={1.5}
-                    strokeLinejoin="round"
-                  />
-                </Svg>
+                // of that loop unmistakable at a glance. `lock.fill`
+                // is the canonical iOS "secured" glyph (Settings,
+                // Privacy, Screen Time all use it).
+                <Symbol
+                  name="lock.fill"
+                  size={14}
+                  color={FOCUS_ACCENT}
+                />
               )}
             </View>
           </View>
@@ -602,14 +594,12 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
                 opacity: pressed ? 0.55 : 1,
               })}
             >
-              <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M6 6l12 12M18 6L6 18"
-                  stroke={endLabelColor}
-                  strokeWidth={2.4}
-                  strokeLinecap="round"
-                />
-              </Svg>
+              <Symbol
+                name="xmark"
+                size={12}
+                weight="bold"
+                color={endLabelColor}
+              />
             </Pressable>
             {!sermonCompleted ? (
               <Pressable
@@ -639,19 +629,11 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
                 })}
               >
                 {/* Play triangle — the universal "open / start"
-                    icon. Offset 1pt right of optical center so
-                    the triangle reads as visually centered (a
-                    raw centered triangle looks slightly left-
-                    weighted because the right vertex is alone). */}
-                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M7 5l13 7-13 7V5z"
-                    fill="#FFFFFF"
-                    stroke="#FFFFFF"
-                    strokeWidth={1.5}
-                    strokeLinejoin="round"
-                  />
-                </Svg>
+                    icon. SF Symbol so the glyph carries Apple's
+                    own optical centering (the system bakes the
+                    1pt nudge-right that a raw centered triangle
+                    needs to read as visually balanced). */}
+                <Symbol name="play.fill" size={14} color="#FFFFFF" />
               </Pressable>
             ) : null}
           </View>

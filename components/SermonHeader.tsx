@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
 import { useRouter } from "expo-router";
+import { Symbol } from "@/components/Symbol";
 import { useColors } from "@/state/theme";
 
 type SermonHeaderProps = {
@@ -71,14 +71,7 @@ export function SermonHeader({ progress, step }: SermonHeaderProps) {
           onPress={handleClose}
           className="w-10 h-10 rounded-full items-center justify-center bg-surface border border-border"
         >
-          <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M6 6l12 12M6 18L18 6"
-              stroke={colors.ink}
-              strokeWidth={2}
-              strokeLinecap="round"
-            />
-          </Svg>
+          <Symbol name="xmark" size={14} weight="semibold" color={colors.ink} />
         </Pressable>
 
         {showProgress ? (

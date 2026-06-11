@@ -1,4 +1,5 @@
-import { Image, Text, View, type ImageStyle, type StyleProp, type ViewStyle } from "react-native";
+import { Text, View, type ImageStyle, type StyleProp, type ViewStyle } from "react-native";
+import { Image } from "expo-image";
 import Svg, {
   Defs,
   LinearGradient,
@@ -61,7 +62,8 @@ export function BookCover({
       >
         <Image
           source={cover}
-          resizeMode="cover"
+          contentFit="cover"
+          transition={200}
           style={[{ width: "100%", height: "100%" }, imageStyle]}
         />
       </View>

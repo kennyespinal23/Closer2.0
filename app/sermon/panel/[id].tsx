@@ -2,18 +2,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  Image,
   Pressable,
   ScrollView,
   Text,
   useWindowDimensions,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FocusBanner } from "@/components/FocusBanner";
 import { SermonHeader } from "@/components/SermonHeader";
+import { Symbol } from "@/components/Symbol";
 import {
   SERMON_STEPS,
   sermonProgressFor,
@@ -547,7 +548,8 @@ export default function SermonPanelScreen() {
               <Image
                 source={type.illustration}
                 style={{ width: "100%", height: "100%" }}
-                resizeMode="cover"
+                contentFit="cover"
+                transition={260}
                 accessibilityIgnoresInvertColors
               />
               <Svg
@@ -884,15 +886,7 @@ function ImprintContinuePill({
           {displayLabel}
         </Text>
         {showArrowGlyph ? (
-          <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M5 12h14M13 6l6 6-6 6"
-              stroke="#FFFFFF"
-              strokeWidth={2.4}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
+          <Symbol name="arrow.right" size={15} weight="bold" color="#FFFFFF" />
         ) : null}
       </View>
     </Pressable>
@@ -974,14 +968,7 @@ function PrayerCloseHeader({ onClose }: { onClose: () => void }) {
             justifyContent: "center",
           }}
         >
-          <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M6 6l12 12M6 18L18 6"
-              stroke={colors.ink}
-              strokeWidth={2}
-              strokeLinecap="round"
-            />
-          </Svg>
+          <Symbol name="xmark" size={12} weight="semibold" color={colors.ink} />
         </View>
       </Pressable>
     </View>

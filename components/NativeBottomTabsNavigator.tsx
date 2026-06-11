@@ -211,13 +211,16 @@ function resolveSFSymbols(
  * In an expo-router layout you'll typically wrap `Navigator` with
  * `withLayoutContext` and re-export it as your own `<NativeTabs>`
  * component — see `app/(tabs)/_layout.tsx` for the canonical use.
+ *
+ * React Navigation v7 dropped the generic arguments from
+ * `createNavigatorFactory` (the typed `Screen` callback infers
+ * options/events from the navigator component instead), so the
+ * factory call is plain — the navigator's own typed Props above
+ * are what carries the option/event shapes downstream.
  */
-export const createNativeBottomTabsNavigator = createNavigatorFactory<
-  TabNavigationState<ParamListBase>,
-  NativeBottomTabsScreenOptions,
-  NativeBottomTabsNavigationEventMap,
-  typeof NativeBottomTabsNavigator
->(NativeBottomTabsNavigator);
+export const createNativeBottomTabsNavigator = createNavigatorFactory(
+  NativeBottomTabsNavigator,
+);
 
 // `RouteProp` is re-exported as a convenience for screen-level
 // hooks that need the typed `route.params` of a sibling tab. Kept

@@ -27,12 +27,11 @@ import Svg, {
   Rect,
   Stop,
 } from "react-native-svg";
+import { BlurView } from "expo-blur";
 import * as haptics from "@/lib/haptics";
 import { NoteEditor } from "@/components/NoteEditor";
 import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
-import { AppleSheet, SheetContent } from "@/components/AppleSheet";
-import { Symbol } from "@/components/Symbol";
 import { BOOKS, findBookById } from "@/constants/books";
 import {
   CATEGORY_COVER_PALETTE,
@@ -2293,38 +2292,69 @@ function ReaderToolbar({
   onOpenReadingGoal: () => void;
 }) {
   const colors = useColors();
-  // Tracks which sheet is currently active so the toolbar pill can
-  // tint the matching button while the sheet is presented (mirrors
-  // the previous inline-popover behavior). Driven by the sheet
-  // present/dismiss callbacks, not toolbar taps directly — that
-  // way if the user swipes the sheet down to dismiss it natively,
-  // the toolbar tint releases at exactly the same moment.
-  const [openSheet, setOpenSheet] = useState<ToolbarSection>(null);
+  const [section, setSection] = useState<ToolbarSection>(null);
   const goalReached = todayMinutes >= goalMinutes;
 
-  const openThemes = () => {
-    haptics.soft();
-    setOpenSheet("themes");
-    AppleSheet.present("themes");
-  };
-  const openGoal = () => {
-    haptics.soft();
-    setOpenSheet("goal");
-    AppleSheet.present("goal");
-  };
+  const toggle = (next: ToolbarSection) =>
+    setSection((cur) => (cur === next ? null : next));
 
   return (
     <>
-      {/* The always-visible icon pill itself.
-          The previous build mounted two inline glass popovers
-          above this pill, dismissable via a backdrop. Both
-          popovers have been promoted to real iOS `UISheetPresentation`
-          sheets (TrueSheet) further down — the toolbar now just
-          presents them imperatively. Net effect: same controls,
-          but now the panel that slides up is the exact same
-          native sheet UIKit uses for Apple-Mail compose, Maps
-          share-location, etc. — including system grabber, edge
-          drag, and Liquid Glass material on iOS 26+. */}
+      {/* Backdrop: invisible, taps it to dismiss any open popover.
+          Only rendered while a popover is open so it doesn't eat
+          taps on the page text the rest of the time. */}
+      {section ? (
+        <Pressable
+          onPress={() => setSection(null)}
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+          }}
+        />
+      ) : null}
+
+      {/* Popover container — sits above the page caption + icon
+          pill so the two read as a connected stack and the popover
+          never visually clashes with the chapter caption. */}
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 100,
+          alignItems: "center",
+        }}
+      >
+        {section === "themes" ? (
+          <ThemesPopover
+            textSizeId={textSizeId}
+            onChangeTextSize={(id) => {
+              onChangeTextSize(id);
+            }}
+            translation={translation}
+            onChangeTranslation={() => {
+              setSection(null);
+              onChangeTranslation();
+            }}
+          />
+        ) : null}
+        {section === "goal" ? (
+          <GoalPopover
+            todayMinutes={todayMinutes}
+            goalMinutes={goalMinutes}
+            onOpen={() => {
+              setSection(null);
+              onOpenReadingGoal();
+            }}
+          />
+        ) : null}
+      </View>
+
+      {/* The always-visible icon pill itself. */}
       <View
         pointerEvents="box-none"
         style={{
@@ -2349,7 +2379,10 @@ function ReaderToolbar({
         >
           <ToolbarIconButton
             accessibilityLabel="Open chapter contents"
-            onPress={onContents}
+            onPress={() => {
+              setSection(null);
+              onContents();
+            }}
             active={false}
           >
             <ContentsListIcon />
@@ -2357,8 +2390,8 @@ function ReaderToolbar({
           <ToolbarPipDivider />
           <ToolbarIconButton
             accessibilityLabel="Text size and translation"
-            onPress={openThemes}
-            active={openSheet === "themes"}
+            onPress={() => toggle("themes")}
+            active={section === "themes"}
           >
             <Text
               style={{
@@ -2373,59 +2406,13 @@ function ReaderToolbar({
           <ToolbarPipDivider />
           <ToolbarIconButton
             accessibilityLabel="Reading goal"
-            onPress={openGoal}
-            active={openSheet === "goal"}
+            onPress={() => toggle("goal")}
+            active={section === "goal"}
           >
             <GoalIconWithDot reached={goalReached} />
           </ToolbarIconButton>
         </View>
       </View>
-
-      {/* ─── Native iOS sheets ───────────────────────────────────
-          Both panels are mounted unconditionally — TrueSheet keeps
-          them off-screen until `AppleSheet.present('name')` is
-          called from the toolbar handlers above. `detents: ['auto']`
-          sizes the sheet to its content so neither panel takes
-          more vertical space than its rows actually need.
-          `backgroundColor: null` + (future) `backgroundBlur` lets
-          the sheet adopt the system Liquid Glass material on
-          iOS 26+ instead of a flat surface fill. */}
-      <AppleSheet
-        name="themes"
-        detents={["auto"]}
-        onDidDismiss={() => setOpenSheet(null)}
-      >
-        <SheetContent>
-          <ThemesPanel
-            textSizeId={textSizeId}
-            onChangeTextSize={onChangeTextSize}
-            translation={translation}
-            onChangeTranslation={async () => {
-              await AppleSheet.dismiss("themes");
-              setOpenSheet(null);
-              onChangeTranslation();
-            }}
-          />
-        </SheetContent>
-      </AppleSheet>
-
-      <AppleSheet
-        name="goal"
-        detents={["auto"]}
-        onDidDismiss={() => setOpenSheet(null)}
-      >
-        <SheetContent>
-          <GoalPanel
-            todayMinutes={todayMinutes}
-            goalMinutes={goalMinutes}
-            onOpen={async () => {
-              await AppleSheet.dismiss("goal");
-              setOpenSheet(null);
-              onOpenReadingGoal();
-            }}
-          />
-        </SheetContent>
-      </AppleSheet>
     </>
   );
 }
@@ -2535,24 +2522,7 @@ function GoalIconWithDot({ reached }: { reached: boolean }) {
 //     alive.
 // ─────────────────────────────────────────────────────────────────
 
-/**
- * ThemesPanel
- *
- * Content for the "Text size + Translation" iOS sheet that the
- * reader toolbar presents. Pure content — no glass wrapper, no
- * shadow, no width clamp — because the sheet provides all of
- * those natively (UISheetPresentationController on iOS 26+ even
- * gives us Liquid Glass via the sheet's `backgroundBlur` prop).
- *
- * The previous build was a 320pt-wide inline popover with a
- * BlurView + drop shadow that anchored above the toolbar; that
- * shell has been promoted to the native sheet machinery one
- * level up. All this panel renders is the rows the user came
- * here to manipulate: text-size slider + the translation row
- * (which dismisses the sheet and forwards to the translation
- * picker).
- */
-function ThemesPanel({
+function ThemesPopover({
   textSizeId,
   onChangeTextSize,
   translation,
@@ -2564,50 +2534,71 @@ function ThemesPanel({
   onChangeTranslation: () => void;
 }) {
   const colors = useColors();
+  const scheme = useResolvedScheme();
+  // Glass material flips with the active scheme — dark mode keeps
+  // a night-sky tint with a faint white hairline; light mode runs
+  // a milky-white tint with a warm hairline so the popover reads
+  // as Apple-Books-quality glass on the cream canvas instead of
+  // staying as a stamped dark rectangle in the middle of a light
+  // page. The shadow color also flips to a warmer near-black so
+  // the soft drop on cream doesn't pool as a cold grey blob.
+  const isLight = scheme === "light";
+  const glassTint = isLight ? "light" : "dark";
+  const glassFill = isLight
+    ? "rgba(255, 255, 255, 0.78)"
+    : "rgba(14, 14, 16, 0.78)";
+  const glassHairline = isLight
+    ? "rgba(15, 15, 15, 0.08)"
+    : "rgba(255, 255, 255, 0.08)";
+  const glassShadowOpacity = isLight ? 0.18 : 0.45;
   return (
-    <View>
-      {/* ─── Text Size ──────────────────────────────────────── */}
-      <View style={{ paddingTop: 4, paddingBottom: 14 }}>
-        <Text
+    <View
+      style={{
+        width: 320,
+        borderRadius: 22,
+        overflow: "hidden",
+        // Soft outer drop shadow so the popover lifts off the page
+        // — gives the glass material its sense of depth even on
+        // iOS where blur alone is subtle.
+        ...Platform.select({
+          ios: {
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 16 },
+            shadowOpacity: glassShadowOpacity,
+            shadowRadius: 30,
+          },
+          android: { elevation: 18 },
+        }),
+      }}
+    >
+      <BlurView
+        // Intensity is platform-tuned (iOS reads `intensity`
+        // directly; Android needs a higher value to reach a
+        // similar opacity) and tint flips with the resolved
+        // scheme so the material reads as the page's own glass
+        // rather than a foreign island.
+        intensity={Platform.OS === "ios" ? 60 : 90}
+        tint={glassTint}
+        style={{
+          // Translucent wash on top of the blur — without it,
+          // page text behind the popover bleeds through enough to
+          // hurt the chip labels' contrast on either canvas.
+          backgroundColor: glassFill,
+          borderRadius: 22,
+          // Subtle hairline keeps the edge crisp against any
+          // chapter bloom color behind it.
+          borderWidth: 1,
+          borderColor: glassHairline,
+        }}
+      >
+        {/* ─── Text Size ──────────────────────────────────────── */}
+        <View
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            fontSize: 10.5,
-            color: colors.inkSubtle,
-            letterSpacing: 2.5,
-            textTransform: "uppercase",
+            paddingHorizontal: 18,
+            paddingTop: 18,
+            paddingBottom: 14,
           }}
         >
-          Text Size
-        </Text>
-        <TextSizeSlider value={textSizeId} onChange={onChangeTextSize} />
-      </View>
-
-      {/* Hairline divider — system-tinted so it reads as
-          standard iOS list separation, not as a custom rule. */}
-      <View
-        style={{
-          height: StyleSheet.hairlineWidth,
-          backgroundColor: colors.border,
-        }}
-      />
-
-      {/* ─── Translation ────────────────────────────────────── */}
-      <Pressable
-        onPress={() => {
-          haptics.soft();
-          onChangeTranslation();
-        }}
-        style={({ pressed }) => ({
-          opacity: pressed ? 0.7 : 1,
-          paddingTop: 14,
-          paddingBottom: 4,
-          flexDirection: "row",
-          alignItems: "center",
-        })}
-        accessibilityRole="button"
-        accessibilityLabel={`Change translation. Current: ${translation.fullName}`}
-      >
-        <View style={{ flex: 1 }}>
           <Text
             style={{
               fontFamily: "PlusJakartaSans_700Bold",
@@ -2617,60 +2608,111 @@ function ThemesPanel({
               textTransform: "uppercase",
             }}
           >
-            Translation
+            Text Size
           </Text>
-          <Text
-            style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              fontSize: 15,
-              color: colors.ink,
-              marginTop: 6,
+          <TextSizeSlider
+            value={textSizeId}
+            onChange={(id) => {
+              onChangeTextSize(id);
             }}
-            numberOfLines={1}
-          >
-            {translation.fullName}
-          </Text>
+          />
         </View>
-        {/* Right-side tag + chevron — the iOS Settings row idiom
-            ("current value + this opens a picker"). The chevron
-            is now an SF Symbol so it inherits the system stroke
-            and aligns with every other iOS settings row. */}
+
+        {/* Hairline divider — same hairline color the popover
+            border uses so the rule reads as part of the same
+            glass material instead of a separate ink line. */}
         <View
           style={{
+            height: StyleSheet.hairlineWidth,
+            backgroundColor: glassHairline,
+            marginHorizontal: 14,
+          }}
+        />
+
+        {/* ─── Translation ────────────────────────────────────── */}
+        <Pressable
+          onPress={() => {
+            haptics.soft();
+            onChangeTranslation();
+          }}
+          style={({ pressed }) => ({
+            opacity: pressed ? 0.7 : 1,
+            paddingHorizontal: 18,
+            paddingTop: 14,
+            paddingBottom: 16,
             flexDirection: "row",
             alignItems: "center",
-            gap: 10,
-          }}
+          })}
+          accessibilityRole="button"
+          accessibilityLabel={`Change translation. Current: ${translation.fullName}`}
         >
-          <View
-            style={{
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: 999,
-              backgroundColor: colors.selectSoft,
-              borderWidth: 1,
-              borderColor: "rgba(10, 132, 255, 0.45)",
-            }}
-          >
+          <View style={{ flex: 1 }}>
             <Text
               style={{
                 fontFamily: "PlusJakartaSans_700Bold",
                 fontSize: 10.5,
-                color: colors.select,
-                letterSpacing: 1.2,
+                color: colors.inkSubtle,
+                letterSpacing: 2.5,
+                textTransform: "uppercase",
               }}
             >
-              {translation.tag}
+              Translation
+            </Text>
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                fontSize: 15,
+                color: colors.ink,
+                marginTop: 6,
+              }}
+              numberOfLines={1}
+            >
+              {translation.fullName}
             </Text>
           </View>
-          <Symbol
-            name="chevron.right"
-            size={12}
-            weight="semibold"
-            color={colors.inkSubtle}
-          />
-        </View>
-      </Pressable>
+          {/* Right-side tag + chevron group reads as "current value
+              + this opens a picker", which is the iOS Settings
+              row idiom users already know. */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <View
+              style={{
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 999,
+                backgroundColor: colors.selectSoft,
+                borderWidth: 1,
+                borderColor: "rgba(10, 132, 255, 0.45)",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontSize: 10.5,
+                  color: colors.select,
+                  letterSpacing: 1.2,
+                }}
+              >
+                {translation.tag}
+              </Text>
+            </View>
+            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M9 6l6 6-6 6"
+                stroke={colors.inkSubtle}
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </View>
+        </Pressable>
+      </BlurView>
     </View>
   );
 }
@@ -2936,15 +2978,7 @@ function TextSizeSlider({
 // Reading-goal popover — today's progress + link to settings
 // ─────────────────────────────────────────────────────────────────
 
-/**
- * GoalPanel
- *
- * Content for the "Today's reading goal" iOS sheet. Same pattern
- * as `ThemesPanel` — pure inner content, the AppleSheet up in
- * `ReaderToolbar` provides the chrome (background, blur, grabber,
- * shadow, dismiss gesture).
- */
-function GoalPanel({
+function GoalPopover({
   todayMinutes,
   goalMinutes,
   onOpen,
@@ -2954,105 +2988,158 @@ function GoalPanel({
   onOpen: () => void;
 }) {
   const colors = useColors();
+  const scheme = useResolvedScheme();
   const pct = Math.min(100, Math.round((todayMinutes / goalMinutes) * 100));
   const reached = todayMinutes >= goalMinutes;
+  // Same theme-aware glass treatment as ThemesPopover so the two
+  // popovers read as one connected family of reader chrome on
+  // either canvas (dark night-sky glass / light milky glass).
+  const isLight = scheme === "light";
+  const glassTint = isLight ? "light" : "dark";
+  const glassFill = isLight
+    ? "rgba(255, 255, 255, 0.78)"
+    : "rgba(14, 14, 16, 0.78)";
+  const glassHairline = isLight
+    ? "rgba(15, 15, 15, 0.08)"
+    : "rgba(255, 255, 255, 0.08)";
+  const glassTrack = isLight
+    ? "rgba(15, 15, 15, 0.10)"
+    : "rgba(255, 255, 255, 0.10)";
+  const glassShadowOpacity = isLight ? 0.18 : 0.45;
   return (
-    <View>
-      <View style={{ paddingTop: 4, paddingBottom: 16 }}>
+    <View
+      style={{
+        width: 320,
+        borderRadius: 22,
+        overflow: "hidden",
+        ...Platform.select({
+          ios: {
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 16 },
+            shadowOpacity: glassShadowOpacity,
+            shadowRadius: 30,
+          },
+          android: { elevation: 18 },
+        }),
+      }}
+    >
+      <BlurView
+        intensity={Platform.OS === "ios" ? 60 : 90}
+        tint={glassTint}
+        style={{
+          backgroundColor: glassFill,
+          borderRadius: 22,
+          borderWidth: 1,
+          borderColor: glassHairline,
+        }}
+      >
         <View
           style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              fontSize: 10.5,
-              color: colors.inkSubtle,
-              letterSpacing: 2.5,
-              textTransform: "uppercase",
-            }}
-          >
-            Today
-          </Text>
-          <Text
-            style={{
-              fontFamily: "PlusJakartaSans_500Medium",
-              fontSize: 11,
-              color: colors.inkSubtle,
-            }}
-          >
-            {formatGoalMinutes(todayMinutes)} / {goalMinutes} min
-          </Text>
-        </View>
-        <View
-          style={{
-            height: 6,
-            backgroundColor: colors.border,
-            borderRadius: 3,
-            overflow: "hidden",
-            marginTop: 12,
+            paddingHorizontal: 18,
+            paddingTop: 18,
+            paddingBottom: 16,
           }}
         >
           <View
             style={{
-              height: "100%",
-              width: `${pct}%`,
-              backgroundColor: reached ? "#FFB672" : colors.primary,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "baseline",
             }}
-          />
+          >
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_700Bold",
+                fontSize: 10.5,
+                color: colors.inkSubtle,
+                letterSpacing: 2.5,
+                textTransform: "uppercase",
+              }}
+            >
+              Today
+            </Text>
+            <Text
+              style={{
+                fontFamily: "PlusJakartaSans_500Medium",
+                fontSize: 11,
+                color: colors.inkSubtle,
+              }}
+            >
+              {formatGoalMinutes(todayMinutes)} / {goalMinutes} min
+            </Text>
+          </View>
+          <View
+            style={{
+              height: 6,
+              backgroundColor: glassTrack,
+              borderRadius: 3,
+              overflow: "hidden",
+              marginTop: 12,
+            }}
+          >
+            <View
+              style={{
+                height: "100%",
+                width: `${pct}%`,
+                backgroundColor: reached ? "#FFB672" : colors.primary,
+              }}
+            />
+          </View>
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_500Medium",
+              fontSize: 12,
+              color: colors.inkMuted,
+              lineHeight: 18,
+              marginTop: 10,
+            }}
+          >
+            {reached
+              ? "Today's reading goal reached."
+              : "Keep reading — your minutes count automatically."}
+          </Text>
         </View>
-        <Text
+        <View
           style={{
-            fontFamily: "PlusJakartaSans_500Medium",
-            fontSize: 12,
-            color: colors.inkMuted,
-            lineHeight: 18,
-            marginTop: 10,
+            height: StyleSheet.hairlineWidth,
+            backgroundColor: glassHairline,
+            marginHorizontal: 14,
           }}
-        >
-          {reached
-            ? "Today's reading goal reached."
-            : "Keep reading — your minutes count automatically."}
-        </Text>
-      </View>
-      <View
-        style={{
-          height: StyleSheet.hairlineWidth,
-          backgroundColor: colors.border,
-        }}
-      />
-      <Pressable
-        onPress={() => {
-          haptics.soft();
-          onOpen();
-        }}
-        style={({ pressed }) => ({
-          opacity: pressed ? 0.7 : 1,
-          paddingVertical: 14,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        })}
-      >
-        <Text
-          style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            fontSize: 14,
-            color: colors.ink,
-          }}
-        >
-          Change goal
-        </Text>
-        <Symbol
-          name="chevron.right"
-          size={12}
-          weight="semibold"
-          color={colors.inkSubtle}
         />
-      </Pressable>
+        <Pressable
+          onPress={() => {
+            haptics.soft();
+            onOpen();
+          }}
+          style={({ pressed }) => ({
+            opacity: pressed ? 0.7 : 1,
+            paddingHorizontal: 18,
+            paddingVertical: 14,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          })}
+        >
+          <Text
+            style={{
+              fontFamily: "PlusJakartaSans_700Bold",
+              fontSize: 14,
+              color: colors.ink,
+            }}
+          >
+            Change goal
+          </Text>
+          <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="M9 6l6 6-6 6"
+              stroke={colors.inkSubtle}
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        </Pressable>
+      </BlurView>
     </View>
   );
 }

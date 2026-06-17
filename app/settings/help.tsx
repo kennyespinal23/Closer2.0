@@ -3,6 +3,7 @@ import { Animated, Easing, Linking, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import {
+  SettingsInfoBanner,
   SettingsLinkRow,
   SettingsScaffold,
   SettingsSection,
@@ -38,27 +39,15 @@ export default function HelpScreen() {
   const router = useRouter();
   return (
     <SettingsScaffold title="Help & Support">
-      {/* ─── Hero ────────────────────────────────────────────────
-          A small invitation that frames the page — Closer isn't a
-          product with a support queue; it's a quiet thing made by
-          someone who actually replies. */}
-      <View className="px-6 mt-2">
-        <View className="rounded-2xl border border-border bg-surface px-5 py-6">
-          <Text
-            className="text-ink text-[20px] leading-[26px] tracking-[-0.2px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            We&apos;re here, and we read everything.
-          </Text>
-          <Text
-            className="text-ink-muted text-[13.5px] leading-[20px] mt-2.5"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-          >
-            A real person answers every email. If something is broken,
-            unclear, or just isn&apos;t hitting right — tell us.
-          </Text>
-        </View>
-      </View>
+      {/* Hero framing card — uses the shared SettingsInfoBanner
+          primitive so the framing card matches Translation /
+          Privacy / Account stylistically. Neutral tone (no blue
+          tint) because this card frames the page rather than
+          carrying compliance context. */}
+      <SettingsInfoBanner
+        title="We're here, and we read everything."
+        body="A real person answers every email. If something is broken, unclear, or just isn't hitting right — tell us."
+      />
 
       <SettingsSection title="Get in Touch">
         <SettingsLinkRow
@@ -106,7 +95,7 @@ export default function HelpScreen() {
       <View className="px-6 mt-8">
         <Text
           className="text-ink-subtle text-[12px] leading-[18px] text-center"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           You showed up today. That counts.
         </Text>
@@ -165,7 +154,7 @@ function FAQRow({
         <View className="flex-row items-center px-4 py-3.5">
           <Text
             className="text-ink text-[14.5px] flex-1 pr-3"
-            style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+            style={{ fontFamily: "System", fontWeight: "600" }}
           >
             {question}
           </Text>
@@ -187,7 +176,7 @@ function FAQRow({
         <View className="px-4 pb-4 -mt-1">
           <Text
             className="text-ink-muted text-[13.5px] leading-[20px]"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
           >
             {answer}
           </Text>

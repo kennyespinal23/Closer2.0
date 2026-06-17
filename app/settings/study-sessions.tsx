@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Animated,
   Linking,
   Pressable,
   ScrollView,
@@ -9,12 +10,14 @@ import {
   Text,
   View,
 } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { BlockedAppsEditor } from "@/components/BlockedAppsEditor";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import { TimeBlockEditor } from "@/components/TimeBlockEditor";
+import { CLOSER_ACCENT } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
 import { findSocialApp, type SocialAppId } from "@/lib/focus";
 import {
@@ -31,13 +34,6 @@ import {
   type StudySessionDraft,
 } from "@/state/studySessions";
 import { useColors } from "@/state/theme";
-
-/** Same iOS-system-blue used by the modal editors' Save buttons.
- *  Reads as the universal "primary tap target" color in both
- *  themes, and keeps the App Blocks vocabulary consistent (the
- *  Save buttons, the day chips, and the apps CTA all share one
- *  accent). */
-const PRIMARY_BLUE = "#0A84FF";
 
 /**
  * App Blocks — the page the home "Add a time and apps to block" row
@@ -230,9 +226,9 @@ export default function AppBlocksScreen() {
         style={{
           flexDirection: "row",
           alignItems: "center",
-          paddingHorizontal: 12,
+          paddingHorizontal: 16,
           paddingTop: 4,
-          paddingBottom: 6,
+          paddingBottom: 4,
         }}
       >
         <Pressable
@@ -264,7 +260,8 @@ export default function AppBlocksScreen() {
         <View style={{ paddingHorizontal: 24, paddingTop: 4 }}>
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               color: colors.ink,
               fontSize: 32,
               lineHeight: 38,
@@ -276,93 +273,192 @@ export default function AppBlocksScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_400Regular",
+              fontFamily: "System",
+              fontWeight: "400",
               color: colors.inkMuted,
               fontSize: 15,
               lineHeight: 21,
-              marginTop: 6,
+              marginTop: 4,
             }}
           >
             Pick the apps you want quieted and the times to silence them.
           </Text>
         </View>
 
-        {/* Permission CTA — only when the user could miss notifications. */}
-        {permission !== "granted" && (
-          <View style={{ paddingHorizontal: 20, marginTop: 18 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 16,
-                paddingVertical: 14,
-                borderRadius: 16,
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: colors.border,
-                backgroundColor: colors.surface,
-              }}
-            >
+        {/* Notification permission row — ALWAYS rendered, with
+            state-specific iconography, copy, and CTA so the user
+            can read current permission state in one glance per
+            HIG's "Visibility of system state". The previous
+            version hid the row entirely when permission was
+            granted, which left the user with no confirmation
+            that block reminders were wired up at all.
+            
+            Three states are surfaced:
+              • GRANTED      — green check + "Notifications
+                               Enabled" + supporting confirmation
+                               line; no CTA (nothing to do).
+              • UNDETERMINED — bell + "Allow Notifications" +
+                               "Required for block reminders" +
+                               "Allow" CTA (triggers OS prompt).
+              • DENIED       — bell-with-slash + "Notifications
+                               Blocked" + "Open Settings to allow
+                               reminders" + "Settings" CTA
+                               (deep-links to system Settings).
+            
+            Each state uses a distinct icon-well tint so the row's
+            disposition reads at a glance even before the headline
+            is parsed — green for resolved, amber for blocked,
+            neutral for pending. */}
+        {(() => {
+          const isGranted = permission === "granted";
+          const isDenied = permission === "denied";
+          let iconBg: string;
+          let iconStroke: string;
+          let title: string;
+          let subtitle: string;
+          let ctaLabel: string | null;
+          let GlyphComp: React.ComponentType<{ stroke: string }>;
+          let accessibilityState: string;
+
+          if (isGranted) {
+            // Soft green well + green stroke. The check inside
+            // is the unambiguous "system on" affordance Apple
+            // uses across iOS (Settings → Apple ID → connected
+            // accounts, Health → permissions, etc).
+            iconBg = "rgba(34, 197, 94, 0.16)";
+            iconStroke = "#22C55E";
+            title = "Notifications Enabled";
+            subtitle = "Block reminders will come through.";
+            ctaLabel = null;
+            GlyphComp = CheckGlyph;
+            accessibilityState = "Notifications are enabled";
+          } else if (isDenied) {
+            // Soft amber well + amber stroke. Amber rather than
+            // red because the situation is "needs attention",
+            // not "error" — the user can still resolve it from
+            // Settings; nothing is broken.
+            iconBg = "rgba(245, 158, 11, 0.16)";
+            iconStroke = "#F59E0B";
+            title = "Notifications Blocked";
+            subtitle = "Open Settings to allow reminders.";
+            ctaLabel = "Settings";
+            GlyphComp = BellSlashGlyph;
+            accessibilityState = "Notifications are blocked";
+          } else {
+            // Neutral pending state — soft white tint instead of
+            // `colors.accentSoft` because that token collapses
+            // to the same hex as the card surface in dark mode
+            // ("#1C1C1E"), which made the icon well visually
+            // disappear. A 12% white wash gives the well a
+            // discernible shape in dark while staying low-
+            // saturation enough to read as quiet pending UI
+            // (not an alarm).
+            iconBg = "rgba(255, 255, 255, 0.12)";
+            iconStroke = colors.ink as string;
+            title = "Allow Notifications";
+            subtitle = "Required for block reminders.";
+            ctaLabel = "Allow";
+            GlyphComp = BellGlyph;
+            accessibilityState = "Notification permission not yet granted";
+          }
+
+          return (
+            <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
               <View
+                accessibilityRole="summary"
+                accessibilityLabel={`${title}. ${accessibilityState}.`}
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 12,
-                  backgroundColor: colors.accentSoft,
+                  flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 12,
+                  paddingHorizontal: 16,
+                  paddingVertical: 16,
+                  borderRadius: 16,
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: colors.border,
+                  backgroundColor: colors.surface,
                 }}
               >
-                <BellGlyph stroke={colors.ink} />
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    backgroundColor: iconBg,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 16,
+                  }}
+                >
+                  <GlyphComp stroke={iconStroke} />
+                </View>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text
+                    style={{
+                      fontFamily: "System",
+                      fontWeight: "700",
+                      color: colors.ink,
+                      fontSize: 14,
+                    }}
+                  >
+                    {title}
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "System",
+                      fontWeight: "400",
+                      color: colors.inkMuted,
+                      fontSize: 12,
+                      lineHeight: 17,
+                      marginTop: 4,
+                    }}
+                  >
+                    {subtitle}
+                  </Text>
+                </View>
+                {ctaLabel ? (
+                  // Trailing CTA pill. Visual surface lives on
+                  // an INNER static View — NativeWind/Pressable
+                  // interop on this codebase silently drops
+                  // non-className backgroundColor/borderRadius
+                  // from a function-style `style` return, which
+                  // earlier rendered the "Allow" button as
+                  // black text floating on the dark card with
+                  // no visible pill. Static inner View
+                  // sidesteps the interop dance entirely.
+                  <Pressable
+                    onPress={handleRequestPermission}
+                    disabled={busy}
+                    accessibilityRole="button"
+                    accessibilityLabel={ctaLabel}
+                    style={({ pressed }) => ({
+                      opacity: pressed || busy ? 0.7 : 1,
+                    })}
+                  >
+                    <View
+                      style={{
+                        paddingHorizontal: 16,
+                        paddingVertical: 8,
+                        borderRadius: 999,
+                        backgroundColor: colors.ink,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: "System",
+                          fontWeight: "700",
+                          fontSize: 12,
+                          color: colors.primaryFg,
+                        }}
+                      >
+                        {ctaLabel}
+                      </Text>
+                    </View>
+                  </Pressable>
+                ) : null}
               </View>
-              <View style={{ flex: 1, paddingRight: 10 }}>
-                <Text
-                  style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
-                    color: colors.ink,
-                    fontSize: 14,
-                  }}
-                >
-                  Allow notifications
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "PlusJakartaSans_400Regular",
-                    color: colors.inkMuted,
-                    fontSize: 12,
-                    lineHeight: 17,
-                    marginTop: 1,
-                  }}
-                >
-                  Required for block reminders.
-                </Text>
-              </View>
-              <Pressable
-                onPress={handleRequestPermission}
-                disabled={busy}
-                accessibilityRole="button"
-                accessibilityLabel="Allow notifications"
-                style={({ pressed }) => ({
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
-                  borderRadius: 999,
-                  backgroundColor: colors.ink,
-                  opacity: pressed || busy ? 0.7 : 1,
-                })}
-              >
-                <Text
-                  style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
-                    fontSize: 12,
-                    color: colors.primaryFg,
-                  }}
-                >
-                  {permission === "denied" ? "Settings" : "Allow"}
-                </Text>
-              </Pressable>
             </View>
-          </View>
-        )}
+          );
+        })()}
 
         {/* ─── Card 1: Blocked Apps ─────────────────────────────
             A single rounded card with: a small section header
@@ -373,7 +469,7 @@ export default function AppBlocksScreen() {
             
             Empty state: no glyph preview, the CTA reads "Pick
             apps to block". */}
-        <View style={{ paddingHorizontal: 20, marginTop: 22 }}>
+        <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
           <View
             style={{
               borderRadius: 22,
@@ -383,47 +479,46 @@ export default function AppBlocksScreen() {
               padding: 16,
             }}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: blockedApps.length === 0 ? 6 : 14,
-              }}
-            >
-              <LockGlyph stroke={colors.ink} />
-              <Text
-                style={{
-                  flex: 1,
-                  marginLeft: 8,
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  color: colors.ink,
-                  fontSize: 16,
-                  letterSpacing: -0.3,
-                }}
-                accessibilityRole="header"
-              >
-                Blocked Apps
-              </Text>
-              {blockedApps.length > 0 ? (
-                <View
+            {/* Header — lock icon + "Blocked Apps" title with a
+                meaningful count subtitle below. The previous
+                version surfaced the count as an isolated "12"
+                chip in the corner; per HIG (Clarity) numbers
+                should have context, so we move the count into
+                a readable subtitle ("{n} selected") right
+                beneath the section title. Empty state replaces
+                the count with the descriptive prompt copy. */}
+            <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 14 }}>
+              <View style={{ marginTop: 2 }}>
+                <LockGlyph stroke={colors.ink} />
+              </View>
+              <View style={{ flex: 1, marginLeft: 8 }}>
+                <Text
                   style={{
-                    paddingHorizontal: 9,
-                    paddingVertical: 2,
-                    borderRadius: 999,
-                    backgroundColor: colors.accentSoft,
+                    fontFamily: "System",
+                    fontWeight: "700",
+                    color: colors.ink,
+                    fontSize: 16,
+                    letterSpacing: -0.3,
+                  }}
+                  accessibilityRole="header"
+                >
+                  Blocked Apps
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "System",
+                    fontWeight: "400",
+                    color: colors.inkMuted,
+                    fontSize: 13,
+                    lineHeight: 18,
+                    marginTop: 2,
                   }}
                 >
-                  <Text
-                    style={{
-                      fontFamily: "PlusJakartaSans_700Bold",
-                      fontSize: 12,
-                      color: colors.ink,
-                    }}
-                  >
-                    {blockedApps.length}
-                  </Text>
-                </View>
-              ) : null}
+                  {blockedApps.length > 0
+                    ? `${blockedApps.length} ${blockedApps.length === 1 ? "app" : "apps"} selected`
+                    : "Pick the apps you want silenced during every block."}
+                </Text>
+              </View>
             </View>
 
             {blockedApps.length > 0 ? (
@@ -431,8 +526,8 @@ export default function AppBlocksScreen() {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{
-                  paddingVertical: 2,
-                  gap: 10,
+                  paddingVertical: 4,
+                  gap: 8,
                 }}
                 style={{ marginBottom: 16 }}
               >
@@ -440,19 +535,7 @@ export default function AppBlocksScreen() {
                   <BrandGlyph key={app.id} appId={app.id} size="md" />
                 ))}
               </ScrollView>
-            ) : (
-              <Text
-                style={{
-                  fontFamily: "PlusJakartaSans_400Regular",
-                  color: colors.inkMuted,
-                  fontSize: 13,
-                  lineHeight: 18,
-                  marginBottom: 14,
-                }}
-              >
-                Pick the apps you want silenced during every block.
-              </Text>
-            )}
+            ) : null}
 
             {/* CTA pill — chrome held on the inner View so the
                 NativeWind/Pressable style-function interop can't
@@ -484,8 +567,8 @@ export default function AppBlocksScreen() {
                   // this" and matches the modal editors' Save
                   // buttons + the day chips so the App Blocks
                   // vocabulary is consistent.
-                  backgroundColor: PRIMARY_BLUE,
-                  paddingVertical: 14,
+                  backgroundColor: CLOSER_ACCENT,
+                  paddingVertical: 16,
                   alignItems: "center",
                   justifyContent: "center",
                   flexDirection: "row",
@@ -494,7 +577,8 @@ export default function AppBlocksScreen() {
                 <LockGlyph stroke="#FFFFFF" />
                 <Text
                   style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
+                    fontFamily: "System",
+                    fontWeight: "700",
                     color: "#FFFFFF",
                     fontSize: 14.5,
                     letterSpacing: 0.2,
@@ -522,7 +606,7 @@ export default function AppBlocksScreen() {
             Long-press a row to delete (with a confirmation
             alert). Tap the row body to open the editor for that
             time. */}
-        <View style={{ paddingHorizontal: 20, marginTop: 18 }}>
+        <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
           <View
             style={{
               borderRadius: 22,
@@ -533,117 +617,160 @@ export default function AppBlocksScreen() {
               paddingBottom: sessions.length > 0 ? 6 : 16,
             }}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 6,
-              }}
-            >
-              <ClockGlyph stroke={colors.ink} />
-              <Text
-                style={{
-                  flex: 1,
-                  marginLeft: 8,
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  color: colors.ink,
-                  fontSize: 16,
-                  letterSpacing: -0.3,
-                }}
-                accessibilityRole="header"
-              >
-                Block Time
-              </Text>
-              {/* Header "+" only renders when there's NO time set
-                  yet — the App Block is capped at a single daily
-                  block, matching the one-sermon-a-day rule. Once
-                  the user has added their time, the only action
-                  is to edit/delete the existing row (tap or
-                  swipe). The "+" returns the moment they delete
-                  the row, so the affordance is never permanently
-                  hidden — just gated by capacity. */}
-              {sessions.length === 0 ? (
+            {/* Header — clock icon + "Block Time" title with a
+                meaningful subtitle below ("No times scheduled"
+                vs "Active at {time}"). When times exist, a "+"
+                affordance in the corner opens the add editor. */}
+            <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 14 }}>
+              <View style={{ marginTop: 2 }}>
+                <ClockGlyph stroke={colors.ink} />
+              </View>
+              <View style={{ flex: 1, marginLeft: 8 }}>
+                <Text
+                  style={{
+                    fontFamily: "System",
+                    fontWeight: "700",
+                    color: colors.ink,
+                    fontSize: 16,
+                    letterSpacing: -0.3,
+                  }}
+                  accessibilityRole="header"
+                >
+                  Block Time
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "System",
+                    fontWeight: "400",
+                    color: colors.inkMuted,
+                    fontSize: 13,
+                    lineHeight: 18,
+                    marginTop: 2,
+                  }}
+                >
+                  {sessions.length === 0
+                    ? "No times scheduled."
+                    : "Your apps will be quieted at this time."}
+                </Text>
+              </View>
+              {sessions.length > 0 ? (
                 <Pressable
                   onPress={() => {
                     haptics.soft();
                     setTimeTarget("new");
                   }}
                   accessibilityRole="button"
-                  accessibilityLabel="Add a time"
+                  accessibilityLabel="Add Block Time"
                   hitSlop={8}
                   style={({ pressed }) => ({
-                    width: 30,
-                    height: 30,
-                    borderRadius: 15,
-                    backgroundColor: colors.accentSoft,
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
                     alignItems: "center",
                     justifyContent: "center",
-                    opacity: pressed ? 0.7 : 1,
+                    backgroundColor: pressed
+                      ? "rgba(252, 131, 68, 0.16)"
+                      : "rgba(252, 131, 68, 0.12)",
                   })}
                 >
-                  <PlusGlyph stroke={colors.ink} />
+                  <PlusGlyph stroke={CLOSER_ACCENT} />
                 </Pressable>
               ) : null}
             </View>
 
-            <Text
-              style={{
-                fontFamily: "PlusJakartaSans_400Regular",
-                color: colors.inkMuted,
-                fontSize: 13,
-                lineHeight: 18,
-                marginBottom: sessions.length === 0 ? 4 : 8,
-              }}
-            >
-              {sessions.length === 0
-                ? "Your apps will be quieted at the time you add here."
-                : "Your apps will be quieted at this time."}
-            </Text>
-
             {sessions.length === 0 ? (
+              // Single primary CTA in empty state. Paints with
+              // the same iOS-system-blue as the Blocked Apps
+              // "Pick apps to block" pill so the two empty-state
+              // actions speak the same visual language and the
+              // user understands both are the screen's primary
+              // setup steps. The previous hairline-border button
+              // read as a tertiary control next to the louder
+              // Apps CTA above and so didn't pull as one of the
+              // page's two main commitments.
               <Pressable
                 onPress={() => {
                   haptics.soft();
                   setTimeTarget("new");
                 }}
                 accessibilityRole="button"
-                accessibilityLabel="Add your first time"
-                style={({ pressed }) => ({
-                  opacity: pressed ? 0.85 : 1,
-                  marginTop: 10,
-                  borderRadius: 14,
-                  borderWidth: StyleSheet.hairlineWidth,
-                  borderColor: colors.border,
-                  paddingVertical: 12,
-                  alignItems: "center",
-                  flexDirection: "row",
-                  justifyContent: "center",
-                })}
+                accessibilityLabel="Add Block Time"
+                style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
               >
-                <PlusGlyph stroke={colors.ink} />
-                <Text
+                <View
                   style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
-                    color: colors.ink,
-                    fontSize: 14,
-                    marginLeft: 6,
+                    borderRadius: 14,
+                    backgroundColor: CLOSER_ACCENT,
+                    paddingVertical: 16,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexDirection: "row",
                   }}
                 >
-                  Add a time
-                </Text>
+                  <PlusGlyph stroke="#FFFFFF" />
+                  <Text
+                    style={{
+                      fontFamily: "System",
+                      fontWeight: "700",
+                      color: "#FFFFFF",
+                      fontSize: 14.5,
+                      letterSpacing: 0.2,
+                      marginLeft: 6,
+                    }}
+                  >
+                    Add Block Time
+                  </Text>
+                </View>
               </Pressable>
             ) : (
               <View style={{ marginTop: 4 }}>
                 {sessions.map((session, i) => (
-                  <TimeRow
+                  <SwipeableTimeRow
                     key={session.id}
                     session={session}
                     isLast={i === sessions.length - 1}
                     onTap={() => setTimeTarget(session.id)}
-                    onLongPress={() => handleDelete(session)}
+                    onDelete={() => handleDelete(session)}
                     onToggle={() => toggleSession(session.id)}
                   />
                 ))}
+                <Pressable
+                  onPress={() => {
+                    haptics.soft();
+                    setTimeTarget("new");
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add Block Time"
+                  style={({ pressed }) => ({
+                    opacity: pressed ? 0.85 : 1,
+                    marginTop: 8,
+                  })}
+                >
+                  <View
+                    style={{
+                      borderRadius: 14,
+                      backgroundColor: CLOSER_ACCENT,
+                      paddingVertical: 16,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexDirection: "row",
+                    }}
+                  >
+                    <PlusGlyph stroke="#FFFFFF" />
+                    <Text
+                      style={{
+                        fontFamily: "System",
+                        fontWeight: "700",
+                        color: "#FFFFFF",
+                        fontSize: 14.5,
+                        letterSpacing: 0.2,
+                        marginLeft: 6,
+                      }}
+                    >
+                      Add Block Time
+                    </Text>
+                  </View>
+                </Pressable>
               </View>
             )}
           </View>
@@ -651,13 +778,14 @@ export default function AppBlocksScreen() {
           {sessions.length > 0 ? (
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_400Regular",
+                fontFamily: "System",
+                fontWeight: "400",
                 color: colors.inkSubtle,
                 fontSize: 12,
                 lineHeight: 17,
                 textAlign: "center",
-                marginTop: 14,
-                paddingHorizontal: 12,
+                marginTop: 16,
+                paddingHorizontal: 16,
               }}
             >
               {anyEnabled
@@ -689,6 +817,85 @@ export default function AppBlocksScreen() {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// SwipeableTimeRow — swipe-left to reveal delete
+// ─────────────────────────────────────────────────────────────────
+
+function SwipeableTimeRow({
+  session,
+  isLast,
+  onTap,
+  onDelete,
+  onToggle,
+}: {
+  session: StudySession;
+  isLast: boolean;
+  onTap: () => void;
+  onDelete: () => void;
+  onToggle: () => void;
+}) {
+  const swipeRef = useRef<Swipeable>(null);
+
+  const renderRightActions = (
+    _progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+  ) => {
+    const translateX = dragX.interpolate({
+      inputRange: [-80, 0],
+      outputRange: [0, 80],
+      extrapolate: "clamp",
+    });
+
+    return (
+      <Animated.View style={{ width: 80, transform: [{ translateX }] }}>
+        <Pressable
+          onPress={() => {
+            swipeRef.current?.close();
+            onDelete();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Delete block time"
+          style={{
+            flex: 1,
+            backgroundColor: "#FF3B30",
+            alignItems: "center",
+            justifyContent: "center",
+            borderTopRightRadius: isLast ? 12 : 0,
+            borderBottomRightRadius: isLast ? 12 : 0,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "System",
+              fontWeight: "600",
+              color: "#FFFFFF",
+              fontSize: 15,
+            }}
+          >
+            Delete
+          </Text>
+        </Pressable>
+      </Animated.View>
+    );
+  };
+
+  return (
+    <Swipeable
+      ref={swipeRef}
+      renderRightActions={renderRightActions}
+      overshootRight={false}
+      friction={2}
+    >
+      <TimeRow
+        session={session}
+        isLast={isLast}
+        onTap={onTap}
+        onToggle={onToggle}
+      />
+    </Swipeable>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
 // TimeRow — one tappable block-time row
 // ─────────────────────────────────────────────────────────────────
 
@@ -696,41 +903,38 @@ function TimeRow({
   session,
   isLast,
   onTap,
-  onLongPress,
   onToggle,
 }: {
   session: StudySession;
   isLast: boolean;
   onTap: () => void;
-  onLongPress: () => void;
   onToggle: () => void;
 }) {
   const colors = useColors();
   return (
     <Pressable
       onPress={onTap}
-      onLongPress={onLongPress}
       accessibilityRole="button"
       accessibilityLabel={`Edit time at ${formatReminderTime(session.time)}`}
-      accessibilityHint="Long-press to delete"
+      accessibilityHint="Swipe left to delete"
       style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
     >
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
-          paddingVertical: 14,
+          paddingVertical: 16,
           paddingHorizontal: 4,
+          backgroundColor: colors.surface,
           borderBottomWidth: isLast ? 0 : StyleSheet.hairlineWidth,
           borderBottomColor: colors.border,
         }}
       >
-        <View style={{ flex: 1, paddingRight: 12 }}>
+        <View style={{ flex: 1, paddingRight: 16 }}>
           <Text
             style={{
-              fontFamily: session.enabled
-                ? "PlusJakartaSans_700Bold"
-                : "PlusJakartaSans_600SemiBold",
+              fontFamily: "System",
+              fontWeight: session.enabled ? "700" : "600",
               fontSize: 22,
               lineHeight: 26,
               letterSpacing: -0.4,
@@ -744,11 +948,12 @@ function TimeRow({
           </Text>
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_400Regular",
+              fontFamily: "System",
+              fontWeight: "400",
               color: colors.inkMuted,
               fontSize: 13,
               lineHeight: 18,
-              marginTop: 1,
+              marginTop: 4,
             }}
             numberOfLines={1}
           >
@@ -757,9 +962,9 @@ function TimeRow({
         </View>
         <Switch
           value={session.enabled}
-          onValueChange={(next) => {
+          onValueChange={() => {
             haptics.tick();
-            onToggle(next);
+            onToggle();
           }}
           ios_backgroundColor={colors.border as string}
           accessibilityLabel={`Toggle block at ${formatReminderTime(session.time)}`}
@@ -830,6 +1035,39 @@ function BellGlyph({ stroke }: { stroke: string }) {
         {...ICON_BASE}
       />
       <Path d="M10 20a2 2 0 004 0" stroke={stroke} {...ICON_BASE} />
+    </Svg>
+  );
+}
+
+/** Bell with a slash through it — denied-permission glyph for
+ *  the notification permission row's "Notifications Blocked"
+ *  state. Same bell silhouette as `BellGlyph` so the two states
+ *  read as variants of one another rather than two unrelated
+ *  icons. The slash is a separate path drawn corner-to-corner
+ *  so it stays crisp at small sizes. */
+function BellSlashGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M6 17h12l-1.5-2V10a4.5 4.5 0 00-9 0v5L6 17z"
+        stroke={stroke}
+        {...ICON_BASE}
+      />
+      <Path d="M10 20a2 2 0 004 0" stroke={stroke} {...ICON_BASE} />
+      <Path d="M4 4l16 16" stroke={stroke} {...ICON_BASE} />
+    </Svg>
+  );
+}
+
+/** Check mark — granted-permission affirmation glyph. Pure
+ *  bare-check stroke (no surrounding circle) because the icon
+ *  is already nested inside a green-tinted 36×36 rounded
+ *  "well" which provides the chrome. Lines up visually with
+ *  the other 16pt stroked glyphs in this file. */
+function CheckGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+      <Path d="M5 12l5 5L20 7" stroke={stroke} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }

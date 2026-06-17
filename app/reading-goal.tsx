@@ -89,7 +89,7 @@ export default function ReadingGoalDetailScreen() {
         </Pressable>
         <Text
           className="text-ink text-[17px] flex-1 text-center"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           Drawing Near
         </Text>
@@ -120,15 +120,16 @@ export default function ReadingGoalDetailScreen() {
                 className="absolute inset-0 items-center justify-center"
               >
                 <Text
-                  className="text-ink-subtle text-[10px] tracking-[3px] uppercase"
-                  style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                  className="text-ink-subtle text-[11px] tracking-[3px] uppercase"
+                  style={{ fontFamily: "System", fontWeight: "700" }}
                 >
                   Minutes
                 </Text>
                 <Text
                   className="text-ink mt-1 tracking-[-0.6px]"
                   style={{
-                    fontFamily: "PlusJakartaSans_800ExtraBold",
+                    fontFamily: "System",
+                    fontWeight: "800",
                     color: heroColor,
                     fontSize: 56,
                     lineHeight: 60,
@@ -138,7 +139,7 @@ export default function ReadingGoalDetailScreen() {
                 </Text>
                 <Text
                   className="text-ink-muted text-[12px] mt-1"
-                  style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+                  style={{ fontFamily: "System", fontWeight: "600" }}
                 >
                   of {goalMinutes} MIN goal
                 </Text>
@@ -147,7 +148,7 @@ export default function ReadingGoalDetailScreen() {
 
             <Text
               className="text-ink-muted text-[13px] mt-5 px-10 text-center leading-[20px]"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
             >
               {captionLabel}
             </Text>
@@ -213,14 +214,14 @@ export default function ReadingGoalDetailScreen() {
               <SlidersIcon />
               <Text
                 className="text-ink text-[14px] ml-2"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 Edit daily goal
               </Text>
               <View className="ml-2 px-2 py-0.5 rounded-full bg-surface">
                 <Text
                   className="text-ink-muted text-[11px]"
-                  style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+                  style={{ fontFamily: "System", fontWeight: "600" }}
                 >
                   {goalMinutes} min
                 </Text>
@@ -251,21 +252,21 @@ function SectionHeader({
     <View>
       <Text
         className="text-primary text-[11px] tracking-[3px] uppercase"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         {eyebrow}
       </Text>
       <View className="flex-row items-baseline justify-between mt-1.5">
         <Text
           className="text-ink text-[20px] tracking-[-0.3px]"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           {title}
         </Text>
         {caption ? (
           <Text
             className="text-ink-muted text-[12px]"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            style={{ fontFamily: "System", fontWeight: "500" }}
             numberOfLines={1}
           >
             {caption}
@@ -352,9 +353,10 @@ function HourlyChart({
           return (
             <Text
               key={t.label}
-              className="text-ink-subtle text-[10px] absolute"
+              className="text-ink-subtle text-[11px] absolute"
               style={{
-                fontFamily: "PlusJakartaSans_600SemiBold",
+                fontFamily: "System",
+                fontWeight: "600",
                 left: leftPct,
                 top: 0,
                 width: 60,
@@ -449,10 +451,10 @@ function WeekRingStrip({ rows }: { rows: ReadonlyArray<WeekRow> }) {
             animate={false}
           />
           <Text
-            className={`text-[10.5px] tracking-[1px] mt-2 ${
+            className={`text-[11px] tracking-[1px] mt-2 ${
               row.isToday ? "text-primary" : "text-ink-subtle"
             }`}
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {row.weekday}
           </Text>

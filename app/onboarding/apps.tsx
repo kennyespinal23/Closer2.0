@@ -102,7 +102,7 @@ export default function AppsScreen() {
           <FadeIn delayMs={0}>
             <Text
               className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-4"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Which apps do you open{"\n"}first thing in the morning?
             </Text>
@@ -111,7 +111,7 @@ export default function AppsScreen() {
           <FadeIn delayMs={500}>
             <Text
               className="text-ink-muted text-[15px] leading-[22px] mt-3"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
             >
               Pick all that apply.
             </Text>
@@ -206,7 +206,8 @@ function AppRow({
       <Text
         className="ml-3 flex-1 text-ink"
         style={{
-          fontFamily: "PlusJakartaSans_600SemiBold",
+          fontFamily: "System",
+          fontWeight: "600",
           fontSize: 16,
           letterSpacing: -0.1,
         }}

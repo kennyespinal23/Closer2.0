@@ -16,6 +16,7 @@ import { splitScripture } from "@/lib/moments";
 import { getDailyImage } from "@/services/unsplashService";
 import { useMoments } from "@/state/moments";
 import { useColors } from "@/state/theme";
+import { NEW_YORK } from "@/lib/typography";
 
 /**
  * Sermon scripture — the opening quote screen.
@@ -269,22 +270,29 @@ export default function SermonScriptureScreen() {
         }}
       >
         {/* The verse — large, centered, generous leading.
-            PlusJakartaSans Medium 26/40 gives long verses
-            room without crowding; short verses sit cleanly
-            in the middle third. Letter-spacing slightly tight
-            (-0.3) so the line reads as a composed quote
-            rather than a paragraph. */}
+            New York Italic 26/40 gives long verses room
+            without crowding; short verses sit cleanly in
+            the middle third. The serif italic is the ONLY
+            place on this screen we leave SF Pro — scripture
+            is the canonical "reflective quote moment" the
+            typography system reserves New York for, and the
+            face shift IS the cue that this surface is a
+            different beat than the rest of the app. The
+            citation below stays SF Pro (it's a label, not
+            the quote). */}
         {scripture.text ? (
           <Animated.Text
             style={{
               opacity: verseAnim,
               transform: [{ translateY: verseTranslateY }],
               color: "#FFFFFF",
-              fontFamily: "PlusJakartaSans_500Medium",
+              fontFamily: NEW_YORK,
+              fontStyle: "italic",
+              fontWeight: "400",
               fontSize: 26,
               lineHeight: 40,
               textAlign: "center",
-              letterSpacing: -0.3,
+              letterSpacing: 0,
               // Strong drop shadow doing the heavy lifting for
               // legibility now that the global dim is only 15%
               // — the shadow casts a tight halo around each
@@ -324,7 +332,8 @@ export default function SermonScriptureScreen() {
           <Text
             style={{
               color: "rgba(255, 255, 255, 0.7)",
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               fontSize: 12,
               letterSpacing: 2.5,
               textTransform: "uppercase",
@@ -460,7 +469,8 @@ export default function SermonScriptureScreen() {
             <Text
               style={{
                 color: "#000000",
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 fontSize: 16,
                 letterSpacing: 0.1,
                 marginRight: 10,

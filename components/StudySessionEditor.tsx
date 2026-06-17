@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
+import { SFSymbol } from "@/components/Symbol";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import { TimePickerModal } from "@/components/TimePickerModal";
 import * as haptics from "@/lib/haptics";
@@ -408,7 +409,8 @@ export function StudySessionEditor({
                     <Text
                       className="text-[15px]"
                       style={{
-                        fontFamily: "PlusJakartaSans_500Medium",
+                        fontFamily: "System",
+                        fontWeight: "500",
                         color: colors.inkMuted,
                       }}
                     >
@@ -428,7 +430,8 @@ export function StudySessionEditor({
                     <Text
                       className="text-[15px]"
                       style={{
-                        fontFamily: "PlusJakartaSans_700Bold",
+                        fontFamily: "System",
+                        fontWeight: "700",
                         color: PRIMARY_BLUE,
                       }}
                     >
@@ -437,9 +440,10 @@ export function StudySessionEditor({
                   </Pressable>
                 </View>
                 <Text
-                  className="mt-5 text-[10.5px] tracking-[3px] uppercase"
+                  className="mt-5 text-[11px] tracking-[3px] uppercase"
                   style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
+                    fontFamily: "System",
+                    fontWeight: "700",
                     color: PRIMARY_BLUE,
                   }}
                 >
@@ -447,13 +451,13 @@ export function StudySessionEditor({
                 </Text>
                 <Text
                   className="text-ink text-[28px] leading-[34px] tracking-[-0.4px] mt-1.5"
-                  style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
+                  style={{ fontFamily: "System", fontWeight: "800" }}
                 >
                   {isEditing ? "Edit session" : "New session"}
                 </Text>
                 <Text
                   className="text-ink-muted text-[13.5px] leading-[20px] mt-2"
-                  style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                  style={{ fontFamily: "System", fontWeight: "400" }}
                 >
                   {isEditing
                     ? "Tune the time, days, and apps that quiet during this practice."
@@ -489,7 +493,8 @@ export function StudySessionEditor({
                       selectionColor={PRIMARY_BLUE}
                       style={{
                         color: colors.ink,
-                        fontFamily: "PlusJakartaSans_700Bold",
+                        fontFamily: "System",
+                        fontWeight: "700",
                         fontSize: 19,
                         letterSpacing: -0.2,
                         paddingVertical: 12,
@@ -530,7 +535,8 @@ export function StudySessionEditor({
                         <Text
                           className="text-ink"
                           style={{
-                            fontFamily: "PlusJakartaSans_800ExtraBold",
+                            fontFamily: "System",
+                            fontWeight: "800",
                             fontSize: 32,
                             lineHeight: 36,
                             letterSpacing: -1,
@@ -541,7 +547,8 @@ export function StudySessionEditor({
                         <Text
                           className="ml-2"
                           style={{
-                            fontFamily: "PlusJakartaSans_700Bold",
+                            fontFamily: "System",
+                            fontWeight: "700",
                             fontSize: 13,
                             letterSpacing: 1.5,
                             color: colors.inkMuted,
@@ -671,9 +678,10 @@ export function StudySessionEditor({
                     aren't going to use. */}
                 <View className="px-5 mt-7">
                   <Text
-                    className="text-[10.5px] tracking-[3px] uppercase mb-3 ml-1"
+                    className="text-[11px] tracking-[3px] uppercase mb-3 ml-1"
                     style={{
-                      fontFamily: "PlusJakartaSans_700Bold",
+                      fontFamily: "System",
+                      fontWeight: "700",
                       color: colors.inkSubtle,
                     }}
                   >
@@ -708,7 +716,8 @@ export function StudySessionEditor({
                       <Text
                         className="text-ink text-[16px]"
                         style={{
-                          fontFamily: "PlusJakartaSans_700Bold",
+                          fontFamily: "System",
+                          fontWeight: "700",
                           letterSpacing: -0.2,
                         }}
                       >
@@ -716,7 +725,7 @@ export function StudySessionEditor({
                       </Text>
                       <Text
                         className="text-ink-muted text-[12.5px] mt-1 leading-[18px]"
-                        style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                        style={{ fontFamily: "System", fontWeight: "400" }}
                       >
                         {draft.useFocusMode
                           ? "Tapping Begin will quiet the apps you pick below."
@@ -871,7 +880,8 @@ export function StudySessionEditor({
                   >
                     <Text
                       style={{
-                        fontFamily: "PlusJakartaSans_700Bold",
+                        fontFamily: "System",
+                        fontWeight: "700",
                         fontSize: 16,
                         color: "#FFFFFF",
                         letterSpacing: 0.3,
@@ -883,7 +893,7 @@ export function StudySessionEditor({
                   {!canSave && draft.daysOfWeek.length === 0 && (
                     <Text
                       className="text-ink-subtle text-[12.5px] mt-3 text-center"
-                      style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                      style={{ fontFamily: "System", fontWeight: "400" }}
                     >
                       Pick at least one day to create the session.
                     </Text>
@@ -927,9 +937,10 @@ function FieldGroup({
   return (
     <View className="px-5 mt-7">
       <Text
-        className="text-[10.5px] tracking-[3px] uppercase mb-3 ml-1"
+        className="text-[11px] tracking-[3px] uppercase mb-3 ml-1"
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           color: colors.inkSubtle,
         }}
       >
@@ -939,7 +950,7 @@ function FieldGroup({
       {footer && (
         <Text
           className="text-ink-subtle text-[12.5px] leading-[19px] mt-3 px-1"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           {footer}
         </Text>
@@ -1010,7 +1021,8 @@ function AppRow({
           style={{
             flex: 1,
             marginLeft: 14,
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             fontSize: 16,
             letterSpacing: -0.2,
             color: colors.ink,
@@ -1098,17 +1110,7 @@ function ShieldGlyph({ stroke }: { stroke: string }) {
 }
 
 function CheckGlyph({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M5 12l5 5L20 7"
-        stroke={stroke}
-        strokeWidth={2.6}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
+  return <SFSymbol name="checkmark" size={12} color={stroke} weight="bold" />;
 }
 
 /**
@@ -1168,7 +1170,8 @@ function DayChip({
         >
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               fontSize: 14,
               color: selected ? "#FFFFFF" : colors.ink,
             }}
@@ -1213,7 +1216,8 @@ function AppsPresetPill({
     >
       <Text
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           fontSize: 12,
           color: PRIMARY_BLUE,
           letterSpacing: 0.2,
@@ -1270,9 +1274,8 @@ function PresetSegment({
       >
         <Text
           style={{
-            fontFamily: active
-              ? "PlusJakartaSans_700Bold"
-              : "PlusJakartaSans_600SemiBold",
+            fontFamily: "System",
+            fontWeight: active ? "700" : "600",
             fontSize: 12.5,
             color: active ? colors.ink : colors.inkMuted,
           }}

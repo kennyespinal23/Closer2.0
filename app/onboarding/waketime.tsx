@@ -63,7 +63,7 @@ export default function WakeTimeScreen() {
           <FadeIn delayMs={0}>
             <Text
               className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-4"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               What time do you usually wake up?
             </Text>

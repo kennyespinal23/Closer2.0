@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  KeyboardAvoidingView,
   LayoutAnimation,
-  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -10,11 +8,12 @@ import {
   UIManager,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import { AppleSheet } from "@/components/AppleSheet";
+import { SFSymbol } from "@/components/Symbol";
+import { CLOSER_ACCENT } from "@/constants/theme";
 import type { WeekdayIndex } from "@/lib/notifications";
 import {
   WEEKDAY_LABELS,
@@ -64,7 +63,7 @@ export type TimeBlockEditorProps = {
 /** Same accent we use elsewhere for primary CTA (e.g. the Begin pill
  *  on the home sermon card). Reads unambiguously as a tap target in
  *  both themes and pairs with the wheel's iOS-spinner chrome. */
-const PRIMARY_BLUE = "#0A84FF";
+const PRIMARY_ACCENT = CLOSER_ACCENT;
 
 // LayoutAnimation enablement for Android — no-op on iOS. Guarded so
 // hot reloads don't repeatedly flip the experimental flag.
@@ -158,59 +157,20 @@ export function TimeBlockEditor({
   const timeAsDate = toDate(draft.time);
 
   return (
-    <Modal
+    <AppleSheet
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-      statusBarTranslucent
+      onClose={onClose}
+      // 'auto' covers the collapsed state (header + wheel +
+      // repeat row). When the user expands the days chip strip
+      // we LayoutAnimation the inside, but the sheet itself
+      // doesn't need to resize because the picker dominates the
+      // height anyway. Keeping a single detent avoids a
+      // confusing magnetic-snap mid-edit.
+      detents={["auto"]}
+      backgroundColor={colors.bg}
     >
-      <Pressable
-        accessibilityLabel="Dismiss"
-        onPress={onClose}
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.45)",
-          justifyContent: "flex-end",
-        }}
-      >
-        {/* Inner Pressable swallows taps on the sheet body so they
-            don't dismiss. KeyboardAvoidingView is a no-op here (we
-            have no text inputs) but kept for parity with the rest
-            of the app's bottom sheets — if we add a label field
-            later, the layout will already do the right thing. */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
-          <Pressable
-            onPress={() => {}}
-            style={{
-              backgroundColor: colors.bg,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              borderTopWidth: StyleSheet.hairlineWidth,
-              borderColor: colors.border,
-              maxHeight: "92%",
-            }}
-          >
-            <SafeAreaView edges={["bottom"]}>
-              {/* Drag indicator — cosmetic. The sheet doesn't
-                  support drag-to-dismiss (tap-outside or Cancel
-                  does it) but the bar is the universal "this is a
-                  sheet" cue. */}
-              <View className="items-center pt-2.5 pb-1">
-                <View
-                  style={{
-                    width: 36,
-                    height: 4,
-                    borderRadius: 2,
-                    backgroundColor: colors.inkSubtle,
-                    opacity: 0.4,
-                  }}
-                />
-              </View>
-
-              {/* Header — Cancel / title / Save. Mirrors the
+      <View>
+            {/* Header — Cancel / title / Save. Mirrors the
                   reference exactly. Title is centered so the
                   three-up reads as one balanced row. */}
               <View className="flex-row items-center px-5 pt-2 pb-3">
@@ -223,7 +183,8 @@ export function TimeBlockEditor({
                 >
                   <Text
                     style={{
-                      fontFamily: "PlusJakartaSans_500Medium",
+                      fontFamily: "System",
+                      fontWeight: "500",
                       color: colors.inkMuted,
                       fontSize: 15,
                     }}
@@ -234,7 +195,8 @@ export function TimeBlockEditor({
                 <View className="flex-1 items-center px-3">
                   <Text
                     style={{
-                      fontFamily: "PlusJakartaSans_700Bold",
+                      fontFamily: "System",
+                      fontWeight: "700",
                       color: colors.ink,
                       fontSize: 17,
                       letterSpacing: -0.3,
@@ -256,8 +218,9 @@ export function TimeBlockEditor({
                 >
                   <Text
                     style={{
-                      fontFamily: "PlusJakartaSans_700Bold",
-                      color: PRIMARY_BLUE,
+                      fontFamily: "System",
+                      fontWeight: "700",
+                      color: PRIMARY_ACCENT,
                       fontSize: 15,
                     }}
                   >
@@ -327,7 +290,8 @@ export function TimeBlockEditor({
                     <Text
                       style={{
                         flex: 1,
-                        fontFamily: "PlusJakartaSans_600SemiBold",
+                        fontFamily: "System",
+                        fontWeight: "600",
                         color: colors.ink,
                         fontSize: 16,
                         letterSpacing: -0.2,
@@ -337,7 +301,8 @@ export function TimeBlockEditor({
                     </Text>
                     <Text
                       style={{
-                        fontFamily: "PlusJakartaSans_500Medium",
+                        fontFamily: "System",
+                        fontWeight: "500",
                         color: colors.inkMuted,
                         fontSize: 14,
                         marginRight: 8,
@@ -381,7 +346,8 @@ export function TimeBlockEditor({
                 {!canSave && (
                   <Text
                     style={{
-                      fontFamily: "PlusJakartaSans_400Regular",
+                      fontFamily: "System",
+                      fontWeight: "400",
                       color: colors.inkSubtle,
                       fontSize: 12.5,
                       lineHeight: 17,
@@ -395,11 +361,8 @@ export function TimeBlockEditor({
               </View>
 
               <View style={{ height: 24 }} />
-            </SafeAreaView>
-          </Pressable>
-        </KeyboardAvoidingView>
-      </Pressable>
-    </Modal>
+      </View>
+    </AppleSheet>
   );
 }
 
@@ -432,12 +395,12 @@ function DayChip({
       >
         <View
           style={{
-            height: 42,
-            borderRadius: 21,
+            height: 44,
+            borderRadius: 22,
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: selected
-              ? PRIMARY_BLUE
+              ? PRIMARY_ACCENT
               : withAlphaHex(colors.ink, 0.06),
             borderWidth: selected ? 0 : StyleSheet.hairlineWidth,
             borderColor: withAlphaHex(colors.ink, 0.12),
@@ -445,7 +408,8 @@ function DayChip({
         >
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               fontSize: 13,
               color: selected ? "#FFFFFF" : colors.ink,
             }}
@@ -465,19 +429,17 @@ function ChevronIcon({
   stroke: string;
   direction: "right" | "down";
 }) {
-  // Right chevron = closed; down chevron = open. Two stroke paths
-  // instead of a rotation transform so the icon's visual weight
-  // (caps, joins) stays identical in both states.
+  // Right chevron = closed; down chevron = open. SF Symbols
+  // ships purpose-built glyphs for each direction so we avoid
+  // any rotation transform — the visual weight (caps, joins)
+  // stays canonical in either state.
   return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-      <Path
-        d={direction === "right" ? "M9 6l6 6-6 6" : "M6 9l6 6 6-6"}
-        stroke={stroke}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol
+      name={direction === "right" ? "chevron.right" : "chevron.down"}
+      size={14}
+      color={stroke}
+      weight="semibold"
+    />
   );
 }
 

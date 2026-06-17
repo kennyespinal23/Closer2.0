@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { HeroDisc, HeroOnboardingPage } from "@/components/HeroOnboardingPage";
 import { useOnboarding } from "@/state/onboarding";
+import { useColors } from "@/state/theme";
 import { useStudySessions } from "@/state/studySessions";
 import {
   DEFAULT_BLOCKED_APP_IDS,
@@ -46,14 +47,12 @@ import {
  * so cold launches bypass the onboarding flow.
  */
 
-const PAGE_BG = "#5F1620"; // deep wine
-const SKY_WINE = "#A03342"; // softer burgundy halo + sky
+const FALLBACK_TIME = { hour: 7, minute: 0 } as const;
 
 const SYSTEM_STUDY_NAME = "Bible Study";
 const SYSTEM_SERMON_NAME = "Daily Sermon";
 const WEEKDAY_DAYS = [1, 2, 3, 4, 5] as const;
 const DAILY_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
-const FALLBACK_TIME = { hour: 7, minute: 0 } as const;
 
 function morningAppsToBlockedList(
   morningApps: string[] | undefined,
@@ -67,6 +66,7 @@ function morningAppsToBlockedList(
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { answers, setAnswer } = useOnboarding();
   const { upsertSystemSession } = useStudySessions();
 
@@ -135,20 +135,15 @@ export default function WelcomeScreen() {
 
   return (
     <HeroOnboardingPage
-      pageBg={PAGE_BG}
-      ambientGlow={SKY_WINE}
       eyebrow={eyebrow}
-      // No back button on the welcome — the user has crossed the
-      // threshold; the only direction is into the app.
       showBack={false}
       subject={
-        <HeroDisc haloColor={SKY_WINE} size={216} innerPaddingVertical={20}>
-          {/* The verse IS the subject. Centered, white, tight
-              line-height — like a small portrait of the Word. */}
+        <HeroDisc size={216} innerPaddingVertical={20}>
           <Text
             style={{
-              color: "#FFFFFF",
-              fontFamily: "PlusJakartaSans_600SemiBold",
+              color: colors.ink,
+              fontFamily: "System",
+              fontWeight: "600",
               fontSize: 15.5,
               lineHeight: 22,
               letterSpacing: -0.1,
@@ -161,9 +156,10 @@ export default function WelcomeScreen() {
           <View style={{ marginTop: 10 }}>
             <Text
               style={{
-                color: "rgba(255,255,255,0.65)",
-                fontFamily: "PlusJakartaSans_700Bold",
-                fontSize: 10,
+                color: colors.inkSecondary,
+                fontFamily: "System",
+                fontWeight: "700",
+                fontSize: 11,
                 letterSpacing: 1.8,
                 textTransform: "uppercase",
               }}

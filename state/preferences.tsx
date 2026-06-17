@@ -155,6 +155,23 @@ export function findTextSize(id: TextSizeId): TextSize {
 export type PreferencesState = {
   translationId: TranslationId;
   textSizeId: TextSizeId;
+  /**
+   * App-level "force reduce motion" override.
+   *
+   * Separate from the OS-level `UIAccessibility.isReduceMotionEnabled`
+   * pref (which `useReducedMotion()` reads directly): this is a
+   * Closer-only opt-in for users who want a calmer motion feel
+   * inside the app without flipping the system setting (which
+   * would affect every other app).
+   *
+   * The effective "reduce motion" state used throughout the app is
+   * `os || override`, so flipping this to `true` is strictly
+   * additive — it can only INCREASE motion-reduction, never undo
+   * an OS-level preference. The Appearance toggle below mirrors
+   * the override and reads the OS state as a force-on disabled
+   * cue when the user already has it enabled system-wide.
+   */
+  reduceMotionOverride: boolean;
 };
 
 type PreferencesContextValue = PreferencesState & {
@@ -162,6 +179,7 @@ type PreferencesContextValue = PreferencesState & {
   textSize: TextSize;
   setTranslation: (id: TranslationId) => void;
   setTextSize: (id: TextSizeId) => void;
+  setReduceMotionOverride: (value: boolean) => void;
   reset: () => void;
   /** True once persisted prefs have loaded (or no save existed). */
   hydrated: boolean;
@@ -170,6 +188,7 @@ type PreferencesContextValue = PreferencesState & {
 const DEFAULT: PreferencesState = {
   translationId: "web",
   textSizeId: "default",
+  reduceMotionOverride: false,
 };
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
@@ -192,9 +211,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       TEXT_SIZES.some((t) => t.id === loaded.textSizeId)
         ? loaded.textSizeId
         : DEFAULT.textSizeId;
+    // Tolerate missing field (older saves predate the override).
+    // Coerce to boolean so a truthy non-bool legacy value (e.g.
+    // "true" string) doesn't slip through and break Switch.
+    const safeOverride = loaded.reduceMotionOverride === true;
     setState({
       translationId: safeTranslation,
       textSizeId: safeTextSize,
+      reduceMotionOverride: safeOverride,
     });
   }, []);
 
@@ -212,6 +236,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, textSizeId: id }));
   }, []);
 
+  const setReduceMotionOverride = useCallback((value: boolean) => {
+    setState((s) => ({ ...s, reduceMotionOverride: value }));
+  }, []);
+
   const reset = useCallback(() => {
     setState(DEFAULT);
     removeKey(STORAGE_KEYS.preferences);
@@ -224,10 +252,18 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       textSize: findTextSize(state.textSizeId),
       setTranslation,
       setTextSize,
+      setReduceMotionOverride,
       reset,
       hydrated,
     }),
-    [state, setTranslation, setTextSize, reset, hydrated],
+    [
+      state,
+      setTranslation,
+      setTextSize,
+      setReduceMotionOverride,
+      reset,
+      hydrated,
+    ],
   );
 
   return (

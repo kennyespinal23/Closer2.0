@@ -1,5 +1,9 @@
 import { Alert, Text, View } from "react-native";
-import { SettingsScaffold, SettingsSection } from "@/components/SettingsScaffold";
+import {
+  SettingsInfoBanner,
+  SettingsScaffold,
+  SettingsSection,
+} from "@/components/SettingsScaffold";
 import { SocialButton } from "@/components/SocialButton";
 
 /**
@@ -31,29 +35,15 @@ export default function AccountScreen() {
 
   return (
     <SettingsScaffold title="Account">
-      {/* ─── Promise ─────────────────────────────────────────────
-          Lead with what sign-in WILL do, framed honestly. We don't
+      {/* Lead with what sign-in WILL do, framed honestly. We don't
           hide that auth isn't wired — we tell the user what's coming
-          and why. The page header already says "Account", so we
-          don't repeat that label in the card. */}
-      <View className="px-6 mt-2">
-        <View className="rounded-2xl border border-border bg-surface px-5 py-6">
-          <Text
-            className="text-ink text-[20px] leading-[26px] tracking-[-0.2px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            One quiet rhythm,{"\n"}every device.
-          </Text>
-          <Text
-            className="text-ink-muted text-[13.5px] leading-[20px] mt-2.5"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-          >
-            Sign in to carry your highlights, notes, and streak between
-            your phone and tablet. Until then, everything lives only on
-            this device.
-          </Text>
-        </View>
-      </View>
+          and why. Uses the shared SettingsInfoBanner so this screen
+          carries the same framing-card treatment as the other
+          settings detail pages. */}
+      <SettingsInfoBanner
+        title="One quiet rhythm, every device."
+        body="Sign in to carry your highlights, notes, and streak between your phone and tablet. Until then, everything lives only on this device."
+      />
 
       <SettingsSection
         title="Sign In"
@@ -76,7 +66,7 @@ export default function AccountScreen() {
       <View className="px-6 mt-8">
         <Text
           className="text-ink-subtle text-[12px] leading-[18px] text-center"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           We&apos;ll never email you a newsletter. Sign-in is for sync, nothing else.
         </Text>

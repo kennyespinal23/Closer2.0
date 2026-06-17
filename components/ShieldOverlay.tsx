@@ -137,9 +137,10 @@ export function ShieldOverlay({
                   style={{ backgroundColor: colors.inkSubtle }}
                 />
                 <Text
-                  className="text-[10px] tracking-[3px] uppercase"
+                  className="text-[11px] tracking-[3px] uppercase"
                   style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
+                    fontFamily: "System",
+                    fontWeight: "700",
                     color: colors.inkSubtle,
                   }}
                 >
@@ -154,7 +155,7 @@ export function ShieldOverlay({
               {/* ─── Headline ───────────────────────────────── */}
               <Text
                 className="text-ink text-[28px] leading-[34px] tracking-[-0.4px] text-center"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 {name} is quiet
               </Text>
@@ -162,7 +163,7 @@ export function ShieldOverlay({
               {/* ─── Quiet message ──────────────────────────── */}
               <Text
                 className="text-ink-muted text-[15px] leading-[23px] text-center mt-4 px-3"
-                style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                style={{ fontFamily: "System", fontWeight: "400" }}
               >
                 {message}
               </Text>
@@ -179,7 +180,7 @@ export function ShieldOverlay({
               >
                 <Text
                   className="text-primary-fg text-[15px]"
-                  style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                  style={{ fontFamily: "System", fontWeight: "700" }}
                 >
                   Back to Closer
                 </Text>
@@ -195,7 +196,7 @@ export function ShieldOverlay({
                 >
                   <Text
                     className="text-ink-subtle text-[13.5px]"
-                    style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+                    style={{ fontFamily: "System", fontWeight: "600" }}
                   >
                     End focus
                   </Text>
@@ -204,7 +205,7 @@ export function ShieldOverlay({
 
               <Text
                 className="text-ink-subtle text-[11.5px] text-center mt-3"
-                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                style={{ fontFamily: "System", fontWeight: "500" }}
               >
                 A few minutes of stillness, before the noise.
               </Text>

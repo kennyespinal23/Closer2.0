@@ -69,7 +69,7 @@ export default function WhyScreen() {
           <FadeIn delayMs={0}>
             <Text
               className="text-ink text-[28px] leading-[36px] tracking-[-0.6px] mt-4"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               What brings you{"\n"}to Closer?
             </Text>
@@ -78,7 +78,7 @@ export default function WhyScreen() {
           <FadeIn delayMs={500}>
             <Text
               className="text-ink-muted text-[15px] leading-[22px] mt-3"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
             >
               No wrong answers.
             </Text>

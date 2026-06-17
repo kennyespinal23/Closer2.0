@@ -32,9 +32,8 @@ export function OptionCard({ label, selected, onPress }: OptionCardProps) {
       <Text
         className="flex-1 text-ink text-[16px] leading-[22px]"
         style={{
-          fontFamily: selected
-            ? "PlusJakartaSans_600SemiBold"
-            : "PlusJakartaSans_500Medium",
+          fontFamily: "System",
+          fontWeight: selected ? "600" : "500",
         }}
       >
         {label}

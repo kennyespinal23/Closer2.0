@@ -84,14 +84,47 @@ export type NativeBottomTabsNavigationEventMap = {
 type NativeBottomTabsNavigatorProps = {
   /** Active tab tint color. iOS systemRed `#FF3B30` by default. */
   tabBarActiveTintColor?: ColorValue;
-  /** Inactive tab tint color. iOS 26+ ignores this (Liquid Glass). */
+  /** Inactive tab tint color. iOS 26+ ignores this (Liquid Glass)
+   *  UNLESS `experimentalBakedTintColors` is enabled. */
   tabBarInactiveTintColor?: ColorValue;
+  /**
+   * Force the active/inactive tint colors to be applied even on
+   * iOS 26+ Liquid Glass tabs. Required to override the default
+   * low-contrast greige Apple paints for inactive labels — the
+   * stock UITabBar appearance on iOS 26+ uses a tint formula
+   * tuned for the translucent glass material that lands below the
+   * AAA contrast bar this project targets. Setting this flag
+   * routes our `tabBarInactiveTintColor` into the icons and
+   * labels at draw time so we can hit AAA on inactive tabs
+   * without sacrificing the Liquid Glass material behind them.
+   *
+   * Marked `experimental` upstream because the bake-time tint
+   * application can produce slight icon-color mismatches with
+   * other Apple tab bars; for our use case (single solid tint per
+   * state) it's stable.
+   */
+  experimentalBakedTintColors?: boolean;
   /** Enable haptic feedback on tab change. */
   hapticFeedbackEnabled?: boolean;
   /** How the bar's appearance reacts when scrolled to the bottom. */
   scrollEdgeAppearance?: "default" | "opaque" | "transparent";
   /** iOS 26+: tab bar minimize-on-scroll behavior. */
   minimizeBehavior?: "automatic" | "onScrollDown" | "onScrollUp" | "never";
+  /**
+   * Disable the cross-fade animation between tabs (iOS only).
+   *
+   * When false (the package default) UITabBarController plays a
+   * brief crossfade as it swaps scenes. With our setup that
+   * crossfade renders a 1-frame "ghost" of the previous tab on top
+   * of the new one before the snapshot drops — visible to the eye
+   * as a flash of the screen you just left. Setting this true makes
+   * the swap atomic the way Apple's Settings / Music / Phone tab
+   * bars feel: tap → new tab is just there, no transition. We
+   * surface it on the navigator (and forward it into TabView) so
+   * the layout can opt in without reaching into the package's
+   * internal prop surface.
+   */
+  disablePageAnimations?: boolean;
 };
 
 type Props = DefaultNavigatorOptions<
@@ -116,9 +149,11 @@ function NativeBottomTabsNavigator({
   backBehavior,
   tabBarActiveTintColor,
   tabBarInactiveTintColor,
+  experimentalBakedTintColors,
   hapticFeedbackEnabled,
   scrollEdgeAppearance,
   minimizeBehavior,
+  disablePageAnimations,
 }: Props) {
   const { state, descriptors, navigation, NavigationContent } =
     useNavigationBuilder<
@@ -180,9 +215,11 @@ function NativeBottomTabsNavigator({
         renderScene={({ route }) => descriptors[route.key]?.render() ?? null}
         tabBarActiveTintColor={tabBarActiveTintColor}
         tabBarInactiveTintColor={tabBarInactiveTintColor}
+        experimental_bakedTintColors={experimentalBakedTintColors}
         hapticFeedbackEnabled={hapticFeedbackEnabled}
         scrollEdgeAppearance={scrollEdgeAppearance}
         minimizeBehavior={minimizeBehavior}
+        disablePageAnimations={disablePageAnimations}
       />
     </NavigationContent>
   );

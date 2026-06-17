@@ -135,7 +135,7 @@ export default function TimeScreen() {
           <FadeIn delayMs={0}>
             <Text
               className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-4"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               When should your sermon arrive
               {firstName ? `, ${firstName}?` : "?"}
@@ -145,7 +145,7 @@ export default function TimeScreen() {
           <FadeIn delayMs={500}>
             <Text
               className="text-ink-muted text-[15px] leading-[22px] mt-3"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
             >
               A short daily word, delivered straight to your
               phone — before you reach for the noise.
@@ -258,7 +258,8 @@ function TimeCard({
       <Text
         className="text-ink"
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           fontSize: 22,
           letterSpacing: -0.3,
         }}
@@ -268,7 +269,8 @@ function TimeCard({
       <Text
         className="text-ink-muted"
         style={{
-          fontFamily: "PlusJakartaSans_500Medium",
+          fontFamily: "System",
+          fontWeight: "500",
           fontSize: 12,
           marginTop: 4,
         }}

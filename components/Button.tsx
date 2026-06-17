@@ -153,7 +153,7 @@ export function Button({
                 "text-[16px] tracking-[0.1px]",
                 labelByVariant[variant],
               ].join(" ")}
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               {label}
             </Text>

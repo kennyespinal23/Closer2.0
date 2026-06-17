@@ -14,6 +14,7 @@ import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
 import { progressFor } from "@/constants/onboarding";
+import { CLOSER_ACCENT } from "@/constants/theme";
 
 /**
  * Screen 12.5 — How Closer works.
@@ -47,7 +48,7 @@ import { progressFor } from "@/constants/onboarding";
  * a fixed height so the page doesn't reflow when you swipe
  * between steps.
  */
-const ACCENT = "#0A84FF";
+const ACCENT = CLOSER_ACCENT;
 const STEP_COUNT = 3;
 const CARD_HEIGHT = 340;
 
@@ -124,7 +125,7 @@ export default function HowItWorksScreen() {
           <FadeIn delayMs={0}>
             <Text
               className="text-ink-muted text-[12.5px] tracking-[2.4px] uppercase mt-4"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               How it works
             </Text>
@@ -133,7 +134,7 @@ export default function HowItWorksScreen() {
           <FadeIn delayMs={300}>
             <Text
               className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-3"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               A simple loop, every{"\n"}morning.
             </Text>
@@ -181,7 +182,8 @@ export default function HowItWorksScreen() {
                 <Text
                   style={{
                     color: ACCENT,
-                    fontFamily: "PlusJakartaSans_700Bold",
+                    fontFamily: "System",
+                    fontWeight: "700",
                     fontSize: 11,
                     letterSpacing: 2.4,
                     textTransform: "uppercase",
@@ -192,7 +194,8 @@ export default function HowItWorksScreen() {
                 <Text
                   style={{
                     color: "#FFFFFF",
-                    fontFamily: "PlusJakartaSans_700Bold",
+                    fontFamily: "System",
+                    fontWeight: "700",
                     fontSize: 19,
                     letterSpacing: -0.3,
                     marginTop: 6,
@@ -203,7 +206,8 @@ export default function HowItWorksScreen() {
                 <Text
                   style={{
                     color: "#C2C2C7",
-                    fontFamily: "PlusJakartaSans_400Regular",
+                    fontFamily: "System",
+                    fontWeight: "400",
                     fontSize: 14.5,
                     lineHeight: 22,
                     marginTop: 6,
@@ -277,7 +281,8 @@ export default function HowItWorksScreen() {
                   <Text
                     style={{
                       color: "#9B9BA3",
-                      fontFamily: "PlusJakartaSans_500Medium",
+                      fontFamily: "System",
+                      fontWeight: "500",
                       fontSize: 14,
                     }}
                   >
@@ -316,7 +321,8 @@ function BlockedAppsVisual() {
       <Text
         style={{
           color: ACCENT,
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           fontSize: 11,
           letterSpacing: 2.2,
           textTransform: "uppercase",
@@ -374,8 +380,9 @@ function SermonVisual() {
       <Text
         style={{
           color: "#9B9BA3",
-          fontFamily: "PlusJakartaSans_700Bold",
-          fontSize: 10,
+          fontFamily: "System",
+          fontWeight: "700",
+          fontSize: 11,
           letterSpacing: 2,
           textTransform: "uppercase",
         }}
@@ -385,7 +392,8 @@ function SermonVisual() {
       <Text
         style={{
           color: "#FFFFFF",
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           fontSize: 16,
           marginTop: 8,
           letterSpacing: -0.2,
@@ -396,7 +404,8 @@ function SermonVisual() {
       <Text
         style={{
           color: "#A1A1AA",
-          fontFamily: "PlusJakartaSans_500Medium",
+          fontFamily: "System",
+          fontWeight: "500",
           fontSize: 13,
           lineHeight: 18,
           marginTop: 6,
@@ -407,8 +416,9 @@ function SermonVisual() {
       <Text
         style={{
           color: ACCENT,
-          fontFamily: "PlusJakartaSans_700Bold",
-          fontSize: 10.5,
+          fontFamily: "System",
+          fontWeight: "700",
+          fontSize: 11,
           letterSpacing: 1.6,
           marginTop: 6,
         }}
@@ -437,7 +447,8 @@ function SermonVisual() {
       <Text
         style={{
           color: "#9B9BA3",
-          fontFamily: "PlusJakartaSans_500Medium",
+          fontFamily: "System",
+          fontWeight: "500",
           fontSize: 11,
           marginTop: 8,
         }}
@@ -486,7 +497,8 @@ function UnlockedAppsVisual() {
         <Text
           style={{
             color: "#34C759",
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             fontSize: 11,
             letterSpacing: 2.2,
             textTransform: "uppercase",

@@ -150,7 +150,8 @@ function BookCoverPlaceholder({
         {variant !== "thumb" && (
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               fontSize: eyebrow.fontSize,
               letterSpacing: eyebrow.letterSpacing,
               color: palette.accent,
@@ -173,7 +174,8 @@ function BookCoverPlaceholder({
         >
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_800ExtraBold",
+              fontFamily: "System",
+              fontWeight: "800",
               fontSize: label.fontSize,
               letterSpacing: label.letterSpacing,
               color: "#FFFFFF",
@@ -189,7 +191,8 @@ function BookCoverPlaceholder({
         {variant === "hero" && (
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_600SemiBold",
+              fontFamily: "System",
+              fontWeight: "600",
               fontSize: 11,
               color: palette.accent,
               opacity: 0.75,
@@ -222,9 +225,9 @@ function radiusForVariant(v: Variant): number {
 function eyebrowForVariant(v: Variant) {
   switch (v) {
     case "thumb":
-      return { fontSize: 7, letterSpacing: 0.8 };
+      return { fontSize: 11, letterSpacing: 0.8 };
     case "card":
-      return { fontSize: 9, letterSpacing: 1.2 };
+      return { fontSize: 11, letterSpacing: 1.2 };
     case "hero":
       return { fontSize: 11, letterSpacing: 2 };
   }

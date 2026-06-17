@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
+import { SFSymbol } from "@/components/Symbol";
 import { FadeIn } from "@/components/FadeIn";
 import { shareInsight } from "@/lib/share";
 import {
@@ -179,21 +180,21 @@ export default function InsightDetailScreen() {
           <FadeIn delayMs={100} durationMs={700}>
             <View className="px-6 mt-6">
               <Text
-                className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase"
+                style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 {category ? category.label : "Insight"} ·{" "}
                 {insight.readMinutes} min read
               </Text>
               <Text
                 className="text-ink text-[30px] leading-[36px] tracking-[-0.5px] mt-3"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 {insight.title}
               </Text>
               <Text
                 className="text-ink-muted text-[15px] leading-[22px] mt-3"
-                style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                style={{ fontFamily: "System", fontWeight: "400" }}
               >
                 {insight.subtitle}
               </Text>
@@ -260,8 +261,8 @@ export default function InsightDetailScreen() {
         {related.length > 0 && (
           <View className="mt-12 px-6">
             <Text
-              className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Read next
             </Text>
@@ -325,7 +326,8 @@ function BlockRenderer({
         <Text
           className="text-ink text-[17px] mt-5"
           style={{
-            fontFamily: "PlusJakartaSans_400Regular",
+            fontFamily: "System",
+            fontWeight: "400",
             lineHeight: 26,
           }}
         >
@@ -338,7 +340,8 @@ function BlockRenderer({
         <Text
           className="text-ink text-[22px] mt-7"
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             lineHeight: 30,
             letterSpacing: -0.3,
           }}
@@ -359,7 +362,8 @@ function BlockRenderer({
           <Text
             className="text-ink text-[19px]"
             style={{
-              fontFamily: "PlusJakartaSans_500Medium",
+              fontFamily: "System",
+              fontWeight: "500",
               fontStyle: "italic",
               lineHeight: 28,
             }}
@@ -369,7 +373,7 @@ function BlockRenderer({
           {block.attribution && (
             <Text
               className="text-ink-subtle text-[12.5px] mt-2"
-              style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+              style={{ fontFamily: "System", fontWeight: "600" }}
             >
               — {block.attribution}
             </Text>
@@ -397,7 +401,8 @@ function BlockRenderer({
               <Text
                 className="text-[11px] tracking-[2.5px] uppercase"
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   color: insight.palette.accent,
                 }}
               >
@@ -409,7 +414,8 @@ function BlockRenderer({
               <Text
                 className="text-ink text-[15.5px] mt-2.5"
                 style={{
-                  fontFamily: "PlusJakartaSans_500Medium",
+                  fontFamily: "System",
+                  fontWeight: "500",
                   lineHeight: 23,
                   fontStyle: "italic",
                 }}
@@ -439,7 +445,8 @@ function BlockRenderer({
               <Text
                 className="text-ink text-[16.5px] flex-1"
                 style={{
-                  fontFamily: "PlusJakartaSans_400Regular",
+                  fontFamily: "System",
+                  fontWeight: "400",
                   lineHeight: 25,
                 }}
               >
@@ -500,7 +507,8 @@ function RelatedRow({
           >
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_800ExtraBold",
+                fontFamily: "System",
+                fontWeight: "800",
                 fontSize: 32,
                 color: insight.palette.ink,
                 opacity: 0.9,
@@ -517,14 +525,14 @@ function RelatedRow({
           <View className="flex-1 pr-2">
             <Text
               className="text-ink text-[15px] leading-[20px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
               numberOfLines={2}
             >
               {insight.title}
             </Text>
             <Text
               className="text-ink-subtle text-[12px] mt-1"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
               numberOfLines={1}
             >
               {insight.readMinutes} min · {insight.subtitle}
@@ -645,7 +653,8 @@ function ActionPill({
         {icon}
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             fontSize: 13.5,
             color: tint ?? colors.ink,
             marginLeft: 8,
@@ -675,7 +684,7 @@ function InsightNotFound({ onBack }: { onBack: () => void }) {
         </Pressable>
         <Text
           className="text-ink text-[17px] flex-1 text-center"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           Insight
         </Text>
@@ -684,13 +693,13 @@ function InsightNotFound({ onBack }: { onBack: () => void }) {
       <View className="flex-1 items-center justify-center px-8">
         <Text
           className="text-ink text-[18px] text-center"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           We couldn&apos;t find that read.
         </Text>
         <Text
           className="text-ink-muted text-[14px] text-center mt-2"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           Head back to Insights to pick another.
         </Text>
@@ -798,59 +807,53 @@ function BookmarkIcon({
   size?: number;
 }) {
   const colors = useColors();
+  // SF Symbol has both filled and outline variants of bookmark;
+  // we just switch the symbol name based on `filled`, keeping
+  // the tint identical so the toggle reads as the same icon
+  // with a fill change.
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M6 4h12v17l-6-4-6 4z"
-        stroke={colors.ink}
-        strokeWidth={1.8}
-        strokeLinejoin="round"
-        fill={filled ? colors.ink : "none"}
-      />
-    </Svg>
+    <SFSymbol
+      name={filled ? "bookmark.fill" : "bookmark"}
+      size={size}
+      color={colors.ink}
+      weight="medium"
+    />
   );
 }
 
 function ShareIcon() {
   const colors = useColors();
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 3v13M8 7l4-4 4 4M5 14v6h14v-6"
-        stroke={colors.ink}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol
+      name="square.and.arrow.up"
+      size={16}
+      color={colors.ink}
+      weight="medium"
+    />
   );
 }
 
 function OpenIcon({ color }: { color: string }) {
+  // SF Symbol equivalent of the "open in new" arrow-out-of-box
+  // glyph used by Safari, Mail, and most Apple share contexts.
   return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M7 17L17 7M9 7h8v8"
-        stroke={color}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol
+      name="arrow.up.right.square"
+      size={14}
+      color={color}
+      weight="medium"
+    />
   );
 }
 
 function ChevronIcon() {
   const colors = useColors();
   return (
-    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M9 6l6 6-6 6"
-        stroke={colors.inkSubtle}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol
+      name="chevron.right"
+      size={12}
+      color={colors.inkSubtle}
+      weight="semibold"
+    />
   );
 }

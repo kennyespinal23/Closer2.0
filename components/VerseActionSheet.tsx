@@ -1,15 +1,12 @@
-import { useEffect, useRef } from "react";
 import {
-  Animated,
-  Easing,
-  Modal,
   Pressable,
   ScrollView,
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
+import * as haptics from "@/lib/haptics";
+import { AppleSheet } from "@/components/AppleSheet";
+import { SFSymbol } from "@/components/Symbol";
 import {
   HIGHLIGHT_COLORS,
   type HighlightColorId,
@@ -36,8 +33,13 @@ import { useColors } from "@/state/theme";
  *   │   + Add note         ↗ Share       │   ← actions
  *   └────────────────────────────────────┘
  *
- * Animation: backdrop fades in, panel slides up. Same pattern as the
- * profile drawer so the feel is consistent across the app.
+ * Presentation: AppleSheet — real UIKit sheet so the
+ * pull-to-resize, magnetic detent snapping, and grabber pulse all
+ * come from `UISheetPresentationController` itself rather than
+ * the hand-rolled translateY+spring animation this used to ship
+ * with. The two detents below ('auto' = sized to current notes
+ * count, 1 = full screen) let a verse with many notes scroll
+ * inside the bigger detent without losing the compact default.
  */
 export function VerseActionSheet({
   visible,
@@ -69,115 +71,25 @@ export function VerseActionSheet({
   onClose: () => void;
 }) {
   const colors = useColors();
-  const translateY = useRef(new Animated.Value(500)).current;
-  const backdrop = useRef(new Animated.Value(0)).current;
-
-  // Show/hide animation. We animate IN whenever visible becomes
-  // true; closing is driven from the parent via the `close` callback
-  // because we also need to reset selection state at the same time.
-  useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-          tension: 80,
-          friction: 14,
-        }),
-        Animated.timing(backdrop, {
-          toValue: 1,
-          duration: 220,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // Reset position for next open. Quick reset, no animation
-      // because the Modal itself is unmounting.
-      translateY.setValue(500);
-      backdrop.setValue(0);
-    }
-  }, [visible, translateY, backdrop]);
-
-  const handleBackdrop = () => {
-    Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: 500,
-        duration: 200,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(backdrop, {
-        toValue: 0,
-        duration: 180,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start(() => onClose());
-  };
-
   const hasNotes = notes.length > 0;
 
   return (
-    <Modal
-      transparent
+    <AppleSheet
       visible={visible}
-      onRequestClose={handleBackdrop}
-      animationType="none"
-      statusBarTranslucent
+      onClose={onClose}
+      // 'auto' is the default opening size — sized to the current
+      // content height (verse + swatches + notes + actions). The
+      // optional second detent (full height) lets a verse with
+      // many notes drag up for a long-list reading position.
+      detents={["auto", 1]}
+      backgroundColor={colors.surface}
     >
-      <View style={{ flex: 1 }}>
-        {/* Backdrop — tap to dismiss. */}
-        <Animated.View
-          pointerEvents={visible ? "auto" : "none"}
-          style={{
-            ...StyleSheetAbsoluteFill,
-            backgroundColor: "rgba(0, 0, 0, 0.55)",
-            opacity: backdrop,
-          }}
-        >
-          <Pressable
-            onPress={handleBackdrop}
-            style={{ flex: 1 }}
-            accessibilityRole="button"
-            accessibilityLabel="Dismiss"
-          />
-        </Animated.View>
-
-        {/* Sheet — anchored to bottom, slides up. */}
-        <Animated.View
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            transform: [{ translateY }],
-            // Cap the sheet height so a verse with many notes scrolls
-            // internally instead of overflowing past the top of the
-            // screen. ~78% leaves the reference visible behind it.
-            maxHeight: "78%",
-          }}
-        >
-          <SafeAreaView
-            edges={["bottom"]}
-            style={{
-              backgroundColor: colors.surface,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              borderTopWidth: 1,
-              borderColor: colors.border,
-            }}
-          >
-            {/* Grab handle */}
-            <View className="items-center pt-3 pb-1">
-              <View className="w-10 h-1 rounded-full bg-border-strong" />
-            </View>
-
-            {/* Reference + preview */}
-            <View className="px-6 pt-3 pb-4">
+      <View>
+        {/* Reference + preview */}
+        <View className="px-6 pt-3 pb-4">
               <Text
                 className="text-primary text-[11px] tracking-[2.5px] uppercase"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 {reference ?? ""}
               </Text>
@@ -185,7 +97,7 @@ export function VerseActionSheet({
                 <Text
                   numberOfLines={2}
                   className="text-ink text-[14.5px] mt-2 leading-[20px]"
-                  style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                  style={{ fontFamily: "System", fontWeight: "400" }}
                 >
                   &ldquo;{previewText}&rdquo;
                 </Text>
@@ -206,8 +118,8 @@ export function VerseActionSheet({
               {/* Color swatches */}
               <View className="px-6 pt-5 pb-2">
                 <Text
-                  className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3"
-                  style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                  className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+                  style={{ fontFamily: "System", fontWeight: "700" }}
                 >
                   Highlight
                 </Text>
@@ -217,9 +129,15 @@ export function VerseActionSheet({
                     return (
                       <Pressable
                         key={c.id}
-                        onPress={() =>
-                          onHighlight(selected ? null : c.id)
-                        }
+                        onPress={() => {
+                          // Selection feedback — same haptic the iOS
+                          // Notes/Mail picker uses when you cycle
+                          // through colors. Reads as a discrete
+                          // "value cross" event, distinct from the
+                          // weightier confirmation haptics on CTAs.
+                          haptics.tick();
+                          onHighlight(selected ? null : c.id);
+                        }}
                         accessibilityRole="button"
                         accessibilityLabel={`${c.name} highlight`}
                         hitSlop={6}
@@ -248,7 +166,14 @@ export function VerseActionSheet({
 
                   {/* Clear / no-highlight swatch */}
                   <Pressable
-                    onPress={() => onHighlight(null)}
+                    onPress={() => {
+                      // Tick — selection feedback. Distinct from
+                      // the swatch picks above because semantically
+                      // the user just selected "no color", which
+                      // is itself a selection value.
+                      haptics.tick();
+                      onHighlight(null);
+                    }}
                     accessibilityRole="button"
                     accessibilityLabel="Clear highlight"
                     hitSlop={6}
@@ -281,8 +206,8 @@ export function VerseActionSheet({
                   <View className="h-[1px] bg-border mx-6 mt-5" />
                   <View className="px-6 pt-5">
                     <Text
-                      className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3"
-                      style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                      className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+                      style={{ fontFamily: "System", fontWeight: "700" }}
                     >
                       Notes · {notes.length}
                     </Text>
@@ -300,7 +225,8 @@ export function VerseActionSheet({
                             <Text
                               className="text-ink text-[13.5px] flex-1 leading-[19px]"
                               style={{
-                                fontFamily: "PlusJakartaSans_500Medium",
+                                fontFamily: "System",
+                                fontWeight: "500",
                               }}
                               numberOfLines={3}
                             >
@@ -339,20 +265,10 @@ export function VerseActionSheet({
                 onPress={onShare}
               />
             </View>
-          </SafeAreaView>
-        </Animated.View>
       </View>
-    </Modal>
+    </AppleSheet>
   );
 }
-
-const StyleSheetAbsoluteFill = {
-  position: "absolute" as const,
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-};
 
 // ─────────────────────────────────────────────────────────────────
 // Bits
@@ -379,7 +295,7 @@ function ActionButton({
       {icon}
       <Text
         className="text-ink text-[14px] ml-2"
-        style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+        style={{ fontFamily: "System", fontWeight: "600" }}
       >
         {label}
       </Text>
@@ -387,75 +303,57 @@ function ActionButton({
   );
 }
 
+// Each glyph below is now an SF Symbol — we keep the named
+// wrapper functions so the JSX call sites stay identical, but
+// the body is a single Symbol render. Apple-native rendering
+// at every device scale, no path tuning, and the symbols
+// auto-vary their stroke to match the requested weight (e.g.
+// "semibold" reads as a slightly chunkier line).
+
 function CheckGlyph({ dark }: { dark?: boolean }) {
   const { ink } = useColors();
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M5 12l5 5L20 7"
-        stroke={dark ? "#0E0E10" : ink}
-        strokeWidth={2.6}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol
+      name="checkmark"
+      size={16}
+      color={dark ? "#0E0E10" : ink}
+      weight="bold"
+    />
   );
 }
 
 function ClearGlyph() {
   const { inkSubtle } = useColors();
   return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M6 6l12 12M18 6l-12 12"
-        stroke={inkSubtle}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-    </Svg>
+    <SFSymbol name="xmark" size={14} color={inkSubtle} weight="semibold" />
   );
 }
 
 function PlusIcon() {
   const { ink } = useColors();
-  return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 5v14M5 12h14"
-        stroke={ink}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
+  return <SFSymbol name="plus" size={16} color={ink} weight="semibold" />;
 }
 
 function ShareIcon() {
   const { ink } = useColors();
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 4v12M12 4l-4 4M12 4l4 4M5 13v6h14v-6"
-        stroke={ink}
-        strokeWidth={1.7}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol
+      name="square.and.arrow.up"
+      size={16}
+      color={ink}
+      weight="medium"
+    />
   );
 }
 
 function ChevronRight() {
   const { inkSubtle } = useColors();
   return (
-    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M9 6l6 6-6 6"
-        stroke={inkSubtle}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol
+      name="chevron.right"
+      size={12}
+      color={inkSubtle}
+      weight="semibold"
+    />
   );
 }

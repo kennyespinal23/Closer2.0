@@ -40,6 +40,12 @@ const FIRE_STREAK_ANIMATION = require("../../assets/lottie/FireStreakAnimation.j
  * completion celebration is white-on-dark with the sermon's accent;
  * the streak screen lives in an amber + warm-orange world tied to
  * the fire icon.
+ *
+ * The history-dashboard view of the streak (week strip, month
+ * calendar, achievements link) lives at `/rhythm` and is reached
+ * from the top-right streak chip on the home page — kept
+ * separate so this post-sermon beat stays a clean celebratory
+ * moment, not a data screen.
  */
 
 const STREAK_AMBER = "#FFB672";
@@ -233,7 +239,8 @@ export default function StreakScreen() {
             <Text
               className="text-[10.5px] tracking-[2.5px] uppercase ml-2"
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color: STREAK_AMBER,
               }}
             >
@@ -251,9 +258,14 @@ export default function StreakScreen() {
             frame always shows `days` once the count-up settles. */}
         <Animated.View style={{ transform: [{ scale: numberScale }] }}>
           <Text
-            className={isMilestone ? "text-[88px] leading-[88px] tracking-[-2px] mt-4 text-center" : "text-[88px] leading-[88px] tracking-[-2px] mt-7 text-center"}
+            className={
+              isMilestone
+                ? "text-[88px] leading-[88px] tracking-[-2px] mt-4 text-center"
+                : "text-[88px] leading-[88px] tracking-[-2px] mt-7 text-center"
+            }
             style={{
-              fontFamily: "PlusJakartaSans_800ExtraBold",
+              fontFamily: "System",
+              fontWeight: "800",
               color: STREAK_AMBER,
             }}
           >
@@ -263,21 +275,21 @@ export default function StreakScreen() {
 
         <Text
           className="text-ink-subtle text-[12px] tracking-[3px] uppercase text-center mt-2"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           {days === 1 ? "DAY STREAK" : `${days}-DAY STREAK`}
         </Text>
 
         <Text
           className="text-ink text-[26px] leading-[32px] tracking-[-0.3px] text-center mt-7 px-4"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           {streakHeadline(days, isMilestone)}
         </Text>
 
         <Text
           className="text-ink-muted text-[14.5px] leading-[22px] text-center mt-3.5 px-4"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           {streakSubcopy(days, isMilestone)}
         </Text>

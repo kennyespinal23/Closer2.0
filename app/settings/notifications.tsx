@@ -136,7 +136,7 @@ export default function NotificationsScreen() {
       <View className="px-6 pt-2 pb-2">
         <Text
           className="text-ink-muted text-[14px] leading-[21px]"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           One notification a day, at a time you choose. Tap it and the
           sermon is already waiting. Closer never sends anything else.
@@ -175,7 +175,7 @@ export default function NotificationsScreen() {
             <ExternalIcon />
             <Text
               className="text-ink text-[14px] ml-2.5"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Open Settings
             </Text>
@@ -188,8 +188,8 @@ export default function NotificationsScreen() {
         {enabled && permission === "granted" && (
           <View className="px-4 pt-4 pb-4">
             <Text
-              className="text-ink-subtle text-[10.5px] tracking-[2px] uppercase mb-3"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              className="text-ink-subtle text-[11px] tracking-[2px] uppercase mb-3"
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Time
             </Text>
@@ -256,7 +256,7 @@ export default function NotificationsScreen() {
             <BellIcon />
             <Text
               className="text-ink text-[14px] ml-2.5"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Fire test notification
             </Text>
@@ -267,7 +267,7 @@ export default function NotificationsScreen() {
       <View className="px-6 mt-6">
         <Text
           className="text-ink-subtle text-[12px] leading-[18px] text-center"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           You can mute everything from your phone&apos;s Settings app at any time.
         </Text>
@@ -336,7 +336,8 @@ function TimeChip({
       <Text
         className="text-[13px] tracking-[-0.1px]"
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           color: selected ? colors.primaryFg : colors.ink,
         }}
       >
@@ -388,7 +389,8 @@ function CustomTimeChip({
       <Text
         className="text-[13px] tracking-[-0.1px] ml-1.5"
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           color: selected ? colors.primaryFg : colors.ink,
         }}
       >
@@ -465,7 +467,7 @@ function NotificationPreview({
       >
         <Text
           className="text-primary text-[14px]"
-          style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
+          style={{ fontFamily: "System", fontWeight: "800" }}
         >
           C
         </Text>
@@ -474,21 +476,21 @@ function NotificationPreview({
         <View className="flex-row items-baseline justify-between">
           <Text
             className="text-ink text-[13px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
             numberOfLines={1}
           >
             {title}
           </Text>
           <Text
             className="text-ink-subtle text-[11px] ml-2"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            style={{ fontFamily: "System", fontWeight: "500" }}
           >
             now
           </Text>
         </View>
         <Text
           className="text-ink-muted text-[13px] mt-0.5"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
           numberOfLines={2}
         >
           {body}

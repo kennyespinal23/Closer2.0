@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
+import { SFSymbol } from "@/components/Symbol";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { summarizeBlockedApps } from "@/lib/focus";
@@ -169,13 +170,13 @@ export default function StudyLandingScreen() {
           </View>
           <Text
             className="text-ink text-[20px] leading-[26px] text-center"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             This study isn&apos;t scheduled anymore
           </Text>
           <Text
             className="text-ink-muted text-[14px] leading-[21px] text-center mt-2.5 px-2"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
           >
             You can set up a new one anytime from your profile, under
             Study sessions.
@@ -205,9 +206,10 @@ export default function StudyLandingScreen() {
               style={{ backgroundColor: STUDY_ACCENT }}
             />
             <Text
-              className="text-[10px] tracking-[3px] uppercase"
+              className="text-[11px] tracking-[3px] uppercase"
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color: STUDY_ACCENT,
               }}
             >
@@ -249,7 +251,7 @@ export default function StudyLandingScreen() {
           {/* Session name */}
           <Text
             className="text-ink text-[28px] leading-[34px] tracking-[-0.4px] text-center mt-7 px-2"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {session.name || "Bible study"}
           </Text>
@@ -257,7 +259,7 @@ export default function StudyLandingScreen() {
           {/* Time + days subtitle */}
           <Text
             className="text-ink-muted text-[13px] mt-3"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            style={{ fontFamily: "System", fontWeight: "500" }}
           >
             {formatReminderTime(session.time)}
             {"  ·  "}
@@ -267,7 +269,7 @@ export default function StudyLandingScreen() {
           {/* Framing copy */}
           <Text
             className="text-ink-subtle text-[14px] leading-[22px] text-center mt-7 px-3"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
           >
             The time you set aside is here. Open your Bible, pick a
             place, and stay there for a few minutes.
@@ -362,7 +364,8 @@ function FocusRow({
         <Text
           className="text-[12px] tracking-[1.5px] uppercase"
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             color: STUDY_ACCENT,
           }}
         >
@@ -370,7 +373,7 @@ function FocusRow({
         </Text>
         <Text
           className="text-ink-muted text-[11.5px] mt-0.5"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          style={{ fontFamily: "System", fontWeight: "500" }}
           numberOfLines={1}
         >
           {summarizeBlockedApps(apps)}
@@ -390,7 +393,8 @@ function FocusRow({
         <Text
           className="text-[11.5px] tracking-[0.5px]"
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             color: colors.inkMuted,
           }}
         >
@@ -439,16 +443,7 @@ function ShieldGlyph({ stroke }: { stroke: string }) {
 }
 
 function CloseIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M6 6l12 12M18 6L6 18"
-        stroke={stroke}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
+  return <SFSymbol name="xmark" size={20} color={stroke} weight="semibold" />;
 }
 
 function AccentGlow({ color }: { color: string }) {

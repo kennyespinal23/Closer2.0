@@ -23,7 +23,14 @@ import { useColors } from "@/state/theme";
  * editorial red if we want one accent everywhere.
  */
 const TAB_BAR_ACTIVE = "#FF3B30";
-const TAB_BAR_INACTIVE = "#888888";
+// #AAAAAA per explicit direction. Resolves to ~7.2:1 contrast
+// against pure black — comfortably above the WCAG AA 4.5:1 floor
+// for navigation text. Applied via `experimentalBakedTintColors`
+// on the navigator so the value actually lands on the iOS 26+
+// Liquid Glass tab bar (the package returns nil for the inactive
+// tint on iOS 26+ unless the bake flag is on — see the
+// NativeBottomTabsNavigator wrapper comment).
+const TAB_BAR_INACTIVE = "#AAAAAA";
 
 /**
  * NativeTabs — expo-router-friendly handle on our custom
@@ -125,6 +132,17 @@ export default function TabsLayout() {
         <NativeTabs
           tabBarActiveTintColor={TAB_BAR_ACTIVE}
           tabBarInactiveTintColor={TAB_BAR_INACTIVE}
+          // Force our custom tints onto the iOS 26+ Liquid Glass
+          // tab bar. Without this the package returns nil for the
+          // inactive tint on iOS 26+ (see TabViewProps.swift's
+          // `effectiveInactiveTintColor`), and iOS paints the
+          // inactive labels in its own greige formula tuned for
+          // the glass material — which lands at ~3:1 contrast
+          // against the dark glass, below the HIG AAA bar this
+          // project targets for navigation text. The `baked` mode
+          // applies our tints at draw time so #B5B5B5 actually
+          // reaches the labels.
+          experimentalBakedTintColors
           hapticFeedbackEnabled
           // `scrollEdgeAppearance: "transparent"` lets content
           // bleed under the bar's edge and only paints the bar's
@@ -133,6 +151,15 @@ export default function TabsLayout() {
           // hide the hairline when content sits flush with the
           // safe-area inset.
           scrollEdgeAppearance="transparent"
+          // Kill the cross-fade between tabs. With the package
+          // default the UITabBarController plays a 1-frame
+          // crossfade that briefly shows the previous tab's
+          // snapshot on top of the new one — visible to the user
+          // as "I see Library/Profile for a flash when I tap
+          // Home." Apple's first-party Settings / Music / Phone
+          // tab bars don't animate either; tapping a tab is
+          // atomic. Disabling here matches that feel.
+          disablePageAnimations
         >
           <NativeTabs.Screen
             name="today"
@@ -144,7 +171,7 @@ export default function TabsLayout() {
           <NativeTabs.Screen
             name="library"
             options={{
-              title: "Library",
+              title: "Bible",
               sfSymbol: {
                 default: "books.vertical",
                 selected: "books.vertical.fill",

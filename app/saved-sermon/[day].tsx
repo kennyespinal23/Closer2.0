@@ -7,6 +7,7 @@ import * as haptics from "@/lib/haptics";
 import { findMomentByDay, resolveSermonType, splitScripture } from "@/lib/moments";
 import { useSavedSermons } from "@/state/savedSermons";
 import { useColors } from "@/state/theme";
+import { NEW_YORK } from "@/lib/typography";
 
 /**
  * Saved-sermon viewer.
@@ -65,7 +66,7 @@ export default function SavedSermonViewer() {
 
   if (!moment || !type) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#000000" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
         <Header colors={colors} title="Saved" onClose={handleClose} />
         <View
           style={{
@@ -77,7 +78,8 @@ export default function SavedSermonViewer() {
         >
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               color: colors.ink,
               fontSize: 17,
               textAlign: "center",
@@ -87,7 +89,8 @@ export default function SavedSermonViewer() {
           </Text>
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_500Medium",
+              fontFamily: "System",
+              fontWeight: "500",
               color: colors.inkMuted,
               fontSize: 13,
               textAlign: "center",
@@ -102,7 +105,7 @@ export default function SavedSermonViewer() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#000000" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <Header
         colors={colors}
         title="Saved"
@@ -130,7 +133,8 @@ export default function SavedSermonViewer() {
             to know the per-day catalog. */}
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             color: type.accent,
             fontSize: 11,
             letterSpacing: 2.5,
@@ -143,8 +147,9 @@ export default function SavedSermonViewer() {
         {/* Sermon title */}
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            color: "#FFFFFF",
+            fontFamily: "System",
+            fontWeight: "700",
+            color: colors.ink,
             fontSize: 28,
             lineHeight: 34,
             letterSpacing: -0.5,
@@ -154,19 +159,11 @@ export default function SavedSermonViewer() {
           {moment.title}
         </Text>
 
-        {/* Voice attribution */}
-        {moment.voice ? (
-          <Text
-            style={{
-              fontFamily: "PlusJakartaSans_500Medium",
-              color: colors.inkMuted,
-              fontSize: 14,
-              marginTop: 6,
-            }}
-          >
-            {moment.voice}
-          </Text>
-        ) : null}
+        {/* (Earlier revisions rendered a pastor / `voice`
+            attribution line under the title. Removed with the
+            June 2026 schema reset — the sermons aren't truly
+            authored by named pastors, so the attribution read
+            as misleading.) */}
 
         {/* Scripture block — quoted, with the reference below.
             Keeps the verse the visual anchor of the page,
@@ -184,19 +181,31 @@ export default function SavedSermonViewer() {
           >
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_500Medium",
-                color: "#FFFFFF",
-                fontSize: 17,
-                lineHeight: 26,
-                letterSpacing: -0.2,
+                // New York Italic — the reflective-quote face.
+                // Same role as the opening scripture screen
+                // (`app/sermon/scripture.tsx`); the saved-
+                // sermon view echoes that beat so the verse
+                // sits as the visual anchor of the page in
+                // both surfaces. Slightly tighter scale here
+                // (17/26 vs 26/40 on the opening screen) so
+                // it composes as a quoted callout inside the
+                // saved-sermon read instead of a full-bleed
+                // reverent moment.
+                fontFamily: NEW_YORK,
+                fontWeight: "400",
                 fontStyle: "italic",
+                color: colors.ink,
+                fontSize: 19,
+                lineHeight: 28,
+                letterSpacing: 0,
               }}
             >
               {scripture.text}
             </Text>
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color: type.accent,
                 fontSize: 11,
                 letterSpacing: 2,
@@ -232,8 +241,9 @@ export default function SavedSermonViewer() {
                   <Text
                     key={i}
                     style={{
-                      fontFamily: "PlusJakartaSans_400Regular",
-                      color: "#FFFFFF",
+                      fontFamily: "System",
+                      fontWeight: "400",
+                      color: colors.ink,
                       fontSize: panel.isPrayer ? 19 : 17,
                       lineHeight: panel.isPrayer ? 30 : 28,
                       letterSpacing: -0.1,
@@ -309,7 +319,8 @@ function Header({
 
       <Text
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           color: colors.ink,
           fontSize: 15,
           letterSpacing: -0.2,

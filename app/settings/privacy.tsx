@@ -1,7 +1,9 @@
 import { Alert, Linking, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
+import { SFSymbol } from "@/components/Symbol";
 import {
+  SettingsInfoBanner,
   SettingsLinkRow,
   SettingsScaffold,
   SettingsSection,
@@ -170,34 +172,20 @@ export default function PrivacyScreen() {
 
   return (
     <SettingsScaffold title="Privacy">
-      {/* ─── The Promise ────────────────────────────────────────
-          The first thing someone reads on the Privacy page should
-          tell them what we *don't* do. The fine print can wait. */}
-      <View className="px-6 mt-2">
-        <View className="rounded-2xl border border-border bg-surface px-5 py-6">
-          <Text
-            className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            Closer&apos;s Promise
-          </Text>
-          <Text
-            className="text-ink text-[15.5px] leading-[23px] tracking-[-0.1px]"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-          >
-            We don&apos;t sell your data. We don&apos;t serve ads. We don&apos;t
-            track what you read for any reason but to give you back your
-            progress.
-          </Text>
-          <Text
-            className="text-ink-muted text-[13.5px] leading-[20px] mt-3"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-          >
-            Your relationship with scripture is yours. We&apos;re just a
-            doorway you walk through each morning.
-          </Text>
-        </View>
-      </View>
+      {/* The first thing someone reads on the Privacy page should
+          tell them what we *don't* do. The fine print can wait.
+          Uses the shared SettingsInfoBanner primitive (same
+          surface treatment as Translation, Help, etc.) so the
+          settings hierarchy reads consistently. The "Learn More"
+          link drops the user into the full privacy policy for
+          users who want the long form. */}
+      <SettingsInfoBanner
+        eyebrow="Closer's Promise"
+        title="We don't sell your data, serve ads, or track what you read."
+        body="Your relationship with scripture is yours. We're just a doorway you walk through each morning."
+        learnMoreLabel="Read Privacy Policy"
+        learnMoreUrl={PRIVACY_URL}
+      />
 
       {/* ─── What We Collect ────────────────────────────────────
           These rows are informational only — no chevron, no press.
@@ -273,7 +261,7 @@ export default function PrivacyScreen() {
       <View className="px-6 mt-8">
         <Text
           className="text-ink-subtle text-[12px] leading-[18px] text-center"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           Built with care. Questions? Reach us through Help &amp; Support.
         </Text>
@@ -356,17 +344,6 @@ function DownloadIcon() {
 
 function TrashIcon({ destructive }: { destructive?: boolean }) {
   const { ink } = useColors();
-  const stroke = destructive ? "#FF6B6B" : ink;
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path
-        d="M4 6h16M9 6V4h6v2M6 6l1 14h10l1-14M10 11v5M14 11v5"
-        stroke={stroke}
-        strokeWidth={1.7}
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
+  const color = destructive ? "#FF6B6B" : ink;
+  return <SFSymbol name="trash" size={14} color={color} weight="medium" />;
 }

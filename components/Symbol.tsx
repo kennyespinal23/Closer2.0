@@ -4,12 +4,22 @@ import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import type { SFSymbol } from "sf-symbols-typescript";
 
 /**
- * Symbol
+ * SFSymbol
  *
  * Thin wrapper around `expo-symbols`' `SymbolView` that pre-sets
  * the props Closer reaches for 95% of the time, and gives us a
  * single place to fall back to a non-SF-Symbol glyph on Android
  * later if we ever ship that platform.
+ *
+ * NOTE on naming: this component was originally named `Symbol`
+ * which shadowed the JS built-in `Symbol` constructor. In some
+ * Fast Refresh scenarios the local binding lost the race against
+ * the global one and JSX `<Symbol />` resolved to the
+ * constructor, which when invoked as a function component
+ * returns a primitive Symbol and crashes React with "Symbols
+ * are not valid as a React child". Renaming to `SFSymbol`
+ * eliminates the conflict entirely and reads as the platform
+ * vocabulary anyway.
  *
  * Why a wrapper instead of using `SymbolView` directly:
  *
@@ -29,35 +39,36 @@ import type { SFSymbol } from "sf-symbols-typescript";
  *      a Platform-switch (SF Symbol on iOS, MaterialCommunity or
  *      a bundled PNG on Android) without touching consumers.
  *
- *   4. **Typed `name`**: re-exports `SFSymbol` so TS gives you
+ *   4. **Typed `name`**: re-exports `SFSymbol` (the union type
+ *      from `sf-symbols-typescript`) so TS gives you
  *      autocomplete for every SF Symbol Apple ships (5500+).
  *
  * Usage:
  *
- *   <Symbol name="house.fill" />
- *   <Symbol name="xmark" size={14} color={colors.ink} weight="semibold" />
- *   <Symbol name="play.fill" size={18} color="#FFFFFF" />
+ *   <SFSymbol name="house.fill" />
+ *   <SFSymbol name="xmark" size={14} color={colors.ink} weight="semibold" />
+ *   <SFSymbol name="play.fill" size={18} color="#FFFFFF" />
  *
  * For animated symbols (the SF Symbols 5+ bounce/pulse/scale
  * effects on iOS 17+), pass `animationSpec` through directly —
  * we don't currently default it anywhere because Closer's icons
  * are mostly static chrome.
  */
-export type SymbolProps = Omit<SymbolViewProps, "tintColor"> & {
+export type SFSymbolProps = Omit<SymbolViewProps, "tintColor"> & {
   /** The tint color applied to the symbol. Aliased from
    *  `SymbolView`'s `tintColor` for consistency with the rest of
    *  Closer's icon components. */
   color?: ColorValue;
 };
 
-export function Symbol({
+export function SFSymbol({
   name,
   size = 22,
   weight = "regular",
   color,
   fallback,
   ...rest
-}: SymbolProps) {
+}: SFSymbolProps) {
   // Android doesn't have SF Symbols. expo-symbols handles this by
   // rendering the `fallback` prop. If no fallback is provided we
   // return null on non-iOS — the caller is expected to gate via
@@ -77,4 +88,8 @@ export function Symbol({
   );
 }
 
-export type { SFSymbol };
+// Re-export the SF Symbol name union from `sf-symbols-typescript`
+// so callers can type their own symbol-name props without a
+// second import. Named `SFSymbolName` to disambiguate from the
+// `SFSymbol` component above.
+export type { SFSymbol as SFSymbolName };

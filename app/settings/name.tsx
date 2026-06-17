@@ -77,7 +77,7 @@ export default function EditNameScreen() {
         </Pressable>
         <Text
           className="text-ink text-[17px] flex-1 text-center"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           Your name
         </Text>
@@ -91,7 +91,8 @@ export default function EditNameScreen() {
         >
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               color: canSave ? colors.primary : colors.inkSubtle,
               fontSize: 15,
             }}
@@ -110,13 +111,13 @@ export default function EditNameScreen() {
           <View className="mt-8">
             <Text
               className="text-ink text-[28px] leading-[34px] tracking-[-0.6px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               What should{"\n"}we call you?
             </Text>
             <Text
               className="text-ink-muted mt-3 text-[14px] leading-[21px]"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
             >
               Used to greet you each morning and{"\n"}
               personalize your daily reading.
@@ -140,7 +141,7 @@ export default function EditNameScreen() {
               onSubmitEditing={handleSave}
               maxLength={40}
               className="text-ink text-[28px] py-2"
-              style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+              style={{ fontFamily: "System", fontWeight: "600" }}
             />
             <View
               className="h-[2px] rounded-full"
@@ -154,7 +155,7 @@ export default function EditNameScreen() {
 
           <Text
             className="text-ink-subtle text-[12.5px] leading-[18px] mt-5"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
           >
             Lives only on this device. Closer never sends your name anywhere.
           </Text>

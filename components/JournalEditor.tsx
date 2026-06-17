@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
+import { AppleSheet } from "@/components/AppleSheet";
+import { SFSymbol } from "@/components/Symbol";
 import { useColors } from "@/state/theme";
 
 /**
@@ -78,18 +77,19 @@ export function JournalEditor({
   const canSave = text.trim().length > 0;
 
   return (
-    <Modal
+    <AppleSheet
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onCancel}
+      onClose={onCancel}
+      // Full-height detent only — text editors need every pixel
+      // they can get once the keyboard is up. The grabber stays
+      // visible so users still have the iOS-standard
+      // swipe-to-dismiss path alongside Cancel.
+      detents={[1]}
+      backgroundColor={colors.bg}
     >
-      <SafeAreaView
-        edges={["top", "bottom"]}
-        style={{ flex: 1, backgroundColor: colors.bg }}
-      >
+      <View style={{ flex: 1 }}>
         {/* Header — Cancel / title / Save */}
-        <View className="flex-row items-center px-4 pt-2 pb-3 border-b border-border">
+        <View className="flex-row items-center px-4 pt-3 pb-3 border-b border-border">
           <Pressable
             onPress={onCancel}
             hitSlop={12}
@@ -99,14 +99,14 @@ export function JournalEditor({
           >
             <Text
               className="text-ink-muted text-[15px]"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
             >
               Cancel
             </Text>
           </Pressable>
           <Text
             className="text-ink text-[16px] flex-1 text-center"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
             numberOfLines={1}
           >
             {hasInitial ? "Edit Journal" : "Journal"}
@@ -122,7 +122,8 @@ export function JournalEditor({
             <Text
               className="text-[15px]"
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color: canSave && dirty ? moodAccent : colors.inkSubtle,
               }}
             >
@@ -144,9 +145,10 @@ export function JournalEditor({
             style={{ borderColor: hexAlpha(moodAccent, 0.28) }}
           >
             <Text
-              className="text-[10px] tracking-[2.5px] uppercase mb-2"
+              className="text-[11px] tracking-[2.5px] uppercase mb-2"
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color: moodAccent,
               }}
             >
@@ -154,7 +156,7 @@ export function JournalEditor({
             </Text>
             <Text
               className="text-ink-muted text-[13px] leading-[19px] italic"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
               numberOfLines={3}
             >
               &ldquo;{verseText}&rdquo;
@@ -175,7 +177,8 @@ export function JournalEditor({
               style={{
                 flex: 1,
                 color: colors.ink,
-                fontFamily: "PlusJakartaSans_400Regular",
+                fontFamily: "System",
+                fontWeight: "400",
                 fontSize: 16,
                 lineHeight: 24,
                 paddingTop: 8,
@@ -197,7 +200,8 @@ export function JournalEditor({
                 <Text
                   className="text-[14px] ml-2"
                   style={{
-                    fontFamily: "PlusJakartaSans_600SemiBold",
+                    fontFamily: "System",
+                    fontWeight: "600",
                     color: "#FF6B6B",
                   }}
                 >
@@ -207,8 +211,8 @@ export function JournalEditor({
             </View>
           )}
         </KeyboardAvoidingView>
-      </SafeAreaView>
-    </Modal>
+      </View>
+    </AppleSheet>
   );
 }
 
@@ -217,17 +221,7 @@ export function JournalEditor({
 // ─────────────────────────────────────────────────────────────────
 
 function TrashIcon() {
-  return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M4 7h16M9 7V5h6v2M10 11v6M14 11v6M6 7l1 13h10l1-13"
-        stroke="#FF6B6B"
-        strokeWidth={1.7}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
+  return <SFSymbol name="trash" size={16} color="#FF6B6B" weight="medium" />;
 }
 
 function hexAlpha(hex: string, alpha: number): string {

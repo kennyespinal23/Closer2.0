@@ -83,10 +83,19 @@ export default function MoodSelectScreen() {
 
   const handleConfirm = () => {
     if (!selected) return;
+    // Thud — heavy commit. This is the moment the user
+    // commits to spending time on this feeling; the screen
+    // transitions and the verse arrives shortly after. Heavier
+    // than the soft() on mood-pick because picking is
+    // exploratory and confirming is decisive.
+    haptics.thud();
     router.push(`/check-in/${selected.id}` as never);
   };
 
   const handleDismissPanel = () => {
+    // Tick — light selection-clear feedback. Same grammar as
+    // the "X" button in iOS Notes header when clearing search.
+    haptics.tick();
     setSelected(null);
   };
 
@@ -119,7 +128,7 @@ export default function MoodSelectScreen() {
         <View className="px-6 pt-2 flex-row items-center justify-between">
           <Text
             className="text-ink-subtle text-[11px] tracking-[3px] uppercase"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             Check-in
           </Text>
@@ -147,13 +156,13 @@ export default function MoodSelectScreen() {
           <View className="px-6 mt-7">
             <Text
               className="text-ink text-[30px] leading-[36px] tracking-[-0.4px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               How are you,{"\n"}really?
             </Text>
             <Text
               className="text-ink-muted text-[14px] leading-[20px] mt-3"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
             >
               Pick what&apos;s closest. A verse will meet you where you are.
             </Text>
@@ -267,8 +276,8 @@ function MoodCard({
             accessibilityIgnoresInvertColors
           />
           <Text
-            className="text-ink text-[10.5px] mt-1.5 text-center px-0.5"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            className="text-ink text-[11px] mt-1.5 text-center px-0.5"
+            style={{ fontFamily: "System", fontWeight: "700" }}
             numberOfLines={2}
           >
             {label}
@@ -384,9 +393,10 @@ function ConfirmationPanel({
 
           <View style={{ flex: 1, marginLeft: 14 }}>
             <Text
-              className="text-[10px] tracking-[2.5px] uppercase"
+              className="text-[11px] tracking-[2.5px] uppercase"
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color: renderedMood.swatch,
               }}
               numberOfLines={1}
@@ -395,14 +405,14 @@ function ConfirmationPanel({
             </Text>
             <Text
               className="text-ink text-[20px] mt-0.5"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
               numberOfLines={1}
             >
               {renderedMood.label}
             </Text>
             <Text
               className="text-ink-muted text-[12.5px] leading-[17px] mt-1"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
               numberOfLines={2}
             >
               {renderedMood.prompt}.
@@ -463,7 +473,8 @@ function ConfirmationPanel({
             <Text
               className="text-[14px] tracking-[0.2px]"
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color: pickReadableText(renderedMood.swatch),
               }}
             >

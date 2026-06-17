@@ -11,19 +11,22 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 import { useRouter } from "expo-router";
-import { Button } from "@/components/Button";
-import { SocialAppCard, type SocialAppKind } from "@/components/SocialAppCard";
+import { SocialAppCard } from "@/components/SocialAppCard";
+import type { SocialAppKind } from "@/lib/socialAppIconAssets";
 import { FadeIn } from "@/components/FadeIn";
+import { CLOSER_ACCENT } from "@/constants/theme";
+import * as haptics from "@/lib/haptics";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useOnboarding } from "@/state/onboarding";
+import { useColors, useResolvedScheme } from "@/state/theme";
 
 /**
  * Get Started — the first screen of the app, before onboarding.
  *
  * Reference: the "falling cards" landing page pattern used by
- * the Wishes / Imprint / Hyper era of premium iOS apps — a dark
- * stage with tilted "playing cards" suspended in mid-fall above
- * the title block, then a single primary CTA.
+ * the Wishes / Imprint / Hyper era of premium iOS apps — a themed
+ * stage with tilted app icons suspended in mid-fall above the
+ * title block, then a single primary CTA.
  *
  * For Closer the falling objects are the social media apps the
  * user is being invited to quiet. The visual is the brief, before
@@ -41,17 +44,20 @@ import { useOnboarding } from "@/state/onboarding";
  * deliberately tiny — bigger amplitudes start looking animated
  * instead of physical.
  *
- * Background: a wide warm-amber radial that anchors the cards
- * (matches the reference's red/orange wash) without leaking into
- * the lower text/CTA block, which stays on the new #141416 page bg.
+ * Background: a soft orange radial behind the falling cards
+ * (Closer accent) on the active theme canvas — cream in light
+ * mode, true black in dark mode.
  */
 
-const PAGE_BG = "#141416";
-// Warm amber wash — used by the radial behind the cards. Picked
-// over Closer's usual cool ambient (purple/teal) because the
-// reference visual reads warmer, and the warmth makes the title
-// "Quiet the noise" feel like an invitation rather than a verdict.
-const AMBER_GLOW = "#FF7A3B";
+// Warm accent wash behind the cards — Closer orange. Opacity
+// steps are applied per-scheme in the render so light mode stays
+// subtle and dark mode keeps enough glow to read on black.
+const AMBER_GLOW = CLOSER_ACCENT;
+
+const GLOW_STOPS = {
+  light: { center: 0.22, mid: 0.08, edge: 0.01 },
+  dark: { center: 0.38, mid: 0.12, edge: 0.02 },
+} as const;
 
 type CardPlacement = {
   app: SocialAppKind;
@@ -98,6 +104,9 @@ const SWAY_DEG = 1.6;
 
 export default function GetStartedScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const scheme = useResolvedScheme();
+  const glow = GLOW_STOPS[scheme];
   const { height: screenHeight } = useWindowDimensions();
   const { answers, reset: resetOnboarding } = useOnboarding();
 
@@ -194,6 +203,7 @@ export default function GetStartedScreen() {
   }, [drops, sways, reducedMotion]);
 
   const handleGetStarted = () => {
+    haptics.thud();
     // Wipe any persisted onboarding answers before pushing into
     // the flow. Two cases this guards against:
     //   1. A previous user partially answered the flow, never
@@ -207,14 +217,7 @@ export default function GetStartedScreen() {
     // Returning users (completed === true) never hit this branch
     // because the useEffect above redirected them to /today.
     resetOnboarding();
-    // First screen of onboarding is now "What brings you to Closer?"
-    // (the why picker), not the stat reveal. New order:
-    //   why → name → stat → apps → ...
-    // The stat reveal moves to AFTER name so the user has already
-    // identified themselves emotionally before being hit with the
-    // number — it lands harder when they're a named person, not
-    // an anonymous prospect.
-    router.push("/onboarding/why");
+    router.push("/onboarding/attention");
   };
 
   const handleSignIn = () => {
@@ -222,14 +225,13 @@ export default function GetStartedScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: PAGE_BG }}>
-      <StatusBar style="light" />
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
 
       {/* ─── Warm radial ambient behind the cards ──────────────
           Anchored to the hero center so the glow paints UPWARD,
           tucks behind the falling cards, and falls off well
-          before the title block — keeping the lower half on the
-          clean #141416 page bg. */}
+          before the title block on the active theme bg. */}
       <View
         pointerEvents="none"
         style={{
@@ -251,9 +253,9 @@ export default function GetStartedScreen() {
               fx="50%"
               fy="40%"
             >
-              <Stop offset="0" stopColor={AMBER_GLOW} stopOpacity={0.38} />
-              <Stop offset="0.45" stopColor={AMBER_GLOW} stopOpacity={0.12} />
-              <Stop offset="0.85" stopColor={AMBER_GLOW} stopOpacity={0.02} />
+              <Stop offset="0" stopColor={AMBER_GLOW} stopOpacity={glow.center} />
+              <Stop offset="0.45" stopColor={AMBER_GLOW} stopOpacity={glow.mid} />
+              <Stop offset="0.85" stopColor={AMBER_GLOW} stopOpacity={glow.edge} />
               <Stop offset="1" stopColor={AMBER_GLOW} stopOpacity={0} />
             </RadialGradient>
           </Defs>
@@ -349,13 +351,24 @@ export default function GetStartedScreen() {
           </View>
         </View>
 
-        {/* ─── Text block + CTAs (lower 45% of screen) ──────── */}
-        <View style={{ flex: 1, justifyContent: "flex-end", paddingHorizontal: 28 }}>
+        {/* ─── Text block + CTAs (lower 45% of screen) ────────
+            zIndex keeps this layer above the absolute card stage
+            so taps always land on the button, not a transparent
+            sibling. */}
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+            paddingHorizontal: 28,
+            zIndex: 2,
+          }}
+        >
           <FadeIn delayMs={900} durationMs={900}>
             <Text
               style={{
-                color: "#FFFFFF",
-                fontFamily: "PlusJakartaSans_700Bold",
+                color: colors.ink,
+                fontFamily: "System",
+                fontWeight: "700",
                 fontSize: 42,
                 lineHeight: 46,
                 letterSpacing: -1.2,
@@ -369,20 +382,49 @@ export default function GetStartedScreen() {
           <FadeIn delayMs={1300} durationMs={900}>
             <Text
               style={{
-                color: "#A1A1AA",
-                fontFamily: "PlusJakartaSans_500Medium",
+                color: colors.inkSecondary,
+                fontFamily: "System",
+                fontWeight: "500",
                 fontSize: 15,
                 lineHeight: 22,
                 marginBottom: 28,
                 maxWidth: 320,
               }}
             >
-              The apps that own your mornings can wait.{"\n"}Scripture can&apos;t.
+              Receive a personalized devotional before social media,
+              notifications, and the distractions of the day.
             </Text>
           </FadeIn>
 
           <FadeIn delayMs={1700} durationMs={800}>
-            <Button label="Get Started" onPress={handleGetStarted} heavy />
+            <Pressable
+              onPress={handleGetStarted}
+              accessibilityRole="button"
+              accessibilityLabel="Get Started"
+              style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+            >
+              <View
+                style={{
+                  height: 56,
+                  borderRadius: 16,
+                  backgroundColor: CLOSER_ACCENT,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontFamily: "System",
+                    fontWeight: "700",
+                    fontSize: 16,
+                    letterSpacing: 0.1,
+                  }}
+                >
+                  Get Started
+                </Text>
+              </View>
+            </Pressable>
           </FadeIn>
 
           <FadeIn delayMs={2100} durationMs={700}>
@@ -402,8 +444,9 @@ export default function GetStartedScreen() {
             >
               <Text
                 style={{
-                  color: "#A1A1AA",
-                  fontFamily: "PlusJakartaSans_400Regular",
+                  color: colors.inkSecondary,
+                  fontFamily: "System",
+                  fontWeight: "400",
                   fontSize: 14,
                 }}
               >
@@ -411,8 +454,9 @@ export default function GetStartedScreen() {
               </Text>
               <Text
                 style={{
-                  color: "#FFFFFF",
-                  fontFamily: "PlusJakartaSans_600SemiBold",
+                  color: colors.ink,
+                  fontFamily: "System",
+                  fontWeight: "600",
                   fontSize: 14,
                   marginLeft: 6,
                 }}

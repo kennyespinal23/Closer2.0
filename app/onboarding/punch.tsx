@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { HeroDisc, HeroOnboardingPage } from "@/components/HeroOnboardingPage";
 import { useOnboarding, type ScrollBucket } from "@/state/onboarding";
+import { useColors } from "@/state/theme";
 
 /**
  * Screen — The Gut Punch.
@@ -36,11 +37,9 @@ import { useOnboarding, type ScrollBucket } from "@/state/onboarding";
  * generic billboard.
  */
 
-const PAGE_BG = "#8B1F1F"; // deep alarm crimson
-const SKY_CRIMSON = "#C44545"; // hotter halo / sky brightener
-
 export default function PunchScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { answers } = useOnboarding();
 
   const apps = answers.morningApps ?? [];
@@ -69,15 +68,14 @@ export default function PunchScreen() {
 
   return (
     <HeroOnboardingPage
-      pageBg={PAGE_BG}
-      ambientGlow={SKY_CRIMSON}
       eyebrow={eyebrow}
       subject={
-        <HeroDisc haloColor={SKY_CRIMSON}>
+        <HeroDisc>
           <Text
             style={{
-              color: "#FFFFFF",
-              fontFamily: "PlusJakartaSans_700Bold",
+              color: colors.ink,
+              fontFamily: "System",
+              fontWeight: "700",
               fontSize: 64,
               letterSpacing: -2.4,
               lineHeight: 68,
@@ -88,8 +86,9 @@ export default function PunchScreen() {
           <View style={{ marginTop: 4 }}>
             <Text
               style={{
-                color: "rgba(255,255,255,0.6)",
-                fontFamily: "PlusJakartaSans_500Medium",
+                color: colors.inkSecondary,
+                fontFamily: "System",
+                fontWeight: "500",
                 fontSize: 13,
                 letterSpacing: 1.4,
                 textTransform: "uppercase",
@@ -105,7 +104,6 @@ export default function PunchScreen() {
       attribution={attribution}
       ctaLabel="Continue"
       onContinue={() => router.push("/onboarding/proof")}
-      ctaTextColor="#1F0707"
     />
   );
 }

@@ -1,4 +1,5 @@
 import type { ImageSourcePropType } from "react-native";
+import type { SFSymbol as SFSymbolName } from "sf-symbols-typescript";
 
 /**
  * The ten sermon types that rotate through the app.
@@ -59,6 +60,28 @@ export type SermonType = {
   hero: ImageSourcePropType;
   homeHero?: ImageSourcePropType;
   illustration?: ImageSourcePropType;
+  /**
+   * SF Symbol that semantically represents the type. Used as a
+   * compact category marker wherever a type is surfaced inline
+   * (home screen type chip, sermon intro eyebrow, library row
+   * leading glyph). Chosen so each type has an instantly
+   * recognizable native-iOS glyph instead of bespoke iconography:
+   *
+   *   daily-church       → building.columns.fill (chapel/temple)
+   *   jesus-only         → sparkles               (presence, light)
+   *   letters-struggling → envelope.fill          (a letter)
+   *   letters-grateful   → envelope.fill          (a letter)
+   *   character-studies  → person.2.fill          (biblical figures)
+   *   deep-verse         → book.closed.fill       (scripture)
+   *   misconceptions     → lightbulb.fill         (the "ohhh" moment)
+   *   testimonies        → quote.bubble.fill      (real stories)
+   *   questions          → questionmark.circle.fill (the asked thing)
+   *   prayer-nights      → moon.stars.fill        (before sleep)
+   *
+   * Typed against `sf-symbols-typescript` so call sites get TS
+   * autocomplete for the full SF Symbol catalog.
+   */
+  iconSymbol?: SFSymbolName;
 };
 
 export const SERMON_TYPES: readonly SermonType[] = [
@@ -84,6 +107,7 @@ export const SERMON_TYPES: readonly SermonType[] = [
     // story-forward card the home screen can show centered when
     // the illustration render mode is active.
     illustration: require("../assets/sermon-types/illustrations/cross-mountain.jpg"),
+    iconSymbol: "building.columns.fill",
   },
   {
     id: "jesus-only",
@@ -98,6 +122,7 @@ export const SERMON_TYPES: readonly SermonType[] = [
     // frame. Matches the type's "just His presence, nothing
     // else" voice line.
     illustration: require("../assets/sermon-types/illustrations/hands-sun.jpg"),
+    iconSymbol: "sparkles",
   },
   {
     id: "letters-struggling",
@@ -112,6 +137,7 @@ export const SERMON_TYPES: readonly SermonType[] = [
     // waters." Reads as the small, fragile voice mid-doubt
     // that the type's letters narrate.
     illustration: require("../assets/sermon-types/illustrations/boat-ocean.jpg"),
+    iconSymbol: "envelope.fill",
   },
   {
     id: "letters-grateful",
@@ -125,6 +151,7 @@ export const SERMON_TYPES: readonly SermonType[] = [
     // A heart blooming from a flower — gratitude that grew. The
     // visual counterpart to the struggling-letters boat.
     illustration: require("../assets/sermon-types/illustrations/heart-flower.jpg"),
+    iconSymbol: "envelope.fill",
   },
   {
     id: "character-studies",
@@ -139,6 +166,7 @@ export const SERMON_TYPES: readonly SermonType[] = [
     // someone in Scripture." People in the frame for a people-
     // forward type.
     illustration: require("../assets/sermon-types/illustrations/family.jpg"),
+    iconSymbol: "person.2.fill",
   },
   {
     id: "deep-verse",
@@ -152,6 +180,7 @@ export const SERMON_TYPES: readonly SermonType[] = [
     // Open book on warm sky — the most literal pairing in the
     // batch. The text itself, slowed down.
     illustration: require("../assets/sermon-types/illustrations/open-book.jpg"),
+    iconSymbol: "book.closed.fill",
   },
   {
     id: "misconceptions",
@@ -165,6 +194,7 @@ export const SERMON_TYPES: readonly SermonType[] = [
     // Lightbulb on deep violet — the "ohhhh" moment, the lie
     // flipping to truth.
     illustration: require("../assets/sermon-types/illustrations/lightbulb.jpg"),
+    iconSymbol: "lightbulb.fill",
   },
   {
     id: "testimonies",
@@ -179,6 +209,7 @@ export const SERMON_TYPES: readonly SermonType[] = [
     // where real stories happen. Pairs with the type's "God
     // didn't stop moving" line.
     illustration: require("../assets/sermon-types/illustrations/chapel-hill.jpg"),
+    iconSymbol: "quote.bubble.fill",
   },
   {
     id: "questions",
@@ -193,6 +224,7 @@ export const SERMON_TYPES: readonly SermonType[] = [
     // hard question itself, framed as a threshold to walk
     // through instead of a wall to bounce off.
     illustration: require("../assets/sermon-types/illustrations/doorway-path.jpg"),
+    iconSymbol: "questionmark.circle.fill",
   },
   {
     id: "prayer-nights",
@@ -207,6 +239,7 @@ export const SERMON_TYPES: readonly SermonType[] = [
     // day this type is meant for. Matches the "before you
     // sleep" closing line of the description.
     illustration: require("../assets/sermon-types/illustrations/moon-stars.jpg"),
+    iconSymbol: "moon.stars.fill",
   },
 ];
 

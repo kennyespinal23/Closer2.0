@@ -89,7 +89,7 @@ export default function RatingScreen() {
           <FadeIn delayMs={0}>
             <Text
               className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-6"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               One quick thing
               {firstName ? `, ${firstName}.` : "."}
@@ -99,7 +99,7 @@ export default function RatingScreen() {
           <FadeIn delayMs={600}>
             <Text
               className="text-ink-muted text-[16px] leading-[24px] mt-4"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
             >
               We&apos;re just getting started — but if Closer feels like
               something you&apos;ve been looking for, a review helps others
@@ -115,7 +115,7 @@ export default function RatingScreen() {
               <StarRow color={colors.accent} />
               <Text
                 className="text-ink-muted text-[12.5px] tracking-[2px] mt-3 uppercase"
-                style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+                style={{ fontFamily: "System", fontWeight: "600" }}
               >
                 Tap once to rate
               </Text>
@@ -125,7 +125,7 @@ export default function RatingScreen() {
           <FadeIn delayMs={1700}>
             <Text
               className="text-ink text-[15px] leading-[22px] mt-6 text-center px-2"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
             >
               People who feel far from God are searching right now.{"\n"}
               A rating helps us reach them.
@@ -161,7 +161,7 @@ export default function RatingScreen() {
                 >
                   <Text
                     className="text-select text-[14px]"
-                    style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                    style={{ fontFamily: "System", fontWeight: "500" }}
                   >
                     Maybe later
                   </Text>

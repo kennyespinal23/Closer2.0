@@ -28,11 +28,70 @@
  * `import { useColors }` and call it inside the component.
  */
 
+/**
+ * Closer's primary brand accent — warm orange used for CTAs,
+ * sermon progress, Read Now, Practice Today eyebrows, and
+ * streak-adjacent highlights. Replaces the earlier editorial
+ * red (#E11D48) so the app reads as warm and faith-forward.
+ */
+export const CLOSER_ACCENT = "#FC8344";
+
+/** Pressed / dimmed state for orange primary buttons. */
+export const CLOSER_ACCENT_PRESSED = "#E6743A";
+
 export type ColorPalette = {
   bg: string;
   surface: string;
+  /**
+   * Elevated dark surface for grouping primary content regions
+   * (devotional card, App Blocks card). Maps conceptually to
+   * iOS UIColor.secondarySystemBackground in dark mode but
+   * pitched a hair calmer than Apple's #1C1C1E default so the
+   * home page reads as a meditative space rather than a stack
+   * of bright cards. Used WITHOUT a border or shadow — the
+   * elevation comes from the surface contrast against `bg`
+   * alone. Apple Health, Journal, Fitness all create depth
+   * this way (subtle surface step, no chrome).
+   */
+  surfaceSecondary: string;
+  /**
+   * Twice-elevated dark surface for content that nests INSIDE
+   * a `surfaceSecondary` region (e.g. the protection status
+   * row sitting inside the devotional card). One perceptual
+   * step lighter than `surfaceSecondary` so the inner item
+   * reads as "lifted" without needing a border. Maps to iOS
+   * UIColor.tertiarySystemBackground in dark mode.
+   */
+  surfaceTertiary: string;
+  /**
+   * Editorial surface for the home page's devotional card.
+   *
+   * Tier between `surface` (deepest editorial canvas) and
+   * `surfaceSecondary` (utility cards) — in dark mode it sits
+   * ONE step DARKER than the utility cards so the devotional
+   * surface reads as the page's deepest, most meditative tier.
+   * In light mode the analog isn't "darker than utility" (light
+   * mode is built around white) so the token resolves to the
+   * same warm white the utility cards use, preserving the
+   * card-on-cream hierarchy without inverting weight.
+   *
+   * Used WITHOUT a border or shadow — same Apple-grouped-card
+   * rule as `surfaceSecondary`. Differentiation comes from
+   * tone alone.
+   */
+  devotionalSurface: string;
   ink: string;
   inkMuted: string;
+  /**
+   * Secondary label color — used for greetings, captions, and
+   * the second line of compound rows (protection subtitle,
+   * stat-card secondary text). Maps to iOS UIColor.secondaryLabel
+   * in dark mode (60% white on black). Distinct from `inkMuted`
+   * (92% white, AAA body-copy tier) so secondary CHROME doesn't
+   * compete with primary CONTENT — Apple's hierarchy: titles
+   * 100% / body 92% / supporting 60% / metadata 40%.
+   */
+  inkSecondary: string;
   inkSubtle: string;
   primary: string;
   primaryPressed: string;
@@ -119,11 +178,55 @@ export type ColorPalette = {
 export const DARK_COLORS: ColorPalette = {
   bg: "#000000",
   surface: "#1C1C1E",
+  // Apple's UIColor.secondarySystemBackground (dark). v1 of
+  // this token shipped at #111111 (calmer than Apple defaults)
+  // but the user's audit flagged the cards as "too close to
+  // the background" — squinting at the home screen, the
+  // section boundaries blurred into the page bg. Bumping to
+  // Apple's stock #1C1C1E gives every card a perceptually
+  // clear lift off the page without introducing borders or
+  // shadows (the audit explicitly forbade chrome). Apple
+  // Fitness, Health, and Journal all use exactly this value
+  // for their grouped inset surfaces.
+  surfaceSecondary: "#1C1C1E",
+  // Apple's UIColor.tertiarySystemBackground (dark). Same
+  // bump rationale as `surfaceSecondary` — v1 shipped at
+  // #1A1A1A which gave the inner type chip ~3% contrast over
+  // its secondary parent. #2C2C2E on #1C1C1E delivers ~6%
+  // which is what Apple HIG and iOS itself use to read inner
+  // controls as "lifted" without any border. Used for the
+  // type pill inside the devotional card, and the empty-state
+  // CTA on the App Blocks card.
+  surfaceTertiary: "#2C2C2E",
+  // Dark mode: devotional card sits ONE step DARKER than the
+  // utility surfaceSecondary (#1C1C1E) so the editorial anchor
+  // reads as the page's deepest tier. Squinting at the home
+  // page, the devotional is the inkiest non-background surface.
+  devotionalSurface: "#151515",
   ink: "#FFFFFF",
-  // 60% white — Apple's secondaryLabel dark. We render the hex
-  // with an explicit alpha suffix so callers that pass the value
-  // straight to SVG/border don't have to do their own composition.
-  inkMuted: "rgba(235, 235, 245, 0.60)",
+  // 92% white — bumped past Apple's secondaryLabel (0.60) and
+  // past the previous 0.80 to put body copy on dark surfaces
+  // comfortably into WCAG AAA territory and remove any reader
+  // perception of "borderline grey" prose. 0.92 over #000000
+  // resolves to approximately #D7D7DC ≈ 12.3:1 contrast against
+  // black — almost two stops above the 7:1 AAA threshold for
+  // small text, which is the bar this project targets per HIG
+  // contrast standards. Apple's stock 0.60 reads as washed-out
+  // grey on black; users flagged the imprint sermon body as
+  // still failing AAA at 0.80, so we step up to 0.92 — high
+  // enough to be unambiguously "white-ish" while still
+  // distinguishable from the primary 100% white ink (ink) so
+  // hierarchy is preserved. Rendered with an explicit alpha
+  // suffix so callers that pass the value straight to SVG/border
+  // don't have to do their own composition.
+  inkMuted: "rgba(235, 235, 245, 0.92)",
+  // 60% white — Apple's secondaryLabel dark. The MIDDLE tier
+  // of the label hierarchy: brighter than tertiary metadata
+  // (chevrons / timestamps) but dimmer than full body copy,
+  // so chrome elements like the home greeting and protection
+  // subtitle settle visually under the primary content (title,
+  // closer) instead of competing with them.
+  inkSecondary: "rgba(235, 235, 245, 0.60)",
   // 40% white — Apple's tertiaryLabel dark. Used for "deep
   // metadata": verse refs, timestamps, the date eyebrow, etc.
   inkSubtle: "rgba(235, 235, 245, 0.40)",
@@ -231,9 +334,48 @@ export const LIGHT_COLORS: ColorPalette = {
   //         competing chroma in the canvas itself.
   bg: "#F8F7F4",
   surface: "#FFFFFF",
+  // Light-mode counterparts to the dark elevation steps.
+  // Surface inversion holds: pure white cards (#FFFFFF) lift
+  // above the cream page (#F8F7F4), and an inset chip on top
+  // of a white card uses a hair-warm gray (#F4F1EB) for the
+  // next elevation step. Symmetric to dark mode's
+  // bg → surfaceSecondary → surfaceTertiary progression.
+  surfaceSecondary: "#FFFFFF",
+  surfaceTertiary: "#F4F1EB",
+  // Light mode: there's no "darker than utility" tier — the
+  // light palette is built around white. Devotional card
+  // collapses to the same pure-white surface used by
+  // `surfaceSecondary`/`surface`, which still lifts cleanly
+  // off the warm-cream page bg (#F8F7F4 → #FFFFFF is a
+  // visible elevation step). The dark-mode "deepest tier"
+  // semantic doesn't carry; the editorial hierarchy in
+  // light mode comes from typography weight, not surface
+  // darkness.
+  devotionalSurface: "#FFFFFF",
   ink: "#0F0F0F",
-  inkMuted: "#6B6B72",
-  inkSubtle: "#8F8F96",
+  // V2: bumped from #6B6B72 (Apple's stock secondaryLabel,
+  // ~5.3:1 on white — AA pass / AAA fail) to #3A3A3F so the
+  // body copy on the new white devotional card and the
+  // streak/settings/profile screens lands at ~10.4:1
+  // contrast — comfortably past WCAG AAA 7:1. Apple's stock
+  // gray reads as washed-out on a high-contrast warm-white
+  // surface; the deeper value matches what Apple Books uses
+  // for its editorial body copy (AAA-tier prose).
+  inkMuted: "#3A3A3F",
+  // V2: bumped from #6B6B72 to #4A4A50 (~7.4:1 on white,
+  // AAA). The secondary label tier needs to remain darker
+  // than the muted body's mid-gray-cousin so chrome
+  // (greetings, captions) stays distinguishable from
+  // primary content (body, titles), but it ALSO has to
+  // clear AAA. Sits one stop lighter than `inkMuted`,
+  // delivering hierarchy AND accessibility.
+  inkSecondary: "#4A4A50",
+  // V2: bumped from #8F8F96 (~3.5:1, below AA!) to #6B6B72
+  // (~5.3:1, comfortably AA — appropriate for non-critical
+  // metadata like timestamps, deep refs, micro-chevrons).
+  // Apple's stock tertiaryLabel actually sits around here
+  // on light; the previous #8F8F96 had drifted off-spec.
+  inkSubtle: "#6B6B72",
   primary: "#0F0F0F",
   primaryPressed: "#2A2A2A",
   primaryFg: "#FFFFFF",
@@ -330,8 +472,12 @@ export function paletteToCssVars(
   return {
     "--color-bg": palette.bg,
     "--color-surface": palette.surface,
+    "--color-surface-secondary": palette.surfaceSecondary,
+    "--color-surface-tertiary": palette.surfaceTertiary,
+    "--color-devotional-surface": palette.devotionalSurface,
     "--color-ink": palette.ink,
     "--color-ink-muted": palette.inkMuted,
+    "--color-ink-secondary": palette.inkSecondary,
     "--color-ink-subtle": palette.inkSubtle,
     "--color-primary": palette.primary,
     "--color-primary-pressed": palette.primaryPressed,

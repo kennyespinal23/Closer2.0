@@ -3,7 +3,7 @@ import { Alert, Animated, Easing, Platform, Pressable, Text, View } from "react-
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useSegments } from "expo-router";
-import { Symbol } from "@/components/Symbol";
+import { SFSymbol } from "@/components/Symbol";
 import { isShieldSupported } from "@/lib/focus";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useFocus } from "@/state/focus";
@@ -498,7 +498,7 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
                 // glyph adopts iOS' system stroke weight + the
                 // exact terminal-cap rounding Apple ships in
                 // first-party apps.
-                <Symbol
+                <SFSymbol
                   name="checkmark"
                   size={14}
                   weight="bold"
@@ -511,7 +511,7 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
                 // of that loop unmistakable at a glance. `lock.fill`
                 // is the canonical iOS "secured" glyph (Settings,
                 // Privacy, Screen Time all use it).
-                <Symbol
+                <SFSymbol
                   name="lock.fill"
                   size={14}
                   color={FOCUS_ACCENT}
@@ -535,7 +535,8 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
             <Text
               numberOfLines={1}
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color: colors.ink,
                 fontSize: 14.5,
                 letterSpacing: 0.05,
@@ -547,7 +548,8 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
             <Text
               numberOfLines={1}
               style={{
-                fontFamily: "PlusJakartaSans_500Medium",
+                fontFamily: "System",
+                fontWeight: "500",
                 color: colors.inkMuted,
                 fontSize: 11.5,
                 marginTop: 2,
@@ -605,7 +607,7 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
                 opacity: pressed ? 0.55 : 1,
               })}
             >
-              <Symbol
+              <SFSymbol
                 name="xmark"
                 size={12}
                 weight="bold"
@@ -644,7 +646,7 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
                     own optical centering (the system bakes the
                     1pt nudge-right that a raw centered triangle
                     needs to read as visually balanced). */}
-                <Symbol name="play.fill" size={14} color="#FFFFFF" />
+                <SFSymbol name="play.fill" size={14} color="#FFFFFF" />
               </Pressable>
             ) : null}
           </View>

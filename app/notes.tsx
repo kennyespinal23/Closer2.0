@@ -72,14 +72,14 @@ function NoteCard({ note, onPress }: { note: Note; onPress: () => void }) {
     >
       <View className="flex-row items-baseline justify-between">
         <Text
-          className="text-primary text-[10.5px] tracking-[2.5px] uppercase"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          className="text-primary text-[11px] tracking-[2.5px] uppercase"
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           {formatRef(note)}
         </Text>
         <Text
           className="text-ink-subtle text-[11px]"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          style={{ fontFamily: "System", fontWeight: "500" }}
         >
           {relativeTime(note.updatedAt)}
         </Text>
@@ -88,7 +88,7 @@ function NoteCard({ note, onPress }: { note: Note; onPress: () => void }) {
       {note.verseText ? (
         <Text
           className="text-ink-muted text-[13px] mt-2 leading-[19px]"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
           numberOfLines={2}
         >
           &ldquo;{note.verseText}&rdquo;
@@ -101,7 +101,7 @@ function NoteCard({ note, onPress }: { note: Note; onPress: () => void }) {
 
       <Text
         className="text-ink text-[14.5px] leading-[21px]"
-        style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+        style={{ fontFamily: "System", fontWeight: "500" }}
         numberOfLines={6}
       >
         {note.text}
@@ -136,13 +136,13 @@ function EmptyState() {
       </View>
       <Text
         className="text-ink text-[18px] mt-5 text-center"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         Nothing written yet
       </Text>
       <Text
         className="text-ink-muted text-[13.5px] mt-2 text-center leading-[20px]"
-        style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+        style={{ fontFamily: "System", fontWeight: "400" }}
       >
         Tap any verse while reading to add a note. Your reflections
         will collect here, in order.
@@ -186,7 +186,7 @@ function Header({
       </Pressable>
       <Text
         className="text-ink text-[17px] flex-1 text-center"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         {title}
       </Text>
@@ -194,7 +194,7 @@ function Header({
         <View className="px-3 h-10 rounded-full border border-border items-center justify-center">
           <Text
             className="text-ink-muted text-[11px]"
-            style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+            style={{ fontFamily: "System", fontWeight: "600" }}
           >
             {countLabel}
           </Text>

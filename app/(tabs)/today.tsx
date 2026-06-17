@@ -18,6 +18,7 @@ import {
 import { Image } from "expo-image";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, {
+  Circle,
   Defs,
   LinearGradient,
   Path,
@@ -32,10 +33,16 @@ import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
 import { LivingHeroIcon } from "@/components/LivingHeroIcon";
 import { ShieldOverlay } from "@/components/ShieldOverlay";
+import { StatusPill, type StatusPillTone } from "@/components/StatusPill";
+import { SFSymbol, type SFSymbolName } from "@/components/Symbol";
+import {
+  FocusStatusSheet,
+  type FocusStatusSheetState,
+} from "@/components/FocusStatusSheet";
 import { cancelDailyReminder } from "@/lib/notifications";
 import * as haptics from "@/lib/haptics";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-import { buildMonthGrid, type RhythmCellState } from "@/lib/rhythm";
+import { buildCurrentWeek, type RhythmCellState } from "@/lib/rhythm";
 import {
   momentDurationMin,
   nextMoment,
@@ -43,12 +50,12 @@ import {
   type Moment,
 } from "@/lib/moments";
 import { formatMinutes, formatRemaining } from "@/lib/readingGoalFormat";
-import { getVerseOfDay } from "@/lib/verseOfDay";
-import { SOCIAL_APPS } from "@/lib/focus";
+import { getGreeting } from "@/lib/greeting";
+import { SOCIAL_APPS, type SocialAppId } from "@/lib/focus";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import { findMood } from "@/constants/moods";
 import { SERMON_TYPES, type SermonType } from "@/constants/sermonTypes";
-import { SYSTEM_COLORS_DARK } from "@/constants/theme";
+import { CLOSER_ACCENT, SYSTEM_COLORS_DARK } from "@/constants/theme";
 import { useAnnotations } from "@/state/annotations";
 import { type CheckIn, useCheckIns } from "@/state/checkIns";
 import { useDevTools } from "@/state/devTools";
@@ -90,8 +97,12 @@ export default function TodayScreen() {
     streak,
     hasCompletedSermonToday,
     hasCompletedSermonForDay,
-    engagedDates,
   } = progress;
+  // (engagedDates destructure removed alongside the home "Your
+  // rhythm" RhythmGrid; the grid now lives only on the /rhythm
+  // detail page reached from the top-right streak chip, and
+  // that screen reads engagedDates directly from useProgress
+  // inside StreakDashboard rather than via this surface.)
   const {
     todayMinutes: readingMinutes,
     goalMinutes: readingGoal,
@@ -269,6 +280,14 @@ export default function TodayScreen() {
   // preview is showing. Only ever set from the __DEV__ tools row.
   const [previewAppId, setPreviewAppId] = useState<string | null>(null);
 
+  // Focus-status sheet visibility. Toggled by the eye-button on
+  // the Gentler-Streak hero (next to "Hi {firstName},") and by the
+  // sheet's own Close X. The sheet itself reads focus state and
+  // study sessions via the same useFocus/useStudySessions hooks
+  // above so the displayed pill state stays in sync without
+  // having to pass current state through props every render.
+  const [statusSheetVisible, setStatusSheetVisible] = useState(false);
+
   // First name still feeds the avatar initial — the greeting line
   // itself was removed from the header for a cleaner top.
   const firstName = (answers.name || "").trim().split(" ")[0] || "friend";
@@ -301,14 +320,26 @@ export default function TodayScreen() {
     [todaysMoment],
   );
 
-  // TEMP — true when today's sermon is the Gentler-Streak A/B test
-  // ("When God Feels Silent"). Drives a fully restructured top-of-
-  // page layout: header chrome is hidden, the editorial hero takes
-  // over the top of the screen edge-to-edge, and the regular
-  // SermonCard render is skipped. See GentlerStreakSermonCard.
-  const isGentlerStreakTest =
-    todaysMoment.title === GENTLER_STREAK_TEST_TITLE &&
-    Boolean(sermonType.illustration);
+  // Home-card editorial preview.
+  //
+  // The June 2026 schema collapsed the previous `blurb` + `closer`
+  // pair into a single `teaser` field on every sermon. The teaser
+  // is authored as multiple `\n\n`-separated paragraphs — the home
+  // card shows ONLY the first paragraph as a tight preview, while
+  // the saved-sermon detail renders the whole teaser. Showing the
+  // full thing here would dominate the card and push the CTA off-
+  // screen on smaller phones.
+  //
+  // Fallback chain: trimmed first paragraph of the teaser → first
+  // paragraph of the Hook panel body. The fallback exists for
+  // defensive shape-drift only; every entry in the new catalog
+  // ships a real `teaser`, so the Hook-body branch effectively
+  // never runs in production.
+  const homeBlurb = useMemo(() => {
+    const teaserFirst = firstParagraphOf(todaysMoment.teaser ?? "");
+    if (teaserFirst) return teaserFirst;
+    return firstParagraphOf(todaysMoment.panels[0]?.body ?? "");
+  }, [todaysMoment.teaser, todaysMoment.panels]);
   // Used by the sermon card meta line + the intro screen; computed
   // here (rather than re-derived inside SermonCard) so the same
   // number renders in both places.
@@ -397,6 +428,138 @@ export default function TodayScreen() {
     router.navigate("/profile");
   }, [router]);
 
+  // ─── Focus-status sheet plumbing ──────────────────────────────
+  //
+  // Computes the same live/armed/off triage the home Blocks pill
+  // uses, but in a form the sheet wants directly:
+  //   • state         — drives copy + CTA + pill color
+  //   • blockedAppIds — which apps to list inside the sheet
+  //
+  // The two callbacks the sheet exposes:
+  //   • handleEndFocusFromSheet — used on the LIVE state's CTA;
+  //     ends the current session via state/focus.tsx.
+  //   • handleManageBlocksFromSheet — used on ARMED + OFF; just
+  //     navigates to the existing study-sessions editor.
+  const focusSheetState: FocusStatusSheetState =
+    focusSession !== null
+      ? "live"
+      : studySessions.some((s) => s.enabled)
+        ? "armed"
+        : "off";
+  // App list resolution mirrors the same precedence the home
+  // Blocks pill uses: live session snapshot wins, otherwise the
+  // routine's per-routine list, otherwise the global focus prefs
+  // list. Falls back to an empty array so the sheet renders the
+  // "no apps" state cleanly.
+  const focusSheetAppIds: ReadonlyArray<string> =
+    focusSession?.blockedAppIds ?? focusPrefs.blockedAppIds ?? [];
+
+  const handleShowStatus = useCallback(() => {
+    haptics.soft();
+    setStatusSheetVisible(true);
+  }, []);
+  const handleCloseStatus = useCallback(() => {
+    setStatusSheetVisible(false);
+  }, []);
+  const handleEndFocusFromSheet = useCallback(() => {
+    endFocusSession().catch(() => {
+      /* end is best-effort; provider state stays consistent on retry */
+    });
+  }, [endFocusSession]);
+  const handleManageBlocksFromSheet = useCallback(() => {
+    router.push("/settings/study-sessions");
+  }, [router]);
+
+  // ─── Header status pill (Gentler Streak-style) ─────────────────
+  //
+  // ONE chip that mirrors the reference Gentler-Streak design:
+  // "Status: Active ●" floats at the top of the home page with a
+  // tinted status dot signalling what the app-block system is
+  // doing for the user right now.
+  //
+  // ALWAYS RENDERED — even when no blocks are configured the pill
+  // shows "Status: Off" with a muted dot. Keeping the chip
+  // permanently mounted means the user always has a glance-able
+  // anchor for the system and an obvious tap target to set blocks
+  // up. Earlier iterations hid the pill on the off state, but
+  // that left a brand-new user with no visible affordance for the
+  // feature at all on the home page.
+  //
+  // Tone matrix:
+  //   • LIVE  (focus session firing)         → "Active", green pulse
+  //   • ARMED (block enabled, not firing)    → "Armed",  amber dot
+  //   • OFF   (no enabled blocks)            → "Off",    muted dot
+  const statusPills = useMemo(() => {
+    type Pill = {
+      key: "blocks";
+      label: string;
+      value: string;
+      tone: StatusPillTone;
+      pulse?: boolean;
+      /** How many apps are configured for blocking (live snapshot
+       *  if a session is firing, otherwise the routine/global
+       *  blocklist count). Surfaced on the second line of the
+       *  HeroStatusRow as "{n} Apps Blocked" when protection is
+       *  active. Zero when the user has no apps selected, which
+       *  the row treats as the Inactive state regardless of
+       *  whether any sessions are technically enabled — "0 Apps
+       *  Blocked" would read as protection-is-on-but-doing-
+       *  nothing, which is the wrong mental model. */
+      blockedCount: number;
+      onPress: () => void;
+    };
+
+    // Two-state protection vocabulary — Active vs Inactive — per
+    // the Apple Design Lead spec. The finer-grained LIVE / ARMED
+    // / OFF triage still drives the visual TONE (green pulse on
+    // live, amber on armed, grey on inactive) so screenreaders
+    // and the status icon both reinforce what's actually
+    // happening, but the headline copy stays binary so the user
+    // doesn't have to learn a third state vocabulary.
+    //
+    //   • LIVE  (focus session firing)         → "Active", green pulse
+    //   • ARMED (block enabled, not firing)    → "Active", amber
+    //   • OFF   (no enabled blocks)            → "Inactive", muted
+    //
+    // The dot color still carries the finer state in the row's
+    // leading status indicator: a green pulsing fill on LIVE, a
+    // solid green fill on ARMED, an outline ring on OFF.
+    const hasEnabledSession = studySessions.some((s) => s.enabled);
+    const blockedCount = focusSheetAppIds.length;
+    let value: string;
+    let tone: StatusPillTone;
+    let pulse = false;
+    if (focusSession !== null) {
+      value = "Active";
+      tone = "live";
+      pulse = true;
+    } else if (hasEnabledSession && blockedCount > 0) {
+      value = "Active";
+      tone = "armed";
+    } else {
+      value = "Inactive";
+      tone = "muted";
+    }
+
+    const pills: Pill[] = [
+      {
+        key: "blocks",
+        label: "App Blocking",
+        value,
+        tone,
+        pulse,
+        blockedCount,
+        onPress: handleOpenStudySessions,
+      },
+    ];
+    return pills;
+  }, [
+    studySessions,
+    focusSession,
+    focusSheetAppIds,
+    handleOpenStudySessions,
+  ]);
+
   const handleResetApp = () => {
     // Dev shortcut: wipe ALL persisted state (onboarding, progress,
     // annotations, preferences, check-ins, moments, focus —
@@ -439,6 +602,53 @@ export default function TodayScreen() {
     cancelDailyReminder().catch(() => {});
     router.replace("/onboarding/name");
   };
+
+  // ─── Shared status pill row JSX ──────────────────────────────
+  // Single JSX value reused by both layouts:
+  //   1. Regular days: rendered between the "Home" title and the
+  //      "Daily Devotional" section ribbon.
+  //   2. Gentler-Streak A/B days: rendered above the full-bleed
+  //      editorial hero, since that day's layout suppresses the
+  //      whole regular header. Keeping it in a shared variable
+  //      means the chip language stays identical between layouts
+  //      and we don't end up with two copy-pasted blocks to keep
+  //      in sync. Renders null when no pills resolve so empty
+  //      home (brand-new user) doesn't leave a ghost gap.
+  //
+  // Why a flex-wrap row over a horizontal ScrollView: the chips
+  // are SHORT (< 80pt each) and there are at most 3, so they
+  // comfortably fit one row even on iPhone SE. Wrap lets the
+  // layout breathe if a future chip overflows; a ScrollView
+  // would feel like a rail and invite scroll-to-discover
+  // behavior we don't want for ambient status.
+  const statusPillRow =
+    statusPills.length > 0 ? (
+      <View
+        style={{
+          marginTop: 16,
+          flexDirection: "row",
+          flexWrap: "wrap",
+          // Negative left margin pairs with each chip's
+          // marginLeft to give clean 8pt gutter without
+          // needing flex-gap (still spotty on older RN).
+          marginLeft: -8,
+        }}
+        accessibilityRole="toolbar"
+        accessibilityLabel="Today's status"
+      >
+        {statusPills.map((pill) => (
+          <View key={pill.key} style={{ marginLeft: 8, marginBottom: 8 }}>
+            <StatusPill
+              label={pill.label}
+              value={pill.value}
+              tone={pill.tone}
+              pulse={pill.pulse}
+              onPress={pill.onPress}
+            />
+          </View>
+        ))}
+      </View>
+    ) : null;
 
   return (
     // SafeAreaView is now TRANSPARENT (no bg-bg) so the
@@ -484,155 +694,27 @@ export default function TodayScreen() {
             a stack of cards. The avatar + streak stay in their
             existing positions so nothing is functionally lost.
 
-            TEMP — when the Gentler-Streak A/B test sermon is the
-            day's moment, the entire header chrome is suppressed
-            so the editorial hero (rendered below) can take over
-            the top of the screen edge-to-edge. The avatar then
+            The full-bleed editorial hero (rendered below) takes
+            over the top of the screen edge-to-edge on EVERY
+            sermon now (the previous gate to the Gentler-Streak
+            A/B test was lifted at the user's request). The avatar
             floats overlaid on the hero image itself, the way
-            Gentler Streak places its profile chip. */}
-        {!isGentlerStreakTest ? (
-        <View className="px-6 pt-1">
-          {/* Top thin row — purely chrome. ONLY the monogram
-              avatar lives here now; the streak chip that used
-              to share this row was promoted into the page-
-              title line below so the streak signal lives on
-              the user's primary horizon (the "Home" headline)
-              rather than as an accessory next to the profile
-              icon.
-              
-              We keep the row's `minHeight: 40` and end-aligned
-              child so the avatar still pins to the top-right
-              corner the way Apple Fitness and Apple TV anchor
-              their profile pills, with no inset jump regardless
-              of streak state. */}
-          <View
-            className="flex-row items-center justify-end"
-            style={{ minHeight: 40 }}
-          >
-            {/* Borderless monogram avatar — matches Apple
-                Fitness Summary and Apple TV's top-right
-                profile pill. The previous version had a
-                hairline border, which reads as "form chrome";
-                Apple's avatars are pure fills. The single
-                elevation step (surface above true-black bg)
-                is what gives the pill its shape. */}
-            <Pressable
-              hitSlop={12}
-              onPress={handleOpenProfile}
-              accessibilityRole="button"
-              accessibilityLabel="Open profile"
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-              className="w-10 h-10 rounded-full bg-accent-soft items-center justify-center"
-            >
-              <Text
-                className="text-primary text-[14px]"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-              >
-                {firstName.charAt(0).toUpperCase()}
-              </Text>
-            </Pressable>
-          </View>
+            Gentler Streak places its profile chip — see the
+            `GentlerStreakSermonCard` render below.
 
-          {/* Page title row — "Home" on the left, a compact
-              StreakHeadline pinned to the right edge on the
-              same baseline. The earlier layout stacked the
-              streak headline UNDER the title on its own row,
-              which read as a second hero element competing
-              with "Home" for the eye. Bringing it inline
-              right-aligned with the title gives the streak
-              the same prominence Apple Fitness gives its
-              "Move +120" inline counter — present, glance-
-              able, but never dominating the page name.
-              
-              Apple-app title shape: 32pt Bold, tight negative
-              tracking, no trailing punctuation. Names the
-              SCREEN. */}
-          <View
-            style={{
-              marginTop: 10,
-              flexDirection: "row",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                color: colors.ink,
-                fontSize: 32,
-                lineHeight: 36,
-                letterSpacing: -0.8,
-              }}
-              accessibilityRole="header"
-            >
-              Home
-            </Text>
-            {/* Streak headline — rendered inline at the page-
-                title baseline. Hidden on the zero-streak
-                fallback so a brand-new user doesn't land on a
-                "0 day streak" badge; we surface this only once
-                the user has at least one engaged day. */}
-            {streak.current > 0 ? (
-              <StreakHeadline
-                count={streak.current}
-                longest={streak.longest}
-                honoredToday={streak.honoredToday}
-              />
-            ) : null}
-          </View>
-
-          {/* Subsection ribbon — Apple News "Top Stories" pattern,
-              one tier below the page title. Apple News uses a
-              BOLD colored label above each section ("Top
-              Stories", "For You", "Trending") that names the
-              section AND signals editorial hierarchy through
-              color alone. Same color in light + dark so the
-              section identity is stable across themes.
-
-              Typography sized to Apple's iOS Title 2 (22pt Bold)
-              — never heavier than the page title above it
-              (Home is 32pt Bold). The earlier 800 ExtraBold
-              broke the hierarchy by making the section header
-              visually outweigh its own page title. The text
-              uses the same `_700Bold` family as Home so the
-              two lines feel like a related pair (page →
-              section) rather than competing weights.
-
-              Color: editorial red (#E11D48 — Tailwind rose-600).
-              Reads warm-serious in light, holds brand-presence
-              on dark without competing with the amber streak
-              flame in the title row above. */}
-          <Text
-            style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              color: HOME_SECTION_ACCENT,
-              fontSize: 22,
-              lineHeight: 26,
-              letterSpacing: -0.4,
-              marginTop: 18,
-            }}
-            accessibilityRole="header"
-          >
-            {/* Personalize the section header with the reader's
-                first name ("Kenny's Daily Devotional"). Falls
-                back to plain "Daily Devotional" when we don't
-                have a real name on file — `firstName` defaults
-                to "friend" for the avatar fallback, but
-                "friend's Daily Devotional" reads like a stock
-                template, so we treat that case as nameless and
-                drop the possessive entirely.
-
-                Always append `'s` (Kenny's, Chris's, James's)
-                instead of conditionally swapping to a bare
-                apostrophe for names ending in `s` — modern
-                style guides prefer the consistent `'s` form
-                and it keeps the title visually balanced. */}
-            {firstName && firstName !== "friend"
-              ? `${firstName}'s Daily Devotional`
-              : "Daily Devotional"}
-          </Text>
-        </View>
-        ) : null}
+            The legacy `<View className="px-6 pt-1">` header block
+            (page title "Home", "Daily Devotional" red ribbon,
+            avatar row) that used to live here for non-test
+            sermons has been removed. If a future surface needs
+            those pieces back, they're recoverable from git.
+        */}
+        {/* Legacy header block (page-title "Home", avatar row,
+            "Daily Devotional" red ribbon, inline statusPillRow)
+            removed here — the full-bleed editorial hero below now
+            owns the top of the screen for every sermon, with the
+            avatar floating overlaid on the image and the status
+            pills rendered on top of the hero as overlay chrome.
+            Recoverable from git if needed. */}
 
         {/* ─── Today's Sermon — the hero ──────────────────────────
             Promoted to the FIRST big element below the header. The
@@ -646,103 +728,88 @@ export default function TodayScreen() {
             routine card. Promoting it removes three small chips
             from the user's path-to-engagement; the supporting
             sections drop below the timeline.) */}
-        {/* TEMP — Gentler-Streak full-bleed editorial hero.
-            When today is the A/B test sermon ("When God Feels
-            Silent") the card takes over the top of the page
-            edge-to-edge, with the avatar floating overlaid on
-            the image (the regular header was suppressed above).
-            No FadeIn wrapper, no top margin — the image IS the
-            page top. Remove this block (and the
-            GentlerStreakSermonCard component) to revert. */}
-        {isGentlerStreakTest && sermonType.illustration ? (
+        {/* Full-bleed editorial hero — the standard sermon hero
+            for EVERY day's moment (no longer gated to the
+            original "When God Feels Silent" A/B test). The
+            full-bleed image owns the top of the screen, the
+            avatar floats overlaid on the image, and the
+            statusPillRow is rendered ON TOP of the hero as
+            overlay chrome (Gentler Streak's own pattern).
+
+            Editorial preview copy is sourced from the sermon's
+            `teaser` field (first paragraph only), with an auto-
+            fallback to the Hook panel's first paragraph so every
+            catalog day renders cleanly even without
+            individually-curated home copy.
+
+            v1 launch (June 14 2026): the `illustration` prop is
+            intentionally NOT passed, so the card renders its
+            typography-only fallback (TODAY'S DEVOTIONAL badge +
+            avatar row at the top of the body, no full-bleed
+            image, no overlay chrome). Per-sermon cover art
+            wasn't ready in time for launch and the placeholder
+            renderings were blocking ship; we'd rather ship clean
+            text than a card with broken visuals. V2 restores
+            the editorial hero by passing
+            `illustration={sermonType.illustration!}` back here —
+            the card's image variant is preserved verbatim, so
+            visual restoration is exact.
+            
+            (When re-enabling: `illustration` resolves through
+            `resolveSermonTypeForMoment` so per-sermon override
+            art wins over the type-level default. Every sermon
+            TYPE in `constants/sermonTypes.ts` ships an
+            illustration, so the non-null assertion is safe.) */}
+        {/* FadeIn at delay=0 — the devotional region is the
+            page's primary content, so it leads the staggered
+            entrance choreography (App Blocks at 90ms, rhythm
+            at 100ms). FadeIn respects iOS Reduce Motion and
+            renders the card in its final pose for users who
+            have the OS-level preference on. Apple's first-
+            party apps use the same subtle on-mount fade for
+            their lead content (Journal's prompt card, Health's
+            Summary section). */}
+        <FadeIn delayMs={0} durationMs={700}>
           <GentlerStreakSermonCard
-            illustration={sermonType.illustration}
             title={todaysMoment.title}
-            blurb={GENTLER_STREAK_TEST_BLURB}
-            closer={GENTLER_STREAK_TEST_CLOSER}
+            blurb={homeBlurb}
             firstName={firstName}
-            // Drives the "NEW" badge — pill renders only when
-            // today's devotional hasn't been completed yet so
-            // a returning reader doesn't see a permanent label
-            // on a card they've already read.
+            // Drives the "TODAY'S WORD" marker INSIDE the
+            // devotional region — renders only when the user
+            // hasn't completed this moment yet so a returning
+            // reader doesn't see a permanent label on a card
+            // they've already read.
             completed={hasCompletedSermonForDay(todaysMoment.day)}
+            // Current consecutive-day count — drives the compact
+            // flame chip in the top-right of the chrome row.
+            // Hidden by the chip itself when 0 so first-day
+            // users don't see "0" before they've earned it.
+            streakCount={streak.current}
+            // Sermon-type identity for the inline TYPE chip
+            // beneath the title. The chip surfaces today's
+            // category (Daily Church, Letters, etc.) with the
+            // type's SF Symbol so users instantly recognize
+            // the editorial voice without enlarging the
+            // type's name into headline-level weight.
+            typeName={sermonType.name}
+            typeIconSymbol={sermonType.iconSymbol}
             onPress={handlePlaySermon}
             onProfilePress={handleOpenProfile}
+            // Status pills are floated over the hero image as
+            // overlay chrome (matching Gentler Streak's own
+            // pattern) so the photo can still bleed full-width
+            // behind the status bar.
+            statusPills={statusPills}
+            // Eye button next to the greeting opens the focus-
+            // status sheet — same pattern Gentler Streak uses
+            // for their "Go Gentler" popup.
+            onShowStatus={handleShowStatus}
+            // Streak hero card in the chrome row taps through
+            // to /rhythm, the streak's history detail. User
+            // explicitly asked for this drill target.
+            onShowRhythm={handleOpenRhythm}
           />
-        ) : (
-        <FadeIn delayMs={80} durationMs={900}>
-          {/* No px-6 here — the SermonCard now paints an
-              ambient radial halo that needs to bleed edge-to-
-              edge of the screen. The card's internal content
-              manages its own horizontal padding.
-
-              Top gap: 32pt — calibrated against the new 44pt
-              editorial title above. Apple gives display
-              headlines a real beat of silence before the hero
-              shot (their iPhone 17 Pro page even uses a
-              full-bleed scroll spacer). 32pt is the Closer
-              equivalent: enough room that the title lands and
-              isn't visually colliding with the card, not so
-              much that the hero gets pushed below the fold on
-              the smallest iPhone SE viewport. */}
-          <View style={{ marginTop: 32 }}>
-            {/* Hero is the SermonCard — full stop. Earlier builds
-                swapped in an ActiveFocusHero whenever a focus
-                session was running, but the user asked for the
-                hero to stay anchored on today's sermon
-                regardless of focus state. Focus sessions still
-                run in the background (the mini-player at the
-                tab bar surfaces the active session as an
-                ambient strip + escape hatch); the home page is
-                consistently sermon-first now. SermonCard
-                handles its own completed-vs-unheard branching
-                internally (forward-look subtitle when
-                completed, "Begin" pill when not). */}
-            <SermonCard
-                type={sermonType}
-                title={todaysMoment.title}
-                // The subtitle slot is a quiet teaser — the type's
-                // tagline ("A daily anchor in scripture", etc) works
-                // here because the verse itself now lives on the
-                // intro screen and shouldn't be doubled up at home.
-                subtitle={sermonType.tagline}
-                // Voice is the attributed speaker straight from the
-                // catalog ("Matt Chandler", "Jackie Hill Perry", …).
-                // SermonCard renders this as the avatar + name +
-                // duration triplet when non-empty.
-                pastor={todaysMoment.voice}
-                durationMin={sermonDurationMin}
-                // Day number anchors the carousel's preview lookups
-                // into the 90-day catalog so the next-day cards
-                // show their actual titles ("I Don't Know How To
-                // Pray Anymore") rather than the sermon-type label.
-                currentDay={todaysMoment.day}
-                // Per-day check: ask "did the user complete the
-                // sermon FOR THE MOMENT we're currently showing?"
-                // not just "did the user complete any sermon
-                // today?" The dev "Next Sermon" pill swaps the
-                // shown moment to a different catalog day without
-                // recording a completion against it, so the
-                // coarse `hasCompletedSermonToday` would leave
-                // this card stuck in its post-completion "Read
-                // Again" state for a sermon the user has never
-                // actually heard.
-                completed={hasCompletedSermonForDay(todaysMoment.day)}
-                // Forward-look label, only used when `completed`.
-                // We compute it here (parent owns the reminder-time
-                // preference) so the card stays a pure presenter.
-                // Falls back to the 7am default that the timeline and
-                // the welcome-screen seeding both use, so an installed
-                // user without an explicit preference still gets a
-                // grounded "Tomorrow at 7:00 AM" rather than nothing.
-                nextSermonLabel={formatNextSermonLabel(
-                  answers.dailyReminderTime ?? { hour: 7, minute: 0 },
-                )}
-                onPress={handlePlaySermon}
-              />
-          </View>
         </FadeIn>
-        )}
 
         {/* ─── App Blocks — scheduled focus rituals ────────────────
             The user explicitly asked for a list of "the times the
@@ -766,117 +833,32 @@ export default function TodayScreen() {
             We use FadeIn delay 90 (between the sermon card's 80
             and the rhythm section's 100) so the section eases in
             as part of the page's staggered entrance choreography. */}
+        {/* App Blocks — section title outside the card; schedule
+            rows live on the elevated surface below.
+            
+            Spec: 32pt gap above the App Blocks section. */}
         <FadeIn delayMs={90} durationMs={800}>
-          <View style={{ marginTop: 44 }}>
-            <View className="px-6" style={{ marginBottom: 16 }}>
-              <Text
-                style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  color: colors.ink,
-                  fontSize: 22,
-                  lineHeight: 26,
-                  letterSpacing: -0.4,
-                }}
-                accessibilityRole="header"
-              >
-                App Blocks
-              </Text>
-            </View>
+          <View style={{ marginTop: 32 }}>
             <AppBlocksList
               sessions={studySessions}
               onToggle={handleToggleStudySession}
               onAdd={handleOpenStudySessions}
+              // Tapping a populated row hands off to the same
+              // editor as the empty-state CTA so the user has
+              // ONE place to manage the schedule, regardless of
+              // whether they're creating or editing.
+              onEdit={handleOpenStudySessions}
             />
           </View>
         </FadeIn>
 
-        {/* ─── Your rhythm (supporting beat) ──────────────────────
-            Apple's dark apps (Fitness, Games, TV) all anchor their
-            sections with a single LARGE BOLD HEADLINE — not a
-            small-caps eyebrow. The previous iteration here used
-            "## Design"-style 11pt eyebrows borrowed from Apple's
-            product MARKETING pages (apple.com/iphone-17-pro), but
-            the user's brief is the dark APPS (Fitness Summary,
-            Games Home, TV Watch Now). Those use a different
-            convention:
-
-              • Headline: 24pt Bold, left-aligned, near-white.
-                ("Watch Now", "Continue Watching", "Workouts For
-                You", "What We're Playing")
-              • Optional trailing chevron / "See All" on the right.
-              • One full line of breathing room before the content.
-
-            Bumping to the Apple-app recipe is the single biggest
-            move toward the Fitness/TV/Games aesthetic — small-caps
-            eyebrows read editorial/print, but the user wants the
-            app-shaped product feel of Apple's first-party apps. */}
-        <FadeIn delayMs={100} durationMs={800}>
-          <View style={{ marginTop: 44 }}>
-            <View className="px-6">
-              <Text
-                style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  color: colors.ink,
-                  fontSize: 22,
-                  lineHeight: 26,
-                  letterSpacing: -0.4,
-                }}
-                accessibilityRole="header"
-              >
-                Your rhythm
-              </Text>
-            </View>
-            {/* HabitKit-style current-month calendar heatmap.
-                Each cell is a day in the current month; lit
-                cells mark days the user completed a sermon
-                (driven by `progress.engagedDates`). The grid
-                IS the rhythm — replaces the previous three-up
-                stat strip (streak / reading / best) because
-                the strip surfaced numbers without pattern,
-                and the user's brief is "I want to see the
-                habit I'm creating."
-
-                The home card shows only the current month so
-                the eye lands on "where am I at, this month?"
-                The full multi-year history with stats lives
-                behind the tap → /rhythm detail page. */}
-            <RhythmGrid
-              engagedDates={engagedDates}
-              onOpenDetail={handleOpenRhythm}
-            />
-          </View>
-        </FadeIn>
-
-        {/* ─── Scripture for today (supporting beat) ───────────────
-            Same Apple-app recipe as "Your rhythm" — 24pt Bold
-            headline, left-aligned, full white. This makes the home
-            page read as a curated rail of sections (Fitness's
-            Summary → Workouts → Meditations rhythm; TV's Watch
-            Now → Continue Watching → Apple Originals rhythm).
-
-            Top margin sits on the same 44pt drum as the rhythm
-            section so the page has a consistent vertical pulse.
-            Eyebrow-to-card gap is 16pt — wider than the previous
-            14pt so the bigger headline has room to breathe before
-            the verse card. */}
-        <FadeIn delayMs={130} durationMs={800}>
-          <View style={{ marginTop: 44 }} className="px-6">
-            <Text
-              style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                color: colors.ink,
-                fontSize: 22,
-                lineHeight: 26,
-                letterSpacing: -0.4,
-                marginBottom: 16,
-              }}
-              accessibilityRole="header"
-            >
-              Today's verse
-            </Text>
-            <VerseOfDay accent={sermonType.accent} />
-          </View>
-        </FadeIn>
+        {/* "Your rhythm" section removed — the streak/rhythm history
+            lives behind the streak chip in the top-right of the
+            header chrome (taps through to /rhythm). Keeping a
+            second copy of the same data on the home page
+            duplicated the surface and competed with the App Blocks
+            list directly above for attention. The chip is the
+            single canonical entry to the rhythm detail screen. */}
 
         {/* Browse all rail was removed at the user's request —
             home is now a focused funnel (Daily Devotional →
@@ -951,8 +933,8 @@ export default function TodayScreen() {
           <FadeIn delayMs={1100} durationMs={700}>
             <View className="px-6 mt-12 items-center">
               <Text
-                className="text-ink-subtle text-[10px] tracking-[3px] uppercase mb-3"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-3"
+                style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 Dev
               </Text>
@@ -1036,6 +1018,21 @@ export default function TodayScreen() {
         appId={previewAppId ?? "instagram"}
         visible={previewAppId !== null}
         onClose={() => setPreviewAppId(null)}
+      />
+
+      {/* FocusStatusSheet — bottom-sheet popup explaining the
+          current app-block state. Opened by the eye button next
+          to the greeting on the Gentler-Streak hero, mirrors
+          Gentler Streak's "Go Gentler" recommendation popup
+          pattern. State + app list are derived above; the
+          sheet itself is pure presentation + dispatch. */}
+      <FocusStatusSheet
+        visible={statusSheetVisible}
+        onClose={handleCloseStatus}
+        state={focusSheetState}
+        blockedAppIds={focusSheetAppIds as ReadonlyArray<SocialAppId>}
+        onEndFocus={handleEndFocusFromSheet}
+        onManageBlocks={handleManageBlocksFromSheet}
       />
     </SafeAreaView>
   );
@@ -1143,8 +1140,8 @@ function ReadingPill({
       />
       <View className="flex-1 ml-4">
         <Text
-          className="text-ink-subtle text-[10px] tracking-[2.5px] uppercase"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase"
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           Drawing Near
         </Text>
@@ -1160,7 +1157,8 @@ function ReadingPill({
             // it doesn't compete with section headers.
             className="text-[17px] leading-[20px] tracking-[-0.3px]"
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               color: reached ? colors.ink : minutes > 0 ? RING_ACCENT : colors.ink,
             }}
             numberOfLines={1}
@@ -1170,7 +1168,7 @@ function ReadingPill({
           {headlineSuffix ? (
             <Text
               className="text-ink-subtle text-[13px] leading-[18px]"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
               numberOfLines={1}
             >
               {headlineSuffix}
@@ -1179,7 +1177,7 @@ function ReadingPill({
         </View>
         <Text
           className="text-ink-subtle text-[11.5px] mt-0.5"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          style={{ fontFamily: "System", fontWeight: "500" }}
           numberOfLines={1}
         >
           {remainingLabel}
@@ -1197,29 +1195,6 @@ function ReadingPill({
     </Pressable>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────
-// VerseOfDay — slim scripture mini-card under the sermon hero
-// ─────────────────────────────────────────────────────────────────
-//
-// Sits in a narrow visual lane: same width as the sermon card,
-// noticeably less vertical mass. Three pieces:
-//
-//   • Small "VERSE FOR TODAY" eyebrow (uppercase, tracked, accent-colored)
-//   • The verse text itself (the only piece the eye should rest on)
-//   • Reference line ("PSALM 46:10") in the same caps style as the eyebrow
-//
-// We deliberately do NOT make this card pressable. Tapping it
-// would open… what? A standalone verse screen would feel like
-// invented surface area, and routing it into the sermon player
-// would be a confusing detour. Calm static content is the point.
-// If we ever want a "share" or "save" affordance, that gets
-// added as an explicit icon button, not the whole card.
-//
-// Themeing: pulls the per-sermon-type accent so the verse,
-// hero eyebrow, and any future per-type chrome read as one
-// composition. The accent only colors the small typographic
-// elements — never the background — so dark mode stays dark.
 
 // ─────────────────────────────────────────────────────────────────
 // AppBlocksList — the schedule list shown directly under today's
@@ -1243,54 +1218,154 @@ const AppBlocksList = memo(function AppBlocksList({
   sessions,
   onToggle,
   onAdd,
+  onEdit,
 }: {
   sessions: ReadonlyArray<StudySession>;
   onToggle: (id: string) => void;
   onAdd: () => void;
+  // Tapping a populated row hands off to the editor so the user
+  // can change the time, the days, or which apps the block
+  // silences. The list itself stays a thin overview; deep edits
+  // happen in /settings/study-sessions.
+  onEdit: (id: string) => void;
 }) {
   const colors = useColors();
+  const isEmpty = sessions.length === 0;
 
-  // Both empty + populated states share the same surface (rounded
-  // card on the page-surface fill) and end with the same "+ Add a
-  // time" action row. The only difference is whether any block
-  // rows render above it. This keeps the affordance to add a
-  // block in the SAME visual location regardless of state — the
-  // user always knows where to tap, and the section never
-  // collapses to zero height (an empty list with just a button
-  // would feel half-built).
+  // Section title sits OUTSIDE the card (Apple Fitness / TV
+  // section-header pattern); the elevated surface below holds
+  // only the schedule rows or the empty-state explainer.
   return (
-    <View className="px-6">
+    <View style={{ marginHorizontal: 16 }}>
+      <Text
+        style={{
+          fontFamily: "System",
+          fontWeight: "700",
+          color: colors.ink,
+          fontSize: 22,
+          lineHeight: 28,
+          letterSpacing: -0.4,
+        }}
+        accessibilityRole="header"
+      >
+        My App Blocks
+      </Text>
+
       <View
         style={{
-          borderRadius: 16,
-          borderWidth: StyleSheet.hairlineWidth,
-          borderColor: colors.border,
-          backgroundColor: colors.surface,
-          overflow: "hidden",
+          marginTop: 16,
+          paddingHorizontal: 24,
+          paddingTop: isEmpty ? 24 : 8,
+          paddingBottom: isEmpty ? 24 : 8,
+          borderRadius: 24,
+          backgroundColor: colors.surfaceSecondary,
         }}
       >
-        {sessions.map((session) => (
-          // onToggle is the same stable ref for every row; AppBlockRow
-          // calls it internally with its own session.id so we don't
-          // need a per-row closure here. Lets React.memo on the row
-          // actually short-circuit when neighbours change.
-          <AppBlockRow
-            key={session.id}
-            session={session}
-            onToggle={onToggle}
-          />
-        ))}
-        {/* Only show the "Add a time" row when there's NO time
-            yet. The App Block is meant for the single daily
-            sermon — capping at one keeps the section from
-            inflating into a calendar of routines and matches
-            the same one-time rule the settings editor enforces.
-            Tap the existing row to manage it (toggle here,
-            edit via /settings/study-sessions). */}
-        {sessions.length === 0 ? (
-          <AppBlockAddRow onPress={onAdd} hasItems={false} />
-        ) : null}
+        {isEmpty ? (
+          <AppBlocksEmptyState onAdd={onAdd} />
+        ) : (
+          <View>
+            {sessions.map((session, idx) => (
+              <AppBlockRow
+                key={session.id}
+                session={session}
+                onToggle={onToggle}
+                onEdit={onEdit}
+                showDivider={idx > 0}
+              />
+            ))}
+          </View>
+        )}
       </View>
+    </View>
+  );
+});
+
+/**
+ * AppBlocksEmptyState — onboarding-style explainer for users
+ * who haven't set up a block yet. Apple rarely leaves feature
+ * regions visually empty (per the audit); their pattern is to
+ * frame the empty state as a CHOICE the user hasn't made yet:
+ * short headline + one-sentence framing + clear primary action.
+ *
+ * Headline answers "what is this?", description answers "why
+ * does this exist for me?", action answers "how do I start?".
+ * Modeled on Apple Health's "Set up Cycle Tracking" empty card
+ * and Apple Journal's "Start a New Entry" empty surface.
+ *
+ * Framing ties the feature back to Closer's mission ("free up
+ * space for what matters") so the user understands the block
+ * isn't just a utility — it's part of the devotional rhythm.
+ */
+const AppBlocksEmptyState = memo(function AppBlocksEmptyState({
+  onAdd,
+}: {
+  onAdd: () => void;
+}) {
+  const colors = useColors();
+  return (
+    <View>
+      <Text
+        style={{
+          fontFamily: "System",
+          fontWeight: "600",
+          color: colors.ink,
+          fontSize: 17,
+          lineHeight: 24,
+          letterSpacing: -0.2,
+        }}
+      >
+        Schedule your first block
+      </Text>
+      <Text
+        style={{
+          fontFamily: "System",
+          fontWeight: "400",
+          color: colors.inkSecondary,
+          fontSize: 15,
+          lineHeight: 22,
+          letterSpacing: -0.1,
+          marginTop: 8,
+        }}
+      >
+        Quiet the apps that pull on you most during the time
+        you set aside for God.
+      </Text>
+      <Pressable
+        onPress={() => {
+          haptics.soft();
+          onAdd();
+        }}
+        accessibilityRole="button"
+        accessibilityLabel="Set up a block"
+        accessibilityHint="Opens the schedule editor where you can pick a time and apps to block"
+        style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+      >
+        <View
+          style={{
+            marginTop: 24,
+            backgroundColor: colors.surfaceTertiary,
+            borderRadius: 16,
+            paddingVertical: 16,
+            paddingHorizontal: 24,
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: 48,
+          }}
+        >
+          <Text
+            style={{
+              color: colors.ink,
+              fontFamily: "System",
+              fontWeight: "600",
+              fontSize: 15,
+              letterSpacing: 0.2,
+            }}
+          >
+            Set Up a Block
+          </Text>
+        </View>
+      </Pressable>
     </View>
   );
 });
@@ -1298,26 +1373,55 @@ const AppBlocksList = memo(function AppBlocksList({
 const AppBlockRow = memo(function AppBlockRow({
   session,
   onToggle,
+  onEdit,
+  showDivider,
 }: {
   session: StudySession;
   // (id) signature lets the parent pass one stable ref shared across
   // every row instead of allocating a per-row closure on each render.
   // Memo can then actually short-circuit when other rows change.
   onToggle: (id: string) => void;
+  // Tap-the-row → open the editor. Same id-based shape as
+  // onToggle so the parent passes one stable ref for the
+  // whole list.
+  onEdit: (id: string) => void;
+  /** True for every row EXCEPT the first — adds a hairline
+   *  separator above the row. The audit forbids the
+   *  bordered-card chrome the previous version relied on for
+   *  separation, so we use a single 1px inkSubtle rule
+   *  between rows instead (Apple's inset-grouped list
+   *  pattern: hairlines INSIDE the card, no outer border). */
+  showDivider?: boolean;
 }) {
   const colors = useColors();
+  // The row is a Pressable that hands off to the editor; the
+  // trailing Switch is rendered as a sibling INSIDE the
+  // Pressable but with its own onValueChange, so iOS treats
+  // the switch gesture as the higher-precedence target. The
+  // earlier build wrapped the same content in a plain View —
+  // there was nothing to tap, so a user with a scheduled
+  // block could only flip it on/off and never reach the
+  // editor to change the time or the apps it silences. (See
+  // June 2026 design review.)
   return (
-    <View
-      style={{
+    <Pressable
+      onPress={() => {
+        haptics.soft();
+        onEdit(session.id);
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={`Edit block at ${formatTimeOfDay(session.time)}`}
+      accessibilityHint="Opens the schedule editor where you can change the time, days, or blocked apps"
+      style={({ pressed }) => ({
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: colors.border,
-      }}
+        paddingVertical: 12,
+        borderTopWidth: showDivider ? StyleSheet.hairlineWidth : 0,
+        borderTopColor: colors.border,
+        opacity: pressed ? 0.7 : 1,
+      })}
     >
-      <View style={{ flex: 1, paddingRight: 12 }}>
+      <View style={{ flex: 1, paddingRight: 16 }}>
         {/* Time leads (Apple Calendar / iOS Alarms pattern — the
             primary line of a scheduled-event row is WHEN it
             happens, not what it's named). The routine's user-
@@ -1327,7 +1431,8 @@ const AppBlockRow = memo(function AppBlockRow({
             users who haven't named anything. */}
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_600SemiBold",
+            fontFamily: "System",
+            fontWeight: "600",
             color: colors.ink,
             fontSize: 17,
             lineHeight: 22,
@@ -1339,11 +1444,12 @@ const AppBlockRow = memo(function AppBlockRow({
         </Text>
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_400Regular",
+            fontFamily: "System",
+            fontWeight: "400",
             color: colors.inkMuted,
             fontSize: 13,
             lineHeight: 18,
-            marginTop: 2,
+            marginTop: 4,
           }}
           numberOfLines={1}
         >
@@ -1368,76 +1474,18 @@ const AppBlockRow = memo(function AppBlockRow({
         ios_backgroundColor={colors.border as string}
         accessibilityLabel={`Toggle block at ${formatTimeOfDay(session.time)}`}
       />
-    </View>
-  );
-});
-
-/**
- * AppBlockAddRow — the always-present "+ Add a time" footer row.
- * Apple Calendar / iOS Settings put the create affordance at the
- * bottom of the list (rather than as a separate floating button)
- * so the action is anchored to the same surface as the items
- * it creates. Tap → opens the existing study-session editor
- * where the user picks a time + the apps to quiet.
- */
-const AppBlockAddRow = memo(function AppBlockAddRow({
-  onPress,
-  hasItems,
-}: {
-  onPress: () => void;
-  hasItems: boolean;
-}) {
-  const colors = useColors();
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel="Add a time and apps to block"
-      style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-    >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 16,
-          paddingVertical: 14,
-        }}
-      >
-        <View
-          style={{
-            width: 22,
-            height: 22,
-            borderRadius: 11,
-            backgroundColor: colors.primary,
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 12,
-          }}
-        >
-          <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M12 5v14M5 12h14"
-              stroke={colors.primaryFg}
-              strokeWidth={3}
-              strokeLinecap="round"
-            />
-          </Svg>
-        </View>
-        <Text
-          style={{
-            fontFamily: "PlusJakartaSans_600SemiBold",
-            color: colors.ink,
-            fontSize: 17,
-            lineHeight: 22,
-            letterSpacing: -0.2,
-          }}
-        >
-          {hasItems ? "Add another time" : "Add a time and apps to block"}
-        </Text>
-      </View>
     </Pressable>
   );
 });
+
+/* AppBlockAddRow — removed in the v1 home redesign. The empty
+   state now uses AppBlocksEmptyState (title + description +
+   primary action) per the audit; the populated state caps at
+   one block so an in-list "+ Add" affordance was redundant.
+   Users with a block who want to edit it tap the row to open
+   the schedule editor. If/when multi-block support lands, this
+   component can be reintroduced from git history (it was the
+   iOS-Settings-style "+ Add another time" footer row). */
 
 function formatTimeOfDay(t: { hour: number; minute: number }): string {
   const h12 = t.hour === 0 ? 12 : t.hour > 12 ? t.hour - 12 : t.hour;
@@ -1471,152 +1519,6 @@ function formatAppCount(n: number): string {
   if (n === 1) return "1 app";
   return `${n} apps`;
 }
-
-const VerseOfDay = memo(function VerseOfDay({ accent }: { accent: string }) {
-  const colors = useColors();
-  // useMemo against the calendar date string (not the Date
-  // instance) so re-renders within the same day return the same
-  // verse without recomputing. Crossing midnight in the
-  // background would normally re-trigger but the screen
-  // remounts on tab change so the verse refreshes naturally
-  // when the user returns the next day.
-  const verse = useMemo(() => getVerseOfDay(), []);
-  return (
-    // Apple-style editorial pull-quote treatment. The previous
-    // version was a small card with a 10pt eyebrow, a 17pt verse
-    // body, and a tight 16pt vertical padding — it read as a
-    // chip, not a moment. Apple's product pages give scripture-
-    // sized content (their quotes, their critic reviews, their
-    // hero copy) a generous full-width treatment: big editorial
-    // body type, an oversized opening glyph as a visual anchor,
-    // and an attribution that sits a beat below in small caps.
-    //
-    // Recipe:
-    //   • Wash retains the per-sermon accent tint at ~5–6% so
-    //     the verse stays part of the same color family as the
-    //     sermon hero above. Border tint matches.
-    //   • Pull-quote opening glyph (the curly quotation mark)
-    //     is rendered ONCE at the top-left at display size,
-    //     accent-colored. It does the job of the old eyebrow:
-    //     signals "topic = scripture" before the eye reads a
-    //     single word.
-    //   • Verse body is bumped to 22pt with 30pt leading —
-    //     about 30% bigger than before. Big enough to feel
-    //     like a real quote, not so big that 3-line verses
-    //     wrap into a wall.
-    //   • Reference sits below with a thin rule and small-caps
-    //     attribution — Apple's "— Critic, Publication" review
-    //     pattern, applied to scripture.
-    //
-    // We removed the internal eyebrow because the section
-    // header ("FROM SCRIPTURE") now lives at the parent level
-    // (see TodayScreen). Two stacked small-caps eyebrows would
-    // have been redundant.
-    // Apple-style borderless inset card. The previous version was a
-    // tinted box: accent-wash fill + accent-tinted hairline border.
-    // Reads "tagged content" — which is fine for editorial product
-    // pages, but Apple's dark APPS (Fitness, TV, Games) don't use
-    // colored borders. They use a single shared surface elevation
-    // (#1C1C1E, iOS systemGray6 dark) and let CONTENT carry color.
-    //
-    // Recipe now matches Apple Fitness's "What's New" cards and
-    // Apple TV's content rows:
-    //   • Surface fill — `colors.surface` (#1C1C1E) so the card
-    //     reads as the same material as every other card in the
-    //     app. The "lift" comes from being a single shade above
-    //     true-black bg, not from a border.
-    //   • NO border. Apple kills borders in their dark apps; the
-    //     value step from bg to surface IS the edge.
-    //   • Color still flows through the content — the oversized
-    //     opening quote glyph and the reference label both carry
-    //     the per-sermon accent. The CHROME is monochromatic, the
-    //     CONTENT is colorful. (Same recipe as Apple TV's content
-    //     thumbnails — neutral chrome, vivid poster art.)
-    <View
-      style={{
-        backgroundColor: colors.surface,
-        borderRadius: 22,
-        paddingHorizontal: 24,
-        paddingTop: 22,
-        paddingBottom: 22,
-      }}
-      accessibilityRole="summary"
-      accessibilityLabel={`Verse for today: ${verse.text} — ${verse.reference}`}
-    >
-      {/* Display-sized opening quote glyph. Acts as the section
-          anchor inside the card — color matches the per-sermon
-          accent so the verse visually belongs to the same family
-          as the hero. lineHeight is tight so the glyph hugs the
-          top edge and doesn't push the verse body down. */}
-      <Text
-        style={{
-          fontFamily: "PlusJakartaSans_800ExtraBold",
-          color: accent,
-          fontSize: 56,
-          lineHeight: 56,
-          marginBottom: -8,
-        }}
-        accessibilityElementsHidden
-        importantForAccessibility="no"
-      >
-        {"\u201C"}
-      </Text>
-
-      {/* Verse body — display-size, near-zero letter-spacing,
-          generous leading so multi-line verses breathe. The
-          opening glyph above doubles as the quotation mark, so
-          the body itself starts unquoted to avoid stacking two
-          quote characters at the top.
-
-          Closing quote stays inline at the end of the body
-          (matches the Apple Books / iBooks treatment — the
-          opening quote is display-sized and decorative, the
-          closing one is just a typographic period). */}
-      <Text
-        style={{
-          fontFamily: "PlusJakartaSans_500Medium",
-          color: colors.ink,
-          fontSize: 22,
-          lineHeight: 30,
-          letterSpacing: -0.4,
-        }}
-      >
-        {verse.text}
-        {"\u201D"}
-      </Text>
-
-      {/* Thin attribution divider — Apple's review-quote pattern
-          uses a tiny accent-colored bar to signal the citation
-          handoff between body and source. */}
-      <View
-        style={{
-          marginTop: 18,
-          height: 1,
-          width: 24,
-          backgroundColor: withAlpha(accent, 0.5),
-        }}
-      />
-
-      {/* Reference — small-caps attribution, same 11pt / 2.4
-          tracking recipe as the page-level eyebrows so the
-          page reads as one editorial system. Tinted with the
-          accent (not inkSubtle) so it carries a hint of the
-          sermon family color into the bottom of the card. */}
-      <Text
-        style={{
-          fontFamily: "PlusJakartaSans_700Bold",
-          color: accent,
-          fontSize: 11,
-          letterSpacing: 2.4,
-          textTransform: "uppercase",
-          marginTop: 10,
-        }}
-      >
-        {verse.reference}
-      </Text>
-    </View>
-  );
-});
 
 // BrowseRail + BrowseTile were removed when the user dropped the
 // "Browse all" section from the home page. The Library tab is now
@@ -1682,49 +1584,385 @@ type SermonCardProps = {
 // sermons.js and lift this component into its own file.
 // ─────────────────────────────────────────────────────────────────
 
-const GENTLER_STREAK_TEST_TITLE = "When God Feels Silent";
+/**
+ * Extract the first paragraph of any blank-line-separated string
+ * (a sermon's `teaser` or a panel `body`). Used by the home card
+ * to show ONLY the first beat of the editorial teaser as a tight
+ * preview — the full multi-paragraph teaser would dominate the
+ * card and push the Read Now CTA off-screen on smaller phones.
+ *
+ * Paragraphs are separated by blank lines (`\n\n`), matching the
+ * way the in-sermon panel renderer already splits them.
+ */
+function firstParagraphOf(body: string): string {
+  const trimmed = body.trim();
+  if (!trimmed) return "";
+  const [first] = trimmed.split(/\n\n+/);
+  return first?.trim() ?? "";
+}
 
-// Editorial blurb shown beneath the title. Split into a quiet
-// "context" paragraph (regular weight, muted ink) and a punchy
-// closing line (heavier weight, full ink) that lands as the
-// real invitation — the same one-two beat Apple News and
-// Gentler Streak use in their hero cards (long calm setup,
-// short bold payoff). The previous draft included a third
-// "There's a man in scripture named Lazarus…" sentence between
-// the two, which broke the rhythm by inserting a scriptural
-// example before the reader was asked to lean in. Removed at
-// the user's request so the closing invitation lands sooner.
-const GENTLER_STREAK_TEST_BLURB =
-  "Many of us have felt God has gone quiet at some point — like our prayers are hitting a ceiling and nothing is coming back.";
-const GENTLER_STREAK_TEST_CLOSER =
-  "Today's devotional is for anyone who has ever sat in that silence.";
+// ─────────────────────────────────────────────────────────────────
+// HeroStatusRow — protection status row (Apple Settings-row shape)
+//
+// Two-line status component that sits between the editorial closer
+// and the Read Now CTA, surfacing the user's app-blocking state
+// at a glance:
+//
+//   ┌────────────────────────────────────────────────────┐
+//   │  ●   Protection Active                          ›  │
+//   │      8 Apps Blocked                                │
+//   └────────────────────────────────────────────────────┘
+//
+//   ┌────────────────────────────────────────────────────┐
+//   │  ○   Protection Inactive                        ›  │
+//   │      Turn on protection                            │
+//   └────────────────────────────────────────────────────┘
+//
+// Shape borrows directly from Apple Settings disclosure rows
+// (Apple Battery, Focus Mode status, Fitness rings summary):
+//   • Leading status indicator (filled vs hollow — non-color
+//     channel per HIG)
+//   • Headline (state name) on top, supporting detail underneath
+//   • Trailing chevron signaling "tap for more"
+//   • Entire surface is one tappable target
+//
+// Replaces the earlier 44pt-tall chip (which only fit one line
+// of text and so couldn't surface the live blocked-app count).
+// The chip read as low-priority chrome; the row reads as a real
+// status disclosure the user can act on.
+//
+// Tones still map to the same green/amber/grey vocabulary used
+// elsewhere so a green leading dot here means the same thing it
+// does on the standalone StatusPill row.
+//
+// Defined as a const arrow so Fast Refresh re-binds it cleanly
+// on subsequent edits to this file (top-level function
+// declarations added mid-session occasionally fail to resolve
+// inside sibling memo'd components until the bundle is fully
+// re-evaluated).
+const HeroStatusRow = ({
+  value,
+  tone,
+  pulse,
+  blockedCount,
+  onPress,
+}: {
+  /** "Active" or "Inactive" — drives the headline copy. */
+  value: string;
+  /** Finer LIVE/ARMED/OFF triage; reinforces the headline with
+   *  the leading icon's fill color + pulse but never changes
+   *  the visible state text. */
+  tone: StatusPillTone;
+  /** True ONLY when a focus session is actively firing. Drives
+   *  the slow opacity pulse on the leading status dot so the
+   *  user can tell at a glance "blocking is happening right
+   *  now" vs "blocking is armed and waiting for its schedule". */
+  pulse?: boolean;
+  /** Number of apps in the active/armed blocklist — surfaced on
+   *  the second line as "{n} Apps Blocked" when active. Ignored
+   *  on the Inactive branch (where the subtitle becomes a CTA
+   *  prompt instead). */
+  blockedCount: number;
+  /** Tap handler — wired by TodayScreen to open the
+   *  FocusStatusSheet (the management screen for blocked apps,
+   *  per Apple's status-then-detail disclosure pattern). */
+  onPress: () => void;
+}) => {
+  const colors = useColors();
+  // Pulse animation removed — the audit explicitly bans
+  // infinite animations on the home surface ("No pulsing.
+  // No infinite animations."). The fill/hollow icon shape
+  // alone communicates state, with `isActive` reinforced
+  // by the green systemFill. `pulse` is kept on the props
+  // surface so callers don't have to remove it everywhere
+  // at once, but it's intentionally a no-op here.
+  void pulse;
+
+  // Binary Active/Inactive disposition feeds copy + leading icon.
+  // The status TONE (live/armed/muted) is preserved as visual
+  // reinforcement (icon color), but the headline stays on the
+  // two-state vocabulary so the user doesn't have to parse a
+  // third word.
+  const isActive = tone === "live" || tone === "armed";
+  const title = isActive ? "Protection Active" : "Protection Inactive";
+  const subtitle = isActive
+    ? `${blockedCount} ${blockedCount === 1 ? "App" : "Apps"} Blocked`
+    : "Turn on protection";
+
+  // ── Surface hierarchy (Apple Health / Journal pattern) ──
+  // The row is now a STANDALONE page section sitting directly
+  // on the page background (#000), not nested inside the
+  // devotional card. Per the home-section audit, every primary
+  // section gets the same elevated surface treatment so the
+  // eye reads them as parallel objects:
+  //   • Devotional content card → surfaceSecondary
+  //   • Protection card         → surfaceSecondary  ← this row
+  //   • App Blocks card         → surfaceSecondary
+  // (Previously this row used surfaceTertiary because it was a
+  // nested element on top of the devotional card's surfaceSecondary.
+  // Moving it OUT of the devotional card means it can step UP to
+  // surfaceSecondary itself.)
+  //
+  // Typography hierarchy on the dark row:
+  //   • Title    → `colors.ink`           (primary label)
+  //   • Subtitle → `colors.inkSecondary`  (60% white)
+  //   • Chevron  → `colors.inkSubtle`     (40% white)
+  // Same descending tier of weight Apple uses inside Health's
+  // metric rows: "Steps" headline + "1,432 — Today" subtitle +
+  // chevron.
+  const surfaceBg = colors.surfaceSecondary;
+  const titleColor = colors.ink;
+  const subtitleColor = colors.inkSecondary;
+  const chevronColor = colors.inkSubtle;
+  // System-on green (Apple SF Symbols semantic for "ENABLED")
+  // for active, secondary-label gray for inactive. The
+  // FILL/HOLLOW shape is the primary status channel (HIG:
+  // never rely on color alone); the green is reinforcement
+  // for sighted users who have learned the "system-on green"
+  // affordance from iOS Settings.
+  const iconColor = isActive
+    ? SYSTEM_COLORS_DARK.green
+    : colors.inkSecondary;
+
+  // The row's visual surface lives on an INNER plain View, not on
+  // the Pressable. The NativeWind/Pressable interop on this
+  // codebase silently drops non-className flex/background/shadow
+  // props from function-style `style` returns — the exact bug
+  // pattern that caused the earlier HeroStatusPill to render
+  // with no capsule for several iterations. Putting all surface
+  // styling on a static inner View sidesteps the interop dance
+  // and renders identically every time.
+  //
+  // Hit area: minHeight: 64 brings the visible row to ≥44pt
+  // (well past the HIG floor for interactive elements), and the
+  // hitSlop extends the press region another 8pt on every side
+  // so users don't need to land precisely on the row.
+  return (
+    <Pressable
+      onPress={() => {
+        haptics.soft();
+        onPress();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${subtitle}. Tap to manage blocked apps.`}
+      accessibilityHint="Opens the focus status sheet"
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.7 : 1,
+      })}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: surfaceBg,
+          // Spec: horizontal padding 20pt, height 88pt,
+          // corner radius 24pt. `minHeight` (not `height`)
+          // preserves the row's resilience to Dynamic Type
+          // — the row will grow past 88pt if the user has
+          // Larger Text on, but never falls below 88pt
+          // when copy is short.
+          paddingHorizontal: 20,
+          paddingVertical: 20,
+          minHeight: 88,
+          borderRadius: 24,
+        }}
+      >
+        {/* Leading status glyph — SF Symbol shield (fill for
+            ACTIVE, outline for INACTIVE). Apple-native concept
+            map: shield.fill is iOS's universal "you are
+            protected" affordance (Safari fraud warning, Mail
+            privacy protection, Screen Time downtime — all use
+            shield.fill on the green systemFill when active).
+            
+            Pure-shape distinction (filled vs outline) carries
+            the channel without color, satisfying HIG's "never
+            rely on color alone" rule; the green tint is
+            reinforcement for sighted users who have learned
+            the system-on green semantic from Settings.app.
+            
+            Sized at 18pt to read with the row's 15pt SemiBold
+            title at the same optical weight — Apple's leading
+            glyphs in Settings disclosure rows are calibrated
+            slightly larger than the title's cap-height so the
+            icon doesn't appear to "shrink" against the text.
+            
+            (Previously a custom SVG circle that ran an opacity
+            pulse during LIVE focus sessions. The audit banned
+            infinite animations on home, and the user's icon
+            language pass replaced the placeholder geometry
+            with a real native glyph the user already recognizes
+            from iOS.) */}
+        <View
+          style={{
+            marginRight: 12,
+            width: 22,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <SFSymbol
+            name={isActive ? "shield.fill" : "shield"}
+            size={18}
+            weight="semibold"
+            color={iconColor}
+          />
+        </View>
+
+        {/* Title + subtitle stack — flex:1 so the chevron stays
+            pinned to the trailing edge regardless of subtitle
+            length. Title is the bold state name, subtitle is
+            the supporting count/CTA in the muted ink. Same
+            Plus Jakarta Sans family the rest of the home page
+            uses so the row reads as part of the existing
+            typographic system, not a foreign Settings panel. */}
+        <View style={{ flex: 1 }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              // SemiBold (not Bold) per the audit — the row sits
+              // inside the devotional card where the editorial
+              // title carries the heavy weight; this status row
+              // must feel like supporting chrome, not a second
+              // headline. Apple uses SemiBold for the title of
+              // Settings disclosure rows (Battery, Focus,
+              // Screen Time) for the same reason.
+              fontFamily: "System",
+              fontWeight: "600",
+              color: titleColor,
+              fontSize: 15,
+              lineHeight: 20,
+              letterSpacing: -0.2,
+            }}
+          >
+            {title}
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontFamily: "System",
+              fontWeight: "400",
+              color: subtitleColor,
+              fontSize: 13,
+              lineHeight: 18,
+              letterSpacing: -0.05,
+              marginTop: 2,
+            }}
+          >
+            {subtitle}
+          </Text>
+        </View>
+
+        {/* Trailing chevron — the iOS disclosure affordance.
+            Signals "tap to drill into the management screen"
+            (Apple Settings convention), and provides the only
+            unambiguous "this is interactive" cue on a calm
+            white row. Subtle 36% black so it sits as ambient
+            chrome rather than competing with the title. */}
+        <SFSymbol
+          name="chevron.right"
+          size={14}
+          weight="semibold"
+          color={chevronColor}
+        />
+      </View>
+    </Pressable>
+  );
+};
 
 const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
   illustration,
   title,
   blurb,
-  closer,
   firstName,
   completed,
+  streakCount = 0,
+  typeName,
+  typeIconSymbol,
   onPress,
   onProfilePress,
+  statusPills,
+  onShowStatus,
+  onShowRhythm,
 }: {
-  illustration: ImageSourcePropType;
+  /**
+   * Full-bleed hero artwork for the top of the card. OPTIONAL —
+   * when omitted the card renders a clean typography-only header
+   * (TODAY'S DEVOTIONAL badge + avatar row at the top of the
+   * body, no image, no overlay chrome). The image-less variant
+   * was added for the v1 launch in June 2026 when per-sermon
+   * cover artwork wasn't ready in time and the home card needed
+   * to ship with no broken/placeholder images. Pass an
+   * illustration again in v2 to restore the full-bleed editorial
+   * hero exactly as it shipped originally — the rest of the
+   * card's behavior (badge logic, status row, Read Now CTA) is
+   * unchanged in either mode.
+   */
+  illustration?: ImageSourcePropType;
   title: string;
-  /** Long-form context paragraph (regular weight, muted ink). */
+  /** Long-form context paragraph (regular weight, muted ink) —
+   *  the first paragraph of the sermon's `teaser`. */
   blurb: string;
-  /** Short closing invitation line (heavier weight, full ink) —
-   *  the editorial payoff that justifies the Read Now CTA right
-   *  underneath. */
-  closer: string;
   firstName: string;
   /** True if the user has already completed today's devotional —
-   *  drives the "NEW" badge: shown ONLY for unread devotionals so
-   *  the pill reads as "fresh content waiting for you" rather
-   *  than a permanent label on the card. */
+   *  drives the "TODAY'S WORD" marker visibility: shown ONLY for
+   *  unread devotionals so the marker reads as "fresh content
+   *  waiting for you" rather than a permanent label on the card. */
   completed: boolean;
+  /** Current consecutive-day streak count. Drives the compact
+   *  flame chip in the chrome row above the devotional region.
+   *  Optional with a default of 0; the chip itself hides when 0
+   *  so first-day users don't see "0 days" before they've earned
+   *  the milestone. Matches Apple Fitness's pattern of hiding
+   *  empty metrics rather than rendering placeholder zeros. */
+  streakCount?: number;
+  /** Today's sermon-type display name (e.g. "Daily Church",
+   *  "Letters From A Struggling Christian"). Surfaced inline
+   *  beneath the title as a compact category chip so the home
+   *  card carries the type's identity without sacrificing the
+   *  title's typographic dominance. Optional — when omitted
+   *  the chip is hidden and the layout collapses cleanly. */
+  typeName?: string;
+  /** SF Symbol name paired with `typeName` in the inline type
+   *  chip. Pulled from each sermon type's `iconSymbol` field
+   *  in `constants/sermonTypes.ts`. Optional — when omitted
+   *  the icon is suppressed; when both this and `typeName`
+   *  are present, the chip renders icon + label inline. */
+  typeIconSymbol?: SFSymbolName;
   onPress: () => void;
   onProfilePress: () => void;
+  /** Header status pills (Streak / Blocks) lifted from
+   *  TodayScreen and floated as overlay chrome over the hero
+   *  image. Pre-computed by the parent so the card stays a
+   *  pure presenter and doesn't have to know about focus
+   *  sessions or streak math. Empty array hides the overlay
+   *  row. */
+  statusPills?: ReadonlyArray<{
+    key: "streak" | "goal" | "blocks";
+    label: string;
+    value: string;
+    tone: StatusPillTone;
+    pulse?: boolean;
+    /** Live count of apps currently in the blocklist — surfaced
+     *  on the HeroStatusRow's second line when protection is
+     *  active. Optional so other pill consumers (streak / goal)
+     *  don't have to compute a value they'd never use. */
+    blockedCount?: number;
+    onPress: () => void;
+  }>;
+  /** Opens the focus-status sheet when the eye button next to the
+   *  greeting is tapped. Passed in by TodayScreen because the
+   *  sheet itself lives at the screen level (it's a Modal and
+   *  needs to be mounted outside the card's render tree). When
+   *  omitted the eye button is hidden entirely so we don't ship
+   *  a button that opens nothing. */
+  onShowStatus?: () => void;
+  /** Tap handler for the streak hero card in the page chrome
+   *  row. Wired to router.push('/rhythm') at the call site so
+   *  the chip drills into the streak's history detail. When
+   *  omitted the chip hides entirely (we don't ship a tappable
+   *  surface that doesn't lead anywhere). */
+  onShowRhythm?: () => void;
 }) {
   const colors = useColors();
   const { width: screenWidth } = useWindowDimensions();
@@ -1736,26 +1974,17 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
   // safe area while the rest of the page stays safely inside.
   const insets = useSafeAreaInsets();
 
-  // Time-of-day greeting — Gentler Streak's "Hi Alex," softened
-  // with a part-of-day cue so the card reads as a current,
-  // present-tense address rather than a generic salutation. The
-  // SALUTATION (Good morning, /Good evening,) sits in muted ink;
-  // the NAME pops in the editorial red so the user's own name
-  // becomes the warm anchor of the page — same accent the
-  // "Daily Devotional" header used on the previous home layout
-  // so the brand voice carries through even with that header
-  // dropped.
-  const { salutation, name } = useMemo(() => {
-    const hour = new Date().getHours();
-    const resolvedName =
-      firstName && firstName !== "friend" ? firstName : "friend";
-    let salute: string;
-    if (hour < 12) salute = "Good morning, ";
-    else if (hour < 17) salute = "Good afternoon, ";
-    else if (hour < 22) salute = "Good evening, ";
-    else salute = "Hi, ";
-    return { salutation: salute, name: resolvedName };
-  }, [firstName]);
+  // Dynamic greeting — replaces the static "Welcome back 👋"
+  // subtitle with a time-of-day-aware line (Good morning ☀️ /
+  // Good afternoon ☀️ / Good evening 🌙 / Good night 🌙). The
+  // user wanted the home page to FEEL different across the day
+  // without changing layout — the greeting and emoji swap is
+  // the cheapest, highest-impact way to deliver that. Computed
+  // at render time (not memoized) because the underlying value
+  // is just a hour comparison; the cost is one new Date() per
+  // render which is negligible. (`firstName` is still consumed
+  // by the dead-code image-overlay variant's avatar initial.)
+  const greeting = getGreeting();
 
   // Hero image height tuned to mirror Gentler Streak's
   // proportion — the illustration takes roughly the upper
@@ -1770,17 +1999,47 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
   // image View is `heroHeight + insets.top` tall and uses a
   // negative top margin to reach pixel y=0 of the screen, so
   // the photo bleeds behind the status bar.
-  const heroHeight = 320;
+  // Reduced 320 → 260 so the imprint card's primary CTA ("Read
+  // Now") clears the floating tab bar on first viewport without
+  // scrolling. With the previous 320pt hero plus the body
+  // section, the button landed ~30pt below the fold — its
+  // accent-red drop shadow bled UP behind the tab bar, which
+  // users perceived as the button colliding with navigation
+  // chrome (HIG: no interactive element may overlap another).
+  // 260pt keeps the illustration commanding without pushing the
+  // CTA off-screen, and reads close to Apple News article-hero
+  // proportions (~30% of viewport).
+  const heroHeight = 260;
 
   return (
     <View style={{ width: "100%" }}>
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={`Begin ${title}`}
-        style={({ pressed }) => ({ opacity: pressed ? 0.97 : 1 })}
+      {/* The whole card USED to be a single Pressable
+          (onPress=onPress) so a tap anywhere in the title /
+          blurb / illustration area navigated into the sermon.
+          That meant a casual scroll-tap on the top of the home
+          screen — including the status-bar-adjacent eyebrow
+          and the avatar chip — fired the sermon-open. Per the
+          June 2026 design review the card is now a plain View;
+          ONLY the explicit Read Now / Read Again pill below
+          navigates into today's sermon. Status pills, profile
+          chip, and other interior controls keep their own
+          dedicated handlers without competing with a parent
+          card press. */}
+      <View
+        accessibilityRole="summary"
+        accessibilityLabel={`Today's devotional: ${title}`}
       >
         {/* ── Hero illustration — FULL-BLEED, behind status bar ─
+            ONLY renders when an `illustration` prop is provided.
+            For v1 launch (June 2026) the home card ships without
+            per-sermon cover artwork — the call site in TodayScreen
+            stopped passing `illustration` — so the entire image
+            block + overlaid chrome (TODAY'S DEVOTIONAL badge,
+            profile avatar) below is gated on the prop. When art
+            ships in v2, restoring it is a one-line change at the
+            call site; this block's logic is preserved verbatim so
+            the visual restoration is exact.
+            
             No card chrome, no rounded corners, no border. The
             image IS the top of the page (Gentler Streak's
             "Day to Rest and Recover" pattern). Closer's
@@ -1799,6 +2058,7 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
             extends UPWARD into the inset region. The previous
             hard horizontal line where the status-bar safe area
             ended and the image began is gone. */}
+        {illustration ? (
         <View
           style={{
             width: screenWidth,
@@ -1881,41 +2141,51 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
             />
           </Svg>
 
-          {/* "NEW" badge — Gentler-Streak's "Highlight" pill
-              equivalent. Surfaced only when the user has NOT
-              yet completed today's devotional so the pill
-              functions as a "fresh, waiting for you" cue
-              rather than a permanent label. Dark capsule with
-              white uppercase text reads against either a dark
-              illustration or a light one because the
-              top-fade above gives it a guaranteed contrast
-              floor. Offset by insets.top so it lands just
-              below the status bar. */}
+          {/* "TODAY'S DEVOTIONAL" badge — surfaced only when
+              the user has NOT yet completed today's devotional
+              so the pill functions as a "what's waiting for you"
+              cue rather than a permanent label. Relabeled from
+              the earlier "NEW" treatment: HIG requires every UI
+              element to clearly communicate its purpose, and a
+              one-word "NEW" label out of context could mean a
+              new feature, new entry, new release — anything.
+              "TODAY'S DEVOTIONAL" is a complete, unambiguous
+              statement of what the imprint card is.
+              
+              White capsule with black uppercase text — Apple
+              News "Top Story" treatment. Maximum contrast,
+              instantly readable over any photographic hero
+              crop. Offset by insets.top so it lands just below
+              the status bar.
+              
+              accessibilityRole="text" so VoiceOver reads it as
+              a label rather than a button (the chip itself
+              isn't tappable; it's a status badge). */}
           {!completed ? (
             <View
               pointerEvents="none"
               style={{
                 position: "absolute",
-                top: insets.top + 10,
+                top: insets.top + 8,
                 left: 16,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
+                paddingHorizontal: 16,
+                paddingVertical: 4,
                 borderRadius: 999,
-                backgroundColor: "rgba(0, 0, 0, 0.78)",
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: "rgba(255, 255, 255, 0.12)",
+                backgroundColor: "#FFFFFF",
               }}
-              accessibilityElementsHidden
+              accessible
+              accessibilityLabel="Today's devotional, not yet read"
             >
               <Text
                 style={{
-                  color: "#FFFFFF",
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  color: "#000000",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   fontSize: 11,
-                  letterSpacing: 1.8,
+                  letterSpacing: 1.5,
                 }}
               >
-                NEW
+                TODAY'S DEVOTIONAL
               </Text>
             </View>
           ) : null}
@@ -1923,195 +2193,661 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
           {/* Profile avatar overlay — pinned to the image's
               top-right corner, same monogram chip we use in
               the regular home header. Offset by insets.top so
-              it clears the status bar. */}
-          <Pressable
-            hitSlop={12}
-            onPress={onProfilePress}
-            accessibilityRole="button"
-            accessibilityLabel="Open profile"
-            style={({ pressed }) => ({
+              it clears the status bar.
+              
+              Layered into three concentric components so each
+              layer is handled by the most reliable React Native
+              primitive for its job:
+              
+                1. Outer positioning <View>  — owns `position:
+                   absolute, top, right`. Positioning lives on a
+                   plain View because NativeWind's interop drops
+                   non-className style props from a Pressable's
+                   `({ pressed }) => ({...})` return value on
+                   this codebase — the exact bug that produced
+                   the user's "stray K rendered at the bottom-
+                   left of the hero" report.
+                2. Middle <Pressable>        — owns the tap +
+                   press-state opacity. No layout/surface props.
+                3. Inner visual <View>       — owns the size,
+                   radius, fill, border, and content centering.
+              
+              Don't refactor this back into a single Pressable
+              with combined styles — the next time NativeWind
+              changes interop behavior the avatar will silently
+              decompose into an inline letter again. */}
+          <View
+            style={{
               position: "absolute",
               top: insets.top + 8,
               right: 16,
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "rgba(255, 255, 255, 0.18)",
-              borderWidth: 1,
-              borderColor: "rgba(255, 255, 255, 0.28)",
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: pressed ? 0.7 : 1,
-            })}
-          >
-            <Text
-              style={{
-                color: "#FFFFFF",
-                fontFamily: "PlusJakartaSans_700Bold",
-                fontSize: 14,
-              }}
-            >
-              {firstName.charAt(0).toUpperCase()}
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* ── Body section — sits flush against page bg ──────
-            No card chrome. Reads as page-native editorial
-            content the way Gentler Streak's body sits flush on
-            the white sheet beneath the illustration band.
-            Generous horizontal padding (22pt) matches the
-            sermon panel's reading rhythm. */}
-        <View style={{ paddingHorizontal: 22, paddingTop: 22, paddingBottom: 26 }}>
-          {/* Personal greeting — quiet salutation in muted ink
-              ("Good morning, ") with the NAME in editorial red
-              so the user's own name becomes the warm anchor at
-              the top of the page. Same #E11D48 the previous
-              "Daily Devotional" section header used so the
-              brand accent carries through even after that
-              header was suppressed. */}
-          <Text
-            style={{
-              fontSize: 15,
-              lineHeight: 20,
-              letterSpacing: -0.1,
             }}
           >
-            <Text
-              style={{
-                fontFamily: "PlusJakartaSans_500Medium",
-                color: colors.inkMuted,
-              }}
+            <Pressable
+              hitSlop={12}
+              onPress={onProfilePress}
+              accessibilityRole="button"
+              accessibilityLabel="Open profile"
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
             >
-              {salutation}
-            </Text>
-            <Text
-              style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                color: HOME_SECTION_ACCENT,
-              }}
-            >
-              {name}
-            </Text>
-            <Text
-              style={{
-                fontFamily: "PlusJakartaSans_500Medium",
-                color: colors.inkMuted,
-              }}
-            >
-              .
-            </Text>
-          </Text>
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: "rgba(255, 255, 255, 0.18)",
+                  borderWidth: 1,
+                  borderColor: "rgba(255, 255, 255, 0.28)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontFamily: "System",
+                    fontWeight: "700",
+                    fontSize: 14,
+                  }}
+                >
+                  {firstName.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            </Pressable>
+          </View>
+        </View>
+        ) : (
+          /* No-illustration variant — UNIFIED HEADER
+              Polish pass: the previous version had a 30pt Home
+              title + tiny static "Welcome back 👋" subtitle on
+              the left and a horizontal streak chip on the
+              right. The user's audit flagged the header as
+              "disconnected" and the streak as "still small".
+              
+              This version anchors both sides at the same
+              optical height (alignItems: center) so the page
+              identity column and the streak HERO read as a
+              single intentional header band — Apple Fitness
+              Summary pattern: large title on the left,
+              prominent metric tile on the right, vertically
+              centered to each other.
+              
+              Left column (page identity, tightened):
+                • "Home" — LargeTitle (30pt 800)
+                • Dynamic time-of-day greeting + emoji
+                  (Good morning ☀️ / evening 🌙 / etc.)
+              
+              Right column (streak HERO, hierarchy: flame →
+              big number → caption):
+                • flame.fill icon on top
+                • LARGE count number (32pt 800) — the hero
+                • "Day Streak" small caps below — supporting
+                The number is now the first thing the eye
+                lands on, which is what the user asked for:
+                "treat progress as a first-class citizen".
+              
+              Spacing: 12pt below SafeAreaView inset, 28pt
+              below the row to the devotional card. Removed
+              the excess empty space the previous version
+              carried at the top. */
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 24,
+              // Spec: status-bar → Home = 20pt. SafeAreaView
+              // handles the status-bar inset; this is the
+              // additional gap inside the safe area before
+              // the Home title.
+              paddingTop: 20,
+              // Spec: Good Evening → Devotional card = 32pt.
+              paddingBottom: 32,
+              gap: 16,
+            }}
+          >
+            {/* Left column — Home title + dynamic greeting.
+                The greeting line replaces the static "Welcome
+                back 👋" with a time-of-day-aware line so the
+                page identity FEELS different morning vs
+                evening without changing layout. Helper at
+                `lib/greeting.ts` returns text + emoji per
+                hour bucket. */}
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  // V3: settled on 34pt 800 ExtraBold — Apple's
+                  // standard Large Title size for iOS tab page
+                  // anchors (Health, Fitness, App Store, News
+                  // all pitch their tab page titles here). 48pt
+                  // overshot and dominated the page; 40pt sat
+                  // near-parity with the 36pt streak number.
+                  // 34pt 800 with the heavier weight delivers
+                  // the optical density of a hero title at the
+                  // size iOS itself uses — meaning the title
+                  // reads as "this is the page" without
+                  // crowding the streak chip on the right.
+                  fontFamily: "System",
+                  fontWeight: "800",
+                  color: colors.ink,
+                  fontSize: 34,
+                  lineHeight: 40,
+                  letterSpacing: -0.6,
+                }}
+                accessibilityRole="header"
+              >
+                Home
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "System",
+                  fontWeight: "400",
+                  // Spec: opacity 65% on white (rather than the
+                  // 60% inkSecondary token) so the line and its
+                  // emoji glyph share the same alpha — `color`
+                  // alone wouldn't dim the emoji.
+                  color: colors.ink,
+                  opacity: 0.65,
+                  fontSize: 17,
+                  lineHeight: 22,
+                  letterSpacing: -0.2,
+                  // Spec: Home → Good Evening = 4pt.
+                  marginTop: 4,
+                }}
+                accessibilityLabel={greeting.text}
+              >
+                {greeting.text} {greeting.emoji}
+              </Text>
+            </View>
 
-          {/* Editorial title — ExtraBold (heavier than the
-              earlier 700 Bold) and tighter tracking so the
-              page anchor lands with real weight, the way
-              Gentler Streak's "Day to Rest and Recover" does.
-              The standalone play-glyph chip that used to sit
-              to its right was dropped — with a real "Read Now"
-              CTA at the bottom of the card the small chip
-              became a duplicate affordance competing with the
-              primary button for the eye. */}
+            {/* Compact horizontal streak chip — "🔥 N".
+            
+                Replaces the previous 120×88 vertical card
+                (flame ↑ number ↑ "DAY STREAK" caps). The
+                vertical hero competed visually with the
+                editorial sermon card directly below it; the
+                horizontal chip drops the visual weight to
+                roughly a quarter of the previous footprint
+                so the home page reads as one anchored
+                editorial surface with a small status mark in
+                the top corner, not a two-tile dashboard.
+                
+                The 🔥 emoji (not the SF Symbol flame.fill)
+                is intentional — the emoji renders with its
+                own native orange/yellow gradient so the chip
+                carries a touch of warmth without us painting
+                any colored surface or glow. The number sits
+                tight to the right of the flame so the whole
+                chip reads as one glyph at a glance.
+                
+                Hidden entirely at streakCount === 0 so
+                first-day users don't see a "🔥 0" before
+                they've earned the milestone (same pattern
+                Apple Fitness uses for empty metrics).
+                
+                Hit target is the full chip + 8pt hitSlop;
+                tap still opens /rhythm. */}
+            {onShowRhythm && streakCount > 0 ? (
+              <Pressable
+                onPress={() => {
+                  haptics.soft();
+                  onShowRhythm();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`${streakCount}-day streak. Tap to open Rhythm.`}
+                hitSlop={8}
+                style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 999,
+                    backgroundColor: colors.surfaceSecondary,
+                    minHeight: 32,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      lineHeight: 20,
+                      marginRight: 6,
+                    }}
+                  >
+                    🔥
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.ink,
+                      fontFamily: "System",
+                      fontWeight: "700",
+                      fontSize: 16,
+                      lineHeight: 20,
+                      letterSpacing: -0.2,
+                    }}
+                  >
+                    {streakCount}
+                  </Text>
+                </View>
+              </Pressable>
+            ) : null}
+          </View>
+        )}
+
+        {/* ── Devotional content card — elevated surface ──────
+            Owns ONLY the devotional content now: greeting,
+            title, type chip, blurb, closer, and Read Now CTA.
+            The TODAY'S WORD marker moved above (own section)
+            and the Protection card moved below (own section)
+            per the home-section audit — "every section should
+            be identifiable by shape and position before
+            reading any text".
+            
+            Apple's first-party apps (Journal, Health, Fitness)
+            group cohesive content on a layered surface
+            (secondarySystemBackground in iOS terminology) and
+            let the page background show through between
+            sections. The previous home laid everything flush
+            on pure black, which read as a stack of unrelated
+            blocks — no perceptual grouping, no Apple-style
+            depth.
+            
+            Surface: `colors.surfaceSecondary` (#111) — one
+            elevation step above the page bg (#000). No border,
+            no shadow per the audit — the surface contrast
+            alone carries the depth. 24pt radius matches the
+            iOS card radius used across Health/Fitness/Music
+            grouped surfaces.
+            
+            Padding: 24pt all around. Apple's grouped card
+            interior padding (UIListCollectionView inset-
+            grouped cell). The 24pt internal padding is the
+            audit's explicit ask and snaps cleanly onto the
+            8pt spacing grid the rest of the home page uses.
+            
+            Horizontal margin: 16pt — leaves the page bg
+            visible at the left/right edges so the card reads
+            as a discrete object on the page, not a full-width
+            band. Matches Apple Health's grouped-card insets.
+            
+            (Image-overlay variant, used when `illustration` is
+            passed, deliberately skips this elevated wrapper —
+            its visual grouping comes from the photo+gradient
+            mask above. This wrapper is the no-image variant's
+            equivalent grouping affordance.) */}
+        <View
+          style={{
+            marginHorizontal: 16,
+            // Spec: 24pt horizontal/top/bottom padding,
+            // 28pt corner radius. The devotional card runs
+            // on its own `devotionalSurface` theme token —
+            // dark mode: #151515 (one step darker than the
+            // utility surfaceSecondary so the editorial
+            // anchor reads as the deepest meditative tier);
+            // light mode: #FFFFFF (pure white, lifts off
+            // the warm-cream page bg #F8F7F4).
+            paddingHorizontal: 24,
+            paddingTop: 24,
+            paddingBottom: 24,
+            borderRadius: 28,
+            backgroundColor: colors.devotionalSurface,
+          }}
+        >
+          {/* ── Top row: TODAY'S WORD badge ↔ Type chip ──────
+              Reference: the user pulled this pattern from a
+              modern devotional layout — a small colored icon
+              badge anchoring the TODAY'S WORD label on the
+              left, balanced by a Daily Church / Letters /
+              etc. type pill on the right. Both rendered at
+              roughly the same eyebrow height so the row
+              reads as a single header strip identifying
+              what this card is AND what voice it speaks in
+              — before the title even begins.
+              
+              Spacing: 0pt from the card's 24pt top padding,
+              16pt below before the title — gives the row
+              its own clear band at the top of the card. */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
+            {/* TODAY'S WORD badge — colored icon square + label.
+                The square (28pt, CLOSER_ACCENT fill,
+                white book.closed.fill glyph) is the only
+                colored surface in the card, which is what
+                makes it instantly findable. Apple Sleep,
+                Health, and Notes all use a small colored
+                icon-square pattern (the "category puck") to
+                anchor their headline rows. */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                flexShrink: 1,
+              }}
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel="Today's Word"
+            >
+              <View
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  backgroundColor: CLOSER_ACCENT,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <SFSymbol
+                  name="book.closed.fill"
+                  size={14}
+                  weight="semibold"
+                  color="#FFFFFF"
+                />
+              </View>
+              <Text
+                style={{
+                  color: CLOSER_ACCENT,
+                  fontFamily: "System",
+                  fontWeight: "700",
+                  fontSize: 12,
+                  letterSpacing: 1.5,
+                  marginLeft: 10,
+                }}
+              >
+                TODAY'S WORD
+              </Text>
+            </View>
+
+            {/* Type chip — Daily Church / Letters / etc.
+                Moved from below the title up to this top row
+                so it pairs with the TODAY'S WORD marker as
+                co-headline metadata: "this is today's word,
+                of the Daily Church voice". Renders as a
+                compact pill (surfaceTertiary fill) so the
+                two markers read as visually parallel chips
+                at the top of the card. */}
+            {typeName && typeIconSymbol ? (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: colors.surfaceTertiary,
+                  borderRadius: 999,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  flexShrink: 1,
+                }}
+                accessible
+                accessibilityRole="text"
+                accessibilityLabel={typeName}
+              >
+                <SFSymbol
+                  name={typeIconSymbol}
+                  size={12}
+                  weight="semibold"
+                  color={colors.inkSecondary}
+                />
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    color: colors.ink,
+                    fontFamily: "System",
+                    fontWeight: "600",
+                    fontSize: 12,
+                    letterSpacing: -0.1,
+                    marginLeft: 6,
+                  }}
+                >
+                  {typeName}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
+          {/* Editorial title — spec maps "SF Pro Display Bold"
+              to the project's existing display face at 700
+              weight (kept on PlusJakartaSans so the card
+              matches the rest of the page). 28/32 per spec.
+              
+              Spacing per spec:
+                • Top row → title  = 12pt (was 8pt)
+                • Title → body     = 20pt (was 24pt)
+              The 12pt gap above keeps the eyebrow row + title
+              feeling like one editorial block; the 20pt gap
+              below separates the title cluster from the body
+              prose. */}
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_800ExtraBold",
+              fontFamily: "System",
+              fontWeight: "700",
               color: colors.ink,
-              fontSize: 30,
-              lineHeight: 36,
-              letterSpacing: -0.8,
-              marginTop: 6,
+              fontSize: 28,
+              lineHeight: 32,
+              letterSpacing: -0.6,
+              marginTop: 12,
             }}
             accessibilityRole="header"
           >
             {title}
           </Text>
 
-          {/* Editorial blurb — long context paragraph in
-              regular weight, muted ink. Same body type as the
-              sermon panels (Plus Jakarta 16/24) so the home
-              preview reads of-a-piece with the prose the
-              reader will meet inside the sermon. */}
+          {/* Editorial blurb — spec: 17pt regular, 28pt line
+              height, 20pt above (from title), 32pt below (to
+              CTA). Color stays at #CCCCCC for ~8.7:1 contrast
+              on the new #151515 surface — comfortably past
+              the WCAG AAA 7:1 floor. */}
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_400Regular",
+              fontFamily: "System",
+              fontWeight: "400",
+              // Theme-aware body copy color. Dark mode lands on
+              // ~85% white (`colors.inkMuted`, AAA on #151515);
+              // light mode lands on the same token (#3A3A3F-ish
+              // muted ink), which delivers AAA on the white
+              // devotional surface. Previously hardcoded
+              // #CCCCCC for dark-only contrast — that pinned
+              // the body copy to a low-contrast gray in light
+              // mode (almost invisible on white).
               color: colors.inkMuted,
-              fontSize: 16,
-              lineHeight: 24,
+              fontSize: 17,
+              lineHeight: 28,
               letterSpacing: -0.1,
-              marginTop: 14,
+              marginTop: 20,
             }}
           >
             {blurb}
           </Text>
 
-          {/* Closing line — punchier weight + full ink color so
-              this lands as the real INVITATION at the end of
-              the editorial setup. Apple News pull-quote energy:
-              short, heavier, sits on the reader's mind as the
-              last thing they read before the CTA. */}
-          <Text
-            style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              color: colors.ink,
-              fontSize: 17,
-              lineHeight: 24,
-              letterSpacing: -0.2,
-              marginTop: 14,
-            }}
-          >
-            {closer}
-          </Text>
+          {/* (Closing emphasis line was REMOVED in the polish
+              pass per the user's audit: "Less is more. The
+              title already communicates the message." The
+              closer paragraph repeated emotional ground the
+              headline + blurb already cover and added a third
+              typographic level inside the card. Removing it
+              drops the card from 6 hierarchy levels down to
+              4 — eyebrow, title, body, CTA — which is the
+              maximum Apple Books and Journal carry on their
+              own card surfaces. The `closer` prop is still
+              accepted by this component for backward compat
+              but is no longer rendered.) */}
 
           {/* Read Now CTA — primary editorial button, editorial
               red to match the brand accent established by the
               greeting's name color. Full-width pill consistent
               with the sermon flow's Continue pill so the visual
               language of "tap this to begin" is uniform from
-              home → sermon → completion. */}
+              home → sermon → completion.
+              
+              Surface styling lives on an INNER static-style View,
+              not on the Pressable's function-style return value.
+              On this codebase the NativeWind/Pressable interop
+              layer drops non-className surface props from
+              function-style style objects (same bug pattern as
+              HeroStatusPill), which paints the button transparent
+              and leaves just the white text floating. Static
+              inner View → guaranteed paint. */}
+          {/* (Protection status row used to render between the
+              closer and the Read Now CTA. The audit moved it
+              OUT of this card — protection is a different
+              purpose from devotional content, so it now lives
+              as its own standalone section BELOW this card.
+              Read Now sits directly under the closer with
+              32pt of breathing room, the HIG-recommended
+              minimum between primary editorial text and a
+              primary CTA. See the outer render for the
+              standalone protection card.) */}
+
           <Pressable
             onPress={onPress}
             accessibilityRole="button"
             accessibilityLabel={completed ? "Read again" : "Read now"}
+            // Surface the completion state to assistive tech so
+            // VoiceOver speaks "Read again. You've already
+            // completed today's devotional." instead of just
+            // "Read again." (a label that doesn't carry the
+            // status the green pill is carrying visually).
+            accessibilityHint={
+              completed
+                ? "You've already completed today's devotional"
+                : undefined
+            }
             style={({ pressed }) => ({
-              marginTop: 22,
-              backgroundColor: HOME_SECTION_ACCENT,
-              borderRadius: 999,
-              paddingVertical: 16,
-              paddingHorizontal: 24,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
+              // V4: 56 → 28pt. The previous 56pt was tuned for an
+              // earlier revision that rendered a 2-line "closer"
+              // paragraph below the blurb (the user's last-pass
+              // edit). After the closer was removed, the body now
+              // ends with the blurb's last line and 56pt of empty
+              // space stranded the CTA at the bottom of the card,
+              // making the whole card feel under-filled. 28pt
+              // matches the gap between the title and the blurb
+              // above (20pt → 28pt; ramping up as we move toward
+              // the action) so the vertical rhythm reads as one
+              // cohesive cluster instead of a top half + a
+              // floating button.
+              marginTop: 28,
               opacity: pressed ? 0.92 : 1,
-              shadowColor: HOME_SECTION_ACCENT,
-              shadowOpacity: 0.32,
-              shadowRadius: 16,
-              shadowOffset: { width: 0, height: 6 },
-              elevation: 4,
             })}
           >
-            <Text
+            <View
               style={{
-                color: "#FFFFFF",
-                fontFamily: "PlusJakartaSans_700Bold",
-                fontSize: 15,
-                letterSpacing: 0.2,
-                marginRight: 10,
+                // Pre-completion: editorial red (the same accent
+                // the page's section headers and progress bar
+                // use, so the eye reads "this IS today's
+                // devotional CTA"). Post-completion: iOS system
+                // green (#34C759), the OS-wide "done /
+                // succeeded" color. The color shift is the
+                // primary visual signal the card has flipped
+                // into its "complete" state — no extra badge or
+                // copy needed, the pill itself reports the
+                // status. (See CLOSER_ACCENT and
+                // COMPLETED_GREEN comments below for the
+                // palette rationale.)
+                backgroundColor: completed
+                  ? COMPLETED_GREEN
+                  : CLOSER_ACCENT,
+                // Spec: 56pt height, 28pt radius (= height/2
+                // = full pill, same shape as Apple's primary
+                // pill buttons in Books / Music).
+                height: 56,
+                borderRadius: 28,
+                paddingHorizontal: 24,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                // Red shadow REMOVED per the polish-pass surface
+                // hierarchy rule ("DO NOT use shadows / glows /
+                // gradients / borders"). The brand red is loud
+                // enough as a fill against the deep editorial
+                // surface to read as the primary action without
+                // additional elevation chrome.
               }}
             >
-              {completed ? "Read Again" : "Read Now"}
-            </Text>
-            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M5 12h14M13 6l6 6-6 6"
-                stroke="#FFFFFF"
-                strokeWidth={2.4}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
+              <Text
+                style={{
+                  color: "#FFFFFF",
+                  fontFamily: "System",
+                  fontWeight: "700",
+                  fontSize: 15,
+                  letterSpacing: 0.2,
+                  marginRight: 8,
+                }}
+              >
+                {completed ? "Read Again" : "Read Now"}
+              </Text>
+              {/* Glyph swaps with the state:
+                    • Read Now    → forward arrow (the call to
+                                    action, "go into the
+                                    sermon").
+                    • Read Again  → checkmark, the OS-standard
+                                    completion mark. Even when
+                                    the user is colorblind and
+                                    can't distinguish red from
+                                    green, the check itself
+                                    reports the "done" status
+                                    so the pill is still
+                                    legible as a completion
+                                    badge. Stroke weight 2.4 +
+                                    rounded caps match the
+                                    arrow's stroke style so
+                                    both glyphs feel like the
+                                    same family. */}
+              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d={completed ? "M5 12l5 5L20 7" : "M5 12h14M13 6l6 6-6 6"}
+                  stroke="#FFFFFF"
+                  strokeWidth={2.4}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </View>
           </Pressable>
+
         </View>
-      </Pressable>
+
+        {/* ── Protection card — standalone section ─────────────
+            A SEPARATE elevated card on the page bg, parallel
+            to the devotional card above and the App Blocks
+            card below. Three home sections, three identical
+            shapes (24pt radius, surfaceSecondary fill, mx 16),
+            three distinct purposes — exactly the "identifiable
+            by shape and position" pattern the audit asked for.
+            
+            Tap propagation: HeroStatusRow contains its own
+            Pressable that swallows the touch (opens the focus
+            status sheet), so the outer card-level Pressable
+            never receives the event — tapping the protection
+            row opens the sheet, not the sermon.
+            
+            24pt margin above separates this card from the
+            devotional card — the polish-pass audit flagged
+            16pt as "blending together" because the two cards
+            are different TASKS (read the devotional vs.
+            manage protection) and should be visually distinct
+            modules. 24pt is the same gap Apple uses between
+            grouped inset sections on iOS Settings, which is
+            the cleanest "these are siblings, not nested"
+            signal in the design system. */}
+        {onShowStatus && statusPills && statusPills.length > 0 ? (
+          <View style={{ marginTop: 24, marginHorizontal: 16 }}>
+            <HeroStatusRow
+              value={statusPills[0].value}
+              tone={statusPills[0].tone}
+              pulse={statusPills[0].pulse}
+              blockedCount={statusPills[0].blockedCount ?? 0}
+              onPress={onShowStatus}
+            />
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 });
@@ -2322,9 +3058,10 @@ const SermonCard = memo(function SermonCard({
             >
               <View className="flex-row items-baseline">
                 <Text
-                  className="text-[10px] tracking-[3px] uppercase"
+                  className="text-[11px] tracking-[3px] uppercase"
                   style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
+                    fontFamily: "System",
+                    fontWeight: "700",
                     color: "#FFFFFF",
                     // Subtle text shadow gives the eyebrow a
                     // floor to sit on even when the gradient is
@@ -2338,9 +3075,10 @@ const SermonCard = memo(function SermonCard({
                   {type.name}
                 </Text>
                 <Text
-                  className="text-[10px] tracking-[2.5px] uppercase"
+                  className="text-[11px] tracking-[2.5px] uppercase"
                   style={{
-                    fontFamily: "PlusJakartaSans_500Medium",
+                    fontFamily: "System",
+                    fontWeight: "500",
                     color: "rgba(255, 255, 255, 0.72)",
                     marginLeft: 8,
                     textShadowColor: "rgba(0, 0, 0, 0.4)",
@@ -2413,9 +3151,10 @@ const SermonCard = memo(function SermonCard({
               style={{ paddingHorizontal: 24 }}
             >
               <Text
-                className="text-[10.5px] tracking-[3px] uppercase"
+                className="text-[11px] tracking-[3px] uppercase"
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   color: type.accent,
                   textAlign: "center",
                 }}
@@ -2434,7 +3173,7 @@ const SermonCard = memo(function SermonCard({
                 rationale. */}
             <View
               className="items-center justify-center relative"
-              style={{ marginTop: 14, marginBottom: 6 }}
+              style={{ marginTop: 16, marginBottom: 4 }}
             >
               <LivingHeroIcon source={type.hero} accent={type.accent} />
             </View>
@@ -2471,7 +3210,8 @@ const SermonCard = memo(function SermonCard({
         <Text
           className="text-ink text-[26px] leading-[32px] tracking-[-0.4px]"
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             textAlign: "center",
           }}
         >
@@ -2487,7 +3227,8 @@ const SermonCard = memo(function SermonCard({
         <Text
           className="text-ink-muted text-[14px] leading-[21px] mt-2"
           style={{
-            fontFamily: "PlusJakartaSans_400Regular",
+            fontFamily: "System",
+            fontWeight: "400",
             textAlign: "center",
           }}
         >
@@ -2500,9 +3241,10 @@ const SermonCard = memo(function SermonCard({
             joined by a middot. Caps-tracked so it reads as
             credit metadata rather than headline text. */}
         <Text
-          className="text-ink-subtle text-[10.5px] tracking-[2px] uppercase mt-3.5"
+          className="text-ink-subtle text-[11px] tracking-[2px] uppercase mt-3.5"
           style={{
-            fontFamily: "PlusJakartaSans_600SemiBold",
+            fontFamily: "System",
+            fontWeight: "600",
             textAlign: "center",
           }}
         >
@@ -2521,7 +3263,7 @@ const SermonCard = memo(function SermonCard({
             separate hit zone. */}
         <View
           pointerEvents="none"
-          style={{ marginTop: 18, alignItems: "center" }}
+          style={{ marginTop: 16, alignItems: "center" }}
         >
           {completed ? <ReadAgainPill accent={type.accent} /> : <PlayPill />}
         </View>
@@ -2631,18 +3373,25 @@ const IMPRINT_IMAGE_HEIGHT = 330;
 const IMPRINT_CARD_INTERIOR = "#161618";
 
 /**
- * Editorial red used for the "Daily Devotional" section header at
- * the top of the home page — an Apple News "Top Stories" treatment
- * that visually marks today's curated sermon as the headline
- * editorial item. Same shade in both light and dark themes so the
- * section identity reads consistently when the user flips modes;
- * picked for legibility against both the cream and true-black bg
- * (Tailwind rose-600). Lives at module scope so it's easy to
- * promote to a theme constant later if we add other section
- * headers (e.g. "Your Rhythms", "Recent Moods") that all want the
- * same colored treatment.
+ * Brand orange accent for the "Daily Devotional" section header —
+ * sourced from CLOSER_ACCENT in constants/theme.ts.
  */
-const HOME_SECTION_ACCENT = "#E11D48";
+
+/**
+ * High-contrast body reading ink for editorial prose on the home
+ * imprint card. Hardcoded per-theme rather than routing through
+ * `colors.inkMuted` so we can pin reading-prose contrast at a
+ * specific point (≈16:1 on dark, ≈14:1 on light — comfortably
+ * past the WCAG AAA 7:1 floor for small text on a dark surface)
+ * without dragging every other inkMuted consumer (eyebrows,
+ * timestamps, refs) along for the ride. Light value picks
+ * Apple's `label` near-black so light-mode reading prose stays
+ * crisp; dark value picks `#E5E5EA` (Apple's tertiarySystemFill
+ * dark — a near-white that still has visible separation from
+ * pure `#FFFFFF` headings so type hierarchy is preserved).
+ */
+const BODY_READING_INK_FOR = (colors: { ink: string }) =>
+  colors.ink === "#FFFFFF" ? "#E5E5EA" : "#1C1C1E";
 
 /**
  * Green used by the "Read Again" pill on the today sermon card
@@ -2764,7 +3513,7 @@ const ImprintSermonCard = memo(function ImprintSermonCard({
         //     as a still-actionable Begin pill. The green
         //     reads as a signal-progress affordance the way
         //     iOS Mail's "completed" check does.
-        ctaColor: completed ? COMPLETED_GREEN : HOME_SECTION_ACCENT,
+        ctaColor: completed ? COMPLETED_GREEN : CLOSER_ACCENT,
         ctaActive: true,
         completed,
       },
@@ -2812,7 +3561,7 @@ const ImprintSermonCard = memo(function ImprintSermonCard({
   );
 
   return (
-    <View style={{ paddingTop: 6, paddingBottom: 4 }}>
+    <View style={{ paddingTop: 4, paddingBottom: 4 }}>
       <ScrollView
         ref={scrollRef}
         horizontal
@@ -2856,7 +3605,7 @@ const ImprintSermonCard = memo(function ImprintSermonCard({
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "center",
-          marginTop: 18,
+          marginTop: 16,
         }}
         pointerEvents="none"
       >
@@ -2872,7 +3621,7 @@ const ImprintSermonCard = memo(function ImprintSermonCard({
                 backgroundColor: isActive
                   ? "rgba(255, 255, 255, 0.85)"
                   : "rgba(255, 255, 255, 0.22)",
-                marginHorizontal: 3.5,
+                marginHorizontal: 4.5,
               }}
             />
           );
@@ -3049,9 +3798,9 @@ function ImprintCardVisual({
             <View
               style={{
                 flex: 1,
-                paddingHorizontal: 22,
-                paddingTop: 12,
-                paddingBottom: 15,
+                paddingHorizontal: 24,
+                paddingTop: 16,
+                paddingBottom: 16,
                 alignItems: "center",
                 justifyContent: "space-between",
               }}
@@ -3060,7 +3809,8 @@ function ImprintCardVisual({
                 <Text
                   style={{
                     color: "#FFFFFF",
-                    fontFamily: "PlusJakartaSans_700Bold",
+                    fontFamily: "System",
+                    fontWeight: "700",
                     fontSize: 20,
                     lineHeight: 26,
                     letterSpacing: -0.3,
@@ -3073,10 +3823,11 @@ function ImprintCardVisual({
                 <Text
                   style={{
                     color: "rgba(255, 255, 255, 0.6)",
-                    fontFamily: "PlusJakartaSans_500Medium",
+                    fontFamily: "System",
+                    fontWeight: "500",
                     fontSize: 13,
                     lineHeight: 18,
-                    marginTop: 5,
+                    marginTop: 4,
                     textAlign: "center",
                   }}
                   numberOfLines={1}
@@ -3130,8 +3881,8 @@ function ImprintPreviewPill({ label }: { label: string }) {
       <View
         style={{
           backgroundColor: "rgba(255, 255, 255, 0.08)",
-          paddingHorizontal: 22,
-          paddingVertical: 11,
+          paddingHorizontal: 24,
+          paddingVertical: 8,
           borderRadius: 999,
           borderWidth: 1,
           borderColor: "rgba(255, 255, 255, 0.1)",
@@ -3140,7 +3891,8 @@ function ImprintPreviewPill({ label }: { label: string }) {
         <Text
           style={{
             color: "rgba(255, 255, 255, 0.7)",
-            fontFamily: "PlusJakartaSans_600SemiBold",
+            fontFamily: "System",
+            fontWeight: "600",
             fontSize: 12.5,
             letterSpacing: 1,
             textTransform: "uppercase",
@@ -3205,9 +3957,9 @@ function ImprintCTAPill({
           flexDirection: "row",
           alignItems: "center",
           backgroundColor: color,
-          paddingLeft: 36,
+          paddingLeft: 32,
           paddingRight: showCheck ? 28 : 36,
-          paddingVertical: 11,
+          paddingVertical: 8,
           borderRadius: 999,
           shadowColor: color,
           shadowOpacity: 0.4,
@@ -3219,7 +3971,8 @@ function ImprintCTAPill({
         <Text
           style={{
             color: "#FFFFFF",
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             fontSize: 14,
             letterSpacing: 0.2,
             marginRight: showCheck ? 8 : 0,
@@ -3480,7 +4233,7 @@ function ActiveFocusHero({
                   borderColor: withAlpha(FOCUS_HERO_ACCENT, 0.45),
                   alignItems: "center",
                   justifyContent: "center",
-                  marginRight: 9,
+                  marginRight: 8,
                   opacity: isPaused
                     ? 0.55
                     : pulse.interpolate({
@@ -3513,9 +4266,10 @@ function ActiveFocusHero({
                 </Svg>
               </Animated.View>
               <Text
-                className="text-[10px] tracking-[3px] uppercase"
+                className="text-[11px] tracking-[3px] uppercase"
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   color: FOCUS_HERO_ACCENT,
                 }}
               >
@@ -3550,9 +4304,10 @@ function ActiveFocusHero({
                 }}
               />
               <Text
-                className="text-[10px] tracking-[3px] uppercase"
+                className="text-[11px] tracking-[3px] uppercase"
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   color: FOCUS_HERO_ACCENT,
                 }}
               >
@@ -3577,7 +4332,8 @@ function ActiveFocusHero({
             >
               <Text
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   color: FOCUS_HERO_ACCENT,
                   fontSize: 11,
                   letterSpacing: 0.3,
@@ -3601,13 +4357,13 @@ function ActiveFocusHero({
                 land as a balanced couplet rather than a runner. */}
             <Text
               className="text-ink text-[25px] leading-[31px] tracking-[-0.4px] mt-3"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Read today&apos;s sermon
             </Text>
             <Text
               className="text-ink-muted text-[16px] leading-[22px] mt-1"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
             >
               to unlock your apps.
             </Text>
@@ -3646,7 +4402,8 @@ function ActiveFocusHero({
                 >
                   <Text
                     style={{
-                      fontFamily: "PlusJakartaSans_700Bold",
+                      fontFamily: "System",
+                      fontWeight: "700",
                       color: "#FFFFFF",
                       fontSize: 16,
                       letterSpacing: 0.3,
@@ -3682,7 +4439,8 @@ function ActiveFocusHero({
               <Text
                 className="text-ink-subtle text-[12px]"
                 style={{
-                  fontFamily: "PlusJakartaSans_500Medium",
+                  fontFamily: "System",
+                  fontWeight: "500",
                   letterSpacing: 0.1,
                 }}
                 numberOfLines={1}
@@ -3699,13 +4457,13 @@ function ActiveFocusHero({
                 accessibilityLabel="End focus session"
                 style={({ pressed }) => ({
                   opacity: pressed ? 0.55 : 0.85,
-                  paddingVertical: 2,
+                  paddingVertical: 4,
                   paddingHorizontal: 4,
                 })}
               >
                 <Text
                   className="text-ink-subtle text-[11px] tracking-[1.6px] uppercase"
-                  style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                  style={{ fontFamily: "System", fontWeight: "700" }}
                 >
                   End focus
                 </Text>
@@ -3720,14 +4478,14 @@ function ActiveFocusHero({
                 focus starts/ends. */}
             <Text
               className="text-ink text-[25px] leading-[31px] tracking-[-0.4px] mt-3"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
               numberOfLines={1}
             >
               {titleLabel}
             </Text>
             <Text
               className="text-ink-muted text-[14px] leading-[20px] mt-1"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
               numberOfLines={1}
             >
               {appsSummary}
@@ -3738,7 +4496,8 @@ function ActiveFocusHero({
               <Text
                 className="text-ink text-[44px] leading-[48px] tracking-[-1px]"
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   opacity: isPaused ? 0.55 : 1,
                 }}
                 // @ts-expect-error — RN types accept this string but
@@ -3748,8 +4507,8 @@ function ActiveFocusHero({
                 {timeLabel}
               </Text>
               <Text
-                className="text-ink-subtle text-[10px] tracking-[3px] uppercase mt-1"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                className="text-ink-subtle text-[11px] tracking-[3px] uppercase mt-1"
+                style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 {timeMetaLabel}
               </Text>
@@ -3778,7 +4537,7 @@ function ActiveFocusHero({
             ) : null}
 
             {/* Action row: Break/Resume + End. */}
-            <View className="flex-row mt-5" style={{ gap: 10 }}>
+            <View className="flex-row mt-5" style={{ gap: 8 }}>
               {hasDuration ? (
                 <View style={{ flex: 1 }}>
                   <Pressable
@@ -3803,7 +4562,7 @@ function ActiveFocusHero({
                     >
                       <Text
                         className="text-ink text-[15px]"
-                        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                        style={{ fontFamily: "System", fontWeight: "700" }}
                       >
                         {isPaused ? "Resume" : "Break"}
                       </Text>
@@ -3833,7 +4592,8 @@ function ActiveFocusHero({
                     <Text
                       className="text-[15px]"
                       style={{
-                        fontFamily: "PlusJakartaSans_700Bold",
+                        fontFamily: "System",
+                        fontWeight: "700",
                         color: "#FFFFFF",
                       }}
                     >
@@ -3876,8 +4636,8 @@ function CompletedBadge() {
         />
       </Svg>
       <Text
-        className="text-ink text-[10px] tracking-[2px] uppercase ml-1.5"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        className="text-ink text-[11px] tracking-[2px] uppercase ml-1.5"
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         Heard
       </Text>
@@ -3973,8 +4733,8 @@ function ReadAgainPill({ accent }: { accent: string }) {
           borderWidth: 1.5,
           borderColor: withAlpha(accent, 0.55),
           paddingLeft: 16,
-          paddingRight: 20,
-          paddingVertical: 11,
+          paddingRight: 16,
+          paddingVertical: 8,
           // Inner accent halo via shadow on iOS — gives the pill
           // a subtle "lit from within" quality. Shadows on the
           // chip itself read as physical light around the action.
@@ -4003,10 +4763,11 @@ function ReadAgainPill({ accent }: { accent: string }) {
         </Svg>
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             fontSize: 14.5,
             color: accent,
-            marginLeft: 9,
+            marginLeft: 8,
             letterSpacing: 0.2,
           }}
         >
@@ -4055,7 +4816,7 @@ function PlayPill() {
       </Svg>
       <Text
         className="text-primary-fg text-[13px] ml-2"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         Begin
       </Text>
@@ -4128,7 +4889,7 @@ type StatRowProps = {
  *     Days from the surrounding months that share a week with
  *     the current month are rendered as transparent slots so
  *     the grid keeps a proper calendar shape.
- *   • Lit cells: HOME_SECTION_ACCENT (editorial red) — same
+ *   • Lit cells: CLOSER_ACCENT (editorial red) — same
  *     color as the "Daily Devotional" ribbon at the top of the
  *     page, so the rhythm card reads as part of the same
  *     conversation, not a new color world.
@@ -4154,10 +4915,11 @@ const RhythmGrid = memo(function RhythmGrid({
 
   // ─── Layout math ─────────────────────────────────────────
   // The card lives in a 24pt-padded section; inside the card
-  // we add 18pt of internal padding. The 7-column calendar
-  // grid then fills whatever's left, with cells clamped to a
-  // pleasant 26–36pt square (smaller-feeling than full
-  // calendar tiles, large enough to read as a grid of days).
+  // we add 18pt of internal padding. With only 7 cells in a
+  // single row (vs the previous month-grid's 35–42), each cell
+  // gets meaningfully more horizontal room — we let cells
+  // scale up to 44pt (Apple's HIG-floor tap target) so the day
+  // numerals inside read comfortably at a glance.
   const SECTION_PADDING = 24;
   const CARD_PADDING = 18;
   const GAP = 6;
@@ -4165,27 +4927,60 @@ const RhythmGrid = memo(function RhythmGrid({
   const cardWidth = screenWidth - SECTION_PADDING * 2;
   const gridWidth = cardWidth - CARD_PADDING * 2;
   const rawCell = (gridWidth - (COLS - 1) * GAP) / COLS;
-  const cellSize = Math.max(26, Math.min(36, Math.floor(rawCell)));
+  const cellSize = Math.max(36, Math.min(44, Math.floor(rawCell)));
 
   // ─── Date math ───────────────────────────────────────────
-  // Build the month grid via the shared `lib/rhythm.ts`
-  // helper so the home card and the /rhythm detail page use
-  // the same source of truth for cell-state classification.
-  const monthGrid = useMemo(() => {
-    const today = new Date();
-    return buildMonthGrid(
-      engagedDates,
-      today.getFullYear(),
-      today.getMonth(),
-    );
+  // Single-week view — the current Sun → Sat window. Drives
+  // the same engaged/idle/future classification as the detail
+  // page's month grid (via the shared lib/rhythm.ts helper) so
+  // both surfaces speak one source of truth.
+  const week = useMemo(() => buildCurrentWeek(engagedDates), [engagedDates]);
+  const { cells, weekStartISO, weekEndISO, engagedCount } = week;
+
+  // Tracking start ISO — the earliest engaged date across the
+  // user's whole history. Anything older than this on the grid
+  // is "pre-tracking" (the user wasn't here yet) and renders
+  // with the bare-numeral visual instead of the "missed" fill.
+  // A brand-new user with zero engagements has
+  // `trackingStartISO === null`, which the cell renderer reads
+  // as "treat every idle past day as pre-tracking" — so the
+  // first time they open the app they don't see a wall of
+  // shame for days they never had the chance to engage.
+  const trackingStartISO = useMemo<string | null>(() => {
+    if (engagedDates.length === 0) return null;
+    let min = engagedDates[0]!;
+    for (const iso of engagedDates) {
+      if (iso < min) min = iso;
+    }
+    return min;
   }, [engagedDates]);
-  const { rows, monthLabel, engagedCount, totalDays } = monthGrid;
+
+  // Header range — "Jun 7 – 13" formatted from the week
+  // boundaries. Compresses to "Jun 28 – Jul 4" when the week
+  // straddles a month boundary, matching iOS Calendar's
+  // formatting convention.
+  const weekRangeLabel = useMemo(
+    () => formatWeekRange(weekStartISO, weekEndISO),
+    [weekStartISO, weekEndISO],
+  );
+
+  // Footer copy — reframes the metric so a brand-new user
+  // doesn't read "0 read this week" as failure. Three messages
+  // depending on engagement state, each one truthful without
+  // accusing the user of missing anything they couldn't have
+  // done.
+  const footerCopy =
+    engagedCount === 0
+      ? "Start your rhythm"
+      : engagedCount === 1
+      ? "1 read this week"
+      : `${engagedCount} read this week`;
 
   return (
     <Pressable
       onPress={onOpenDetail}
       accessibilityRole="button"
-      accessibilityLabel={`Open rhythm detail — ${engagedCount} of ${totalDays} days in ${monthLabel}`}
+      accessibilityLabel={`Open rhythm detail — ${footerCopy}, ${weekRangeLabel}`}
       style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
     >
       <View
@@ -4199,8 +4994,10 @@ const RhythmGrid = memo(function RhythmGrid({
           borderColor: colors.border,
         }}
       >
-        {/* Header — month label on the left, completion count
-            on the right (small "12 / 30" pair). */}
+        {/* Header — "This week" anchor on the leading edge,
+            "Jun 7 – 13" date range trailing as quiet context
+            so the user can place the row in time without
+            squinting at the cell numerals below. */}
         <View
           style={{
             flexDirection: "row",
@@ -4211,30 +5008,31 @@ const RhythmGrid = memo(function RhythmGrid({
         >
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               color: colors.ink,
               fontSize: 15.5,
               letterSpacing: -0.2,
             }}
           >
-            {monthLabel}
+            This week
           </Text>
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "600",
               color: colors.inkSubtle,
-              fontSize: 11,
-              letterSpacing: 1.6,
-              textTransform: "uppercase",
+              fontSize: 12,
+              letterSpacing: 0.2,
             }}
           >
-            {engagedCount} / {totalDays}
+            {weekRangeLabel}
           </Text>
         </View>
 
-        {/* Weekday strip — single character abbreviations,
-            quietly muted so the grid below stays the visual
-            anchor. */}
+        {/* Weekday strip — single-character abbreviations
+            (Sun → Sat), quietly muted so the cells below
+            stay the visual anchor. */}
         <View
           style={{
             flexDirection: "row",
@@ -4252,9 +5050,10 @@ const RhythmGrid = memo(function RhythmGrid({
             >
               <Text
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   color: colors.inkSubtle,
-                  fontSize: 10,
+                  fontSize: 11,
                   letterSpacing: 1,
                 }}
               >
@@ -4264,38 +5063,32 @@ const RhythmGrid = memo(function RhythmGrid({
           ))}
         </View>
 
-        {/* The calendar itself */}
-        <View>
-          {rows.map((row, rIdx) => (
-            <View
-              key={rIdx}
-              style={{
-                flexDirection: "row",
-                marginTop: rIdx === 0 ? 0 : GAP,
-              }}
-            >
-              {row.map((cell, cIdx) => (
-                // RhythmCell pulls colors from context itself so the
-                // grid doesn't have to thread a fresh-on-each-render
-                // colors prop into 35–42 cells (which would defeat the
-                // cell-level React.memo wrapper).
-                <RhythmCell
-                  key={`${rIdx}-${cIdx}`}
-                  size={cellSize}
-                  marginLeft={cIdx === 0 ? 0 : GAP}
-                  state={cell.state}
-                  isToday={cell.isToday}
-                />
-              ))}
-            </View>
+        {/* The single-week row */}
+        <View style={{ flexDirection: "row" }}>
+          {cells.map((cell, cIdx) => (
+            // RhythmCell pulls colors from context itself so the
+            // grid doesn't have to thread a fresh-on-each-render
+            // colors prop into 7 cells (which would defeat the
+            // cell-level React.memo wrapper).
+            <RhythmCell
+              key={cell.dateISO}
+              size={cellSize}
+              marginLeft={cIdx === 0 ? 0 : GAP}
+              state={cell.state}
+              isToday={cell.isToday}
+              dateISO={cell.dateISO}
+              trackingStartISO={trackingStartISO}
+            />
           ))}
         </View>
 
-        {/* Footer — "N of N days" on the left, "View all →"
-            on the right hinting the tappable detail. */}
+        {/* Footer — copy varies by engagement count to avoid
+            the previous "0 read" failure framing.
+            "View all →" on the right hints the tappable
+            detail page. */}
         <View
           style={{
-            marginTop: 14,
+            marginTop: 16,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
@@ -4303,19 +5096,21 @@ const RhythmGrid = memo(function RhythmGrid({
         >
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_600SemiBold",
+              fontFamily: "System",
+              fontWeight: "600",
               color: colors.ink,
               fontSize: 13,
               letterSpacing: -0.1,
             }}
           >
-            {engagedCount} of {totalDays} days
+            {footerCopy}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                color: HOME_SECTION_ACCENT,
+                fontFamily: "System",
+                fontWeight: "700",
+                color: CLOSER_ACCENT,
                 fontSize: 13,
                 letterSpacing: -0.1,
                 marginRight: 4,
@@ -4326,7 +5121,7 @@ const RhythmGrid = memo(function RhythmGrid({
             <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
               <Path
                 d="M9 6l6 6-6 6"
-                stroke={HOME_SECTION_ACCENT}
+                stroke={CLOSER_ACCENT}
                 strokeWidth={2.4}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -4339,86 +5134,290 @@ const RhythmGrid = memo(function RhythmGrid({
   );
 });
 
+/**
+ * Format the Sun → Sat boundaries of a week into a compact
+ * label suitable for the home card's trailing context:
+ *
+ *   • Same month     →  "Jun 7 – 13"
+ *   • Straddles two  →  "Jun 28 – Jul 4"
+ *
+ * Mirrors iOS Calendar's week-range convention so the home
+ * card reads as a native iOS surface.
+ */
+function formatWeekRange(startISO: string, endISO: string): string {
+  const start = new Date(startISO + "T00:00:00");
+  const end = new Date(endISO + "T00:00:00");
+  const startMonth = start.toLocaleDateString(undefined, { month: "short" });
+  const endMonth = end.toLocaleDateString(undefined, { month: "short" });
+  const startDay = start.getDate();
+  const endDay = end.getDate();
+  if (startMonth === endMonth) {
+    return `${startMonth} ${startDay} – ${endDay}`;
+  }
+  return `${startMonth} ${startDay} – ${endMonth} ${endDay}`;
+}
+
 /** Single-letter weekday strip — US locale (Sun → Sat). */
 const WEEKDAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"] as const;
 
+/** Tracks identical palette tokens to the /rhythm detail screen
+ *  so the two surfaces speak one vocabulary. Duplicated locally
+ *  (rather than imported) because the detail screen keeps its
+ *  own private copies for the same self-contained reason. */
+const RHYTHM_MISSED_FILL = "rgba(255, 255, 255, 0.06)";
+const RHYTHM_NEUTRAL_OUTLINE = "rgba(255, 255, 255, 0.28)";
+
 /**
- * One cell in a rhythm heatmap. Kept as a separate component
- * so re-renders don't re-create style objects for dozens of
- * cells on every paint.
+ * One cell in the home rhythm heatmap. Visual vocabulary
+ * mirrors the /rhythm detail screen's day cells exactly so the
+ * home preview and the full page speak the same language —
+ * tapping the home card into the detail page should feel like
+ * the same calendar zoomed in, not a different chart.
  *
  * State-driven render:
- *   • engaged    → solid HOME_SECTION_ACCENT
- *   • idle       → calm border-tone fill (a quiet "this day
- *                  has happened but you didn't engage")
- *   • future     → faint outline inside the current month
- *                  (the day exists, it just hasn't happened
- *                  yet)
- *   • outOfMonth → transparent placeholder (preserves
- *                  calendar shape on the home grid)
- *   • isToday    → adds an accent ring over whatever fill is
- *                  underneath so the user can locate "now"
- *                  at a glance, engaged or not
+ *   • engaged       — solid CLOSER_ACCENT filled circle
+ *                     + bold WHITE day number (only saturated
+ *                     fill in the grid → engaged days dominate)
+ *   • today (idle)  — hollow CLOSER_ACCENT ring + bold
+ *                     red day number. Renders only when today
+ *                     isn't engaged — engaged-today falls into
+ *                     the branch above so the user's lit moment
+ *                     isn't visually downgraded.
+ *   • future        — DASHED neutral outline (drawn via SVG
+ *                     strokeDasharray — RN's native dashed
+ *                     border is unreliable at 28–36pt circles)
+ *                     + dim day number
+ *   • pre-tracking  — BARE dim numeral, no container. Used for
+ *                     any past idle day before the user's
+ *                     first-ever engagement (or every past day
+ *                     for a brand-new user). Fixes the design-
+ *                     review concern that brand-new users were
+ *                     being shown days they couldn't have
+ *                     engaged as "missed"
+ *   • missed        — subtle filled circle (rgba white 0.06) +
+ *                     muted day number. Reads as "this day
+ *                     passed without a sermon" without shouting
+ *                     "you failed"
+ *   • outOfMonth    — transparent placeholder (preserves
+ *                     calendar shape)
+ *
+ * Kept memo'd because a typical month renders ~35–42 of these,
+ * and the parent re-renders whenever ANY home-screen state
+ * changes (focus pill, sermon swap, etc) — the memo keeps
+ * those re-renders from cascading through 40+ subtrees.
  */
 const RhythmCell = memo(function RhythmCell({
   size,
   marginLeft,
   state,
   isToday,
+  dateISO,
+  trackingStartISO,
 }: {
   size: number;
   marginLeft: number;
   state: RhythmCellState;
   isToday: boolean;
+  dateISO: string;
+  trackingStartISO: string | null;
 }) {
-  // Pull colors from context rather than props so memo's shallow
-  // equality on (size, marginLeft, state, isToday) — all primitives —
-  // can actually short-circuit. With colors as a prop the grid would
-  // pass a fresh ref into every cell on each render and bust memo.
-  const colors = useColors();
-  const radius = Math.max(2, Math.floor(size / 4));
-  let backgroundColor = "transparent";
-  let opacity = 1;
-  let borderWidth = 0;
-  let borderColor: string | undefined;
-  switch (state) {
-    case "engaged":
-      backgroundColor = HOME_SECTION_ACCENT;
-      break;
-    case "idle":
-      backgroundColor = colors.border;
-      break;
-    case "future":
-      backgroundColor = "transparent";
-      borderWidth = 1;
-      borderColor = colors.border;
-      opacity = 0.7;
-      break;
-    case "outOfMonth":
-      backgroundColor = "transparent";
-      opacity = 0;
-      break;
+  // Out-of-month spacer — preserves the 7-column shape without
+  // painting a ghost numeral.
+  if (state === "outOfMonth") {
+    return (
+      <View
+        style={{
+          width: size,
+          height: size,
+          marginLeft,
+        }}
+      />
+    );
   }
-  // Today gets an accent ring over whatever fill is below so
-  // the user can find "now" without scanning numbers.
-  if (isToday && state !== "outOfMonth" && state !== "engaged") {
-    borderWidth = 1.5;
-    borderColor = HOME_SECTION_ACCENT;
-    opacity = 1;
+
+  const day = parseInt(dateISO.slice(8, 10), 10);
+  // Numeral font sizes scale down a hair for the tightest cell
+  // size (28pt). At 36pt the 12pt numeral has comfortable
+  // breathing room; at 28pt we drop to 11pt (the HIG minimum)
+  // to keep the numeral fully inside the disc.
+  const numeralSize = size >= 32 ? 12 : 11;
+
+  // Engaged — saturated red disc + bold white numeral. The ONLY
+  // filled-red cell in the grid, so engaged days are the
+  // unmistakable signal of "you showed up".
+  if (state === "engaged") {
+    return (
+      <View
+        style={{
+          width: size,
+          height: size,
+          marginLeft,
+          borderRadius: size / 2,
+          backgroundColor: CLOSER_ACCENT,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: "System",
+            fontWeight: "700",
+            color: "#FFFFFF",
+            fontSize: numeralSize,
+            letterSpacing: -0.1,
+          }}
+          allowFontScaling={false}
+        >
+          {day}
+        </Text>
+      </View>
+    );
   }
+
+  // Today (not engaged) — hollow red ring + bold red numeral.
+  // Distinct SHAPE (ring, not disc) marks "today, in play".
+  if (isToday) {
+    return (
+      <View
+        style={{
+          width: size,
+          height: size,
+          marginLeft,
+          borderRadius: size / 2,
+          borderWidth: 1.5,
+          borderColor: CLOSER_ACCENT,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: "System",
+            fontWeight: "700",
+            color: CLOSER_ACCENT,
+            fontSize: numeralSize,
+            letterSpacing: -0.1,
+          }}
+          allowFontScaling={false}
+        >
+          {day}
+        </Text>
+      </View>
+    );
+  }
+
+  // Future — DASHED neutral outline + dim numeral. We draw the
+  // ring via SVG (not borderStyle="dashed") because RN's dashed
+  // border doesn't reliably render at 28–36pt circles — dashes
+  // collapse to a solid line or disappear depending on the
+  // platform pass. SVG strokeDasharray gives us deterministic
+  // dotted rings at this size.
+  if (state === "future") {
+    const r = size / 2 - 0.5;
+    return (
+      <View
+        style={{
+          width: size,
+          height: size,
+          marginLeft,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Svg
+          width={size}
+          height={size}
+          style={{ position: "absolute", top: 0, left: 0 }}
+        >
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            stroke={RHYTHM_NEUTRAL_OUTLINE}
+            strokeWidth={1}
+            strokeDasharray="2,2"
+            fill="none"
+          />
+        </Svg>
+        <Text
+          style={{
+            fontFamily: "System",
+            fontWeight: "400",
+            color: "rgba(235, 235, 245, 0.32)",
+            fontSize: numeralSize,
+            letterSpacing: -0.1,
+          }}
+          allowFontScaling={false}
+        >
+          {day}
+        </Text>
+      </View>
+    );
+  }
+
+  // Pre-tracking — past idle day that sits BEFORE the user's
+  // first-ever engagement, OR any past day for a brand-new
+  // user who has never engaged. Bare dim numeral, no
+  // container — reads as "you weren't here yet" rather than
+  // "you missed this". Mirror of the detail screen's pre-
+  // tracking branch.
+  const isPreTracking =
+    trackingStartISO === null || dateISO < trackingStartISO;
+  if (isPreTracking) {
+    return (
+      <View
+        style={{
+          width: size,
+          height: size,
+          marginLeft,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: "System",
+            fontWeight: "400",
+            color: "rgba(235, 235, 245, 0.24)",
+            fontSize: numeralSize,
+            letterSpacing: -0.1,
+          }}
+          allowFontScaling={false}
+        >
+          {day}
+        </Text>
+      </View>
+    );
+  }
+
+  // Missed — subtle filled disc + muted numeral. Quiet enough
+  // to read as "this day passed without a sermon" without
+  // painting a heavy "you failed" badge on the grid.
   return (
     <View
       style={{
         width: size,
         height: size,
         marginLeft,
-        borderRadius: radius,
-        backgroundColor,
-        opacity,
-        borderWidth,
-        borderColor,
+        borderRadius: size / 2,
+        backgroundColor: RHYTHM_MISSED_FILL,
+        alignItems: "center",
+        justifyContent: "center",
       }}
-    />
+    >
+      <Text
+        style={{
+          fontFamily: "System",
+          fontWeight: "500",
+          color: "rgba(235, 235, 245, 0.55)",
+          fontSize: numeralSize,
+          letterSpacing: -0.1,
+        }}
+        allowFontScaling={false}
+      >
+        {day}
+      </Text>
+    </View>
   );
 });
 
@@ -4602,7 +5601,7 @@ function Stat({
       style={{
         flex: 1,
         alignItems: "center",
-        paddingVertical: 6,
+        paddingVertical: 4,
       }}
     >
       <View
@@ -4613,7 +5612,8 @@ function Stat({
       >
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_800ExtraBold",
+            fontFamily: "System",
+            fontWeight: "800",
             color: valueTint,
             fontSize: 42,
             lineHeight: 46,
@@ -4624,10 +5624,11 @@ function Stat({
         </Text>
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_600SemiBold",
+            fontFamily: "System",
+            fontWeight: "600",
             color: valueTint,
             fontSize: 13,
-            marginLeft: 5,
+            marginLeft: 4,
             letterSpacing: -0.2,
           }}
         >
@@ -4636,9 +5637,10 @@ function Stat({
       </View>
       <Text
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           color: colors.inkSubtle,
-          fontSize: 10,
+          fontSize: 11,
           letterSpacing: 2,
           textTransform: "uppercase",
           marginTop: 8,
@@ -4665,7 +5667,7 @@ function StatDivider() {
         width: StyleSheet.hairlineWidth,
         backgroundColor: colors.border,
         alignSelf: "stretch",
-        marginVertical: 6,
+        marginVertical: 4,
       }}
     />
   );
@@ -4755,7 +5757,7 @@ function StreakHeadline({
         width={14}
         height={17}
         viewBox="0 0 24 28"
-        style={{ alignSelf: "center", marginRight: 6 }}
+        style={{ alignSelf: "center", marginRight: 4 }}
       >
         <Defs>
           <LinearGradient id="streakHeadlineFlame" x1="0" y1="0" x2="0" y2="1">
@@ -4771,7 +5773,8 @@ function StreakHeadline({
 
       <Text
         style={{
-          fontFamily: "PlusJakartaSans_800ExtraBold",
+          fontFamily: "System",
+          fontWeight: "800",
           color: FIRE_AMBER,
           fontSize: 22,
           lineHeight: 26,
@@ -4784,11 +5787,12 @@ function StreakHeadline({
 
       <Text
         style={{
-          fontFamily: "PlusJakartaSans_600SemiBold",
+          fontFamily: "System",
+          fontWeight: "600",
           color: colors.inkMuted,
           fontSize: 13,
           letterSpacing: -0.1,
-          marginLeft: 5,
+          marginLeft: 4,
         }}
       >
         day{count === 1 ? "" : "s"}
@@ -4803,8 +5807,8 @@ function StreakChip({ count }: { count: number }) {
       style={{
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 10,
-        paddingVertical: 5,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
         borderRadius: 999,
         borderWidth: StyleSheet.hairlineWidth,
         borderColor: withAlpha(FIRE_AMBER, 0.4),
@@ -4832,10 +5836,11 @@ function StreakChip({ count }: { count: number }) {
       </Svg>
       <Text
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           color: FIRE_AMBER,
           fontSize: 12.5,
-          marginLeft: 5,
+          marginLeft: 4,
         }}
       >
         {count}
@@ -4918,7 +5923,8 @@ function WeekStrip({
             <Text
               className="text-[28px] leading-[32px] tracking-[-0.6px]"
               style={{
-                fontFamily: "PlusJakartaSans_800ExtraBold",
+                fontFamily: "System",
+                fontWeight: "800",
                 color: accent,
               }}
             >
@@ -4926,7 +5932,7 @@ function WeekStrip({
             </Text>
             <Text
               className="text-ink text-[14px] leading-[18px] ml-1.5"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               {streakCount === 1 ? "day streak" : "day streak"}
             </Text>
@@ -4938,7 +5944,7 @@ function WeekStrip({
               the number alone can't communicate. */}
           <Text
             className="text-ink-subtle text-[11.5px] leading-[16px] mt-0.5"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            style={{ fontFamily: "System", fontWeight: "500" }}
           >
             {prompt}
           </Text>
@@ -4946,7 +5952,7 @@ function WeekStrip({
       ) : (
         <Text
           className="text-ink text-[13px] leading-[18px] text-center"
-          style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+          style={{ fontFamily: "System", fontWeight: "600" }}
         >
           {prompt}
         </Text>
@@ -5020,7 +6026,7 @@ function DayDot({
         borderWidth: 1.5,
         borderColor: isToday ? accent : "transparent",
         borderRadius: 14,
-        paddingHorizontal: 5,
+        paddingHorizontal: 4,
         paddingVertical: 4,
         alignItems: "center",
       }}
@@ -5028,7 +6034,8 @@ function DayDot({
       <Text
         className="text-[11px] tracking-[0.5px]"
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           // Engaged days get the accent on their letter too so
           // the "we did it" visual is read by the eye in two
           // places (letter + dot) instead of one. Today (without
@@ -5041,7 +6048,7 @@ function DayDot({
       </Text>
       <View
         style={{
-          marginTop: 6,
+          marginTop: 4,
           width: dotSize,
           height: dotSize,
           borderRadius: dotSize / 2,
@@ -5133,7 +6140,7 @@ function DevPill({
       {icon}
       <Text
         className="text-ink-muted text-[13px] ml-2"
-        style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+        style={{ fontFamily: "System", fontWeight: "600" }}
       >
         {label}
       </Text>
@@ -5180,7 +6187,7 @@ function NextSermonPill({
       </Svg>
       <Text
         className="text-ink-muted text-[13px] ml-2"
-        style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+        style={{ fontFamily: "System", fontWeight: "600" }}
       >
         Next Sermon
       </Text>
@@ -5188,7 +6195,7 @@ function NextSermonPill({
           metadata, not as the action itself. */}
       <Text
         className="text-ink-subtle text-[11.5px] ml-2.5 tracking-[1px] uppercase"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         {position} / {total}
       </Text>
@@ -5336,14 +6343,14 @@ function RoutineCard({
           <View className="flex-1">
             <Text
               className="text-ink text-[16px] tracking-[-0.2px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
               numberOfLines={1}
             >
               {title}
             </Text>
             <Text
               className="text-ink-muted text-[12.5px] mt-0.5"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
               numberOfLines={1}
             >
               {featured.subtitle}
@@ -5369,7 +6376,8 @@ function RoutineCard({
             <Text
               className="text-[12px] tracking-[0.5px]"
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color: colors.ink,
               }}
             >
@@ -5412,7 +6420,7 @@ function RoutineCard({
           <AppGlyphStack ids={featured.apps} maxVisible={5} />
           <Text
             className="text-ink-muted text-[12.5px] ml-3 flex-1"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            style={{ fontFamily: "System", fontWeight: "500" }}
             numberOfLines={1}
           >
             {featured.apps.length === 1
@@ -5508,7 +6516,8 @@ function AppGlyphStack({
         >
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               fontSize: 12,
               color: colors.ink,
             }}
@@ -5548,13 +6557,13 @@ function PreviewShieldPill({ onPress }: { onPress: () => void }) {
       </Svg>
       <Text
         className="text-ink-muted text-[13px] ml-2"
-        style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+        style={{ fontFamily: "System", fontWeight: "600" }}
       >
         Preview Shield
       </Text>
       <Text
         className="text-ink-subtle text-[11.5px] ml-2.5 tracking-[1px] uppercase"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         Next App
       </Text>
@@ -5615,7 +6624,8 @@ function DevSessionPill({
       <Text
         className="text-[13px] ml-2"
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           color: active ? accent : colors.inkMuted,
         }}
       >
@@ -5665,21 +6675,21 @@ function LastCheckInCard({
       <View style={{ width: 4, backgroundColor: accent }} />
       <View className="flex-1 px-5 py-4">
         <Text
-          className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase"
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           Last check in
         </Text>
         <Text
           className="text-ink text-[17px] mt-1 tracking-[-0.2px]"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
           numberOfLines={1}
         >
           {moodLabel}
         </Text>
         <Text
           className="text-ink-muted text-[12.5px] mt-1.5"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          style={{ fontFamily: "System", fontWeight: "500" }}
           numberOfLines={1}
         >
           {checkIn.verse.reference}
@@ -6015,13 +7025,13 @@ function TodayRhythm({
         <View className="flex-1 pr-3">
           <Text
             className="text-ink text-[19px] leading-[24px] tracking-[-0.2px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             Today's rhythm
           </Text>
           <Text
             className="text-ink-muted text-[12.5px] leading-[18px] mt-0.5"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            style={{ fontFamily: "System", fontWeight: "500" }}
           >
             What&apos;s planned, what&apos;s done.
           </Text>
@@ -6033,15 +7043,15 @@ function TodayRhythm({
             accessibilityLabel="Start a focus session"
             style={({ pressed }) => ({
               opacity: pressed ? 0.88 : 1,
-              marginTop: 3,
+              marginTop: 4,
             })}
           >
             <View
               className="flex-row items-center rounded-full"
               style={{
-                paddingLeft: 9,
-                paddingRight: 12,
-                paddingVertical: 5,
+                paddingLeft: 8,
+                paddingRight: 16,
+                paddingVertical: 4,
                 backgroundColor: withAlpha(FOCUS_HERO_ACCENT, 0.14),
               }}
             >
@@ -6051,19 +7061,21 @@ function TodayRhythm({
                   Plus Jakarta "+" sits well in the cap height. */}
               <Text
                 style={{
-                  fontFamily: "PlusJakartaSans_800ExtraBold",
+                  fontFamily: "System",
+                  fontWeight: "800",
                   fontSize: 14,
                   lineHeight: 14,
                   color: FOCUS_HERO_ACCENT,
-                  marginRight: 5,
+                  marginRight: 4,
                 }}
               >
                 +
               </Text>
               <Text
-                className="text-[10.5px] tracking-[1.5px] uppercase"
+                className="text-[11px] tracking-[1.5px] uppercase"
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   color: FOCUS_HERO_ACCENT,
                 }}
               >
@@ -6086,13 +7098,13 @@ function TodayRhythm({
           >
             <Text
               className="text-ink text-[13.5px] text-center"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Nothing scheduled today
             </Text>
             <Text
               className="text-ink-muted text-[12.5px] text-center mt-1.5 leading-[18px]"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
             >
               Add a routine from Practice to start shaping your day.
             </Text>
@@ -6175,16 +7187,17 @@ function RhythmRow({
         style={{
           paddingTop: isFirst ? 14 : 10,
           paddingBottom: isLast ? 14 : 10,
-          paddingHorizontal: 14,
+          paddingHorizontal: 16,
         }}
       >
         {/* Time column — fixed width so titles in column two align
             across all rows regardless of "7:00 AM" vs "12:30 PM". */}
-        <View style={{ width: 62, paddingTop: 2 }}>
+        <View style={{ width: 62, paddingTop: 4 }}>
           <Text
             className="text-ink text-[12px]"
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               opacity: isDone ? 0.55 : 1,
               letterSpacing: 0.2,
             }}
@@ -6258,7 +7271,8 @@ function RhythmRow({
           <Text
             className="text-ink text-[14.5px] leading-[19px]"
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               letterSpacing: -0.1,
             }}
             numberOfLines={1}
@@ -6267,7 +7281,7 @@ function RhythmRow({
           </Text>
           <Text
             className="text-ink-muted text-[12px] leading-[16px] mt-0.5"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            style={{ fontFamily: "System", fontWeight: "500" }}
             numberOfLines={1}
           >
             {item.meta}
@@ -6296,7 +7310,8 @@ function RhythmRow({
             <Text
               className="text-ink-subtle text-[11px]"
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 letterSpacing: 0.4,
                 textTransform: "uppercase",
               }}
@@ -6306,7 +7321,7 @@ function RhythmRow({
           ) : isNow ? (
             <View
               style={{
-                paddingHorizontal: 9,
+                paddingHorizontal: 8,
                 paddingVertical: 4,
                 borderRadius: 999,
                 backgroundColor: withAlpha("#0A84FF", 0.14),
@@ -6314,8 +7329,9 @@ function RhythmRow({
             >
               <Text
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  fontSize: 10,
+                  fontFamily: "System",
+                  fontWeight: "700",
+                  fontSize: 11,
                   color: "#0A84FF",
                   letterSpacing: 0.4,
                   textTransform: "uppercase",
@@ -6329,23 +7345,25 @@ function RhythmRow({
               <Text
                 className="text-ink-subtle text-[11px]"
                 style={{
-                  fontFamily: "PlusJakartaSans_500Medium",
+                  fontFamily: "System",
+                  fontWeight: "500",
                 }}
               >
                 {formatRelativeUntil(item.at, Date.now())}
               </Text>
               <Text
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   fontSize: 16,
                   lineHeight: 16,
                   color: withAlpha(colors.ink, 0.32),
-                  marginLeft: 6,
+                  marginLeft: 4,
                   // Optical centering — the chevron glyph
                   // sits a hair high in its em-box so we
                   // nudge it down to align with the time
                   // label baseline.
-                  marginTop: 1,
+                  marginTop: 4,
                 }}
               >
                 ›

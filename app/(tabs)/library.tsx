@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
+import { SFSymbol } from "@/components/Symbol";
 import { BookCover } from "@/components/BookCover";
 import { FadeIn } from "@/components/FadeIn";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
@@ -23,11 +24,8 @@ import {
   OT_CATEGORY_ORDER,
 } from "@/constants/books";
 import { hasBookCover } from "@/constants/bookCovers";
-import * as haptics from "@/lib/haptics";
-import { findMomentByDay, resolveSermonType } from "@/lib/moments";
 import { useProgress } from "@/state/progress";
-import { useSavedSermons } from "@/state/savedSermons";
-import { useColors } from "@/state/theme";
+import { useColors, useResolvedScheme } from "@/state/theme";
 
 /**
  * Library — Imprint-inspired browse grid.
@@ -97,7 +95,6 @@ export default function LibraryScreen() {
   const [filter, setFilter] = useState<LibraryFilter>("all");
   const [query, setQuery] = useState("");
   const { lastVisited, hasReadChapter } = useProgress();
-  const { saved: savedSermonDays } = useSavedSermons();
 
   // Search takes precedence over the active filter — when the user
   // types we hide the section header and surface a flat match grid.
@@ -157,14 +154,15 @@ export default function LibraryScreen() {
             <Text
               className="text-ink"
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 fontSize: 32,
                 lineHeight: 36,
                 letterSpacing: -0.8,
               }}
               accessibilityRole="header"
             >
-              Library
+              Bible
             </Text>
           </View>
         </FadeIn>
@@ -190,25 +188,12 @@ export default function LibraryScreen() {
           </FadeIn>
         )}
 
-        {/* ─── Saved sermons rail ─────────────────────────────────
-            Surfaces every sermon the user has tapped Save on
-            from the celebration screen. A horizontal rail of
-            compact cards (title + voice + accent tint) so the
-            collection reads as a glanceable "library of kept
-            words" rather than a long vertical list. Hidden when
-            the user has zero saves so the Library tab doesn't
-            grow a permanent empty rail. */}
-        {savedSermonDays.length > 0 && (
-          <FadeIn delayMs={90} durationMs={800}>
-            <SavedSermonsRail
-              days={savedSermonDays}
-              onOpen={(day) => {
-                haptics.soft();
-                router.push(`/saved-sermon/${day}` as const);
-              }}
-            />
-          </FadeIn>
-        )}
+        {/* Saved sermons used to live here as a horizontal rail
+            but moved to the Profile tab in June 2026 — once a user
+            intentionally saves a sermon it stops being browsable
+            content and becomes a personal artifact alongside Notes
+            and Highlights. Library is now pure discovery:
+            Continue Reading → Search → Filters → Books. */}
 
         {/* ─── Search ─────────────────────────────────────────── */}
         <SearchField value={query} onChangeText={setQuery} />
@@ -300,6 +285,19 @@ function FilterPill({
   onPress: () => void;
 }) {
   const colors = useColors();
+  const scheme = useResolvedScheme();
+  // iOS systemBlue — Apple's universal "selected filter" tint.
+  // Music genre chips, App Store filter rails, News topic
+  // pills all use blue-on-blue-tint for active state. We mirror
+  // exactly so the rail reads as a first-party iOS control.
+  const blue = scheme === "light" ? "#007AFF" : "#0A84FF";
+  // Active fill — a low-alpha wash of the same systemBlue, the
+  // ".tinted" button style Apple introduced in iOS 15. Inactive
+  // chips sit on `surfaceSecondary` (the same secondary-grey
+  // surface Apple uses for unfilled chips against an off-white
+  // canvas).
+  const activeFill =
+    scheme === "light" ? "rgba(0, 122, 255, 0.12)" : "rgba(10, 132, 255, 0.20)";
   return (
     <Pressable
       onPress={onPress}
@@ -307,26 +305,33 @@ function FilterPill({
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
     >
+      {/* Pill — iOS-native ".tinted" capsule. Active uses a
+          systemBlue wash + blue ink + bold weight to read as
+          the selected filter; inactive sits on the secondary
+          surface with muted ink. Border dropped entirely on
+          the active state because the tinted fill itself
+          communicates selection (less chrome = more iOS).
+          
+          paddingVertical 8 keeps the chip compact while the
+          surrounding ScrollView's vertical padding + the chip's
+          own hitSlop=6 keep the total tap region comfortably
+          above HIG's 44pt floor. */}
       <View
         style={{
-          paddingHorizontal: 16,
-          paddingVertical: 10,
+          paddingHorizontal: 14,
+          paddingVertical: 8,
           borderRadius: 999,
-          borderWidth: 1.5,
-          // Active = surface backdrop with primary (ink) outline,
-          // mirroring Imprint's selected chip. Inactive = same
-          // surface with a neutral border that fades into the bg.
-          backgroundColor: colors.surface,
-          borderColor: active ? colors.primary : colors.border,
+          backgroundColor: active ? activeFill : colors.surfaceSecondary,
+          borderWidth: active ? 0 : StyleSheet.hairlineWidth,
+          borderColor: colors.border,
         }}
       >
         <Text
           style={{
-            fontFamily: active
-              ? "PlusJakartaSans_700Bold"
-              : "PlusJakartaSans_600SemiBold",
+            fontFamily: "System",
+            fontWeight: active ? "700" : "600",
             fontSize: 13.5,
-            color: active ? colors.ink : colors.inkMuted,
+            color: active ? blue : colors.inkMuted,
             letterSpacing: -0.1,
           }}
           numberOfLines={1}
@@ -351,17 +356,31 @@ function SectionHeader({
   count: number;
   isSearch: boolean;
 }) {
+  const colors = useColors();
   return (
     <View className="px-6 mt-7 mb-4 flex-row items-baseline justify-between">
       <Text
         className="text-ink text-[22px] tracking-[-0.3px]"
-        style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
+        style={{ fontFamily: "System", fontWeight: "800" }}
       >
         {title}
       </Text>
+      {/* Count badge — tracking-1pt / 11pt / SemiBold so it reads as
+          a quiet supporting number instead of competing with the
+          section title beside it. Design review (June 2026) flagged
+          the previous treatment (12pt Bold + 1.5pt tracking) as
+          near-equal weight with "All" — the title now dominates and
+          the count fades behind it. Color held at inkSubtle for the
+          same hierarchy reason. */}
       <Text
-        className="text-ink-subtle text-[12px] tracking-[1.5px] uppercase"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{
+          fontFamily: "System",
+          fontWeight: "600",
+          color: colors.inkSubtle,
+          fontSize: 11,
+          letterSpacing: 1,
+          textTransform: "uppercase",
+        }}
       >
         {count} {isSearch ? (count === 1 ? "match" : "matches") : count === 1 ? "book" : "books"}
       </Text>
@@ -461,8 +480,9 @@ function BookGridTile({
           >
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_800ExtraBold",
-                fontSize: 9.5,
+                fontFamily: "System",
+                fontWeight: "800",
+                fontSize: 11,
                 color: "#0F0F10",
                 letterSpacing: 1,
               }}
@@ -474,7 +494,8 @@ function BookGridTile({
       </View>
       <Text
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           fontSize: 14.5,
           color: colors.ink,
           letterSpacing: -0.2,
@@ -486,7 +507,8 @@ function BookGridTile({
       </Text>
       <Text
         style={{
-          fontFamily: "PlusJakartaSans_500Medium",
+          fontFamily: "System",
+          fontWeight: "500",
           fontSize: 11.5,
           color: colors.inkSubtle,
           marginTop: 2,
@@ -512,8 +534,30 @@ function SearchField({
 }) {
   const colors = useColors();
   return (
+    // iOS-native search bar — the same recipe UISearchBar /
+    // UIKit's `searchController` paints on every list screen
+    // (Settings, Messages, Mail, Files). Visual contract:
+    //   - Filled capsule on the SECONDARY surface (not the page
+    //     bg) so the field reads as a chrome control sitting on
+    //     the canvas rather than another card.
+    //   - 10pt radius — Apple's stock UISearchBar curvature
+    //     (more rounded than a row, less than a pill).
+    //   - 16pt magnifyingglass leading + 8pt gutter + text.
+    //   - clearButtonMode="while-editing" → native iOS X-circle
+    //     clear button instead of a custom SVG one.
+    //   - No border. Apple's search bar leans on the fill +
+    //     placeholder contrast, not a hairline outline.
     <View
-      className="mx-5 mt-5 flex-row items-center bg-surface border border-border rounded-2xl px-4 py-3"
+      style={{
+        marginHorizontal: 20,
+        marginTop: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: colors.surfaceSecondary,
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 9,
+      }}
     >
       <SearchIcon stroke={colors.inkSubtle} />
       <TextInput
@@ -521,22 +565,25 @@ function SearchField({
         onChangeText={onChangeText}
         placeholder="Find a book"
         placeholderTextColor={colors.inkSubtle}
-        className="flex-1 ml-2.5 text-ink"
         style={{
-          fontFamily: "PlusJakartaSans_500Medium",
-          fontSize: 15,
+          flex: 1,
+          marginLeft: 8,
+          color: colors.ink,
+          fontFamily: "System",
+          fontWeight: "500",
+          fontSize: 16,
           paddingVertical: 0,
         }}
         autoCorrect={false}
         autoCapitalize="none"
         returnKeyType="search"
-        clearButtonMode="never"
+        // Use the native iOS clear button — UIKit paints a
+        // small grey-circle X inside the field while editing,
+        // which is the canonical search-clear affordance. Drops
+        // our custom <ClearIcon> press target so we don't ship
+        // two competing clear glyphs.
+        clearButtonMode="while-editing"
       />
-      {value.length > 0 && (
-        <Pressable onPress={() => onChangeText("")} hitSlop={10}>
-          <ClearIcon stroke={colors.inkSubtle} />
-        </Pressable>
-      )}
     </View>
   );
 }
@@ -554,13 +601,13 @@ function EmptyState({ query }: { query: string }) {
       </View>
       <Text
         className="text-ink text-[16px]"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         No books match
       </Text>
       <Text
         className="text-ink-muted text-[13px] mt-1.5 text-center"
-        style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+        style={{ fontFamily: "System", fontWeight: "400" }}
       >
         {query
           ? `Nothing in the canon contains "${query}".`
@@ -621,21 +668,21 @@ function ContinueReadingHero({
       </View>
       <View className="flex-1 ml-4 justify-center">
         <Text
-          className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase"
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           Continue Reading
         </Text>
         <Text
           className="text-ink text-[18px] leading-[22px] tracking-[-0.3px] mt-1"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
           numberOfLines={1}
         >
           {book.name} {chapter}
         </Text>
         <Text
           className="text-ink-muted text-[12.5px] mt-1.5"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          style={{ fontFamily: "System", fontWeight: "500" }}
           numberOfLines={1}
         >
           {hint}
@@ -707,194 +754,6 @@ function computeContinueReading(
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Saved sermons rail — horizontal list of bookmarked moments
-// ─────────────────────────────────────────────────────────────────
-
-/**
- * Horizontal rail of saved-sermon cards. Each card surfaces the
- * sermon title, voice, and the type's accent as a left-edge
- * ribbon — enough to recognize the kept piece at a glance
- * without overflowing the card with metadata.
- *
- * Renders nothing when the catalog can't resolve any of the
- * saved days (catalog truncation between updates) — the section
- * caller already guards on `savedSermonDays.length > 0`, but
- * the per-day filter inside means we don't paint dead cards
- * for moments that no longer exist.
- */
-function SavedSermonsRail({
-  days,
-  onOpen,
-}: {
-  days: ReadonlyArray<number>;
-  onOpen: (day: number) => void;
-}) {
-  const colors = useColors();
-  const resolved = useMemo(
-    () =>
-      days
-        .map((day) => {
-          const moment = findMomentByDay(day);
-          if (!moment) return null;
-          return { moment, type: resolveSermonType(moment.type) };
-        })
-        .filter((x): x is { moment: NonNullable<ReturnType<typeof findMomentByDay>>; type: ReturnType<typeof resolveSermonType> } => x !== null),
-    [days],
-  );
-
-  if (resolved.length === 0) return null;
-
-  return (
-    <View style={{ marginTop: 26 }}>
-      <View className="px-6 flex-row items-baseline justify-between">
-        <Text
-          style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            color: colors.ink,
-            fontSize: 22,
-            lineHeight: 26,
-            letterSpacing: -0.4,
-          }}
-          accessibilityRole="header"
-        >
-          Saved sermons
-        </Text>
-        <Text
-          style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            color: colors.inkSubtle,
-            fontSize: 11,
-            letterSpacing: 1.6,
-            textTransform: "uppercase",
-          }}
-        >
-          {resolved.length} {resolved.length === 1 ? "kept" : "kept"}
-        </Text>
-      </View>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: 14,
-          paddingBottom: 4,
-        }}
-      >
-        {resolved.map(({ moment, type }, i) => (
-          <View
-            key={moment.day}
-            style={{
-              marginRight: i === resolved.length - 1 ? 0 : 12,
-            }}
-          >
-            <SavedSermonCard
-              title={moment.title}
-              voice={moment.voice}
-              typeName={type.name}
-              accent={type.accent}
-              onPress={() => onOpen(moment.day)}
-            />
-          </View>
-        ))}
-      </ScrollView>
-    </View>
-  );
-}
-
-function SavedSermonCard({
-  title,
-  voice,
-  typeName,
-  accent,
-  onPress,
-}: {
-  title: string;
-  voice: string;
-  typeName: string;
-  accent: string;
-  onPress: () => void;
-}) {
-  const colors = useColors();
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`Open saved sermon ${title}`}
-      style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
-    >
-      <View
-        style={{
-          width: 220,
-          minHeight: 132,
-          borderRadius: 18,
-          backgroundColor: colors.surface,
-          borderWidth: StyleSheet.hairlineWidth,
-          borderColor: colors.border,
-          padding: 16,
-          flexDirection: "row",
-          overflow: "hidden",
-        }}
-      >
-        {/* Left ribbon — paints the sermon-type accent down the
-            left edge so each card is recognizable by color at a
-            glance without leaning on a per-type illustration. */}
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            left: 0,
-            width: 4,
-            backgroundColor: accent,
-          }}
-        />
-        <View style={{ flex: 1, paddingLeft: 8 }}>
-          <Text
-            style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              color: accent,
-              fontSize: 10.5,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-            }}
-            numberOfLines={1}
-          >
-            {typeName}
-          </Text>
-          <Text
-            style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              color: colors.ink,
-              fontSize: 15.5,
-              lineHeight: 20,
-              letterSpacing: -0.2,
-              marginTop: 8,
-            }}
-            numberOfLines={3}
-          >
-            {title}
-          </Text>
-          {voice ? (
-            <Text
-              style={{
-                fontFamily: "PlusJakartaSans_500Medium",
-                color: colors.inkMuted,
-                fontSize: 12,
-                marginTop: 10,
-              }}
-              numberOfLines={1}
-            >
-              {voice}
-            </Text>
-          ) : null}
-        </View>
-      </View>
-    </Pressable>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
 // Icons
 // ─────────────────────────────────────────────────────────────────
 
@@ -906,28 +765,18 @@ function SearchIcon({
   stroke: string;
 }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4-4"
-        stroke={stroke}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol
+      name="magnifyingglass"
+      size={size}
+      color={stroke}
+      weight="semibold"
+    />
   );
 }
 
-function ClearIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 22a10 10 0 100-20 10 10 0 000 20zM9 9l6 6M15 9l-6 6"
-        stroke={stroke}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
+// ClearIcon — REMOVED. The SearchField above now uses
+// React Native's `clearButtonMode="while-editing"` prop, which
+// renders UIKit's stock grey-circle X inside the search field
+// while the user is typing. Same affordance Apple ships in
+// Settings, Mail, Messages — we no longer need to maintain a
+// custom SVG clear glyph.

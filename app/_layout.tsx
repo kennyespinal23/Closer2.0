@@ -4,21 +4,16 @@ import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
-import {
-  useFonts,
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-  PlusJakartaSans_800ExtraBold,
-} from "@expo-google-fonts/plus-jakarta-sans";
-// (The editorial serif EB Garamond used to load here for
-// scripture quotes + sermon prose. Removed in the typography
-// unification pass — the whole app now lives on Plus Jakarta
-// Sans, with scripture moments distinguished by weight + size
-// instead of font family. Drops ~5MB of font weight from the
-// bundle and removes the only cross-family voice switch.)
+// June 2026 typography reset: the app now lives on the iOS
+// system fonts (SF Pro for interface + reading; New York Italic
+// for reflective-quote moments). Both are platform system fonts
+// — no bundling required, no useFonts wait, no FOUT. The
+// previous Plus Jakarta Sans loader (and the EB Garamond loader
+// before it) are gone with this change. See lib/typography.ts
+// for the canonical role vocabulary; that module is the single
+// source of truth for which weight + size each surface uses.
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { LaunchSplash } from "@/components/LaunchSplash";
 import { UpdatesGate } from "@/components/UpdatesGate";
 import {
   configureForegroundDisplay,
@@ -63,17 +58,10 @@ ensureAndroidChannel().catch(() => {
 });
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    PlusJakartaSans_400Regular,
-    PlusJakartaSans_500Medium,
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold,
-    PlusJakartaSans_800ExtraBold,
-  });
-
-  if (!fontsLoaded && !fontError) {
-    return null;
-  }
+  // No useFonts wait: SF Pro and New York are iOS system fonts,
+  // available to the JS runtime from the moment the app
+  // launches. The Expo splash hides as soon as the React tree
+  // mounts, with no font-loading gate in between.
 
   // ThemeProvider sits OUTSIDE every other provider so the CSS
   // variables it sets via `vars()` reach every Tailwind class in
@@ -186,6 +174,16 @@ function AppShell() {
           lib/notificationDeepLink.tsx for the three paths
           this handles (cold / warm / foreground). */}
       <NotificationDeepLinkHandler />
+      {/* LaunchSplash — the white-on-black cross + Closer
+          wordmark intro. Sits as an absolutely-positioned
+          overlay above the entire navigator and self-unmounts
+          once its fade-in / hold / fade-out choreography
+          completes. The native iOS splash background is set to
+          `#FFFFFF` in app.json so the OS splash hands off into
+          this overlay with no visible flash. See the
+          component's file header for the full timing spec and
+          Reduce Motion behavior. */}
+      <LaunchSplash />
       {/* Default animation is slide_from_right (Apple-standard
           drill-down). Per-screen overrides below opt routes
           into other animations (none / fade / slide_from_bottom)

@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
+import { AppleSheet } from "@/components/AppleSheet";
 import { BrandGlyph } from "@/components/BrandGlyph";
+import { SFSymbol } from "@/components/Symbol";
 import { SOCIAL_APPS, type SocialAppId } from "@/lib/focus";
+import { CLOSER_ACCENT } from "@/constants/theme";
 import { useColors } from "@/state/theme";
 
 /**
@@ -44,7 +44,7 @@ export type BlockedAppsEditorProps = {
   onSubmit: (next: SocialAppId[]) => void | Promise<void>;
 };
 
-const PRIMARY_BLUE = "#0A84FF";
+const PRIMARY_ACCENT = CLOSER_ACCENT;
 
 export function BlockedAppsEditor({
   visible,
@@ -82,50 +82,23 @@ export function BlockedAppsEditor({
   };
 
   return (
-    <Modal
+    <AppleSheet
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-      statusBarTranslucent
+      onClose={onClose}
+      // The app grid is the same length every time (12 social
+      // apps), so 'auto' yields a consistent tall sheet without
+      // any drag. We keep `1` (full) as an optional second
+      // detent for tiny devices where 'auto' might bump the
+      // safe-area cap.
+      detents={["auto", 1]}
+      backgroundColor={colors.bg}
+      scrollable
     >
-      <Pressable
-        accessibilityLabel="Dismiss"
-        onPress={onClose}
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.45)",
-          justifyContent: "flex-end",
-        }}
-      >
-        <Pressable
-          onPress={() => {}}
-          style={{
-            backgroundColor: colors.bg,
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            borderTopWidth: StyleSheet.hairlineWidth,
-            borderColor: colors.border,
-            maxHeight: "92%",
-          }}
-        >
-          <SafeAreaView edges={["bottom"]}>
-            <View className="items-center pt-2.5 pb-1">
-              <View
-                style={{
-                  width: 36,
-                  height: 4,
-                  borderRadius: 2,
-                  backgroundColor: colors.inkSubtle,
-                  opacity: 0.4,
-                }}
-              />
-            </View>
-
+      <View>
             {/* Header — Cancel / title / Save. Same chrome as
                 TimeBlockEditor so stacking the two sheets feels
                 like one coherent modal vocabulary. */}
-            <View className="flex-row items-center px-5 pt-2 pb-3">
+            <View className="flex-row items-center px-5 pt-3 pb-3">
               <Pressable
                 onPress={onClose}
                 hitSlop={10}
@@ -135,7 +108,8 @@ export function BlockedAppsEditor({
               >
                 <Text
                   style={{
-                    fontFamily: "PlusJakartaSans_500Medium",
+                    fontFamily: "System",
+                    fontWeight: "500",
                     color: colors.inkMuted,
                     fontSize: 15,
                   }}
@@ -146,7 +120,8 @@ export function BlockedAppsEditor({
               <View className="flex-1 items-center px-3">
                 <Text
                   style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
+                    fontFamily: "System",
+                    fontWeight: "700",
                     color: colors.ink,
                     fontSize: 17,
                     letterSpacing: -0.3,
@@ -168,8 +143,9 @@ export function BlockedAppsEditor({
               >
                 <Text
                   style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
-                    color: PRIMARY_BLUE,
+                    fontFamily: "System",
+                    fontWeight: "700",
+                    color: PRIMARY_ACCENT,
                     fontSize: 15,
                   }}
                 >
@@ -180,7 +156,8 @@ export function BlockedAppsEditor({
 
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_400Regular",
+                fontFamily: "System",
+                fontWeight: "400",
                 color: colors.inkMuted,
                 fontSize: 13.5,
                 lineHeight: 19,
@@ -222,10 +199,8 @@ export function BlockedAppsEditor({
                 })}
               </View>
             </ScrollView>
-          </SafeAreaView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+      </View>
+    </AppleSheet>
   );
 }
 
@@ -252,7 +227,7 @@ function AppRow({
       style={({ pressed }) => ({
         opacity: pressed ? 0.7 : 1,
         backgroundColor: selected
-          ? withAlphaHex(PRIMARY_BLUE, 0.08)
+          ? withAlphaHex(PRIMARY_ACCENT, 0.08)
           : "transparent",
       })}
     >
@@ -270,7 +245,8 @@ function AppRow({
           style={{
             flex: 1,
             marginLeft: 14,
-            fontFamily: "PlusJakartaSans_600SemiBold",
+            fontFamily: "System",
+            fontWeight: "600",
             fontSize: 16,
             letterSpacing: -0.2,
             color: colors.ink,
@@ -284,7 +260,7 @@ function AppRow({
               width: 24,
               height: 24,
               borderRadius: 12,
-              backgroundColor: PRIMARY_BLUE,
+              backgroundColor: PRIMARY_ACCENT,
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -321,17 +297,10 @@ function AppRow({
 }
 
 function CheckGlyph({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M5 12l5 5L20 7"
-        stroke={stroke}
-        strokeWidth={2.6}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
+  // `stroke` is preserved as the prop name so call sites stay
+  // unchanged; SF Symbol's `tintColor` is the equivalent
+  // concept (uniform fill applied to the symbol's path).
+  return <SFSymbol name="checkmark" size={12} color={stroke} weight="bold" />;
 }
 
 function withAlphaHex(hex: string, alpha: number): string {

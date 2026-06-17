@@ -5,59 +5,45 @@ import {
   Pressable,
   ScrollView,
   Text,
+  type TextStyle,
   useWindowDimensions,
   View,
 } from "react-native";
-import { Image } from "expo-image";
+// `expo-image` was imported for the Hook panel's hero illustration;
+// that block was removed for V1 (artwork prep is incomplete) so the
+// import goes with it. Re-add when V2 reintroduces the hero.
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FocusBanner } from "@/components/FocusBanner";
+import { PracticeTodayCard } from "@/components/PracticeTodayCard";
 import { SermonHeader } from "@/components/SermonHeader";
-import { Symbol } from "@/components/Symbol";
+import { SFSymbol } from "@/components/Symbol";
 import {
   SERMON_STEPS,
-  sermonProgressFor,
   sermonStepNumber,
   stepForPanelId,
 } from "@/constants/sermon";
 import * as haptics from "@/lib/haptics";
+import { parseInlineEmphasis } from "@/lib/inlineEmphasis";
 import { resolveSermonTypeForMoment } from "@/lib/moments";
 import { useMoments } from "@/state/moments";
+import { useOnboarding } from "@/state/onboarding";
 import { useProgress } from "@/state/progress";
 import { useColors } from "@/state/theme";
 
 /**
  * The editorial red shared with the home "Daily Devotional"
  * subsection header and the SermonHeader progress bar. The
- * Continue pill on every narrative panel paints with this color
+ * Continue pill on every narrative panel paints with CLOSER_ACCENT
  * so the home → sermon flow reads as one continuous accent.
- *
- * Same hex (`#E11D48` / Tailwind rose-600) duplicated here rather
- * than threaded through a shared module so the panel file stays
- * self-contained. The home file and SermonHeader each declare
- * their own private copy of the constant for the same reason.
  */
-const SERMON_ACCENT = "#E11D48";
+import { CLOSER_ACCENT } from "@/constants/theme";
 
-/**
- * Hero image geometry for the Hook panel (panel 1).
- *
- * Apple-News-style hero treatment: the per-sermon illustration
- * sits at the top of the article as a full-width image, with the
- * body prose below. 320pt is ~38% of an iPhone 14 Pro screen —
- * matches the proportion Apple News uses for an article's
- * primary art and leaves enough vertical room for the title +
- * opening paragraph to be visible above the fold.
- *
- * The bottom 120pt of the image dissolves into the page's black
- * canvas via a vertical gradient so the title beneath it reads
- * without a hard horizontal seam. Tuned long enough to feel like
- * a gradient rather than a band, short enough that the
- * recognizable subject of the illustration stays visible.
- */
-const HOOK_HERO_HEIGHT = 320;
-const HOOK_HERO_FADE_HEIGHT = 120;
+// (Hook hero geometry constants HOOK_HERO_HEIGHT and
+//  HOOK_HERO_FADE_HEIGHT were removed alongside the Hook
+//  illustration render. Re-introduce when V2 brings the
+//  hero image back.)
 
 /**
  * The Continue pill is locked for the first 5 seconds of every
@@ -173,7 +159,20 @@ export default function SermonPanelScreen() {
   const router = useRouter();
   const { todaysMoment } = useMoments();
   const { recordCompletion } = useProgress();
+  const { answers } = useOnboarding();
   const type = resolveSermonTypeForMoment(todaysMoment);
+
+  // First-name source for the Practice Today card's `[name]`
+  // interpolation. Same convention used everywhere else in the
+  // app (today.tsx, pray-together, profile): take the first
+  // space-separated token from the onboarding answer and fall
+  // back to "friend" so the practice line never renders as a
+  // bare "[name]" or an empty hyphen. Computed once per render
+  // — the practice card itself memoizes the interpolated copy.
+  const firstName = useMemo(
+    () => (answers.name || "").trim().split(" ")[0] || "friend",
+    [answers.name],
+  );
   // Theme-aware so light mode lands on the warm cream canvas with
   // deep ink prose, and dark mode keeps its true-black sermon
   // canvas. We thread `colors.bg` through the page root, the body
@@ -207,6 +206,18 @@ export default function SermonPanelScreen() {
   // panel was clutter that pushed the body further down.)
   const isHookPanel = !isPrayer && panelId === 1;
 
+  // Practice Today — opt-in per-panel field. Shown only on The
+  // Landing (panel 4) and only when the catalog entry actually
+  // ships practice copy. When present, the panel hides its
+  // regular Continue pill and the Practice Today card becomes
+  // the sole advance affordance: the user expands the card,
+  // reads the practice, then taps "Continue to prayer" (or
+  // swipes the card back down) to route into the prayer-together
+  // interstitial — the same destination Continue would have
+  // taken them on a sermon without a practice line.
+  const practiceText = panel.practiceToday?.trim() ?? "";
+  const showPracticeCard = practiceText.length > 0 && !isPrayer && !isLastPanel;
+
   // Map the panel id to the canonical step name so we can drive
   // the SermonHeader progress bar from the same source of truth
   // every other screen uses (constants/sermon.ts).
@@ -218,8 +229,12 @@ export default function SermonPanelScreen() {
   // lands as a series of breathing beats rather than a wall of
   // text (see `splitPanelParagraphs` above).
   const paragraphs = useMemo(
-    () => splitPanelParagraphs(panel.body, isPrayer),
-    [panel.body, isPrayer],
+    () =>
+      splitPanelParagraphs(
+        panel.body.replace(/\[name\]/g, firstName),
+        isPrayer,
+      ),
+    [panel.body, isPrayer, firstName],
   );
 
   // ─── Entrance choreography ────────────────────────────────────
@@ -391,7 +406,32 @@ export default function SermonPanelScreen() {
   // with the red accent the user sees the moment they tap Begin on
   // home. One accent across the whole flow keeps the journey
   // visually coherent.
-  const accent = SERMON_ACCENT;
+  const accent = CLOSER_ACCENT;
+
+  // ─── Scroll-driven progress within the active step ──────────
+  // The Deepstash-style segmented progress bar fills the
+  // CURRENT segment based on how far the reader has scrolled
+  // through this panel's body. This isn't a perfect proxy for
+  // "did you read it" — but it matches the user's intuition:
+  // "the bar is filling as I move down the page."
+  //
+  // Implementation notes:
+  //   • We snap to 0 on panel change so a fresh panel always
+  //     starts with an empty active-segment fill.
+  //   • The fraction is computed in onScroll as
+  //     offsetY / (contentHeight - layoutHeight), clamped to
+  //     [0, 1]. On a short panel that fits without scrolling,
+  //     the divisor approaches 0 — in that case we fill to 1
+  //     immediately (the whole panel is visible by definition,
+  //     so the segment should read as "you've seen it").
+  //   • Updates fire on every scroll frame (scrollEventThrottle
+  //     of 16ms = 60fps). The progress bar internally
+  //     rate-limits its animation so we don't pay any
+  //     re-render cost downstream.
+  const [scrollFraction, setScrollFraction] = useState(0);
+  useEffect(() => {
+    setScrollFraction(0);
+  }, [panelId]);
 
   const handleContinue = () => {
     // Continue advances the sermon; Amen on the prayer panel
@@ -427,9 +467,11 @@ export default function SermonPanelScreen() {
 
     // Last panel — record the completion and chain into the
     // celebration screen, exactly as the old prayer.tsx did. The
-    // moment's title goes onto the Journey timeline and the
-    // moment's `voice` carries through as the pastor attribution
-    // so the timeline card has a real name to display.
+    // moment's title goes onto the Journey timeline. The pastor
+    // field is intentionally empty since the June 2026 catalog
+    // dropped the `voice` attribution (sermons aren't truly
+    // authored by named pastors); the field stays on the record
+    // so old on-disk completions keep deserializing cleanly.
     const {
       typeCount,
       isFirstEver,
@@ -438,7 +480,7 @@ export default function SermonPanelScreen() {
       crossedMilestone,
     } = recordCompletion(type.id, {
       title: todaysMoment.title,
-      pastor: todaysMoment.voice,
+      pastor: "",
       // Stamp the catalog day onto the completion so the home card
       // can ask "did the user finish THIS moment?" rather than
       // "did the user finish anything today?" — without this the
@@ -478,8 +520,8 @@ export default function SermonPanelScreen() {
             reader can see their position in the sermon. */}
         {!isPrayer ? (
           <SermonHeader
-            progress={sermonProgressFor(stepName)}
             step={sermonStepNumber(stepName)}
+            stepProgress={scrollFraction}
           />
         ) : (
           <PrayerCloseHeader onClose={() => router.back()} />
@@ -499,10 +541,26 @@ export default function SermonPanelScreen() {
             as every other panel, with the prose itself doing all
             the atmospheric work. */}
 
+        <View style={{ flex: 1, position: "relative" }}>
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            paddingBottom: 24,
+            // Generous bottom padding so the last line of body text
+            // clears the bottom-anchored Continue/Finish pill. The
+            // pill lives OUTSIDE the ScrollView (rendered as a
+            // sibling at the bottom of the SafeAreaView), so its
+            // height has to be reserved here as scroll content
+            // padding — otherwise the bottom prose sits BENEATH
+            // the pill and the last line gets visually clipped
+            // (HIG: controls must not overlap content). 96pt
+            // accounts for: ~52pt pill (paddingVertical 16 × 2 +
+            // ~20pt label) + 16pt button-above-content breathing
+            // room per HIG controls-spacing + ~28pt safety
+            // margin for shadow glow. Previously 24pt — the
+            // pill consistently covered the final paragraph's
+            // trailing dash, e.g. "It's the pain of believing
+            // He does —" was being cut off mid-em-dash.
+            paddingBottom: 96,
             // Prayer is meant to be received — vertically centered so
             // the words settle in the middle of the screen, not at
             // the top. Narrative panels start at the top so the
@@ -510,75 +568,48 @@ export default function SermonPanelScreen() {
             justifyContent: isPrayer ? "center" : "flex-start",
           }}
           showsVerticalScrollIndicator={false}
+          // 16ms = 60fps. The segmented progress bar internally
+          // smooths the value into an animated fill (220ms ease-
+          // out), so we can afford to fire on every frame without
+          // visible jitter or perf cost — the per-frame work is
+          // a single Math.max/min in the handler below.
+          scrollEventThrottle={16}
+          onScroll={(e) => {
+            // Skip on the prayer panel — its header is the
+            // PrayerCloseHeader (no progress bar) and the scroll
+            // is centered around a static stanza block. Computing
+            // a fraction there would inflate state churn for no
+            // visible payoff.
+            if (isPrayer) return;
+            const { contentOffset, contentSize, layoutMeasurement } =
+              e.nativeEvent;
+            const scrollable = contentSize.height - layoutMeasurement.height;
+            // Short-panel guard: if the body fits on one screen
+            // (scrollable <= 0), there's nothing to scroll
+            // through, so we treat the panel as fully read.
+            // This way the active segment doesn't stay stuck at
+            // 0% just because the user has nothing to scroll.
+            if (scrollable <= 0) {
+              setScrollFraction(1);
+              return;
+            }
+            const next = Math.max(
+              0,
+              Math.min(1, contentOffset.y / scrollable),
+            );
+            setScrollFraction(next);
+          }}
         >
-          {/* ─── Apple News-style hero image (Hook panel only) ──
-              The per-sermon illustration sits at the top of the
-              article as a full-width hero — the visual anchor
-              that grounds the reader in the topic before any
-              prose is read. Renders ONLY on panel 1 (the Hook);
-              every subsequent panel drops it so the body has
-              the screen to itself once the reader is settled
-              into the sermon.
-              
-              `type.illustration` resolves to the per-sermon
-              override from sermons.js when present (e.g. the
-              "When God Feels Silent" phone-receiver art),
-              otherwise falls back to the sermon TYPE's default
-              illustration. Either way, we paint nothing when
-              both are absent — better to drop the band than to
-              render a placeholder.
-              
-              Full screen width (no horizontal padding so the
-              image goes edge-to-edge — same as Apple News),
-              320pt tall, cover-cropped. A 120pt vertical
-              gradient on the bottom dissolves the image into
-              the black canvas so the title underneath reads
-              without a hard horizontal seam. The image scrolls
-              naturally with the rest of the article rather
-              than parallaxing — the simpler scroll is the
-              Apple News default and reads as more reverent
-              than a paralax effect would for a sermon body. */}
-          {isHookPanel && type.illustration ? (
-            <View
-              style={{
-                width: "100%",
-                height: HOOK_HERO_HEIGHT,
-              }}
-            >
-              <Image
-                source={type.illustration}
-                style={{ width: "100%", height: "100%" }}
-                contentFit="cover"
-                transition={260}
-                accessibilityIgnoresInvertColors
-              />
-              <Svg
-                pointerEvents="none"
-                width={screenWidth}
-                height={HOOK_HERO_FADE_HEIGHT}
-                style={{ position: "absolute", bottom: 0, left: 0 }}
-              >
-                <Defs>
-                  <LinearGradient
-                    id="hookHeroFade"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2={HOOK_HERO_FADE_HEIGHT}
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <Stop offset="0" stopColor={colors.bg} stopOpacity={0} />
-                    <Stop offset="1" stopColor={colors.bg} stopOpacity={1} />
-                  </LinearGradient>
-                </Defs>
-                <Rect
-                  width={screenWidth}
-                  height={HOOK_HERO_FADE_HEIGHT}
-                  fill="url(#hookHeroFade)"
-                />
-              </Svg>
-            </View>
-          ) : null}
+          {/* (Apple News-style hero illustration removed for
+              launch — the user pulled hero artwork from the
+              home cover card and the sermon reader for the
+              same reason: artwork prep is incomplete for V1.
+              The sermon panels now open straight to the
+              title + body so the prose is the entire surface,
+              consistent with the no-image home cover. The
+              illustration prop is preserved on the sermon
+              TYPE for V2 reintroduction; this render branch
+              is the only consumer that needed to drop.) */}
 
           <View className="px-6 pt-4">
             {/* Beat eyebrow (THE HOOK / THE STORY / etc), per-
@@ -609,7 +640,8 @@ export default function SermonPanelScreen() {
               <Animated.Text
                 className="text-ink text-[28px] leading-[36px] tracking-[-0.4px] mt-3"
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   opacity: titleOpacity,
                   transform: [{ translateY: titleY }],
                 }}
@@ -694,22 +726,121 @@ export default function SermonPanelScreen() {
                 inputRange: [0, 1],
                 outputRange: [8, 0],
               });
+              // Inline emphasis: split the paragraph into
+              // {text, bold?, italic?} segments BEFORE render
+              // so the catalog can author `**word**` /
+              // `*word*` / `***word***` markers and we paint
+              // each span with the matching Plus Jakarta face.
+              // The parser is a no-op fast path for paragraphs
+              // with zero markers (the vast majority today),
+              // so we don't pay per-paragraph cost on
+              // unemphasized prose.
+              const emphasisSegments = parseInlineEmphasis(p);
               return (
                 <Animated.Text
                   key={i}
                   style={{
-                    fontFamily: "PlusJakartaSans_400Regular",
+                    // Body weight bumped from 400 Regular → 500
+                    // Medium across both narrative and prayer
+                    // panels. Per design review (June 2026) the
+                    // long-form prose was reading as feather-
+                    // weight against the calm canvas — bumping
+                    // to Medium adds the editorial "ink on
+                    // page" presence we wanted without forcing
+                    // SemiBold (which would feel shouty in a
+                    // multi-paragraph block).
+                    //
+                    // This is the BASE family inherited by
+                    // every inline segment below. Bold /
+                    // italic spans only override fontFamily;
+                    // color, size, leading, spacing all pass
+                    // through unchanged.
+                    fontFamily: "System",
+                    fontWeight: "500",
+                    // Every paragraph uses the SAME ink color
+                    // (colors.ink → pure #FFFFFF on dark theme,
+                    // ~21:1 contrast — well past the 7:1 AAA bar
+                    // for body text). All three body paragraphs
+                    // on a panel are this same value; any
+                    // perceived dimming on the trailing paragraph
+                    // is the entrance animation's translateY
+                    // sub-pixel anti-aliasing during the fade-in,
+                    // not a color difference.
                     color: colors.ink,
                     fontSize: isPrayer ? 24 : 20,
                     lineHeight: isPrayer ? 36 : 32,
                     letterSpacing: -0.1,
-                    textAlign: isPrayer ? "center" : "left",
-                    marginBottom: 28,
+                    // Prayer was previously center-aligned to
+                    // read as a "ceremony" beat distinct from
+                    // narrative panels. Design review reverted
+                    // it to left-align so the closing prayer
+                    // reads with the same column rhythm the
+                    // reader has spent the last four panels
+                    // settling into — switching alignment at
+                    // the final beat felt like changing voices
+                    // mid-sentence. Both modes now share the
+                    // same left-anchored column.
+                    textAlign: "left",
+                    // Snapped from 28 → 24 to land on the 8-pt
+                    // grid. The same value is applied to every
+                    // paragraph (no per-index override) so the
+                    // paragraph rhythm is mathematically uniform.
+                    // 24pt is above the HIG 16pt floor for
+                    // paragraph separation and reads as a clear
+                    // "next thought" break without crowding.
+                    marginBottom: 24,
                     opacity: anim,
                     transform: [{ translateY }],
                   }}
                 >
-                  {p}
+                  {emphasisSegments.map((seg, j) => {
+                    // Pick the matching SF Pro weight/style per
+                    // segment kind. The base paragraph already
+                    // declares Medium; we only override the
+                    // weight (and optionally italic) for
+                    // emphasized spans so the inner <Text> stays
+                    // as light as possible (color, size,
+                    // lineHeight, family all inherit from the
+                    // parent Animated.Text above).
+                    //
+                    //   • Bold      → 700 Bold (a clean two-
+                    //                 step jump above Medium so
+                    //                 the emphasis lands; 600
+                    //                 SemiBold read as "kind of
+                    //                 bolder", which is no
+                    //                 emphasis at all).
+                    //   • Italic    → 500 Medium Italic
+                    //                 (same weight as the
+                    //                 surrounding prose so the
+                    //                 italic reads as TONE, not
+                    //                 weight — sub-cue, not
+                    //                 over-emphasis).
+                    //   • Both      → 700 Bold Italic (used
+                    //                 sparingly for the
+                    //                 strongest single beats).
+                    //   • Plain     → no override, inherits
+                    //                 Medium from the parent.
+                    let segStyle: TextStyle | undefined;
+                    if (seg.bold && seg.italic) {
+                      segStyle = { fontWeight: "700", fontStyle: "italic" };
+                    } else if (seg.bold) {
+                      segStyle = { fontWeight: "700" };
+                    } else if (seg.italic) {
+                      segStyle = { fontWeight: "500", fontStyle: "italic" };
+                    }
+                    return segStyle ? (
+                      <Text key={j} style={segStyle}>
+                        {seg.text}
+                      </Text>
+                    ) : (
+                      // Plain-text segment — render the raw
+                      // string instead of a wrapper <Text> so
+                      // we don't pay an unnecessary subtree
+                      // for the common case of unemphasized
+                      // prose between two emphasized spans.
+                      seg.text
+                    );
+                  })}
                 </Animated.Text>
               );
             })}
@@ -732,6 +863,46 @@ export default function SermonPanelScreen() {
               "Complete and unlock apps" CTA below. */}
           </View>
         </ScrollView>
+
+        {/* Bottom-fade overlay — soft vertical gradient from the
+            page background (opaque) → transparent over 56pt,
+            anchored to the bottom edge of the scroll area just
+            above the Continue pill. Apple Books / Apple News /
+            iOS Reader all use this pattern so scrolling prose
+            doesn't visually collide with the bottom toolbar —
+            content gracefully dissolves into the page canvas as
+            it approaches the CTA region instead of being clipped
+            by the toolbar's hard edge or bleeding behind the
+            button's shadow glow. Renders with
+            `pointerEvents="none"` so it never intercepts taps
+            on the body content beneath. */}
+        <Svg
+          pointerEvents="none"
+          width={screenWidth}
+          height={56}
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }}
+        >
+          <Defs>
+            <LinearGradient
+              id="bodyBottomFade"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="56"
+              gradientUnits="userSpaceOnUse"
+            >
+              <Stop offset="0" stopColor={colors.bg} stopOpacity={0} />
+              <Stop offset="1" stopColor={colors.bg} stopOpacity={1} />
+            </LinearGradient>
+          </Defs>
+          <Rect width={screenWidth} height={56} fill="url(#bodyBottomFade)" />
+        </Svg>
+        </View>
 
         <View className="px-6 pb-2">
           {/* Earlier revisions rendered a small "Next · The
@@ -764,12 +935,28 @@ export default function SermonPanelScreen() {
               stanza lands. Narrative panels render the pill
               immediately (the 5s dwell timer still gates the
               tap itself). */}
-          {isPrayer && !prayerRevealComplete ? null : (
+          {/* The Landing panel HIDES the regular Continue pill
+              when the catalog ships a `practiceToday` line for
+              this sermon — the swipe-up Practice card below
+              becomes the only advance affordance, so the user's
+              attention isn't split between two CTAs. The card
+              itself includes a "Continue to prayer" pill inside
+              its expanded body, so the user never loses access
+              to a labeled advance. Panels without practice
+              content render the regular pill exactly as before. */}
+          {showPracticeCard ? null : isPrayer && !prayerRevealComplete ? null : (
             <PillReveal animate={isPrayer}>
               <ImprintContinuePill
+                // Prayer pill prefixes the label with an unlock
+                // emoji (🔓) — the small visual cue makes the
+                // "and unlock apps" side-effect feel concrete in
+                // the same pre-attentive glance the label takes.
+                // Narrative / final panels keep their plain text
+                // label (the trailing arrow on those carries the
+                // forward-motion cue instead).
                 label={
                   isPrayer
-                    ? "Complete and unlock apps"
+                    ? "🔓 Complete and unlock apps"
                     : isLastPanel
                       ? "Finish"
                       : "Continue"
@@ -786,7 +973,7 @@ export default function SermonPanelScreen() {
             <PillReveal animate>
               <Text
                 className="text-ink-subtle text-[12px] text-center mt-3"
-                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                style={{ fontFamily: "System", fontWeight: "500" }}
               >
                 You showed up today. That counts.
               </Text>
@@ -794,6 +981,35 @@ export default function SermonPanelScreen() {
           ) : null}
         </View>
       </SafeAreaView>
+
+      {/* Practice Today card — sibling of SafeAreaView so it can
+          overlay the entire panel (including the safe-area
+          bottom inset) without being clipped by the safe-area
+          padding. Anchored to the bottom of the root view in
+          PEEK state, expanded to ~78% of the screen height on
+          swipe up. The card's "Continue to prayer" CTA + the
+          swipe-down gesture both route through the same path
+          the regular Continue pill would have taken on this
+          panel (the pray-together interstitial → prayer panel),
+          so the practice card is a CONTENT moment, not a
+          navigational branch. */}
+      {showPracticeCard ? (
+        <PracticeTodayCard
+          text={practiceText}
+          firstName={firstName}
+          accent={accent}
+          onAdvance={() => {
+            // Same destination handleContinue would have used
+            // on this panel — the pray-together interstitial
+            // fades into the prayer body. Keeping the routing
+            // in one place means future changes to the prayer
+            // entry flow (e.g. swapping the interstitial for a
+            // breath beat) automatically apply whether the
+            // sermon has practice content or not.
+            router.push("/sermon/pray-together");
+          }}
+        />
+      ) : null}
     </View>
   );
 }
@@ -877,7 +1093,8 @@ function ImprintContinuePill({
         <Text
           style={{
             color: "#FFFFFF",
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             fontSize: 15,
             letterSpacing: 0.2,
             marginRight: showArrowGlyph ? 10 : 0,
@@ -886,7 +1103,7 @@ function ImprintContinuePill({
           {displayLabel}
         </Text>
         {showArrowGlyph ? (
-          <Symbol name="arrow.right" size={15} weight="bold" color="#FFFFFF" />
+          <SFSymbol name="arrow.right" size={15} weight="bold" color="#FFFFFF" />
         ) : null}
       </View>
     </Pressable>
@@ -968,7 +1185,7 @@ function PrayerCloseHeader({ onClose }: { onClose: () => void }) {
             justifyContent: "center",
           }}
         >
-          <Symbol name="xmark" size={12} weight="semibold" color={colors.ink} />
+          <SFSymbol name="xmark" size={12} weight="semibold" color={colors.ink} />
         </View>
       </Pressable>
     </View>

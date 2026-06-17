@@ -1,16 +1,22 @@
-import { useState, type ReactNode } from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import Svg, { Path } from "react-native-svg";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
+import * as haptics from "@/lib/haptics";
+import { useOsReducedMotion } from "@/lib/useReducedMotion";
 import {
-  SettingsChoiceRow,
   SettingsLinkRow,
   SettingsScaffold,
   SettingsSection,
   SettingsToggleRow,
 } from "@/components/SettingsScaffold";
+import { SFSymbol } from "@/components/Symbol";
 import { TEXT_SIZES, usePreferences } from "@/state/preferences";
-import { useColors, useTheme, type ThemePref } from "@/state/theme";
+import {
+  useColors,
+  useResolvedScheme,
+  useTheme,
+  type ThemePref,
+} from "@/state/theme";
 
 /**
  * Appearance preferences.
@@ -26,43 +32,82 @@ import { useColors, useTheme, type ThemePref } from "@/state/theme";
  *
  * Text size is also live — drives scripture rendering via
  * `usePreferences().textSize.scale` in the reader.
+ *
+ * Layout note: theme and text size are now native
+ * `UISegmentedControl`s (via
+ * `@react-native-segmented-control/segmented-control`) instead
+ * of stacks of `SettingsChoiceRow`s. The audit flagged both
+ * pickers as the canonical "short labels, one-of-N choice"
+ * shape that segmented controls were designed for — switching
+ * reclaims ~150pt of vertical real estate on this screen and
+ * lands the tap-to-pick interaction in iOS's native vocabulary
+ * (haptic on segment change, slide animation between segments,
+ * Voice Control wiring, etc.).
  */
 export default function AppearanceScreen() {
   const router = useRouter();
-  const [reduceMotion, setReduceMotion] = useState(false);
-  const { textSizeId, setTextSize } = usePreferences();
+  // OS-level Reduce Motion read directly (NOT composed with our
+  // override) — we want to surface the OS state independently so
+  // we can lock the toggle on and explain why it's locked when
+  // the user already has the system-wide preference enabled.
+  // Every other consumer of motion-gating should keep using
+  // `useReducedMotion()` from the same module.
+  const osReduceMotion = useOsReducedMotion();
+  const { textSizeId, setTextSize, reduceMotionOverride, setReduceMotionOverride } =
+    usePreferences();
   const { pref, setPref } = useTheme();
   const colors = useColors();
+  // `useResolvedScheme` returns the actually-applied scheme
+  // (light/dark) after collapsing the "system" preference
+  // through the OS-level color scheme. Used here only to pin
+  // the segmented control's `appearance` so it matches the
+  // active palette even when our app overrides the OS pref
+  // (e.g. user picks "Dark" on a Light-mode device).
+  const scheme = useResolvedScheme();
 
-  // Theme picker options — order is intentional (System first as
-  // the default-ish path, then Dark/Light as the two manual
-  // overrides). Each row's icon doubles as the visual cue for
-  // the choice (device / moon / sun).
-  const themeOptions: Array<{
+  // ─── Theme picker ─────────────────────────────────────────
+  // The order matters: System first (default-ish), then the two
+  // manual overrides. Index ↔ id mapping is derived from this
+  // array so the segmented control stays index-driven (native
+  // API) while our state machine stays id-driven.
+  const themeOptions: ReadonlyArray<{
     id: ThemePref;
     label: string;
     sublabel: string;
-    icon: ReactNode;
   }> = [
     {
       id: "system",
-      label: "Match System",
+      label: "System",
       sublabel: "Follow your iOS Light / Dark setting",
-      icon: <DeviceIcon stroke={colors.ink} />,
     },
     {
       id: "dark",
       label: "Dark",
       sublabel: "Easy on the eyes, day or night",
-      icon: <MoonIcon stroke={colors.ink} />,
     },
     {
       id: "light",
       label: "Light",
       sublabel: "Bright canvas for daytime reading",
-      icon: <SunIcon stroke={colors.ink} />,
     },
   ];
+  const themeIndex = Math.max(
+    0,
+    themeOptions.findIndex((opt) => opt.id === pref),
+  );
+  const themeSublabel = themeOptions[themeIndex]?.sublabel ?? "";
+
+  // ─── Text size picker ─────────────────────────────────────
+  // TEXT_SIZES is the source of truth (id, name, scale). We
+  // collapse to `name` strings for the segmented control and
+  // keep the scale-aware Aa preview as a separate row above
+  // so users can see the actual rendered size live as they
+  // change the segment.
+  const textSizeIndex = Math.max(
+    0,
+    TEXT_SIZES.findIndex((s) => s.id === textSizeId),
+  );
+  const currentTextSize = TEXT_SIZES[textSizeIndex] ?? TEXT_SIZES[1];
 
   return (
     <SettingsScaffold title="Appearance">
@@ -70,52 +115,162 @@ export default function AppearanceScreen() {
         title="Theme"
         footer="A handful of sermon illustrations were authored against a dark backdrop and may read as floating cards on the light canvas — we're refining those in follow-ups."
       >
-        {themeOptions.map((opt, i) => (
-          <SettingsChoiceRow
-            key={opt.id}
-            icon={opt.icon}
-            label={opt.label}
-            sublabel={opt.sublabel}
-            selected={pref === opt.id}
-            onPress={() => setPref(opt.id)}
-            showDivider={i < themeOptions.length - 1}
+        <View style={styles.controlBlock}>
+          <SegmentedControl
+            // Native UISegmentedControl. `appearance` pins the
+            // control to our resolved scheme so the control's
+            // own colors (active fill, inactive fill, separators)
+            // match the rest of the surface even if the user
+            // forced a non-system theme.
+            appearance={scheme}
+            values={themeOptions.map((o) => o.label)}
+            selectedIndex={themeIndex}
+            onChange={(event) => {
+              const nextIndex = event.nativeEvent.selectedSegmentIndex;
+              const next = themeOptions[nextIndex]?.id;
+              if (next && next !== pref) {
+                // Light tick haptic on segment commit — same
+                // grammar as SettingsToggleRow so theme changes
+                // feel categorically equivalent to other native
+                // settings interactions.
+                haptics.tick();
+                setPref(next);
+              }
+            }}
+            style={styles.segmented}
+            fontStyle={{
+              fontFamily: "System",
+              fontWeight: "500",
+              fontSize: 14,
+              color: colors.inkMuted,
+            }}
+            activeFontStyle={{
+              fontFamily: "System",
+              fontWeight: "700",
+              fontSize: 14,
+              color: colors.ink,
+            }}
           />
-        ))}
+          {/* Sublabel under the control — describes the current
+              selection. Mirrors the per-row sublabel users got
+              with the old SettingsChoiceRow layout so the
+              guidance copy doesn't disappear with the swap. */}
+          <Text style={[styles.helperText, { color: colors.inkSubtle }]}>
+            {themeSublabel}
+          </Text>
+        </View>
       </SettingsSection>
 
       <SettingsSection
         title="Reading"
         footer="Applies to scripture in the chapter reader. Sermons and the rest of the app stay at their tuned sizes."
       >
-        {TEXT_SIZES.map((size, i) => (
-          <SettingsChoiceRow
-            key={size.id}
-            icon={<TextScaleIcon scale={size.scale} ink={colors.ink} />}
-            label={size.name}
-            sublabel={size.id === "default" ? "Recommended" : undefined}
-            selected={textSizeId === size.id}
-            onPress={() => setTextSize(size.id)}
-            showDivider={i < TEXT_SIZES.length - 1}
+        <View style={styles.controlBlock}>
+          {/* Live Aa preview at the chosen scale. Sits above the
+              segmented control so users see the actual visual
+              effect of their selection BEFORE the segments tell
+              them what they picked. */}
+          <View style={styles.previewWrap}>
+            <Text
+              style={{
+                color: colors.ink,
+                fontFamily: "EBGaramond_500Medium",
+                fontSize: Math.round(20 * currentTextSize.scale),
+                lineHeight: Math.round(28 * currentTextSize.scale),
+              }}
+            >
+              The Lord is my shepherd; I shall not want.
+            </Text>
+          </View>
+          <SegmentedControl
+            appearance={scheme}
+            values={TEXT_SIZES.map((s) => s.name)}
+            selectedIndex={textSizeIndex}
+            onChange={(event) => {
+              const nextIndex = event.nativeEvent.selectedSegmentIndex;
+              const next = TEXT_SIZES[nextIndex];
+              if (next && next.id !== textSizeId) {
+                haptics.tick();
+                setTextSize(next.id);
+              }
+            }}
+            style={styles.segmented}
+            fontStyle={{
+              fontFamily: "System",
+              fontWeight: "500",
+              fontSize: 13,
+              color: colors.inkMuted,
+            }}
+            activeFontStyle={{
+              fontFamily: "System",
+              fontWeight: "700",
+              fontSize: 13,
+              color: colors.ink,
+            }}
           />
-        ))}
+          <Text style={[styles.helperText, { color: colors.inkSubtle }]}>
+            {currentTextSize.id === "default"
+              ? "Recommended"
+              : `Scaled to ${Math.round(currentTextSize.scale * 100)}%`}
+          </Text>
+        </View>
       </SettingsSection>
 
       <SettingsSection
         title="Motion"
-        footer="Disables fades and slide-ins across the app — useful if motion makes you uneasy."
+        footer={
+          osReduceMotion
+            ? "iOS Reduce Motion is on, so Closer is already snapping instead of fading. Turn it off in Settings → Accessibility → Motion if you want full animations everywhere."
+            : "Disables fades and slide-ins across Closer only — useful if motion makes you uneasy but you'd rather not change the system-wide setting."
+        }
       >
         <SettingsToggleRow
-          icon={<MotionIcon stroke={colors.ink} />}
+          icon={
+            <SFSymbol
+              name="figure.walk.motion"
+              size={16}
+              color={colors.ink}
+              weight="medium"
+            />
+          }
           label="Reduce Motion"
-          sublabel="Snap into screens instead of fading"
-          value={reduceMotion}
-          onValueChange={setReduceMotion}
+          // Sublabel narrates the EFFECTIVE state, not just the
+          // override flag — that's the only honest read for a
+          // user who has iOS Reduce Motion already on (where
+          // their override is moot). When the OS pref is off,
+          // we describe the on/off behavior so the toggle's
+          // affordance reads cleanly.
+          sublabel={
+            osReduceMotion
+              ? "On — following iOS Settings"
+              : reduceMotionOverride
+              ? "On — Closer is snapping into screens"
+              : "Snap into screens instead of fading"
+          }
+          // Effective value: OS pref OR our override. When OS
+          // pref is on we visually pin the switch up so users
+          // don't perceive a false "off" state for a feature
+          // they've already enabled. `disabled` blocks the
+          // tap because flipping the override down would be
+          // both moot AND confusing (the motion would still
+          // be reduced). Sub-label + footer copy together
+          // explain the inert state.
+          value={osReduceMotion || reduceMotionOverride}
+          onValueChange={setReduceMotionOverride}
+          disabled={osReduceMotion}
         />
       </SettingsSection>
 
       <SettingsSection title="Display">
         <SettingsLinkRow
-          icon={<HomeIcon stroke={colors.ink} />}
+          icon={
+            <SFSymbol
+              name="house.fill"
+              size={16}
+              color={colors.ink}
+              weight="medium"
+            />
+          }
           label="Home Screen Widget"
           sublabel="Add today's sermon to your iPhone home screen"
           onPress={() => router.push("/settings/widget")}
@@ -125,7 +280,7 @@ export default function AppearanceScreen() {
       <View className="px-6 mt-8">
         <Text
           className="text-ink-subtle text-[12px] leading-[18px] text-center"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           These preferences apply only to Closer.
         </Text>
@@ -135,98 +290,30 @@ export default function AppearanceScreen() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Icons
-//
-// Each glyph takes its stroke color as a prop so the same component
-// works in both themes. The Appearance screen always passes the
-// active `colors.ink` for the row leading icons.
+// Styles
 // ─────────────────────────────────────────────────────────────────
 
-const ICON_BASE = {
-  strokeWidth: 1.7,
-  fill: "none",
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
-function MoonIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M20 14.5A8 8 0 119.5 4 7 7 0 0020 14.5z" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
-}
-
-function SunIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      {/* Center disc */}
-      <Path
-        d="M12 8a4 4 0 100 8 4 4 0 000-8z"
-        {...ICON_BASE}
-        stroke={stroke}
-      />
-      {/* Eight rays */}
-      <Path
-        d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"
-        {...ICON_BASE}
-        stroke={stroke}
-      />
-    </Svg>
-  );
-}
-
-function DeviceIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      {/* Phone outline */}
-      <Path
-        d="M8 3h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2z"
-        {...ICON_BASE}
-        stroke={stroke}
-      />
-      {/* Home indicator */}
-      <Path d="M11 18h2" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
-}
-
-/**
- * A single "Aa" glyph sized proportionally to the scale it represents.
- * Smaller for "Small", larger for "Extra Large" — the icon's size
- * itself communicates the choice.
- */
-function TextScaleIcon({ scale, ink }: { scale: number; ink: string }) {
-  // Glyph size walks from ~9pt to ~15pt across the four sizes.
-  const fontSize = Math.round(9 + (scale - 0.88) * 14);
-  return (
-    <View style={{ width: 14, alignItems: "center" }}>
-      <Text
-        style={{
-          color: ink,
-          fontFamily: "PlusJakartaSans_700Bold",
-          fontSize,
-          lineHeight: fontSize + 2,
-        }}
-      >
-        Aa
-      </Text>
-    </View>
-  );
-}
-
-function MotionIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M4 12h10M14 8l4 4-4 4" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
-}
-
-function HomeIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M4 11l8-7 8 7v9a1 1 0 01-1 1h-4v-6h-6v6H5a1 1 0 01-1-1z" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
-}
+const styles = StyleSheet.create({
+  controlBlock: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 18,
+  },
+  segmented: {
+    height: 36,
+  },
+  helperText: {
+    fontFamily: "System",
+    fontWeight: "500",
+    fontSize: 12.5,
+    lineHeight: 17,
+    marginTop: 10,
+    marginLeft: 2,
+  },
+  previewWrap: {
+    paddingHorizontal: 4,
+    paddingTop: 4,
+    paddingBottom: 18,
+    alignItems: "flex-start",
+  },
+});

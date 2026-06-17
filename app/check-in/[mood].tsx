@@ -14,6 +14,7 @@ import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { JournalEditor } from "@/components/JournalEditor";
 import { shareVerse } from "@/lib/share";
+import { NEW_YORK } from "@/lib/typography";
 import { findMood, pickVerseForMood, type MoodVerse } from "@/constants/moods";
 import { useCheckIns } from "@/state/checkIns";
 import { useColors } from "@/state/theme";
@@ -139,7 +140,7 @@ export default function VerseDeliveryScreen() {
         <View className="flex-1 items-center justify-center px-6">
           <Text
             className="text-ink-muted text-[14px] text-center"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
           >
             That mood isn&apos;t in the catalog. Try again.
           </Text>
@@ -230,7 +231,7 @@ export default function VerseDeliveryScreen() {
           </Pressable>
           <Text
             className="text-ink-subtle text-[11px] tracking-[3px] uppercase"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             Check-in
           </Text>
@@ -258,9 +259,10 @@ export default function VerseDeliveryScreen() {
               }}
             >
               <Text
-                className="text-[10.5px] tracking-[2.5px] uppercase"
+                className="text-[11px] tracking-[2.5px] uppercase"
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   color: mood.swatch,
                 }}
               >
@@ -270,13 +272,13 @@ export default function VerseDeliveryScreen() {
 
             <Text
               className="text-ink text-[22px] leading-[28px] tracking-[-0.3px] text-center mt-6 px-4"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               {echoHeadline(mood.echo)}
             </Text>
             <Text
               className="text-ink-muted text-[13.5px] mt-2.5 text-center leading-[20px] px-4"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
             >
               Here&apos;s a verse for you.
             </Text>
@@ -304,8 +306,21 @@ export default function VerseDeliveryScreen() {
           <FadeIn delayMs={500} durationMs={1300}>
             <View className="px-7 items-center">
               <Text
-                className="text-ink text-[22px] leading-[34px] tracking-[-0.2px] text-center"
-                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                className="text-ink text-[22px] leading-[34px] text-center"
+                // New York Italic — the reflective-quote face.
+                // Mood check-in serves the user a verse as the
+                // emotional anchor of the moment, which is
+                // exactly the "short reflective quote block"
+                // the typography system reserves the serif
+                // italic for. SF Pro for everything else on
+                // this screen (eyebrow, headline, citation,
+                // CTAs); New York for the verse text alone.
+                style={{
+                  fontFamily: NEW_YORK,
+                  fontWeight: "400",
+                  fontStyle: "italic",
+                  letterSpacing: 0,
+                }}
               >
                 &ldquo;{verse.text}&rdquo;
               </Text>
@@ -317,7 +332,8 @@ export default function VerseDeliveryScreen() {
                 <Text
                   className="text-[11px] tracking-[3px] uppercase"
                   style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
+                    fontFamily: "System",
+                    fontWeight: "700",
                     color: mood.swatch,
                   }}
                 >
@@ -342,7 +358,8 @@ export default function VerseDeliveryScreen() {
             <Text
               className="text-ink-muted text-[14.5px] text-center leading-[22px]"
               style={{
-                fontFamily: "PlusJakartaSans_500Medium",
+                fontFamily: "System",
+                fontWeight: "500",
                 letterSpacing: -0.1,
               }}
             >
@@ -371,9 +388,10 @@ export default function VerseDeliveryScreen() {
             >
               <View className="flex-row items-center justify-between mb-2">
                 <Text
-                  className="text-[10px] tracking-[2.5px] uppercase"
+                  className="text-[11px] tracking-[2.5px] uppercase"
                   style={{
-                    fontFamily: "PlusJakartaSans_700Bold",
+                    fontFamily: "System",
+                    fontWeight: "700",
                     color: mood.swatch,
                   }}
                 >
@@ -381,14 +399,14 @@ export default function VerseDeliveryScreen() {
                 </Text>
                 <Text
                   className="text-ink-subtle text-[11px]"
-                  style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                  style={{ fontFamily: "System", fontWeight: "500" }}
                 >
                   Edit
                 </Text>
               </View>
               <Text
                 className="text-ink text-[14px] leading-[21px]"
-                style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                style={{ fontFamily: "System", fontWeight: "400" }}
                 numberOfLines={6}
               >
                 {journalText}
@@ -493,7 +511,8 @@ function ChipButton({
       <Text
         className="text-[14px] ml-2"
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           color: accent,
         }}
       >

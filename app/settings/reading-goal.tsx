@@ -53,14 +53,14 @@ export default function ReadingGoalScreen() {
         <View className="px-4 py-4">
           <View className="flex-row items-baseline justify-between">
             <Text
-              className="text-ink-subtle text-[10.5px] tracking-[2px] uppercase"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              className="text-ink-subtle text-[11px] tracking-[2px] uppercase"
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Progress
             </Text>
             <Text
               className="text-ink-subtle text-[11px]"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
             >
               {todayLabel} / {goalMinutes} min
             </Text>
@@ -87,7 +87,7 @@ export default function ReadingGoalScreen() {
               <FlameIcon />
               <Text
                 className="text-ink text-[12.5px] ml-2"
-                style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+                style={{ fontFamily: "System", fontWeight: "600" }}
               >
                 Today&apos;s reading goal reached.
               </Text>
@@ -95,7 +95,7 @@ export default function ReadingGoalScreen() {
           ) : (
             <Text
               className="text-ink-muted text-[12.5px] mt-3 leading-[18px]"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
             >
               {minutesLeftCopy(goalMinutes - todayMinutes)}
             </Text>

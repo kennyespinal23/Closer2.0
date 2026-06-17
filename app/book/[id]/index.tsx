@@ -73,13 +73,13 @@ export default function BookOverviewScreen() {
         <View className="flex-1 items-center justify-center px-6">
           <Text
             className="text-ink text-[18px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             We don&apos;t know that book.
           </Text>
           <Text
             className="text-ink-muted text-[13.5px] mt-2 text-center"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
           >
             Head back to the Library and try another.
           </Text>
@@ -89,7 +89,7 @@ export default function BookOverviewScreen() {
           >
             <Text
               className="text-primary-fg text-[13px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Back to Library
             </Text>
@@ -150,14 +150,6 @@ function BookDetail({ book }: { book: Book }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
-      {/* Tinted backdrop sits behind everything and bleeds into the
-          status-bar area. When the book has registered cover art,
-          the backdrop borrows from the cover's bloom palette so the
-          whole page sings in one key; otherwise it falls back to
-          the category color so the placeholder books still feel
-          tonally distinct from each other. */}
-      <PageBackdrop book={book} />
-
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <Header bookId={book.id} />
 
@@ -175,7 +167,7 @@ function BookDetail({ book }: { book: Book }) {
           <View className="px-6 mt-7 items-center">
             <Text
               className="text-ink text-[30px] leading-[36px] tracking-[-0.6px] text-center"
-              style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
+              style={{ fontFamily: "System", fontWeight: "800" }}
             >
               {book.name}
             </Text>
@@ -189,7 +181,7 @@ function BookDetail({ book }: { book: Book }) {
             >
               <Text
                 className="text-ink-muted text-[11px] tracking-[0.5px]"
-                style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+                style={{ fontFamily: "System", fontWeight: "600" }}
               >
                 {book.category}
               </Text>
@@ -260,14 +252,14 @@ function BookDetail({ book }: { book: Book }) {
             <View className="px-5 mt-7">
               <View className="px-1 mb-2 flex-row items-baseline justify-between">
                 <Text
-                  className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase"
-                  style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                  className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase"
+                  style={{ fontFamily: "System", fontWeight: "700" }}
                 >
                   Your progress
                 </Text>
                 <Text
                   className="text-ink text-[12px]"
-                  style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+                  style={{ fontFamily: "System", fontWeight: "600" }}
                 >
                   {readCount}/{book.chapters} ·{" "}
                   <Text className="text-ink-subtle">{progressPct}%</Text>
@@ -330,13 +322,13 @@ function BookDetail({ book }: { book: Book }) {
               <View className="px-6 mb-3 flex-row items-baseline justify-between">
                 <Text
                   className="text-ink text-[17px] tracking-[-0.2px]"
-                  style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                  style={{ fontFamily: "System", fontWeight: "700" }}
                 >
                   More from {book.category}
                 </Text>
                 <Text
                   className="text-ink-subtle text-[11px] tracking-[2px] uppercase"
-                  style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                  style={{ fontFamily: "System", fontWeight: "700" }}
                 >
                   {siblings.length}{" "}
                   {siblings.length === 1 ? "book" : "books"}
@@ -476,62 +468,6 @@ function HeroCover({ book }: { book: Book }) {
         paddingBottom: 6,
       }}
     >
-      {/* Bloom — sits absolutely behind the cover and bleeds past
-          its edges. pointerEvents disabled so it can't intercept
-          future taps on the cover. */}
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          width: bloomWidth,
-          height: bloomHeight,
-          top: 12 - (bloomHeight - coverHeight) / 2,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Svg width={bloomWidth} height={bloomHeight}>
-          <Defs>
-            <RadialGradient
-              id={`coverBloom-${book.id}`}
-              cx="50%"
-              cy="50%"
-              rx="50%"
-              ry="50%"
-            >
-              {/* The cover blocks the gradient's geometric center.
-                  Math: cover is ~280×373 inside a bloom of roughly
-                  500×633, so the cover edges sit at ~42% of the
-                  gradient radius from center. Everything BEFORE
-                  ~42% is hidden behind the painting; the visible
-                  bloom starts there. So we pile the brightest
-                  stops at that boundary and keep significant
-                  opacity all the way out to ~75% so the halo has
-                  weight, not just a thin rim. */}
-              <Stop offset="0%" stopColor={bloom.inner} stopOpacity={0.7} />
-              <Stop offset="42%" stopColor={bloom.inner} stopOpacity={0.55} />
-              {/* Just outside the cover edge — the peak visible
-                  brightness with a hint of the outer color
-                  bleeding in. */}
-              <Stop offset="55%" stopColor={bloom.outer} stopOpacity={0.4} />
-              {/* Mid falloff — quiet enough to keep the bloom
-                  feeling like atmosphere, not a spotlight. */}
-              <Stop offset="78%" stopColor={bloom.outer} stopOpacity={0.18} />
-              {/* Edge: fade outer color to fully transparent so the
-                  bloom blends into the page bg cleanly. */}
-              <Stop offset="100%" stopColor={bloom.outer} stopOpacity={0} />
-            </RadialGradient>
-          </Defs>
-          <Rect
-            x={0}
-            y={0}
-            width={bloomWidth}
-            height={bloomHeight}
-            fill={`url(#coverBloom-${book.id})`}
-          />
-        </Svg>
-      </View>
-
       <View
         style={{
           width: coverWidth,
@@ -583,13 +519,13 @@ function PrimaryReadButton({
     >
       <Text
         className="text-primary-fg text-[16px] tracking-[-0.1px]"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         {label}
       </Text>
       <Text
         className="text-primary-fg text-[11.5px] mt-0.5 opacity-65"
-        style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+        style={{ fontFamily: "System", fontWeight: "500" }}
       >
         {sublabel}
       </Text>
@@ -619,12 +555,12 @@ function ChipAction({
     >
       <View
         className="flex-row items-center justify-center rounded-full border border-border bg-surface"
-        style={{ height: 38 }}
+        style={{ height: 44 }}
       >
         {icon}
         <Text
           className="text-ink text-[12.5px] ml-2"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           {label}
         </Text>
@@ -652,14 +588,14 @@ function StatTile({
     >
       <Text
         className="text-ink text-[18px] tracking-[-0.2px]"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
         numberOfLines={1}
       >
         {value}
       </Text>
       <Text
-        className="text-ink-subtle text-[9.5px] mt-0.5 tracking-[1.5px] uppercase"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        className="text-ink-subtle text-[11px] mt-0.5 tracking-[1.5px] uppercase"
+        style={{ fontFamily: "System", fontWeight: "700" }}
         numberOfLines={1}
       >
         {label}
@@ -685,7 +621,7 @@ function AboutBlurb({ text }: { text: string }) {
     <View>
       <Text
         className="text-ink text-[14.5px] leading-[22px]"
-        style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+        style={{ fontFamily: "System", fontWeight: "400" }}
         numberOfLines={expanded ? undefined : 4}
       >
         {text}
@@ -702,7 +638,7 @@ function AboutBlurb({ text }: { text: string }) {
         >
           <Text
             className="text-primary text-[12.5px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {expanded ? "Show less" : "Read more"}
           </Text>
@@ -735,14 +671,14 @@ function Section({
       <View className="flex-row items-baseline justify-between mb-3 px-1">
         <Text
           className="text-ink text-[17px] tracking-[-0.2px]"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           {title}
         </Text>
         {titleAside && (
           <Text
             className="text-ink-subtle text-[11px] tracking-[2px] uppercase"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {titleAside}
           </Text>
@@ -787,7 +723,7 @@ function ChapterTile({
             className={`text-[14px] ${
               isResume ? "text-primary" : "text-ink"
             }`}
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {number}
           </Text>
@@ -829,14 +765,14 @@ function SiblingCard({ book, onPress }: { book: Book; onPress: () => void }) {
       </View>
       <Text
         className="text-ink text-[12.5px] mt-2.5"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
         numberOfLines={1}
       >
         {book.name}
       </Text>
       <Text
         className="text-ink-subtle text-[11px] mt-0.5"
-        style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+        style={{ fontFamily: "System", fontWeight: "500" }}
         numberOfLines={1}
       >
         {book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}

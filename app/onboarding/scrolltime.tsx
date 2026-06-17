@@ -71,7 +71,7 @@ export default function ScrollTimeScreen() {
           <FadeIn delayMs={0}>
             <Text
               className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-4"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               How long do you spend{"\n"}on your phone before{"\n"}you get out of bed?
             </Text>
@@ -80,7 +80,7 @@ export default function ScrollTimeScreen() {
           <FadeIn delayMs={600}>
             <Text
               className="text-ink-muted text-[15px] leading-[22px] mt-3"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
             >
               Be honest. We&apos;re not judging.
             </Text>

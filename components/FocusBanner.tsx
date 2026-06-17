@@ -102,7 +102,8 @@ export function FocusBanner() {
           <Text
             className="text-[12px] tracking-[1.6px] uppercase"
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               color: FOCUS_ACCENT,
             }}
           >
@@ -110,7 +111,7 @@ export function FocusBanner() {
           </Text>
           <Text
             className="text-ink-muted text-[11.5px] mt-0.5"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            style={{ fontFamily: "System", fontWeight: "500" }}
             numberOfLines={1}
           >
             {subtitle}
@@ -131,7 +132,8 @@ export function FocusBanner() {
           <Text
             className="text-[11.5px] tracking-[0.5px]"
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               color: colors.ink,
             }}
           >

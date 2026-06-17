@@ -71,7 +71,7 @@ export default function NameScreen() {
             <View className="mt-8">
               <Text
                 className="text-ink text-[28px] leading-[36px] tracking-[-0.6px]"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 Before we go any further —{"\n"}what&apos;s your name?
               </Text>
@@ -100,7 +100,7 @@ export default function NameScreen() {
                 onSubmitEditing={handleContinue}
                 maxLength={40}
                 className="text-ink text-[32px] py-2"
-                style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+                style={{ fontFamily: "System", fontWeight: "600" }}
               />
               <View
                 className="h-[2px] rounded-full"
@@ -119,7 +119,7 @@ export default function NameScreen() {
           <FadeIn delayMs={1100}>
             <Text
               className="text-ink-muted text-[14px] leading-[21px] mt-6"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
             >
               This is just for us.{"\n"}
               Your verse will know who it&apos;s talking to.

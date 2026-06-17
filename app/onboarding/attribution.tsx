@@ -61,7 +61,7 @@ export default function AttributionScreen() {
           <FadeIn delayMs={0}>
             <Text
               className="text-ink-muted text-[13px] tracking-[2px] uppercase mt-4"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Last thing before we set you up
             </Text>
@@ -70,7 +70,7 @@ export default function AttributionScreen() {
           <FadeIn delayMs={400}>
             <Text
               className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-3"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               How did you hear about Closer?
             </Text>

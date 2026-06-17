@@ -80,7 +80,7 @@ export function SocialButton({ provider, onPress }: SocialButtonProps) {
       </View>
       <Text
         className="text-ink text-[16px]"
-        style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+        style={{ fontFamily: "System", fontWeight: "600" }}
       >
         {labelByProvider[provider]}
       </Text>

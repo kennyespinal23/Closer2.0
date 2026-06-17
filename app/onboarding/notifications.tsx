@@ -79,7 +79,7 @@ export default function NotificationsScreen() {
           <FadeIn delayMs={0}>
             <Text
               className="text-ink text-[28px] leading-[36px] tracking-[-0.5px] mt-4"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Let us show up{"\n"}before Instagram does.
             </Text>
@@ -88,7 +88,7 @@ export default function NotificationsScreen() {
           <FadeIn delayMs={600}>
             <Text
               className="text-ink-muted text-[15px] leading-[22px] mt-3"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
             >
               One notification. Every morning.{"\n"}That&apos;s all we&apos;ll ever send.
             </Text>
@@ -107,7 +107,7 @@ export default function NotificationsScreen() {
           <FadeIn delayMs={1700}>
             <Text
               className="text-ink-muted text-[14px] leading-[20px] text-center mt-8"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
             >
               Before the noise starts.
             </Text>
@@ -147,7 +147,7 @@ export default function NotificationsScreen() {
                 >
                   <Text
                     className="text-select text-[14px]"
-                    style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                    style={{ fontFamily: "System", fontWeight: "500" }}
                   >
                     I&apos;ll do this later
                   </Text>
@@ -217,7 +217,8 @@ function NotificationPreview({ firstName }: { firstName: string }) {
           <Text
             style={{
               color: colors.ink,
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               fontSize: 14,
             }}
           >
@@ -226,7 +227,8 @@ function NotificationPreview({ firstName }: { firstName: string }) {
           <Text
             style={{
               color: colors.inkSubtle,
-              fontFamily: "PlusJakartaSans_500Medium",
+              fontFamily: "System",
+              fontWeight: "500",
               fontSize: 12,
               marginLeft: 8,
             }}
@@ -237,7 +239,8 @@ function NotificationPreview({ firstName }: { firstName: string }) {
         <Text
           style={{
             color: colors.ink,
-            fontFamily: "PlusJakartaSans_500Medium",
+            fontFamily: "System",
+            fontWeight: "500",
             fontSize: 14,
             lineHeight: 20,
             marginTop: 2,

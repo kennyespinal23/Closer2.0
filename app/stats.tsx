@@ -3,6 +3,7 @@ import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
+import { SFSymbol } from "@/components/Symbol";
 import { FadeIn } from "@/components/FadeIn";
 import { findBookById } from "@/constants/books";
 import { SERMON_TYPES, type SermonType } from "@/constants/sermonTypes";
@@ -73,7 +74,7 @@ export default function StatsScreen() {
         </Pressable>
         <Text
           className="text-ink text-[17px] flex-1 text-center"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           Your Practice
         </Text>
@@ -89,20 +90,20 @@ export default function StatsScreen() {
           <View className="px-6 mt-3">
             <Text
               className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-3"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Your Rhythm
             </Text>
             <View className="rounded-3xl border border-border bg-surface px-6 py-7">
               <Text
                 className="text-ink text-[72px] leading-[72px] tracking-[-2px]"
-                style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
+                style={{ fontFamily: "System", fontWeight: "800" }}
               >
                 {progress.totalCompletions}
               </Text>
               <Text
                 className="text-ink-muted text-[14px] mt-1"
-                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                style={{ fontFamily: "System", fontWeight: "500" }}
               >
                 {progress.totalCompletions === 1
                   ? "sermon completed"
@@ -119,7 +120,7 @@ export default function StatsScreen() {
                 />
                 <Text
                   className="text-ink text-[14px]"
-                  style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+                  style={{ fontFamily: "System", fontWeight: "600" }}
                 >
                   {completedToday
                     ? "Today is honored."
@@ -135,7 +136,7 @@ export default function StatsScreen() {
           <View className="px-6 mt-8">
             <Text
               className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-3"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Streak
             </Text>
@@ -143,20 +144,20 @@ export default function StatsScreen() {
               <View className="flex-row items-end">
                 <Text
                   className="text-ink text-[56px] leading-[56px] tracking-[-1.5px]"
-                  style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
+                  style={{ fontFamily: "System", fontWeight: "800" }}
                 >
                   {streak.current}
                 </Text>
                 <Text
                   className="text-ink-muted text-[15px] ml-2 mb-1.5"
-                  style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                  style={{ fontFamily: "System", fontWeight: "500" }}
                 >
                   {streak.current === 1 ? "day in a row" : "days in a row"}
                 </Text>
               </View>
               <Text
                 className="text-ink-subtle text-[12px] mt-1.5 tracking-[0.5px]"
-                style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+                style={{ fontFamily: "System", fontWeight: "600" }}
               >
                 {streak.longest > streak.current
                   ? `Best ever · ${streak.longest} days`
@@ -168,8 +169,8 @@ export default function StatsScreen() {
               <View className="h-[1px] bg-border my-5" />
 
               <Text
-                className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+                style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 Last 7 days
               </Text>
@@ -192,7 +193,7 @@ export default function StatsScreen() {
           <View className="px-6 mt-8">
             <Text
               className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-3"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Reading
             </Text>
@@ -200,13 +201,13 @@ export default function StatsScreen() {
               <View className="flex-row items-end">
                 <Text
                   className="text-ink text-[44px] leading-[44px] tracking-[-1px]"
-                  style={{ fontFamily: "PlusJakartaSans_800ExtraBold" }}
+                  style={{ fontFamily: "System", fontWeight: "800" }}
                 >
                   {chaptersRead.length}
                 </Text>
                 <Text
                   className="text-ink-muted text-[14px] ml-2 mb-1"
-                  style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                  style={{ fontFamily: "System", fontWeight: "500" }}
                 >
                   {chaptersRead.length === 1
                     ? "chapter read"
@@ -218,7 +219,7 @@ export default function StatsScreen() {
                   <BookmarkIcon />
                   <Text
                     className="text-ink-muted text-[12.5px] ml-2"
-                    style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                    style={{ fontFamily: "System", fontWeight: "500" }}
                   >
                     Last read · {formatChapterRef(lastReadChapter)}
                   </Text>
@@ -257,13 +258,13 @@ export default function StatsScreen() {
                       <View className="flex-row items-baseline justify-between">
                         <Text
                           className="text-ink text-[13px]"
-                          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                          style={{ fontFamily: "System", fontWeight: "700" }}
                         >
                           {formatRef(h)}
                         </Text>
                         <Text
                           className="text-ink-subtle text-[11px]"
-                          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                          style={{ fontFamily: "System", fontWeight: "500" }}
                         >
                           {relativeTime(h.updatedAt)}
                         </Text>
@@ -271,7 +272,7 @@ export default function StatsScreen() {
                       {h.verseText ? (
                         <Text
                           className="text-ink-muted text-[12.5px] mt-1 leading-[18px]"
-                          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                          style={{ fontFamily: "System", fontWeight: "400" }}
                           numberOfLines={1}
                         >
                           &ldquo;{h.verseText}&rdquo;
@@ -313,21 +314,21 @@ export default function StatsScreen() {
                     >
                       <View className="flex-row items-baseline justify-between">
                         <Text
-                          className="text-primary text-[10.5px] tracking-[2px] uppercase"
-                          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                          className="text-primary text-[11px] tracking-[2px] uppercase"
+                          style={{ fontFamily: "System", fontWeight: "700" }}
                         >
                           {formatRef(n)}
                         </Text>
                         <Text
                           className="text-ink-subtle text-[11px]"
-                          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                          style={{ fontFamily: "System", fontWeight: "500" }}
                         >
                           {relativeTime(n.updatedAt)}
                         </Text>
                       </View>
                       <Text
                         className="text-ink text-[13.5px] mt-1.5 leading-[19px]"
-                        style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                        style={{ fontFamily: "System", fontWeight: "500" }}
                         numberOfLines={2}
                       >
                         {n.text}
@@ -348,7 +349,7 @@ export default function StatsScreen() {
           <View className="px-6 mt-8">
             <Text
               className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-4"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               By Sermon Type
             </Text>
@@ -374,7 +375,7 @@ export default function StatsScreen() {
           <View className="px-6 mt-8">
             <Text
               className="text-ink-muted text-[13px] leading-[20px] text-center"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
             >
               The point was never the streak.{"\n"}
               It was always the showing up.
@@ -429,14 +430,14 @@ function TypeRow({
         <View className="flex-1 pr-3">
           <Text
             className={`text-[14px] ${touched ? "text-ink" : "text-ink-muted"}`}
-            style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+            style={{ fontFamily: "System", fontWeight: "600" }}
             numberOfLines={1}
           >
             {type.name}
           </Text>
           <Text
             className="text-ink-subtle text-[11.5px] mt-0.5"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            style={{ fontFamily: "System", fontWeight: "500" }}
             numberOfLines={1}
           >
             {touched
@@ -448,7 +449,8 @@ function TypeRow({
         <Text
           className={`text-[18px] ${touched ? "text-ink" : "text-ink-subtle"}`}
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             color: touched ? type.accent : undefined,
           }}
         >
@@ -485,10 +487,10 @@ function MiniDot({
         }`}
       />
       <Text
-        className={`text-[9.5px] mt-2 ${
+        className={`text-[11px] mt-2 ${
           isToday ? "text-primary" : "text-ink-subtle"
         }`}
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         {label}
       </Text>
@@ -499,14 +501,12 @@ function MiniDot({
 function BookmarkIcon() {
   const colors = useColors();
   return (
-    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M6 4h12v17l-6-4-6 4z"
-        stroke={colors.inkMuted}
-        strokeWidth={1.6}
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol
+      name="bookmark"
+      size={12}
+      color={colors.inkMuted}
+      weight="medium"
+    />
   );
 }
 
@@ -528,14 +528,14 @@ function SectionHeader({
       <View className="flex-row items-baseline">
         <Text
           className="text-ink-subtle text-[11px] tracking-[3px] uppercase"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           {title}
         </Text>
         {typeof count === "number" && count > 0 && (
           <Text
             className="text-ink-muted text-[12px] ml-2"
-            style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+            style={{ fontFamily: "System", fontWeight: "600" }}
           >
             {count}
           </Text>
@@ -545,7 +545,7 @@ function SectionHeader({
         <Pressable onPress={onSeeAll} hitSlop={8}>
           <Text
             className="text-primary text-[12px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             See all
           </Text>
@@ -570,7 +570,7 @@ function AnnotationEmpty({
     >
       <Text
         className="text-ink-muted text-[13px] leading-[19px]"
-        style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+        style={{ fontFamily: "System", fontWeight: "400" }}
       >
         {copy}
       </Text>

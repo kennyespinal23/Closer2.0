@@ -81,7 +81,7 @@ export default function HighlightsScreen() {
             <View className="items-center mt-16 px-10">
               <Text
                 className="text-ink-muted text-[13px] text-center"
-                style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                style={{ fontFamily: "System", fontWeight: "400" }}
               >
                 No verses highlighted in this color yet.
               </Text>
@@ -135,7 +135,7 @@ function ColorFilterRow({
         >
           <Text
             className="text-ink text-[12px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             All
           </Text>
@@ -202,14 +202,14 @@ function HighlightCard({
       <View className="flex-1 px-5 py-4">
         <View className="flex-row items-baseline justify-between">
           <Text
-            className="text-primary text-[10.5px] tracking-[2.5px] uppercase"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            className="text-primary text-[11px] tracking-[2.5px] uppercase"
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {formatRef(highlight)}
           </Text>
           <Text
             className="text-ink-subtle text-[11px]"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            style={{ fontFamily: "System", fontWeight: "500" }}
           >
             {relativeTime(highlight.updatedAt)}
           </Text>
@@ -218,7 +218,7 @@ function HighlightCard({
         {highlight.verseText ? (
           <Text
             className="text-ink text-[14.5px] mt-2 leading-[21px]"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
             numberOfLines={4}
           >
             &ldquo;{highlight.verseText}&rdquo;
@@ -226,7 +226,7 @@ function HighlightCard({
         ) : (
           <Text
             className="text-ink-muted text-[13px] mt-2 italic"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
           >
             Tap to open chapter
           </Text>
@@ -261,13 +261,13 @@ function EmptyState() {
       </View>
       <Text
         className="text-ink text-[18px] mt-5 text-center"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         Nothing highlighted yet
       </Text>
       <Text
         className="text-ink-muted text-[13.5px] mt-2 text-center leading-[20px]"
-        style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+        style={{ fontFamily: "System", fontWeight: "400" }}
       >
         Tap any verse while reading and pick a color. Highlights
         gather here for easy returning.
@@ -311,7 +311,7 @@ function Header({
       </Pressable>
       <Text
         className="text-ink text-[17px] flex-1 text-center"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         {title}
       </Text>
@@ -319,7 +319,7 @@ function Header({
         <View className="px-3 h-10 rounded-full border border-border items-center justify-center">
           <Text
             className="text-ink-muted text-[11px]"
-            style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+            style={{ fontFamily: "System", fontWeight: "600" }}
           >
             {countLabel}
           </Text>

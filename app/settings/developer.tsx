@@ -63,7 +63,7 @@ export default function DeveloperToolsScreen() {
       <View className="px-6 mt-8">
         <Text
           className="text-ink-subtle text-[12px] leading-[18px] text-center"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           This panel exists for the team to QA new content and
           flows. Real users won't see it unless they explicitly turn

@@ -55,12 +55,24 @@ module.exports = {
           soft: "var(--color-select-soft)",
         },
       },
+      // June 2026 typography reset: the app now lives on the iOS
+      // system fonts. SF Pro (resolved via fontFamily: "System"
+      // on iOS) is the interface and reading face; New York is
+      // reserved for the few reflective-quote moments. The
+      // Tailwind `font-*` shortcuts below map ONLY weights — the
+      // family is uniformly "System" so every utility resolves
+      // to SF Pro on iOS / Roboto on Android. New York Italic is
+      // intentionally not exposed as a utility class: that face
+      // appears in a handful of authored components only and
+      // should be reached via the typography.reflectiveQuote
+      // role token in lib/typography.ts, not by sprinkling a
+      // `font-serif` class across the codebase.
       fontFamily: {
-        sans: ["PlusJakartaSans_400Regular"],
-        medium: ["PlusJakartaSans_500Medium"],
-        semibold: ["PlusJakartaSans_600SemiBold"],
-        bold: ["PlusJakartaSans_700Bold"],
-        extrabold: ["PlusJakartaSans_800ExtraBold"],
+        sans: ["System"],
+        medium: ["System"],
+        semibold: ["System"],
+        bold: ["System"],
+        extrabold: ["System"],
       },
     },
   },

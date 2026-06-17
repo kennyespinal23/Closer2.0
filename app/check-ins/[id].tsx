@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { shareVerse } from "@/lib/share";
+import { NEW_YORK } from "@/lib/typography";
 import Svg, {
   Defs,
   Path,
@@ -162,13 +163,13 @@ export default function CheckInDetailScreen() {
         <View className="flex-1 items-center justify-center px-8">
           <Text
             className="text-ink text-[18px] text-center"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             That check-in isn&apos;t here anymore.
           </Text>
           <Text
             className="text-ink-muted text-[13.5px] text-center mt-2 leading-[20px]"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
           >
             It may have been deleted, or this link is from an older
             session.
@@ -197,7 +198,7 @@ export default function CheckInDetailScreen() {
         <View className="items-center px-6 mt-2">
           <Text
             className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {formatStamp(checkIn.createdAt)}
           </Text>
@@ -222,9 +223,10 @@ export default function CheckInDetailScreen() {
             }}
           >
             <Text
-              className="text-[10.5px] tracking-[2.5px] uppercase"
+              className="text-[11px] tracking-[2.5px] uppercase"
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color: accent,
               }}
             >
@@ -253,8 +255,20 @@ export default function CheckInDetailScreen() {
 
           <View className="px-7 items-center">
             <Text
-              className="text-ink text-[19px] leading-[30px] tracking-[-0.1px] text-center"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              className="text-ink text-[19px] leading-[30px] text-center"
+              // New York Italic — mirrors the verse treatment
+              // on the live mood check-in (`app/check-in/[mood]
+              // .tsx`). Past check-ins re-render the SAME beat
+              // (mood → echo → verse), so the verse face stays
+              // the reflective serif italic — not the SF Pro
+              // body — to keep both surfaces feeling like one
+              // ritual revisited.
+              style={{
+                fontFamily: NEW_YORK,
+                fontWeight: "400",
+                fontStyle: "italic",
+                letterSpacing: 0,
+              }}
             >
               &ldquo;{checkIn.verse.text}&rdquo;
             </Text>
@@ -266,7 +280,8 @@ export default function CheckInDetailScreen() {
               <Text
                 className="text-[11px] tracking-[3px] uppercase"
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   color: accent,
                 }}
               >
@@ -279,9 +294,10 @@ export default function CheckInDetailScreen() {
         {/* ─── Reflection block ──────────────────────────────── */}
         <View className="mt-10 px-6">
           <Text
-            className="text-[10.5px] tracking-[2.5px] uppercase mb-3"
+            className="text-[11px] tracking-[2.5px] uppercase mb-3"
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               color: accent,
             }}
           >
@@ -302,7 +318,7 @@ export default function CheckInDetailScreen() {
             >
               <Text
                 className="text-ink text-[14.5px] leading-[22px]"
-                style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                style={{ fontFamily: "System", fontWeight: "400" }}
               >
                 {journalText}
               </Text>
@@ -314,7 +330,7 @@ export default function CheckInDetailScreen() {
               >
                 <Text
                   className="text-ink-subtle text-[11px]"
-                  style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                  style={{ fontFamily: "System", fontWeight: "500" }}
                 >
                   {checkIn.journalUpdatedAt
                     ? `Updated ${formatStamp(checkIn.journalUpdatedAt)}`
@@ -325,7 +341,8 @@ export default function CheckInDetailScreen() {
                   <Text
                     className="text-[11px] ml-1.5"
                     style={{
-                      fontFamily: "PlusJakartaSans_700Bold",
+                      fontFamily: "System",
+                      fontWeight: "700",
                       color: accent,
                     }}
                   >
@@ -350,13 +367,13 @@ export default function CheckInDetailScreen() {
               <PenGlyph color={accent} size={18} />
               <Text
                 className="text-ink text-[14px] mt-2 text-center"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+                style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 Add a reflection
               </Text>
               <Text
                 className="text-ink-muted text-[12.5px] mt-1 text-center leading-[18px]"
-                style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+                style={{ fontFamily: "System", fontWeight: "400" }}
               >
                 Capture what you&apos;re carrying, what stood out, or
                 what you want to do with this today.
@@ -399,7 +416,8 @@ export default function CheckInDetailScreen() {
             <Text
               className="text-[13px]"
               style={{
-                fontFamily: "PlusJakartaSans_600SemiBold",
+                fontFamily: "System",
+                fontWeight: "600",
                 color: "#FF6B6B",
               }}
             >
@@ -451,7 +469,7 @@ function Header({ onBack }: { onBack: () => void }) {
       </Pressable>
       <Text
         className="text-ink text-[17px] flex-1 text-center"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         Check-in
       </Text>

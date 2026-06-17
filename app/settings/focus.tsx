@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { SFSymbol } from "@/components/Symbol";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import {
   SettingsScaffold,
@@ -58,7 +59,7 @@ export default function FocusSettingsScreen() {
       <View className="px-6 pt-2 pb-2">
         <Text
           className="text-ink-muted text-[14px] leading-[21px]"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           When you begin a sermon, Closer can quiet the apps that
           usually pull your attention away — so the next few minutes
@@ -137,13 +138,13 @@ export default function FocusSettingsScreen() {
             <ShieldIcon stroke={colors.ink} />
             <Text
               className="text-ink text-[14px] ml-2.5 flex-1"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Preview next shield
             </Text>
             <Text
               className="text-ink-subtle text-[11.5px] tracking-[1px] uppercase"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               {previewAppId
                 ? `${
@@ -160,7 +161,7 @@ export default function FocusSettingsScreen() {
       <View className="px-6 mt-6">
         <Text
           className="text-ink-subtle text-[12px] leading-[18px] text-center"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           A few minutes of stillness, before the noise.
         </Text>
@@ -224,7 +225,7 @@ function AppRow({
           </View>
           <Text
             className="text-ink text-[14.5px] flex-1"
-            style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+            style={{ fontFamily: "System", fontWeight: "600" }}
           >
             {app.name}
           </Text>
@@ -247,7 +248,7 @@ function AppRow({
         <View className="flex-row items-start px-4 pb-3.5 pl-[60px] pr-4">
           <Text
             className="text-ink-muted text-[12.5px] leading-[18px] flex-1 pr-3"
-            style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+            style={{ fontFamily: "System", fontWeight: "500" }}
             numberOfLines={2}
           >
             &ldquo;{app.quietMessage}&rdquo;
@@ -255,7 +256,8 @@ function AppRow({
           <Text
             className="text-[11.5px] tracking-[1.5px] uppercase"
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               color: colors.select,
             }}
           >
@@ -301,15 +303,7 @@ function BoltIcon({ stroke }: { stroke: string }) {
 
 function CheckIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M5 12l5 5L20 7"
-        stroke={stroke}
-        strokeWidth={2.2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol name="checkmark" size={16} color={stroke} weight="semibold" />
   );
 }
 

@@ -3,6 +3,7 @@ import { Animated, Easing, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { HeroDisc, HeroOnboardingPage } from "@/components/HeroOnboardingPage";
 import { AppIcon } from "@/components/SocialAppCard";
+import { useColors } from "@/state/theme";
 
 /**
  * Screen — The Pattern.
@@ -24,11 +25,9 @@ import { AppIcon } from "@/components/SocialAppCard";
  * logos.
  */
 
-const PAGE_BG = "#5B2B8C"; // deep royal violet
-const SKY_VIOLET = "#8C4FC7"; // lighter lavender for glow + halo
-
 export default function PatternScreen() {
   const router = useRouter();
+  const colors = useColors();
 
   // Local breath value drives the morning/night opposite-phase
   // animation inside the disc. The disc itself doesn't breathe
@@ -59,11 +58,8 @@ export default function PatternScreen() {
 
   return (
     <HeroOnboardingPage
-      pageBg={PAGE_BG}
-      ambientGlow={SKY_VIOLET}
       subject={
         <HeroDisc
-          haloColor={SKY_VIOLET}
           size={216}
           breathe={false}
           innerPaddingVertical={24}
@@ -73,7 +69,7 @@ export default function PatternScreen() {
             style={{
               width: 64,
               height: 1,
-              backgroundColor: "rgba(255,255,255,0.22)",
+              backgroundColor: colors.border,
               marginVertical: 12,
             }}
           />
@@ -85,7 +81,6 @@ export default function PatternScreen() {
       attribution="We're going to change the order."
       ctaLabel="Continue"
       onContinue={() => router.push("/onboarding/calculating")}
-      ctaTextColor="#1B0F2E"
     />
   );
 }
@@ -103,6 +98,7 @@ function PatternIcon({
   breath: Animated.Value;
   phase: "in" | "out";
 }) {
+  const colors = useColors();
   const scale = breath.interpolate({
     inputRange: [0, 1],
     outputRange: phase === "in" ? [0.97, 1.03] : [1.03, 0.97],
@@ -127,9 +123,10 @@ function PatternIcon({
       </Animated.View>
       <Text
         style={{
-          color: "rgba(255,255,255,0.6)",
-          fontFamily: "PlusJakartaSans_600SemiBold",
-          fontSize: 10,
+          color: colors.inkSecondary,
+          fontFamily: "System",
+          fontWeight: "600",
+          fontSize: 11,
           letterSpacing: 1.4,
           marginTop: 6,
           textTransform: "uppercase",

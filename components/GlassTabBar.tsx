@@ -378,9 +378,8 @@ export function GlassTabBar({
                       // focused tab reads with a touch more weight
                       // even at 10pt. Inactive stays at Medium —
                       // legible but quiet.
-                      fontFamily: isFocused
-                        ? "PlusJakartaSans_600SemiBold"
-                        : "PlusJakartaSans_500Medium",
+                      fontFamily: "System",
+                      fontWeight: isFocused ? "600" : "500",
                     },
                   ]}
                 >
@@ -456,7 +455,7 @@ const styles = StyleSheet.create({
     // (fontSize / lineHeight / marginTop) match the constants
     // (LABEL_LINE_HEIGHT / LABEL_GAP) above so the pill height
     // math stays consistent.
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: LABEL_LINE_HEIGHT,
     letterSpacing: 0.2,
     marginTop: LABEL_GAP,

@@ -119,6 +119,70 @@ export function buildMonthGrid(
 }
 
 /**
+ * Build the 7-cell Sunday → Saturday grid for the week
+ * containing `referenceToday` (defaults to actual today).
+ *
+ * Drives the home card's "This week" mini-calendar. Unlike
+ * `buildMonthGrid`, this never produces `outOfMonth` cells:
+ * every day in the week — even days from an adjacent month
+ * when the week straddles a month boundary — gets its real
+ * engaged / idle / future classification so the home glance
+ * accurately represents the actual 7-day window.
+ *
+ * `weekStartISO` and `weekEndISO` are returned alongside the
+ * cells so callers can format a "Jun 7 – 13" range label
+ * without recomputing the week boundaries themselves.
+ */
+export function buildCurrentWeek(
+  engagedDates: ReadonlyArray<string>,
+  referenceToday?: Date,
+): {
+  cells: ReadonlyArray<RhythmCell>;
+  weekStartISO: string;
+  weekEndISO: string;
+  engagedCount: number;
+} {
+  const today = referenceToday ? new Date(referenceToday) : new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayISO = toLocalISO(today);
+
+  // Snap to Sunday of the week containing today.
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay());
+
+  const engagedSet = new Set(engagedDates);
+  const cells: Array<RhythmCell> = [];
+  let engagedCount = 0;
+
+  const cursor = new Date(weekStart);
+  for (let i = 0; i < 7; i++) {
+    const iso = toLocalISO(cursor);
+    const isFuture = cursor.getTime() > today.getTime();
+    const engaged = engagedSet.has(iso);
+    let state: RhythmCellState;
+    // No `outOfMonth` branch — every cell in the 7-day window
+    // is a real day in the user's calendar regardless of
+    // which month boundary it lands on.
+    if (engaged) state = "engaged";
+    else if (isFuture) state = "future";
+    else state = "idle";
+    if (engaged) engagedCount++;
+    cells.push({ dateISO: iso, state, isToday: iso === todayISO });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+
+  return {
+    cells,
+    weekStartISO: toLocalISO(weekStart),
+    weekEndISO: toLocalISO(weekEnd),
+    engagedCount,
+  };
+}
+
+/**
  * Per-month engagement summary for an entire year. Drives the
  * detail page's "Completions / Month" bar chart and the
  * year-total stat card.

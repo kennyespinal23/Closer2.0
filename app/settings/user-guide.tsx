@@ -30,20 +30,20 @@ export default function UserGuideScreen() {
       <View className="px-6 mt-2">
         <View className="rounded-2xl border border-border bg-surface px-5 py-6">
           <Text
-            className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             A quiet walkthrough
           </Text>
           <Text
             className="text-ink text-[20px] leading-[26px] tracking-[-0.2px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             Closer in five minutes.
           </Text>
           <Text
             className="text-ink-muted text-[13.5px] leading-[20px] mt-2.5"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
           >
             One screen at a time, here&apos;s every place worth knowing —
             and what each is quietly built for.
@@ -115,13 +115,13 @@ export default function UserGuideScreen() {
         <View className="rounded-2xl border border-border bg-surface px-5 py-5">
           <Text
             className="text-ink text-[15px] leading-[21px]"
-            style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+            style={{ fontFamily: "System", fontWeight: "600" }}
           >
             Anything still unclear?
           </Text>
           <Text
             className="text-ink-muted text-[13px] leading-[19px] mt-1.5"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
           >
             Head over to Help &amp; Support — a real person reads every
             message that comes through.
@@ -158,13 +158,13 @@ function GuideSection({
         <View className="flex-1 pt-0.5">
           <Text
             className="text-ink text-[16.5px] leading-[22px] tracking-[-0.2px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {title}
           </Text>
           <Text
             className="text-ink-muted text-[13.5px] leading-[20px] mt-2"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
           >
             {body}
           </Text>

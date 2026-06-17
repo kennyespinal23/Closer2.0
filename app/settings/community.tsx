@@ -1,5 +1,6 @@
 import { Linking, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { SFSymbol } from "@/components/Symbol";
 import {
   SettingsLinkRow,
   SettingsScaffold,
@@ -33,20 +34,20 @@ export default function CommunityScreen() {
       <View className="px-6 mt-2">
         <View className="rounded-2xl border border-border bg-surface px-5 py-6">
           <Text
-            className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             Coming Soon
           </Text>
           <Text
             className="text-ink text-[20px] leading-[26px] tracking-[-0.2px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             A quiet place{"\n"}for the rest of us.
           </Text>
           <Text
             className="text-ink-muted text-[13.5px] leading-[20px] mt-2.5"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+            style={{ fontFamily: "System", fontWeight: "400" }}
           >
             We&apos;re building a small community for people on the same
             rhythm — somewhere to share what scripture is teaching you,
@@ -82,7 +83,7 @@ export default function CommunityScreen() {
       <View className="px-6 mt-8">
         <Text
           className="text-ink-subtle text-[12px] leading-[18px] text-center"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           &ldquo;Where two or three gather in my name, there am I with them.&rdquo;{"\n"}
           Matthew 18:20
@@ -116,8 +117,11 @@ function MailIcon() {
 function ShareIcon() {
   const { ink } = useColors();
   return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M12 3v12M8 7l4-4 4 4M5 14v6h14v-6" {...ICON_BASE} stroke={ink} />
-    </Svg>
+    <SFSymbol
+      name="square.and.arrow.up"
+      size={14}
+      color={ink}
+      weight="medium"
+    />
   );
 }

@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
+import { AppleSheet } from "@/components/AppleSheet";
+import { SFSymbol } from "@/components/Symbol";
 import { useColors } from "@/state/theme";
 
 /**
@@ -64,18 +63,19 @@ export function NoteEditor({
   const canSave = text.trim().length > 0;
 
   return (
-    <Modal
+    <AppleSheet
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onCancel}
+      onClose={onCancel}
+      // Full-height detent only — text editors need every pixel
+      // they can get once the keyboard is up. The grabber stays
+      // visible so users still have the iOS-standard
+      // swipe-to-dismiss path alongside Cancel.
+      detents={[1]}
+      backgroundColor={colors.bg}
     >
-      <SafeAreaView
-        edges={["top", "bottom"]}
-        style={{ flex: 1, backgroundColor: colors.bg }}
-      >
+      <View style={{ flex: 1 }}>
         {/* Header — Cancel / title / Save */}
-        <View className="flex-row items-center px-4 pt-2 pb-3 border-b border-border">
+        <View className="flex-row items-center px-4 pt-3 pb-3 border-b border-border">
           <Pressable
             onPress={onCancel}
             hitSlop={12}
@@ -85,14 +85,14 @@ export function NoteEditor({
           >
             <Text
               className="text-ink-muted text-[15px]"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
             >
               Cancel
             </Text>
           </Pressable>
           <Text
             className="text-ink text-[16px] flex-1 text-center"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
             numberOfLines={1}
           >
             {hasInitial ? "Edit Note" : "Add Note"}
@@ -108,7 +108,8 @@ export function NoteEditor({
             <Text
               className="text-[15px]"
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color:
                   canSave && dirty ? colors.primary : colors.inkSubtle,
               }}
@@ -126,14 +127,14 @@ export function NoteEditor({
           {/* Verse card — reminds you what you're noting on */}
           <View className="mx-5 mt-5 mb-4 rounded-2xl border border-border bg-surface px-5 py-4">
             <Text
-              className="text-primary text-[10.5px] tracking-[2.5px] uppercase mb-2"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              className="text-primary text-[11px] tracking-[2.5px] uppercase mb-2"
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               {reference}
             </Text>
             <Text
               className="text-ink text-[13.5px] leading-[20px]"
-              style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+              style={{ fontFamily: "System", fontWeight: "400" }}
               numberOfLines={4}
             >
               &ldquo;{verseText}&rdquo;
@@ -154,7 +155,8 @@ export function NoteEditor({
               style={{
                 flex: 1,
                 color: colors.ink,
-                fontFamily: "PlusJakartaSans_400Regular",
+                fontFamily: "System",
+                fontWeight: "400",
                 fontSize: 16,
                 lineHeight: 24,
                 paddingTop: 8,
@@ -176,7 +178,8 @@ export function NoteEditor({
                 <Text
                   className="text-[14px] ml-2"
                   style={{
-                    fontFamily: "PlusJakartaSans_600SemiBold",
+                    fontFamily: "System",
+                    fontWeight: "600",
                     color: "#FF6B6B",
                   }}
                 >
@@ -186,21 +189,14 @@ export function NoteEditor({
             </View>
           )}
         </KeyboardAvoidingView>
-      </SafeAreaView>
-    </Modal>
+      </View>
+    </AppleSheet>
   );
 }
 
 function TrashIcon() {
-  return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M4 7h16M9 7V5h6v2M10 11v6M14 11v6M6 7l1 13h10l1-13"
-        stroke="#FF6B6B"
-        strokeWidth={1.7}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
+  // SF Symbol "trash" — same visual language as the Mail/Notes
+  // delete glyph users see system-wide, so the affordance reads
+  // unambiguously even at small sizes.
+  return <SFSymbol name="trash" size={16} color="#FF6B6B" weight="medium" />;
 }

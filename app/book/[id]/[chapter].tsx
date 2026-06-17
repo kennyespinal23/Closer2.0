@@ -29,6 +29,7 @@ import Svg, {
 import { BlurView } from "expo-blur";
 import * as haptics from "@/lib/haptics";
 import { shareVerse, sharePassage } from "@/lib/share";
+import { AppleSheet } from "@/components/AppleSheet";
 import { NoteEditor } from "@/components/NoteEditor";
 import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
@@ -742,13 +743,6 @@ export default function ChapterReaderScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      {/* Per-book bloom backdrop — a very soft wash tinted to the
-          cover's palette, anchored to the top of the screen. The
-          reading area below stays on the clean page bg so serif
-          text never has to fight a colored field. Sits behind
-          everything; pointer-events off. */}
-      <ChapterBackdrop book={book} />
-
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <Header
           translationTag={translation.tag}
@@ -882,12 +876,31 @@ export default function ChapterReaderScreen() {
                     // gestures (long-press to start, tap to add/
                     // remove) feeling like one continuous flow.
                     if (selectionMode) {
+                      // Tick — discrete selection event. Same
+                      // grammar as iOS Mail/Notes when toggling
+                      // a row's checkmark in edit mode.
+                      haptics.tick();
                       toggleVerseSelection(n);
                     } else {
+                      // Soft — confirms the action sheet is
+                      // committing to open. Sheet appears
+                      // immediately after this fires so the
+                      // haptic + visual lift land together.
+                      haptics.soft();
                       setActiveVerse(n);
                     }
                   }}
-                  onVerseLongPress={(n) => toggleVerseSelection(n)}
+                  onVerseLongPress={(n) => {
+                    // Long-press is a deliberate "I want more
+                    // than a tap can give me" gesture, so it
+                    // deserves a heavier confirmation than the
+                    // tap path above. `soft` keeps it lighter
+                    // than tap() (which is reserved for primary
+                    // CTAs); the user feels it as "selection
+                    // mode is now armed".
+                    haptics.soft();
+                    toggleVerseSelection(n);
+                  }}
                   selectedSet={selectedVersesSet}
                   focusVerse={focusVerse}
                   focusTint={focusTint}
@@ -914,7 +927,7 @@ export default function ChapterReaderScreen() {
           >
             <Text
               className="text-ink-subtle text-[11px] tracking-[1.5px]"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
             >
               Page {currentPage} of {totalPages}
             </Text>
@@ -1345,7 +1358,8 @@ function VerseFlow({
     <Text
       onTextLayout={handleTextLayout}
       style={{
-        fontFamily: "PlusJakartaSans_400Regular",
+        fontFamily: "System",
+        fontWeight: "400",
         fontSize: baseFontSize,
         lineHeight: baseLineHeight,
         color: colors.ink,
@@ -1363,7 +1377,8 @@ function VerseFlow({
           <>
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 fontSize: verseNumSize,
                 color: isSelected ? colors.ink : colors.inkSubtle,
               }}
@@ -1378,7 +1393,8 @@ function VerseFlow({
             {v.hasNote ? (
               <Text
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontFamily: "System",
+                  fontWeight: "700",
                   fontSize: verseNumSize * 0.95,
                   color: NOTE_MARKER_COLOR,
                 }}
@@ -1388,7 +1404,8 @@ function VerseFlow({
             ) : null}
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 fontSize: verseNumSize,
               }}
             >
@@ -1469,7 +1486,7 @@ function LoadingView() {
       <ActivityIndicator size="small" color={colors.inkMuted} />
       <Text
         className="text-ink-subtle text-[12px] tracking-[2px] uppercase mt-4"
-        style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+        style={{ fontFamily: "System", fontWeight: "500" }}
       >
         Drawing near
       </Text>
@@ -1488,7 +1505,7 @@ function ErrorView({
     <View className="items-center py-8">
       <Text
         className="text-ink text-[16px] text-center"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         {message}
       </Text>
@@ -1498,7 +1515,7 @@ function ErrorView({
       >
         <Text
           className="text-ink text-[13px]"
-          style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+          style={{ fontFamily: "System", fontWeight: "600" }}
         >
           Try again
         </Text>
@@ -1537,18 +1554,18 @@ function TranslationNotInstalledView({
     <View className="items-center py-8 max-w-[340px]">
       <Text
         className="text-ink text-[18px] text-center"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         {translationName} isn&apos;t installed yet
       </Text>
       <Text
         className="text-ink-muted text-[14px] text-center mt-3 leading-[21px]"
-        style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+        style={{ fontFamily: "System", fontWeight: "400" }}
       >
         {bookName} {chapter} isn&apos;t bundled with the app. {translationName}{" "}
         is copyrighted, so its text has to come from your own licensed
         copy. Drop a JSON file at{" "}
-        <Text style={{ fontFamily: "PlusJakartaSans_700Bold" }}>
+        <Text style={{ fontFamily: "System", fontWeight: "700" }}>
           assets/bibles/nwt/{bookName.toLowerCase()}.json
         </Text>{" "}
         and rebuild to read it here.
@@ -1561,7 +1578,8 @@ function TranslationNotInstalledView({
         <Text
           className="text-[13px]"
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             color: "#FFFFFF",
             letterSpacing: 0.2,
           }}
@@ -1709,21 +1727,22 @@ function ChapterHeading({
 }) {
   const colors = useColors();
   return (
-    <View style={{ alignItems: "center", marginBottom: 14 }}>
+    <View style={{ alignItems: "center", marginBottom: 16 }}>
       <Text
-        className="text-ink-subtle text-[10.5px] tracking-[3px] uppercase"
-        style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+        className="text-ink-subtle text-[11px] tracking-[3px] uppercase"
+        style={{ fontFamily: "System", fontWeight: "700" }}
       >
         {bookName}
       </Text>
       <Text
         style={{
-          fontFamily: "PlusJakartaSans_700Bold",
+          fontFamily: "System",
+          fontWeight: "700",
           fontSize: 26 * Math.sqrt(scale),
           lineHeight: 34 * Math.sqrt(scale),
           letterSpacing: 0.5,
           color: colors.ink,
-          marginTop: 10,
+          marginTop: 8,
           textAlign: "center",
         }}
       >
@@ -1874,16 +1893,17 @@ function EndMatterPage({
       style={{ width }}
       contentContainerStyle={{
         paddingHorizontal: paddingX,
-        paddingTop: 36,
+        paddingTop: 32,
         paddingBottom: 220,
       }}
       showsVerticalScrollIndicator={false}
     >
       <View className="items-center pt-6 pb-8">
         <Text
-          className="text-[10.5px] tracking-[3px] uppercase"
+          className="text-[11px] tracking-[3px] uppercase"
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             color: alreadyRead ? colors.inkMuted : colors.inkSubtle,
           }}
         >
@@ -1892,7 +1912,8 @@ function EndMatterPage({
         <Text
           className="text-ink mt-3"
           style={{
-            fontFamily: "PlusJakartaSans_800ExtraBold",
+            fontFamily: "System",
+            fontWeight: "800",
             fontSize: 32,
             lineHeight: 36,
             letterSpacing: -0.6,
@@ -1913,8 +1934,8 @@ function EndMatterPage({
         style={({ pressed }) => ({
           backgroundColor: colors.primary,
           borderRadius: 18,
-          paddingVertical: 18,
-          paddingHorizontal: 22,
+          paddingVertical: 16,
+          paddingHorizontal: 24,
           alignItems: "center",
           justifyContent: "center",
           opacity: pressed ? 0.9 : advancing ? 0.92 : 1,
@@ -1929,7 +1950,8 @@ function EndMatterPage({
             <PrimaryCheckIcon color={colors.primaryFg} />
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color: colors.primaryFg,
                 fontSize: 17,
                 marginLeft: 8,
@@ -1942,7 +1964,8 @@ function EndMatterPage({
           <>
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 color: colors.primaryFg,
                 fontSize: 17,
               }}
@@ -1951,10 +1974,11 @@ function EndMatterPage({
             </Text>
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_500Medium",
+                fontFamily: "System",
+                fontWeight: "500",
                 color: colors.primaryFg,
                 fontSize: 12,
-                marginTop: 3,
+                marginTop: 4,
                 opacity: 0.65,
               }}
             >
@@ -1968,7 +1992,8 @@ function EndMatterPage({
         <Text
           className="text-center mt-3"
           style={{
-            fontFamily: "PlusJakartaSans_500Medium",
+            fontFamily: "System",
+            fontWeight: "500",
             color: colors.inkSubtle,
             fontSize: 11.5,
             lineHeight: 16,
@@ -1989,10 +2014,11 @@ function EndMatterPage({
           <Chevron direction="prev" />
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_600SemiBold",
+              fontFamily: "System",
+              fontWeight: "600",
               color: colors.inkMuted,
               fontSize: 13,
-              marginLeft: 6,
+              marginLeft: 4,
             }}
           >
             {prevBook.name} {prev.chapter}
@@ -2007,14 +2033,14 @@ function EndMatterPage({
         accessibilityLabel="Change Bible version"
       >
         <Text
-          className="text-ink-subtle text-[10.5px] tracking-[2px] uppercase text-center"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          className="text-ink-subtle text-[11px] tracking-[2px] uppercase text-center"
+          style={{ fontFamily: "System", fontWeight: "500" }}
         >
           {translationName}
         </Text>
         <Text
-          className="text-ink-subtle text-[10px] mt-1 text-center opacity-70"
-          style={{ fontFamily: "PlusJakartaSans_400Regular" }}
+          className="text-ink-subtle text-[11px] mt-1 text-center opacity-70"
+          style={{ fontFamily: "System", fontWeight: "400" }}
         >
           {translationNote} · Tap to change version
         </Text>
@@ -2134,7 +2160,7 @@ function Header({
           {pagesLeftLabel ? (
             <Text
               className="text-ink-subtle text-[11.5px]"
-              style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+              style={{ fontFamily: "System", fontWeight: "500" }}
               numberOfLines={1}
             >
               {pagesLeftLabel}
@@ -2152,8 +2178,8 @@ function Header({
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
             <Text
-              className="text-ink-muted text-[10.5px] tracking-[1.5px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              className="text-ink-muted text-[11px] tracking-[1.5px]"
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               {translationTag}
             </Text>
@@ -2213,8 +2239,8 @@ function ChapterOrnament() {
       style={{
         flexDirection: "row",
         alignItems: "center",
-        marginTop: 14,
-        marginBottom: 6,
+        marginTop: 16,
+        marginBottom: 4,
       }}
     >
       <View
@@ -2224,7 +2250,7 @@ function ChapterOrnament() {
           backgroundColor: colors.border,
         }}
       />
-      <View style={{ flexDirection: "row", marginHorizontal: 10 }}>
+      <View style={{ flexDirection: "row", marginHorizontal: 8 }}>
         <Diamond />
         <View style={{ width: 6 }} />
         <Diamond />
@@ -2371,8 +2397,8 @@ function ReaderToolbar({
             borderColor: colors.border,
             borderWidth: 1,
             borderRadius: 999,
-            paddingHorizontal: 6,
-            paddingVertical: 6,
+            paddingHorizontal: 4,
+            paddingVertical: 4,
           }}
         >
           <ToolbarIconButton
@@ -2393,7 +2419,8 @@ function ReaderToolbar({
           >
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 fontSize: 16,
                 color: colors.ink,
               }}
@@ -2432,6 +2459,7 @@ function ToolbarIconButton({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
+      hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
       style={({ pressed }) => ({
         opacity: pressed ? 0.6 : 1,
         width: 48,
@@ -2592,15 +2620,16 @@ function ThemesPopover({
         {/* ─── Text Size ──────────────────────────────────────── */}
         <View
           style={{
-            paddingHorizontal: 18,
-            paddingTop: 18,
-            paddingBottom: 14,
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 16,
           }}
         >
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              fontSize: 10.5,
+              fontFamily: "System",
+              fontWeight: "700",
+              fontSize: 11,
               color: colors.inkSubtle,
               letterSpacing: 2.5,
               textTransform: "uppercase",
@@ -2623,7 +2652,7 @@ function ThemesPopover({
           style={{
             height: StyleSheet.hairlineWidth,
             backgroundColor: glassHairline,
-            marginHorizontal: 14,
+            marginHorizontal: 16,
           }}
         />
 
@@ -2635,8 +2664,8 @@ function ThemesPopover({
           }}
           style={({ pressed }) => ({
             opacity: pressed ? 0.7 : 1,
-            paddingHorizontal: 18,
-            paddingTop: 14,
+            paddingHorizontal: 16,
+            paddingTop: 16,
             paddingBottom: 16,
             flexDirection: "row",
             alignItems: "center",
@@ -2647,8 +2676,9 @@ function ThemesPopover({
           <View style={{ flex: 1 }}>
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                fontSize: 10.5,
+                fontFamily: "System",
+                fontWeight: "700",
+                fontSize: 11,
                 color: colors.inkSubtle,
                 letterSpacing: 2.5,
                 textTransform: "uppercase",
@@ -2658,10 +2688,11 @@ function ThemesPopover({
             </Text>
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
+                fontFamily: "System",
+                fontWeight: "700",
                 fontSize: 15,
                 color: colors.ink,
-                marginTop: 6,
+                marginTop: 4,
               }}
               numberOfLines={1}
             >
@@ -2675,12 +2706,12 @@ function ThemesPopover({
             style={{
               flexDirection: "row",
               alignItems: "center",
-              gap: 10,
+              gap: 8,
             }}
           >
             <View
               style={{
-                paddingHorizontal: 10,
+                paddingHorizontal: 8,
                 paddingVertical: 4,
                 borderRadius: 999,
                 backgroundColor: colors.selectSoft,
@@ -2690,8 +2721,9 @@ function ThemesPopover({
             >
               <Text
                 style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  fontSize: 10.5,
+                  fontFamily: "System",
+                  fontWeight: "700",
+                  fontSize: 11,
                   color: colors.select,
                   letterSpacing: 1.2,
                 }}
@@ -2849,7 +2881,7 @@ function TextSizeSlider({
   }, [indexFromX, activeIndex, stepCount, onChange]);
 
   return (
-    <View style={{ marginTop: 14 }}>
+    <View style={{ marginTop: 16 }}>
       {/* End-label bookends — tiny "Aa" on the left to indicate
           "smaller", larger "Aa" on the right to indicate "bigger".
           Same visual idiom Apple Books / Hallow use. */}
@@ -2858,14 +2890,15 @@ function TextSizeSlider({
           flexDirection: "row",
           alignItems: "flex-end",
           justifyContent: "space-between",
-          paddingHorizontal: 2,
-          marginBottom: 10,
+          paddingHorizontal: 4,
+          marginBottom: 8,
           height: 22,
         }}
       >
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             fontSize: 13,
             lineHeight: 16,
             color: colors.inkSubtle,
@@ -2875,7 +2908,8 @@ function TextSizeSlider({
         </Text>
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             fontSize: 21,
             lineHeight: 24,
             color: colors.inkSubtle,
@@ -3033,8 +3067,8 @@ function GoalPopover({
       >
         <View
           style={{
-            paddingHorizontal: 18,
-            paddingTop: 18,
+            paddingHorizontal: 16,
+            paddingTop: 16,
             paddingBottom: 16,
           }}
         >
@@ -3047,8 +3081,9 @@ function GoalPopover({
           >
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                fontSize: 10.5,
+                fontFamily: "System",
+                fontWeight: "700",
+                fontSize: 11,
                 color: colors.inkSubtle,
                 letterSpacing: 2.5,
                 textTransform: "uppercase",
@@ -3058,7 +3093,8 @@ function GoalPopover({
             </Text>
             <Text
               style={{
-                fontFamily: "PlusJakartaSans_500Medium",
+                fontFamily: "System",
+                fontWeight: "500",
                 fontSize: 11,
                 color: colors.inkSubtle,
               }}
@@ -3072,7 +3108,7 @@ function GoalPopover({
               backgroundColor: glassTrack,
               borderRadius: 3,
               overflow: "hidden",
-              marginTop: 12,
+              marginTop: 16,
             }}
           >
             <View
@@ -3085,11 +3121,12 @@ function GoalPopover({
           </View>
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_500Medium",
+              fontFamily: "System",
+              fontWeight: "500",
               fontSize: 12,
               color: colors.inkMuted,
               lineHeight: 18,
-              marginTop: 10,
+              marginTop: 8,
             }}
           >
             {reached
@@ -3101,7 +3138,7 @@ function GoalPopover({
           style={{
             height: StyleSheet.hairlineWidth,
             backgroundColor: glassHairline,
-            marginHorizontal: 14,
+            marginHorizontal: 16,
           }}
         />
         <Pressable
@@ -3111,8 +3148,8 @@ function GoalPopover({
           }}
           style={({ pressed }) => ({
             opacity: pressed ? 0.7 : 1,
-            paddingHorizontal: 18,
-            paddingVertical: 14,
+            paddingHorizontal: 16,
+            paddingVertical: 16,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
@@ -3120,7 +3157,8 @@ function GoalPopover({
         >
           <Text
             style={{
-              fontFamily: "PlusJakartaSans_700Bold",
+              fontFamily: "System",
+              fontWeight: "700",
               fontSize: 14,
               color: colors.ink,
             }}
@@ -3252,13 +3290,13 @@ function SelectionBar({
             alignItems: "center",
             justifyContent: "space-between",
             paddingHorizontal: ROW_INSET,
-            paddingTop: 12,
-            paddingBottom: 10,
+            paddingTop: 16,
+            paddingBottom: 8,
           }}
         >
           <Text
             className="text-ink text-[13px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {count} verse{count === 1 ? "" : "s"} selected
           </Text>
@@ -3268,7 +3306,7 @@ function SelectionBar({
             accessibilityLabel="Exit selection"
             style={({ pressed }) => ({
               opacity: pressed ? 0.6 : 1,
-              paddingHorizontal: 10,
+              paddingHorizontal: 8,
               paddingVertical: 4,
               borderRadius: 999,
               borderColor: colors.border,
@@ -3277,7 +3315,7 @@ function SelectionBar({
           >
             <Text
               className="text-ink-muted text-[11px] tracking-[1.5px]"
-              style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+              style={{ fontFamily: "System", fontWeight: "700" }}
             >
               DONE
             </Text>
@@ -3294,7 +3332,7 @@ function SelectionBar({
             flexDirection: "row",
             alignItems: "center",
             paddingHorizontal: ROW_INSET,
-            paddingBottom: 12,
+            paddingBottom: 16,
           }}
         >
           <ColorSwatch
@@ -3451,7 +3489,8 @@ function SelectionAction({
         {icon}
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
             fontSize: 13,
             color: colors.ink,
             marginLeft: 8,
@@ -3526,64 +3565,55 @@ function ContentsModal({
   const book = findBookById(bookId);
 
   return (
-    <Modal
+    <AppleSheet
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      onClose={onClose}
+      // Two detents: half-screen lets the reader peek the
+      // chapter list without losing context, full lets them
+      // scan a long book (Psalms = 150 chapters) without
+      // micro-scrolling. Apple Books uses the same pattern.
+      detents={[0.6, 1]}
+      backgroundColor={colors.bg}
+      scrollable
     >
-      <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
-        <View className="flex-row items-center px-4 pt-2 pb-3">
-          <View className="flex-row items-center flex-1">
-            {book ? (
-              <View
-                style={{
-                  width: 36,
-                  height: 48,
-                  borderRadius: 4,
-                  overflow: "hidden",
-                  marginRight: 12,
-                }}
-              >
-                <BookCover book={book} variant="thumb" />
-              </View>
-            ) : null}
-            <View className="flex-1">
-              <Text
-                className="text-ink text-[15px]"
-                style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-                numberOfLines={1}
-              >
-                {bookName}
-              </Text>
-              <Text
-                className="text-ink-subtle text-[11.5px] mt-0.5"
-                style={{ fontFamily: "PlusJakartaSans_500Medium" }}
-              >
-                Chapter {currentChapter} of {totalChapters}
-              </Text>
+      <View>
+        {/* Header — book cover thumb + name + chapter counter.
+            Grabber handles dismissal; no X needed. */}
+        <View className="flex-row items-center px-4 pt-3 pb-3">
+          {book ? (
+            <View
+              style={{
+                width: 36,
+                height: 48,
+                borderRadius: 4,
+                overflow: "hidden",
+                marginRight: 16,
+              }}
+            >
+              <BookCover book={book} variant="thumb" />
             </View>
+          ) : null}
+          <View className="flex-1">
+            <Text
+              className="text-ink text-[15px]"
+              style={{ fontFamily: "System", fontWeight: "700" }}
+              numberOfLines={1}
+            >
+              {bookName}
+            </Text>
+            <Text
+              className="text-ink-subtle text-[11.5px] mt-0.5"
+              style={{ fontFamily: "System", fontWeight: "500" }}
+            >
+              Chapter {currentChapter} of {totalChapters}
+            </Text>
           </View>
-          <Pressable
-            onPress={onClose}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Close contents"
-            className="w-10 h-10 rounded-full items-center justify-center"
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-          >
-            <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M6 6l12 12M18 6l-12 12"
-                stroke={colors.ink}
-                strokeWidth={2}
-                strokeLinecap="round"
-              />
-            </Svg>
-          </Pressable>
         </View>
 
         <ScrollView
+          // scrollable=true on AppleSheet pins this ScrollView
+          // to fill the remaining sheet space and forwards
+          // momentum into the sheet's drag-to-resize gesture.
           contentContainerStyle={{ paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
         >
@@ -3609,9 +3639,8 @@ function ContentsModal({
                   <Text
                     className="text-ink text-[15px] flex-1"
                     style={{
-                      fontFamily: current
-                        ? "PlusJakartaSans_700Bold"
-                        : "PlusJakartaSans_500Medium",
+                      fontFamily: "System",
+                      fontWeight: current ? "700" : "500",
                     }}
                   >
                     Chapter {c}
@@ -3623,13 +3652,13 @@ function ContentsModal({
                         height: 6,
                         borderRadius: 3,
                         backgroundColor: colors.primary,
-                        marginRight: 12,
+                        marginRight: 16,
                       }}
                     />
                   ) : null}
                   <Text
                     className="text-ink-subtle text-[13px]"
-                    style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+                    style={{ fontFamily: "System", fontWeight: "500" }}
                   >
                     {c}
                   </Text>
@@ -3638,8 +3667,8 @@ function ContentsModal({
             );
           })}
         </ScrollView>
-      </SafeAreaView>
-    </Modal>
+      </View>
+    </AppleSheet>
   );
 }
 
@@ -3680,20 +3709,20 @@ function GoalToast({
           borderColor: colors.border,
           borderWidth: 1,
           borderRadius: 999,
-          paddingHorizontal: 14,
-          paddingVertical: 9,
+          paddingHorizontal: 16,
+          paddingVertical: 8,
         }}
       >
         <CheckBadgeIcon />
         <Text
           className="text-ink text-[13px] ml-2"
-          style={{ fontFamily: "PlusJakartaSans_600SemiBold" }}
+          style={{ fontFamily: "System", fontWeight: "600" }}
         >
           Today&apos;s reading goal achieved
         </Text>
         <Text
           className="text-ink-subtle text-[11.5px] ml-2"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          style={{ fontFamily: "System", fontWeight: "500" }}
         >
           · {goalMinutes} min
         </Text>
@@ -3956,7 +3985,7 @@ function NotFound({ message }: { message: string }) {
       <View className="flex-1 items-center justify-center px-6">
         <Text
           className="text-ink text-[18px] text-center"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           {message}
         </Text>
@@ -3966,7 +3995,7 @@ function NotFound({ message }: { message: string }) {
         >
           <Text
             className="text-primary-fg text-[13px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+            style={{ fontFamily: "System", fontWeight: "700" }}
           >
             Go back
           </Text>

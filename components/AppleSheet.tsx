@@ -1,4 +1,12 @@
-import { forwardRef, type ForwardRefExoticComponent, type ReactNode, type RefAttributes } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  type ForwardRefExoticComponent,
+  type ReactNode,
+  type RefAttributes,
+} from "react";
 import { type ColorValue, View, type ViewStyle } from "react-native";
 import {
   TrueSheet,
@@ -83,6 +91,32 @@ export type AppleSheetProps = Omit<
    * (which on iOS 26 picks up Liquid Glass).
    */
   backgroundColor?: ColorValue | null;
+  /**
+   * Controlled-mode visibility flag. When provided, `AppleSheet`
+   * presents and dismisses itself in lock-step with this prop
+   * — flip to `true` to slide up, `false` to dismiss. This is
+   * what lets the dozen `<XxxModal visible={open} ... />`
+   * patterns in the app keep their existing call shape after
+   * the swap; the underlying TrueSheet stays purely imperative
+   * but the bridge useEffect below translates declarative state
+   * into present/dismiss calls.
+   *
+   * Leave undefined to use the imperative API
+   * (`<AppleSheet name="x">` + `AppleSheet.present('x')`) which
+   * is preferable for one-shot dialogs that don't need their
+   * open-state mirrored in React state.
+   */
+  visible?: boolean;
+  /**
+   * Fired any time the sheet finishes dismissing — whether by
+   * swipe-to-dismiss, grabber drag, the OS hardware back, or a
+   * `visible` flip from the parent. Wire this to your parent
+   * setter (e.g. `setOpen(false)`) so React state stays in sync
+   * after user-driven dismisses. Without this, swiping the
+   * sheet away would close the UI but leave `visible=true` in
+   * the parent, blocking subsequent opens.
+   */
+  onClose?: () => void;
 };
 
 /**
@@ -107,6 +141,9 @@ const AppleSheetInner = forwardRef<TrueSheet, AppleSheetProps>(
       detents = ["auto"],
       grabber = true,
       backgroundColor,
+      visible,
+      onClose,
+      onDidDismiss,
       ...rest
     },
     ref,
@@ -121,15 +158,72 @@ const AppleSheetInner = forwardRef<TrueSheet, AppleSheetProps>(
         ? undefined
         : (backgroundColor ?? colors.surface);
 
+    // ─── Controlled-mode bridge ─────────────────────────────────
+    //
+    // TrueSheet is intrinsically imperative — there's no `visible`
+    // prop on the underlying native view; instead the JS class
+    // exposes `present()` / `dismiss()` instance methods. To let
+    // the existing controlled-component callers in Closer keep
+    // their `<XxxModal visible={open} onClose={...} />` shape, we
+    // hold an INTERNAL ref and:
+    //
+    //   1. forward that ref out via useImperativeHandle so callers
+    //      that DO want the imperative handle still get the full
+    //      TrueSheet API (present / dismiss / resize). This means
+    //      the existing `AppleSheet.present('name')` static path
+    //      keeps working alongside controlled mode.
+    //
+    //   2. useEffect on `visible` calls present()/dismiss() on the
+    //      internal ref. Skipping the very first render in the
+    //      `false` case prevents a spurious dismiss-when-not-open
+    //      no-op on mount (TrueSheet logs about it).
+    //
+    //   3. bridge `onDidDismiss` back to the parent's `onClose`
+    //      so swipe-to-dismiss, grabber-drag, and OS back-press
+    //      all sync React state back to `visible=false`. We chain
+    //      the caller's own `onDidDismiss` if they passed one so
+    //      this stays additive, not replacing.
+    const internalRef = useRef<TrueSheet | null>(null);
+    useImperativeHandle(ref, () => internalRef.current as TrueSheet);
+
+    const isControlled = visible !== undefined;
+    const hasPresentedRef = useRef(false);
+    useEffect(() => {
+      if (!isControlled) return;
+      const node = internalRef.current;
+      if (!node) return;
+      if (visible) {
+        // Ignore the rejection — TrueSheet rejects with a benign
+        // "already presented" if a fast double-render hits the
+        // present path twice.
+        node.present().catch(() => {});
+        hasPresentedRef.current = true;
+      } else if (hasPresentedRef.current) {
+        // Only dismiss if we ever presented — avoids the noisy
+        // "no presented sheet to dismiss" warning on initial mount
+        // with `visible={false}` (the common parent default).
+        node.dismiss().catch(() => {});
+        hasPresentedRef.current = false;
+      }
+    }, [isControlled, visible]);
+
     return (
       <TrueSheet
-        ref={ref}
+        ref={internalRef}
         detents={detents}
         grabber={grabber}
         cornerRadius={28}
         backgroundColor={resolvedBg}
         dimmed
         draggable
+        onDidDismiss={(event) => {
+          // Track presented-state so a subsequent `visible=false`
+          // flip after a swipe-to-dismiss doesn't try to
+          // double-dismiss.
+          hasPresentedRef.current = false;
+          onClose?.();
+          onDidDismiss?.(event);
+        }}
         {...rest}
       >
         {children}

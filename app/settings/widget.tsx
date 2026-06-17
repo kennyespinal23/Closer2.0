@@ -1,6 +1,7 @@
 import { Linking, Text, View } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
 import {
+  SettingsInfoBanner,
   SettingsLinkRow,
   SettingsScaffold,
   SettingsSection,
@@ -26,33 +27,16 @@ import { useColors } from "@/state/theme";
 export default function WidgetScreen() {
   return (
     <SettingsScaffold title="Home Screen Widget">
-      {/* ─── Promise ─────────────────────────────────────────────
-          Frames the widget honestly: it isn't shipped yet, here's
-          what it will look like, and here's how to be notified. */}
-      <View className="px-6 mt-2">
-        <View className="rounded-2xl border border-border bg-surface px-5 py-6">
-          <Text
-            className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            Coming Soon
-          </Text>
-          <Text
-            className="text-ink text-[20px] leading-[26px] tracking-[-0.2px]"
-            style={{ fontFamily: "PlusJakartaSans_700Bold" }}
-          >
-            Today&apos;s verse,{"\n"}on your home screen.
-          </Text>
-          <Text
-            className="text-ink-muted text-[13.5px] leading-[20px] mt-2.5"
-            style={{ fontFamily: "PlusJakartaSans_400Regular" }}
-          >
-            A small widget that puts today&apos;s scripture and a tap-to-open
-            shortcut right next to your apps. Lock-screen and home-screen
-            sizes, refreshed each morning.
-          </Text>
-        </View>
-      </View>
+      {/* Frames the widget honestly: it isn't shipped yet, here's
+          what it will look like, and here's how to be notified.
+          Uses the shared SettingsInfoBanner with the "Coming Soon"
+          eyebrow so the framing matches Translation / Privacy /
+          Account / Help. */}
+      <SettingsInfoBanner
+        eyebrow="Coming Soon"
+        title="Today's verse, on your home screen."
+        body="A small widget that puts today's scripture and a tap-to-open shortcut right next to your apps. Lock-screen and home-screen sizes, refreshed each morning."
+      />
 
       {/* ─── Preview ─────────────────────────────────────────────
           Static SVG mock of the planned widget. Lives in its own
@@ -60,15 +44,15 @@ export default function WidgetScreen() {
           interactive thing. */}
       <View className="px-6 mt-7 items-center">
         <Text
-          className="text-ink-subtle text-[10.5px] tracking-[2.5px] uppercase mb-3"
-          style={{ fontFamily: "PlusJakartaSans_700Bold" }}
+          className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+          style={{ fontFamily: "System", fontWeight: "700" }}
         >
           Preview
         </Text>
         <WidgetMock />
         <Text
           className="text-ink-subtle text-[11.5px] mt-3"
-          style={{ fontFamily: "PlusJakartaSans_500Medium" }}
+          style={{ fontFamily: "System", fontWeight: "500" }}
         >
           Approximate — final design may differ.
         </Text>
@@ -124,10 +108,11 @@ function WidgetMock() {
         <Text
           style={{
             color: colors.inkSubtle,
-            fontSize: 9.5,
+            fontSize: 11,
             letterSpacing: 2.2,
             textTransform: "uppercase",
-            fontFamily: "PlusJakartaSans_700Bold",
+            fontFamily: "System",
+            fontWeight: "700",
           }}
         >
           Today
@@ -138,7 +123,8 @@ function WidgetMock() {
             fontSize: 14,
             lineHeight: 19,
             marginTop: 6,
-            fontFamily: "PlusJakartaSans_500Medium",
+            fontFamily: "System",
+            fontWeight: "500",
           }}
         >
           &ldquo;Draw near to God, and he will draw near to you.&rdquo;
@@ -149,7 +135,8 @@ function WidgetMock() {
           style={{
             color: colors.inkMuted,
             fontSize: 11,
-            fontFamily: "PlusJakartaSans_600SemiBold",
+            fontFamily: "System",
+            fontWeight: "600",
           }}
         >
           James 4:8

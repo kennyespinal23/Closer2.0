@@ -10,11 +10,12 @@
     "runtimeVersion": "exposdk:54.0.0",
     "splash": {
       "resizeMode": "contain",
-      "backgroundColor": "#141416"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.espinalcapital.closer",
+      "appleTeamId": "7ZKDS4X5B9",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -31,7 +32,22 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "16.0"
+          }
+        }
+      ],
+      [
+        "react-native-device-activity",
+        {
+          "appleTeamId": "7ZKDS4X5B9",
+          "appGroup": "group.com.espinalcapital.closer"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

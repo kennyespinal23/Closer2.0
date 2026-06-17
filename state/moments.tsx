@@ -48,8 +48,9 @@ import { removeKey, STORAGE_KEYS, usePersistence } from "@/lib/storage";
  *     `lib/notifications.ts`.
  *   • Record completions. The sermon flow continues to call
  *     `useProgress().recordCompletion(typeId, { title, pastor })`
- *     — the title comes from `useMoments().todaysMoment.title`
- *     and the pastor field carries the moment's `voice`.
+ *     — the title comes from `useMoments().todaysMoment.title`.
+ *     The pastor field is intentionally always empty string since
+ *     the June 2026 schema dropped the `voice` attribution.
  */
 
 // ─────────────────────────────────────────────────────────────────

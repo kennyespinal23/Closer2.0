@@ -148,7 +148,8 @@ export function ArticleHero({
       <View className="flex-1 items-center justify-center">
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_800ExtraBold",
+            fontFamily: "System",
+            fontWeight: "800",
             fontSize: Math.round(height * 0.55),
             lineHeight: Math.round(height * 0.55),
             color: insight.palette.ink,
@@ -164,8 +165,9 @@ export function ArticleHero({
       <View style={{ position: "absolute", bottom: 12, left: 14 }}>
         <Text
           style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            fontSize: 9.5,
+            fontFamily: "System",
+            fontWeight: "700",
+            fontSize: 11,
             letterSpacing: 2.5,
             color: insight.palette.ink,
             opacity: 0.5,

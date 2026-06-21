@@ -11,11 +11,10 @@ import { STORAGE_KEYS, usePersistence } from "@/lib/storage";
 /**
  * Developer Tools provider.
  *
- * The Today screen ships with a small panel of internal QA shortcuts
- * (Next Sermon, Preview Shield, Start/End Dev Session, Reset / Restart
- * App). In a local-dev (`__DEV__`) build that panel renders
- * automatically. In a production-channel build it's hidden so end
- * users don't see it.
+ * The Profile tab ships with a small Developer section of internal
+ * QA shortcuts (Next Sermon, Reset App, Restart App). In a local-dev
+ * (`__DEV__`) build that section renders automatically. In a
+ * production-channel build it's hidden so end users don't see it.
  *
  * That worked great until the team needed to QA a production-channel
  * install (TestFlight / internal distribution) — at which point there

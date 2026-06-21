@@ -4,7 +4,7 @@ export const SERMONS = [
     type: `Daily Church`,
     title: `When God Feels Silent`,
     scripture: `John 11:25 - I am the resurrection and the life.`,
-    illustrationPrompt: `sunrise field`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `There's a kind of silence that's hard to explain.\n\nYou're reaching toward God and He's not reaching back.\n\nAnd the longer it goes the more you start to wonder.`,
     panels: [
       {
@@ -82,7 +82,7 @@ In Jesus' name, Amen.`,
     type: `Daily Church`,
     title: `I Don't Know How To Pray Anymore`,
     scripture: `Romans 8:26 - The Spirit himself intercedes for us through wordless groans.`,
-    illustrationPrompt: `quiet morning light`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `Most people think prayer is supposed to feel like something.\n\nLike there's a right way to do it.\n\nThere isn't.`,
     panels: [
       {
@@ -164,7 +164,7 @@ In Jesus' name, Amen.`,
     type: `Jesus Only`,
     title: `He Stopped For One Person`,
     scripture: `Luke 19:5 - Zacchaeus come down immediately, I must stay at your house today.`,
-    illustrationPrompt: `tree branches sunlight`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `There are people who stand at the back of every room.\n\nNot because there's no space at the front.\n\nBecause they decided the front wasn't for them.`,
     panels: [
       {
@@ -334,7 +334,7 @@ In Jesus' name, Amen.`,
     type: `Character Studies`,
     title: `Peter — The Man Who Failed Out Loud`,
     scripture: `John 21:19 - Follow me.`,
-    illustrationPrompt: `footpath beach`,
+    illustrationPrompt: `ocean sunrise`,
     teaser: `Most people fail quietly.\n\nThey find a way to keep it private.\n\nPeter failed in front of everyone.`,
     panels: [
       {
@@ -418,7 +418,7 @@ In Jesus' name, Amen.`,
     type: `Misconceptions`,
     title: `You Have To Fix Yourself Before Coming To God`,
     scripture: `Luke 15:20 - While he was still a long way off his father saw him and ran to him.`,
-    illustrationPrompt: `open road sunset`,
+    illustrationPrompt: `sunset sky`,
     teaser: `Somewhere along the way most people picked up the same idea.\n\nGet yourself together first. Then come to God.\n\nIt has kept more people from God than almost anything else.`,
     panels: [
       {
@@ -506,7 +506,7 @@ In Jesus' name, Amen.`,
     type: `Deep Verse Studies`,
     title: `Plans in the Middle of Babylon`,
     scripture: `Jeremiah 29:11 - For I know the plans I have for you, plans to give you hope and a future.`,
-    illustrationPrompt: `green field horizon`,
+    illustrationPrompt: `mountains sky`,
     teaser: `You've seen this verse before.\n\nOn a graduation card. On a coffee mug.\n\nMost people have missed what God was actually saying.`,
     panels: [
       {
@@ -592,7 +592,7 @@ In Jesus' name, Amen.`,
     type: `Hymn Reflection`,
     title: `It Is Well With My Soul`,
     scripture: `Philippians 4:7 - The peace of God will guard your hearts and your minds.`,
-    illustrationPrompt: `calm ocean water`,
+    illustrationPrompt: `blue ocean sky`,
     teaser: `When peace like a river attendeth my way,\nWhen sorrows like sea billows roll —\nWhatever my lot, Thou hast taught me to say,\nIt is well with my soul.`,
     panels: [
       {
@@ -673,7 +673,7 @@ In Jesus' name, Amen.`,
     type: `Prayer Nights`,
     title: `Be Still`,
     scripture: `Psalm 46:10 - Be still and know that I am God.`,
-    illustrationPrompt: `still lake reflection`,
+    illustrationPrompt: `night sky stars`,
     teaser: `This verse gets put on candles and bath salts.\n\nBut it was written in the middle of a catastrophe.\n\nNations in uproar. Kingdoms falling. The earth giving way.`,
     panels: [
       {
@@ -728,14 +728,14 @@ And knowing that changes what the chaos is.
         id: 4,
         label: `The Landing`,
         isPrayer: false,
-        body: `Tonight, [name], you don't have to figure anything out.
+        body: `Today, [name], you don't have to figure anything out.
 
-*Be still* was spoken into a world falling apart — nations raging, mountains being thrown into the sea — and it still meant the same thing it means tonight: stop gripping, and let Him be God in it.
+*Be still* was spoken into a world falling apart — nations raging, mountains being thrown into the sea — and it still means the same thing it means today: stop gripping, and let Him be God in it.
 
 You don't have to have the answers.
 
 *He's in the room.*`,
-        practiceToday: `Remember [name] — be still was spoken into catastrophe. Not calm.\n\nTonight — put the phone down for five minutes. No music. No noise. Just stillness.\n\nLet Him be God in it.`,
+        practiceToday: `Remember [name] — be still was spoken into catastrophe. Not calm.\n\nToday — put the phone down for five minutes. No music. No noise. Just stillness.\n\nLet Him be God in it.`,
       },
       {
         id: 5,
@@ -745,7 +745,7 @@ You don't have to have the answers.
 
 Thank You that You don't ask me to have it together before You show up.
 
-Tonight I choose to be still.
+Today I choose to be still.
 
 Not because things are calm — but because You are here.
 
@@ -759,7 +759,7 @@ In Jesus' name, Amen.`,
     type: `Jesus Only`,
     title: `He Knew Her Name`,
     scripture: `John 20:16 - Jesus said to her, Mary.`,
-    illustrationPrompt: `garden sunrise`,
+    illustrationPrompt: `sunrise sky`,
     teaser: `Mary went to the tomb before sunrise.\n\nNot because she expected anything.\n\nBecause she had nowhere else to go.`,
     panels: [
       {
@@ -847,7 +847,7 @@ In Jesus' name, Amen.`,
     type: `Deep Verse Studies`,
     title: `The Yoke He Actually Offers`,
     scripture: `Matthew 11:28 - Come to me all you who are weary and I will give you rest.`,
-    illustrationPrompt: `open meadow`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `Most people hear this verse and picture relief.\n\nLike God is offering to take everything away.\n\nHe's not. He's offering something better.`,
     panels: [
       {
@@ -931,7 +931,7 @@ In Jesus' name, Amen.`,
     type: `Character Studies`,
     title: `David — The Worship Leader Who Fell Apart`,
     scripture: `Psalm 51:10 - Create in me a clean heart, O God.`,
-    illustrationPrompt: `clear blue sky`,
+    illustrationPrompt: `mountains sunrise`,
     teaser: `Most people know the end of David's story.\n\nThe restoration. The redemption.\n\nBut we skip the chapters that explain what that actually cost him.`,
     panels: [
       {
@@ -1013,7 +1013,7 @@ In Jesus' name, Amen.`,
     type: `Misconceptions`,
     title: `Doubt Means Weak Faith`,
     scripture: `Mark 9:23 - Everything is possible for one who believes.`,
-    illustrationPrompt: `mountain sunrise`,
+    illustrationPrompt: `blue sky`,
     teaser: `Most people treat doubt like a secret.\n\nSomething to overcome quietly before anyone notices.\n\nThe Bible treats it very differently.`,
     panels: [
       {
@@ -1095,7 +1095,7 @@ In Jesus' name, Amen.`,
     type: `Daily Church`,
     title: `What Shame Actually Does`,
     scripture: `Genesis 3:9 - The Lord God called to the man, Where are you?`,
-    illustrationPrompt: `forest light rays`,
+    illustrationPrompt: `green forest trees`,
     teaser: `The first thing shame ever did was make someone hide.\n\nAnd it's been doing the same thing ever since.`,
     panels: [
       {
@@ -1181,7 +1181,7 @@ In Jesus' name, Amen.`,
     type: `Jesus Only`,
     title: `The Touch Before the Healing`,
     scripture: `Mark 1:41 - Jesus reached out his hand and touched the man.`,
-    illustrationPrompt: `hands sunlight`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `The man with leprosy didn't ask to be touched.\n\nHe asked to be healed.\n\nJesus did both. But He touched him first.`,
     panels: [
       {
@@ -1273,7 +1273,7 @@ In Jesus' name, Amen.`,
     type: `Hymn Reflection`,
     title: `Amazing Grace`,
     scripture: `Ephesians 2:8 - For it is by grace you have been saved through faith.`,
-    illustrationPrompt: `golden field wheat`,
+    illustrationPrompt: `golden field sky`,
     teaser: `Amazing grace, how sweet the sound,\nThat saved a wretch like me.\nThe man who wrote those words knew exactly what he was.`,
     panels: [
       {
@@ -1361,7 +1361,7 @@ In Jesus' name, Amen.`,
     type: `Deep Verse Studies`,
     title: `What Grace Actually Means`,
     scripture: `Ephesians 2:8-9 - It is by grace you have been saved, it is the gift of God.`,
-    illustrationPrompt: `sunbeam clouds`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `Grace is one of the most used words in Christianity.\n\nAnd one of the least understood.\n\nIf you really understood it — it would change everything about how you come to God.`,
     panels: [
       {
@@ -1445,7 +1445,7 @@ In Jesus' name, Amen.`,
     type: `Questions`,
     title: `Why Does God Feel Distant Sometimes?`,
     scripture: `Psalm 22:24 - He has listened to his cry for help.`,
-    illustrationPrompt: `dawn horizon`,
+    illustrationPrompt: `night sky stars`,
     teaser: `This question has been asked by more people than will ever admit it.\n\nIncluding Jesus.\n\nFrom the cross.`,
     panels: [
       {
@@ -1527,7 +1527,7 @@ In Jesus' name, Amen.`,
     type: `Daily Church`,
     title: `The Thing About Starting Over`,
     scripture: `Lamentations 3:22-23 - His mercies are new every morning.`,
-    illustrationPrompt: `sunrise window`,
+    illustrationPrompt: `sunrise sky`,
     teaser: `Most people treat a fresh start like something they have to earn.\n\nLike you have to do enough right before you get to begin again.\n\nThat's not how morning works.`,
     panels: [
       {
@@ -1617,7 +1617,7 @@ In Jesus' name, Amen.`,
     type: `Prayer Nights`,
     title: `When Words Don't Come`,
     scripture: `Psalm 62:1 - Truly my soul finds rest in God.`,
-    illustrationPrompt: `peaceful lake`,
+    illustrationPrompt: `night sky stars`,
     teaser: `Some nights you don't have a prayer.\n\nNot because nothing is wrong.\n\nBecause everything is — and words don't reach that far.`,
     panels: [
       {
@@ -1670,14 +1670,14 @@ Sitting down in His presence the way you sit down at the end of a long day.
         id: 4,
         label: `The Landing`,
         isPrayer: false,
-        body: `Tonight, [name], you don't have to say anything.
+        body: `Today, [name], you don't have to say anything.
 
 David wrote *my soul finds rest in God alone* while being hunted by his own son — not a victory psalm, a stillness psalm, written by someone who had run out of words and brought his exhausted self instead.
 
 **Just come.**
 
-*Rest in God alone. That's enough for tonight.*`,
-        practiceToday: `Remember [name] — David found rest not words. Rest was enough.\n\nTonight — don't try to pray. Just sit. Two minutes. Quiet.\n\nLet your presence be the prayer.`,
+*Rest in God alone. That's enough for today.*`,
+        practiceToday: `Remember [name] — David found rest not words. Rest was enough.\n\nToday — don't try to pray. Just sit. Two minutes. Quiet.\n\nLet your presence be the prayer.`,
       },
       {
         id: 5,
@@ -1687,7 +1687,7 @@ David wrote *my soul finds rest in God alone* while being hunted by his own son 
 
 Thank You that rest in You is a form of prayer.
 
-I don't have words tonight.
+I don't have words today.
 
 But I'm here.
 
@@ -1701,7 +1701,7 @@ In Jesus' name, Amen.`,
     type: `Daily Church`,
     title: `The Waiting Room`,
     scripture: `Isaiah 40:31 - Those who hope in the Lord will soar on wings like eagles.`,
-    illustrationPrompt: `eagle flying sky`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `Nobody wants to be in a waiting room.\n\nBut some of the most important things in scripture happened in the waiting.\n\nNot after it. In it.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Nobody wants to be in a waiting room.
@@ -1759,7 +1759,7 @@ In Jesus' name, Amen.` },
     type: `Jesus Only`,
     title: `He Wept`,
     scripture: `John 11:35 - Jesus wept.`,
-    illustrationPrompt: `soft rain window`,
+    illustrationPrompt: `grey clouds sky`,
     teaser: `The shortest verse in the Bible.\n\nTwo words.\n\nAnd they might be the most important two words in scripture for anyone who has wondered if God understands what they're going through.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `The shortest verse in the Bible.
@@ -1819,7 +1819,7 @@ In Jesus' name, Amen.` },
     type: `Misconceptions`,
     title: `God Helps Those Who Help Themselves`,
     scripture: `2 Corinthians 12:9 - My power is made perfect in weakness.`,
-    illustrationPrompt: `sunlight through clouds`,
+    illustrationPrompt: `sunlight clouds`,
     teaser: `Most people think this is in the Bible.\n\nIt isn't.\n\nAnd what the Bible actually says is almost exactly the opposite.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Most people think this is in the Bible.
@@ -1879,7 +1879,7 @@ In Jesus' name, Amen.` },
     type: `Hymn Reflection`,
     title: `Great Is Thy Faithfulness`,
     scripture: `Lamentations 3:22-23 - His mercies are new every morning, great is your faithfulness.`,
-    illustrationPrompt: `morning sunrise field`,
+    illustrationPrompt: `sunrise mountains`,
     teaser: `Great is Thy faithfulness, O God my Father,\nThere is no shadow of turning with Thee.\nThomas Chisholm wrote those words from the most ordinary kind of hard life.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -1938,7 +1938,7 @@ In Jesus' name, Amen.` },
     type: `Letters Grateful`,
     title: `I Don't Know How To Explain What Happened This Year`,
     scripture: `Psalm 126:3 - The Lord has done great things for us, and we are filled with joy.`,
-    illustrationPrompt: `golden sunset sky`,
+    illustrationPrompt: `sunset sky`,
     teaser: `Dear God,\n\nI don't know how to explain what happened this year.\n\nNot because nothing happened. Because what happened doesn't fit neatly into a sentence.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Dear God,
@@ -2002,7 +2002,7 @@ In Jesus' name, Amen.` },
     type: `Deep Verse Studies`,
     title: `Be Still and Know — What God Was Actually Saying`,
     scripture: `Psalm 46:10 - Be still and know that I am God.`,
-    illustrationPrompt: `calm water sunset`,
+    illustrationPrompt: `ocean clouds`,
     teaser: `Four words that have been on more mugs than almost any other verse.\n\nBut they were spoken into catastrophe — not calm.\n\nAnd knowing that changes everything about what they mean.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `*Be still and know that I am God.*
@@ -2064,7 +2064,7 @@ In Jesus' name, Amen.` },
     type: `Character Studies`,
     title: `Ruth — The Woman Who Stayed`,
     scripture: `Ruth 1:16 - Where you go I will go, your God will be my God.`,
-    illustrationPrompt: `two paths field`,
+    illustrationPrompt: `green field path`,
     teaser: `Ruth had every reason to go home.\n\nHer husband was dead. Her options were limited. Her mother-in-law told her to leave.\n\nShe stayed anyway.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Ruth had every reason to go home.
@@ -2124,7 +2124,7 @@ In Jesus' name, Amen.` },
     type: `Questions`,
     title: `Is God Actually Good?`,
     scripture: `Psalm 34:8 - Taste and see that the Lord is good.`,
-    illustrationPrompt: `orchard fruit trees`,
+    illustrationPrompt: `blue sky trees`,
     teaser: `This is the question most people are afraid to ask.\n\nDavid asked it. And his answer came from experience — not theology.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `This is the question most people are afraid to ask.
@@ -2186,7 +2186,7 @@ In Jesus' name, Amen.` },
     type: `Daily Church`,
     title: `You Are Not Too Far Gone`,
     scripture: `Luke 15:4 - Does he not leave the ninety nine and go after the lost sheep.`,
-    illustrationPrompt: `sheep green hills`,
+    illustrationPrompt: `green hills sky`,
     teaser: `There is a version of this message most people have heard.\n\nGod loves you.\n\nBut there is a more specific version. One that is harder to believe.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `There is a version of this message most people have heard.
@@ -2250,7 +2250,7 @@ In Jesus' name, Amen.` },
     type: `Jesus Only`,
     title: `He Saw Zacchaeus First`,
     scripture: `Luke 19:5 - Zacchaeus come down immediately, I must stay at your house today.`,
-    illustrationPrompt: `sycamore tree light`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `Zacchaeus climbed the tree because he didn't think he could get close.\n\nHe was right about the crowd.\n\nHe was wrong about Jesus.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Zacchaeus climbed the tree because he didn't think he could get close.
@@ -2310,7 +2310,7 @@ In Jesus' name, Amen.` },
     type: `Deep Verse Studies`,
     title: `I Can Do All Things — What Paul Actually Meant`,
     scripture: `Philippians 4:13 - I can do all this through him who gives me strength.`,
-    illustrationPrompt: `mountain peak sunrise`,
+    illustrationPrompt: `mountains clouds`,
     teaser: `This verse gets tattooed on arms and printed on gym walls.\n\nBut Paul wrote it from prison.\n\nAnd he wasn't talking about winning.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `*I can do all things through Christ who strengthens me.*
@@ -2370,7 +2370,7 @@ In Jesus' name, Amen.` },
     type: `Character Studies`,
     title: `Elijah — The Prophet Who Hit a Wall`,
     scripture: `1 Kings 19:7 - Get up and eat, the journey is too much for you.`,
-    illustrationPrompt: `desert sunrise`,
+    illustrationPrompt: `desert sky sunrise`,
     teaser: `The day before this prayer Elijah called fire down from heaven.\n\nThe day of this prayer he was under a tree asking to die.\n\nGod's response was not a rebuke.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -2436,7 +2436,7 @@ In Jesus' name, Amen.` },
     type: `Misconceptions`,
     title: `Christians Should Always Be Happy`,
     scripture: `Psalm 62:8 - Trust in him at all times, God is our refuge.`,
-    illustrationPrompt: `open sky clouds`,
+    illustrationPrompt: `night sky clouds`,
     teaser: `Somewhere the idea got established that faith produces constant happiness.\n\nPsalm 88 was written by a man of deep faith.\n\nIt doesn't end well.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Somewhere the idea got established that faith produces constant happiness.
@@ -2498,7 +2498,7 @@ In Jesus' name, Amen.` },
     type: `Daily Church`,
     title: `The Long Way Around`,
     scripture: `Exodus 13:17 - God led the people by the desert road.`,
-    illustrationPrompt: `winding desert road`,
+    illustrationPrompt: `desert sky`,
     teaser: `God led the Israelites the long way around.\n\nNot because He got the directions wrong.\n\nBecause He knew what was on the shorter road.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `God led the Israelites the long way around.
@@ -2558,7 +2558,7 @@ In Jesus' name, Amen.` },
     type: `Hymn Reflection`,
     title: `Come Thou Fount`,
     scripture: `Romans 8:38-39 - Nothing will separate us from the love of God.`,
-    illustrationPrompt: `wide open sky`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `Come Thou Fount of every blessing,\nTune my heart to sing Thy grace.\nRobert Robinson wrote those words at 22 — full of faith and fire.\nHe spent the rest of his life living out the line he wrote next.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -2622,7 +2622,7 @@ In Jesus' name, Amen.` },
     type: `Prayer Nights`,
     title: `Surrender`,
     scripture: `Matthew 11:28 - Come to me all you who are weary, I will give you rest.`,
-    illustrationPrompt: `open hands sky`,
+    illustrationPrompt: `night sky stars`,
     teaser: `Surrender is one of the hardest words in faith.\n\nBecause it sounds like losing.\n\nBut it's the only way to the rest Jesus is describing.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Surrender is one of the hardest words in faith.
@@ -2666,18 +2666,18 @@ With full knowledge of what was coming.
 That single act of surrender changed the course of everything.
 
 *Yours might too.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Tonight, [name].
+      { id: 4, label: `The Landing`, isPrayer: false, body: `Today, [name].
 
-Jesus asked for another way in the garden, said so honestly, and then released the outcome anyway — *not my will but Yours* — with full knowledge of what surrender was about to cost Him. That same surrender is available to you tonight, in whatever you've been gripping.
+Jesus asked for another way in the garden, said so honestly, and then released the outcome anyway — *not my will but Yours* — with full knowledge of what surrender was about to cost Him. That same surrender is available to you today, in whatever you've been gripping.
 
 **Put it down.**
 
-*Not your will. His.*`, practiceToday: `Remember [name] — Jesus surrendered with full knowledge of the cost. That's what made it real.\n\nTonight — name the thing you've been gripping. Say it out loud.\n\nThen say: not my will but Yours.` },
+*Not your will. His.*`, practiceToday: `Remember [name] — Jesus surrendered with full knowledge of the cost. That's what made it real.\n\nToday — name the thing you've been gripping. Say it out loud.\n\nThen say: not my will but Yours.` },
       { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the example of Jesus in the garden.
 
 Thank You that surrender is strength — not weakness.
 
-Help me to release what I've been holding onto tonight.
+Help me to release what I've been holding onto today.
 
 Not my will. Yours.
 
@@ -2690,7 +2690,7 @@ In Jesus' name, Amen.` },
     type: `Daily Church`,
     title: `The Thing About the Cross`,
     scripture: `1 Corinthians 1:18 - The message of the cross is the power of God.`,
-    illustrationPrompt: `sunrise hills`,
+    illustrationPrompt: `sunrise mountains`,
     teaser: `The cross doesn't make sense if you approach it logically.\n\nPaul knew that. He said so.\n\nBut there's a way of understanding it that changes everything.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -2756,7 +2756,7 @@ In Jesus' name, Amen.` },
     type: `Jesus Only`,
     title: `The Woman Who Anointed His Feet`,
     scripture: `Luke 7:47 - Her many sins have been forgiven, as her great love has shown.`,
-    illustrationPrompt: `soft light flowers`,
+    illustrationPrompt: `blue sky flowers`,
     teaser: `She walked into a room where she wasn't welcome.\n\nWith an expensive jar of perfume.\n\nAnd broke it open at the feet of the only person in the room who didn't judge her for being there.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `She walked into a room where she wasn't welcome.
@@ -2820,7 +2820,7 @@ In Jesus' name, Amen.` },
     type: `Deep Verse Studies`,
     title: `Perfect Love Casts Out Fear`,
     scripture: `1 John 4:18 - Perfect love drives out fear.`,
-    illustrationPrompt: `sunlight forest path`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `Most people read this as a promise about feeling fearless.\n\nThat's not what John is saying.\n\nHe's describing a specific kind of fear — and a specific cure.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Most people read this as a promise about feeling fearless.
@@ -2884,7 +2884,7 @@ In Jesus' name, Amen.` },
     type: `Questions`,
     title: `Why Do Good People Suffer?`,
     scripture: `Job 42:5 - My ears had heard of you, now my eyes have seen you.`,
-    illustrationPrompt: `clear night stars`,
+    illustrationPrompt: `stars night sky`,
     teaser: `Job was described as blameless and upright before any of it happened.\n\nWhich removes the easy explanation.\n\nHe was doing everything right. And everything went wrong anyway.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Job was described as blameless and upright before any of it happened.
@@ -2950,7 +2950,7 @@ In Jesus' name, Amen.` },
     type: `Character Studies`,
     title: `Thomas — The Man Who Needed Proof`,
     scripture: `John 20:29 - Blessed are those who have not seen and yet have believed.`,
-    illustrationPrompt: `sunrise mist`,
+    illustrationPrompt: `sunrise mountains`,
     teaser: `Thomas wasn't there the first time Jesus appeared after the resurrection.\n\nWhen they told him what they saw — he said he wouldn't believe unless he could touch the wounds.\n\nJesus came back. Specifically for Thomas.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -3014,7 +3014,7 @@ In Jesus' name, Amen.` },
     type: `Misconceptions`,
     title: `Waiting Means God Forgot You`,
     scripture: `Isaiah 49:15-16 - I have engraved you on the palms of my hands.`,
-    illustrationPrompt: `open palm sky`,
+    illustrationPrompt: `blue sky`,
     teaser: `Waiting feels like being forgotten.\n\nLike everyone else is moving and you've been left behind.\n\nGod directly addresses this feeling — and the answer is more specific than you might expect.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Waiting feels like being forgotten.
@@ -3080,7 +3080,7 @@ In Jesus' name, Amen.` },
     type: `Letters Grateful`,
     title: `The Year I Almost Walked Away`,
     scripture: `Psalm 73:23 - I am always with you, you hold me by my right hand.`,
-    illustrationPrompt: `holding hands sunset`,
+    illustrationPrompt: `ocean sunset`,
     teaser: `Dear God,\n\nI almost walked away.\n\nNot in a dramatic moment. There was no single day when I decided.\nJust a slow drift I almost didn't notice until I was already far.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Dear God,
@@ -3144,7 +3144,7 @@ In Jesus' name, Amen.` },
     type: `Daily Church`,
     title: `When Forgiveness Feels Impossible`,
     scripture: `Matthew 18:21-22 - Not seven times, but seventy seven times.`,
-    illustrationPrompt: `open field morning`,
+    illustrationPrompt: `sunrise field`,
     teaser: `Peter thought he was being generous.\n\nSeven times was more than the religious law required.\n\nJesus said seventy-seven times. Which is not a number. It is a direction.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `There are things that are easy to say you believe and hard to actually do.
@@ -3208,7 +3208,7 @@ In Jesus' name, Amen.` },
     type: `Jesus Only`,
     title: `The Disciples on the Water`,
     scripture: `Matthew 14:29 - Peter walked on the water toward Jesus.`,
-    illustrationPrompt: `calm sea sunrise`,
+    illustrationPrompt: `ocean sunrise`,
     teaser: `The storm was real.\n\nThe waves were real.\n\nAnd Peter actually walked on the water — until he looked at the storm instead of at Jesus.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -3280,7 +3280,7 @@ In Jesus' name, Amen.` },
     type: `Hymn Reflection`,
     title: `Blessed Assurance`,
     scripture: `Hebrews 10:22 - Let us draw near to God with a sincere heart.`,
-    illustrationPrompt: `open door light`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `Blessed assurance, Jesus is mine.\nFanny Crosby was blind from the age of six weeks.\nShe never expressed bitterness about it once.\nNot once in 95 years.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -3344,7 +3344,7 @@ In Jesus' name, Amen.` },
     type: `Deep Verse Studies`,
     title: `Cast Your Anxiety — What Peter Knew`,
     scripture: `1 Peter 5:7 - Cast all your anxiety on him because he cares for you.`,
-    illustrationPrompt: `ocean waves sunrise`,
+    illustrationPrompt: `ocean waves`,
     teaser: `This is one of the most quoted verses about anxiety in scripture.\n\nAnd it was written by a man who personally experienced what happens when fear takes over.\n\nPeter knew what anxiety could make a person do.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `*Cast all your anxiety on him because he cares for you.*
@@ -3408,7 +3408,7 @@ In Jesus' name, Amen.` },
     type: `Questions`,
     title: `Does God Hear My Prayers?`,
     scripture: `Psalm 34:17 - The Lord hears them, he delivers them from all their troubles.`,
-    illustrationPrompt: `sky birds flying`,
+    illustrationPrompt: `sky clouds`,
     teaser: `This is the question most people are embarrassed to ask.\n\nBecause it feels like you should already know the answer.\n\nBut if the prayers have been going up and nothing seems to be coming back — the question is real.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `This is the question most people are embarrassed to ask.
@@ -3474,7 +3474,7 @@ In Jesus' name, Amen.` },
     type: `Prayer Nights`,
     title: `Halfway`,
     scripture: `Psalm 23:4 - Even though I walk through the darkest valley, you are with me.`,
-    illustrationPrompt: `forest path light`,
+    illustrationPrompt: `mountains night sky`,
     teaser: `Some nights you're not at the beginning and not yet at the end.\n\nYou're in the middle of something and you can't see either shore.\n\nDavid called it the darkest valley.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Some nights you're not at the beginning and not yet at the end.
@@ -3518,18 +3518,18 @@ David's answer — from his own valleys — is not *you will.*
 It is — **you will not walk it alone.**
 
 *He is with you in the middle.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Tonight, [name], if you're in the middle of something —
+      { id: 4, label: `The Landing`, isPrayer: false, body: `Today, [name], if you're in the middle of something —
 
 David didn't write *if* I walk through the darkest valley. He wrote *even though*, because he had already been there, and the promise was never that the valley would be avoided — only that it would never be walked alone.
 
 You are not walking it alone.
 
-*Even here.*`, practiceToday: `Remember [name] — even though means David had been in the valley. He was writing from inside it.\n\nTonight — tell God where you actually are. Not where you want to be.\n\nHe's in the middle with you.` },
+*Even here.*`, practiceToday: `Remember [name] — even though means David had been in the valley. He was writing from inside it.\n\nToday — tell God where you actually are. Not where you want to be.\n\nHe's in the middle with you.` },
       { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for walking through — not around.
 
 Thank You that even the darkest valley is not walked alone.
 
-Help me to feel Your presence in the middle of where I am tonight.
+Help me to feel Your presence in the middle of where I am today.
 
 I will fear no evil. You are with me.
 
@@ -3542,7 +3542,7 @@ In Jesus' name, Amen.` },
     type: `Daily Church`,
     title: `The Battle You Can't See`,
     scripture: `Ephesians 6:13 - Put on the full armor of God, stand your ground.`,
-    illustrationPrompt: `sunrise over hills`,
+    illustrationPrompt: `sunrise hills`,
     teaser: `Most of the time when something feels wrong — we look for someone to blame.\n\nPaul says the real battle is somewhere you're not looking.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -3608,7 +3608,7 @@ In Jesus' name, Amen.` },
     type: `Character Studies`,
     title: `Joseph — The Pit Was Not the End`,
     scripture: `Genesis 50:20 - You intended to harm me, but God intended it for good.`,
-    illustrationPrompt: `well light above`,
+    illustrationPrompt: `blue sky horizon`,
     teaser: `Joseph's brothers threw him in a pit and sold him into slavery.\n\nHe spent years in a foreign prison for something he didn't do.\n\nAnd at the end of the story — he said something almost impossible to say.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -3672,7 +3672,7 @@ In Jesus' name, Amen.` },
     type: `Jesus Only`,
     title: `The Father in the Parable`,
     scripture: `Luke 15:20 - While he was still a long way off his father saw him and ran to him.`,
-    illustrationPrompt: `golden road sunset`,
+    illustrationPrompt: `sunset sky`,
     teaser: `Jesus told this story to describe what God is like.\n\nNot what God tolerates.\n\nWhat God is like.\n\nAnd the detail that changes everything is four words: while he was still.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Jesus told this story to describe what God is like.
@@ -3736,7 +3736,7 @@ In Jesus' name, Amen.` },
     type: `Misconceptions`,
     title: `Faith Means Never Feeling Afraid`,
     scripture: `Psalm 56:3 - When I am afraid, I put my trust in you.`,
-    illustrationPrompt: `sunrise mountain path`,
+    illustrationPrompt: `mountains sunrise`,
     teaser: `Somehow the idea got established that fear and faith cannot exist at the same time.\n\nDavid wrote the opposite — directly.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -3806,7 +3806,7 @@ In Jesus' name, Amen.` },
     type: `Deep Verse Studies`,
     title: `The Lord Is My Shepherd — What It Actually Means to Lack Nothing`,
     scripture: `Psalm 23:1 - The Lord is my shepherd, I lack nothing.`,
-    illustrationPrompt: `green pasture stream`,
+    illustrationPrompt: `green field stream`,
     teaser: `The most famous psalm in the Bible.\n\nAnd the first line might be the most misunderstood.\n\nI shall not want does not mean you will always get what you want.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -3872,7 +3872,7 @@ In Jesus' name, Amen.` },
     type: `Daily Church`,
     title: `Some Days I Don't Feel Like a Christian`,
     scripture: `Romans 7:25 - Thanks be to God who delivers me through Jesus Christ.`,
-    illustrationPrompt: `sunrise breaking clouds`,
+    illustrationPrompt: `sunrise clouds`,
     teaser: `Paul wrote the most honest thing anyone has ever written about the gap between who you want to be and what you actually do.\n\nAnd he wrote it after his conversion.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Some days you don't feel like a Christian.
@@ -3936,7 +3936,7 @@ In Jesus' name, Amen.` },
     type: `Hymn Reflection`,
     title: `Be Thou My Vision`,
     scripture: `Psalm 27:4 - One thing I ask, that I may dwell in the house of the Lord.`,
-    illustrationPrompt: `morning light window`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `Be Thou my vision, O Lord of my heart.\nThese words were written in the 6th century by a blind Irish poet.\nThey survived 1,300 years before the world could sing them.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -4002,7 +4002,7 @@ In Jesus' name, Amen.` },
     type: `Questions`,
     title: `What If I Lose My Faith?`,
     scripture: `Luke 22:32 - I have prayed for you, that your faith may not fail.`,
-    illustrationPrompt: `candle flame dark`,
+    illustrationPrompt: `night sky stars`,
     teaser: `This is the fear underneath a lot of other fears.\n\nWhat if I stop believing?\n\nJesus addressed this directly — to the person most likely to experience it.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `This is the fear underneath a lot of other fears.
@@ -4072,7 +4072,7 @@ In Jesus' name, Amen.` },
     type: `Daily Church`,
     title: `Jesus and the Outsider`,
     scripture: `John 4:9 - How can you ask me for a drink?`,
-    illustrationPrompt: `well water sunlight`,
+    illustrationPrompt: `blue sky`,
     teaser: `The woman at the well came at noon.\n\nNot in the morning when women came together.\n\nShe had her reasons for avoiding the crowd.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -4142,7 +4142,7 @@ In Jesus' name, Amen.` },
     type: `Jesus Only`,
     title: `I Am the Resurrection`,
     scripture: `John 11:25 - I am the resurrection and the life.`,
-    illustrationPrompt: `sunrise field open`,
+    illustrationPrompt: `sunrise field`,
     teaser: `Jesus didn't say — I will bring about a resurrection.\n\nHe said — I am the resurrection.\n\nThere is a difference. And it changes everything about who you're praying to.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -4210,7 +4210,7 @@ In Jesus' name, Amen.` },
     type: `Character Studies`,
     title: `Mary Magdalene — The First Witness`,
     scripture: `John 20:18 - Mary Magdalene said, I have seen the Lord.`,
-    illustrationPrompt: `sunrise running path`,
+    illustrationPrompt: `sunrise sky`,
     teaser: `Mary Magdalene was the first person to see the risen Jesus.\n\nNot a disciple. Not a religious leader.\n\nJesus chose her first anyway.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -4280,7 +4280,7 @@ In Jesus' name, Amen.` },
     type: `Deep Verse Studies`,
     title: `Do Not Be Anxious — What Paul Didn't Mean`,
     scripture: `Philippians 4:6-7 - Do not be anxious, present your requests to God.`,
-    illustrationPrompt: `calm sky clouds`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `One of the most quoted verses about anxiety in scripture.\n\nAnd one of the most misapplied.\n\nBecause most people read it as a command to stop feeling anxious.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -4348,7 +4348,7 @@ In Jesus' name, Amen.` },
     type: `Misconceptions`,
     title: `God Only Loves the Cleaned-Up Version of You`,
     scripture: `Romans 5:8 - While we were still sinners, Christ died for us.`,
-    illustrationPrompt: `warm sunset light`,
+    illustrationPrompt: `sunset sky`,
     teaser: `The timing in Romans 5:8 is everything.\n\nNot after you cleaned yourself up.\n\nNot when you were trying harder.\n\nWhile you were still sinners.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -4418,7 +4418,7 @@ In Jesus' name, Amen.` },
     type: `Letters Grateful`,
     title: `I Used To Think I Was Too Far Gone`,
     scripture: `1 Timothy 1:16 - I was shown mercy, Christ might display his patience.`,
-    illustrationPrompt: `open door sunrise`,
+    illustrationPrompt: `sunrise sky`,
     teaser: `Dear God,\n\nI used to think there was a limit.\n\nA point past which grace couldn't reach.\n\nA version of myself that was too far gone to come back from.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -4532,20 +4532,20 @@ Because you cannot live in tomorrow. You can only live in today.
 And today — *your heavenly Father knows what you need.*
 
 **That is enough to live on.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Tonight, [name].
+      { id: 4, label: `The Landing`, isPrayer: false, body: `Today, [name].
 
 Jesus didn't say worry is a sin. He said you're carrying tomorrow's weight on today's back, and today already has enough — pointing to birds fed and flowers clothed as evidence that the same provision is already covering you right now.
 
-**Just tonight.**
+**Just today.**
 
-*Tomorrow will worry about itself. He knows what you need.*`, practiceToday: `Remember [name] — Jesus said each day has enough trouble of its own. You're only responsible for today.\n\nTonight — set down one thing you've been carrying about tomorrow.\n\nJust tonight. Tomorrow is not yours yet.` },
+*Tomorrow will worry about itself. He knows what you need.*`, practiceToday: `Remember [name] — Jesus said each day has enough trouble of its own. You're only responsible for today.\n\nToday — set down one thing you've been carrying about tomorrow.\n\nJust today. Tomorrow is not yours yet.` },
       { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You know what I need — today, tomorrow, and every day after.
 
-Thank You that I don't have to carry tomorrow tonight.
+Thank You that I don't have to carry tomorrow before it gets here.
 
 Help me to live in today. To find the evidence of Your provision in what's already here.
 
-Tonight is enough. You are enough.
+Today is enough. You are enough.
 
 In Jesus' name, Amen.` },
     ],
@@ -4556,7 +4556,7 @@ In Jesus' name, Amen.` },
     type: `Daily Church`,
     title: `What Worship Actually Is`,
     scripture: `Romans 12:1 - Offer your bodies, this is your true and proper worship.`,
-    illustrationPrompt: `morning kitchen light`,
+    illustrationPrompt: `sunrise field`,
     teaser: `Most people think worship is the music part of a church service.\n\nPaul had a different definition.\n\nAnd it changes what the rest of your week looks like.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -4620,7 +4620,7 @@ In Jesus' name, Amen.` },
     type: `Jesus Only`,
     title: `Loaves and Fish`,
     scripture: `John 6:11 - Jesus took the loaves and gave thanks.`,
-    illustrationPrompt: `bread basket sunlight`,
+    illustrationPrompt: `golden field sky`,
     teaser: `Five loaves. Two fish.\n\nFive thousand people.\n\nThe disciples saw a problem that couldn't be solved.\n\nJesus saw a different kind of math.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Five loaves. Two fish. Five thousand people.
@@ -4688,7 +4688,7 @@ In Jesus' name, Amen.` },
     type: `Hymn Reflection`,
     title: `To God Be The Glory`,
     scripture: `Psalm 115:1 - Not to us, Lord, but to your name be the glory.`,
-    illustrationPrompt: `sky clouds light`,
+    illustrationPrompt: `sky clouds`,
     teaser: `To God be the glory, great things He hath done.\nFanny Crosby wrote it in 1872.\nShe never knew it would become famous.\nNeither did anyone in America for nearly 80 years.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -4754,7 +4754,7 @@ In Jesus' name, Amen.` },
     type: `Deep Verse Studies`,
     title: `For God So Loved the World — What You've Been Missing`,
     scripture: `John 3:16 - For God so loved the world that he gave his one and only Son.`,
-    illustrationPrompt: `earth space stars`,
+    illustrationPrompt: `stars space`,
     teaser: `The most famous verse in the Bible.\n\nSo familiar that most people stopped reading it years ago.\n\nThere are two words in it that most people have never fully absorbed.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -4822,7 +4822,7 @@ In Jesus' name, Amen.` },
     type: `Questions`,
     title: `Can God Still Love Me After What I've Done?`,
     scripture: `Romans 8:38-39 - Nothing will separate us from the love of God.`,
-    illustrationPrompt: `open arms sky`,
+    illustrationPrompt: `blue sky clouds`,
     teaser: `Paul lists everything he can think of that might separate you from God's love.\n\nThen says none of it can.\n\nNotice what's on the list.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -4890,7 +4890,7 @@ In Jesus' name, Amen.` },
     type: `Character Studies`,
     title: `Paul — The Man God Used Despite Everything`,
     scripture: `1 Corinthians 15:9-10 - By the grace of God I am what I am.`,
-    illustrationPrompt: `road sunrise`,
+    illustrationPrompt: `sunrise road`,
     teaser: `Paul never forgot what he had been.\n\nHe referenced it regularly. Not for sympathy.\n\nBecause the distance between what he had been and what he became was the whole argument for grace.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -4956,7 +4956,7 @@ In Jesus' name, Amen.` },
     type: `Daily Church`,
     title: `The Kingdom Is Upside Down`,
     scripture: `Matthew 5:3 - Blessed are the poor in spirit, theirs is the kingdom of heaven.`,
-    illustrationPrompt: `open hands light`,
+    illustrationPrompt: `blue sky horizon`,
     teaser: `The Beatitudes are the most counterintuitive statements Jesus ever made.\n\nBlessed are the poor in spirit. The mourning. The meek.\n\nThis is not how the world works. That's the point.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `The Beatitudes are the most counterintuitive statements Jesus ever made.
@@ -5022,7 +5022,7 @@ In Jesus' name, Amen.` },
     type: `Jesus Only`,
     title: `He Prayed For Us`,
     scripture: `John 17:20 - I pray also for those who will believe in me.`,
-    illustrationPrompt: `garden night stars`,
+    illustrationPrompt: `night sky stars`,
     teaser: `The night before the cross Jesus prayed.\n\nNot just for the disciples in the room.\n\nFor everyone who would ever believe because of their message.\n\nThat includes you.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -5090,7 +5090,7 @@ In Jesus' name, Amen.` },
     type: `Misconceptions`,
     title: `Grace Means Keep Living However You Want`,
     scripture: `Romans 6:1-2 - We are those who have died to sin.`,
-    illustrationPrompt: `sunrise new day`,
+    illustrationPrompt: `sunrise sky`,
     teaser: `Paul anticipated this objection.\n\nIf grace covers everything — why change anything?\n\nHe answered it directly. And the answer is not what most people expect.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -5160,7 +5160,7 @@ In Jesus' name, Amen.` },
     type: `Daily Church`,
     title: `The Version of Me That Shows Up Consistently`,
     scripture: `Lamentations 3:22-23 - His mercies are new every morning.`,
-    illustrationPrompt: `sunrise morning dew`,
+    illustrationPrompt: `sunrise field`,
     teaser: `Most people have a version of themselves they're trying to become.\n\nThe consistent one. The disciplined one.\n\nThat version is not the point.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -5226,7 +5226,7 @@ In Jesus' name, Amen.` },
     type: `Hymn Reflection`,
     title: `How Great Thou Art`,
     scripture: `Psalm 8:3-4 - When I consider your heavens, what is mankind that you are mindful of them.`,
-    illustrationPrompt: `stars milky way`,
+    illustrationPrompt: `stars night sky`,
     teaser: `O Lord my God, when I in awesome wonder\nConsider all the worlds Thy hands have made.\nCarl Boberg wrote those words in Swedish in 1885.\nHe had no idea what he had started.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -5290,7 +5290,7 @@ In Jesus' name, Amen.` },
     type: `Deep Verse Studies`,
     title: `Seek First the Kingdom — What Jesus Was Actually Asking`,
     scripture: `Matthew 6:33 - Seek first his kingdom, all these things will be given to you.`,
-    illustrationPrompt: `compass sunrise`,
+    illustrationPrompt: `sunrise sky`,
     teaser: `This verse is often quoted as a promise about provision.\n\nIf you seek first — God will take care of the rest.\n\nThat's true. But it misses what Jesus meant by seeking first.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -5352,7 +5352,7 @@ In Jesus' name, Amen.` },
     type: `Prayer Nights`,
     title: `For the Grieving`,
     scripture: `Psalm 34:18 - The Lord is close to the brokenhearted.`,
-    illustrationPrompt: `soft light comfort`,
+    illustrationPrompt: `mountains mist`,
     teaser: `Not every night needs a lesson.\n\nSome nights just need the truth that God is close.\n\nEspecially the brokenhearted ones.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Not every night needs a lesson.
@@ -5385,35 +5385,29 @@ Not watching from a safe distance while you grieve.
 *In the grief.*` },
       { id: 3, label: `The Turn`,
         isPrayer: false,
-        body: `There is nothing to learn tonight.
-
-No application. No three steps.
+        body: `There is nothing to learn today. No application. No three steps.
 
 **Just the truth that He is close.**
 
-That the grief you feel is not felt alone.
-
-That the broken heart is the very place He comes to.
-
-Not after the healing.
+That the grief you feel is not felt alone. That the broken heart is the very place He comes to — not after the healing, but inside it.
 
 *He saves those who are crushed in spirit.*
 
 The crushing is not the absence of God.
 
 *It is the place of His nearness.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Tonight, [name].
+      { id: 4, label: `The Landing`, isPrayer: false, body: `Today, [name].
 
-The Lord is close to the brokenhearted — not fixing first, not explaining first, just close, present in the room with the grief the same way David found Him present in his own. There is nothing else to learn tonight.
+The Lord is close to the brokenhearted — not fixing first, not explaining first, just close, present in the room with the grief the same way David found Him present in his own. There is nothing else to learn today.
 
 **He is close.**
 
-*Right here. In this. You are not grieving alone.*`, practiceToday: `Remember [name] — close means present. In the room. In the grief.\n\nTonight — you don't have to do anything. Just let Him be close.\n\nSit in it. You're not alone in it.` },
+*Right here. In this. You are not grieving alone.*`, practiceToday: `Remember [name] — close means present. In the room. In the grief.\n\nToday — you don't have to do anything. Just let Him be close.\n\nSit in it. You're not alone in it.` },
       { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for being close — not distant — in the broken places.
 
 Thank You that grief is not the absence of You but the place of Your nearness.
 
-Be close tonight. I need that more than answers.
+Be close today. I need that more than answers.
 
 I am not grieving alone.
 
@@ -5426,7 +5420,7 @@ In Jesus' name, Amen.` },
     type: `Questions`,
     title: `Why Doesn't God Just Fix Everything?`,
     scripture: `2 Corinthians 4:17 - Our troubles are achieving for us an eternal glory.`,
-    illustrationPrompt: `sunlight breaking clouds`,
+    illustrationPrompt: `sunlight clouds`,
     teaser: `Paul called his troubles light and momentary.\n\nHe had been beaten five times with thirty-nine lashes. Three times shipwrecked.\n\nThat is the context for this verse.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Paul called his troubles *light and momentary.*
@@ -5492,7 +5486,7 @@ In Jesus' name, Amen.` },
     type: `Daily Church`,
     title: `The Posture of Humility`,
     scripture: `James 4:10 - Humble yourselves before the Lord, and he will lift you up.`,
-    illustrationPrompt: `sunrise valley`,
+    illustrationPrompt: `valley sunrise`,
     teaser: `Humility is one of the most misunderstood virtues in Christianity.\n\nMost people think it means thinking poorly of yourself.\n\nIt doesn't.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -5560,7 +5554,7 @@ In Jesus' name, Amen.` },
     type: `Jesus Only`,
     title: `The Triumphal Entry`,
     scripture: `Mark 11:9 - Hosanna, blessed is he who comes in the name of the Lord.`,
-    illustrationPrompt: `palm leaves sunlight`,
+    illustrationPrompt: `blue sky palm trees`,
     teaser: `Palm Sunday is usually told as a celebration.\n\nAnd it was.\n\nBut Jesus knew something the crowd didn't know about what week it was.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -5630,7 +5624,7 @@ In Jesus' name, Amen.` },
     type: `Character Studies`,
     title: `Jonah — The Prophet Who Ran`,
     scripture: `Jonah 2:9 - Salvation comes from the Lord.`,
-    illustrationPrompt: `ocean horizon sunrise`,
+    illustrationPrompt: `ocean sunrise`,
     teaser: `God told Jonah to go to Nineveh.\n\nJonah boarded a ship going in the exact opposite direction.\n\nWhat happens next is not primarily a story about a fish.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -5700,7 +5694,7 @@ In Jesus' name, Amen.` },
     type: `Letters Grateful`,
     title: `What I Know Now That I Didn't Know Then`,
     scripture: `Psalm 116:12 - What shall I return to the Lord for all his goodness.`,
-    illustrationPrompt: `golden field sunset`,
+    illustrationPrompt: `sunset field`,
     teaser: `Dear God,\n\nThere are things I know now that I didn't know when I first started following You.\n\nI want to write some of them down.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Dear God,
@@ -5772,7 +5766,7 @@ In Jesus' name, Amen.` },
     type: `Misconceptions`,
     title: `You Have To Feel It To Believe It`,
     scripture: `2 Corinthians 5:7 - We live by faith, not by sight.`,
-    illustrationPrompt: `fog mountain trail`,
+    illustrationPrompt: `mountains fog`,
     teaser: `Most people treat their feelings as the most reliable indicator of whether God is real.\n\nWhen they feel His presence — they believe.\n\nPaul had a different framework entirely.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -5840,7 +5834,7 @@ In Jesus' name, Amen.` },
     type: `Hymn Reflection`,
     title: `Rock of Ages`,
     scripture: `1 Corinthians 10:4 - That rock was Christ.`,
-    illustrationPrompt: `rock formation light`,
+    illustrationPrompt: `mountains rocks`,
     teaser: `Rock of Ages, cleft for me,\nLet me hide myself in Thee.\nAugustus Toplady wrote those words and died at 38.\nBut he understood something about grace that most people spend a lifetime missing.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -5908,7 +5902,7 @@ In Jesus' name, Amen.` },
     type: `Deep Verse Studies`,
     title: `The Vine and the Branches — What Abiding Actually Means`,
     scripture: `John 15:5 - I am the vine, you are the branches.`,
-    illustrationPrompt: `vineyard sunlight`,
+    illustrationPrompt: `green vineyard field`,
     teaser: `Jesus called Himself the vine and His followers the branches.\n\nThe image is simple. The implications are enormous.\n\nEspecially the last four words.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -5978,7 +5972,7 @@ In Jesus' name, Amen.` },
     type: `Questions`,
     title: `Is the Bible Actually True?`,
     scripture: `2 Timothy 3:16 - All Scripture is God breathed and is useful for teaching.`,
-    illustrationPrompt: `open book light`,
+    illustrationPrompt: `blue sky horizon`,
     teaser: `This is the question most Christians are afraid to ask out loud.\n\nBecause asking it feels like the beginning of losing your faith.\n\nIt's actually the beginning of a more honest one.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -6042,7 +6036,7 @@ In Jesus' name, Amen.` },
     type: `Prayer Nights`,
     title: `For Those Who Are Exhausted`,
     scripture: `Matthew 11:28 - Come to me all you who are weary, I will give you rest.`,
-    illustrationPrompt: `soft bed morning light`,
+    illustrationPrompt: `soft clouds sky`,
     teaser: `Some nights the most spiritual thing you can do is rest.\n\nJesus said so.`,
     panels: [
       { id: 1, label: `The Hook`, isPrayer: false, body: `Some nights the most spiritual thing you can do is rest.
@@ -6057,7 +6051,7 @@ Not — come to me and I will give you more to do.
 
 *Rest.*
 
-**That is the offer. Tonight.**` },
+**That is the offer. Today.**` },
       { id: 2, label: `The Story`,
         isPrayer: false,
         body: `Elijah ran into the wilderness and asked God to take his life.
@@ -6087,19 +6081,19 @@ It is obedience to a God who designed human beings to need rest.
 
 The work will continue tomorrow.
 
-*Tonight — rest.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Tonight, [name].
+*Today — rest.*` },
+      { id: 4, label: `The Landing`, isPrayer: false, body: `Today, [name].
 
 Elijah was fed and allowed to sleep — twice — before God ever spoke another word to him. The word came after the rest, not instead of it, because the journey really was too much for him to carry without stopping first.
 
 **Put it down.**
 
-*The weight. The striving. Come. He will give you rest.*`, practiceToday: `Remember [name] — God fed Elijah and let him sleep before giving him the next assignment.\n\nTonight — actually rest. Not scroll. Rest.\n\nThe journey is too much for you to carry without it.` },
+*The weight. The striving. Come. He will give you rest.*`, practiceToday: `Remember [name] — God fed Elijah and let him sleep before giving him the next assignment.\n\nToday — actually rest. Not scroll. Rest.\n\nThe journey is too much for you to carry without it.` },
       { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that rest is Your idea — not a sign of weakness.
 
 Thank You that You fed Elijah before You spoke to him.
 
-Help me to receive rest tonight as a gift — not a failure.
+Help me to receive rest today as a gift — not a failure.
 
 I come to You weary. Give me rest.
 
@@ -6112,7 +6106,7 @@ In Jesus' name, Amen.` },
     type: `Daily Church`,
     title: `He Is Risen — What That Actually Changes`,
     scripture: `1 Corinthians 15:17 - If Christ has not been raised, your faith is futile.`,
-    illustrationPrompt: `sunrise empty field`,
+    illustrationPrompt: `sunrise field`,
     teaser: `Paul staked everything on the resurrection.\n\nNot as a metaphor.\n\nAs a historical event that either happened or didn't.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -6178,7 +6172,7 @@ In Jesus' name, Amen.` },
     type: `Character Studies`,
     title: `Job — The Man Who Argued With God and Wasn't Wrong`,
     scripture: `Job 42:5 - My ears had heard of you, now my eyes have seen you.`,
-    illustrationPrompt: `stars desert sky`,
+    illustrationPrompt: `stars desert`,
     teaser: `At the end of the book of Job — God spoke.\n\nNot to commend the friends who gave careful theological explanations.\n\nTo commend Job — the one who argued.\n\nGod called it truth.`,
     panels: [
       { id: 1, label: `The Hook`,
@@ -6248,7 +6242,7 @@ In Jesus' name, Amen.` },
     type: `Jesus Only`,
     title: `It Is Finished`,
     scripture: `John 19:30 - It is finished.`,
-    illustrationPrompt: `sunrise breaking light`,
+    illustrationPrompt: `sunrise sky`,
     teaser: `Three words.\n\nThe last thing Jesus said from the cross.\n\nAnd the most important three words ever spoken.`,
     panels: [
       { id: 1, label: `The Hook`,

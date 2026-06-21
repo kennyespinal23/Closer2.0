@@ -40,7 +40,6 @@ import {
   FocusStatusSheet,
   type FocusStatusSheetState,
 } from "@/components/FocusStatusSheet";
-import { cancelDailyReminder } from "@/lib/notifications";
 import * as haptics from "@/lib/haptics";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { buildCurrentWeek, type RhythmCellState } from "@/lib/rhythm";
@@ -57,13 +56,10 @@ import { BrandGlyph } from "@/components/BrandGlyph";
 import { findMood } from "@/constants/moods";
 import { SERMON_TYPES, type SermonType } from "@/constants/sermonTypes";
 import { CLOSER_ACCENT, SYSTEM_COLORS_DARK } from "@/constants/theme";
-import { useAnnotations } from "@/state/annotations";
 import { type CheckIn, useCheckIns } from "@/state/checkIns";
-import { useDevTools } from "@/state/devTools";
 import { useFocus } from "@/state/focus";
 import { useMoments } from "@/state/moments";
 import { useOnboarding } from "@/state/onboarding";
-import { usePreferences } from "@/state/preferences";
 import { useProgress } from "@/state/progress";
 import { type StudySession, useStudySessions } from "@/state/studySessions";
 import { useReadingGoal } from "@/state/readingGoal";
@@ -82,17 +78,9 @@ import { useColors } from "@/state/theme";
 
 export default function TodayScreen() {
   const router = useRouter();
-  const { answers, reset: resetOnboarding } = useOnboarding();
-  const { reset: resetPreferences } = usePreferences();
-  const { reset: resetAnnotations } = useAnnotations();
-  const { log: checkInLog, reset: resetCheckIns } = useCheckIns();
-  const { reset: resetReadingGoal } = useReadingGoal();
-  const {
-    todaysMoment,
-    catalogPosition,
-    advanceToNextMoment,
-    reset: resetMoments,
-  } = useMoments();
+  const { answers } = useOnboarding();
+  const { log: checkInLog } = useCheckIns();
+  const { todaysMoment } = useMoments();
   const progress = useProgress();
   const {
     streak,
@@ -117,20 +105,11 @@ export default function TodayScreen() {
     endSession: endFocusSession,
     pauseSession: pauseFocusSession,
     resumeSession: resumeFocusSession,
-    reset: resetFocus,
   } = useFocus();
   const {
     sessions: studySessions,
     toggleSession: toggleStudySession,
-    reset: resetStudySessions,
   } = useStudySessions();
-  // Dev-tools opt-in. In a __DEV__ build this defaults to true and
-  // the panel is always visible; in production it defaults to false
-  // and only flips on if a teammate enables Settings → Developer
-  // Tools. The Today screen reads `showDevTools` below to gate the
-  // entire dev-panel subtree without a code change for the team.
-  const { enabled: devToolsEnabled } = useDevTools();
-  const showDevTools = __DEV__ || devToolsEnabled;
 
   // Extra bottom padding the FocusMiniPlayer needs when a focus
   // session is active. Returns 0 when no session / hidden, so the
@@ -321,24 +300,12 @@ export default function TodayScreen() {
     [todaysMoment],
   );
 
-  // Home-card editorial preview.
-  //
-  // The June 2026 schema collapsed the previous `blurb` + `closer`
-  // pair into a single `teaser` field on every sermon. The teaser
-  // is authored as multiple `\n\n`-separated paragraphs — the home
-  // card shows ONLY the first paragraph as a tight preview, while
-  // the saved-sermon detail renders the whole teaser. Showing the
-  // full thing here would dominate the card and push the CTA off-
-  // screen on smaller phones.
-  //
-  // Fallback chain: trimmed first paragraph of the teaser → first
-  // paragraph of the Hook panel body. The fallback exists for
-  // defensive shape-drift only; every entry in the new catalog
-  // ships a real `teaser`, so the Hook-body branch effectively
-  // never runs in production.
+  // Home-card editorial preview — full teaser, collapsed to single-
+  // spaced body copy (catalog authors `\n\n` between beats; double
+  // newlines read as awkward gaps on the hero).
   const homeBlurb = useMemo(() => {
-    const teaserFirst = firstParagraphOf(todaysMoment.teaser ?? "");
-    if (teaserFirst) return teaserFirst;
+    const teaser = todaysMoment.teaser?.trim();
+    if (teaser) return formatHomeTeaser(teaser);
     return firstParagraphOf(todaysMoment.panels[0]?.body ?? "");
   }, [todaysMoment.teaser, todaysMoment.panels]);
   // Used by the sermon card meta line + the intro screen; computed
@@ -376,7 +343,6 @@ export default function TodayScreen() {
   // actually change, both of which already imply the hero card props
   // changed too.
   const handlePlaySermon = useCallback(async () => {
-    haptics.tap();
     const focusOffered =
       focusPrefs.enabled && focusPrefs.blockedAppIds.length > 0;
     if (focusOffered) {
@@ -385,7 +351,10 @@ export default function TodayScreen() {
       // sees the active session.
       await startFocusSession(todaysMoment.day);
     }
-    router.push("/sermon/scripture");
+    router.push({
+      pathname: "/sermon/scripture",
+      params: { continuity: "1" },
+    });
   }, [
     focusPrefs.enabled,
     focusPrefs.blockedAppIds,
@@ -591,49 +560,6 @@ export default function TodayScreen() {
     focusSheetAppIds,
     handleOpenStudySessions,
   ]);
-
-  const handleResetApp = () => {
-    // Dev shortcut: wipe ALL persisted state (onboarding, progress,
-    // annotations, preferences, check-ins, moments, focus —
-    // in-memory + on disk) and drop the user back at the welcome
-    // screen, mimicking a fresh install. Each provider's reset()
-    // also calls removeKey() so AsyncStorage is purged.
-    resetOnboarding();
-    progress.reset();
-    resetAnnotations();
-    resetPreferences();
-    resetCheckIns();
-    resetReadingGoal();
-    resetMoments();
-    resetFocus();
-    // resetStudySessions also cancels every OS-level study
-    // notification before clearing the persisted list, so the
-    // wipe doesn't leave stale weekly reminders armed in the OS.
-    resetStudySessions().catch(() => {});
-    // Also cancel any scheduled "Before The Noise" notification so a
-    // reset doesn't leave a stale OS-level schedule firing every
-    // morning long after the user has wiped the app.
-    cancelDailyReminder().catch(() => {});
-    router.replace("/");
-  };
-
-  const handleRestartApp = () => {
-    // Sibling of handleResetApp — clears state but jumps STRAIGHT into
-    // the onboarding flow instead of stopping at the welcome screen.
-    // Useful when iterating on onboarding copy/visuals without having
-    // to tap through the welcome page every time.
-    resetOnboarding();
-    progress.reset();
-    resetAnnotations();
-    resetPreferences();
-    resetCheckIns();
-    resetReadingGoal();
-    resetMoments();
-    resetFocus();
-    resetStudySessions().catch(() => {});
-    cancelDailyReminder().catch(() => {});
-    router.replace("/onboarding/name");
-  };
 
   // ─── Shared status pill row JSX ──────────────────────────────
   // Single JSX value reused by both layouts:
@@ -1282,6 +1208,11 @@ function firstParagraphOf(body: string): string {
   if (!trimmed) return "";
   const [first] = trimmed.split(/\n\n+/);
   return first?.trim() ?? "";
+}
+
+/** Collapse authored `\n\n` paragraph breaks into normal body flow. */
+function formatHomeTeaser(teaser: string): string {
+  return teaser.trim().replace(/\n\n+/g, " ").replace(/\s+/g, " ");
 }
 
 // ─────────────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, type Href } from "expo-router";
 import Svg, { Path } from "react-native-svg";
@@ -24,6 +24,9 @@ import {
   useAnnotations,
 } from "@/state/annotations";
 import { useOnboarding } from "@/state/onboarding";
+import { useDevAppReset } from "@/lib/useDevAppReset";
+import { useDevTools } from "@/state/devTools";
+import { useMoments } from "@/state/moments";
 import { useSavedSermons } from "@/state/savedSermons";
 import {
   useColors,
@@ -63,6 +66,10 @@ export default function ProfileTabScreen() {
   const { allNotes, allHighlights, counts: annotationCounts } =
     useAnnotations();
   const { saved: savedSermonDays, count: savedCount } = useSavedSermons();
+  const { todaysMoment, catalogPosition, advanceToNextMoment } = useMoments();
+  const { enabled: devToolsEnabled } = useDevTools();
+  const showDevShortcuts = __DEV__ || devToolsEnabled;
+  const { resetApp, restartApp } = useDevAppReset();
   const colors = useColors();
   const { pref: themePref } = useTheme();
 
@@ -124,6 +131,48 @@ export default function ProfileTabScreen() {
   const navigateTo = (href: Href) => {
     haptics.soft();
     router.push(href);
+  };
+
+  const handleAdvanceSermon = () => {
+    haptics.soft();
+    advanceToNextMoment();
+    router.navigate("/today");
+  };
+
+  const confirmResetApp = () => {
+    Alert.alert(
+      "Reset app?",
+      "Wipes all persisted state and returns to the welcome screen — like a fresh install. There's no undo.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reset",
+          style: "destructive",
+          onPress: () => {
+            haptics.soft();
+            resetApp();
+          },
+        },
+      ],
+    );
+  };
+
+  const confirmRestartApp = () => {
+    Alert.alert(
+      "Restart app?",
+      "Wipes everything and jumps straight into onboarding — useful when iterating on the welcome flow.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Restart",
+          style: "destructive",
+          onPress: () => {
+            haptics.soft();
+            restartApp();
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -481,6 +530,58 @@ export default function ProfileTabScreen() {
           title="You're building something quiet."
           body="Every sermon completed is a small turn of the heart toward Him."
         />
+
+        {showDevShortcuts ? (
+          <SettingsSection
+            title="Developer"
+            footer="Internal QA only. Reset and Restart wipe every provider on disk — progress, notes, focus sessions, reminders — then route to a fresh entry."
+          >
+            <SettingsLinkRow
+              icon={
+                <SFSymbol
+                  name="forward.fill"
+                  size={14}
+                  color={colors.ink}
+                  weight="semibold"
+                />
+              }
+              label="Next sermon"
+              sublabel={todaysMoment.title}
+              value={`${catalogPosition.position} / ${catalogPosition.total}`}
+              onPress={handleAdvanceSermon}
+              showDivider
+            />
+            <SettingsLinkRow
+              icon={
+                <SFSymbol
+                  name="arrow.counterclockwise"
+                  size={14}
+                  color="#FF6B6B"
+                  weight="semibold"
+                />
+              }
+              label="Reset app"
+              sublabel="Fresh install — welcome screen"
+              onPress={confirmResetApp}
+              destructive
+              showDivider
+            />
+            <SettingsLinkRow
+              icon={
+                <SFSymbol
+                  name="power"
+                  size={14}
+                  color="#FF6B6B"
+                  weight="semibold"
+                />
+              }
+              label="Restart app"
+              sublabel="Fresh install — straight into onboarding"
+              onPress={confirmRestartApp}
+              destructive
+            />
+          </SettingsSection>
+        ) : null}
 
         <SettingsSection title="About">
           <SettingsLinkRow

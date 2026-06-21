@@ -5,6 +5,7 @@ import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { LivingHeroIcon } from "@/components/LivingHeroIcon";
+import { SermonBlurredBackdrop } from "@/components/SermonBlurredBackdrop";
 import { SFSymbol } from "@/components/Symbol";
 import * as haptics from "@/lib/haptics";
 import {
@@ -186,7 +187,9 @@ export default function CompleteScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <View style={{ flex: 1 }}>
+      <SermonBlurredBackdrop />
+      <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
       {/* Celebration block — centered in the upper portion of the
           screen. The previous revision used flex-1 + justify-center
           which absorbed all the vertical space; we now cap that
@@ -376,6 +379,7 @@ export default function CompleteScreen() {
         />
       </View>
     </SafeAreaView>
+    </View>
   );
 }
 

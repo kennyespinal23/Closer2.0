@@ -9,13 +9,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import * as haptics from "@/lib/haptics";
 import { shareVerse } from "@/lib/share";
 import { splitScripture } from "@/lib/moments";
-import { getDailyImage } from "@/services/unsplashService";
+import { getSermonBackdrop } from "@/services/unsplashService";
 import { useMoments } from "@/state/moments";
 import { useColors } from "@/state/theme";
+import { HERO_DIM_OVERLAY, HERO_GLASS_DISC } from "@/constants/heroChrome";
 import { NEW_YORK } from "@/lib/typography";
 
 /**
@@ -61,6 +62,8 @@ import { NEW_YORK } from "@/lib/typography";
  */
 export default function SermonScriptureScreen() {
   const router = useRouter();
+  const { continuity } = useLocalSearchParams<{ continuity?: string }>();
+  const isContinuity = continuity === "1";
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { todaysMoment } = useMoments();
@@ -98,7 +101,7 @@ export default function SermonScriptureScreen() {
       todaysMoment.illustrationPrompt?.trim() ||
       todaysMoment.imageQuery?.trim();
     if (!query) return;
-    getDailyImage(query, todaysMoment.day).then((url) => {
+    getSermonBackdrop(query, todaysMoment.day).then((url) => {
       if (!cancelled) setImageUrl(url);
     });
     return () => {
@@ -116,52 +119,48 @@ export default function SermonScriptureScreen() {
   // backing. Native-driven so it runs off the JS thread and
   // doesn't compete with the verse + continue animations
   // already running on mount.
-  const backdropFade = useRef(new Animated.Value(0)).current;
+  const backdropFade = useRef(
+    new Animated.Value(isContinuity ? 1 : 0),
+  ).current;
 
-  // Mount choreography — two beats, deliberately glacial:
+  // Mount choreography — two beats:
   //
-  //   1. The verse fades + lifts in over 4200 ms with a 1100 ms
-  //      lead-in. The whole rise takes ~5.3 seconds, which
-  //      feels almost painfully slow as a button animation but
-  //      reads as reverent for scripture — the words don't
-  //      slam into view, they materialize. The reader's eye
-  //      has time to settle, take a breath, and meet the verse
-  //      where it lands rather than where it loads.
+  //   • From home (`continuity=1`): the photo is already on
+  //     screen — hold it at full opacity and let only the verse
+  //     materialize after home copy fades out.
   //
-  //   2. The Continue pill drifts in 5800 ms after mount, well
-  //      AFTER the verse has finished settling. The CTA is the
-  //      third beat (after the verse appears and the eye
-  //      finishes reading it), so it whispers into view (1400
-  //      ms fade) once the reader is ready for the next step
-  //      rather than competing with the scripture for the
-  //      first glance.
-  //
-  // Tuned (and re-tuned, repeatedly) for "much slower than
-  // feels right at a desk, much closer to the right pace on a
-  // phone in your hand at the start of a quiet moment." If the
-  // verse ever feels too slow on a dev machine, that's the
-  // indicator it's correct — it's meant to make you slow down.
-  //
-  // Both animations use native driver so they stay buttery
-  // during the navigation transition.
+  //   • Everywhere else: glacial reverent arrival (original
+  //     scripture pacing).
   const verseAnim = useRef(new Animated.Value(0)).current;
   const continueAnim = useRef(new Animated.Value(0)).current;
+  const chromeAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
+    const verseDelay = isContinuity ? 900 : 1100;
+    const verseDuration = 4200;
+    const continueDelay = isContinuity ? 6800 : 5800;
+
     Animated.timing(verseAnim, {
       toValue: 1,
-      duration: 4200,
-      delay: 1100,
+      duration: verseDuration,
+      delay: verseDelay,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(chromeAnim, {
+      toValue: 1,
+      duration: isContinuity ? 1800 : 1400,
+      delay: isContinuity ? verseDelay + 200 : 1100,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
     Animated.timing(continueAnim, {
       toValue: 1,
-      duration: 1400,
-      delay: 5800,
+      duration: isContinuity ? 1800 : 1400,
+      delay: continueDelay,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-  }, [verseAnim, continueAnim]);
+  }, [verseAnim, continueAnim, chromeAnim, isContinuity]);
 
   const verseTranslateY = verseAnim.interpolate({
     inputRange: [0, 1],
@@ -226,6 +225,10 @@ export default function SermonScriptureScreen() {
         <Animated.Image
           source={{ uri: imageUrl }}
           onLoad={() => {
+            if (isContinuity) {
+              backdropFade.setValue(1);
+              return;
+            }
             Animated.timing(backdropFade, {
               toValue: 1,
               duration: 600,
@@ -255,7 +258,7 @@ export default function SermonScriptureScreen() {
         pointerEvents="none"
         style={[
           StyleSheet.absoluteFill,
-          { backgroundColor: "rgba(0, 0, 0, 0.55)" },
+          { backgroundColor: HERO_DIM_OVERLAY },
         ]}
       />
 
@@ -359,11 +362,12 @@ export default function SermonScriptureScreen() {
           on iOS in this RN version, causing the chip to flow
           inline at the bottom of the page. Wrapping with a
           plain View pins the chip reliably at the top edge. */}
-      <View
+      <Animated.View
         style={{
           position: "absolute",
           top: insets.top + 8,
           left: 16,
+          opacity: chromeAnim,
         }}
       >
         <Pressable
@@ -373,7 +377,7 @@ export default function SermonScriptureScreen() {
           accessibilityLabel="Close scripture"
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
-          <View style={GLASS_DISC_STYLE}>
+          <View style={HERO_GLASS_DISC}>
             <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
               <Path
                 d="M6 6l12 12M6 18L18 6"
@@ -384,18 +388,19 @@ export default function SermonScriptureScreen() {
             </Svg>
           </View>
         </Pressable>
-      </View>
+      </Animated.View>
 
       {/* ─── Floating Share (top-right) ─────────────────────
           Same wrapping pattern as the close X above (see
           comment there). Opens the system share sheet with
           the verse text + reference + a short Closer
           attribution. */}
-      <View
+      <Animated.View
         style={{
           position: "absolute",
           top: insets.top + 8,
           right: 16,
+          opacity: chromeAnim,
         }}
       >
         <Pressable
@@ -405,7 +410,7 @@ export default function SermonScriptureScreen() {
           accessibilityLabel="Share scripture"
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
-          <View style={GLASS_DISC_STYLE}>
+          <View style={HERO_GLASS_DISC}>
             <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
               <Path
                 d="M12 3v13M7 8l5-5 5 5"
@@ -424,7 +429,7 @@ export default function SermonScriptureScreen() {
             </Svg>
           </View>
         </Pressable>
-      </View>
+      </Animated.View>
 
       {/* ─── Continue CTA ───────────────────────────────────
           Big white pill identical to the intro's Begin CTA so
@@ -499,26 +504,3 @@ export default function SermonScriptureScreen() {
     </View>
   );
 }
-
-/**
- * Shared style for the two floating top-edge glass discs (close
- * X on the left, Share on the right).
- *
- * Tuned for safety: the disc has a more opaque dark fill (0.65)
- * and a brighter hairline border (0.22) so the chip remains
- * clearly visible against any backdrop — bright sky, deep sky,
- * or pure-black fallback if the photograph fails to load. An
- * earlier 0.45 / 0.12 treatment was disappearing entirely on a
- * black bg and reading as "off-screen" to users. The disc still
- * reads as glass over the photo; it just no longer vanishes.
- */
-const GLASS_DISC_STYLE = {
-  width: 38,
-  height: 38,
-  borderRadius: 19,
-  alignItems: "center" as const,
-  justifyContent: "center" as const,
-  backgroundColor: "rgba(0, 0, 0, 0.65)",
-  borderWidth: 1,
-  borderColor: "rgba(255, 255, 255, 0.22)",
-};

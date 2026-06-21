@@ -1,5 +1,4 @@
 import { Stack } from "expo-router";
-import { useColors } from "@/state/theme";
 
 /**
  * Sermon flow layout.
@@ -16,12 +15,11 @@ import { useColors } from "@/state/theme";
  * options below for the per-param animation switch.
  */
 export default function SermonLayout() {
-  const { bg } = useColors();
   return (
     <Stack
-      screenOptions={{
+        screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: bg },
+        contentStyle: { backgroundColor: "transparent" },
         animation: "slide_from_right",
       }}
     >

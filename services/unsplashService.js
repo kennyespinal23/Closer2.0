@@ -90,9 +90,16 @@ export const getHeroImage = async (typeId, day, illustrationPrompt) => {
     illustrationPrompt?.trim() ||
     SERMON_TYPE_UNSPLASH_QUERIES[typeId] ||
     "peaceful spiritual nature landscape";
-  return getCachedImage(query, `hero_${day}_${query}`);
+  return getSermonBackdrop(query, day);
+};
+
+/** Shared Unsplash backdrop for home + scripture — one photo per
+ *  sermon day so both surfaces feel like the same moment. */
+export const getSermonBackdrop = async (query, day) => {
+  const q = (query || "peaceful spiritual nature landscape").trim();
+  return getCachedImage(q, `sermon_backdrop_${day}_${q}`);
 };
 
 export const getDailyImage = async (query, day) => {
-  return getCachedImage(query, `daily_${day}`);
+  return getSermonBackdrop(query, day);
 };

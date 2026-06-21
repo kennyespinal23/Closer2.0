@@ -17,6 +17,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FocusBanner } from "@/components/FocusBanner";
 import { PracticeTodayCard } from "@/components/PracticeTodayCard";
+import { SermonBlurredBackdrop } from "@/components/SermonBlurredBackdrop";
 import { SermonHeader } from "@/components/SermonHeader";
 import { SFSymbol } from "@/components/Symbol";
 import {
@@ -501,15 +502,10 @@ export default function SermonPanelScreen() {
   };
 
   return (
-    // Calm canvas across the entire sermon flow — true black in
-    // dark mode, warm cream in light mode. The previous full-
-    // bleed dimmed illustration + bottom fade gradient was
-    // removed at the user's request — the prose is the whole
-    // stage now, and the eye stays anchored on the words across
-    // panel transitions instead of re-acclimating to a new
-    // visual every time. Prayer keeps its dawn-glow halo on top
-    // of this canvas, painted in the SafeAreaView below.
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    // Blurred Unsplash wash behind the prose — same day's photo
+    // as home/scripture, softened so the sermon stays legible.
+    <View style={{ flex: 1 }}>
+      <SermonBlurredBackdrop />
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         {/* Progress bar is hidden on the prayer panel — the
             sermon has functionally ended by the time the

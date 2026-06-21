@@ -5,6 +5,7 @@ import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import LottieView from "lottie-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/components/Button";
+import { SermonBlurredBackdrop } from "@/components/SermonBlurredBackdrop";
 import { milestoneCopy } from "@/lib/journey";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -189,7 +190,9 @@ export default function StreakScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <View style={{ flex: 1 }}>
+      <SermonBlurredBackdrop />
+      <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
       <View className="flex-1 px-6 items-center justify-center">
         {/* Halo + flame stack */}
         <View className="items-center justify-center mb-2">
@@ -299,6 +302,7 @@ export default function StreakScreen() {
         <Button label="Continue" onPress={handleContinue} />
       </View>
     </SafeAreaView>
+    </View>
   );
 }
 

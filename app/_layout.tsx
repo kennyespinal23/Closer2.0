@@ -327,6 +327,17 @@ function AppShell() {
             animation: "slide_from_bottom",
           }}
         />
+        {/* Sermon flow — fade from home so the shared Unsplash
+            backdrop reads as one continuous photograph while
+            copy dissolves into the scripture quote. */}
+        <Stack.Screen
+          name="sermon"
+          options={{
+            animation: "fade",
+            animationDuration: 650,
+            contentStyle: { backgroundColor: "#0A0A0A" },
+          }}
+        />
       </Stack>
     </>
   );

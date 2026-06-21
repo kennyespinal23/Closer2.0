@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Animated, Easing, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
+import { SermonBlurredBackdrop } from "@/components/SermonBlurredBackdrop";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import * as haptics from "@/lib/haptics";
@@ -154,7 +155,8 @@ export default function PrayTogetherScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1 }}>
+      <SermonBlurredBackdrop />
       {/* ─── Minimal close X ───────────────────────────────
           Same glass disc as the prayer panel's close header
           so the two screens read as one continuous beat.

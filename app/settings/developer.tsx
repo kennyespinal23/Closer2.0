@@ -15,17 +15,17 @@ import { useColors } from "@/state/theme";
  * of the Today screen on builds where it's hidden by default.
  *
  * Why this screen exists:
- *   Closer ships its dev shortcuts (Next Sermon, Preview Shield,
- *   Start/End Dev Session, Reset / Restart App) gated by `__DEV__`,
- *   which is stripped from production-channel builds. That's the
- *   right default for end users — but it leaves the team unable to
- *   QA a production install (TestFlight, internal distribution)
+ *   Closer ships its dev shortcuts (Next Sermon, Reset / Restart
+ *   App) gated by `__DEV__` or Settings → Developer Tools, which
+ *   is stripped from production-channel builds by default. That's
+ *   the right default for end users — but it leaves the team unable
+ *   to QA a production install (TestFlight, internal distribution)
  *   without us cutting a custom build.
  *
  *   This screen closes the gap. Toggling "Show developer panel" on
- *   makes the Today-screen dev row appear on any build, persists
- *   across launches, and is per-install (one teammate enabling it
- *   doesn't affect anyone else).
+ *   makes the Profile → Developer section appear on any build,
+ *   persists across launches, and is per-install (one teammate
+ *   enabling it doesn't affect anyone else).
  *
  *   In `__DEV__` builds the toggle defaults to ON; in production
  *   builds it defaults to OFF.
@@ -47,14 +47,14 @@ export default function DeveloperToolsScreen() {
         title="Internal QA"
         footer={
           enabled
-            ? "The developer panel is visible at the bottom of the Today screen. Pull down to refresh if you don't see it."
-            : "Turn on to show the developer panel at the bottom of the Today screen — Next Sermon, Preview Shield, Start/End Dev Session, and Reset / Restart App."
+            ? "The developer section is visible on the Profile tab — Next Sermon, Reset App, and Restart App."
+            : "Turn on to show the developer section on Profile — Next Sermon, Reset App, and Restart App."
         }
       >
         <SettingsToggleRow
           icon={<DeveloperIcon stroke={colors.ink} />}
           label="Show developer panel"
-          sublabel="Surface QA shortcuts on the Today screen"
+          sublabel="Surface QA shortcuts on the Profile tab"
           value={enabled}
           onValueChange={setEnabled}
         />

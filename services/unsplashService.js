@@ -12,10 +12,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 //   EXPO_PUBLIC_UNSPLASH_ACCESS_KEY=your_access_key_here
 const UNSPLASH_ACCESS_KEY = process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY;
 
-const CACHE_DAY_KEY = 'daily_image_day';
-const CACHE_DATE_KEY = 'daily_image_date';
-const CACHE_URL_KEY = 'daily_image_url';
-
 export const fetchImageForQuery = async (query) => {
   if (!UNSPLASH_ACCESS_KEY) {
     console.log('Unsplash: missing EXPO_PUBLIC_UNSPLASH_ACCESS_KEY');
@@ -42,35 +38,61 @@ export const fetchImageForQuery = async (query) => {
   }
 };
 
-export const getDailyImage = async (query, day) => {
+async function getCachedImage(query, storageKey) {
   try {
     const today = new Date().toDateString();
-    const dayKey = String(day);
+    const dayKeyName = `${storageKey}_day`;
+    const dateKeyName = `${storageKey}_date`;
+    const urlKeyName = `${storageKey}_url`;
 
     const [storedDay, storedDate, storedUrl] = await Promise.all([
-      AsyncStorage.getItem(CACHE_DAY_KEY),
-      AsyncStorage.getItem(CACHE_DATE_KEY),
-      AsyncStorage.getItem(CACHE_URL_KEY),
+      AsyncStorage.getItem(dayKeyName),
+      AsyncStorage.getItem(dateKeyName),
+      AsyncStorage.getItem(urlKeyName),
     ]);
 
-    // Cache hit requires BOTH the same sermon day AND the
-    // same calendar date — advancing to the next sermon
-    // refetches a new image, and the image rotates at
-    // midnight even if the user stays on the same sermon.
-    if (storedDay === dayKey && storedDate === today && storedUrl) {
+    if (storedDay === query && storedDate === today && storedUrl) {
       return storedUrl;
     }
 
     const url = await fetchImageForQuery(query);
     if (url) {
       await AsyncStorage.multiSet([
-        [CACHE_DAY_KEY, dayKey],
-        [CACHE_DATE_KEY, today],
-        [CACHE_URL_KEY, url],
+        [dayKeyName, query],
+        [dateKeyName, today],
+        [urlKeyName, url],
       ]);
     }
     return url;
-  } catch (error) {
+  } catch {
     return null;
   }
+}
+
+/** Unsplash search terms keyed by sermon-type id — used for the
+ *  home editorial hero backgrounds. Kept here so content can
+ *  tune queries without touching UI code. */
+export const SERMON_TYPE_UNSPLASH_QUERIES = {
+  "daily-church": "mountain sunrise spiritual fog",
+  "jesus-only": "ocean sunset golden hour",
+  "letters-struggling": "stormy ocean waves dark",
+  "letters-grateful": "sunrise meadow peaceful",
+  "character-studies": "forest path misty nature",
+  "deep-verse": "open bible light warm",
+  misconceptions: "lightbulb dawn sky",
+  testimonies: "hands raised sunset",
+  questions: "night sky stars peaceful",
+  "prayer-nights": "moon stars quiet night",
+};
+
+export const getHeroImage = async (typeId, day, illustrationPrompt) => {
+  const query =
+    illustrationPrompt?.trim() ||
+    SERMON_TYPE_UNSPLASH_QUERIES[typeId] ||
+    "peaceful spiritual nature landscape";
+  return getCachedImage(query, `hero_${day}_${query}`);
+};
+
+export const getDailyImage = async (query, day) => {
+  return getCachedImage(query, `daily_${day}`);
 };

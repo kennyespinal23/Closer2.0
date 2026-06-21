@@ -69,9 +69,7 @@ const NativeTabs = withLayoutContext<
 >(Navigator);
 
 /**
- * Bottom-tab layout for the main app — consolidated 3-tab shell.
- *
- * Home · Library · Profile. The earlier 5-cell layout (Today /
+ * Bottom-tab layout for the main app — Home · Bible · My Blocks · Profile.
  * Journey / + Check-in / Library / Insights) was collapsed at
  * the user's request:
  *
@@ -175,6 +173,16 @@ export default function TabsLayout() {
               sfSymbol: {
                 default: "books.vertical",
                 selected: "books.vertical.fill",
+              },
+            }}
+          />
+          <NativeTabs.Screen
+            name="blocks"
+            options={{
+              title: "My Blocks",
+              sfSymbol: {
+                default: "shield",
+                selected: "shield.fill",
               },
             }}
           />

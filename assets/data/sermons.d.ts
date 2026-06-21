@@ -24,14 +24,13 @@
  *                       the single `teaser` field below; the home
  *                       card renders the teaser's first paragraph
  *                       as the new editorial preview.
- *   • `imageQuery`   — Unsplash search query for per-sermon
- *                       scripture backdrops. The new catalog
- *                       ships without these; the field is kept
- *                       OPTIONAL on the type so the scripture
- *                       screen's existing Unsplash fallback path
- *                       still type-checks, and so future per-
- *                       sermon queries can be reintroduced
- *                       without another schema migration.
+ *   • `imageQuery`   — legacy Unsplash query (superseded by
+ *                       `illustrationPrompt`). Kept optional so
+ *                       older entries still type-check.
+ *   • `illustrationPrompt` — short Unsplash search phrase for
+ *                       the home hero AND scripture backdrop
+ *                       (e.g. `"sunrise field"`). Required on
+ *                       every entry in the current catalog.
  *   • `illustration` — per-sermon hero image override. Kept
  *                       optional for the same reason as
  *                       `imageQuery` (V2 may reintroduce per-
@@ -109,14 +108,14 @@ export type SermonRecord = {
    *  the saved-sermon view shows the whole thing. Replaces the
    *  previous `blurb` + `closer` two-field pattern. */
   teaser: string;
+  /** Unsplash search phrase for the home hero and scripture
+   *  backdrop, e.g. `"sunrise field"`. Authored per sermon so
+   *  each day's imagery matches the editorial mood. */
+  illustrationPrompt: string;
   /** Always 5 entries, in the canonical Hook → Prayer order. */
   panels: SermonPanel[];
-  /** OPTIONAL per-sermon Unsplash search query for the scripture
-   *  screen backdrop. The new catalog ships without these — the
-   *  scripture screen falls back to a solid dark canvas when the
-   *  field is absent. Kept optional on the type so future
-   *  authoring can re-introduce per-sermon backdrops without a
-   *  schema migration. */
+  /** OPTIONAL legacy Unsplash query — superseded by
+   *  `illustrationPrompt`. Kept for backward compatibility. */
   imageQuery?: string;
   /** OPTIONAL per-sermon hero illustration override. When
    *  present, the home card / intro / panel screens render THIS

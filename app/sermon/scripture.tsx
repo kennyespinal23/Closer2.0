@@ -71,7 +71,7 @@ export default function SermonScriptureScreen() {
 
   // Per-day Unsplash backdrop. `null` until the fetch resolves
   // (or stays null on missing key / offline / 429 / no
-  // `imageQuery` on the sermon — see `getDailyImage()`).
+  // `illustrationPrompt` on the sermon — see `getDailyImage()`).
   //
   // While null, the screen shows a solid #0A0A0A black backing.
   // No bundled fallback image, no swap-flash — when the
@@ -94,7 +94,9 @@ export default function SermonScriptureScreen() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
-    const query = todaysMoment.imageQuery;
+    const query =
+      todaysMoment.illustrationPrompt?.trim() ||
+      todaysMoment.imageQuery?.trim();
     if (!query) return;
     getDailyImage(query, todaysMoment.day).then((url) => {
       if (!cancelled) setImageUrl(url);
@@ -102,7 +104,11 @@ export default function SermonScriptureScreen() {
     return () => {
       cancelled = true;
     };
-  }, [todaysMoment.imageQuery, todaysMoment.day]);
+  }, [
+    todaysMoment.illustrationPrompt,
+    todaysMoment.imageQuery,
+    todaysMoment.day,
+  ]);
 
   // Backdrop cross-fade. Held at 0 until the network image
   // reports onLoad — at that point we ramp to 1 over 600ms,

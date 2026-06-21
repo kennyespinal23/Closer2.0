@@ -29,6 +29,7 @@ import Svg, {
 import { useRouter } from "expo-router";
 import { ActivityRing, RING_ACCENT } from "@/components/ActivityRing";
 import { FadeIn } from "@/components/FadeIn";
+import { HomeDevotionalCarousel } from "@/components/HomeDevotionalCarousel";
 import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
 import { LivingHeroIcon } from "@/components/LivingHeroIcon";
@@ -393,6 +394,37 @@ export default function TodayScreen() {
     router,
   ]);
 
+  const carouselCards = useMemo(() => {
+    const todayType = resolveSermonTypeForMoment(todaysMoment);
+    return [
+      {
+        key: `day-${todaysMoment.day}`,
+        title: todaysMoment.title,
+        blurb: homeBlurb,
+        typeName: todayType.name,
+        accent: todayType.accent,
+        readMinutes: sermonDurationMin,
+        typeId: todayType.id,
+        sermonDay: todaysMoment.day,
+        illustrationPrompt: todaysMoment.illustrationPrompt,
+        active: true,
+        completed: hasCompletedSermonForDay(todaysMoment.day),
+        onPress: handlePlaySermon,
+      },
+    ];
+  }, [
+    todaysMoment,
+    homeBlurb,
+    sermonDurationMin,
+    hasCompletedSermonForDay,
+    handlePlaySermon,
+  ]);
+
+  const handleOpenCompleted = useCallback(() => {
+    haptics.soft();
+    router.push("/completed-sermons");
+  }, [router]);
+
   // Stable refs for the AppBlocksList + RhythmGrid children, which
   // are React.memo'd downstream. Without these the parent re-creates
   // the closures on every render and defeats the memo entirely.
@@ -405,7 +437,7 @@ export default function TodayScreen() {
   );
   const handleOpenStudySessions = useCallback(() => {
     haptics.soft();
-    router.push("/settings/study-sessions");
+    router.navigate("/blocks");
   }, [router]);
   const handleOpenRhythm = useCallback(() => {
     haptics.soft();
@@ -651,363 +683,14 @@ export default function TodayScreen() {
     ) : null;
 
   return (
-    // SafeAreaView is now TRANSPARENT (no bg-bg) so the
-    // AmbientAtmosphere painted at the (tabs) layout level shows
-    // through. The previous per-screen radial gradient was
-    // hoisted into the shared AmbientAtmosphere component and
-    // mounted in app/(tabs)/_layout.tsx so every tab (Today,
-    // Practice, Library, Insights) glows with the same per-day
-    // accent — the whole app reads as one continuous lit space
-    // rather than four flat-black tabs. See AmbientAtmosphere.tsx
-    // and the comments in (tabs)/_layout.tsx for the full
-    // architecture.
-    <SafeAreaView className="flex-1" edges={["top"]}>
-      <ScrollView
-        // Floating glass tab bar sits over the screen — pad the bottom
-        // of the scroll so the last sections aren't hidden beneath it.
-        contentContainerStyle={{
-          paddingBottom: TAB_BAR_TOTAL_HEIGHT + 16 + focusPillSpacing,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ─── Editorial header — Apple iPhone 17 Pro pattern ──────
-            The previous header was a single tight row: a small
-            26pt "Home" title on the left, streak chip + avatar on
-            the right. Compact, but it read like an app screen
-            chrome, not a page. The user feedback was direct: "the
-            home page looks supppppper cheap." The fix is a
-            magazine-spread treatment inspired directly by Apple's
-            product pages (iPhone 17 Pro, AirPods, MacBook):
-              1.  A thin top row with a small-caps date "eyebrow"
-                  on the left and the existing streak chip + avatar
-                  cluster on the right — the FUNCTIONAL chrome.
-              2.  A huge editorial page title beneath it ("Today.")
-                  set in ExtraBold with very tight tracking and a
-                  period — Apple's hallmark display-headline shape
-                  ("A big zoom forward.", "New dimensions in
-                  power.", "Battery life. All-time high.").
-              3.  Generous vertical breathing room below before the
-                  hero — a deliberate top gutter that lets the
-                  title land before the page begins.
-            Together this gives the home page a strong typographic
-            anchor and reads as a curated daily edition rather than
-            a stack of cards. The avatar + streak stay in their
-            existing positions so nothing is functionally lost.
+    <View style={{ flex: 1, backgroundColor: "#000000" }}>
+      <HomeDevotionalCarousel
+        cards={carouselCards}
+        onCompletedPress={handleOpenCompleted}
+        streakCount={streak.current}
+        onStreakPress={handleOpenRhythm}
+      />
 
-            The full-bleed editorial hero (rendered below) takes
-            over the top of the screen edge-to-edge on EVERY
-            sermon now (the previous gate to the Gentler-Streak
-            A/B test was lifted at the user's request). The avatar
-            floats overlaid on the hero image itself, the way
-            Gentler Streak places its profile chip — see the
-            `GentlerStreakSermonCard` render below.
-
-            The legacy `<View className="px-6 pt-1">` header block
-            (page title "Home", "Daily Devotional" red ribbon,
-            avatar row) that used to live here for non-test
-            sermons has been removed. If a future surface needs
-            those pieces back, they're recoverable from git.
-        */}
-        {/* Legacy header block (page-title "Home", avatar row,
-            "Daily Devotional" red ribbon, inline statusPillRow)
-            removed here — the full-bleed editorial hero below now
-            owns the top of the screen for every sermon, with the
-            avatar floating overlaid on the image and the status
-            pills rendered on top of the hero as overlay chrome.
-            Recoverable from git if needed. */}
-
-        {/* ─── Today's Sermon — the hero ──────────────────────────
-            Promoted to the FIRST big element below the header. The
-            sermon is the soul of Closer; everything else on home is
-            supporting context. Opal puts its Now Playing card here
-            for the same reason — the hero answers "what should I
-            do right now?" before the user has to scan or scroll.
-
-            (Historical note: this card used to sit fifth in the
-            stack, behind the streak strip, reading pill, and
-            routine card. Promoting it removes three small chips
-            from the user's path-to-engagement; the supporting
-            sections drop below the timeline.) */}
-        {/* Full-bleed editorial hero — the standard sermon hero
-            for EVERY day's moment (no longer gated to the
-            original "When God Feels Silent" A/B test). The
-            full-bleed image owns the top of the screen, the
-            avatar floats overlaid on the image, and the
-            statusPillRow is rendered ON TOP of the hero as
-            overlay chrome (Gentler Streak's own pattern).
-
-            Editorial preview copy is sourced from the sermon's
-            `teaser` field (first paragraph only), with an auto-
-            fallback to the Hook panel's first paragraph so every
-            catalog day renders cleanly even without
-            individually-curated home copy.
-
-            v1 launch (June 14 2026): the `illustration` prop is
-            intentionally NOT passed, so the card renders its
-            typography-only fallback (TODAY'S DEVOTIONAL badge +
-            avatar row at the top of the body, no full-bleed
-            image, no overlay chrome). Per-sermon cover art
-            wasn't ready in time for launch and the placeholder
-            renderings were blocking ship; we'd rather ship clean
-            text than a card with broken visuals. V2 restores
-            the editorial hero by passing
-            `illustration={sermonType.illustration!}` back here —
-            the card's image variant is preserved verbatim, so
-            visual restoration is exact.
-            
-            (When re-enabling: `illustration` resolves through
-            `resolveSermonTypeForMoment` so per-sermon override
-            art wins over the type-level default. Every sermon
-            TYPE in `constants/sermonTypes.ts` ships an
-            illustration, so the non-null assertion is safe.) */}
-        {/* FadeIn at delay=0 — the devotional region is the
-            page's primary content, so it leads the staggered
-            entrance choreography (App Blocks at 90ms, rhythm
-            at 100ms). FadeIn respects iOS Reduce Motion and
-            renders the card in its final pose for users who
-            have the OS-level preference on. Apple's first-
-            party apps use the same subtle on-mount fade for
-            their lead content (Journal's prompt card, Health's
-            Summary section). */}
-        <FadeIn delayMs={0} durationMs={700}>
-          <GentlerStreakSermonCard
-            title={todaysMoment.title}
-            blurb={homeBlurb}
-            firstName={firstName}
-            // Drives the "TODAY'S WORD" marker INSIDE the
-            // devotional region — renders only when the user
-            // hasn't completed this moment yet so a returning
-            // reader doesn't see a permanent label on a card
-            // they've already read.
-            completed={hasCompletedSermonForDay(todaysMoment.day)}
-            // Current consecutive-day count — drives the compact
-            // flame chip in the top-right of the chrome row.
-            // Hidden by the chip itself when 0 so first-day
-            // users don't see "0" before they've earned it.
-            streakCount={streak.current}
-            // Sermon-type identity for the inline TYPE chip
-            // beneath the title. The chip surfaces today's
-            // category (Daily Church, Letters, etc.) with the
-            // type's SF Symbol so users instantly recognize
-            // the editorial voice without enlarging the
-            // type's name into headline-level weight.
-            typeName={sermonType.name}
-            typeIconSymbol={sermonType.iconSymbol}
-            onPress={handlePlaySermon}
-            onProfilePress={handleOpenProfile}
-            // Status pills are floated over the hero image as
-            // overlay chrome (matching Gentler Streak's own
-            // pattern) so the photo can still bleed full-width
-            // behind the status bar.
-            statusPills={statusPills}
-            // Eye button next to the greeting opens the focus-
-            // status sheet — same pattern Gentler Streak uses
-            // for their "Go Gentler" popup.
-            onShowStatus={handleShowStatus}
-            // Streak hero card in the chrome row taps through
-            // to /rhythm, the streak's history detail. User
-            // explicitly asked for this drill target.
-            onShowRhythm={handleOpenRhythm}
-          />
-        </FadeIn>
-
-        {/* ─── App Blocks — scheduled focus rituals ────────────────
-            The user explicitly asked for a list of "the times the
-            user has set for App Blocks" with toggles, sitting
-            directly under today's sermon. These are the same
-            study-session routines that previously lived in the
-            Practice tab — now that Practice is collapsed into
-            Home + Profile, the routines live here so the user
-            can glance at "what blocks am I committed to" without
-            navigating away from the home page.
-            
-            Each row is the canonical iOS schedule row:
-              • Title (routine name)
-              • Subtitle (time · weekdays)
-              • Trailing Switch (enabled/disabled)
-            
-            Tapping the row navigates to the per-routine editor;
-            the switch is an independent affordance that toggles
-            enabled state without leaving the page.
-            
-            We use FadeIn delay 90 (between the sermon card's 80
-            and the rhythm section's 100) so the section eases in
-            as part of the page's staggered entrance choreography. */}
-        {/* App Blocks — section title outside the card; schedule
-            rows live on the elevated surface below.
-            
-            Spec: 32pt gap above the App Blocks section. */}
-        <FadeIn delayMs={90} durationMs={800}>
-          <View style={{ marginTop: 32 }}>
-            <AppBlocksList
-              sessions={studySessions}
-              onToggle={handleToggleStudySession}
-              onAdd={handleOpenStudySessions}
-              // Tapping a populated row hands off to the same
-              // editor as the empty-state CTA so the user has
-              // ONE place to manage the schedule, regardless of
-              // whether they're creating or editing.
-              onEdit={handleOpenStudySessions}
-            />
-          </View>
-        </FadeIn>
-
-        {/* "Your rhythm" section removed — the streak/rhythm history
-            lives behind the streak chip in the top-right of the
-            header chrome (taps through to /rhythm). Keeping a
-            second copy of the same data on the home page
-            duplicated the surface and competed with the App Blocks
-            list directly above for attention. The chip is the
-            single canonical entry to the rhythm detail screen. */}
-
-        {/* Browse all rail was removed at the user's request —
-            home is now a focused funnel (Daily Devotional →
-            App Blocks → rhythm → verse) and the other sermon
-            types live exclusively on the Library tab. */}
-
-        {/*
-            ═══════════════════════════════════════════════════════════
-            HOME PAGE STOPS HERE.
-
-            Phase 10C declutter: removed Today's rhythm timeline,
-            "Your practice" section header, WeekStrip, ReadingPill,
-            RoutineCard, and LastCheckInCard from the home screen.
-
-            Why — the user feedback was clear: the home was reading
-            like a "put everything next to each other for the sake
-            of it" stack. Opal's home is comparatively bare — a hero
-            object and one or two supporting strips, then it ENDS.
-            The rest of the app lives in dedicated tabs (My Apps,
-            Insights, etc).
-
-            Closer's home is now the same posture:
-              1. Greeting + streak chip + tagline    (top-of-page personality)
-              2. Sermon hero                          (the day's invitation)
-              3. 3-stat row                           (gentle progress signal)
-              4. Verse for today                      (the second sacred moment)
-            …and that's it.
-
-            The cut sections aren't deleted from the app — they live
-            on more appropriate tabs:
-              • Today's rhythm / RoutineCard → Practice tab (which
-                already has the routines + study sessions).
-              • WeekStrip                    → Insights tab (which
-                already has the deep streak/history visualizations
-                — the chip in the header keeps the streak signal on
-                home for emotional continuity).
-              • ReadingPill                  → Practice tab (paired
-                with the Bible-study routine that drives it).
-              • LastCheckInCard              → already accessible from
-                the check-in flow / Insights timeline; cutting it
-                from home reduces a "yesterday's history" feel from
-                a screen meant to invite today's practice.
-
-            The dev tools section below stays — see the gate
-            immediately below for the visibility logic (kept on in
-            __DEV__, opt-in for production-channel testers).
-            ═══════════════════════════════════════════════════════════ */}
-
-        {/* ─── Dev tools ────────────────────────────────────────────
-            Gated behind `showDevTools` (= __DEV__ OR the persisted
-            user opt-in from Settings → Developer Tools). In a local
-            __DEV__ build this is always true so nothing changes for
-            day-to-day development; in production builds the subtree
-            stays hidden until a teammate flips the toggle on. That
-            opt-in path is what lets the team QA a production-channel
-            install (TestFlight / internal distribution) without
-            cutting a custom build — see state/devTools.tsx for the
-            persistence + defaults.
-
-              • Next Sermon — replaces today's moment with the next
-                              one in the flat catalog (wraps at 85).
-                              Lets a reviewer walk through every
-                              moment end-to-end during content QA
-                              without waiting for the daily rotation.
-                              Counter on the right shows position
-                              within the catalog.
-              • Reset App   — clears state, lands at welcome screen.
-              • Restart App — clears state, jumps straight into the
-                              onboarding flow (skips welcome).
-        */}
-        {showDevTools && (
-          <FadeIn delayMs={1100} durationMs={700}>
-            <View className="px-6 mt-12 items-center">
-              <Text
-                className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-3"
-                style={{ fontFamily: "System", fontWeight: "700" }}
-              >
-                Dev
-              </Text>
-              <View className="items-center mb-3">
-                <NextSermonPill
-                  position={catalogPosition.position}
-                  total={catalogPosition.total}
-                  onPress={advanceToNextMoment}
-                />
-              </View>
-              {/* Preview-shield row. Lets a reviewer step through
-                  each app's quiet message overlay without starting
-                  a real focus session. Tapping cycles through the
-                  catalog (1 → 2 → ... → 7 → wrap). */}
-              <View className="items-center mb-3">
-                <PreviewShieldPill
-                  onPress={() => {
-                    const currentIdx = previewAppId
-                      ? SOCIAL_APPS.findIndex((a) => a.id === previewAppId)
-                      : -1;
-                    const nextIdx = (currentIdx + 1) % SOCIAL_APPS.length;
-                    setPreviewAppId(SOCIAL_APPS[nextIdx]!.id);
-                  }}
-                />
-              </View>
-              {/* Toggle a real focus SESSION without going through
-                  the sermon Begin flow. The session uses the
-                  current pref's blocked-app set + today's moment
-                  day. Lets the reviewer verify the FocusMiniPlayer
-                  appears on every tab + the book reader + settings
-                  without having to walk through a full sermon each
-                  time. End-state shows "End focus session" so the
-                  pill doubles as a quick teardown affordance. */}
-              <View className="items-center mb-3">
-                <DevSessionPill
-                  active={!!focusSession}
-                  onPress={() => {
-                    if (focusSession) {
-                      endFocusSession().catch(() => {});
-                    } else {
-                      // Auto-enable focus before starting if the
-                      // master toggle is off — otherwise the
-                      // session would be silently dropped at
-                      // surface time (the in-sermon banner and
-                      // global banner both gate on session, but
-                      // the user might be testing without
-                      // having flipped the master switch yet).
-                      if (!focusPrefs.enabled) {
-                        setFocusEnabled(true);
-                      }
-                      startFocusSession(todaysMoment.day).catch(
-                        () => {},
-                      );
-                    }
-                  }}
-                />
-              </View>
-              <View className="flex-row items-center gap-3">
-                <DevPill
-                  icon={<ResetIcon />}
-                  label="Reset App"
-                  onPress={handleResetApp}
-                />
-                <DevPill
-                  icon={<RestartIcon />}
-                  label="Restart App"
-                  onPress={handleRestartApp}
-                />
-              </View>
-            </View>
-          </FadeIn>
-        )}
-      </ScrollView>
 
       {/* ShieldOverlay — mounted at the SafeArea root so it covers
           the full screen + tab bar when visible. The Modal handles
@@ -1034,7 +717,7 @@ export default function TodayScreen() {
         onEndFocus={handleEndFocusFromSheet}
         onManageBlocks={handleManageBlocksFromSheet}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

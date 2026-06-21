@@ -1,57 +1,31 @@
 import { useMemo } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import Svg, { Path } from "react-native-svg";
-import { useRouter } from "expo-router";
-import * as haptics from "@/lib/haptics";
+import { ScrollView, Text, View } from "react-native";
+import LottieView from "lottie-react-native";
 import { SFSymbol } from "@/components/Symbol";
 import { buildCurrentWeek, buildMonthGrid } from "@/lib/rhythm";
 import { useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
+const FIRE_STREAK_ANIMATION = require("../assets/lottie/FireStreakAnimation.json");
+
 /**
  * StreakDashboard — the shared body used by both the post-sermon
  * /sermon/streak celebration AND the /rhythm history modal.
  *
- * Both surfaces show the same information (current streak +
- * week-strip + achievements link + month grid + Daily Goals
- * soon row), so the body is extracted here once. Each caller
- * owns ONLY its chrome (the nav bar / close affordance) and
- * passes its specific concerns (entrance haptic vs none, day
- * override from URL params vs live progress, etc.).
- *
  * Layout — top to bottom:
  *
- *   shield emblem    (floats over hero card)
  *   ┌────────────────────────────────────────┐
- *   │  X Day Streak!                         │   hero card
+ *   │  X Day Streak!              [🔥 lottie]│   hero card
  *   │  Great start! Keep going               │
  *   │                                          │
  *   │  Mon  Tue  Wed  Thu  Fri  Sat  Sun     │   week strip
  *   │   8   9    10   11   12   13   (14)    │   today = amber chip
  *   └────────────────────────────────────────┘
  *   ┌────────────────────────────────────────┐
- *   │  [📖]  Achievements              ›     │   achievements row
- *   └────────────────────────────────────────┘
- *   ┌────────────────────────────────────────┐
  *   │   ‹    June 2026             ›         │   month calendar
  *   │   S M T W T F S                        │
  *   │   …  …  …                              │
  *   └────────────────────────────────────────┘
- *   ┌────────────────────────────────────────┐
- *   │  [📅] Daily Goals          [Soon]      │   coming-soon row
- *   └────────────────────────────────────────┘
- *
- * Two amber tiers — `STREAK_TEXT_AMBER` is the readable text
- * accent (deep on cream, light on black) and `STREAK_FILL_AMBER`
- * is the saturated chip/shield fill that reads as a bright
- * object in both schemes. Apple Fitness does the same with its
- * Move ring (text color and fill color split per scheme so
- * the metric reads everywhere it lands).
  */
 
 const STREAK_AMBER_LIGHT = "#FFB672";
@@ -70,30 +44,19 @@ export type StreakDashboardProps = {
 };
 
 export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
-  const router = useRouter();
   const colors = useColors();
   const scheme = useResolvedScheme();
   const { engagedDates, streak } = useProgress();
 
-  // Two-tier amber per scheme — see file header doc.
   const STREAK_TEXT_AMBER =
     scheme === "light" ? STREAK_AMBER_DEEP : STREAK_AMBER_LIGHT;
   const STREAK_FILL_AMBER =
     scheme === "light" ? STREAK_AMBER_FILL_LIGHT : STREAK_AMBER_FILL_DARK;
 
-  // Day count: prefer the explicit override (post-sermon
-  // deep-link path), otherwise the user's real current streak.
   const days = daysOverride && daysOverride > 0 ? daysOverride : streak.current;
 
-  // Current week — Sun..Sat row of cells from the canonical
-  // rhythm helper. Same engaged set everything else in the app
-  // reads from, so this row can never disagree with the user's
-  // actual history.
   const week = useMemo(() => buildCurrentWeek(engagedDates), [engagedDates]);
 
-  // Current month grid for the lower calendar card. Same shape
-  // the legacy rhythm detail page used so any future feature
-  // we add can rely on consistent classification across surfaces.
   const todayDate = useMemo(() => new Date(), []);
   const monthGrid = useMemo(
     () =>
@@ -111,60 +74,61 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
       contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
       showsVerticalScrollIndicator={false}
     >
-      {/* Shield emblem — floats above the hero card like a badge
-          on a Wallet pass, nested over the top rim. Static SVG
-          (no animation libraries) so the dashboard stays light.
-          The parent screen can wrap this body in entrance motion
-          if it wants; the dashboard itself is render-static. */}
-      <View
-        style={{
-          alignItems: "center",
-          marginTop: 8,
-          marginBottom: -32,
-          zIndex: 2,
-        }}
-        pointerEvents="none"
-      >
-        <ShieldEmblem fill={STREAK_FILL_AMBER} />
-      </View>
-
-      {/* Hero card — current streak headline + week strip */}
+      {/* Hero card — streak headline left, flame lottie right */}
       <View
         style={{
           borderRadius: 24,
           backgroundColor: colors.surfaceSecondary,
-          paddingTop: 56,
+          paddingTop: 24,
           paddingHorizontal: 24,
           paddingBottom: 24,
+          marginTop: 8,
         }}
       >
-        <Text
+        <View
           style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            color: colors.ink,
-            fontSize: 28,
-            lineHeight: 34,
-            letterSpacing: -0.5,
-            textAlign: "center",
-          }}
-          accessibilityRole="header"
-        >
-          {days} {days === 1 ? "Day Streak!" : "Day Streak!"}
-        </Text>
-        <Text
-          style={{
-            fontFamily: "System",
-            fontWeight: "500",
-            color: colors.inkMuted,
-            fontSize: 14,
-            lineHeight: 19,
-            textAlign: "center",
-            marginTop: 4,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-          {weekSubtitle(days)}
-        </Text>
+          <View style={{ flex: 1, paddingRight: 12 }}>
+            <Text
+              style={{
+                fontFamily: "System",
+                fontWeight: "700",
+                color: colors.ink,
+                fontSize: 28,
+                lineHeight: 34,
+                letterSpacing: -0.5,
+                textAlign: "left",
+              }}
+              accessibilityRole="header"
+            >
+              {days} {days === 1 ? "Day Streak!" : "Day Streak!"}
+            </Text>
+            <Text
+              style={{
+                fontFamily: "System",
+                fontWeight: "500",
+                color: colors.inkMuted,
+                fontSize: 14,
+                lineHeight: 19,
+                textAlign: "left",
+                marginTop: 4,
+              }}
+            >
+              {weekSubtitle(days)}
+            </Text>
+          </View>
+
+          <LottieView
+            source={FIRE_STREAK_ANIMATION}
+            autoPlay
+            loop
+            style={{ width: 88, height: 88 }}
+          />
+        </View>
 
         {/* Week strip — Sun..Sat columns */}
         <View
@@ -209,90 +173,6 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
           })}
         </View>
       </View>
-
-      {/* Achievements card — links to a future achievements
-          surface. Today it links to /rhythm (which is itself
-          this same dashboard, so we early-return at the call
-          site when the user is already on the rhythm route to
-          avoid a no-op tap). */}
-      <Pressable
-        onPress={() => {
-          haptics.soft();
-          // If we're ALREADY on /rhythm (the modal renders the
-          // dashboard), tapping this row would no-op; we route
-          // back to /today instead so the row still does
-          // something honest. The streak route always pushes
-          // /rhythm — no self-cycle there.
-          router.push("/rhythm");
-        }}
-        accessibilityRole="button"
-        accessibilityLabel="Open achievements"
-        style={({ pressed }) => ({
-          marginTop: 16,
-          opacity: pressed ? 0.88 : 1,
-        })}
-      >
-        <View
-          style={{
-            borderRadius: 20,
-            backgroundColor: colors.surfaceSecondary,
-            paddingHorizontal: 16,
-            paddingVertical: 16,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 14,
-              backgroundColor: STREAK_FILL_AMBER,
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 14,
-            }}
-          >
-            <SFSymbol
-              name="book.closed.fill"
-              size={22}
-              color="#FFFFFF"
-              weight="bold"
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: colors.ink,
-                fontSize: 17,
-                letterSpacing: -0.2,
-              }}
-            >
-              Achievements
-            </Text>
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "400",
-                color: colors.inkMuted,
-                fontSize: 13,
-                marginTop: 2,
-              }}
-              numberOfLines={1}
-            >
-              Track your reading rhythm
-            </Text>
-          </View>
-          <SFSymbol
-            name="chevron.right"
-            size={14}
-            color={colors.inkSubtle}
-            weight="semibold"
-          />
-        </View>
-      </Pressable>
 
       {/* Month calendar card */}
       <View
@@ -392,90 +272,6 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
             })}
           </View>
         ))}
-      </View>
-
-      {/* Daily Goals — coming-soon row. Inert (no Pressable
-          wrapper) so the user can't tap into a dead end. */}
-      <View
-        style={{
-          marginTop: 16,
-          borderRadius: 20,
-          backgroundColor: colors.surfaceSecondary,
-          paddingHorizontal: 16,
-          paddingVertical: 16,
-          flexDirection: "row",
-          alignItems: "center",
-        }}
-      >
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 12,
-            backgroundColor:
-              scheme === "light"
-                ? "rgba(180, 83, 9, 0.12)"
-                : "rgba(251, 146, 60, 0.18)",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 14,
-          }}
-        >
-          <SFSymbol
-            name="calendar"
-            size={20}
-            color={STREAK_TEXT_AMBER}
-            weight="semibold"
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: colors.ink,
-              fontSize: 15,
-              letterSpacing: -0.2,
-            }}
-          >
-            Daily Goals
-          </Text>
-          <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "400",
-              color: colors.inkMuted,
-              fontSize: 12.5,
-              marginTop: 2,
-            }}
-            numberOfLines={1}
-          >
-            Set and track your reading rhythm
-          </Text>
-        </View>
-        <View
-          style={{
-            borderRadius: 999,
-            backgroundColor:
-              scheme === "light"
-                ? "rgba(60, 60, 67, 0.10)"
-                : "rgba(235, 235, 245, 0.14)",
-            paddingHorizontal: 10,
-            paddingVertical: 4,
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "600",
-              color: colors.inkMuted,
-              fontSize: 11,
-              letterSpacing: 0.2,
-            }}
-          >
-            Soon
-          </Text>
-        </View>
       </View>
     </ScrollView>
   );
@@ -667,79 +463,6 @@ function MonthDayCell({
       >
         {dayNum}
       </Text>
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Shield emblem — laurel-wreath badge
-// ─────────────────────────────────────────────────────────────────
-
-function ShieldEmblem({ fill }: { fill: string }) {
-  const SIZE = 88;
-  return (
-    <View
-      style={{
-        width: SIZE,
-        height: SIZE,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Svg width={SIZE} height={SIZE} viewBox="0 0 88 88">
-        <Path
-          d="M14 18
-             C 14 13.582 17.582 10 22 10
-             L 66 10
-             C 70.418 10 74 13.582 74 18
-             L 74 46
-             C 74 60 64 70 44 80
-             C 24 70 14 60 14 46
-             Z"
-          fill={fill}
-        />
-        <Path
-          d="M30 32
-             C 30 32 32 38 34 42
-             C 36 46 38 49 42 52
-             M30 32 C 30 30 32 30 33 31
-             M32 36 C 32 34 34 34 35 35
-             M34 40 C 34 38 36 38 37 39
-             M36 44 C 36 42 38 42 39 43
-             M38 48 C 38 46 40 46 41 47"
-          stroke="#FFFFFF"
-          strokeOpacity={0.92}
-          strokeWidth={1.8}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        <Path
-          d="M58 32
-             C 58 32 56 38 54 42
-             C 52 46 50 49 46 52
-             M58 32 C 58 30 56 30 55 31
-             M56 36 C 56 34 54 34 53 35
-             M54 40 C 54 38 52 38 51 39
-             M52 44 C 52 42 50 42 49 43
-             M50 48 C 50 46 48 46 47 47"
-          stroke="#FFFFFF"
-          strokeOpacity={0.92}
-          strokeWidth={1.8}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        <Path
-          d="M40 52
-             C 42 54 46 54 48 52"
-          stroke="#FFFFFF"
-          strokeOpacity={0.92}
-          strokeWidth={1.8}
-          strokeLinecap="round"
-          fill="none"
-        />
-      </Svg>
     </View>
   );
 }

@@ -256,6 +256,10 @@ function AppShell() {
           name="highlights"
           options={{ animation: "slide_from_right" }}
         />
+        <Stack.Screen
+          name="completed-sermons"
+          options={{ animation: "slide_from_right" }}
+        />
         {/* Per-check-in detail page (app/check-ins/[id].tsx).
             Drill-down semantics matching notes / highlights —
             reached from the Journey timeline. */}

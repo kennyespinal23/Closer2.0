@@ -5,7 +5,11 @@ import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import { SFSymbol } from "@/components/Symbol";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/components/Button";
-import { summarizeBlockedApps } from "@/lib/focus";
+import {
+  isScreenTimeShieldReady,
+  shouldOfferManualFocusShield,
+  summarizeBlockedApps,
+} from "@/lib/focus";
 import { formatReminderTime } from "@/lib/notifications";
 import { useFocus } from "@/state/focus";
 import {
@@ -75,6 +79,9 @@ export default function StudyLandingScreen() {
       ? session.blockedAppIds
       : focusPrefs.blockedAppIds;
 
+  const canShieldThisRoutine =
+    isScreenTimeShieldReady() || sessionApps.length > 0;
+
   // Focus engages only when ALL of these are true:
   //   • Global focus master is ON (focusPrefs.enabled). This is what
   //     the home screen's Focus-mode pill toggles. Gating on it here
@@ -91,9 +98,9 @@ export default function StudyLandingScreen() {
   //     would just be theater.
   //   • The user hasn't tapped Skip on this visit.
   const focusOffered =
-    focusPrefs.enabled &&
+    shouldOfferManualFocusShield(focusPrefs) &&
     Boolean(session?.useFocusMode) &&
-    sessionApps.length > 0 &&
+    canShieldThisRoutine &&
     !skipFocusOnce;
 
   const showFocusRow = focusOffered && !focusPrefs.autoStart;

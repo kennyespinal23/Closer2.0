@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -10,12 +10,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { SocialAppCard } from "@/components/SocialAppCard";
 import type { SocialAppKind } from "@/lib/socialAppIconAssets";
 import { FadeIn } from "@/components/FadeIn";
 import { CLOSER_ACCENT } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
+import {
+  armLaunchSplash,
+  suppressLaunchSplashUntilRouted,
+} from "@/lib/launchSplashSession";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useOnboarding } from "@/state/onboarding";
 import { useColors, useResolvedScheme } from "@/state/theme";
@@ -102,28 +106,69 @@ const PLACEMENTS: ReadonlyArray<CardPlacement> = [
 const SWAY_PX = 3.5;
 const SWAY_DEG = 1.6;
 
-export default function GetStartedScreen() {
+type ReturningHref = "/rotating-moment" | "/today";
+
+/**
+ * Root launch gate.
+ *
+ * Returning users (`completed === true`) never see the Get Started
+ * landing — they route straight to the rotating moment or home.
+ * New users see the falling-cards landing below.
+ */
+export default function IndexScreen() {
+  const { answers } = useOnboarding();
+  const [returningHref, setReturningHref] = useState<ReturningHref | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!answers.completed) return;
+
+    suppressLaunchSplashUntilRouted();
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const { shouldShowRotatingMoment } = await import(
+          "@/lib/rotatingMomentStorage"
+        );
+        const showMoment = await shouldShowRotatingMoment();
+        if (cancelled) return;
+        if (showMoment) {
+          setReturningHref("/rotating-moment");
+        } else {
+          armLaunchSplash();
+          setReturningHref("/today");
+        }
+      } catch {
+        if (cancelled) return;
+        armLaunchSplash();
+        setReturningHref("/today");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [answers.completed]);
+
+  if (answers.completed) {
+    if (!returningHref) {
+      return <View style={{ flex: 1, backgroundColor: "#000000" }} />;
+    }
+    return <Redirect href={returningHref} />;
+  }
+
+  return <GetStartedLanding />;
+}
+
+function GetStartedLanding() {
   const router = useRouter();
   const colors = useColors();
   const scheme = useResolvedScheme();
   const glow = GLOW_STOPS[scheme];
   const { height: screenHeight } = useWindowDimensions();
-  const { answers, reset: resetOnboarding } = useOnboarding();
-
-  // ─── Auto-redirect for returning users ──────────────────────
-  // HydrationGate (root layout) has already loaded the persisted
-  // onboarding answers before this screen mounts, so `completed`
-  // is reliable here. If the user finished onboarding on a prior
-  // session, skip the landing entirely and route straight into
-  // the app — they shouldn't see the Get Started chrome again on
-  // every cold launch.
-  // `useEffect` (not inline) so the redirect happens after mount
-  // and doesn't fight with the router's own initial-route setup.
-  useEffect(() => {
-    if (answers.completed) {
-      router.replace("/today");
-    }
-  }, [answers.completed, router]);
+  const { answers, reset: resetOnboarding, setAnswer } = useOnboarding();
 
   // Hero center sits in the UPPER-MIDDLE third of the screen so
   // the title block has room to live below the falling cards.
@@ -221,6 +266,11 @@ export default function GetStartedScreen() {
   };
 
   const handleSignIn = () => {
+    // Returning-user shortcut — must persist `completed` or every
+    // cold launch routes back to this landing.
+    if (!answers.completed) {
+      setAnswer("completed", true);
+    }
     router.replace("/today");
   };
 

@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import * as haptics from "@/lib/haptics";
+import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { useColors } from "@/state/theme";
 
 /**
@@ -445,32 +446,12 @@ export function PracticeTodayCard({
                 Painted in the shared SERMON_ACCENT so it pairs
                 visually with the Continue pill the user has seen
                 on Panels 1-3. */}
-            <Pressable
-              onPress={advanceWithSlide}
-              accessibilityRole="button"
-              accessibilityLabel="Continue to prayer"
-              style={({ pressed }) => ({
-                marginTop: 20,
-                backgroundColor: accent,
-                borderRadius: 100,
-                paddingVertical: 18,
-                paddingHorizontal: 24,
-                opacity: pressed ? 0.92 : 1,
-              })}
-            >
-              <Text
-                style={{
-                  color: "#FFFFFF",
-                  fontFamily: "System",
-                  fontWeight: "600",
-                  fontSize: 17,
-                  textAlign: "center",
-                  letterSpacing: -0.2,
-                }}
-              >
-                Continue to prayer
-              </Text>
-            </Pressable>
+            <View style={{ marginTop: 20 }}>
+              <PrimaryPillButton
+                label="Continue to prayer"
+                onPress={advanceWithSlide}
+              />
+            </View>
 
             {/* Secondary affordance hint — a small caption under
                 the Continue pill that names the gesture-native

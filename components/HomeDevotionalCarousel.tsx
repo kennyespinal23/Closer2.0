@@ -2,31 +2,40 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
+  InteractionManager,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from "react-native";
 import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
+import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
+import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
+import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { SFSymbol } from "@/components/Symbol";
 import * as haptics from "@/lib/haptics";
 import { typography } from "@/lib/typography";
 import { getSermonBackdrop } from "@/services/unsplashService";
 import {
-  COMPLETED_READ_GREEN,
   HERO_DIM_OVERLAY,
   HERO_GLASS_DISC,
 } from "@/constants/heroChrome";
 
-/** Title anchor — editorial placement, high enough for long titles + teaser. */
-const TITLE_TOP_RATIO = 0.46;
-const TITLE_FONT_SIZE = 40;
-const TITLE_LINE_HEIGHT = 44;
+/** Native iOS UITabBar visible height (above home indicator). */
+const TAB_BAR_VISIBLE_HEIGHT = 49;
+/** Worst-case tab bar footprint (bar + home indicator) on modern iPhones. */
+const TAB_BAR_FOOTPRINT = 83;
+/** Breathing room between pinned CTAs and the floating tab bar. */
+const TAB_BAR_CONTENT_GAP = 24;
+/** Extra lift so the editorial block floats above the tab bar edge. */
+const BOTTOM_CONTENT_LIFT = 40;
+/** Horizontal page margin — Apple HIG / Espinal layout standard. */
+const PAGE_MARGIN_H = 16;
+/** Editorial gap between teaser body and the primary CTA. */
+const CTA_TOP_MARGIN = 56;
 
 /** Native emoji per sermon type — travel-app metadata dimension. */
 const TYPE_EMOJI: Record<string, string> = {
@@ -65,6 +74,28 @@ export type HomeDevotionalCarouselProps = {
   onStreakPress?: () => void;
 };
 
+/** Reserve space above the native tab bar (+ focus mini-player when live). */
+function useHomeBottomInset(): number {
+  const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
+  const focusPillSpacing = useFocusMiniPlayerSpacing();
+  const frozenFocusSpacingRef = useRef(focusPillSpacing);
+
+  if (isFocused) {
+    frozenFocusSpacingRef.current = focusPillSpacing;
+  }
+
+  const effectiveFocusSpacing = isFocused
+    ? focusPillSpacing
+    : frozenFocusSpacingRef.current;
+
+  const tabClearance = Math.max(
+    insets.bottom + TAB_BAR_VISIBLE_HEIGHT + TAB_BAR_CONTENT_GAP,
+    TAB_BAR_FOOTPRINT + TAB_BAR_CONTENT_GAP,
+  );
+  return tabClearance + BOTTOM_CONTENT_LIFT + effectiveFocusSpacing;
+}
+
 /** "21 June" — same voice as the travel reference's "11–17 June". */
 function formatTodayDate(now: Date): string {
   return now.toLocaleDateString("en-GB", {
@@ -98,18 +129,16 @@ function EmojiMeta({ emoji, label }: { emoji: string; label: string }) {
 
 const HomeHeroSlide = memo(function HomeHeroSlide({
   card,
-  width,
-  height,
   todayLabel,
   exitOpacity,
   onReadPress,
+  bottomInset,
 }: {
   card: DevotionalCarouselCard;
-  width: number;
-  height: number;
   todayLabel: string;
   exitOpacity: Animated.Value;
   onReadPress: () => void;
+  bottomInset: number;
 }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const typeEmoji = TYPE_EMOJI[card.typeId] ?? "📖";
@@ -129,10 +158,9 @@ const HomeHeroSlide = memo(function HomeHeroSlide({
   const ctaLabel =
     card.ctaLabel ??
     (card.completed ? "Read Again" : card.active ? "Read Now" : "Coming Soon");
-  const useWhiteCta = card.active && !card.completed;
 
   return (
-    <View style={{ width, height, backgroundColor: "#0A0A0A" }}>
+    <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
       {imageUrl ? (
         <Image
           source={{ uri: imageUrl }}
@@ -151,35 +179,20 @@ const HomeHeroSlide = memo(function HomeHeroSlide({
 
       <Animated.View
         style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: height * TITLE_TOP_RATIO,
-          bottom: TAB_BAR_TOTAL_HEIGHT + 12,
-          paddingHorizontal: 32,
+          flex: 1,
+          justifyContent: "flex-end",
+          paddingBottom: bottomInset,
+          paddingHorizontal: PAGE_MARGIN_H,
           opacity: exitOpacity,
         }}
       >
         <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: 12 }}
+          style={{ flexGrow: 0, flexShrink: 1 }}
           showsVerticalScrollIndicator={false}
           bounces={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              fontSize: TITLE_FONT_SIZE,
-              lineHeight: TITLE_LINE_HEIGHT,
-              letterSpacing: -0.7,
-              color: "#FFFFFF",
-              textShadowColor: "rgba(0, 0, 0, 0.75)",
-              textShadowOffset: { width: 0, height: 1 },
-              textShadowRadius: 14,
-            }}
-          >
+          <Text style={[typography.pageTitle, { color: "#FFFFFF" }]}>
             {card.title}
           </Text>
 
@@ -226,69 +239,36 @@ const HomeHeroSlide = memo(function HomeHeroSlide({
           ) : null}
         </ScrollView>
 
-        <Pressable
-          onPress={() => {
-            if (!card.active) return;
-            onReadPress();
-          }}
-          disabled={!card.active}
-          accessibilityRole="button"
-          accessibilityLabel={ctaLabel}
-          style={({ pressed }) => ({
-            marginTop: 8,
-            opacity: pressed && card.active ? 0.92 : 1,
-            alignSelf: "stretch",
-          })}
-        >
+        <View style={{ height: CTA_TOP_MARGIN }} />
+
+        {card.active ? (
+          <PrimaryPillButton
+            label={ctaLabel}
+            onPress={onReadPress}
+            showArrow={!card.completed}
+          />
+        ) : (
           <View
             style={{
-              backgroundColor: useWhiteCta
-                ? "#FFFFFF"
-                : card.completed
-                  ? COMPLETED_READ_GREEN
-                  : "rgba(255,255,255,0.18)",
+              backgroundColor: "rgba(255,255,255,0.18)",
               borderRadius: 999,
-              paddingVertical: useWhiteCta ? 18 : 16,
-              paddingHorizontal: 28,
-              flexDirection: "row",
+              paddingVertical: 14,
+              paddingHorizontal: 24,
+              minHeight: 52,
               alignItems: "center",
               justifyContent: "center",
-              minHeight: 52,
-              ...(useWhiteCta
-                ? {
-                    shadowColor: "#FFFFFF",
-                    shadowOpacity: 0.2,
-                    shadowRadius: 18,
-                    shadowOffset: { width: 0, height: 0 },
-                  }
-                : {}),
             }}
           >
             <Text
               style={[
                 typography.button,
-                {
-                  color: useWhiteCta
-                    ? "#000000"
-                    : card.active
-                      ? "#FFFFFF"
-                      : "rgba(255,255,255,0.5)",
-                  marginRight: card.active ? 8 : 0,
-                },
+                { color: "rgba(255,255,255,0.5)" },
               ]}
             >
               {ctaLabel}
             </Text>
-            {card.active ? (
-              <SFSymbol
-                name={card.completed ? "checkmark" : "arrow.right"}
-                size={15}
-                color={useWhiteCta ? "#000000" : "#FFFFFF"}
-                weight="semibold"
-              />
-            ) : null}
           </View>
-        </Pressable>
+        )}
       </Animated.View>
     </View>
   );
@@ -300,8 +280,8 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
   streakCount = 0,
   onStreakPress,
 }: HomeDevotionalCarouselProps) {
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const bottomInset = useHomeBottomInset();
   const card = cards[0];
   const todayLabel = useMemo(() => formatTodayDate(new Date()), []);
   const exitOpacity = useRef(new Animated.Value(1)).current;
@@ -331,11 +311,10 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
     <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
       <HomeHeroSlide
         card={card}
-        width={screenWidth}
-        height={screenHeight}
         todayLabel={todayLabel}
         exitOpacity={exitOpacity}
         onReadPress={runReadTransition}
+        bottomInset={bottomInset}
       />
 
       <Animated.View
@@ -343,8 +322,8 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
         style={{
           position: "absolute",
           top: insets.top + 8,
-          left: 16,
-          right: 16,
+          left: PAGE_MARGIN_H,
+          right: PAGE_MARGIN_H,
           zIndex: 10,
           flexDirection: "row",
           alignItems: "center",
@@ -359,7 +338,7 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
           }}
           accessibilityRole="button"
           accessibilityLabel="Open completed sermons"
-          hitSlop={14}
+          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
           <View style={HERO_GLASS_DISC}>
@@ -376,7 +355,12 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
           <Pressable
             onPress={() => {
               haptics.soft();
-              onStreakPress();
+              // Defer navigation one frame so the press opacity
+              // settles and the native tab bar doesn't fight the
+              // modal transition on the same tick.
+              InteractionManager.runAfterInteractions(() => {
+                onStreakPress();
+              });
             }}
             accessibilityRole="button"
             accessibilityLabel={
@@ -384,7 +368,7 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
                 ? `${streakCount}-day streak. Tap to open Rhythm.`
                 : "Start a streak. Tap to open Rhythm."
             }
-            hitSlop={14}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
             <View
@@ -393,11 +377,11 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
                 alignItems: "center",
                 paddingHorizontal: 14,
                 paddingVertical: 9,
-                borderRadius: 19,
+                borderRadius: 22,
                 backgroundColor: HERO_GLASS_DISC.backgroundColor,
                 borderWidth: HERO_GLASS_DISC.borderWidth,
                 borderColor: HERO_GLASS_DISC.borderColor,
-                minHeight: 38,
+                minHeight: 44,
               }}
             >
               <Text

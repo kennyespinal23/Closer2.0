@@ -8,6 +8,7 @@ import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
 import { SFSymbol } from "@/components/Symbol";
 import { CLOSER_ACCENT } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
+import { countSilencedTargets } from "@/lib/focus";
 import { typography } from "@/lib/typography";
 import { useFocus } from "@/state/focus";
 import { useStudySessions } from "@/state/studySessions";
@@ -33,7 +34,7 @@ export default function BlocksTabScreen() {
     router.push("/settings/study-sessions");
   }, [router]);
 
-  const blockedCount = focusPrefs.blockedAppIds.length;
+  const blockedCount = countSilencedTargets(focusPrefs.blockedAppIds);
   const enabledCount = sessions.filter((s) => s.enabled).length;
 
   return (

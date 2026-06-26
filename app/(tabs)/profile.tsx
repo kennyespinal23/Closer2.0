@@ -25,6 +25,7 @@ import {
 } from "@/state/annotations";
 import { useOnboarding } from "@/state/onboarding";
 import { useDevAppReset } from "@/lib/useDevAppReset";
+import { isInternalBuild } from "@/lib/isInternalBuild";
 import { useDevTools } from "@/state/devTools";
 import { useMoments } from "@/state/moments";
 import { useSavedSermons } from "@/state/savedSermons";
@@ -68,7 +69,7 @@ export default function ProfileTabScreen() {
   const { saved: savedSermonDays, count: savedCount } = useSavedSermons();
   const { todaysMoment, catalogPosition, advanceToNextMoment } = useMoments();
   const { enabled: devToolsEnabled } = useDevTools();
-  const showDevShortcuts = __DEV__ || devToolsEnabled;
+  const showDevShortcuts = isInternalBuild() || devToolsEnabled;
   const { resetApp, restartApp } = useDevAppReset();
   const colors = useColors();
   const { pref: themePref } = useTheme();
@@ -413,7 +414,7 @@ export default function ProfileTabScreen() {
           <View className="px-6 mt-2 gap-2">
             {recentHighlights.map((highlight) => (
               <ProfileHighlightRow
-                key={`${highlight.book}-${highlight.chapter}-${highlight.verse}-${highlight.createdAt}`}
+                key={highlight.key}
                 highlight={highlight}
                 onPress={() => navigateTo(routeForVerse(highlight))}
               />

@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import { STORAGE_KEYS, usePersistence } from "@/lib/storage";
+import { isInternalBuild } from "@/lib/isInternalBuild";
 
 /**
  * Developer Tools provider.
@@ -54,7 +55,7 @@ type DevToolsContextValue = DevToolsState & {
  * production build the panel is hidden until a tester opts in.
  */
 const DEFAULT: DevToolsState = {
-  enabled: __DEV__,
+  enabled: isInternalBuild(),
 };
 
 const DevToolsContext = createContext<DevToolsContextValue | null>(null);

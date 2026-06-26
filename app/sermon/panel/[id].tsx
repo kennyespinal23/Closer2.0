@@ -39,6 +39,7 @@ import { useColors } from "@/state/theme";
  * Continue pill on every narrative panel paints with CLOSER_ACCENT
  * so the home → sermon flow reads as one continuous accent.
  */
+import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { CLOSER_ACCENT } from "@/constants/theme";
 
 // (Hook hero geometry constants HOOK_HERO_HEIGHT and
@@ -942,26 +943,25 @@ export default function SermonPanelScreen() {
               content render the regular pill exactly as before. */}
           {showPracticeCard ? null : isPrayer && !prayerRevealComplete ? null : (
             <PillReveal animate={isPrayer}>
-              <ImprintContinuePill
-                // Prayer pill prefixes the label with an unlock
-                // emoji (🔓) — the small visual cue makes the
-                // "and unlock apps" side-effect feel concrete in
-                // the same pre-attentive glance the label takes.
-                // Narrative / final panels keep their plain text
-                // label (the trailing arrow on those carries the
-                // forward-motion cue instead).
+              <PrimaryPillButton
                 label={
-                  isPrayer
-                    ? "🔓 Complete and unlock apps"
-                    : isLastPanel
-                      ? "Finish"
-                      : "Continue"
+                  locked
+                    ? `${
+                        isPrayer
+                          ? "🔓 Complete and unlock apps"
+                          : isLastPanel
+                            ? "Finish"
+                            : "Continue"
+                      } · ${secondsLeft}s`
+                    : isPrayer
+                      ? "🔓 Complete and unlock apps"
+                      : isLastPanel
+                        ? "Finish"
+                        : "Continue"
                 }
-                accent={accent}
                 onPress={handleContinue}
-                locked={locked}
-                secondsLeft={secondsLeft}
-                showArrow={!isPrayer}
+                disabled={locked}
+                showArrow={!isPrayer && !locked}
               />
             </PillReveal>
           )}
@@ -1009,106 +1009,6 @@ export default function SermonPanelScreen() {
     </View>
   );
 }
-
-/**
- * ImprintContinuePill — wide rounded primary CTA with a trailing
- * arrow glyph. Used on narrative sermon panels (1–4) as the
- * "carry me forward" tap. Matches the Imprint reading-screen
- * primary action shape: full-width pill, bright color, end-of-
- * label arrow that hints at the next beat.
- *
- * Background + glow color come from the shared SERMON_ACCENT so
- * the whole flow — narrative panels, prayer panel, home → sermon
- * transition — reads of-a-piece in the same editorial red. An
- * earlier revision hard-coded iOS-blue regardless of sermon type,
- * which created a jarring blue island in an otherwise accent-
- * tinted page; an intermediate revision flipped the prayer panel
- * to a separate blue palette, which made the prayer feel like a
- * different app. One accent across the whole journey collapses
- * both regressions.
- */
-function ImprintContinuePill({
-  label,
-  accent,
-  onPress,
-  locked,
-  secondsLeft,
-  showArrow,
-}: {
-  label: string;
-  accent: string;
-  onPress: () => void;
-  /** When true the pill is dimmed and ignores taps; the countdown is appended to the label. */
-  locked: boolean;
-  /** Seconds remaining on the lock; surfaced in-pill as "label · 4s". */
-  secondsLeft: number;
-  /** Show the trailing arrow glyph. Disabled on prayer (completion is not "next"). */
-  showArrow: boolean;
-}) {
-  // When locked, append the countdown to the label and dim the
-  // pill. Tap is swallowed by the `disabled` prop so the user
-  // can mash without anything happening. We keep the arrow
-  // hidden during the lock window so the eye doesn't read the
-  // pill as "tap me, go forward" while it's deliberately
-  // waiting on the dwell timer.
-  const displayLabel = locked ? `${label} · ${secondsLeft}s` : label;
-  const showArrowGlyph = showArrow && !locked;
-
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={locked}
-      style={({ pressed }) => ({
-        opacity: locked ? 0.45 : pressed ? 0.92 : 1,
-        alignSelf: "stretch",
-      })}
-      accessibilityRole="button"
-      accessibilityLabel={displayLabel}
-      accessibilityState={{ disabled: locked }}
-    >
-      <View
-        style={{
-          backgroundColor: accent,
-          borderRadius: 999,
-          paddingVertical: 16,
-          paddingHorizontal: 24,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          // Glow stays attached to the pill at all times — the
-          // dim opacity above already communicates the lock; a
-          // toggled shadow would feel like the button blinked
-          // out of existence and back.
-          shadowColor: accent,
-          shadowOpacity: 0.5,
-          shadowRadius: 18,
-          shadowOffset: { width: 0, height: 0 },
-          elevation: 6,
-        }}
-      >
-        <Text
-          style={{
-            color: "#FFFFFF",
-            fontFamily: "System",
-            fontWeight: "700",
-            fontSize: 15,
-            letterSpacing: 0.2,
-            marginRight: showArrowGlyph ? 10 : 0,
-          }}
-        >
-          {displayLabel}
-        </Text>
-        {showArrowGlyph ? (
-          <SFSymbol name="arrow.right" size={15} weight="bold" color="#FFFFFF" />
-        ) : null}
-      </View>
-    </Pressable>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Constants + helpers
-// ─────────────────────────────────────────────────────────────────
 
 /**
  * Clamp an arbitrary number to a valid panel id (1..5). Anything

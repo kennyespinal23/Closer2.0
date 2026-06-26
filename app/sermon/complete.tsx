@@ -585,7 +585,7 @@ function UpNextCard({
 }: {
   moment: Moment;
   accent: string;
-  illustration: ReturnType<typeof require>;
+  illustration: import("react-native").ImageSourcePropType;
   inkColor: string;
   mutedColor: string;
   subtleColor: string;

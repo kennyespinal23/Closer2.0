@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
+import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { CLOSER_ACCENT } from "@/constants/theme";
 import { useColors } from "@/state/theme";
 
@@ -123,32 +124,7 @@ export function HeroOnboardingPage({
           </View>
 
           <FadeIn delayMs={2600} durationMs={800}>
-            <Pressable
-              onPress={onContinue}
-              accessibilityRole="button"
-              accessibilityLabel={ctaLabel}
-              style={({ pressed }) => ({
-                height: 58,
-                borderRadius: 999,
-                backgroundColor: CLOSER_ACCENT,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 8,
-                opacity: pressed ? 0.88 : 1,
-              })}
-            >
-              <Text
-                style={{
-                  color: "#FFFFFF",
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 17,
-                  letterSpacing: -0.1,
-                }}
-              >
-                {ctaLabel}
-              </Text>
-            </Pressable>
+            <PrimaryPillButton label={ctaLabel} onPress={onContinue} />
           </FadeIn>
         </View>
       </SafeAreaView>

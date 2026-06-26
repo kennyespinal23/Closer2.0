@@ -19,12 +19,16 @@
     "production": {
       "autoIncrement": true,
       "channel": "production"
+    },
+    "testflight": {
+      "extends": "production",
+      "channel": "testflight"
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "appleId": "kennyespinal23@gmail.com",
+        "appleId": "espinalcapital@gmail.com",
         "appleTeamId": "7ZKDS4X5B9",
         "ascAppId": "6779004238"
       }

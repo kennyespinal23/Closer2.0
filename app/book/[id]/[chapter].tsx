@@ -18,7 +18,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import Svg, {
   Defs,
   LinearGradient as SvgLinearGradient,
@@ -229,6 +229,15 @@ export default function ChapterReaderScreen() {
   const [editingNote, setEditingNote] = useState<
     { verses: number[]; noteId: string | null } | null
   >(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setEditingNote(null);
+        setActiveVerse(null);
+      };
+    }, []),
+  );
 
   // ─── Multi-verse selection ─────────────────────────────────────
   // Long-pressing any verse enters selection mode with that verse
@@ -478,6 +487,37 @@ export default function ChapterReaderScreen() {
   // focus-verse deep-link can jump to the right PAGE (not just scroll
   // to a Y the user can't see in a paginated view).
   const verseToLineRef = useRef<Map<number, number>>(new Map());
+  const advanceLockRef = useRef(false);
+  const pageIdxAtDragStartRef = useRef(0);
+
+  const advanceToNextChapter = () => {
+    if (!next || advanceLockRef.current) return;
+    advanceLockRef.current = true;
+    if (!alreadyRead) {
+      recordChapterRead(book.id, chapter);
+      setJustMarked(true);
+      haptics.success();
+    } else {
+      haptics.tap();
+    }
+    goto(next);
+  };
+
+  const tryAdvanceFromLastPage = (
+    pageIdx: number,
+    velocityX: number | undefined,
+  ) => {
+    if (!pages || !next) return;
+    const lastVersePageIdx = pages.length - 1;
+    if (pageIdx < lastVersePageIdx) return;
+    // Only advance when the user was already on the last page and
+    // swipes forward again — not when they first land on it.
+    if (pageIdxAtDragStartRef.current < lastVersePageIdx) return;
+    // Finger moving left → forward into the next chapter.
+    if ((velocityX ?? 0) < -0.2) {
+      advanceToNextChapter();
+    }
+  };
 
   /**
    * Capture the off-screen line measurement and recompute pages.
@@ -538,14 +578,19 @@ export default function ChapterReaderScreen() {
     setPages(null);
     setCurrentPageIdx(0);
     verseToLineRef.current = new Map();
+    advanceLockRef.current = false;
+    pageIdxAtDragStartRef.current = 0;
   }, [book.id, chapter, translation.id, textSize.id, pageContentHeight]);
 
-  // Derived presentation: total page count INCLUDES the end-matter
-  // card we append after the verse pages (so "Page X of Y" matches
-  // what the user can swipe to). pagesLeft is what shows up in the
-  // top caption: "4 pages left in chapter".
+  // Derived presentation: verse pages only when a next chapter exists
+  // (swiping past the last page advances directly). End-matter card is
+  // appended only at the canonical end of a book / the Bible.
   const versePageCount = pages?.length ?? 0;
-  const totalPages = Math.max(1, versePageCount + (data ? 1 : 0));
+  const hasEndMatter = !next;
+  const totalPages = Math.max(
+    1,
+    versePageCount + (data && hasEndMatter ? 1 : 0),
+  );
   const currentPage = Math.min(totalPages, currentPageIdx + 1);
   const pagesLeft = Math.max(0, totalPages - currentPage);
 
@@ -737,12 +782,15 @@ export default function ChapterReaderScreen() {
       key: `page-${idx}`,
       page: p,
     }));
-    verseCards.push({ kind: "endMatter", key: "end" });
+    if (!next) {
+      verseCards.push({ kind: "endMatter", key: "end" });
+    }
     return verseCards;
-  }, [data, pages]);
+  }, [data, pages, next]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ChapterBackdrop book={book} />
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <Header
           translationTag={translation.tag}
@@ -823,10 +871,19 @@ export default function ChapterReaderScreen() {
               offset: screenWidth * index,
               index,
             })}
+            onScrollBeginDrag={(e) => {
+              const x = e.nativeEvent.contentOffset.x;
+              pageIdxAtDragStartRef.current = Math.round(x / screenWidth);
+            }}
             onMomentumScrollEnd={(e) => {
               const x = e.nativeEvent.contentOffset.x;
               const idx = Math.round(x / screenWidth);
               setCurrentPageIdx(idx);
+            }}
+            onScrollEndDrag={(e) => {
+              const x = e.nativeEvent.contentOffset.x;
+              const idx = Math.round(x / screenWidth);
+              tryAdvanceFromLastPage(idx, e.nativeEvent.velocity?.x);
             }}
             initialNumToRender={1}
             maxToRenderPerBatch={2}
@@ -1039,8 +1096,9 @@ export default function ChapterReaderScreen() {
           Same modal handles both "add new" and "edit existing" —
           differentiated by editingNote.noteId. On save we route to
           the right provider method. */}
+      {editingNote !== null ? (
       <NoteEditor
-        visible={editingNote !== null}
+        visible
         reference={editingReference}
         verseText={editingVerseData?.text ?? ""}
         initialNote={editingNoteInitialText}
@@ -1080,6 +1138,7 @@ export default function ChapterReaderScreen() {
         }}
         onCancel={() => setEditingNote(null)}
       />
+      ) : null}
       </SafeAreaView>
     </View>
   );

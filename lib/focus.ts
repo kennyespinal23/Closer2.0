@@ -2,41 +2,41 @@
  * Focus mode — the "Opal-style" social media shield Closer raises
  * while the user is reading a sermon.
  *
- * ─── Phase 1 (this file) ────────────────────────────────────────
+ * ─── iOS Screen Time (Phase 2) ──────────────────────────────────
  *
- * Everything here is a stub. `shieldStart` and `shieldStop` resolve
- * immediately and never touch the OS. The UI layer (sermon flow,
- * settings, banner) talks to this module's surface as if blocking
- * were real — that lets us ship the full product story today
- * without waiting on Apple's FamilyControls entitlement queue.
+ * On iOS builds that include `react-native-device-activity` +
+ * Apple's Family Controls entitlement, `shieldStart` / `shieldStop`
+ * call ManagedSettings via the native module. The user picks apps
+ * through Apple's FamilyActivityPicker (see
+ * `lib/deviceActivityShield.ts` + FamilyActivityAppsEditor).
  *
- * The promise of "blocking" in Phase 1 is honor-system: the user
- * commits to a focus session, the banner says it's active, the
- * settings explain which apps are listed. If they jump to Instagram,
- * nothing physically stops them — but they tell themselves they're
- * in a session, and the UX makes that commitment visible.
+ * Builds without the native module (Expo Go, or EAS profiles with
+ * `INCLUDE_DEVICE_ACTIVITY=false`) fall back to honor-mode: the
+ * session UX still runs, but nothing is physically blocked.
  *
- * ─── Phase 2 (later) ────────────────────────────────────────────
- *
- * Swap this file for a thin wrapper around `react-native-device-activity`
- * (iOS, FamilyControls + ManagedSettings) and a custom Android module
- * built on UsageStatsManager + AccessibilityService. The public
- * surface (SOCIAL_APPS, shieldStart, shieldStop, isShieldSupported)
- * stays exactly the same so no call site outside this file needs to
- * change. The provider, banner, settings, sermon screens — all
- * untouched.
- *
- * Two things will gate Phase 2:
- *   1. Apple's `com.apple.developer.family-controls` entitlement
- *      (requested via the developer portal — historically multi-day).
- *   2. Switching the build pipeline from Expo Go to a custom
- *      development client (`expo prebuild` + a real native build).
- *
- * Until then, `isShieldSupported()` returns false and the UI shows
- * a quiet "honor-mode" caption so the user isn't misled.
+ * Android remains honor-mode until a UsageStats / Accessibility
+ * module ships.
  */
 
 import { Platform } from "react-native";
+import {
+  getScreenTimeSelectionSummary,
+  isNativeScreenTimeAvailable,
+  isScreenTimeShieldReady,
+  startNativeScreenTimeShield,
+  stopNativeScreenTimeShield,
+} from "@/lib/deviceActivityShield";
+
+export {
+  formatScreenTimeSelectionSummary,
+  getScreenTimeAuthorizationStatus,
+  getScreenTimeSelectionSummary,
+  hasScreenTimeAppSelection,
+  isNativeScreenTimeAvailable,
+  isScreenTimeAuthorized,
+  isScreenTimeShieldReady,
+  requestScreenTimeAuthorization,
+} from "@/lib/deviceActivityShield";
 
 // ─────────────────────────────────────────────────────────────────
 // App catalog
@@ -294,10 +294,43 @@ export function findSocialApp(id: string): SocialApp | null {
  * lie to the user about whether the shield is real.
  */
 export function isShieldSupported(): boolean {
-  // Hard-coded false for Phase 1. Don't gate on Platform — the
-  // honor-mode UI is identical on both platforms, and the only
-  // thing that matters is "is there a real native shield?".
-  return false;
+  return isNativeScreenTimeAvailable();
+}
+
+/** True when Screen Time is authorized AND the user has picked apps. */
+export function isShieldActiveCapable(): boolean {
+  return isScreenTimeShieldReady();
+}
+
+/**
+ * Whether a manual focus session (Read Now, study Begin) should
+ * raise the shield. Honors Screen Time when the user picked apps
+ * via Apple's picker even if the legacy honor-mode list is empty.
+ */
+export function shouldOfferManualFocusShield(prefs: {
+  enabled: boolean;
+  blockedAppIds: ReadonlyArray<string>;
+}): boolean {
+  if (!prefs.enabled) return false;
+  return isScreenTimeShieldReady() || prefs.blockedAppIds.length > 0;
+}
+
+/**
+ * Count of silenced targets for UI chips — prefers the native
+ * Screen Time selection when available.
+ */
+export function countSilencedTargets(
+  honorModeBlockedIds: ReadonlyArray<string>,
+): number {
+  const summary = getScreenTimeSelectionSummary();
+  if (summary) {
+    return (
+      summary.applicationCount +
+      summary.categoryCount +
+      summary.webDomainCount
+    );
+  }
+  return honorModeBlockedIds.length;
 }
 
 /**
@@ -315,10 +348,6 @@ export async function shieldStart(
   apps: ReadonlyArray<SocialAppId>,
 ): Promise<boolean> {
   if (!isShieldSupported()) {
-    // Honor mode — return success so the caller knows the session
-    // started cleanly. The lack of a real shield is communicated
-    // through `isShieldSupported()` so the UI can phrase its copy
-    // truthfully ("you committed to a session" vs. "apps blocked").
     if (__DEV__) {
       // eslint-disable-next-line no-console
       console.log(
@@ -327,8 +356,26 @@ export async function shieldStart(
     }
     return true;
   }
-  // Phase 2 reaches here.
-  return false;
+
+  if (!isScreenTimeShieldReady()) {
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log(
+        "[focus] Screen Time module present but not ready (auth or app selection missing)",
+      );
+    }
+    return false;
+  }
+
+  try {
+    return await startNativeScreenTimeShield();
+  } catch (error) {
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.warn("[focus] native shield start failed", error);
+    }
+    return false;
+  }
 }
 
 /**
@@ -348,7 +395,15 @@ export async function shieldStop(): Promise<void> {
     }
     return;
   }
-  // Phase 2 reaches here.
+
+  try {
+    stopNativeScreenTimeShield();
+  } catch (error) {
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.warn("[focus] native shield stop failed", error);
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────

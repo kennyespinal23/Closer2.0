@@ -1,0 +1,171 @@
+---
+description: Closer typography system — SF Pro for interface and reading, New York for reflective quotes; sizes, weights, alignment, dynamic type per Apple HIG.
+alwaysApply: true
+---
+
+# Closer Typography (iOS-only)
+
+Source: the Closer typography spec (June 2026) + Apple HIG. Follow these
+rules on every screen — new components, edits, audits, refactors.
+
+The canonical role vocabulary lives in `lib/typography.ts`. Reach for the
+preset there rather than re-authoring `fontFamily` / `fontWeight` /
+`fontSize` / `lineHeight` by hand at each call site.
+
+## Two faces. One job each.
+
+| Face | Where it goes |
+| --- | --- |
+| **SF Pro** (via `fontFamily: "System"`) | Navigation, tab bar, buttons, cards, the home screen, devotional titles, body copy, section headers, settings, streaks, App Blocks, protection screens. **Everything that's not a reflective quote.** |
+| **New York** (via `fontFamily: NEW_YORK` from `lib/typography.ts`) | **Reflective quote moments only.** Scripture callouts, opening reflective quotes, closing reflective quotes, short blockquotes meant to feel like a breath. **Nothing else.** |
+
+New York is the punctuation of the app's voice. Used sparingly it reads
+as *special*. Sprinkled across body copy, buttons, or section headers it
+collapses into noise. **If you're about to set `fontFamily: NEW_YORK` on
+anything other than a quoted scripture or a reflective pull quote, stop.**
+
+### New York is FORBIDDEN on:
+
+- Buttons
+- Navigation
+- Tab bar
+- Form fields and inputs
+- Section headers
+- Settings rows
+- General body text
+- Home screen titles
+- Eyebrows, labels, captions, statuses
+
+## Role presets (`lib/typography.ts`)
+
+Spread these into a `<Text>` style prop instead of authoring per-call-site
+styles. Per-role overrides (a specific color, a tighter margin) compose
+cleanly on top via the array form: `style={[typography.body, { color: ink }]}`.
+
+| Role | Face | Weight | Size | Line height | Notes |
+| --- | --- | --- | --- | --- | --- |
+| `typography.pageTitle` | SF Pro | 700 Bold | 40 | 44 | Top-of-screen page anchor (Settings, Library, etc). |
+| `typography.devotionalTitle` | SF Pro | 700 Bold | 30 (28–32) | 36 | In-card / in-sermon title for today's reading. |
+| `typography.body` | SF Pro | 400 Regular | 17 | 28 | The reading default. iOS body baseline. |
+| `typography.button` | SF Pro | 600 Semibold | 17 | — | Primary-action pill label. Single line. |
+| `typography.smallLabel` | SF Pro | 600 Semibold | 13 (12–13) | — | All-caps eyebrows, chips, status pills. +0.8 tracking. Caller decides uppercase. |
+| `typography.reflectiveQuote` | **New York Italic** | 400 Italic | 26 (24–28) | 36 (34–38) | Centered. The ONLY surface that uses New York. Compose `max-width: 85%` via the parent View. |
+
+## Weights
+
+Apple HIG (verbatim): *"avoid light font weights. Prefer Regular, Medium,
+Semibold, or Bold font weights, and avoid Ultralight, Thin, and Light font
+weights, which can be difficult to see, especially when text is small."*
+
+| Weight | Use? |
+| --- | --- |
+| `100` Thin | ❌ FORBIDDEN |
+| `200` ExtraLight | ❌ FORBIDDEN |
+| `300` Light | ❌ FORBIDDEN |
+| `400` Regular | ✅ Default body |
+| `500` Medium | ✅ Subtle emphasis |
+| `600` Semibold | ✅ Section headers, captions, button labels |
+| `700` Bold | ✅ Titles, primary actions |
+| `800` ExtraBold | ✅ Hero only (use sparingly) |
+| `900` Black | ✅ Allowed but rarely needed |
+
+In SF Pro, weights are reached via the `fontWeight` property — NEVER by
+stringifying a face name. `fontFamily: "System", fontWeight: "700"` is
+correct; legacy `"PlusJakartaSans_700Bold"` is gone and must not return.
+
+## Sizes
+
+Use the 8pt grid: 11, 12, 13, 15, 17, 20, 22, 28, 30, 34, 40, 48…
+
+| Context | Rule |
+| --- | --- |
+| **Body text** | 17pt default. The iOS-baseline. |
+| **Minimum size** | **11pt floor.** Anything below 11pt MUST be raised. |
+| **Reflective quote** | 24–28pt. The serif italic needs scale to land. |
+
+Avoid stair-stepping outside the 8pt grid unless replacing a fixed Apple
+system size (e.g. SF Symbols small chips at 12 or 13).
+
+## Alignment
+
+- **Left-align** body text. Never justify on iOS (Apple-HIG-forbidden).
+- Reflective quotes are centered by default (`typography.reflectiveQuote`
+  carries `textAlign: "center"`).
+- Center-align is otherwise reserved for compositional moments: hero
+  titles, prayer beats, splash/launch states, standalone captions under
+  hero artwork.
+
+## Color & Contrast
+
+- Body text on dark surfaces: target **AAA 7:1** contrast (≈ `#CCCCCC` on
+  `#000` / `#151515`). AA 4.5:1 is the absolute floor.
+- Never use color alone to convey meaning. Pair every color cue with
+  shape, weight, or icon (e.g. `shield.fill` vs `shield` outline for
+  protection state).
+
+## Touch Targets
+
+- Every interactive element needs at minimum a **44×44pt hit area**. If
+  the visual element is smaller, extend with `hitSlop`.
+
+## Dynamic Type
+
+- Prefer `allowFontScaling` (default-on) for narrative copy so users with
+  Larger Text accommodations get the scale.
+- Only opt out (`allowFontScaling={false}`) for tightly composed hero
+  typography where scaling would break layout — and only after
+  considering the accessibility tradeoff.
+
+## Concrete examples
+
+```tsx
+// ❌ BAD — 9pt is below the HIG 11pt floor; legacy PlusJakartaSans face.
+<Text style={{ fontSize: 9, fontFamily: "PlusJakartaSans_300Light" }}>…</Text>
+
+// ✅ GOOD — uses the body role token, leaves family + weight to the system.
+import { typography } from "@/lib/typography";
+<Text style={typography.body}>…</Text>
+
+// ✅ GOOD — small-caps eyebrow via the smallLabel preset + uppercase.
+<Text
+  style={[typography.smallLabel, { textTransform: "uppercase" }]}
+>
+  DAY STREAK
+</Text>
+
+// ✅ GOOD — primary-action pill label.
+<Text style={[typography.button, { color: "#FFFFFF" }]}>Read Now</Text>
+
+// ✅ GOOD — reflective scripture quote (the ONLY New York Italic spot).
+<Text style={typography.reflectiveQuote}>
+  &ldquo;The Lord is my shepherd; I shall not want.&rdquo;
+</Text>
+
+// ❌ BAD — New York Italic on a button. Forbidden.
+<Text
+  style={{ fontFamily: NEW_YORK, fontStyle: "italic", fontSize: 17 }}
+>
+  Continue
+</Text>
+
+// ❌ BAD — justified body copy.
+<Text style={{ textAlign: "justify" }}>…</Text>
+```
+
+## Reviewer checklist
+
+Before shipping any screen edit, scan for:
+
+- [ ] No `fontFamily: "PlusJakartaSans_*"` anywhere (the legacy face is
+      gone; the codebase lives on `"System"` and `NEW_YORK`).
+- [ ] No `NEW_YORK` outside a reflective-quote surface (scripture
+      callouts, pull quotes). It is FORBIDDEN on buttons, nav, tab bar,
+      form fields, section headers, settings, body text, or any home
+      screen title.
+- [ ] No `fontSize` below 11.
+- [ ] No `fontWeight: "100" | "200" | "300"`.
+- [ ] No `textAlign: "justify"`.
+- [ ] Body text 17pt where reading-density matters.
+- [ ] All `Pressable` / `TouchableOpacity` ≥ 44×44pt (or `hitSlop`
+      compensates).
+- [ ] All color signals paired with a non-color channel.

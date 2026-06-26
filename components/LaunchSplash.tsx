@@ -1,72 +1,37 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Text, View, Platform } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { usePathname } from "expo-router";
+import { shouldPlayLaunchSplash, consumeLaunchSplash } from "@/lib/launchSplashSession";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /**
  * LaunchSplash — the first frame after the OS splash.
  *
  * Sits as an absolutely-positioned overlay on top of the app
- * shell during cold launch. The native iOS splash (configured in
- * `app.json` → `splash.backgroundColor: "#FFFFFF"`) hands off to
- * this component seamlessly: both surfaces are pure white, so
- * there's no visible flash between OS-paint and JS-paint.
+ * shell during cold launch. The native iOS splash hands off to
+ * this component on a true-black canvas with a white wordmark.
  *
- * Choreography (matches the user's brief — Imprint/Opal-style
- * quiet logo intro):
- *
- *   t = 0 ms          mount; overlay fully visible, logo at 0
- *                     opacity (white screen, nothing in center)
- *   t = 0–300 ms      logo group fades in (opacity 0 → 1)
- *   t = 300–1300 ms   hold (1000 ms — center of the 800–1200 ms
- *                     range the brief specifies)
- *   t = 1300–1700 ms  entire overlay fades out (opacity 1 → 0,
- *                     ~400 ms) revealing whatever the app
- *                     mounted underneath
- *   t = 1700 ms       overlay unmounts itself via local state
- *                     so it stops eating gestures and frees
- *                     the SVG layer
- *
- * Reduce Motion: when the user has the iOS "Reduce Motion"
- * accessibility preference enabled, all three opacity transitions
- * are replaced with instant value sets. The logo still HOLDS for
- * the same duration (the splash isn't decorative — it carries
- * the brand mark) but the FADES don't happen. This is exactly
- * how Apple's own splash → app crossfade handles Reduce Motion
- * across iOS first-party apps: timing preserved, motion silenced.
- *
- * Visual spec (from the brief, no deviation):
- *   • Background:   #FFFFFF
- *   • Logo group:   centered horizontally + vertically
- *   • Cross:        ~64pt tall, black, ~7pt stroke, rounded
- *                   caps; sits to the LEFT of the wordmark
- *   • Wordmark:     "Closer", SF Pro Display Bold, 52pt, #000
- *   • Gap:          20pt between cross and wordmark
- *   • No tagline, no spinner, no scripture, no decoration
+ * Skipped when the rotating-moment screen opens first for the
+ * current time window — that beat replaces the branded intro.
  */
 export function LaunchSplash() {
+  const pathname = usePathname();
   const reducedMotion = useReducedMotion();
+  const playSplash = shouldPlayLaunchSplash() && pathname !== "/rotating-moment";
 
-  // Local mount gate — once the fade-out completes, the parent
-  // doesn't need to manage our visibility; we just stop rendering.
-  // This is preferable to leaving an opacity-0 overlay in the tree
-  // because (a) the SVG layer stays composited even at 0 opacity
-  // on some iOS builds and (b) any gesture-aware children would
-  // continue eating taps. Self-unmount keeps the contract clean.
-  const [mounted, setMounted] = useState(true);
+  const [mounted, setMounted] = useState(playSplash);
 
-  // Two-stage animation:
-  //   • logoOpacity — controls just the logo group's fade-in
-  //   • overlayOpacity — controls the entire overlay's fade-OUT
-  // Keeping them separate lets the white surface stay solid
-  // through the entire fade-in + hold beats; only the final
-  // fade-out beat involves the page surface dissolving.
   const logoOpacity = useRef(
     new Animated.Value(reducedMotion ? 1 : 0),
   ).current;
   const overlayOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    if (!playSplash) return;
+
+    consumeLaunchSplash();
+
     // Total dwell time before the fade-out begins. 1300ms keeps
     // us comfortably inside Apple's "perceived load" window
     // (under 2s feels intentional; over 2s feels broken). The
@@ -127,9 +92,9 @@ export function LaunchSplash() {
     // flipped a system setting would be weirder than honoring
     // the initial pose.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [playSplash]);
 
-  if (!mounted) return null;
+  if (!playSplash || !mounted) return null;
 
   return (
     <Animated.View
@@ -145,7 +110,7 @@ export function LaunchSplash() {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "#000000",
         alignItems: "center",
         justifyContent: "center",
         opacity: overlayOpacity,
@@ -188,7 +153,7 @@ export function LaunchSplash() {
             fontWeight: "700",
             fontSize: 52,
             lineHeight: 56,
-            color: "#000000",
+            color: "#FFFFFF",
             letterSpacing: -1,
             // Keep the text vertically aligned with the cross by
             // including the descender padding RN inserts by
@@ -210,7 +175,7 @@ export function LaunchSplash() {
 
 /**
  * The cross glyph. Two stroked paths (vertical + horizontal)
- * rendered in pure black with rounded line caps, sized at 64pt
+ * rendered in white with rounded line caps, sized at 64pt
  * tall to match the brief.
  *
  * Why SVG (not an SF Symbol or PNG asset):
@@ -240,7 +205,7 @@ function CrossIcon() {
           centered horizontally in the 44pt viewport. */}
       <Path
         d="M22 4 L22 60"
-        stroke="#000000"
+        stroke="#FFFFFF"
         strokeWidth={7}
         strokeLinecap="round"
       />
@@ -251,7 +216,7 @@ function CrossIcon() {
           rounded caps land flush against the bounding box. */}
       <Path
         d="M4 22 L40 22"
-        stroke="#000000"
+        stroke="#FFFFFF"
         strokeWidth={7}
         strokeLinecap="round"
       />

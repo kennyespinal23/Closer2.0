@@ -16,10 +16,19 @@ import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { BlockedAppsEditor } from "@/components/BlockedAppsEditor";
 import { BrandGlyph } from "@/components/BrandGlyph";
+import { FamilyActivityAppsEditor } from "@/components/FamilyActivityAppsEditor";
+import { ScreenTimePermissionRow } from "@/components/ScreenTimePermissionRow";
 import { TimeBlockEditor } from "@/components/TimeBlockEditor";
 import { CLOSER_ACCENT } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
-import { findSocialApp, type SocialAppId } from "@/lib/focus";
+import {
+  findSocialApp,
+  formatScreenTimeSelectionSummary,
+  getScreenTimeSelectionSummary,
+  isShieldSupported,
+  type SocialAppId,
+} from "@/lib/focus";
+import { syncAllScheduledAppBlocks } from "@/lib/scheduledAppBlocks";
 import {
   formatReminderTime,
   getNotificationPermission,
@@ -76,6 +85,10 @@ export default function AppBlocksScreen() {
   // means closed; `"new"` means creating; a string id means editing.
   const [timeTarget, setTimeTarget] = useState<null | "new" | string>(null);
   const [appsEditorOpen, setAppsEditorOpen] = useState(false);
+  const [nativeAppsEditorOpen, setNativeAppsEditorOpen] = useState(false);
+  const [selectionRevision, setSelectionRevision] = useState(0);
+
+  const nativeShield = isShieldSupported();
 
   useEffect(() => {
     let cancelled = false;
@@ -210,6 +223,14 @@ export default function AppBlocksScreen() {
   const blockedApps = focusPrefs.blockedAppIds
     .map((id) => findSocialApp(id))
     .filter((x): x is NonNullable<typeof x> => Boolean(x));
+  const screenTimeSummary = nativeShield
+    ? getScreenTimeSelectionSummary()
+    : null;
+  const screenTimeSummaryLabel = formatScreenTimeSelectionSummary(
+    screenTimeSummary,
+  );
+  // selectionRevision bumps after native picker saves so summary re-reads.
+  void selectionRevision;
 
   // The session currently being edited (if any).
   const editingSession =
@@ -460,6 +481,13 @@ export default function AppBlocksScreen() {
           );
         })()}
 
+        <ScreenTimePermissionRow
+          onOpenAppPicker={() => {
+            haptics.soft();
+            setNativeAppsEditorOpen(true);
+          }}
+        />
+
         {/* ─── Card 1: Blocked Apps ─────────────────────────────
             A single rounded card with: a small section header
             row (lock icon + "Blocked Apps" + count chip on the
@@ -514,14 +542,16 @@ export default function AppBlocksScreen() {
                     marginTop: 2,
                   }}
                 >
-                  {blockedApps.length > 0
-                    ? `${blockedApps.length} ${blockedApps.length === 1 ? "app" : "apps"} selected`
-                    : "Pick the apps you want silenced during every block."}
+                  {nativeShield
+                    ? screenTimeSummaryLabel
+                    : blockedApps.length > 0
+                      ? `${blockedApps.length} ${blockedApps.length === 1 ? "app" : "apps"} selected`
+                      : "Pick the apps you want silenced during every block."}
                 </Text>
               </View>
             </View>
 
-            {blockedApps.length > 0 ? (
+            {nativeShield ? null : blockedApps.length > 0 ? (
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -545,13 +575,21 @@ export default function AppBlocksScreen() {
             <Pressable
               onPress={() => {
                 haptics.soft();
-                setAppsEditorOpen(true);
+                if (nativeShield) {
+                  setNativeAppsEditorOpen(true);
+                } else {
+                  setAppsEditorOpen(true);
+                }
               }}
               accessibilityRole="button"
               accessibilityLabel={
-                blockedApps.length > 0
-                  ? "Update Blocked Apps"
-                  : "Pick apps to block"
+                nativeShield
+                  ? screenTimeSummary
+                    ? "Update blocked apps"
+                    : "Choose apps to block"
+                  : blockedApps.length > 0
+                    ? "Update Blocked Apps"
+                    : "Pick apps to block"
               }
               style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
             >
@@ -585,9 +623,13 @@ export default function AppBlocksScreen() {
                     marginLeft: 8,
                   }}
                 >
-                  {blockedApps.length > 0
-                    ? "Update Blocked Apps"
-                    : "Pick apps to block"}
+                  {nativeShield
+                    ? screenTimeSummary
+                      ? "Update blocked apps"
+                      : "Choose apps to block"
+                    : blockedApps.length > 0
+                      ? "Update Blocked Apps"
+                      : "Pick apps to block"}
                 </Text>
               </View>
             </Pressable>
@@ -807,10 +849,19 @@ export default function AppBlocksScreen() {
       />
 
       <BlockedAppsEditor
-        visible={appsEditorOpen}
+        visible={!nativeShield && appsEditorOpen}
         initial={focusPrefs.blockedAppIds}
         onClose={() => setAppsEditorOpen(false)}
         onSubmit={handleAppsSave}
+      />
+
+      <FamilyActivityAppsEditor
+        visible={nativeShield && nativeAppsEditorOpen}
+        onClose={() => setNativeAppsEditorOpen(false)}
+        onSaved={() => {
+          setSelectionRevision((n) => n + 1);
+          void syncAllScheduledAppBlocks(sessions).catch(() => {});
+        }}
       />
     </SafeAreaView>
   );

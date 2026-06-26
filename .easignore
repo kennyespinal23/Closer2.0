@@ -1,0 +1,5 @@
+# EAS Build upload exclusions.
+#
+# NOTE: Do NOT exclude `targets/` — Screen Time extensions
+# (ActivityMonitor, ShieldAction, ShieldConfiguration) and their
+# generated.entitlements must be present for iOS native builds.

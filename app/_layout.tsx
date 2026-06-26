@@ -217,6 +217,14 @@ function AppShell() {
             tab paints up softly instead of sliding in from the
             side. */}
         <Stack.Screen
+          name="rotating-moment"
+          options={{
+            animation: "fade",
+            gestureEnabled: false,
+            contentStyle: { backgroundColor: "#000000" },
+          }}
+        />
+        <Stack.Screen
           name="(tabs)"
           options={{ animation: "fade" }}
         />
@@ -298,7 +306,9 @@ function AppShell() {
         <Stack.Screen
           name="rhythm"
           options={{
-            presentation: "modal",
+            // Full-screen so the native Liquid Glass tab bar underneath
+            // doesn't peek through or re-layout during the slide-up.
+            presentation: "fullScreenModal",
             animation: "slide_from_bottom",
           }}
         />

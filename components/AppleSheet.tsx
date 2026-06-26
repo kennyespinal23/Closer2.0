@@ -193,19 +193,20 @@ const AppleSheetInner = forwardRef<TrueSheet, AppleSheetProps>(
       const node = internalRef.current;
       if (!node) return;
       if (visible) {
-        // Ignore the rejection — TrueSheet rejects with a benign
-        // "already presented" if a fast double-render hits the
-        // present path twice.
         node.present().catch(() => {});
         hasPresentedRef.current = true;
       } else if (hasPresentedRef.current) {
-        // Only dismiss if we ever presented — avoids the noisy
-        // "no presented sheet to dismiss" warning on initial mount
-        // with `visible={false}` (the common parent default).
         node.dismiss().catch(() => {});
         hasPresentedRef.current = false;
       }
     }, [isControlled, visible]);
+
+    useEffect(() => {
+      return () => {
+        internalRef.current?.dismiss().catch(() => {});
+        hasPresentedRef.current = false;
+      };
+    }, []);
 
     return (
       <TrueSheet

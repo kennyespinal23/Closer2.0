@@ -51,7 +51,7 @@ import {
 } from "@/lib/moments";
 import { formatMinutes, formatRemaining } from "@/lib/readingGoalFormat";
 import { getGreeting } from "@/lib/greeting";
-import { SOCIAL_APPS, type SocialAppId } from "@/lib/focus";
+import { shouldOfferManualFocusShield, SOCIAL_APPS, type SocialAppId } from "@/lib/focus";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import { findMood } from "@/constants/moods";
 import { SERMON_TYPES, type SermonType } from "@/constants/sermonTypes";
@@ -342,19 +342,22 @@ export default function TodayScreen() {
   // because it only happens when focus prefs or today's moment day
   // actually change, both of which already imply the hero card props
   // changed too.
-  const handlePlaySermon = useCallback(async () => {
-    const focusOffered =
-      focusPrefs.enabled && focusPrefs.blockedAppIds.length > 0;
-    if (focusOffered) {
-      // Fire-and-forget — local state commits synchronously so
-      // the navigation below lands on a screen that already
-      // sees the active session.
-      await startFocusSession(todaysMoment.day);
-    }
+  const handlePlaySermon = useCallback(() => {
+    // Navigate first — never let focus / Screen Time setup block
+    // or race the sermon route. A native shield call can't be
+    // caught by JS; starting focus after push keeps Read Now
+    // resilient even when blocking misbehaves on device.
     router.push({
       pathname: "/sermon/scripture",
       params: { continuity: "1" },
     });
+
+    const focusOffered = shouldOfferManualFocusShield(focusPrefs);
+    if (focusOffered) {
+      void startFocusSession(todaysMoment.day).catch(() => {
+        /* focus is best-effort; never block the sermon entry */
+      });
+    }
   }, [
     focusPrefs.enabled,
     focusPrefs.blockedAppIds,
@@ -409,7 +412,6 @@ export default function TodayScreen() {
     router.navigate("/blocks");
   }, [router]);
   const handleOpenRhythm = useCallback(() => {
-    haptics.soft();
     router.push("/rhythm");
   }, [router]);
 
@@ -3952,7 +3954,6 @@ function ActiveFocusHero({
                   fontSize: 11,
                   letterSpacing: 0.3,
                   opacity: isPaused ? 0.6 : 1,
-                  // @ts-expect-error fontVariant typing — see below.
                   fontVariant: ["tabular-nums"],
                 }}
               >

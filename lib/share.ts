@@ -140,7 +140,10 @@ export async function shareRaw(content: ShareContent): Promise<ShareResult> {
   try {
     const result = await Share.share(content, options);
     if (result.action === Share.sharedAction) {
-      return { status: "shared", activityType: result.activityType };
+      return {
+        status: "shared",
+        activityType: result.activityType ?? undefined,
+      };
     }
     return { status: "dismissed" };
   } catch (err) {

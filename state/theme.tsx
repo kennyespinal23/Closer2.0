@@ -74,10 +74,10 @@ type ThemeContextValue = ThemeState & {
 };
 
 const DEFAULT: ThemeState = {
-  // Light is the default for new installs — warm cream canvas,
-  // dark ink, orange accent. Users can still opt into dark or
+  // Dark is the default for new installs — true black canvas,
+  // light ink, orange accent. Users can still opt into light or
   // system via Profile → Appearance.
-  pref: "light",
+  pref: "dark",
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);

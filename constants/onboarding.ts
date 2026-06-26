@@ -69,6 +69,7 @@ export const ONBOARDING_STEPS = [
   // visible in the Practice/Blocks tab from day one.
   "time",
   "studytime",
+  "quietapps",
   "paywall",
   "welcome",
 ] as const;

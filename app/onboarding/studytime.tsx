@@ -113,7 +113,7 @@ export default function StudyTimeScreen() {
     // and the seed point is a single source of truth.
     setAnswer("bibleStudyTime", selectedOption.time);
     setSubmitting(false);
-    router.push("/onboarding/paywall");
+    router.push("/onboarding/quietapps");
   };
 
   return (

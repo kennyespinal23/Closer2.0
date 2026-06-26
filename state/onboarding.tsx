@@ -157,6 +157,11 @@ export type OnboardingAnswers = {
    */
   growthAreas?: string[];
   /**
+   * Whether the user completed Screen Time setup on /onboarding/quietapps
+   * (authorized + picked apps from Apple's FamilyActivityPicker).
+   */
+  screenTimeConfigured?: boolean;
+  /**
    * Where the user heard about Closer (Screen 12). Pure product
    * analytics — never shown back to the user.
    */

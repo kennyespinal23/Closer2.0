@@ -215,12 +215,12 @@ export function resolveSermonTypeForMoment(moment: Moment): SermonType {
  * we return the whole string as the reference and empty text so
  * nothing renders as a phantom blank line.
  */
-export function splitScripture(raw: string): {
+export function splitScripture(raw: string | null | undefined): {
   reference: string;
   text: string;
   raw: string;
 } {
-  const trimmed = raw.trim();
+  const trimmed = (raw ?? "").trim();
   const match = trimmed.match(/^(.*?)\s+[—–-]\s+(.+)$/);
   if (!match) {
     return { reference: trimmed, text: "", raw: trimmed };

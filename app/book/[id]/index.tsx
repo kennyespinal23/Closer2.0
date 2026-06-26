@@ -18,6 +18,9 @@ import Svg, {
   Stop,
 } from "react-native-svg";
 import { BookCover } from "@/components/BookCover";
+import { BookMetaRow } from "@/components/BookMetaRow";
+import { PrimaryPillButton } from "@/components/PrimaryPillButton";
+import { typography } from "@/lib/typography";
 import { type Book, findBookById, siblingBooks } from "@/constants/books";
 import {
   CATEGORY_COVER_PALETTE,
@@ -110,7 +113,7 @@ export default function BookOverviewScreen() {
 function BookDetail({ book }: { book: Book }) {
   const router = useRouter();
   const { lastVisited, hasReadChapter, chaptersRead } = useProgress();
-  const { bg, accentSoft, border, primary, ink } = useColors();
+  const { bg, border, primary, ink, inkMuted } = useColors();
   const blurb = useMemo(() => getBookBlurb(book.id), [book.id]);
   const siblings = useMemo(() => siblingBooks(book.id), [book.id]);
 
@@ -148,8 +151,11 @@ function BookDetail({ book }: { book: Book }) {
   // precision."
   const estMinutes = book.chapters * 4;
 
+  const blurbTeaser = blurb ? firstParagraph(blurb) : null;
+
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
+      <PageBackdrop book={book} />
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <Header bookId={book.id} />
 
@@ -160,73 +166,44 @@ function BookDetail({ book }: { book: Book }) {
           {/* ─── Hero cover ──────────────────────────────────── */}
           <HeroCover book={book} />
 
-          {/* ─── Title + category pill ────────────────────────
-              Tightened from before: dropped the testament/book-order
-              eyebrow line — that information now lives in the stats
-              strip below so each piece of metadata appears once. */}
-          <View className="px-6 mt-7 items-center">
-            <Text
-              className="text-ink text-[30px] leading-[36px] tracking-[-0.6px] text-center"
-              style={{ fontFamily: "System", fontWeight: "800" }}
-            >
+          {/* ─── Title + metadata — home-hero editorial layout ─ */}
+          <View className="px-6 mt-7">
+            <Text style={[typography.pageTitle, { color: ink }]}>
               {book.name}
             </Text>
-            <View
-              className="mt-2.5 px-3 py-1 rounded-full"
-              style={{
-                backgroundColor: accentSoft,
-                borderWidth: 1,
-                borderColor: border,
-              }}
-            >
-              <Text
-                className="text-ink-muted text-[11px] tracking-[0.5px]"
-                style={{ fontFamily: "System", fontWeight: "600" }}
-              >
-                {book.category}
-              </Text>
+
+            <View style={{ marginTop: 12 }}>
+              <BookMetaRow
+                chapters={book.chapters}
+                readMinutes={estMinutes}
+                testamentLabel={testamentLabel}
+                category={book.category}
+                order={book.order}
+                mutedColor={inkMuted}
+              />
             </View>
+
+            {blurbTeaser ? (
+              <>
+                <View
+                  style={{
+                    width: 32,
+                    height: 1,
+                    backgroundColor: border,
+                    marginTop: 14,
+                    marginBottom: 12,
+                    borderRadius: 1,
+                  }}
+                />
+                <Text style={[typography.body, { color: ink }]}>
+                  {blurbTeaser}
+                </Text>
+              </>
+            ) : null}
           </View>
 
-          {/* ─── Stats strip ──────────────────────────────────
-              Four small bordered tiles, like Apple Books' "Length /
-              Genre / Publisher" row. Tunes to the canonical info we
-              actually have: chapter count, average read time,
-              testament, position. Replaces the old "Information"
-              section which was a 5-row list of mostly the same data. */}
+          {/* ─── Action row ─────────────────────────────────── */}
           <View className="px-5 mt-6">
-            <View className="flex-row" style={{ gap: 8 }}>
-              <StatTile
-                label="Chapters"
-                value={String(book.chapters)}
-              />
-              <StatTile
-                label="Read time"
-                value={`${estMinutes >= 60 ? `${Math.round(estMinutes / 60)}h` : `${estMinutes}m`}`}
-              />
-              <StatTile
-                label={book.testament === "old" ? "Testament" : "Testament"}
-                value={book.testament === "old" ? "Old" : "New"}
-              />
-              <StatTile
-                label="Position"
-                value={`#${book.order}`}
-              />
-            </View>
-          </View>
-
-          {/* ─── Action row ───────────────────────────────────
-              Apple Books pattern: one prominent primary CTA, then a
-              quieter secondary affordance beneath. We previously had
-              a 3-up chip row (Start over / Random / Share); the
-              Random + Share chips were removed at the user's
-              request to keep the page focused on the canonical
-              "what should I open right now" decision. "Start over"
-              survives because it's the only secondary that responds
-              to the user's actual reading state — it appears
-              exclusively when they have a resume position past
-              chapter 1. */}
-          <View className="px-5 mt-5">
             <PrimaryReadButton
               label={resumeChapter ? "Continue Reading" : "Start Reading"}
               sublabel={
@@ -459,6 +436,8 @@ function HeroCover({ book }: { book: Book }) {
     ? getCoverBloom(book.id) ?? { inner: "#FFD49B", outer: "#A07040" }
     : { inner: palette.accent, outer: palette.top };
 
+  const bloomId = `heroBloom_${book.id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+
   return (
     <View
       style={{
@@ -471,22 +450,61 @@ function HeroCover({ book }: { book: Book }) {
       <View
         style={{
           width: coverWidth,
-          // Drop shadow tuned to feel like a hardcover catching
-          // overhead light. iOS picks this up directly; Android
-          // uses elevation. The shadow is offset DOWN so the top
-          // of the cover stays clean.
-          ...Platform.select({
-            ios: {
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 16 },
-              shadowOpacity: 0.55,
-              shadowRadius: 28,
-            },
-            android: { elevation: 20 },
-          }),
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <BookCover book={book} variant="hero" />
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            width: bloomWidth,
+            height: bloomHeight,
+          }}
+        >
+          <Svg width={bloomWidth} height={bloomHeight}>
+            <Defs>
+              <RadialGradient
+                id={bloomId}
+                cx="50%"
+                cy="50%"
+                r="50%"
+              >
+                <Stop offset="0" stopColor={bloom.inner} stopOpacity="0.55" />
+                <Stop offset="0.45" stopColor={bloom.outer} stopOpacity="0.28" />
+                <Stop offset="1" stopColor={bloom.outer} stopOpacity="0" />
+              </RadialGradient>
+            </Defs>
+            <Rect
+              x={0}
+              y={0}
+              width={bloomWidth}
+              height={bloomHeight}
+              fill={`url(#${bloomId})`}
+            />
+          </Svg>
+        </View>
+
+        <View
+          style={{
+            width: coverWidth,
+            // Drop shadow tuned to feel like a hardcover catching
+            // overhead light. iOS picks this up directly; Android
+            // uses elevation. The shadow is offset DOWN so the top
+            // of the cover stays clean.
+            ...Platform.select({
+              ios: {
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 16 },
+                shadowOpacity: 0.55,
+                shadowRadius: 28,
+              },
+              android: { elevation: 20 },
+            }),
+          }}
+        >
+          <BookCover book={book} variant="hero" />
+        </View>
       </View>
     </View>
   );
@@ -512,24 +530,12 @@ function PrimaryReadButton({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <PrimaryPillButton
+      label={label}
+      sublabel={sublabel}
       onPress={onPress}
-      style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
-      className="bg-primary rounded-2xl py-4 items-center"
-    >
-      <Text
-        className="text-primary-fg text-[16px] tracking-[-0.1px]"
-        style={{ fontFamily: "System", fontWeight: "700" }}
-      >
-        {label}
-      </Text>
-      <Text
-        className="text-primary-fg text-[11.5px] mt-0.5 opacity-65"
-        style={{ fontFamily: "System", fontWeight: "500" }}
-      >
-        {sublabel}
-      </Text>
-    </Pressable>
+      showArrow
+    />
   );
 }
 
@@ -569,39 +575,13 @@ function ChipAction({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Stats strip — 4-up bordered tiles, Apple Books info-row energy
-// ─────────────────────────────────────────────────────────────────
-
-function StatTile({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  const { surface } = useColors();
-  return (
-    <View
-      className="flex-1 rounded-2xl border border-border items-center justify-center"
-      style={{ backgroundColor: surface, paddingVertical: 12 }}
-    >
-      <Text
-        className="text-ink text-[18px] tracking-[-0.2px]"
-        style={{ fontFamily: "System", fontWeight: "700" }}
-        numberOfLines={1}
-      >
-        {value}
-      </Text>
-      <Text
-        className="text-ink-subtle text-[11px] mt-0.5 tracking-[1.5px] uppercase"
-        style={{ fontFamily: "System", fontWeight: "700" }}
-        numberOfLines={1}
-      >
-        {label}
-      </Text>
-    </View>
-  );
+function firstParagraph(text: string): string {
+  const trimmed = text.trim();
+  const split = trimmed.split(/\n\n+/);
+  if (split[0]?.length) return split[0].trim();
+  const sentenceEnd = trimmed.search(/[.!?]\s/);
+  if (sentenceEnd > 0) return trimmed.slice(0, sentenceEnd + 1).trim();
+  return trimmed;
 }
 
 // ─────────────────────────────────────────────────────────────────

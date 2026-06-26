@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { FamilyActivityAppsEditor } from "@/components/FamilyActivityAppsEditor";
 import { SFSymbol } from "@/components/Symbol";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import {
@@ -10,6 +11,9 @@ import {
 } from "@/components/SettingsScaffold";
 import { ShieldOverlay } from "@/components/ShieldOverlay";
 import {
+  formatScreenTimeSelectionSummary,
+  getScreenTimeSelectionSummary,
+  isShieldActiveCapable,
   isShieldSupported,
   SOCIAL_APPS,
   type SocialApp,
@@ -45,8 +49,12 @@ export default function FocusSettingsScreen() {
   } = useFocus();
 
   const supported = isShieldSupported();
+  const shieldReady = isShieldActiveCapable();
+  const screenTimeSummary = supported ? getScreenTimeSelectionSummary() : null;
 
-  // The id of the app whose shield is currently being previewed,
+  const [nativeAppsEditorOpen, setNativeAppsEditorOpen] = useState(false);
+  const [selectionRevision, setSelectionRevision] = useState(0);
+  void selectionRevision;
   // or null when no preview is open. Driven by the "Preview"
   // button on each app row + the dev "Preview every shield"
   // cycler at the bottom.
@@ -70,9 +78,11 @@ export default function FocusSettingsScreen() {
       <SettingsSection
         title="Session"
         footer={
-          supported
-            ? "When focus mode is on, selected apps are blocked from the moment you tap Begin until you finish the sermon."
-            : "Right now this is an honor-mode commitment — the apps aren't physically blocked. A future update will add real OS-level blocking once Apple's Screen Time permissions are approved."
+          shieldReady
+            ? "When focus mode is on, the apps you chose in Screen Time are blocked from the moment you tap Begin until you finish."
+            : supported
+              ? "Allow Screen Time and choose apps to block below. Until then, focus sessions run as an honor-mode commitment."
+              : "Right now this is an honor-mode commitment — the apps aren't physically blocked. Install a Closer build with Screen Time extensions to enable real blocking."
         }
       >
         <SettingsToggleRow
@@ -96,24 +106,71 @@ export default function FocusSettingsScreen() {
         />
       </SettingsSection>
 
-      <SettingsSection
-        title="Apps to quiet"
-        footer="Tap the toggle to include or exclude. Tap the message preview to see the quiet text the user will encounter during a session."
-      >
-        {SOCIAL_APPS.map((app, i) => {
-          const checked = prefs.blockedAppIds.includes(app.id);
-          return (
-            <AppRow
-              key={app.id}
-              app={app}
-              checked={checked}
-              onToggle={() => toggleAppBlocked(app.id)}
-              onPreview={() => setPreviewAppId(app.id)}
-              showDivider={i < SOCIAL_APPS.length - 1}
-            />
-          );
-        })}
-      </SettingsSection>
+      {supported ? (
+        <SettingsSection
+          title="Screen Time"
+          footer={formatScreenTimeSelectionSummary(screenTimeSummary)}
+        >
+          <Pressable
+            onPress={() => setNativeAppsEditorOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Choose apps to block with Screen Time"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            <View className="px-4 py-3.5 flex-row items-center">
+              <SFSymbol
+                name="hourglass"
+                size={14}
+                color={colors.ink}
+                weight="semibold"
+              />
+              <View className="flex-1 ml-2.5">
+                <Text
+                  className="text-ink text-[14.5px]"
+                  style={{ fontFamily: "System", fontWeight: "600" }}
+                >
+                  {screenTimeSummary
+                    ? "Update blocked apps"
+                    : "Allow Screen Time & choose apps"}
+                </Text>
+                <Text
+                  className="text-ink-muted text-[12px] leading-[17px] mt-0.5"
+                  style={{ fontFamily: "System", fontWeight: "400" }}
+                >
+                  {shieldReady
+                    ? "Real OS blocking is ready."
+                    : "Required before apps can be physically blocked."}
+                </Text>
+              </View>
+              <SFSymbol
+                name="chevron.right"
+                size={12}
+                color={colors.inkMuted}
+                weight="semibold"
+              />
+            </View>
+          </Pressable>
+        </SettingsSection>
+      ) : (
+        <SettingsSection
+          title="Apps to quiet"
+          footer="Tap the toggle to include or exclude. Tap the message preview to see the quiet text the user will encounter during a session."
+        >
+          {SOCIAL_APPS.map((app, i) => {
+            const checked = prefs.blockedAppIds.includes(app.id);
+            return (
+              <AppRow
+                key={app.id}
+                app={app}
+                checked={checked}
+                onToggle={() => toggleAppBlocked(app.id)}
+                onPreview={() => setPreviewAppId(app.id)}
+                showDivider={i < SOCIAL_APPS.length - 1}
+              />
+            );
+          })}
+        </SettingsSection>
+      )}
 
       {/* Dev tools — gated behind __DEV__ so it strips from prod.
           The cycler runs through SOCIAL_APPS in order so a reviewer
@@ -174,6 +231,12 @@ export default function FocusSettingsScreen() {
         appId={previewAppId ?? "instagram"}
         visible={previewAppId !== null}
         onClose={() => setPreviewAppId(null)}
+      />
+
+      <FamilyActivityAppsEditor
+        visible={supported && nativeAppsEditorOpen}
+        onClose={() => setNativeAppsEditorOpen(false)}
+        onSaved={() => setSelectionRevision((n) => n + 1)}
       />
     </SettingsScaffold>
   );

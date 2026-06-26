@@ -1,0 +1,227 @@
+import { useCallback, useEffect, useState } from "react";
+import {
+  Linking,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import Svg, { Path } from "react-native-svg";
+import {
+  AuthorizationStatus,
+  getScreenTimeAuthorizationStatus,
+  getScreenTimeSelectionSummary,
+  hasScreenTimeAppSelection,
+  isNativeScreenTimeAvailable,
+  requestScreenTimeAuthorization,
+} from "@/lib/deviceActivityShield";
+import { useColors } from "@/state/theme";
+
+const ICON_BASE = {
+  strokeWidth: 1.7,
+  fill: "none" as const,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
+
+type ScreenTimePermissionRowProps = {
+  onOpenAppPicker?: () => void;
+};
+
+/**
+ * Settings row for Screen Time authorization + app-selection status.
+ * Mirrors the notification-permission row on App Blocks.
+ */
+export function ScreenTimePermissionRow({
+  onOpenAppPicker,
+}: ScreenTimePermissionRowProps) {
+  const colors = useColors();
+  const [busy, setBusy] = useState(false);
+  const [authStatus, setAuthStatus] = useState(getScreenTimeAuthorizationStatus);
+  const [hasSelection, setHasSelection] = useState(hasScreenTimeAppSelection);
+
+  const refresh = useCallback(() => {
+    setAuthStatus(getScreenTimeAuthorizationStatus());
+    setHasSelection(hasScreenTimeAppSelection());
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  if (!isNativeScreenTimeAvailable()) {
+    return null;
+  }
+
+  const authorized = authStatus === AuthorizationStatus.approved;
+  const denied = authStatus === AuthorizationStatus.denied;
+
+  let iconBg: string;
+  let iconStroke: string;
+  let title: string;
+  let subtitle: string;
+  let ctaLabel: string | null = null;
+  let onPress: (() => void) | undefined;
+
+  if (authorized && hasSelection) {
+    iconBg = "rgba(34, 197, 94, 0.16)";
+    iconStroke = "#22C55E";
+    title = "Screen Time enabled";
+    subtitle = "Apps you picked will be blocked during focus.";
+    ctaLabel = "Update apps";
+    onPress = onOpenAppPicker;
+  } else if (authorized) {
+    iconBg = "rgba(245, 158, 11, 0.16)";
+    iconStroke = "#F59E0B";
+    title = "Pick apps to block";
+    subtitle = "Screen Time is on — choose which apps to quiet.";
+    ctaLabel = "Choose apps";
+    onPress = onOpenAppPicker;
+  } else if (denied) {
+    iconBg = "rgba(245, 158, 11, 0.16)";
+    iconStroke = "#F59E0B";
+    title = "Screen Time blocked";
+    subtitle = "Open Settings to allow Closer to manage app limits.";
+    ctaLabel = "Settings";
+    onPress = () => Linking.openSettings();
+  } else {
+    iconBg = "rgba(255, 255, 255, 0.12)";
+    iconStroke = colors.ink as string;
+    title = "Allow Screen Time";
+    subtitle = "Required to physically block apps during focus.";
+    ctaLabel = "Allow";
+    onPress = async () => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        const next = await requestScreenTimeAuthorization();
+        refresh();
+        if (next === AuthorizationStatus.approved) {
+          onOpenAppPicker?.();
+        }
+      } finally {
+        setBusy(false);
+      }
+    };
+  }
+
+  const summary = getScreenTimeSelectionSummary();
+  if (authorized && summary && hasSelection) {
+    const count =
+      summary.applicationCount + summary.categoryCount + summary.webDomainCount;
+    if (count > 0) {
+      subtitle = `${count} ${count === 1 ? "item" : "items"} selected for blocking.`;
+    }
+  }
+
+  return (
+    <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+      <View
+        accessibilityRole="summary"
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingVertical: 16,
+          borderRadius: 16,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: colors.border,
+          backgroundColor: colors.surface,
+        }}
+      >
+        <View
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 12,
+            backgroundColor: iconBg,
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: 16,
+          }}
+        >
+          {authorized && hasSelection ? (
+            <CheckGlyph stroke={iconStroke} />
+          ) : (
+            <HourglassGlyph stroke={iconStroke} />
+          )}
+        </View>
+        <View style={{ flex: 1, paddingRight: 8 }}>
+          <Text
+            style={{
+              fontFamily: "System",
+              fontWeight: "700",
+              color: colors.ink,
+              fontSize: 14,
+            }}
+          >
+            {title}
+          </Text>
+          <Text
+            style={{
+              fontFamily: "System",
+              fontWeight: "400",
+              color: colors.inkMuted,
+              fontSize: 12,
+              lineHeight: 17,
+              marginTop: 4,
+            }}
+          >
+            {subtitle}
+          </Text>
+        </View>
+        {ctaLabel && onPress ? (
+          <Pressable
+            onPress={onPress}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel={ctaLabel}
+            style={({ pressed }) => ({
+              opacity: pressed || busy ? 0.7 : 1,
+            })}
+          >
+            <View
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 999,
+                backgroundColor: colors.ink,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "System",
+                  fontWeight: "700",
+                  fontSize: 12,
+                  color: colors.primaryFg,
+                }}
+              >
+                {ctaLabel}
+              </Text>
+            </View>
+          </Pressable>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+function CheckGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24">
+      <Path d="M5 12l5 5L20 7" {...ICON_BASE} stroke={stroke} />
+    </Svg>
+  );
+}
+
+function HourglassGlyph({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24">
+      <Path
+        d="M6 3h12M6 21h12M8 3v4l4 4-4 4v4M16 3v4l-4 4 4 4v4"
+        {...ICON_BASE}
+        stroke={stroke}
+      />
+    </Svg>
+  );
+}

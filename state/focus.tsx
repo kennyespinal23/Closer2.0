@@ -10,10 +10,12 @@ import {
 import {
   DEFAULT_BLOCKED_APP_IDS,
   FOCUS_SESSION_MAX_AGE_MS,
+  isShieldSupported,
   shieldStart,
   shieldStop,
   type SocialAppId,
 } from "@/lib/focus";
+import { configureCloserShieldUI } from "@/lib/deviceActivityShield";
 import { removeKey, STORAGE_KEYS, usePersistence } from "@/lib/storage";
 
 /**
@@ -321,6 +323,23 @@ export function FocusProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const hydrated = usePersistence(STORAGE_KEYS.focus, state, applyLoaded);
+
+  // Install shield UI + re-apply blocks after cold start when a
+  // session was persisted mid-sermon.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (isShieldSupported()) {
+      configureCloserShieldUI();
+    }
+    const s = state.session;
+    if (s) {
+      shieldStart(s.blockedAppIds).catch(() => {
+        /* best-effort */
+      });
+    }
+    // Only run when hydration completes — not on every session tick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   // Stale-session sweeper. Runs once after hydration completes and
   // any time the persisted session changes — if the session is past

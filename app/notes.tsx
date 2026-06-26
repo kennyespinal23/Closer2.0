@@ -7,7 +7,9 @@ import {
   relativeTime,
   routeForVerse,
 } from "@/lib/annotationsFormat";
+import { typography } from "@/lib/typography";
 import { type Note, useAnnotations } from "@/state/annotations";
+import { type ColorPalette } from "@/constants/theme";
 import { useColors } from "@/state/theme";
 
 /**
@@ -16,18 +18,18 @@ import { useColors } from "@/state/theme";
  * the verse it's anchored to, the note itself, and a relative
  * timestamp. Tapping a card jumps back to that chapter in the
  * reader.
- *
- * Empty state matters here: this screen exists from day one but
- * stays empty until the user writes their first note, so the empty
- * copy needs to feel like an invitation, not an apology.
  */
 export default function NotesScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { allNotes } = useAnnotations();
   const notes = allNotes();
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      edges={["top", "bottom"]}
+    >
       <Header
         title="Notes"
         countLabel={
@@ -35,10 +37,11 @@ export default function NotesScreen() {
             ? `${notes.length} ${notes.length === 1 ? "note" : "notes"}`
             : undefined
         }
+        colors={colors}
       />
 
       {notes.length === 0 ? (
-        <EmptyState />
+        <EmptyState colors={colors} />
       ) : (
         <ScrollView
           contentContainerStyle={{ paddingBottom: 32, paddingTop: 12 }}
@@ -46,10 +49,9 @@ export default function NotesScreen() {
         >
           {notes.map((n) => (
             <NoteCard
-              // noteId is unique per entry, while `key` (the verseKey)
-              // can repeat when a verse has more than one note.
               key={n.noteId}
               note={n}
+              colors={colors}
               onPress={() => router.push(routeForVerse(n))}
             />
           ))}
@@ -59,66 +61,120 @@ export default function NotesScreen() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Card
-// ─────────────────────────────────────────────────────────────────
-
-function NoteCard({ note, onPress }: { note: Note; onPress: () => void }) {
+function NoteCard({
+  note,
+  colors,
+  onPress,
+}: {
+  note: Note;
+  colors: ColorPalette;
+  onPress: () => void;
+}) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-      className="mx-5 mt-3 rounded-2xl border border-border bg-surface px-5 py-4"
-    >
-      <View className="flex-row items-baseline justify-between">
-        <Text
-          className="text-primary text-[11px] tracking-[2.5px] uppercase"
-          style={{ fontFamily: "System", fontWeight: "700" }}
+    <Pressable onPress={onPress} accessibilityRole="button">
+      {({ pressed }) => (
+        <View
+          style={{
+            marginHorizontal: 20,
+            marginTop: 12,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.surface,
+            paddingHorizontal: 20,
+            paddingVertical: 16,
+            opacity: pressed ? 0.85 : 1,
+          }}
         >
-          {formatRef(note)}
-        </Text>
-        <Text
-          className="text-ink-subtle text-[11px]"
-          style={{ fontFamily: "System", fontWeight: "500" }}
-        >
-          {relativeTime(note.updatedAt)}
-        </Text>
-      </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "System",
+                fontWeight: "700",
+                fontSize: 11,
+                letterSpacing: 2.5,
+                textTransform: "uppercase",
+                color: colors.primary,
+              }}
+            >
+              {formatRef(note)}
+            </Text>
+            <Text
+              style={{
+                fontFamily: "System",
+                fontWeight: "500",
+                fontSize: 11,
+                color: colors.inkSubtle,
+              }}
+            >
+              {relativeTime(note.updatedAt)}
+            </Text>
+          </View>
 
-      {note.verseText ? (
-        <Text
-          className="text-ink-muted text-[13px] mt-2 leading-[19px]"
-          style={{ fontFamily: "System", fontWeight: "400" }}
-          numberOfLines={2}
-        >
-          &ldquo;{note.verseText}&rdquo;
-        </Text>
-      ) : null}
+          {note.verseText ? (
+            <Text
+              style={{
+                fontFamily: "System",
+                fontWeight: "400",
+                fontSize: 13,
+                lineHeight: 19,
+                color: colors.inkMuted,
+                marginTop: 8,
+              }}
+              numberOfLines={2}
+            >
+              &ldquo;{note.verseText}&rdquo;
+            </Text>
+          ) : null}
 
-      {/* Quiet divider — the note itself gets its own visual block
-          below the verse so it reads as a separate column of thought. */}
-      <View className="h-[1px] bg-border my-3" />
+          <View
+            style={{
+              height: 1,
+              backgroundColor: colors.border,
+              marginVertical: 12,
+            }}
+          />
 
-      <Text
-        className="text-ink text-[14.5px] leading-[21px]"
-        style={{ fontFamily: "System", fontWeight: "500" }}
-        numberOfLines={6}
-      >
-        {note.text}
-      </Text>
+          <Text
+            style={[typography.body, { color: colors.ink, fontSize: 14.5, lineHeight: 21 }]}
+            numberOfLines={6}
+          >
+            {note.text}
+          </Text>
+        </View>
+      )}
     </Pressable>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Empty state
-// ─────────────────────────────────────────────────────────────────
-
-function EmptyState() {
-  const colors = useColors();
+function EmptyState({ colors }: { colors: ColorPalette }) {
   return (
-    <View className="flex-1 items-center justify-center px-10">
-      <View className="w-14 h-14 rounded-2xl bg-accent-soft border border-border items-center justify-center">
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 40,
+      }}
+    >
+      <View
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: 16,
+          backgroundColor: colors.accentSoft,
+          borderWidth: 1,
+          borderColor: colors.border,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
           <Path
             d="M4 4h12l4 4v12H4zM14 4v6h6"
@@ -135,14 +191,27 @@ function EmptyState() {
         </Svg>
       </View>
       <Text
-        className="text-ink text-[18px] mt-5 text-center"
-        style={{ fontFamily: "System", fontWeight: "700" }}
+        style={{
+          fontFamily: "System",
+          fontWeight: "700",
+          fontSize: 18,
+          color: colors.ink,
+          marginTop: 20,
+          textAlign: "center",
+        }}
       >
         Nothing written yet
       </Text>
       <Text
-        className="text-ink-muted text-[13.5px] mt-2 text-center leading-[20px]"
-        style={{ fontFamily: "System", fontWeight: "400" }}
+        style={{
+          fontFamily: "System",
+          fontWeight: "400",
+          fontSize: 13.5,
+          lineHeight: 20,
+          color: colors.inkMuted,
+          marginTop: 8,
+          textAlign: "center",
+        }}
       >
         Tap any verse while reading to add a note. Your reflections
         will collect here, in order.
@@ -151,28 +220,38 @@ function EmptyState() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Header (shared shape with /highlights — kept inline because each
-// screen owns its own back-action semantics; abstracting felt thin.)
-// ─────────────────────────────────────────────────────────────────
-
 function Header({
   title,
   countLabel,
+  colors,
 }: {
   title: string;
   countLabel?: string;
+  colors: ColorPalette;
 }) {
   const router = useRouter();
-  const colors = useColors();
   return (
-    <View className="flex-row items-center px-4 pt-2 pb-3">
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingTop: 8,
+        paddingBottom: 12,
+      }}
+    >
       <Pressable
         onPress={() => router.back()}
         hitSlop={12}
         accessibilityRole="button"
         accessibilityLabel="Back"
-        className="w-10 h-10 rounded-full items-center justify-center"
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
         <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
           <Path
@@ -185,22 +264,42 @@ function Header({
         </Svg>
       </Pressable>
       <Text
-        className="text-ink text-[17px] flex-1 text-center"
-        style={{ fontFamily: "System", fontWeight: "700" }}
+        style={{
+          flex: 1,
+          textAlign: "center",
+          fontFamily: "System",
+          fontWeight: "700",
+          fontSize: 17,
+          color: colors.ink,
+        }}
       >
         {title}
       </Text>
       {countLabel ? (
-        <View className="px-3 h-10 rounded-full border border-border items-center justify-center">
+        <View
+          style={{
+            paddingHorizontal: 12,
+            height: 40,
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: colors.border,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <Text
-            className="text-ink-muted text-[11px]"
-            style={{ fontFamily: "System", fontWeight: "600" }}
+            style={{
+              fontFamily: "System",
+              fontWeight: "600",
+              fontSize: 11,
+              color: colors.inkMuted,
+            }}
           >
             {countLabel}
           </Text>
         </View>
       ) : (
-        <View className="w-10 h-10" />
+        <View style={{ width: 40, height: 40 }} />
       )}
     </View>
   );

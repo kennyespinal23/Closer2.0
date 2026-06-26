@@ -2,10 +2,12 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import { syncAllScheduledAppBlocks } from "@/lib/scheduledAppBlocks";
 import { DEFAULT_BLOCKED_APP_IDS, type SocialAppId } from "@/lib/focus";
 import {
   cancelStudySession,
@@ -298,6 +300,9 @@ export function StudySessionsProvider({ children }: { children: ReactNode }) {
         useFocusMode,
         blockedAppIds,
         notificationIds,
+        ...(typeof raw.durationMinutes === "number" && raw.durationMinutes > 0
+          ? { durationMinutes: raw.durationMinutes }
+          : {}),
       });
     }
     setState({ sessions: cleaned });
@@ -308,6 +313,14 @@ export function StudySessionsProvider({ children }: { children: ReactNode }) {
     state,
     applyLoaded,
   );
+
+  // Keep native Screen Time monitors aligned with the session list.
+  useEffect(() => {
+    if (!hydrated) return;
+    void syncAllScheduledAppBlocks(state.sessions).catch(() => {
+      /* best-effort */
+    });
+  }, [hydrated, state.sessions]);
 
   // ─── CRUD ──────────────────────────────────────────────────────
 

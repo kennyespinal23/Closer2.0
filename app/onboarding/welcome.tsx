@@ -4,6 +4,11 @@ import { useRouter } from "expo-router";
 import { HeroDisc, HeroOnboardingPage } from "@/components/HeroOnboardingPage";
 import { useOnboarding } from "@/state/onboarding";
 import { useColors } from "@/state/theme";
+import {
+  configureCloserShieldUI,
+  isScreenTimeShieldReady,
+} from "@/lib/deviceActivityShield";
+import { useFocus } from "@/state/focus";
 import { useStudySessions } from "@/state/studySessions";
 import {
   DEFAULT_BLOCKED_APP_IDS,
@@ -69,6 +74,7 @@ export default function WelcomeScreen() {
   const colors = useColors();
   const { answers, setAnswer } = useOnboarding();
   const { upsertSystemSession } = useStudySessions();
+  const { setEnabled } = useFocus();
 
   const firstName = (answers.name || "").trim().split(" ")[0];
 
@@ -112,11 +118,18 @@ export default function WelcomeScreen() {
       useFocusMode: false,
       blockedAppIds: [],
     }).catch(() => {});
+
+    if (answers.screenTimeConfigured || isScreenTimeShieldReady()) {
+      configureCloserShieldUI();
+      setEnabled(true);
+    }
   }, [
     upsertSystemSession,
     answers.bibleStudyTime,
     answers.dailyReminderTime,
     answers.morningApps,
+    answers.screenTimeConfigured,
+    setEnabled,
   ]);
 
   const handleEnterApp = () => {

@@ -5,7 +5,11 @@ export const SERMONS = [
     title: `When God Feels Silent`,
     scripture: `John 11:25 - I am the resurrection and the life.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `There's a kind of silence that's hard to explain.\n\nYou're reaching toward God and He's not reaching back.\n\nAnd the longer it goes the more you start to wonder.`,
+    teaser: `There's a kind of silence that's hard to explain.
+
+You're reaching toward God and He's not reaching back.
+
+And the longer it goes the more you start to wonder.`,
     panels: [
       {
         id: 1,
@@ -55,10 +59,12 @@ That's who you're praying to when the silence comes.`,
 
 Jesus knew what was happening in that tomb every hour He was away. He knew what it was costing Martha to wait. And He let the silence continue anyway — not because He had forgotten, but because something was being prepared that the silence itself was part of.
 
-He was not late.
+He was not late.`,
+        practiceToday: `Remember [name] — Jesus knew where Lazarus was every hour He was away. He knows where you are today too.
 
-*He was never not there.*`,
-        practiceToday: `Remember [name] — Jesus knew where Lazarus was every hour He was away. He knows where you are today too.\n\nWhen the silence comes — don't run from it. Sit in it for 60 seconds.\n\nHe's already in the room.`,
+When the silence comes — don't run from it. Sit in it for 60 seconds.
+
+He's already in the room.`,
       },
       {
         id: 5,
@@ -83,21 +89,25 @@ In Jesus' name, Amen.`,
     title: `I Don't Know How To Pray Anymore`,
     scripture: `Romans 8:26 - The Spirit himself intercedes for us through wordless groans.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `Most people think prayer is supposed to feel like something.\n\nLike there's a right way to do it.\n\nThere isn't.`,
+    teaser: `Most people think prayer is supposed to feel like something.
+
+Like there's a right way to do it.
+
+There isn't.`,
     panels: [
       {
         id: 1,
         label: `The Hook`,
         isPrayer: false,
-        body: `Most people think prayer is supposed to feel like something.
+        body: `You sat down to pray.
 
-Like there's a right posture. A right amount of words. A right feeling that's supposed to come after.
+Nothing came out.
 
-And when none of that comes —
+Not words. Not feelings. Just — nothing.
 
-**Most people assume something is wrong with them.**
+**And you stayed there anyway.**
 
-Nothing is wrong with you.`,
+That counts. Paul says so.`,
       },
       {
         id: 2,
@@ -137,10 +147,12 @@ Your silence is not a failed prayer.
 
 The Spirit takes the groaning you can't put words around and prays it for you — translates the weight into something heaven receives. That has been true every time you've sat down with nothing to offer but your exhaustion.
 
-You never did have to know what to say.
-
 *He knows what's in the silence.*`,
-        practiceToday: `Remember [name] — the Spirit intercedes even when you have no words.\n\nToday when you don't know what to pray — just show up. Two minutes. Don't perform.\n\nJust be there. That's enough.`,
+        practiceToday: `Remember [name] — the Spirit intercedes even when you have no words.
+
+Today when you don't know what to pray — just show up. Two minutes. Don't perform.
+
+Just be there. That's enough.`,
       },
       {
         id: 5,
@@ -165,23 +177,25 @@ In Jesus' name, Amen.`,
     title: `He Stopped For One Person`,
     scripture: `Luke 19:5 - Zacchaeus come down immediately, I must stay at your house today.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `There are people who stand at the back of every room.\n\nNot because there's no space at the front.\n\nBecause they decided the front wasn't for them.`,
+    teaser: `There are people who stand at the back of every room.
+
+Not because there's no space at the front.
+
+Because they decided the front wasn't for them.`,
     panels: [
       {
         id: 1,
         label: `The Hook`,
         isPrayer: false,
-        body: `There are people who stand at the back of every room.
+        body: `Zacchaeus climbed a tree to see Jesus.
 
-Not because there's no space at the front.
+Not to meet Him. Not to talk to Him.
 
-Because somewhere along the way they decided **the front wasn't for them.**
+**Just to see Him from a safe distance.**
 
-They watch from a distance. Never fully commit to being in.
+Jesus stopped under the tree and looked up.
 
-Zacchaeus was one of those people.
-
-*Except he climbed a tree about it.*`,
+*Zacchaeus — come down. I'm coming to your house today.*`,
       },
       {
         id: 2,
@@ -209,7 +223,7 @@ Zacchaeus didn't present himself. Didn't make himself worthy.
 
 **He climbed a tree and watched from a distance.**
 
-And Jesus stopped for him anyway. Called him by name. Came to his house anyway.
+And Jesus stopped for him. Called him by name. Came to his house anyway.
 
 *The distance you've been keeping — He already sees you in the tree.*`,
       },
@@ -224,7 +238,11 @@ He stopped under the tree before Zacchaeus had said a word, called him by name, 
 He called him by name first.
 
 *He's been calling yours.*`,
-        practiceToday: `Remember [name] — Zacchaeus thought watching from a distance was the best he could get. Jesus had other plans.\n\nToday — take one step closer. Open this app first. Say one honest thing to God.\n\nCome down from the tree.`,
+        practiceToday: `Remember [name] — Zacchaeus thought watching from a distance was the best he could get. Jesus had other plans.
+
+Today — take one step closer. Open this app first. Say one honest thing to God.
+
+Come down from the tree.`,
       },
       {
         id: 5,
@@ -249,23 +267,25 @@ In Jesus' name, Amen.`,
     title: `Why Does God Allow Suffering?`,
     scripture: `Job 38:3 - Brace yourself like a man, I will question you and you shall answer me.`,
     illustrationPrompt: `storm clouds sky`,
-    teaser: `This is the question nobody wants to ask out loud.\n\nNot because they haven't thought about it.\n\nBecause asking it feels like it might break something.`,
+    teaser: `This is the question nobody wants to ask out loud.
+
+Not because they haven't thought about it.
+
+Because asking it feels like it might break something.`,
     panels: [
       {
         id: 1,
         label: `The Hook`,
         isPrayer: false,
-        body: `This is the question nobody wants to ask out loud.
+        body: `Job lost everything in a single day.
 
-Because asking it feels like it might break something.
+His children. His property. His health.
 
-Like if you say it — *really say it* — you've crossed a line.
+**He had done nothing wrong.**
 
-**Why does God allow suffering?**
+The text says so directly — *blameless and upright, a man who feared God.*
 
-It's a fair question.
-
-*And the fact that you're asking it doesn't mean your faith is weak.*`,
+And everything went wrong anyway.`,
       },
       {
         id: 2,
@@ -309,8 +329,12 @@ Not because the pain went away.
 
 God showed up in his storm.
 
-**He shows up in yours too.** That's not nothing. That's everything.`,
-        practiceToday: `Remember [name] — Job pressed until God showed up. He didn't accept easy answers.\n\nToday — bring the unanswered why. Say it directly. Press.\n\nYou might not get an explanation. You might get something better.`,
+**He shows up in yours too.**`,
+        practiceToday: `Remember [name] — Job pressed until God showed up. He didn't accept easy answers.
+
+Today — bring the unanswered why. Say it directly. Press.
+
+You might not get an explanation. You might get something better.`,
       },
       {
         id: 5,
@@ -335,21 +359,25 @@ In Jesus' name, Amen.`,
     title: `Peter — The Man Who Failed Out Loud`,
     scripture: `John 21:19 - Follow me.`,
     illustrationPrompt: `ocean sunrise`,
-    teaser: `Most people fail quietly.\n\nThey find a way to keep it private.\n\nPeter failed in front of everyone.`,
+    teaser: `Most people fail quietly.
+
+They find a way to keep it private.
+
+Peter failed in front of everyone.`,
     panels: [
       {
         id: 1,
         label: `The Hook`,
         isPrayer: false,
-        body: `Most people fail quietly.
+        body: `Peter swore he would never deny Jesus.
 
-They manage the narrative. Make sure the people who matter don't see the worst of what happened.
+That same night — three times — he said he didn't know Him.
 
-**Peter failed in front of everyone.**
+**The third time a rooster crowed and Peter remembered.**
 
-Three times. Out loud. On record. The same night he had promised he never would.
+He went outside and wept bitterly.
 
-*He denied knowing Jesus while Jesus was on trial for his life.*`,
+*That's where this story starts.*`,
       },
       {
         id: 2,
@@ -394,7 +422,11 @@ He told him at the table, the night it happened — and still washed his feet a 
 He knew. And He still made breakfast.
 
 *Your failure is not the last word.*`,
-        practiceToday: `Remember [name] — Jesus met Peter at the thing he was most ashamed of and gave him back his purpose.\n\nToday — think of the failure you keep carrying.\n\nBring it. He already knows. He's already made breakfast.`,
+        practiceToday: `Remember [name] — Jesus met Peter at the thing he was most ashamed of and gave him back his purpose.
+
+Today — think of the failure you keep carrying.
+
+Bring it. He already knows. He's already made breakfast.`,
       },
       {
         id: 5,
@@ -419,25 +451,23 @@ In Jesus' name, Amen.`,
     title: `You Have To Fix Yourself Before Coming To God`,
     scripture: `Luke 15:20 - While he was still a long way off his father saw him and ran to him.`,
     illustrationPrompt: `sunset sky`,
-    teaser: `Somewhere along the way most people picked up the same idea.\n\nGet yourself together first. Then come to God.\n\nIt has kept more people from God than almost anything else.`,
+    teaser: `Somewhere along the way most people picked up the same idea.
+
+Get yourself together first. Then come to God.
+
+It has kept more people from God than almost anything else.`,
     panels: [
       {
         id: 1,
         label: `The Hook`,
         isPrayer: false,
-        body: `Somewhere along the way most people picked up the same idea.
+        body: `The son had a speech prepared.
 
-Get yourself together first. Fix the habit. Be a better person.
+He had rehearsed it the whole way home — every word of it, all the way back from the far country.
 
-Then — when you're presentable — *then* you can come.
+*I am no longer worthy to be called your son. Make me like one of your hired servants.*
 
-Nobody says it exactly like that.
-
-**But most people believe it.**
-
-And the version of yourself you're waiting to become before you come to God —
-
-*that version never arrives.*`,
+**He never got to finish it.**`,
       },
       {
         id: 2,
@@ -482,7 +512,11 @@ The son had a whole speech prepared — a plan for how to earn his way back in a
 He's been watching for you the same way.
 
 *He's already running.*`,
-        practiceToday: `Remember [name] — the father ran before the son finished his apology.\n\nToday — come as you are. Don't wait until you feel ready. Don't clean up first.\n\nJust come. That's the whole thing.`,
+        practiceToday: `Remember [name] — the father ran before the son finished his apology.
+
+Today — come as you are. Don't wait until you feel ready. Don't clean up first.
+
+Just come. That's the whole thing.`,
       },
       {
         id: 5,
@@ -507,23 +541,25 @@ In Jesus' name, Amen.`,
     title: `Plans in the Middle of Babylon`,
     scripture: `Jeremiah 29:11 - For I know the plans I have for you, plans to give you hope and a future.`,
     illustrationPrompt: `mountains sky`,
-    teaser: `You've seen this verse before.\n\nOn a graduation card. On a coffee mug.\n\nMost people have missed what God was actually saying.`,
+    teaser: `You've seen this verse before.
+
+On a graduation card. On a coffee mug.
+
+Most people have missed what God was actually saying.`,
     panels: [
       {
         id: 1,
         label: `The Hook`,
         isPrayer: false,
-        body: `*For I know the plans I have for you.*
+        body: `Jeremiah wrote this letter to people in exile.
 
-You've seen it on graduation cards and coffee mugs.
+Not free people planning their futures.
 
-Most people read it as a promise that things are about to get better.
+**Captives. In a foreign city. With no timeline for going home.**
 
-**That's not what God was saying.**
+*Build houses. Plant gardens. Seek the peace of the city.*
 
-What He was actually saying is harder than that. And more honest.
-
-*And somehow — more comforting.*`,
+He was telling them to put down roots in the place they never wanted to be.`,
       },
       {
         id: 2,
@@ -545,17 +581,11 @@ God sent a letter through Jeremiah that said something different.
         id: 3,
         label: `The Turn`,
         isPrayer: false,
-        body: `Most people want God to change their circumstances.
+        body: `Jeremiah wasn't telling them to pretend they weren't in exile.
 
-*God keeps showing up in the middle of them.*
+He was telling them to live fully in the place they were — because God was already there.
 
-He didn't extract the Israelites immediately. He said — build a life where you are. I know where you are.
-
-**The plans He has for you are not suspended until your situation improves.**
-
-They are operating right now.
-
-*In the middle of whatever Babylon you're living in.*`,
+**Not waiting for the rescue. Present in the captivity.**`,
       },
       {
         id: 4,
@@ -568,7 +598,11 @@ God told the exiles to build houses and plant gardens in the very city that held
 He knows where you are.
 
 *Even here.*`,
-        practiceToday: `Remember [name] — God told the Israelites to build a life in Babylon. Not wait for things to change.\n\nToday — do one thing you've been putting off until your situation improves.\n\nHe is already working here.`,
+        practiceToday: `Remember [name] — God told the Israelites to build a life in Babylon. Not wait for things to change.
+
+Today — do one thing you've been putting off until your situation improves.
+
+He is already working here.`,
       },
       {
         id: 5,
@@ -593,7 +627,10 @@ In Jesus' name, Amen.`,
     title: `It Is Well With My Soul`,
     scripture: `Philippians 4:7 - The peace of God will guard your hearts and your minds.`,
     illustrationPrompt: `blue ocean sky`,
-    teaser: `When peace like a river attendeth my way,\nWhen sorrows like sea billows roll —\nWhatever my lot, Thou hast taught me to say,\nIt is well with my soul.`,
+    teaser: `When peace like a river attendeth my way,
+When sorrows like sea billows roll —
+Whatever my lot, Thou hast taught me to say,
+It is well with my soul.`,
     panels: [
       {
         id: 1,
@@ -642,14 +679,20 @@ Not when things get better.
         id: 4,
         label: `The Landing`,
         isPrayer: false,
-        body: `[name], the shepherd left the ninety-nine.
+        body: `[name], Horatio wrote those words in a ship's cabin.
 
-Not to the edge of the field to call out and hope — He went until He found the one. That same search has been happening for you, whether or not you've felt the ground moving under it.
+Over the Atlantic. Over the place where his four daughters drowned twelve minutes after the ship went down.
 
-He is not waiting for you to find your way back.
+He didn't write it when things got better.
 
-*He is already out looking.*`,
-        practiceToday: `Remember [name] — Horatio wrote it is well from the worst moment of his life. Not after it.\n\nToday — find the one thing in your situation that is still well. Just one.\n\nSay it out loud. That's where it starts.`,
+He wrote it from inside the worst moment of his life.
+
+*Whatever my lot — it is well.*`,
+        practiceToday: `Remember [name] — Horatio wrote it is well from the worst moment of his life. Not after it.
+
+Today — find the one thing in your situation that is still well. Just one.
+
+Say it out loud. That's where it starts.`,
       },
       {
         id: 5,
@@ -674,7 +717,11 @@ In Jesus' name, Amen.`,
     title: `Be Still`,
     scripture: `Psalm 46:10 - Be still and know that I am God.`,
     illustrationPrompt: `night sky stars`,
-    teaser: `This verse gets put on candles and bath salts.\n\nBut it was written in the middle of a catastrophe.\n\nNations in uproar. Kingdoms falling. The earth giving way.`,
+    teaser: `This verse gets put on candles and bath salts.
+
+But it was written in the middle of a catastrophe.
+
+Nations in uproar. Kingdoms falling. The earth giving way.`,
     panels: [
       {
         id: 1,
@@ -682,15 +729,13 @@ In Jesus' name, Amen.`,
         isPrayer: false,
         body: `*Be still and know that I am God.*
 
-This verse gets put on candles and bath salts.
+This was written during a catastrophe.
 
-But it was written **in the middle of a catastrophe.**
+**Nations in uproar. Kingdoms falling. Mountains crumbling into the sea.**
 
-Nations in uproar. Kingdoms falling. Mountains crumbling into the sea.
+Not a verse about calm mornings.
 
-*Be still* wasn't written for a quiet Sunday morning.
-
-It was written for the moment everything was falling apart.`,
+*A command given in the middle of collapse.*`,
       },
       {
         id: 2,
@@ -716,7 +761,7 @@ It's about knowing **who is in the room** while the chaos continues.`,
         isPrayer: false,
         body: `You don't have to wait for things to calm down before you find peace.
 
-In the middle of the noise — in the middle of the uproar —
+In the middle of the noise —
 
 **God is there.**
 
@@ -735,7 +780,11 @@ And knowing that changes what the chaos is.
 You don't have to have the answers.
 
 *He's in the room.*`,
-        practiceToday: `Remember [name] — be still was spoken into catastrophe. Not calm.\n\nToday — put the phone down for five minutes. No music. No noise. Just stillness.\n\nLet Him be God in it.`,
+        practiceToday: `Remember [name] — be still was spoken into catastrophe. Not calm.
+
+Today — put the phone down for five minutes. No music. No noise. Just stillness.
+
+Let Him be God in it.`,
       },
       {
         id: 5,
@@ -760,7 +809,11 @@ In Jesus' name, Amen.`,
     title: `He Knew Her Name`,
     scripture: `John 20:16 - Jesus said to her, Mary.`,
     illustrationPrompt: `sunrise sky`,
-    teaser: `Mary went to the tomb before sunrise.\n\nNot because she expected anything.\n\nBecause she had nowhere else to go.`,
+    teaser: `Mary went to the tomb before sunrise.
+
+Not because she expected anything.
+
+Because she had nowhere else to go.`,
     panels: [
       {
         id: 1,
@@ -820,10 +873,12 @@ The one who stayed when everyone else went home.
 
 Not a sermon. Not an announcement to the crowd. One word, to one woman who had stayed when everyone else went home — because Jesus came back to the place she was, before He went anywhere else.
 
-He knows yours too.
+He knows yours too.`,
+        practiceToday: `Remember [name] — Jesus said Mary's name and she knew it was Him.
 
-*And He knows exactly where you're standing right now.*`,
-        practiceToday: `Remember [name] — Jesus said Mary's name and she knew it was Him.\n\nToday — sit quietly and listen. Not for a voice. Just for the sense that you are known.\n\nYou are not anonymous to Him.`,
+Today — sit quietly and listen. Not for a voice. Just for the sense that you are known.
+
+You are not anonymous to Him.`,
       },
       {
         id: 5,
@@ -848,23 +903,25 @@ In Jesus' name, Amen.`,
     title: `The Yoke He Actually Offers`,
     scripture: `Matthew 11:28 - Come to me all you who are weary and I will give you rest.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `Most people hear this verse and picture relief.\n\nLike God is offering to take everything away.\n\nHe's not. He's offering something better.`,
+    teaser: `Most people hear this verse and picture relief.
+
+Like God is offering to take everything away.
+
+He's not. He's offering something better.`,
     panels: [
       {
         id: 1,
         label: `The Hook`,
         isPrayer: false,
-        body: `Most people hear this verse and picture relief.
+        body: `*Come to me all who are weary and burdened.*
 
-Like God is offering to remove the weight. Make life easier.
+Jesus said this to people who were exhausted by religion.
 
-**He's not offering that.**
+By rules. By requirements. By the weight of trying to be enough.
 
-*Come to me all who are weary and burdened — and I will give you rest.*
+**He didn't say — try harder.**
 
-The word rest doesn't mean the absence of difficulty.
-
-It means something far more specific — and more useful.`,
+*He offered a different yoke entirely.*`,
       },
       {
         id: 2,
@@ -904,10 +961,12 @@ He is saying *come.* Let someone stronger take the other side.
 
 The yoke was built for two — a well-fitted yoke didn't make the work lighter, it made it shared. He's not asking you to set it down. He's asking to take the other side.
 
-It's the presence of Someone pulling with you.
+It's the presence of Someone pulling with you.`,
+        practiceToday: `Remember [name] — the yoke is designed for two. You were never meant to pull alone.
 
-*You don't have to carry this alone.*`,
-        practiceToday: `Remember [name] — the yoke is designed for two. You were never meant to pull alone.\n\nToday — identify the one thing you've been carrying by yourself.\n\nThen hand it to the other side of the yoke.`,
+Today — identify the one thing you've been carrying by yourself.
+
+Then hand it to the other side of the yoke.`,
       },
       {
         id: 5,
@@ -932,7 +991,11 @@ In Jesus' name, Amen.`,
     title: `David — The Worship Leader Who Fell Apart`,
     scripture: `Psalm 51:10 - Create in me a clean heart, O God.`,
     illustrationPrompt: `mountains sunrise`,
-    teaser: `Most people know the end of David's story.\n\nThe restoration. The redemption.\n\nBut we skip the chapters that explain what that actually cost him.`,
+    teaser: `Most people know the end of David's story.
+
+The restoration. The redemption.
+
+But we skip the chapters that explain what that actually cost him.`,
     panels: [
       {
         id: 1,
@@ -968,7 +1031,7 @@ Not restore. Not repair.
         id: 3,
         label: `The Turn`,
         isPrayer: false,
-        body: `This story is not in scripture to show what God does with extraordinary people.
+        body: `David wrote Psalm 51 after the worst year of his life.
 
 **It's in scripture to show what He does with ordinary ones who stop pretending.**
 
@@ -989,7 +1052,11 @@ The bottom of Psalm 51 was not where David's story ended — it was where the pa
 The creating was always the point.
 
 *Not the fixing. The creating.*`,
-        practiceToday: `Remember [name] — David stopped performing and started praying. That's when everything changed.\n\nToday — stop performing. Say the true thing to God. The actual thing.\n\nThat's where the creating begins.`,
+        practiceToday: `Remember [name] — David stopped performing and started praying. That's when everything changed.
+
+Today — stop performing. Say the true thing to God. The actual thing.
+
+That's where the creating begins.`,
       },
       {
         id: 5,
@@ -1014,21 +1081,31 @@ In Jesus' name, Amen.`,
     title: `Doubt Means Weak Faith`,
     scripture: `Mark 9:23 - Everything is possible for one who believes.`,
     illustrationPrompt: `blue sky`,
-    teaser: `Most people treat doubt like a secret.\n\nSomething to overcome quietly before anyone notices.\n\nThe Bible treats it very differently.`,
+    teaser: `Most people treat doubt like a secret.
+
+Something to overcome quietly before anyone notices.
+
+The Bible treats it very differently.`,
     panels: [
       {
         id: 1,
         label: `The Hook`,
         isPrayer: false,
-        body: `Most people treat doubt like a secret.
+        body: `A father brought his son to the disciples.
 
-Something to hide. To overcome quietly. Like if you say *I'm not sure about this* — you've failed some kind of test.
+The boy had been seized by convulsions since childhood.
 
-**That's not how the Bible treats doubt.**
+The disciples couldn't help.
 
-The Bible is full of people who doubted out loud. Who brought their uncertainty directly to God.
+Jesus came down from the mountain.
 
-*And God didn't turn any of them away.*`,
+The father looked at Him and said — *if you can do anything — please help us.*
+
+**If you can.**
+
+Jesus didn't rebuke the doubt.
+
+*He healed the boy anyway.*`,
       },
       {
         id: 2,
@@ -1052,8 +1129,6 @@ In the same breath. In the same sentence.
         isPrayer: false,
         body: `Doubt is not the opposite of faith.
 
-**Certainty is not the requirement for faith.**
-
 The father had enough faith to show up. Enough to ask. Enough to say the honest thing.
 
 *That was enough.*
@@ -1066,12 +1141,12 @@ Faith is not the absence of doubt. Faith is **choosing to come anyway** — with
         isPrayer: false,
         body: `[name], *I believe — help my unbelief* is not a failure.
 
-The father said it in the same breath he asked for healing, doubt and faith tangled together in one honest sentence — and Jesus didn't ask him to untangle them first. He healed the son anyway.
+The father said it in the same breath he asked for healing, doubt and faith tangled together in one honest sentence — and Jesus didn't ask him to untangle them first. He healed the son anyway.`,
+        practiceToday: `Remember [name] — the father brought his doubt directly to Jesus and it was enough.
 
-It's one of the most honest prayers in scripture.
+Today — say the honest thing. The version with the doubt still in it.
 
-*And it worked.*`,
-        practiceToday: `Remember [name] — the father brought his doubt directly to Jesus and it was enough.\n\nToday — say the honest thing. The version with the doubt still in it.\n\nShow up. That's faith.`,
+Show up. That's faith.`,
       },
       {
         id: 5,
@@ -1096,7 +1171,9 @@ In Jesus' name, Amen.`,
     title: `What Shame Actually Does`,
     scripture: `Genesis 3:9 - The Lord God called to the man, Where are you?`,
     illustrationPrompt: `green forest trees`,
-    teaser: `The first thing shame ever did was make someone hide.\n\nAnd it's been doing the same thing ever since.`,
+    teaser: `The first thing shame ever did was make someone hide.
+
+And it's been doing the same thing ever since.`,
     panels: [
       {
         id: 1,
@@ -1150,14 +1227,12 @@ He would rather have you out in the open — *ashamed and honest* — than hidde
         id: 4,
         label: `The Landing`,
         isPrayer: false,
-        body: `[name], God is still asking the same question He asked in the garden.
+        body: `[name], not to condemn you. To find you.`,
+        practiceToday: `Remember [name] — God called into the garden knowing what had happened. He's calling into yours.
 
-Not because He didn't know where Adam was hiding — He knew exactly. He asked so Adam would answer, so the hiding would end, so the conversation could start again.
+Today — come out from wherever you've been hiding. Even just one step.
 
-Where are you?
-
-Not to condemn you. *To find you.*`,
-        practiceToday: `Remember [name] — God called into the garden knowing what had happened. He's calling into yours.\n\nToday — come out from wherever you've been hiding. Even just one step.\n\nAnswer the question. Here I am.`,
+Answer the question. Here I am.`,
       },
       {
         id: 5,
@@ -1182,7 +1257,11 @@ In Jesus' name, Amen.`,
     title: `The Touch Before the Healing`,
     scripture: `Mark 1:41 - Jesus reached out his hand and touched the man.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `The man with leprosy didn't ask to be touched.\n\nHe asked to be healed.\n\nJesus did both. But He touched him first.`,
+    teaser: `The man with leprosy didn't ask to be touched.
+
+He asked to be healed.
+
+Jesus did both. But He touched him first.`,
     panels: [
       {
         id: 1,
@@ -1249,7 +1328,11 @@ The man asked to be made clean. Jesus touched him first — before the healing, 
 He also sees what you didn't know to ask for.
 
 *He touches both.*`,
-        practiceToday: `Remember [name] — the man asked to be healed. Jesus touched him first.\n\nToday — bring your actual request. The real one.\n\nHe already sees what's underneath it.`,
+        practiceToday: `Remember [name] — the man asked to be healed. Jesus touched him first.
+
+Today — bring your actual request. The real one.
+
+He already sees what's underneath it.`,
       },
       {
         id: 5,
@@ -1274,7 +1357,9 @@ In Jesus' name, Amen.`,
     title: `Amazing Grace`,
     scripture: `Ephesians 2:8 - For it is by grace you have been saved through faith.`,
     illustrationPrompt: `golden field sky`,
-    teaser: `Amazing grace, how sweet the sound,\nThat saved a wretch like me.\nThe man who wrote those words knew exactly what he was.`,
+    teaser: `Amazing grace, how sweet the sound,
+That saved a wretch like me.
+The man who wrote those words knew exactly what he was.`,
     panels: [
       {
         id: 1,
@@ -1315,8 +1400,6 @@ He eventually became one of the most important abolitionists in British history.
         isPrayer: false,
         body: `Grace that can reach John Newton can reach anyone.
 
-It means grace is not reserved for people who have done reasonably bad things.
-
 **It reaches the worst version of what a person can be.**
 
 And it is patient. It works slowly. It doesn't require you to have it figured out before it begins.
@@ -1337,7 +1420,11 @@ John Newton was still trading slaves when grace started working on him. It took 
 *That saved a wretch like me.*
 *I once was lost but now am found,*
 ***Was blind but now I see.***`,
-        practiceToday: `Remember [name] — grace worked on Newton slowly over years. He didn't change overnight.\n\nToday — stop expecting instant transformation. Grace is patient.\n\nLet it keep working.`,
+        practiceToday: `Remember [name] — grace worked on Newton slowly over years. He didn't change overnight.
+
+Today — stop expecting instant transformation. Grace is patient.
+
+Let it keep working.`,
       },
       {
         id: 5,
@@ -1362,23 +1449,25 @@ In Jesus' name, Amen.`,
     title: `What Grace Actually Means`,
     scripture: `Ephesians 2:8-9 - It is by grace you have been saved, it is the gift of God.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `Grace is one of the most used words in Christianity.\n\nAnd one of the least understood.\n\nIf you really understood it — it would change everything about how you come to God.`,
+    teaser: `Grace is one of the most used words in Christianity.
+
+And one of the least understood.
+
+If you really understood it — it would change everything about how you come to God.`,
     panels: [
       {
         id: 1,
         label: `The Hook`,
         isPrayer: false,
-        body: `Grace shows up in songs and prayers and tattoos.
+        body: `Imagine getting a gift and trying to pay the giver back.
 
-And one of the least understood words in faith.
+Not because they asked you to.
 
-Because if you actually understood what grace means — not the word, the *thing* —
+**Because receiving it for free felt wrong.**
 
-**It would change everything about how you come to God.**
+That is what most people do with grace.
 
-Most people still operate as if they're earning something.
-
-*They're not.*`,
+*It has already been given. They are still trying to earn it.*`,
       },
       {
         id: 2,
@@ -1421,7 +1510,11 @@ Grace was never a wage you earned by showing up enough days in a row. It was a g
 You never were on a performance review.
 
 *It was always a gift.*`,
-        practiceToday: `Remember [name] — grace means you cannot earn it and you cannot lose it.\n\nToday — do something for God not to earn anything.\n\nJust because you want to. That's what grace produces.`,
+        practiceToday: `Remember [name] — grace means you cannot earn it and you cannot lose it.
+
+Today — do something for God not to earn anything.
+
+Just because you want to. That's what grace produces.`,
       },
       {
         id: 5,
@@ -1446,23 +1539,25 @@ In Jesus' name, Amen.`,
     title: `Why Does God Feel Distant Sometimes?`,
     scripture: `Psalm 22:24 - He has listened to his cry for help.`,
     illustrationPrompt: `night sky stars`,
-    teaser: `This question has been asked by more people than will ever admit it.\n\nIncluding Jesus.\n\nFrom the cross.`,
+    teaser: `This question has been asked by more people than will ever admit it.
+
+Including Jesus.
+
+From the cross.`,
     panels: [
       {
         id: 1,
         label: `The Hook`,
         isPrayer: false,
-        body: `Why does God feel distant sometimes?
+        body: `Have you ever felt God go quiet?
 
-Why does faith feel certain in some seasons and paper-thin in others?
+Not peaceful quiet.
 
-Why does the God who is supposed to be everywhere sometimes feel *nowhere near here?*
+**The kind where you're reaching and nothing comes back.**
 
-This question is not a sign of weak faith.
+*Where did He go?*
 
-**It is one of the most human things a person can feel.**
-
-And someone said it before you. *From the cross.*`,
+Or the harder question — *was He ever there?*`,
       },
       {
         id: 2,
@@ -1503,7 +1598,11 @@ He quoted Psalm 22 from the cross — the same psalm that ends with God not desp
 And God did not leave.
 
 *He never does.*`,
-        practiceToday: `Remember [name] — David felt forsaken. Jesus quoted that psalm from the cross. The feeling was real. The distance was not.\n\nToday — tell God honestly that He feels far away.\n\nThat's not losing faith. That's Psalm 22.`,
+        practiceToday: `Remember [name] — David felt forsaken. Jesus quoted that psalm from the cross. The feeling was real. The distance was not.
+
+Today — tell God honestly that He feels far away.
+
+That's not losing faith. That's Psalm 22.`,
       },
       {
         id: 5,
@@ -1528,25 +1627,25 @@ In Jesus' name, Amen.`,
     title: `The Thing About Starting Over`,
     scripture: `Lamentations 3:22-23 - His mercies are new every morning.`,
     illustrationPrompt: `sunrise sky`,
-    teaser: `Most people treat a fresh start like something they have to earn.\n\nLike you have to do enough right before you get to begin again.\n\nThat's not how morning works.`,
+    teaser: `Most people treat a fresh start like something they have to earn.
+
+Like you have to do enough right before you get to begin again.
+
+That's not how morning works.`,
     panels: [
       {
         id: 1,
         label: `The Hook`,
         isPrayer: false,
-        body: `Most people treat a fresh start like something they have to earn.
+        body: `Lamentations was written in the ruins of Jerusalem.
 
-Like there's a minimum requirement of consistency before you're allowed to call today a new day.
+The city had been destroyed. Everything was gone.
 
-**That's not how morning works.**
+And Jeremiah wrote — **His mercies are new every morning.**
 
-Morning comes whether you deserve it or not.
+Not someday. Not when the ruins are cleared.
 
-*His mercies are new every morning.*
-
-Not every morning you earned it.
-
-*Every morning.*`,
+*Every morning. Including this one.*`,
       },
       {
         id: 2,
@@ -1578,9 +1677,7 @@ Like morning. You did nothing to produce it. You simply woke up and it was there
 
 Not mercy when you've earned it.
 
-*Mercy new every morning. Before you've had a chance to succeed or fail.*
-
-**It is already here.**`,
+*Mercy new every morning. Before you've had a chance to succeed or fail.*`,
       },
       {
         id: 4,
@@ -1593,7 +1690,11 @@ Jeremiah wrote about mercies new every morning from inside the ruins of a destro
 Whatever happened yesterday —
 
 *His mercies were already here when you woke up.*`,
-        practiceToday: `Remember [name] — the mercy was new before you did anything today.\n\nToday — receive it. Don't earn it. Don't explain why you need it.\n\nJust let it be new. It already is.`,
+        practiceToday: `Remember [name] — the mercy was new before you did anything today.
+
+Today — receive it. Don't earn it. Don't explain why you need it.
+
+Just let it be new. It already is.`,
       },
       {
         id: 5,
@@ -1618,7 +1719,11 @@ In Jesus' name, Amen.`,
     title: `When Words Don't Come`,
     scripture: `Psalm 62:1 - Truly my soul finds rest in God.`,
     illustrationPrompt: `night sky stars`,
-    teaser: `Some nights you don't have a prayer.\n\nNot because nothing is wrong.\n\nBecause everything is — and words don't reach that far.`,
+    teaser: `Some nights you don't have a prayer.
+
+Not because nothing is wrong.
+
+Because everything is — and words don't reach that far.`,
     panels: [
       {
         id: 1,
@@ -1664,7 +1769,7 @@ Sitting down in His presence the way you sit down at the end of a long day.
 
 *Just resting.*
 
-**God receives that. He receives you.**`,
+**God receives that.**`,
       },
       {
         id: 4,
@@ -1677,7 +1782,11 @@ David wrote *my soul finds rest in God alone* while being hunted by his own son 
 **Just come.**
 
 *Rest in God alone. That's enough for today.*`,
-        practiceToday: `Remember [name] — David found rest not words. Rest was enough.\n\nToday — don't try to pray. Just sit. Two minutes. Quiet.\n\nLet your presence be the prayer.`,
+        practiceToday: `Remember [name] — David found rest not words. Rest was enough.
+
+Today — don't try to pray. Just sit. Two minutes. Quiet.
+
+Let your presence be the prayer.`,
       },
       {
         id: 5,
@@ -1702,20 +1811,33 @@ In Jesus' name, Amen.`,
     title: `The Waiting Room`,
     scripture: `Isaiah 40:31 - Those who hope in the Lord will soar on wings like eagles.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `Nobody wants to be in a waiting room.\n\nBut some of the most important things in scripture happened in the waiting.\n\nNot after it. In it.`,
+    teaser: `Nobody wants to be in a waiting room.
+
+But some of the most important things in scripture happened in the waiting.
+
+Not after it. In it.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Nobody wants to be in a waiting room.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `You're not at the beginning of this anymore.
 
-You came because you need something. And all you can do right now is wait.
+And you can't see the end yet.
 
-**But some of the most important things in scripture happened in the waiting.**
+**You're just in it.**
 
-Not after it. *In it.*
+Isaiah wrote about people in exactly this place.
 
-Which means the waiting room is not the place before the story begins.
+*They will soar. They will run. They will walk and not faint.*
 
-*It might be where the story is happening.*` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `Isaiah 40 was written to people exhausted from waiting — Israel in exile.
+He listed them in the wrong order on purpose.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `Isaiah 40 was written to people exhausted from waiting — Israel in exile.
 
 The prophet doesn't tell them to try harder. He describes what happens **when you wait on God.**
 
@@ -1725,24 +1847,40 @@ Notice the order. Soar. Run. Walk.
 
 It goes backward from what you'd expect.
 
-*Because by the end of a long wait — walking without fainting is enough.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Waiting on the Lord is not passive.
+*Because by the end of a long wait — walking without fainting is enough.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The promise is not that the waiting ends quickly.
 
-It is the active decision to trust timing you cannot control.
+**It is that the waiting is not wasted.**
 
-To stay in the room. To keep showing up. To believe what God promised is still coming even when the evidence is thin.
+The people who walk without fainting — who stay in the ordinary days without collapsing — those are the ones Isaiah calls strong.
 
-**The waiting is not wasted time.**
+*That is the victory being offered.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], walking without fainting is the miracle.
 
-*It is where the strength gets built.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the waiting room is not the waiting room.
+Not soaring. Not running. Just — staying in it, one day at a time, not collapsing under what you cannot yet see the end of.
 
-Isaiah told an exhausted people that those who wait on the Lord soar, run, and finally just walk without fainting — the order goes backward from what you'd expect, because by the end of a long wait, walking is the victory.
+*Isaiah called that strength.*`,
+        practiceToday: `Remember [name] — the strength gets renewed in the waiting. Not after it.
 
-*It is the training ground.*
+Today — name the thing you've been waiting for. Write it down.
 
-Stay in it.`, practiceToday: `Remember [name] — the strength gets renewed in the waiting. Not after it.\n\nToday — name the thing you've been waiting for. Write it down.\n\nThen choose to trust one more day. That's active waiting.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that waiting on You is never wasted.
+Then choose to trust one more day. That's active waiting.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that waiting on You is never wasted.
 
 Thank You that You renew strength in the process not just at the end.
 
@@ -1750,7 +1888,8 @@ Help me to stay in the waiting room without losing hope.
 
 Give me what I need for today.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -1760,9 +1899,17 @@ In Jesus' name, Amen.` },
     title: `He Wept`,
     scripture: `John 11:35 - Jesus wept.`,
     illustrationPrompt: `grey clouds sky`,
-    teaser: `The shortest verse in the Bible.\n\nTwo words.\n\nAnd they might be the most important two words in scripture for anyone who has wondered if God understands what they're going through.`,
+    teaser: `The shortest verse in the Bible.
+
+Two words.
+
+And they might be the most important two words in scripture for anyone who has wondered if God understands what they're going through.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `The shortest verse in the Bible.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `The shortest verse in the Bible.
 
 Two words.
 
@@ -1772,8 +1919,13 @@ Two words.
 
 He stood in the middle of it and wept.
 
-*Before He did anything about it.*` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `Jesus arrived in Bethany four days after Lazarus died.
+*Before He did anything about it.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `Jesus arrived in Bethany four days after Lazarus died.
 
 He already knew what He was going to do. He had told the disciples this would not end in death.
 
@@ -1781,28 +1933,42 @@ He already knew what He was going to do. He had told the disciples this would no
 
 And He still wept.
 
-When He saw Mary weeping — when He saw the crowd weeping — the text says He was *deeply moved in spirit and troubled.*
-
-**Before He demonstrated any power — He sat in the pain.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `There is a God who observes suffering from a distance.
+When He saw Mary weeping — when He saw the crowd weeping — the text says He was *deeply moved in spirit and troubled.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `There is a God who observes suffering from a distance.
 
 *Jesus is not that God.*
 
 He entered the grief fully. Stood in it. Let it move Him.
 
-**Before He demonstrated any power — He sat in the pain.**
-
-Which means when you are in pain — God is not watching from somewhere else.
-
-*He is standing where you are standing. He is weeping too.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], Jesus knew the miracle was coming.
+**Before He demonstrated any power — He sat in the pain.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], Jesus knew the miracle was coming.
 
 He had already told the disciples Lazarus would live again. He knew exactly what was about to happen in that tomb — and He still stood outside it and wept, because the grief deserved to be entered before the power was demonstrated.
 
 He still sat in the grief first.
 
-*He is in yours too.*`, practiceToday: `Remember [name] — Jesus wept before He raised Lazarus. He sat in the grief before the power.\n\nToday — let yourself feel what you're feeling. Don't rush to the lesson.\n\nHe's weeping with you right now.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You weep with those who weep.
+*He is in yours too.*`,
+        practiceToday: `Remember [name] — Jesus wept before He raised Lazarus. He sat in the grief before the power.
+
+Today — let yourself feel what you're feeling. Don't rush to the lesson.
+
+He's weeping with you right now.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You weep with those who weep.
 
 Thank You that You don't rush past the grief to get to the miracle.
 
@@ -1810,7 +1976,8 @@ Help me to feel Your presence in the pain today — not just in the resolution.
 
 You are here. I believe that.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -1820,22 +1987,31 @@ In Jesus' name, Amen.` },
     title: `God Helps Those Who Help Themselves`,
     scripture: `2 Corinthians 12:9 - My power is made perfect in weakness.`,
     illustrationPrompt: `sunlight clouds`,
-    teaser: `Most people think this is in the Bible.\n\nIt isn't.\n\nAnd what the Bible actually says is almost exactly the opposite.`,
+    teaser: `Most people think this is in the Bible.
+
+It isn't.
+
+And what the Bible actually says is almost exactly the opposite.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Most people think this is in the Bible.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Paul had a thorn in his flesh.
 
-*God helps those who help themselves.*
+He never tells us what it was. Just that it was painful enough that he begged God three times to remove it.
 
-It isn't. Benjamin Franklin said it.
+**God said no.**
 
-**And what the Bible actually says is almost exactly the opposite.**
+*My grace is sufficient for you. My power is made perfect in weakness.*
 
-God helps those who *can't* help themselves.
-
-God shows up specifically in weakness. In the place where your own effort has run out.
-
-*That is where His power is made perfect.*` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `Paul had something he called a *thorn in the flesh* — painful enough that he asked God three times to remove it.
+That is the opposite of helping yourself first.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `Paul had something he called a *thorn in the flesh* — painful enough that he asked God three times to remove it.
 
 And God's answer was — **My grace is sufficient for you. My power is made perfect in weakness.**
 
@@ -1843,26 +2019,42 @@ Paul's response is one of the most counterintuitive things in scripture.
 
 *Therefore I will boast all the more gladly about my weaknesses so that Christ's power may rest on me.*
 
-**He stopped trying to fix the weakness.** Because he understood that the weakness was the access point.` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The idea that God helps those who help themselves produces a specific kind of exhaustion.
+**He stopped trying to fix the weakness.** Because he understood that the weakness was the access point.`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Paul stopped asking for the thorn to be removed.
 
-The exhaustion of always needing to have something to bring. Of never being able to come empty-handed.
+Not because he gave up. Because the answer changed the prayer.
 
-**God's economy works differently.**
+**My grace is sufficient. My power is made perfect in weakness.**
 
-His power is made perfect not in your strength but in your weakness.
+Which means the weakness was never the problem.
 
-Which means the thing you've been ashamed of —
-
-*might be exactly where God is about to show up.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], you don't have to help yourself first.
+*It was the access point.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], you don't have to help yourself first.
 
 Paul asked three times for the thorn to be removed and got a different answer each time he asked — *my grace is sufficient, my power is made perfect in weakness* — until he stopped fighting the weakness and let it become the access point.
 
-You never did have to help yourself first.
+*His grace is sufficient for exactly where you are.*`,
+        practiceToday: `Remember [name] — Paul's weakness was the access point for God's power.
 
-*His grace is sufficient for exactly where you are.*`, practiceToday: `Remember [name] — Paul's weakness was the access point for God's power.\n\nToday — identify the area where you've run out of your own effort.\n\nBring it empty. That's the right condition.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that Your power works in my weakness — not in spite of it.
+Today — identify the area where you've run out of your own effort.
+
+Bring it empty. That's the right condition.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that Your power works in my weakness — not in spite of it.
 
 Thank You that I don't have to have it together before You show up.
 
@@ -1870,7 +2062,8 @@ Help me to stop relying on my own strength and trust Yours instead.
 
 Where I am weak — be strong.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -1880,9 +2073,13 @@ In Jesus' name, Amen.` },
     title: `Great Is Thy Faithfulness`,
     scripture: `Lamentations 3:22-23 - His mercies are new every morning, great is your faithfulness.`,
     illustrationPrompt: `sunrise mountains`,
-    teaser: `Great is Thy faithfulness, O God my Father,\nThere is no shadow of turning with Thee.\nThomas Chisholm wrote those words from the most ordinary kind of hard life.`,
+    teaser: `Great is Thy faithfulness, O God my Father,
+There is no shadow of turning with Thee.
+Thomas Chisholm wrote those words from the most ordinary kind of hard life.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `*Great is Thy faithfulness, O God my Father,*
 *There is no shadow of turning with Thee.*
@@ -1893,8 +2090,13 @@ There was no dramatic moment behind it. No shipwreck. No crisis God saw him thro
 
 He had been forced out of ministry by chronic illness. Spent years selling life insurance.
 
-*From the middle of it. Not from the other side.*` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `The verse behind the hymn is from Lamentations — written by Jeremiah in the ruins of Jerusalem.
+*From the middle of it. Not from the other side.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `The verse behind the hymn is from Lamentations — written by Jeremiah in the ruins of Jerusalem.
 
 *It is of the Lord's mercies that we are not consumed. His compassions fail not. They are new every morning.*
 
@@ -1904,8 +2106,13 @@ And Chisholm wrote his hymn from the same kind of place — the quiet erosion of
 
 Both arrived at the same conclusion.
 
-*God has not changed. Every morning. New mercy. Still faithful.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The faithfulness described here is not the faithfulness of a God who makes life easy.
+*God has not changed. Every morning. New mercy. Still faithful.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The faithfulness described here is not the faithfulness of a God who makes life easy.
 
 It is the faithfulness of a God who **shows up every morning** regardless of what the day holds.
 
@@ -1913,15 +2120,30 @@ Not — God will fix this. *God will be here in this.*
 
 That is what Chisholm was testifying to from his ordinary difficult life.
 
-**Not that things turned out well. That God had been faithful even when they hadn't.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Chisholm wrote this not from victory, [name] — but from endurance.
+**Not that things turned out well. That God had been faithful even when they hadn't.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `Chisholm wrote this not from victory, [name] — but from endurance.
 
 Forced out of ministry, selling insurance to pay bills, his health never fully returning — and at 57 he sat down and testified to a faithfulness he had felt morning after ordinary morning, not once in a single dramatic rescue.
 
 *Great is Thy faithfulness,*
 *Morning by morning new mercies I see —*
-***All I have needed Thy hand hath provided.***`, practiceToday: `Remember [name] — Chisholm wrote about faithfulness from a hard ordinary life. Not from a miracle.\n\nToday — look for one small evidence of God's faithfulness this week.\n\nMorning by morning. That's enough.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for being faithful in the ordinary difficult days.
+***All I have needed Thy hand hath provided.***`,
+        practiceToday: `Remember [name] — Chisholm wrote about faithfulness from a hard ordinary life. Not from a miracle.
+
+Today — look for one small evidence of God's faithfulness this week.
+
+Morning by morning. That's enough.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for being faithful in the ordinary difficult days.
 
 Thank You that Your mercies are new this morning — whether or not anything has changed.
 
@@ -1929,7 +2151,8 @@ Help me to see Your faithfulness today even if nothing looks different.
 
 All I have needed — You have provided.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -1939,9 +2162,17 @@ In Jesus' name, Amen.` },
     title: `I Don't Know How To Explain What Happened This Year`,
     scripture: `Psalm 126:3 - The Lord has done great things for us, and we are filled with joy.`,
     illustrationPrompt: `sunset sky`,
-    teaser: `Dear God,\n\nI don't know how to explain what happened this year.\n\nNot because nothing happened. Because what happened doesn't fit neatly into a sentence.`,
+    teaser: `Dear God,
+
+I don't know how to explain what happened this year.
+
+Not because nothing happened. Because what happened doesn't fit neatly into a sentence.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Dear God,
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Dear God,
 
 I don't know how to explain what happened this year.
 
@@ -1953,8 +2184,13 @@ There were months I was convinced nothing was going to work out. That I had made
 
 And then something shifted.
 
-*Just — quietly. The way light comes back after a long winter.*` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `I keep trying to find the moment it turned around.
+*Just — quietly. The way light comes back after a long winter.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `I keep trying to find the moment it turned around.
 
 I can't find it.
 
@@ -1966,8 +2202,13 @@ You just — **kept showing up.** In small things. In mornings slightly better t
 
 I almost missed all of it because I was waiting for something bigger.
 
-*That was You.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `I'm writing this because I want whoever is reading this to know something.
+*That was You.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `There were a hundred moments where leaving would have been easy.
 
 The season you're in right now — the one that feels like it's never going to turn —
 
@@ -1977,15 +2218,28 @@ Not because you figured it out. Because God is quietly working in the small thin
 
 You'll look back and see it. *The way I'm looking back now.*
 
-And you won't find the exact moment. **But you'll know it was Him.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `You don't have to see it yet, [name].
+And you won't find the exact moment. **But you'll know it was Him.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `You don't have to see it yet, [name].
 
 The letter writer couldn't find the exact moment things turned either — no single Tuesday stood out as the hinge. Looking back was the only way to see that God had been in the small things the entire time.
 
-It's already happening.
+It's already happening.`,
+        practiceToday: `Remember [name] — the letter writer couldn't find the exact moment things turned. But looking back they could see God had been there.
 
-*He's been in the small things all along.*`, practiceToday: `Remember [name] — the letter writer couldn't find the exact moment things turned. But looking back they could see God had been there.\n\nToday — look back at the last month. Find one small thing you almost missed.\n\nThat was Him.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the things I almost missed.
+Today — look back at the last month. Find one small thing you almost missed.
+
+That was Him.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for the things I almost missed.
 
 Thank You for showing up in the ordinary days when I was waiting for something dramatic.
 
@@ -1993,7 +2247,8 @@ Help me to trust that You are working right now even when I can't see it.
 
 Give me eyes to notice the small things.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2003,22 +2258,31 @@ In Jesus' name, Amen.` },
     title: `Be Still and Know — What God Was Actually Saying`,
     scripture: `Psalm 46:10 - Be still and know that I am God.`,
     illustrationPrompt: `ocean clouds`,
-    teaser: `Four words that have been on more mugs than almost any other verse.\n\nBut they were spoken into catastrophe — not calm.\n\nAnd knowing that changes everything about what they mean.`,
+    teaser: `Four words that have been on more mugs than almost any other verse.
+
+But they were spoken into catastrophe — not calm.
+
+And knowing that changes everything about what they mean.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `*Be still and know that I am God.*
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Psalm 46 was written during a catastrophe.
 
-Most people read it as gentle advice for a busy life.
+Nations in uproar. Kingdoms falling. The earth giving way.
 
-Slow down. Breathe. Find your center.
+**In the middle of all of it — one line.**
 
-**But that's not the context.**
+*Be still and know that I am God.*
 
-The context is nations raging. Kingdoms falling. Mountains crumbling into the sea.
-
-This verse was not written for a slow Tuesday morning.
-
-*It was spoken into catastrophe.*` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `The Hebrew word *be still* is *raphah* — meaning to let go. To release. To stop striving.
+Not — wait until it calms down. Be still. *Now.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `The Hebrew word *be still* is *raphah* — meaning to let go. To release. To stop striving.
 
 And *know* is *yada* — a deep intimate knowing. Not intellectual acknowledgment.
 
@@ -2028,8 +2292,13 @@ So what God is actually saying is —
 
 *And know — really know, deep in your bones — that I am God and you are not.*
 
-**This is not a verse about finding inner peace. It is a command to surrender control in the middle of chaos.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The hardest thing about *be still* is that it comes when everything in you wants to *move.*
+**This is not a verse about finding inner peace. It is a command to surrender control in the middle of chaos.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The hardest thing about *be still* is that it comes when everything in you wants to *move.*
 
 When the situation is falling apart — the instinct is to act. To fix. To force an outcome.
 
@@ -2039,15 +2308,30 @@ God says — *stop.*
 
 Be still is not passive. It is **the most active choice** you can make when everything feels like it's collapsing.
 
-*To choose trust over control.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], be still is not advice for a calm moment.
+*To choose trust over control.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], be still is not advice for a calm moment.
 
 The Hebrew word means to let go entirely — to stop striving — and it was spoken into a world of falling kingdoms and crumbling mountains, not a quiet afternoon. It is a command for exactly the moment you're in.
 
 Release the grip.
 
-*He's got it.*`, practiceToday: `Remember [name] — be still means stop striving. Release control. In the middle of the chaos.\n\nToday — identify the thing you've been trying to force.\n\nSet it down for 24 hours. Let Him handle it.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You are God even when everything feels like it's falling apart.
+*He's got it.*`,
+        practiceToday: `Remember [name] — be still means stop striving. Release control. In the middle of the chaos.
+
+Today — identify the thing you've been trying to force.
+
+Set it down for 24 hours. Let Him handle it.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You are God even when everything feels like it's falling apart.
 
 Thank You that be still is a command for this moment — not a distant calm one.
 
@@ -2055,7 +2339,8 @@ Help me to release my grip today.
 
 I choose to trust You with what I cannot control.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2065,9 +2350,17 @@ In Jesus' name, Amen.` },
     title: `Ruth — The Woman Who Stayed`,
     scripture: `Ruth 1:16 - Where you go I will go, your God will be my God.`,
     illustrationPrompt: `green field path`,
-    teaser: `Ruth had every reason to go home.\n\nHer husband was dead. Her options were limited. Her mother-in-law told her to leave.\n\nShe stayed anyway.`,
+    teaser: `Ruth had every reason to go home.
+
+Her husband was dead. Her options were limited. Her mother-in-law told her to leave.
+
+She stayed anyway.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Ruth had every reason to go home.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Ruth had every reason to go home.
 
 Her husband was dead. Her options were limited. Her mother-in-law had told her twice — *go back to your own people.*
 
@@ -2077,8 +2370,11 @@ The practical thing was to leave.
 
 Not because she had a plan. Not because she could see how it was going to work out.
 
-**Because loyalty mattered more to her than comfort.**` },
-      { id: 2, label: `The Story`,
+**Because loyalty mattered more to her than comfort.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Naomi was returning to Bethlehem empty and bitter. She told Ruth to go back. Find another husband. Start over.
 
@@ -2088,26 +2384,40 @@ And Ruth said — *Where you go I will go. Where you stay I will stay. Your peop
 
 The book of Ruth ends with her in the lineage of David — and ultimately of Jesus.
 
-*That choice echoed through all of history.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Ruth didn't know where the story was going.
+*That choice echoed through all of history.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `You don't get to see the end before you decide to stay.
 
-She made a decision based on loyalty — not strategy. Based on love — not logic.
+**Ruth didn't.**
 
-**And God honored the faithfulness before the outcome was visible.**
+She chose Naomi. She chose the unknown country. She chose before she knew what it would mean.
 
-That is how it tends to work.
-
-You don't get to see the end of the story before you decide to stay.
-
-*You decide to stay. And then the story unfolds.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], Ruth didn't know she was in the lineage of Jesus.
+*And the story unfolded from there.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], Ruth didn't know she was in the lineage of Jesus.
 
 She made the choice to stay with no visibility into where it would lead — no promise of a husband, a home, or a place in history. She just stayed, and the story unfolded from there, the way it tends to.
 
-She just stayed.
+*Sometimes faithfulness is the whole assignment.*`,
+        practiceToday: `Remember [name] — Ruth stayed without knowing where the story was going. Her faithfulness was honored before the outcome was visible.
 
-*Sometimes faithfulness is the whole assignment.*`, practiceToday: `Remember [name] — Ruth stayed without knowing where the story was going. Her faithfulness was honored before the outcome was visible.\n\nToday — identify the place you've been considering leaving.\n\nConsider staying one more day.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the example of Ruth — who chose faithfulness without a guaranteed outcome.
+Today — identify the place you've been considering leaving.
+
+Consider staying one more day.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for the example of Ruth — who chose faithfulness without a guaranteed outcome.
 
 Thank You that You honor the staying even when we can't see where it leads.
 
@@ -2115,7 +2425,8 @@ Help me to be faithful today in the place You've put me.
 
 Give me the courage to stay.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2125,20 +2436,29 @@ In Jesus' name, Amen.` },
     title: `Is God Actually Good?`,
     scripture: `Psalm 34:8 - Taste and see that the Lord is good.`,
     illustrationPrompt: `blue sky trees`,
-    teaser: `This is the question most people are afraid to ask.\n\nDavid asked it. And his answer came from experience — not theology.`,
+    teaser: `This is the question most people are afraid to ask.
+
+David asked it. And his answer came from experience — not theology.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `This is the question most people are afraid to ask.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `David wrote — *taste and see that the Lord is good.*
 
-Because it feels like asking it means you've already lost something.
+He wrote it after pretending to be insane to escape a king who wanted to kill him.
 
-*Is God actually good?*
+**Not from comfort. From a corner.**
 
-When the thing you prayed for didn't come through. When the person didn't get better. When the door closed and another didn't open.
+The invitation to taste is not from someone who had an easy life.
 
-**Is He good?**
-
-David asked it. From a place of real difficulty. And his answer came from experience — not theology.` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `Psalm 34 was written by David while pretending to be insane to escape a king who wanted to kill him.
+*It is from someone who had tested it in the worst conditions and still came back with the same answer.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `Psalm 34 was written by David while pretending to be insane to escape a king who wanted to kill him.
 
 Not from comfort. **From a corner.**
 
@@ -2150,8 +2470,13 @@ Not — believe theoretically that the Lord is good.
 
 That's a sensory word. An experience word.
 
-**David was not asking people to believe an abstract truth. He was pointing to something he had personally tasted.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The goodness of God is not a theological proposition to be argued.
+**David was not asking people to believe an abstract truth. He was pointing to something he had personally tasted.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The goodness of God is not a theological proposition to be argued.
 
 It is an experience to be had.
 
@@ -2161,15 +2486,30 @@ They are the people who **tasted it in the hardest moments.**
 
 Who found Him present when they expected to find Him absent.
 
-*That is the testimony.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the invitation was never to believe it on principle.
+*That is the testimony.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the invitation is to taste it.
 
-David wrote *taste and see* from a corner, pretending to be insane to survive — and what he was pointing to wasn't a doctrine to accept, it was something he had personally tasted in the hardest moment of his life.
+Not to understand it perfectly first. Not to resolve every doubt before coming close.
 
-It is to taste it.
+David wrote *taste and see* from the worst corner of his life — and what he found there was still good.
 
-*Come and see.*`, practiceToday: `Remember [name] — David tasted God's goodness from a corner while pretending to be insane.\n\nToday — look for one small evidence of God's goodness. Not a miracle. Something small.\n\nTaste it. That's the start.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You invite us to taste — not just believe.
+*Come and see. That's the whole invitation.*`,
+        practiceToday: `Remember [name] — David tasted God's goodness from a corner while pretending to be insane.
+
+Today — look for one small evidence of God's goodness. Not a miracle. Something small.
+
+Taste it. That's the start.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You invite us to taste — not just believe.
 
 Thank You that Your goodness is something that can be personally experienced.
 
@@ -2177,7 +2517,8 @@ Help me to find the evidence of Your goodness in my life today.
 
 I want to taste and see.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2187,22 +2528,31 @@ In Jesus' name, Amen.` },
     title: `You Are Not Too Far Gone`,
     scripture: `Luke 15:4 - Does he not leave the ninety nine and go after the lost sheep.`,
     illustrationPrompt: `green hills sky`,
-    teaser: `There is a version of this message most people have heard.\n\nGod loves you.\n\nBut there is a more specific version. One that is harder to believe.`,
+    teaser: `There is a version of this message most people have heard.
+
+God loves you.
+
+But there is a more specific version. One that is harder to believe.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `There is a version of this message most people have heard.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `A shepherd had a hundred sheep.
 
-*God loves you.*
+One went missing.
 
-Most people can accept that in the abstract.
+He left the ninety-nine and went looking.
 
-But there is a more specific version. One that is harder to believe.
+**Not to the edge of the field.**
 
-*God loves you specifically. In the condition you're currently in. With the history you actually have.*
-
-Not the cleaned-up version.
-
-**You.**` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `Jesus asks — *if a man has a hundred sheep and one wanders off — does he not leave the ninety-nine and go looking for the one?*
+*Until he found it.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `Jesus asks — *if a man has a hundred sheep and one wanders off — does he not leave the ninety-nine and go looking for the one?*
 
 The answer He expects is yes.
 
@@ -2214,8 +2564,13 @@ Not because the ninety-nine didn't matter. Because **the one that was lost matte
 
 And the shepherd didn't go to the edge and call out.
 
-*He went until he found it.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The lost sheep didn't do anything to get found.
+*He went until he found it.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The lost sheep didn't do anything to get found.
 
 It didn't find its way back. Didn't make a better choice.
 
@@ -2225,15 +2580,30 @@ Because the shepherd went looking.
 
 Which means the distance you've put between yourself and God — the wandering, the years away —
 
-**None of that stopped Him from looking.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], He left the ninety-nine.
+**None of that stopped Him from looking.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], He left the ninety-nine.
 
 The sheep that wandered off didn't find its own way back — it got found, because the shepherd went looking and didn't stop at the edge of the field. The years away, the wandering, none of it stopped Him from coming after the one.
 
 For the one.
 
-*You were never too far gone.*`, practiceToday: `Remember [name] — the sheep didn't find its way back. It got found.\n\nToday — stop trying to find your way back on your own.\n\nJust stop moving. Let yourself be found.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You go after the one that wandered.
+*You were never too far gone.*`,
+        practiceToday: `Remember [name] — the sheep didn't find its way back. It got found.
+
+Today — stop trying to find your way back on your own.
+
+Just stop moving. Let yourself be found.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You go after the one that wandered.
 
 Thank You that too far gone is not a category that exists for You.
 
@@ -2241,7 +2611,8 @@ Help me to believe that You are still looking for me — even now.
 
 Find me.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2251,9 +2622,17 @@ In Jesus' name, Amen.` },
     title: `He Saw Zacchaeus First`,
     scripture: `Luke 19:5 - Zacchaeus come down immediately, I must stay at your house today.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `Zacchaeus climbed the tree because he didn't think he could get close.\n\nHe was right about the crowd.\n\nHe was wrong about Jesus.`,
+    teaser: `Zacchaeus climbed the tree because he didn't think he could get close.
+
+He was right about the crowd.
+
+He was wrong about Jesus.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Zacchaeus climbed the tree because he didn't think he could get close.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Zacchaeus climbed the tree because he didn't think he could get close.
 
 He was short. The crowd was large. His reputation would have made people move away from him rather than make room.
 
@@ -2263,10 +2642,13 @@ He was wrong about Jesus.
 
 Because Jesus wasn't moving with the crowd.
 
-*He was looking for the one in the tree.*` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `The moment Jesus stopped under the sycamore tree is one of the most quietly remarkable moments in the Gospels.
-
-Zacchaeus hadn't called out. Hadn't asked for anything. Hadn't made himself known.
+*He was looking for the one in the tree.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `Zacchaeus hadn't called out. Hadn't asked for anything. Hadn't made himself known.
 
 He was *watching from a safe distance.*
 
@@ -2274,8 +2656,13 @@ And Jesus **saw him first.**
 
 Said his name. Invited Himself to dinner. Walked away from the crowd toward the house of the most hated man in town.
 
-*He was already at the table.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Zacchaeus didn't present himself. Didn't make himself worthy.
+*He was already at the table.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Zacchaeus didn't present himself. Didn't make himself worthy.
 
 He climbed a tree to watch from a safe distance.
 
@@ -2285,15 +2672,30 @@ Which means the distance you put between yourself and Jesus is not the deciding 
 
 He sees through trees. He knows your name from the road.
 
-*The watching from a distance was enough for Jesus to stop.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], Jesus saw Zacchaeus before Zacchaeus saw Jesus.
+*The watching from a distance was enough for Jesus to stop.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], Jesus saw Zacchaeus before Zacchaeus saw Jesus.
 
 A man who climbed a tree just to watch from a safe distance was seen, named, and invited to dinner before he had said a single word — because Jesus wasn't moving with the crowd, He was looking for the one in the tree.
 
 He sees you first too.
 
-*You don't have to call out.*`, practiceToday: `Remember [name] — Zacchaeus was just watching. Jesus stopped for him anyway.\n\nToday — just be present. Open the app. Show up.\n\nThat's enough to be seen.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You see people before they see You.
+*You don't have to call out.*`,
+        practiceToday: `Remember [name] — Zacchaeus was just watching. Jesus stopped for him anyway.
+
+Today — just be present. Open the app. Show up.
+
+That's enough to be seen.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You see people before they see You.
 
 Thank You that You stopped for Zacchaeus when he thought he was just watching.
 
@@ -2301,7 +2703,8 @@ Help me to know that You see me too — even when I'm watching from a distance.
 
 Come to my house today.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2311,9 +2714,17 @@ In Jesus' name, Amen.` },
     title: `I Can Do All Things — What Paul Actually Meant`,
     scripture: `Philippians 4:13 - I can do all this through him who gives me strength.`,
     illustrationPrompt: `mountains clouds`,
-    teaser: `This verse gets tattooed on arms and printed on gym walls.\n\nBut Paul wrote it from prison.\n\nAnd he wasn't talking about winning.`,
+    teaser: `This verse gets tattooed on arms and printed on gym walls.
+
+But Paul wrote it from prison.
+
+And he wasn't talking about winning.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `*I can do all things through Christ who strengthens me.*
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `*I can do all things through Christ who strengthens me.*
 
 This gets tattooed on arms and quoted before championship games.
 
@@ -2325,8 +2736,13 @@ And he wasn't talking about winning.
 
 He was talking about something harder and more useful —
 
-*being okay in any situation.*` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `The verse right before it explains everything.
+*being okay in any situation.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `The verse right before it explains everything.
 
 *I have learned the secret of being content in any and every situation — whether well fed or hungry, whether living in plenty or in want.*
 
@@ -2334,26 +2750,44 @@ He was talking about something harder and more useful —
 
 Which means it took time. It took difficulty. It took being in the situations he's describing — hungry, in prison — and finding that Christ's strength was sufficient even there.
 
-The *all things* he can do is not all achievements. *It is all conditions.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Paul is not saying Christ will help you accomplish everything you set out to do.
+The *all things* he can do is not all achievements. *It is all conditions.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Paul is not saying Christ will help you accomplish everything you set out to do.
 
-He is saying **Christ will sustain you through everything you go through.**
+**He is saying Christ will sustain you through everything you go through.**
 
-The strength described is not the strength to win.
+The strength is not for winning.
 
-It is the strength to remain whole. To maintain peace. To keep your footing when the ground is shifting.
+*It is for remaining whole when the conditions are against you.*
 
-*That is the all things.*
-
-**Available in every condition — not just the ones where you come out on top.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the strength Paul describes is for exactly the situation you're in.
+Available in every condition. Not just the ones where you come out on top.`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the strength Paul describes is for exactly the situation you're in.
 
 He learned contentment in chains, in hunger, in want — not as a feeling that arrived but as a sustaining strength that held him whole no matter which condition he found himself in.
 
 Not the one you're hoping for.
 
-*This one.*`, practiceToday: `Remember [name] — Paul learned contentment. It wasn't natural. It took practice.\n\nToday — find one thing in your current situation to be content about. Just one.\n\nThat's how the learning starts.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that Your strength is for every condition — not just the good ones.
+*This one.*`,
+        practiceToday: `Remember [name] — Paul learned contentment. It wasn't natural. It took practice.
+
+Today — find one thing in your current situation to be content about. Just one.
+
+That's how the learning starts.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that Your strength is for every condition — not just the good ones.
 
 Thank You that Paul learned contentment and that means I can learn it too.
 
@@ -2361,7 +2795,8 @@ Help me to find Your sustaining strength in today's circumstances — not the on
 
 Strengthen me for this.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2371,9 +2806,15 @@ In Jesus' name, Amen.` },
     title: `Elijah — The Prophet Who Hit a Wall`,
     scripture: `1 Kings 19:7 - Get up and eat, the journey is too much for you.`,
     illustrationPrompt: `desert sky sunrise`,
-    teaser: `The day before this prayer Elijah called fire down from heaven.\n\nThe day of this prayer he was under a tree asking to die.\n\nGod's response was not a rebuke.`,
+    teaser: `The day before this prayer Elijah called fire down from heaven.
+
+The day of this prayer he was under a tree asking to die.
+
+God's response was not a rebuke.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `The day before this prayer Elijah called fire down from heaven.
 
@@ -2385,8 +2826,11 @@ The distance between those two days is one of the most human things in all of sc
 
 One day — the most dramatic victory of his ministry.
 
-And God's response was not a rebuke. *It was a nap and a meal.*` },
-      { id: 2, label: `The Story`,
+And God's response was not a rebuke. *It was a nap and a meal.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `After his victory on Mount Carmel — Queen Jezebel threatened to kill him.
 
@@ -2400,8 +2844,13 @@ Not with a word of correction. Not with a vision of what came next.
 
 *Get up and eat. The journey is too much for you.*
 
-**God addressed the exhaustion before the assignment.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `God did not tell Elijah to push through.
+**God addressed the exhaustion before the assignment.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `God did not tell Elijah to push through.
 
 He let him sleep. Fed him. Let him sleep again.
 
@@ -2409,17 +2858,30 @@ He let him sleep. Fed him. Let him sleep again.
 
 Which means when you hit a wall — when you've done everything right and you're still completely empty — God's first response is not *try harder.*
 
-It is — *get up and eat.*
-
-*Rest. The journey is too much for you to carry like this.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], God fed Elijah before He gave him the next assignment.
+It is — *get up and eat.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], God fed Elijah before He gave him the next assignment.
 
 The prophet who called fire from heaven was, one day later, lying under a tree asking to die — and God's first move wasn't correction. It was a meal, a nap, another meal, and only then a word.
 
 He sees the exhaustion.
 
-*He addresses it.*`, practiceToday: `Remember [name] — God's first response to Elijah's burnout was rest and food. Not a pep talk.\n\nToday — if you're exhausted, rest. Actually rest. Not scroll. Rest.\n\nThe next assignment can wait until you've eaten.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You addressed Elijah's exhaustion with compassion and not correction.
+*He addresses it.*`,
+        practiceToday: `Remember [name] — God's first response to Elijah's burnout was rest and food. Not a pep talk.
+
+Today — if you're exhausted, rest. Actually rest. Not scroll. Rest.
+
+The next assignment can wait until you've eaten.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You addressed Elijah's exhaustion with compassion and not correction.
 
 Thank You that You see when the journey has been too much.
 
@@ -2427,7 +2889,8 @@ Help me to receive rest as a gift from You today — not as a failure.
 
 Feed me. Then lead me.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2437,18 +2900,29 @@ In Jesus' name, Amen.` },
     title: `Christians Should Always Be Happy`,
     scripture: `Psalm 62:8 - Trust in him at all times, God is our refuge.`,
     illustrationPrompt: `night sky clouds`,
-    teaser: `Somewhere the idea got established that faith produces constant happiness.\n\nPsalm 88 was written by a man of deep faith.\n\nIt doesn't end well.`,
+    teaser: `Somewhere the idea got established that faith produces constant happiness.
+
+Psalm 88 was written by a man of deep faith.
+
+It doesn't end well.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Somewhere the idea got established that faith produces constant happiness.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Psalm 88 ends in darkness.
 
-That if you're sad or struggling — you must be doing something wrong.
+*Darkness is my closest friend* — that is the final line.
 
-**The Bible does not support this.**
+No resolution. No turn toward hope. No light at the end.
 
-The Bible is full of people of deep faith who were in deep pain.
+**And it is in the Bible.**
 
-And none of them were told they were doing it wrong.` },
-      { id: 2, label: `The Story`,
+Placed there on purpose. As an honest record of what faith can look like on the worst days.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Psalm 88 is the darkest psalm in the entire collection.
 
@@ -2460,28 +2934,42 @@ The last line — *darkness is my closest friend.*
 
 And this psalm is in the Bible. Placed there intentionally. As an honest record of what faith can look like on the worst days.
 
-*God did not remove it from the canon.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The Psalms give permission for the full range of human emotion in the presence of God.
+*God did not remove it from the canon.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The Psalms give permission for the full range of human emotion in the presence of God.
 
 **Anger. Grief. Confusion. Despair.**
 
 Not as failures to overcome before coming to God.
 
-As the actual content of the conversation.
-
-God does not require you to be okay before you come to Him.
-
-He received Psalm 88.
-
-*He will receive yours.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], you are allowed to not be okay.
+As the actual content of the conversation.`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], you are allowed to not be okay.
 
 Psalm 88 ends in darkness — *darkness is my closest friend* is the final line, and it is still scripture, still placed there on purpose, as an honest record that faith and despair can occupy the same page.
 
 That is not a failure of faith.
 
-*It is the most honest kind.*`, practiceToday: `Remember [name] — Psalm 88 ends in darkness. And it's still in the Bible.\n\nToday — bring the honest version. The dark draft. The prayer that doesn't end well yet.\n\nGod receives that too.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that Psalm 88 is in the Bible.
+*It is the most honest kind.*`,
+        practiceToday: `Remember [name] — Psalm 88 ends in darkness. And it's still in the Bible.
+
+Today — bring the honest version. The dark draft. The prayer that doesn't end well yet.
+
+God receives that too.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that Psalm 88 is in the Bible.
 
 Thank You that the darkest prayers are still prayers.
 
@@ -2489,7 +2977,8 @@ Help me to bring the honest version of where I am today — not the version I th
 
 Receive all of it.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2499,9 +2988,17 @@ In Jesus' name, Amen.` },
     title: `The Long Way Around`,
     scripture: `Exodus 13:17 - God led the people by the desert road.`,
     illustrationPrompt: `desert sky`,
-    teaser: `God led the Israelites the long way around.\n\nNot because He got the directions wrong.\n\nBecause He knew what was on the shorter road.`,
+    teaser: `God led the Israelites the long way around.
+
+Not because He got the directions wrong.
+
+Because He knew what was on the shorter road.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `God led the Israelites the long way around.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `God led the Israelites the long way around.
 
 There was a shorter road. A faster route from Egypt to the Promised Land.
 
@@ -2511,8 +3008,11 @@ Not because He got the directions wrong. Not because He wasn't paying attention.
 
 *Because He knew what was on the shorter road.*
 
-And He knew they weren't ready for it yet.` },
-      { id: 2, label: `The Story`,
+And He knew they weren't ready for it yet.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `The text says God didn't lead them through Philistine country — though that was shorter — because He thought *if they face war, they might change their minds and return to Egypt.*
 
@@ -2522,8 +3022,13 @@ The long way around was not punishment.
 
 The forty years in the wilderness weren't wasted. They were the years that built the people who could enter and live in what God was giving them.
 
-*They had to become who could receive the promise.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The route that feels like a detour may be the only route that gets you there.
+*They had to become who could receive the promise.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The route that feels like a detour may be the only route that gets you there.
 
 Not because God is being slow. Not because He forgot the destination.
 
@@ -2531,17 +3036,30 @@ Not because God is being slow. Not because He forgot the destination.
 
 He sees what you're not ready for yet.
 
-He sees what would break you if you arrived before you'd become the person who can hold what He's giving you.
-
-*The long way around is still the way.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the detour is not a mistake.
+*The long way around is still the way.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the detour is not a mistake.
 
 God chose the longer road on purpose, knowing the shorter one led through war the Israelites weren't ready to survive — the forty years weren't punishment, they were the years that built the people who could hold what was coming.
 
 It is the route that gets you there as the person who can handle arriving.
 
-*Trust the long way around.*`, practiceToday: `Remember [name] — God chose the longer route to protect the Israelites from what they couldn't handle yet.\n\nToday — look at the detour you're frustrated by.\n\nAsk what it might be preparing you for.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You see what's on the shorter road even when I can't.
+*Trust the long way around.*`,
+        practiceToday: `Remember [name] — God chose the longer route to protect the Israelites from what they couldn't handle yet.
+
+Today — look at the detour you're frustrated by.
+
+Ask what it might be preparing you for.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You see what's on the shorter road even when I can't.
 
 Thank You that the long way around is still the right way.
 
@@ -2549,7 +3067,8 @@ Help me to trust Your route even when I can see a faster one.
 
 I trust Your timing more than my own.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2559,9 +3078,14 @@ In Jesus' name, Amen.` },
     title: `Come Thou Fount`,
     scripture: `Romans 8:38-39 - Nothing will separate us from the love of God.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `Come Thou Fount of every blessing,\nTune my heart to sing Thy grace.\nRobert Robinson wrote those words at 22 — full of faith and fire.\nHe spent the rest of his life living out the line he wrote next.`,
+    teaser: `Come Thou Fount of every blessing,
+Tune my heart to sing Thy grace.
+Robert Robinson wrote those words at 22 — full of faith and fire.
+He spent the rest of his life living out the line he wrote next.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `*Come Thou Fount of every blessing,*
 *Tune my heart to sing Thy grace.*
@@ -2574,8 +3098,13 @@ And then he wrote the line that would follow him for the rest of his life.
 
 ***Prone to wander, Lord, I feel it — prone to leave the God I love.***
 
-**He wrote his own prophecy without knowing it.**` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `In the years that followed Robinson drifted.
+**He wrote his own prophecy without knowing it.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `In the years that followed Robinson drifted.
 
 His theological views shifted. His faith became complicated.
 
@@ -2585,27 +3114,41 @@ Then he said — *Madam, I am the unhappy man who wrote that hymn many years ago
 
 **The man who wrote *tune my heart to sing Thy grace* had lost the tune.**
 
-And he knew it.` },
-      { id: 3, label: `The Turn`,
+And he knew it.`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
-        body: `The most honest line in the hymn is not the triumphant opening.
-
-It is the confession buried in the third verse.
-
-Robinson didn't write that as a general observation. **He wrote it about himself. Before it had fully happened.**
+        body: `Robinson didn't write *prone to wander* as a general observation. **He wrote it about himself. Before it had fully happened.**
 
 And the grace he described in the opening lines is the same grace that reaches people who have wandered far from the faith they once had.
 
 *Nothing can separate us from the love of God.*
 
-Not even wandering.` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `If you feel the pull to wander, [name] — if you recognize yourself in Robinson's own confession —
+Not even wandering.`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `If you feel the pull to wander, [name] — if you recognize yourself in Robinson's own confession —
 
 He wrote *prone to wander* at 22, in the flush of his new faith, and spent the rest of his life proving how true it was. The grace he wrote about reached him anyway, every time he drifted back.
 
 *Here's my heart, Lord, take and seal it,*
-***Seal it for Thy courts above.***`, practiceToday: `Remember [name] — Robinson wrote his own prophecy. He felt the prone-to-wander pull even when his faith was strongest.\n\nToday — name the thing pulling you away.\n\nHere's my heart Lord. Take and seal it.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You receive wanderers.
+***Seal it for Thy courts above.***`,
+        practiceToday: `Remember [name] — Robinson wrote his own prophecy. He felt the prone-to-wander pull even when his faith was strongest.
+
+Today — name the thing pulling you away.
+
+Here's my heart Lord. Take and seal it.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You receive wanderers.
 
 Thank You that prone to wander doesn't mean too far gone.
 
@@ -2613,7 +3156,8 @@ Tune my heart today. I give You what I have — even the parts that want to drif
 
 Here's my heart. Take and seal it.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2623,20 +3167,29 @@ In Jesus' name, Amen.` },
     title: `Surrender`,
     scripture: `Matthew 11:28 - Come to me all you who are weary, I will give you rest.`,
     illustrationPrompt: `night sky stars`,
-    teaser: `Surrender is one of the hardest words in faith.\n\nBecause it sounds like losing.\n\nBut it's the only way to the rest Jesus is describing.`,
+    teaser: `Surrender is one of the hardest words in faith.
+
+Because it sounds like losing.
+
+But it's the only way to the rest Jesus is describing.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Surrender is one of the hardest words in faith.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `The night before the cross Jesus prayed in the garden.
 
-Because it sounds like losing. Like giving up.
+*My Father — if it is possible — may this cup be taken from me.*
 
-**But the rest Jesus describes is only found on the other side of it.**
+He had a preference. He said so honestly.
 
-*Come to me. All who are weary. All who are burdened.*
+**And then He said — yet not as I will. But as You will.**
 
-The entry point is not having it together.
-
-*The entry point is being done trying to hold it all.*` },
-      { id: 2, label: `The Story`,
+That is surrender. Not the absence of preference. The release of the outcome.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `The night before the cross Jesus prayed in the garden.
 
@@ -2650,8 +3203,13 @@ He had a preference. He expressed it honestly.
 
 *And then He released the outcome.*
 
-**Not — I don't care what happens. Not as my will, but as Yours.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Surrender is not passive.
+**Not — I don't care what happens. Not as my will, but as Yours.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Surrender is not passive.
 
 It is the most active choice available to you.
 
@@ -2661,19 +3219,30 @@ Jesus modeled it from the hardest place imaginable.
 
 With full knowledge of what was coming.
 
-*Not my will but Yours.*
-
-That single act of surrender changed the course of everything.
-
-*Yours might too.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Today, [name].
+*Not my will but Yours.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `Today, [name].
 
 Jesus asked for another way in the garden, said so honestly, and then released the outcome anyway — *not my will but Yours* — with full knowledge of what surrender was about to cost Him. That same surrender is available to you today, in whatever you've been gripping.
 
 **Put it down.**
 
-*Not your will. His.*`, practiceToday: `Remember [name] — Jesus surrendered with full knowledge of the cost. That's what made it real.\n\nToday — name the thing you've been gripping. Say it out loud.\n\nThen say: not my will but Yours.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the example of Jesus in the garden.
+*Not your will. His.*`,
+        practiceToday: `Remember [name] — Jesus surrendered with full knowledge of the cost. That's what made it real.
+
+Today — name the thing you've been gripping. Say it out loud.
+
+Then say: not my will but Yours.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for the example of Jesus in the garden.
 
 Thank You that surrender is strength — not weakness.
 
@@ -2681,7 +3250,8 @@ Help me to release what I've been holding onto today.
 
 Not my will. Yours.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2691,9 +3261,15 @@ In Jesus' name, Amen.` },
     title: `The Thing About the Cross`,
     scripture: `1 Corinthians 1:18 - The message of the cross is the power of God.`,
     illustrationPrompt: `sunrise mountains`,
-    teaser: `The cross doesn't make sense if you approach it logically.\n\nPaul knew that. He said so.\n\nBut there's a way of understanding it that changes everything.`,
+    teaser: `The cross doesn't make sense if you approach it logically.
+
+Paul knew that. He said so.
+
+But there's a way of understanding it that changes everything.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `The cross doesn't make sense if you approach it logically.
 
@@ -2705,8 +3281,11 @@ A God who dies. An execution that becomes salvation. The worst moment in history
 
 And then he said — to those who are being saved, it is the power of God.
 
-*The foolishness is the point.*` },
-      { id: 2, label: `The Story`,
+*The foolishness is the point.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Jesus was crucified between two criminals. On a garbage heap outside the city walls.
 
@@ -2720,8 +3299,13 @@ Not because He couldn't leave. Because staying was the point.
 
 The cross was not a defeat that God recovered from.
 
-*It was the plan.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `God chose the most humiliating, most public, most apparently final method of death available.
+*It was the plan.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `God chose the most humiliating, most public, most apparently final method of death available.
 
 **Because He wanted there to be no confusion.**
 
@@ -2731,15 +3315,28 @@ If death itself could be reversed — nothing else is beyond reach.
 
 The cross is not a symbol of suffering.
 
-*It is the proof that suffering is not the last word.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the worst moment became the turning point.
+*It is the proof that suffering is not the last word.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the worst moment became the turning point.
 
 God chose the most public, most humiliating, most apparently final method available — on purpose — so there would be no confusion about how far redemption reaches. If death itself could be reversed, nothing is beyond it.
 
-That is the pattern God uses.
+*Your worst moment is not the last chapter.*`,
+        practiceToday: `Remember [name] — God used the worst possible moment as the turning point of all history.
 
-*Your worst moment is not the last chapter.*`, practiceToday: `Remember [name] — God used the worst possible moment as the turning point of all history.\n\nToday — look at the worst thing in your story.\n\nThat might be exactly where God is about to work.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the cross.
+Today — look at the worst thing in your story.
+
+That might be exactly where God is about to work.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for the cross.
 
 Thank You that You didn't choose a dignified path — You chose the one that reaches the furthest.
 
@@ -2747,7 +3344,8 @@ Help me to believe that my worst moments are not beyond Your redemption.
 
 Work in what looks finished.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2757,9 +3355,17 @@ In Jesus' name, Amen.` },
     title: `The Woman Who Anointed His Feet`,
     scripture: `Luke 7:47 - Her many sins have been forgiven, as her great love has shown.`,
     illustrationPrompt: `blue sky flowers`,
-    teaser: `She walked into a room where she wasn't welcome.\n\nWith an expensive jar of perfume.\n\nAnd broke it open at the feet of the only person in the room who didn't judge her for being there.`,
+    teaser: `She walked into a room where she wasn't welcome.
+
+With an expensive jar of perfume.
+
+And broke it open at the feet of the only person in the room who didn't judge her for being there.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `She walked into a room where she wasn't welcome.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `She walked into a room where she wasn't welcome.
 
 With an expensive jar of perfume. No invitation. No reason anyone would let her in.
 
@@ -2771,8 +3377,13 @@ She broke the jar open at His feet. Wept. Wiped His feet with her hair.
 
 The room went silent.
 
-*Not the good kind of silent.*` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `The Pharisee who had invited Jesus watched and thought — *if this man were a prophet, he would know what kind of woman is touching him.*
+*Not the good kind of silent.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `The Pharisee who had invited Jesus watched and thought — *if this man were a prophet, he would know what kind of woman is touching him.*
 
 Jesus knew exactly who she was.
 
@@ -2784,8 +3395,13 @@ He turned to the woman.
 
 **Her sins — which are many — are forgiven. For she loved much.**
 
-The crowd had been tracking her sin. *Jesus was tracking her love.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `What she brought to that room was not dignity or credentials.
+The crowd had been tracking her sin. *Jesus was tracking her love.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `What she brought to that room was not dignity or credentials.
 
 She brought the only things she had.
 
@@ -2795,15 +3411,30 @@ Jesus didn't tell her to clean up her story before she came.
 
 He received everything she brought.
 
-*And then He called it love.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], Jesus was tracking her love, not her record.
+*And then He called it love.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], Jesus was tracking her love, not her record.
 
 The room was counting her sins. He was counting what it cost her to walk in with an expensive jar of perfume and break it open at the feet of the one person who wouldn't judge her for being there.
 
 He's tracking yours too.
 
-*Not what you've done. What you bring.*`, practiceToday: `Remember [name] — she brought everything she had. Expensive. Uncontainable. Uninvited.\n\nToday — bring something that costs you something. Honesty. Vulnerability. Showing up when it's hard.\n\nHe receives it all.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You track love — not records.
+*Not what you've done. What you bring.*`,
+        practiceToday: `Remember [name] — she brought everything she had. Expensive. Uncontainable. Uninvited.
+
+Today — bring something that costs you something. Honesty. Vulnerability. Showing up when it's hard.
+
+He receives it all.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You track love — not records.
 
 Thank You that she walked in with nothing but what she had and it was enough.
 
@@ -2811,7 +3442,8 @@ Help me to bring what I have today — even if it doesn't feel like much.
 
 Receive it as love.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2821,9 +3453,17 @@ In Jesus' name, Amen.` },
     title: `Perfect Love Casts Out Fear`,
     scripture: `1 John 4:18 - Perfect love drives out fear.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `Most people read this as a promise about feeling fearless.\n\nThat's not what John is saying.\n\nHe's describing a specific kind of fear — and a specific cure.`,
+    teaser: `Most people read this as a promise about feeling fearless.
+
+That's not what John is saying.
+
+He's describing a specific kind of fear — and a specific cure.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Most people read this as a promise about feeling fearless.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Most people read this as a promise about feeling fearless.
 
 Like if you have enough faith you'll stop being afraid of things.
 
@@ -2835,8 +3475,11 @@ Not the fear of heights or failure.
 
 *The fear of punishment.*
 
-And he's saying that God's love — when you really understand it — **removes the fear that God is against you.**` },
-      { id: 2, label: `The Story`,
+And he's saying that God's love — when you really understand it — **removes the fear that God is against you.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `The verse in full — *there is no fear in love. But perfect love drives out fear, because fear has to do with punishment.*
 
@@ -2848,8 +3491,13 @@ John is describing the anxiety of people who come to God expecting judgment. Who
 
 By showing you that the judge has already ruled in your favor.
 
-**Through Jesus. On the cross. The punishment is already settled.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `If you're afraid to come to God because of what you've done — this is the verse for you.
+**Through Jesus. On the cross. The punishment is already settled.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `If you're afraid to come to God because of what you've done — this is the verse for you.
 
 The fear that keeps people at a distance is the fear of what He will say when He sees them.
 
@@ -2859,15 +3507,30 @@ He is not waiting to condemn you.
 
 The condemnation was taken.
 
-*Come without fear.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], you don't have to approach God braced for impact.
+*Come without fear.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], you don't have to approach God braced for impact.
 
-The fear John describes is specifically the fear of punishment — and he says that fear was already answered at the cross, the verdict already settled, before you ever worked up the courage to come close.
+The fear John describes — the fear that God is against you — was answered at the cross before you ever worked up the courage to come close.
 
-The punishment was already taken.
+The verdict is already in.
 
-*Come without fear.*`, practiceToday: `Remember [name] — the fear John describes is the fear of punishment. God is against you.\n\nToday — come to God without bracing. Without the defensive posture.\n\nYou are not walking into a courtroom. You're walking home.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that perfect love removes the fear of punishment.
+*You are not the defendant anymore.*`,
+        practiceToday: `Remember [name] — the fear John describes is specifically the fear of punishment — the belief that God is against you.
+
+Today — come to God without bracing. Without the defensive posture.
+
+You are not walking into a courtroom. You're walking home.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that perfect love removes the fear of punishment.
 
 Thank You that I don't have to approach You braced for condemnation.
 
@@ -2875,7 +3538,8 @@ Help me to come close today without the fear that You are against me.
 
 You are for me. Help me to live like I believe that.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2885,9 +3549,17 @@ In Jesus' name, Amen.` },
     title: `Why Do Good People Suffer?`,
     scripture: `Job 42:5 - My ears had heard of you, now my eyes have seen you.`,
     illustrationPrompt: `stars night sky`,
-    teaser: `Job was described as blameless and upright before any of it happened.\n\nWhich removes the easy explanation.\n\nHe was doing everything right. And everything went wrong anyway.`,
+    teaser: `Job was described as blameless and upright before any of it happened.
+
+Which removes the easy explanation.
+
+He was doing everything right. And everything went wrong anyway.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Job was described as blameless and upright before any of it happened.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Job was described as blameless and upright before any of it happened.
 
 **Blameless. Upright. A man who feared God.**
 
@@ -2897,8 +3569,11 @@ You can't say he brought it on himself. Can't point to a hidden sin. Can't sugge
 
 *He was doing everything right.*
 
-And everything went wrong anyway.` },
-      { id: 2, label: `The Story`,
+And everything went wrong anyway.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Job lost everything. His friends came and offered explanations.
 
@@ -2908,12 +3583,17 @@ Job rejected all of it. He knew his own record.
 
 **He demanded an audience with God.**
 
-Not to explain. *To confront Job with the vastness of what he didn't know.*
+God didn't come to explain. He came to confront Job with the vastness of what he didn't know.
 
 Job responded — *now my eyes have seen You.*
 
-**And God declared him right. Not the friends. Job.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The book of Job is not in scripture to explain why good people suffer.
+**And God declared him right. Not the friends. Job.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The book of Job is not in scripture to explain why good people suffer.
 
 **It is in scripture to show that the question can be brought directly to God.**
 
@@ -2925,15 +3605,30 @@ It was an encounter.
 
 *God showed up in the whirlwind.*
 
-**And that was enough.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], God never explained why to Job.
+**And that was enough.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], God never explained why to Job.
 
 He showed up in a whirlwind instead, confronted Job with the vastness of what he didn't know, and Job let go of the demand for an explanation the moment he actually encountered God.
 
 *And Job said — now my eyes have seen You.*
 
-That was enough.`, practiceToday: `Remember [name] — Job pressed until God showed up. He didn't accept easy answers.\n\nToday — bring the unanswered why. Say it directly.\n\nYou might not get an explanation. You might get something better.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that Job's honest pressing brought You into the conversation.
+That was enough.`,
+        practiceToday: `Remember [name] — Job pressed until God showed up. He didn't accept easy answers.
+
+Today — bring the unanswered why. Say it directly.
+
+You might not get an explanation. You might get something better.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that Job's honest pressing brought You into the conversation.
 
 Thank You that You are not threatened by hard questions.
 
@@ -2941,7 +3636,8 @@ Help me to bring my why — honestly and directly — and trust that Your presen
 
 Show up in my whirlwind.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -2951,9 +3647,15 @@ In Jesus' name, Amen.` },
     title: `Thomas — The Man Who Needed Proof`,
     scripture: `John 20:29 - Blessed are those who have not seen and yet have believed.`,
     illustrationPrompt: `sunrise mountains`,
-    teaser: `Thomas wasn't there the first time Jesus appeared after the resurrection.\n\nWhen they told him what they saw — he said he wouldn't believe unless he could touch the wounds.\n\nJesus came back. Specifically for Thomas.`,
+    teaser: `Thomas wasn't there the first time Jesus appeared after the resurrection.
+
+When they told him what they saw — he said he wouldn't believe unless he could touch the wounds.
+
+Jesus came back. Specifically for Thomas.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `Thomas wasn't there the first time Jesus appeared after the resurrection.
 
@@ -2963,8 +3665,11 @@ When they told him — he said he wouldn't believe unless he could touch the wou
 
 Two thousand years later we still call him Doubting Thomas.
 
-**What defines Thomas is what Jesus did next.**` },
-      { id: 2, label: `The Story`,
+**What defines Thomas is what Jesus did next.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `A week later the disciples were together again. Thomas was with them.
 
@@ -2976,28 +3681,46 @@ The doors were locked. Jesus came and stood among them.
 
 He didn't rebuke Thomas. Didn't exclude him. Didn't make an example of him.
 
-He showed him the wounds. Thomas said — *My Lord and my God.*` },
-      { id: 3, label: `The Turn`,
+He showed him the wounds. Thomas said — *My Lord and my God.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
-        body: `Jesus said — *because you have seen me, you have believed. Blessed are those who have not seen and yet have believed.*
+        body: `Jesus said — *because you have seen me, you have believed.*
 
 That is usually quoted as a rebuke of Thomas.
 
-**It is a statement of extraordinary grace toward everyone who comes after him.**
+**It is grace toward everyone who comes after him.**
 
-Thomas needed to see the wounds. Jesus showed him the wounds.
+Thomas needed proof. Jesus gave him proof.
 
-You haven't seen the wounds. And Jesus says — **your belief without seeing is a blessing.**
+You haven't seen the wounds.
 
-*Not inferior. A blessing.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], Jesus came back for Thomas.
+*And Jesus says — your belief without seeing is a blessing. Not inferior. A blessing.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], Jesus came back for Thomas.
 
 A week later, specifically for the one who hadn't believed — no rebuke, no exclusion, just the wounds held out exactly the way Thomas said he needed them, until *my Lord and my God* was all that was left to say.
 
 He comes back for the one who isn't sure too.
 
-*My Lord and my God. That's enough.*`, practiceToday: `Remember [name] — Jesus came back specifically for the one who doubted. He didn't move on.\n\nToday — bring the doubt. Say it out loud. Put it in front of Him.\n\nHe can handle it.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You came back for Thomas — and that You come back for me too.
+*My Lord and my God. That's enough.*`,
+        practiceToday: `Remember [name] — Jesus came back specifically for the one who doubted. He didn't move on.
+
+Today — bring the doubt. Say it out loud. Put it in front of Him.
+
+He can handle it.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You came back for Thomas — and that You come back for me too.
 
 Thank You that doubt is not disqualifying.
 
@@ -3005,7 +3728,8 @@ Help me to believe today — with whatever faith I have.
 
 My Lord and my God. That's where I want to land.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3015,20 +3739,27 @@ In Jesus' name, Amen.` },
     title: `Waiting Means God Forgot You`,
     scripture: `Isaiah 49:15-16 - I have engraved you on the palms of my hands.`,
     illustrationPrompt: `blue sky`,
-    teaser: `Waiting feels like being forgotten.\n\nLike everyone else is moving and you've been left behind.\n\nGod directly addresses this feeling — and the answer is more specific than you might expect.`,
+    teaser: `Waiting feels like being forgotten.
+
+Like everyone else is moving and you've been left behind.
+
+God directly addresses this feeling — and the answer is more specific than you might expect.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Waiting feels like being forgotten.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Waiting feels like being forgotten.
 
 Like everyone else is moving — getting the answer, the breakthrough — and you've been left in the same place.
 
 The prayers are the same. The situation is the same. The silence is the same.
 
-**And the thought creeps in — maybe God just forgot.**
-
-God directly addresses this feeling in Isaiah.
-
-*And the answer He gives is more specific than most people expect.*` },
-      { id: 2, label: `The Story`,
+**And the thought creeps in — maybe God just forgot.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `The people of Israel were in exile — feeling exactly this way.
 
@@ -3042,8 +3773,13 @@ And then He said something even more specific.
 
 Permanent. Into the skin. The kind of mark that doesn't wash off.
 
-*Your name. On His hands.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `A mother may forget.
+*Your name. On His hands.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `A mother may forget.
 
 God chose the most devoted human love available and said even *that* could fail.
 
@@ -3053,17 +3789,30 @@ You are engraved.
 
 Which means the waiting is not evidence of forgetting.
 
-It is happening in the sight of Someone who has your name written permanently where He can always see it.
-
-*Every moment of the waiting — He sees your name.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], you are engraved on the palms of His hands.
+It is happening in the sight of Someone who has your name written permanently where He can always see it.`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], you are engraved on the palms of His hands.
 
 Not written, not noted — engraved, the kind of mark that doesn't wash off, chosen as the image precisely because even a devoted mother could forget and this still would not.
 
 Not forgotten.
 
-*Permanent.*`, practiceToday: `Remember [name] — engraved means permanent. It doesn't wash off. It doesn't fade.\n\nToday — write your name on your hand. Look at it once.\n\nThat's where your name is. On His.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You engrave — not just remember.
+*Permanent.*`,
+        practiceToday: `Remember [name] — engraved means permanent. It doesn't wash off. It doesn't fade.
+
+Today — write your name on your hand. Look at it once.
+
+That's where your name is. On His.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You engrave — not just remember.
 
 Thank You that my name is permanently where You can always see it.
 
@@ -3071,7 +3820,8 @@ Help me to trust that the waiting is not forgetting.
 
 I believe You have not forgotten me.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3081,9 +3831,18 @@ In Jesus' name, Amen.` },
     title: `The Year I Almost Walked Away`,
     scripture: `Psalm 73:23 - I am always with you, you hold me by my right hand.`,
     illustrationPrompt: `ocean sunset`,
-    teaser: `Dear God,\n\nI almost walked away.\n\nNot in a dramatic moment. There was no single day when I decided.\nJust a slow drift I almost didn't notice until I was already far.`,
+    teaser: `Dear God,
+
+I almost walked away.
+
+Not in a dramatic moment. There was no single day when I decided.
+Just a slow drift I almost didn't notice until I was already far.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Dear God,
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Dear God,
 
 I almost walked away.
 
@@ -3095,8 +3854,13 @@ The prayers got shorter. Then occasional. Then mostly in emergencies.
 
 I wasn't angry. Wasn't doubting. Just — *busy.*
 
-And somehow busy turned into gone before I understood what was happening.` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `Psalm 73 is written by a man who almost walked away.
+And somehow busy turned into gone before I understood what was happening.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `Psalm 73 is written by a man who almost walked away.
 
 He was watching the wicked prosper and the faithful suffer — and it was making him question everything.
 
@@ -3106,12 +3870,13 @@ Then he went into the sanctuary. And something shifted.
 
 *Yet I am always with You. You hold me by my right hand.*
 
-**He didn't walk away. And looking back — he couldn't explain why except that God had been holding on.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `I'm writing this because I didn't walk away.
-
-And I've been trying to figure out why — because I can't fully credit myself with staying.
-
-There were a hundred moments where leaving would have been easy.
+**He didn't walk away. And looking back — he couldn't explain why except that God had been holding on.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `There were a hundred moments where leaving would have been easy.
 
 **But something kept pulling.**
 
@@ -3119,15 +3884,30 @@ A conversation I didn't expect. A morning where something cracked open just a li
 
 I don't know what to call it except — *You held me by my right hand.*
 
-**Even when I wasn't holding back.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `As for me — it is good to be near God, [name].
+**Even when I wasn't holding back.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `As for me — it is good to be near God, [name].
 
 Asaph nearly lost his foothold watching the wicked prosper, and never could fully explain why he didn't walk away — except that God had been holding him by the right hand the entire time he thought he was holding on alone.
 
 I know that now more than I did before I almost left.
 
-*Sincerely, a Christian who almost wasn't.*`, practiceToday: `Remember [name] — Asaph nearly lost his foothold. But God held him by his right hand.\n\nToday — think of the moment you almost walked away.\n\nThink about what pulled you back. Name it. That was Him.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for holding on when I wasn't holding back.
+*Sincerely, a Christian who almost wasn't.*`,
+        practiceToday: `Remember [name] — Asaph nearly lost his foothold. But God held him by his right hand.
+
+Today — think of the moment you almost walked away.
+
+Think about what pulled you back. Name it. That was Him.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for holding on when I wasn't holding back.
 
 Thank You for the things that pulled me back when the drift was taking me away.
 
@@ -3135,7 +3915,8 @@ Help me to stay close today — not just when I feel like it.
 
 It is good to be near You.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3145,22 +3926,27 @@ In Jesus' name, Amen.` },
     title: `When Forgiveness Feels Impossible`,
     scripture: `Matthew 18:21-22 - Not seven times, but seventy seven times.`,
     illustrationPrompt: `sunrise field`,
-    teaser: `Peter thought he was being generous.\n\nSeven times was more than the religious law required.\n\nJesus said seventy-seven times. Which is not a number. It is a direction.`,
+    teaser: `Peter thought he was being generous.
+
+Seven times was more than the religious law required.
+
+Jesus said seventy-seven times. Which is not a number. It is a direction.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `There are things that are easy to say you believe and hard to actually do.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Peter thought he was being generous — seven times was more than the religious law required.
 
-Forgiveness is at the top of that list.
+**Jesus said seventy-seven times.**
 
-Not the small forgiveness.
+Which is not a number to count to.
 
-**The real forgiveness. The kind that costs something.**
-
-The person who knew what they were doing and did it anyway.
-
-The wound that didn't heal the way you expected.
-
-*The apology that never came.*` },
-      { id: 2, label: `The Story`,
+*It is a direction to move in.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Peter thought he was being generous — seven times was more than the religious law required.
 
@@ -3170,28 +3956,46 @@ Then He told a story about a servant forgiven an enormous debt who immediately h
 
 *You wicked servant. I cancelled all that debt of yours. Shouldn't you have had mercy on your fellow servant just as I had on you?*
 
-**The amount you've been forgiven is the measure of the forgiveness you're called to give.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Seventy-seven times is not a number to count to.
+**The amount you've been forgiven is the measure of the forgiveness you're called to give.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Seventy-seven times is not a number.
 
-It is **a direction to move in.**
+**It is a direction.**
 
 Toward forgiveness. Continuously. Without keeping score.
 
-Not because the person deserves it. Not because what they did was acceptable.
+Not because what they did was acceptable.
 
-Because you have been forgiven a debt you could never repay.
+Because you have been forgiven a debt you could never repay — and forgiveness is not a feeling that arrives.
 
-And forgiveness — real forgiveness — is not a feeling that arrives.
-
-*It is a decision you make in the direction of something you don't yet feel.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], seventy-seven times is not about them.
+*It is a decision you keep making in a direction you don't yet feel.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], seventy-seven times is not about them.
 
 The number was never meant to be counted to — it was a direction to keep moving in, the same direction the master moved when he cancelled a debt that could never have been repaid in a lifetime.
 
 It is about who you become when you keep choosing it.
 
-*Free.*`, practiceToday: `Remember [name] — seventy-seven times is a direction not a destination.\n\nToday — take one small step in the direction of the forgiveness you haven't fully gotten to yet.\n\nThat's enough for today.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the debt You cancelled that I could never repay.
+*Free.*`,
+        practiceToday: `Remember [name] — seventy-seven times is a direction not a destination.
+
+Today — take one small step in the direction of the forgiveness you haven't fully gotten to yet.
+
+That's enough for today.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for the debt You cancelled that I could never repay.
 
 Help me to move in the direction of forgiveness today — even when I don't feel it yet.
 
@@ -3199,7 +4003,8 @@ Give me the grace to take one step toward what feels impossible.
 
 Free me from the debt I've been holding onto.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3209,9 +4014,15 @@ In Jesus' name, Amen.` },
     title: `The Disciples on the Water`,
     scripture: `Matthew 14:29 - Peter walked on the water toward Jesus.`,
     illustrationPrompt: `ocean sunrise`,
-    teaser: `The storm was real.\n\nThe waves were real.\n\nAnd Peter actually walked on the water — until he looked at the storm instead of at Jesus.`,
+    teaser: `The storm was real.
+
+The waves were real.
+
+And Peter actually walked on the water — until he looked at the storm instead of at Jesus.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `The disciples were in the boat in the middle of the night. The storm had been going for hours.
 
@@ -3225,8 +4036,11 @@ It was Jesus — walking toward them across the waves.
 
 Peter said — *Lord, if it's you, tell me to come to you on the water.*
 
-**And Peter got out of the boat.**` },
-      { id: 2, label: `The Story`,
+**And Peter got out of the boat.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `For a moment Peter was walking on water.
 
@@ -3242,10 +4056,13 @@ Not a rebuke. A genuine question about what happened in that moment.
 
 **Peter's faith was enough to get him out of the boat.**
 
-*It was the storm that broke his attention.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Here is the detail that changes everything.
-
-Jesus was already walking toward the boat when Peter got out.
+*It was the storm that broke his attention.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Jesus was already walking toward the boat when Peter got out.
 
 **He was already coming.**
 
@@ -3255,15 +4072,30 @@ Which means in the moments when the storm is loud and your attention breaks —
 
 Jesus is not standing still.
 
-*He is walking toward you.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], Peter sank — and Jesus caught him immediately.
+*He is walking toward you.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], Peter sank — and Jesus caught him immediately.
 
 Not after a pause, not after a lesson about doubt. The hand was already reaching before Peter finished going under, the same way Jesus was already walking toward the boat before Peter ever stepped out of it.
 
 Not after a moment of disappointment.
 
-*Immediately. He's still doing that.*`, practiceToday: `Remember [name] — Peter's faith got him out of the boat. The storm broke his attention. Jesus caught him immediately.\n\nToday — when the storm gets loud, say it out loud. Lord, save me.\n\nThat's the whole prayer. It worked for Peter.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You were already walking toward the disciples before Peter got out of the boat.
+*Immediately. He's still doing that.*`,
+        practiceToday: `Remember [name] — Peter's faith got him out of the boat. The storm broke his attention. Jesus caught him immediately.
+
+Today — when the storm gets loud, say it out loud. Lord, save me.
+
+That's the whole prayer. It worked for Peter.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You were already walking toward the disciples before Peter got out of the boat.
 
 Thank You that You catch immediately — not after deliberation.
 
@@ -3271,7 +4103,8 @@ Help me to keep my eyes on You when the storm gets loud today.
 
 And when I sink — Lord, save me.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3281,9 +4114,14 @@ In Jesus' name, Amen.` },
     title: `Blessed Assurance`,
     scripture: `Hebrews 10:22 - Let us draw near to God with a sincere heart.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `Blessed assurance, Jesus is mine.\nFanny Crosby was blind from the age of six weeks.\nShe never expressed bitterness about it once.\nNot once in 95 years.`,
+    teaser: `Blessed assurance, Jesus is mine.
+Fanny Crosby was blind from the age of six weeks.
+She never expressed bitterness about it once.
+Not once in 95 years.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `*Blessed assurance, Jesus is mine —*
 *O what a foretaste of glory divine!*
@@ -3294,8 +4132,13 @@ Fanny Crosby was blind from the age of six weeks. A botched medical procedure. U
 
 When people asked she said she was glad — that when she finally opened her eyes it would be the face of Jesus she saw first.
 
-*That is the woman who wrote these words.*` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `In 1873 a friend named Phoebe Knapp came to visit Fanny. She had composed a new melody but had no words for it.
+*That is the woman who wrote these words.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `In 1873 a friend named Phoebe Knapp came to visit Fanny. She had composed a new melody but had no words for it.
 
 She played it and asked — *what does this say to you?*
 
@@ -3305,8 +4148,11 @@ The entire first verse came out in that moment.
 
 She drew it from a mind that had memorized nearly the entire Bible — because it was the only way a blind woman could carry the Word with her.
 
-*Her blindness was the very thing that made her who she was.*` },
-      { id: 3, label: `The Turn`,
+*Her blindness was the very thing that made her who she was.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `The assurance Fanny describes is not the assurance that life will be easy.
 
@@ -3318,16 +4164,29 @@ It is the assurance that **Jesus is hers.**
 
 Not — blessed assurance, my circumstances are good.
 
-That is the one thing that cannot be taken. Cannot be dimmed by any darkness.
-
-**And it produces a specific kind of joy** — the kind that doesn't depend on what you can see.` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Fanny had every reason to be bitter, [name]. And she wasn't.
+That is the one thing that cannot be taken. Cannot be dimmed by any darkness.`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `Fanny had every reason to be bitter, [name]. And she wasn't.
 
 Blind from six weeks old, a botched procedure that could never be undone — and she said she was glad, that the first face she'd ever see would be His. The assurance she wrote about never depended on her circumstances changing, only on whose she was.
 
 *This is my story, this is my song,*
-***Praising my Saviour all the day long.***`, practiceToday: `Remember [name] — Fanny's joy didn't come from her circumstances. It came from one thing.\n\nToday — say it out loud. Blessed assurance. Jesus is mine.\n\nLet that be your story today.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for Fanny Crosby and what she showed us about joy.
+***Praising my Saviour all the day long.***`,
+        practiceToday: `Remember [name] — Fanny's joy didn't come from her circumstances. It came from one thing.
+
+Today — say it out loud. Blessed assurance. Jesus is mine.
+
+Let that be your story today.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for Fanny Crosby and what she showed us about joy.
 
 Thank You that assurance in You doesn't depend on what I can see or what I have.
 
@@ -3335,7 +4194,8 @@ Help me to hold onto the one thing that cannot be taken today.
 
 Jesus is mine. Help me to live like I believe that.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3345,31 +4205,45 @@ In Jesus' name, Amen.` },
     title: `Cast Your Anxiety — What Peter Knew`,
     scripture: `1 Peter 5:7 - Cast all your anxiety on him because he cares for you.`,
     illustrationPrompt: `ocean waves`,
-    teaser: `This is one of the most quoted verses about anxiety in scripture.\n\nAnd it was written by a man who personally experienced what happens when fear takes over.\n\nPeter knew what anxiety could make a person do.`,
+    teaser: `This is one of the most quoted verses about anxiety in scripture.
+
+And it was written by a man who personally experienced what happens when fear takes over.
+
+Peter knew what anxiety could make a person do.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `*Cast all your anxiety on him because he cares for you.*
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `*Cast all your anxiety on him because he cares for you.*
 
-It's on coffee mugs and phone cases everywhere.
+Peter wrote this.
 
-**But it was written by a man who personally experienced what happens when anxiety wins.**
+**The man who denied Jesus three times in a single night because he was afraid.**
 
-Peter denied Jesus three times in a single night because he was afraid.
+He knew what anxiety could make a person do.
 
-He knew what fear could make a person do.
-
-*That's who wrote this verse.*` },
-      { id: 2, label: `The Story`,
+*That's who wrote this verse.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `The word translated *cast* is the same word used when the disciples threw their cloaks on a donkey for Jesus to ride.
 
-Not — slowly release. Not — try to worry a little less.
+Not slowly release. Not try to worry a little less. *Throw it.*
 
 And the reason Peter gives is not — because it will make you feel better.
 
 The casting is only possible if you believe the one you're throwing to actually wants to catch it.
 
-**Peter believed it because Jesus had caught him.** In the courtyard. After the denial. On the beach with breakfast.` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The anxiety doesn't disappear when you cast it.
+**Peter believed it because Jesus had caught him.** In the courtyard. After the denial. On the beach with breakfast.`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The anxiety doesn't disappear when you cast it.
 
 The circumstances don't change.
 
@@ -3383,15 +4257,30 @@ This is not denial. Not pretending the anxiety isn't real.
 
 The same trust Peter had to rebuild after the denial.
 
-**He learned it. Then told everyone else they could do the same.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the man who wrote *cast your anxiety* had to relearn trust after his greatest failure.
+**He learned it. Then told everyone else they could do the same.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the man who wrote *cast your anxiety* had to relearn trust after his greatest failure.
 
 Peter denied Jesus three times in a single night out of fear — and was caught, restored, and fed breakfast before he ever wrote a word telling anyone else how to throw their weight onto God.
 
 He learned it.
 
-*Now throw it.*`, practiceToday: `Remember [name] — cast means throw. A deliberate physical act.\n\nToday — name the specific anxiety. Write it down.\n\nThen say out loud: I'm casting this to You. Because You care for me.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You want to catch what I throw.
+*Now throw it.*`,
+        practiceToday: `Remember [name] — cast means throw. A deliberate physical act.
+
+Today — name the specific anxiety. Write it down.
+
+Then say out loud: I'm casting this to You. Because You care for me.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You want to catch what I throw.
 
 Thank You that Peter's greatest failure didn't disqualify him from teaching others about trust.
 
@@ -3399,7 +4288,8 @@ Help me to throw today — decisively, specifically, believing You care.
 
 I cast this on You. I trust You with it.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3409,22 +4299,31 @@ In Jesus' name, Amen.` },
     title: `Does God Hear My Prayers?`,
     scripture: `Psalm 34:17 - The Lord hears them, he delivers them from all their troubles.`,
     illustrationPrompt: `sky clouds`,
-    teaser: `This is the question most people are embarrassed to ask.\n\nBecause it feels like you should already know the answer.\n\nBut if the prayers have been going up and nothing seems to be coming back — the question is real.`,
-    panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `This is the question most people are embarrassed to ask.
+    teaser: `This is the question most people are embarrassed to ask.
 
 Because it feels like you should already know the answer.
 
-**But if the prayers have been going up and nothing seems to be coming back —**
+But if the prayers have been going up and nothing seems to be coming back — the question is real.`,
+    panels: [
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `The prayers have been going up for a while now.
 
-The question is real.
+And nothing seems to be coming back.
 
-*Does He actually hear?*
+Not silence like peace. Silence like a ceiling.
+
+**Does He actually hear?**
 
 Not in the abstract.
 
-*Does He hear mine?*` },
-      { id: 2, label: `The Story`,
+*Does He hear mine?*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `The Psalms are full of this question asked out loud.
 
@@ -3436,8 +4335,13 @@ These are not the prayers of people with weak faith.
 
 *The righteous cry out and the Lord hears them. He is close to the brokenhearted. He has listened to his cry for help.*
 
-**He hears. He is close. He listens.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The silence is not the same as not being heard.
+**He hears. He is close. He listens.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The silence is not the same as not being heard.
 
 A doctor hearing your symptoms and not yet having the answer is not the same as a doctor who isn't listening.
 
@@ -3449,15 +4353,30 @@ But the hearing itself is not in question.
 
 *The righteous cry out.* You have cried out.
 
-*And the Lord hears them.* He heard.` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the silence is not evidence of deafness.
+*And the Lord hears them.* He heard.`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the silence is not evidence of deafness.
 
 The same Psalms that ask *how long, Lord, will you forget me* also declare *He has listened to my cry for help* — both written by people who kept talking to someone they couldn't always hear back from.
 
 He heard the cry.
 
-*He is close to the brokenhearted. That includes you.*`, practiceToday: `Remember [name] — the Psalmists asked does God hear and then answered their own question. He hears.\n\nToday — pray the thing you've been wondering if He hears.\n\nHe does. Say it anyway.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You hear every cry — including the ones that feel like they're hitting the ceiling.
+*He is close to the brokenhearted.*`,
+        practiceToday: `Remember [name] — the Psalmists asked does God hear and then answered their own question. He hears.
+
+Today — pray the thing you've been wondering if He hears.
+
+He does. Say it anyway.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You hear every cry — including the ones that feel like they're hitting the ceiling.
 
 Thank You that the Psalmists asked the hard questions and kept praying anyway.
 
@@ -3465,7 +4384,8 @@ Help me to trust that You hear me today — even when I can't hear back yet.
 
 I'm crying out. You hear me.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3475,9 +4395,17 @@ In Jesus' name, Amen.` },
     title: `Halfway`,
     scripture: `Psalm 23:4 - Even though I walk through the darkest valley, you are with me.`,
     illustrationPrompt: `mountains night sky`,
-    teaser: `Some nights you're not at the beginning and not yet at the end.\n\nYou're in the middle of something and you can't see either shore.\n\nDavid called it the darkest valley.`,
+    teaser: `Some nights you're not at the beginning and not yet at the end.
+
+You're in the middle of something and you can't see either shore.
+
+David called it the darkest valley.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Some nights you're not at the beginning and not yet at the end.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Some nights you're not at the beginning and not yet at the end.
 
 You're in the middle of something and you can't see either shore.
 
@@ -3489,12 +4417,13 @@ David called it the darkest valley.
 
 He didn't say — *if* you walk through it.
 
-*Even though.* **He had been there.**` },
-      { id: 2, label: `The Story`,
+*Even though.* **He had been there.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
-        body: `Psalm 23 is the most famous psalm. But the moment that matters most is in verse 4.
-
-*Even though I walk through the darkest valley — I will fear no evil.*
+        body: `*Even though I walk through the darkest valley — I will fear no evil.*
 
 Not — I will be removed from the valley. Not — the valley will end soon.
 
@@ -3504,8 +4433,13 @@ It is that you will not walk it alone.
 
 *For you are with me.*
 
-**The shepherd doesn't remove the sheep from the valley. He walks through it with them.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The middle of something is the hardest place to be.
+**The shepherd doesn't remove the sheep from the valley. He walks through it with them.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The middle of something is the hardest place to be.
 
 The beginning has adrenaline. The end has resolution.
 
@@ -3517,15 +4451,30 @@ David's answer — from his own valleys — is not *you will.*
 
 It is — **you will not walk it alone.**
 
-*He is with you in the middle.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Today, [name], if you're in the middle of something —
+*He is with you in the middle.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `Today, [name], if you're in the middle of something —
 
 David didn't write *if* I walk through the darkest valley. He wrote *even though*, because he had already been there, and the promise was never that the valley would be avoided — only that it would never be walked alone.
 
 You are not walking it alone.
 
-*Even here.*`, practiceToday: `Remember [name] — even though means David had been in the valley. He was writing from inside it.\n\nToday — tell God where you actually are. Not where you want to be.\n\nHe's in the middle with you.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for walking through — not around.
+*Even here.*`,
+        practiceToday: `Remember [name] — even though means David had been in the valley. He was writing from inside it.
+
+Today — tell God where you actually are. Not where you want to be.
+
+He's in the middle with you.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for walking through — not around.
 
 Thank You that even the darkest valley is not walked alone.
 
@@ -3533,7 +4482,8 @@ Help me to feel Your presence in the middle of where I am today.
 
 I will fear no evil. You are with me.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3543,22 +4493,27 @@ In Jesus' name, Amen.` },
     title: `The Battle You Can't See`,
     scripture: `Ephesians 6:13 - Put on the full armor of God, stand your ground.`,
     illustrationPrompt: `sunrise hills`,
-    teaser: `Most of the time when something feels wrong — we look for someone to blame.\n\nPaul says the real battle is somewhere you're not looking.`,
+    teaser: `Most of the time when something feels wrong — we look for someone to blame.
+
+Paul says the real battle is somewhere you're not looking.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
-        body: `Most of the time when something feels wrong — we look for someone to blame.
+        body: `Paul named the real enemy from a prison cell.
 
-A person. A circumstance. A choice that went badly.
-
-**But Paul says the real battle is somewhere you're not looking.**
-
-Not against the person who hurt you. Not against yourself.
+Not the Romans who put him there. Not the religious leaders who opposed him.
 
 *Against rulers. Against authorities. Against the powers of this dark world.*
 
-**And pretending it doesn't exist makes you easier to defeat.**` },
-      { id: 2, label: `The Story`,
+**The real battle was somewhere most people aren't looking.**
+
+And pretending it doesn't exist makes you easier to defeat.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Paul wrote this from prison.
 
@@ -3572,26 +4527,46 @@ And then told the Ephesians exactly what to do about it.
 
 *Put on the full armor of God. Truth. Righteousness. Faith. The Word of God. Prayer.*
 
-*Stand your ground. Stand firm.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Understanding that the battle is spiritual changes how you fight it.
+*Stand your ground. Stand firm.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Understanding that the battle is spiritual changes how you fight it.
 
-You stop exhausting yourself fighting people and circumstances you can't control.
+You stop exhausting yourself fighting people and circumstances you cannot control.
 
 **You start using the weapons that actually work.**
 
-Truth against lies. Prayer against darkness. The Word against the thing that keeps whispering it's hopeless.
+Truth against lies. Prayer against darkness. The Word against the thought that keeps saying it's hopeless.
 
-The battle is real. The resistance you feel is real.
+The battle is real. The resistance is real.
 
-**But you are not unarmed. And you are not fighting alone.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the resistance you've been feeling has a source.
+*But you are armed. And you are not in this alone.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the resistance you've been feeling has a source.
 
 Paul named it from a prison cell instead of blaming the people around him — and then handed over an actual battle plan instead of a vague warning, because the weapons that work were already available to him too.
 
 You have what you need to stand against it.
 
-*Stand firm.*`, practiceToday: `Remember [name] — Paul said stand. Not advance. Not attack. Stand your ground.\n\nToday — identify the lie that keeps coming. The thought that says it's hopeless.\n\nSpeak truth at it. Out loud. That's how this works.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for telling us the truth about what we're fighting.
+*Stand firm.*`,
+        practiceToday: `Remember [name] — Paul said stand. Not advance. Not attack. Stand your ground.
+
+Today — identify the lie that keeps coming. The thought that says it's hopeless.
+
+Speak truth at it. Out loud. That's how this works.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for telling us the truth about what we're fighting.
 
 Thank You that we are not unarmed and not fighting alone.
 
@@ -3599,7 +4574,8 @@ Help me to stand firm today — to use truth against the lies.
 
 I put on what You've given me.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3609,9 +4585,15 @@ In Jesus' name, Amen.` },
     title: `Joseph — The Pit Was Not the End`,
     scripture: `Genesis 50:20 - You intended to harm me, but God intended it for good.`,
     illustrationPrompt: `blue sky horizon`,
-    teaser: `Joseph's brothers threw him in a pit and sold him into slavery.\n\nHe spent years in a foreign prison for something he didn't do.\n\nAnd at the end of the story — he said something almost impossible to say.`,
+    teaser: `Joseph's brothers threw him in a pit and sold him into slavery.
+
+He spent years in a foreign prison for something he didn't do.
+
+And at the end of the story — he said something almost impossible to say.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `Joseph's brothers threw him in a pit and sold him into slavery. He was seventeen.
 
@@ -3621,8 +4603,11 @@ Then Potiphar's wife lied about him. **He was thrown in prison for something he 
 
 He was forgotten there for two years after helping someone who promised to remember him.
 
-*And at the end of the story — he said something almost impossible to say.*` },
-      { id: 2, label: `The Story`,
+*And at the end of the story — he said something almost impossible to say.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Years later Joseph was second in command of Egypt.
 
@@ -3636,8 +4621,13 @@ Then he said — *You intended to harm me.*
 
 He could see the whole arc now. Every pit. Every prison. Every forgotten year.
 
-**It had led to this.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Joseph could only say *God intended it for good* from the end of the story.
+**It had led to this.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Joseph could only say *God intended it for good* from the end of the story.
 
 He couldn't have said it in the pit. In prison. In the years of being forgotten.
 
@@ -3645,17 +4635,30 @@ He couldn't have said it in the pit. In prison. In the years of being forgotten.
 
 Which means if you're in the pit right now — you are not supposed to be able to see it yet.
 
-You are in the part of the story that looks like the end.
-
-*It is not the end.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], Joseph couldn't see the arc from the pit.
+You are in the part of the story that looks like the end.`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], Joseph couldn't see the arc from the pit.
 
 He could only say *God intended it for good* decades later, from the other end of the slavery, the false accusation, the forgotten years in prison — never once from inside any of them.
 
 He could only see it from the end.
 
-*You are not at the end yet.*`, practiceToday: `Remember [name] — Joseph couldn't say God intended it for good while he was in the pit. Only from the other side.\n\nToday — think of a pit that turned into something. The thing that looked like the end but wasn't.\n\nThat's the pattern. Trust it for the current pit.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You see the arc of the story from beginning to end.
+*You are not at the end yet.*`,
+        practiceToday: `Remember [name] — Joseph couldn't say God intended it for good while he was in the pit. Only from the other side.
+
+Today — think of a pit that turned into something. The thing that looked like the end but wasn't.
+
+That's the pattern. Trust it for the current pit.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You see the arc of the story from beginning to end.
 
 Thank You that what looks like the end in the pit is not the end.
 
@@ -3663,7 +4666,8 @@ Help me to trust Your intention even when I can't see what it's for yet.
 
 You intended it for good. I'm choosing to believe that.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3673,9 +4677,19 @@ In Jesus' name, Amen.` },
     title: `The Father in the Parable`,
     scripture: `Luke 15:20 - While he was still a long way off his father saw him and ran to him.`,
     illustrationPrompt: `sunset sky`,
-    teaser: `Jesus told this story to describe what God is like.\n\nNot what God tolerates.\n\nWhat God is like.\n\nAnd the detail that changes everything is four words: while he was still.`,
+    teaser: `Jesus told this story to describe what God is like.
+
+Not what God tolerates.
+
+What God is like.
+
+And the detail that changes everything is four words: while he was still.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Jesus told this story to describe what God is like.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Jesus told this story to describe what God is like.
 
 Not what God tolerates. Not the minimum God will accept.
 
@@ -3685,8 +4699,13 @@ A father whose son took his inheritance, wasted it, ended up feeding pigs in a f
 
 The son had a speech prepared.
 
-**He had no idea what was coming.**` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `*While he was still a long way off —*
+**He had no idea what was coming.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `*While he was still a long way off —*
 
 **Four words that change everything.**
 
@@ -3700,8 +4719,13 @@ He ran. Threw his arms around him. Kissed him.
 
 The son began his speech. The father interrupted him before it was finished.
 
-*The party started before the apology was complete.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The father in this story is how Jesus describes God.
+*The party started before the apology was complete.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The father in this story is how Jesus describes God.
 
 Not God as judge waiting for the minimum acceptable contrition.
 
@@ -3711,15 +4735,30 @@ Who runs. Who throws His arms around you *before you finish the speech.*
 
 The son came back expecting to be hired.
 
-*He was welcomed home.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], He saw you while you were still a long way off.
+*He was welcomed home.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], He saw you while you were still a long way off.
 
 The father didn't wait at the door with arms crossed for the apology to be delivered correctly — he was already running down the road, already calling for the robe, before the rehearsed speech got past the first line.
 
 He's been watching the road.
 
-*He's already running.*`, practiceToday: `Remember [name] — the father ran before the speech was finished. The party started before the explanation was complete.\n\nToday — come back. Don't wait until you have the right words.\n\nHe's already running toward you.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the picture of the father running down the road.
+*He's already running.*`,
+        practiceToday: `Remember [name] — the father ran before the speech was finished. The party started before the explanation was complete.
+
+Today — come back. Don't wait until you have the right words.
+
+He's already running toward you.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for the picture of the father running down the road.
 
 Thank You that You saw me while I was still a long way off.
 
@@ -3727,7 +4766,8 @@ Help me to come home today — however far I feel from where I should be.
 
 I don't have to finish the speech first.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3737,22 +4777,27 @@ In Jesus' name, Amen.` },
     title: `Faith Means Never Feeling Afraid`,
     scripture: `Psalm 56:3 - When I am afraid, I put my trust in you.`,
     illustrationPrompt: `mountains sunrise`,
-    teaser: `Somehow the idea got established that fear and faith cannot exist at the same time.\n\nDavid wrote the opposite — directly.`,
+    teaser: `Somehow the idea got established that fear and faith cannot exist at the same time.
+
+David wrote the opposite — directly.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
-        body: `Somehow the idea got established that fear and faith cannot exist at the same time.
+        body: `David wrote this psalm when the Philistines had seized him.
 
-That a person of real faith doesn't feel afraid. That if you're anxious — something is wrong with your belief.
+Real enemies. Real danger. Real reasons to be afraid.
 
-He wrote — *when I am afraid, I put my trust in you.*
+He didn't write — *because I trust God I am never afraid.*
 
-Not — because I trust you, I am never afraid.
+He wrote — ***when I am afraid — I put my trust in You.***
 
-*When I am afraid — I trust you.*
-
-**The fear and the trust in the same sentence.**` },
-      { id: 2, label: `The Story`,
+*The fear and the trust in the same sentence.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Psalm 56 was written when David was captured by the Philistines.
 
@@ -3766,8 +4811,11 @@ Not — I talk myself out of the fear. Not — I quote scripture until it goes a
 
 **I put my trust in You.**
 
-*The fear remains in the sentence. The trust is what he adds to it.*` },
-      { id: 3, label: `The Turn`,
+*The fear remains in the sentence. The trust is what he adds to it.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `Faith is not the absence of fear.
 
@@ -3779,17 +4827,30 @@ Peter was afraid when he started to sink.
 
 **Fear appears throughout the lives of the most faithful people in scripture.**
 
-What they did with it — *who they turned to in it* — is what defined them.
-
-*When I am afraid — I put my trust in You.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], you are allowed to be afraid.
+*When I am afraid — I put my trust in You.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], you are allowed to be afraid.
 
 David wrote the fear and the trust into the very same sentence — *when I am afraid, I put my trust in you* — without resolving one before admitting the other. Fear showed up in the lives of nearly everyone faithful in scripture.
 
 That's not a failure of faith.
 
-*It's the beginning of it.*`, practiceToday: `Remember [name] — David named the fear before he named the trust. Both in the same sentence.\n\nToday — name the specific fear. Say it out loud.\n\nThen say: I put my trust in You. Both sentences. In that order.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that David was afraid and still faithful.
+*It's the beginning of it.*`,
+        practiceToday: `Remember [name] — David named the fear before he named the trust. Both in the same sentence.
+
+Today — name the specific fear. Say it out loud.
+
+Then say: I put my trust in You. Both sentences. In that order.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that David was afraid and still faithful.
 
 Thank You that fear and trust can exist in the same sentence.
 
@@ -3797,7 +4858,8 @@ Help me to name what I'm afraid of today — and then put my trust in You.
 
 When I am afraid — I trust You.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3807,24 +4869,31 @@ In Jesus' name, Amen.` },
     title: `The Lord Is My Shepherd — What It Actually Means to Lack Nothing`,
     scripture: `Psalm 23:1 - The Lord is my shepherd, I lack nothing.`,
     illustrationPrompt: `green field stream`,
-    teaser: `The most famous psalm in the Bible.\n\nAnd the first line might be the most misunderstood.\n\nI shall not want does not mean you will always get what you want.`,
+    teaser: `The most famous psalm in the Bible.
+
+And the first line might be the most misunderstood.
+
+I shall not want does not mean you will always get what you want.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `*The Lord is my shepherd — I shall not want.*
 
-Most people read *I shall not want* as a promise that God will give them everything they ask for.
-
-**That's not what it means.**
-
 The Hebrew word translated *want* means *lack.*
 
-Which is a different claim entirely.
+**Which is a different claim entirely.**
 
 Not — I will have everything I desire.
 
-**I will not lack what I actually need.**` },
-      { id: 2, label: `The Story`,
+*I will not lack what I actually need.*
+
+David knew the difference. He had been both a shepherd and a sheep.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `A shepherd's responsibility is specific.
 
@@ -3836,26 +4905,42 @@ A table in the presence of enemies. Anointing with oil — protection from insec
 
 Not everything the sheep might want.
 
-And David — who had been both a shepherd and a sheep — wrote this from a lifetime of experience on both sides.` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The promise of Psalm 23 is not abundance in every category you can name.
+And David — who had been both a shepherd and a sheep — wrote this from a lifetime of experience on both sides.`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The shepherd provides what the sheep needs.
 
-It is the specific provision of a shepherd who knows exactly what his sheep need — and provides it.
+Green pastures when hungry. Still water when thirsty. Presence in the dark valley.
 
-**Green pastures when you're hungry. Still waters when you're thirsty. Presence in the valley.**
+**A table set in the presence of enemies — not after they leave. While they're still standing there.**
 
-The table prepared in the presence of enemies is not a metaphor for comfort.
-
-It is being sustained and provided for *even when the threat is still present.*
-
-**Not after the enemies leave. While they're still there.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the shepherd knows what you need.
+*It was never about the threat disappearing first.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the shepherd knows what you need.
 
 Green pastures when you're hungry. Still water when you're thirsty. A table prepared in the presence of enemies who are still standing there — not after they leave, while they're still present, because provision was never about the threat disappearing first.
 
 Not what you want.
 
-*What you need. And He has never once failed to provide it.*`, practiceToday: `Remember [name] — the shepherd provides what the sheep needs, not everything the sheep wants.\n\nToday — look for the green pasture. The still water. The one thing being provided right now.\n\nName it. That's the shepherd at work.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for being a shepherd who knows what I actually need.
+*What you need. And He has never once failed to provide it.*`,
+        practiceToday: `Remember [name] — the shepherd provides what the sheep needs, not everything the sheep wants.
+
+Today — look for the green pasture. The still water. The one thing being provided right now.
+
+Name it. That's the shepherd at work.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for being a shepherd who knows what I actually need.
 
 Thank You that Your provision is specific — not generic.
 
@@ -3863,7 +4948,8 @@ Help me to see where You are providing today — even if it's not what I asked f
 
 I shall not lack. Help me to believe that.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3873,9 +4959,15 @@ In Jesus' name, Amen.` },
     title: `Some Days I Don't Feel Like a Christian`,
     scripture: `Romans 7:25 - Thanks be to God who delivers me through Jesus Christ.`,
     illustrationPrompt: `sunrise clouds`,
-    teaser: `Paul wrote the most honest thing anyone has ever written about the gap between who you want to be and what you actually do.\n\nAnd he wrote it after his conversion.`,
+    teaser: `Paul wrote the most honest thing anyone has ever written about the gap between who you want to be and what you actually do.
+
+And he wrote it after his conversion.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Some days you don't feel like a Christian.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Some days you don't feel like a Christian.
 
 Not because you doubt God exists. Not because you've walked away.
 
@@ -3885,8 +4977,11 @@ And the gap between who you want to be and what you actually do feels too wide t
 
 You've prayed about it. Tried to change. Made promises.
 
-*And then done it again.*` },
-      { id: 2, label: `The Story`,
+*And then done it again.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `*I do not understand what I do. For what I want to do — I do not do. But what I hate — I do.*
 
@@ -3898,28 +4993,44 @@ He called it *a war within my members.* Called himself *a wretched man.*
 
 He asked — *who will rescue me from this body of death?*
 
-*Thanks be to God — through Jesus Christ our Lord.*` },
-      { id: 3, label: `The Turn`,
+*Thanks be to God — through Jesus Christ our Lord.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `The answer Paul arrives at is not — try harder. Be more disciplined.
 
-Not your effort applied to the problem.
-
-The rescue that comes from outside you.
+Not your effort applied to the problem — but the rescue that comes from outside you entirely.
 
 Which means the war you feel inside — the gap between who you want to be and what you do — **does not disqualify you.**
 
 It is the universal experience of every person who takes the interior life seriously.
 
-*Paul felt it. He named it. And he said the rescue was real.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], Paul felt this too.
+*Paul felt it. He named it. And he said the rescue was real.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], Paul felt this too.
 
 Years into his faith, the man who wrote half the New Testament still described the exact war you feel between who you want to be and what you actually do — and named the rescue as coming from outside himself entirely.
 
 And he kept going.
 
-*Thanks be to God — through Jesus Christ our Lord. That's available to you right now.*`, practiceToday: `Remember [name] — Paul named the war. He didn't pretend it wasn't happening.\n\nToday — name the specific thing. The gap. The keep-on-doing.\n\nBring it to Jesus. As a war you need rescue from.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that Paul named the war honestly and kept going.
+*Thanks be to God — through Jesus Christ our Lord.*`,
+        practiceToday: `Remember [name] — Paul named the war. He didn't pretend it wasn't happening.
+
+Today — name the specific thing. The gap. The keep-on-doing.
+
+Bring it to Jesus. As a war you need rescue from.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that Paul named the war honestly and kept going.
 
 Thank You that the rescue is real — not something I have to manufacture through effort.
 
@@ -3927,7 +5038,8 @@ Help me today in the specific place where I keep falling short.
 
 Thanks be to You — through Jesus Christ my Lord.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -3937,9 +5049,13 @@ In Jesus' name, Amen.` },
     title: `Be Thou My Vision`,
     scripture: `Psalm 27:4 - One thing I ask, that I may dwell in the house of the Lord.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `Be Thou my vision, O Lord of my heart.\nThese words were written in the 6th century by a blind Irish poet.\nThey survived 1,300 years before the world could sing them.`,
+    teaser: `Be Thou my vision, O Lord of my heart.
+These words were written in the 6th century by a blind Irish poet.
+They survived 1,300 years before the world could sing them.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `*Be Thou my vision, O Lord of my heart,*
 *Naught be all else to me, save that Thou art.*
@@ -3950,8 +5066,13 @@ And from that place — blind, brilliant — he wrote a prayer asking God to be 
 
 *A blind man writing about seeing what he could not see.*
 
-He was later martyred by pirates. His poem survived him by thirteen centuries.` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `The poem sat in Irish manuscripts for over a thousand years.
+He was later martyred by pirates. His poem survived him by thirteen centuries.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `The poem sat in Irish manuscripts for over a thousand years.
 
 In 1905 a scholar translated it into English. In 1912 another versified it into the form we sing today.
 
@@ -3965,8 +5086,11 @@ It is a prayer of *orientation.*
 
 Not — give me good things.
 
-*Give me You. Above all else — You.*` },
-      { id: 3, label: `The Turn`,
+*Give me You. Above all else — You.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `The prayer Dallán wrote was for single-hearted devotion.
 
@@ -3976,16 +5100,29 @@ Not divided attention. Not God alongside everything else competing for space.
 
 The one thing the Psalmist asked for was to dwell in the presence of God.
 
-Not success. Not answers. Not clarity.
-
-That prayer — made by a blind man in the 6th century — is the prayer for anyone whose vision has been clouded by everything else.` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `A blind man wrote a prayer about vision that has lasted 1,300 years, [name].
+Not success. Not answers. Not clarity.`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `A blind man wrote a prayer about vision that has lasted 1,300 years, [name].
 
 Dallán asked for exactly one thing — not many — and that single-hearted devotion has outlasted every empire that existed when he wrote it, surviving in manuscript for a thousand years before the world could sing it.
 
 *Thou my best thought by day and by night,*
-***Waking or sleeping, Thy presence my light.***`, practiceToday: `Remember [name] — Dallán asked for one thing. Not many things. One.\n\nToday — simplify your ask. What is the one thing you need from God right now?\n\nBring just that. Be Thou my vision.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for a prayer that has lasted 1,300 years.
+***Waking or sleeping, Thy presence my light.***`,
+        practiceToday: `Remember [name] — Dallán asked for one thing. Not many things. One.
+
+Today — simplify your ask. What is the one thing you need from God right now?
+
+Bring just that. Be Thou my vision.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for a prayer that has lasted 1,300 years.
 
 Thank You that single-hearted devotion is still what You're after.
 
@@ -3993,7 +5130,8 @@ Be my vision today. My best thought. My first thought.
 
 Clear out everything competing for the space that belongs to You.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4003,13 +5141,17 @@ In Jesus' name, Amen.` },
     title: `What If I Lose My Faith?`,
     scripture: `Luke 22:32 - I have prayed for you, that your faith may not fail.`,
     illustrationPrompt: `night sky stars`,
-    teaser: `This is the fear underneath a lot of other fears.\n\nWhat if I stop believing?\n\nJesus addressed this directly — to the person most likely to experience it.`,
+    teaser: `This is the fear underneath a lot of other fears.
+
+What if I stop believing?
+
+Jesus addressed this directly — to the person most likely to experience it.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `This is the fear underneath a lot of other fears.
-
-Not just — what if things go wrong.
-
-**What if I stop believing?**
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `**What if I stop believing?**
 
 What if the doubts accumulate and the distance grows and one day I look back and realize I've drifted so far I can't find my way back?
 
@@ -4017,8 +5159,11 @@ Jesus addressed this directly.
 
 To the person most likely to experience it.
 
-*The night before Peter denied Him three times.*` },
-      { id: 2, label: `The Story`,
+*The night before Peter denied Him three times.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `At the Last Supper Jesus said to Peter —
 
@@ -4032,8 +5177,11 @@ Jesus knew what was about to happen. He knew Peter would deny Him.
 
 Not that Peter would avoid the failure.
 
-Something had to hold. *Something did.*` },
-      { id: 3, label: `The Turn`,
+Something had to hold. *Something did.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `Peter's faith did not fail.
 
@@ -4047,15 +5195,30 @@ Because Jesus had prayed for him.
 
 Which means the same prayer that held Peter through his worst failure is being prayed over your doubt. Your drift.
 
-*Something is holding. It is not your grip. It is His.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], Jesus prayed for Peter before the failure happened.
+*Something is holding. It is not your grip. It is His.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], Jesus prayed for Peter before the failure happened.
 
 He told him plainly that an attack was coming, and then prayed not that Peter would avoid it but that his faith would not fail underneath it — and it didn't, even through the denial, the weeping, the running.
 
 He's praying for you now.
 
-*Your faith will not fail.*`, practiceToday: `Remember [name] — Jesus told Peter the attack was coming. He didn't hide it. He prayed.\n\nToday — bring the fear of losing your faith directly to God.\n\nHe's already praying for you on the other side of it.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that Jesus prayed for Peter before his worst failure.
+*Your faith will not fail.*`,
+        practiceToday: `Remember [name] — Jesus told Peter the attack was coming. He didn't hide it. He prayed.
+
+Today — bring the fear of losing your faith directly to God.
+
+He's already praying for you on the other side of it.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that Jesus prayed for Peter before his worst failure.
 
 Thank You that He prays for me now — always interceding.
 
@@ -4063,7 +5226,8 @@ Help me to trust that my faith is held by something stronger than my grip.
 
 I don't want to drift. Hold me.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4073,9 +5237,15 @@ In Jesus' name, Amen.` },
     title: `Jesus and the Outsider`,
     scripture: `John 4:9 - How can you ask me for a drink?`,
     illustrationPrompt: `blue sky`,
-    teaser: `The woman at the well came at noon.\n\nNot in the morning when women came together.\n\nShe had her reasons for avoiding the crowd.`,
+    teaser: `The woman at the well came at noon.
+
+Not in the morning when women came together.
+
+She had her reasons for avoiding the crowd.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `The woman at the well came at noon.
 
@@ -4089,8 +5259,11 @@ Five husbands. Living with a man who wasn't her husband.
 
 Jesus was sitting at the well when she arrived.
 
-He asked her for a drink.` },
-      { id: 2, label: `The Story`,
+He asked her for a drink.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Jews and Samaritans didn't speak. Men didn't address unfamiliar women in public.
 
@@ -4104,8 +5277,13 @@ He said — *go call your husband.*
 
 He said — **you are right. The fact is you have had five husbands and the man you now have is not your husband.**
 
-He knew everything. *And He was still sitting there talking to her.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The woman who came to the well alone at noon **left and went into the town.**
+He knew everything. *And He was still sitting there talking to her.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The woman who came to the well alone at noon **left and went into the town.**
 
 *Come see a man who told me everything I ever did.*
 
@@ -4117,15 +5295,30 @@ Because Jesus hadn't told her everything she'd ever done to condemn her.
 
 *That is what changed her.*
 
-Being fully known and fully welcomed at the same time.` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], He knows everything you've ever done.
+Being fully known and fully welcomed at the same time.`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], He knows everything you've ever done.
 
 The woman at the well heard her entire history laid out by a stranger who had every reason to walk away — and instead kept sitting there, talking with her, offering water that would never run dry.
 
 And He's sitting at the well waiting for you.
 
-*Come and see.*`, practiceToday: `Remember [name] — the woman came alone at noon to avoid people. She left running to find them.\n\nToday — come to the well. Bring the thing you've been carrying alone.\n\nHe already knows. He's still there.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that Jesus sat at the well and waited for the woman who came alone.
+*Come and see.*`,
+        practiceToday: `Remember [name] — the woman came alone at noon to avoid people. She left running to find them.
+
+Today — come to the well. Bring the thing you've been carrying alone.
+
+He already knows. He's still there.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that Jesus sat at the well and waited for the woman who came alone.
 
 Thank You that knowing everything didn't make You leave.
 
@@ -4133,7 +5326,8 @@ Help me to come to You with the things I've been carrying in private.
 
 You already know. I trust that You're still here.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4143,22 +5337,27 @@ In Jesus' name, Amen.` },
     title: `I Am the Resurrection`,
     scripture: `John 11:25 - I am the resurrection and the life.`,
     illustrationPrompt: `sunrise field`,
-    teaser: `Jesus didn't say — I will bring about a resurrection.\n\nHe said — I am the resurrection.\n\nThere is a difference. And it changes everything about who you're praying to.`,
+    teaser: `Jesus didn't say — I will bring about a resurrection.
+
+He said — I am the resurrection.
+
+There is a difference. And it changes everything about who you're praying to.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `Jesus didn't say — I will bring about a resurrection.
-
-One is a promise about what He will do.
-
-The other is a statement about **what He is.**
 
 Martha believed in a future resurrection. Most Jewish people of her day did.
 
 *I am the resurrection — and the life.*
 
-**Not a future event. A present reality standing in front of her.**` },
-      { id: 2, label: `The Story`,
+**Not a future event. A present reality standing in front of her.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Martha said — *Lord, if you had been here my brother would not have died. But I know that even now God will give you whatever you ask.*
 
@@ -4172,8 +5371,13 @@ Not — do you believe resurrection is coming?
 
 *Do you believe this? Me. Standing here. Right now.*
 
-*Yes, Lord — she said. I believe.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `What Jesus offered Martha was not comfort about the future.
+*Yes, Lord — she said. I believe.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `What Jesus offered Martha was not comfort about the future.
 
 It was a Person in the present.
 
@@ -4183,17 +5387,30 @@ Which means when you pray — you are not sending a request to an impersonal for
 
 You are talking to the one in whom life itself resides.
 
-The one who walked out of His own tomb.
-
-**He is what He claims to be. And He is available to you right now.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the resurrection is not a future event you're waiting for.
+The one who walked out of His own tomb.`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the resurrection is not a future event you're waiting for.
 
 Martha believed in a resurrection someday, at the last day — Jesus stood in front of her and said *I am* the resurrection, present tense, a Person and not a future promise, and asked if she believed it right then.
 
 He is here now.
 
-*Do you believe this?*`, practiceToday: `Remember [name] — Jesus asked Martha directly: do you believe this? Not in the abstract. In Me. Now.\n\nToday — answer the question. Out loud.\n\nSay yes as honestly as you can. That's the conversation.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that resurrection is a Person and not just an event.
+*Do you believe this?*`,
+        practiceToday: `Remember [name] — Jesus asked Martha directly: do you believe this? Not in the abstract. In Me. Now.
+
+Today — answer the question. Out loud.
+
+Say yes as honestly as you can. That's the conversation.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that resurrection is a Person and not just an event.
 
 Thank You that I am talking to the one in whom life resides.
 
@@ -4201,7 +5418,8 @@ Help me to believe this — not just in the abstract but right now, in my actual
 
 Yes Lord. I believe.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4211,9 +5429,15 @@ In Jesus' name, Amen.` },
     title: `Mary Magdalene — The First Witness`,
     scripture: `John 20:18 - Mary Magdalene said, I have seen the Lord.`,
     illustrationPrompt: `sunrise sky`,
-    teaser: `Mary Magdalene was the first person to see the risen Jesus.\n\nNot a disciple. Not a religious leader.\n\nJesus chose her first anyway.`,
+    teaser: `Mary Magdalene was the first person to see the risen Jesus.
+
+Not a disciple. Not a religious leader.
+
+Jesus chose her first anyway.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `Mary Magdalene was the first person to see the risen Jesus.
 
@@ -4225,8 +5449,11 @@ If you were constructing a resurrection story to be believed — you would not c
 
 **You would not choose Mary.**
 
-Jesus chose her first anyway.` },
-      { id: 2, label: `The Story`,
+Jesus chose her first anyway.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `The tomb was empty. Peter and John came, saw, and went home.
 
@@ -4242,8 +5469,13 @@ Then He said her name.
 
 And she knew.
 
-She was the first. **Because she stayed when everyone else went home.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Mary stayed because she had nowhere else to go.
+She was the first. **Because she stayed when everyone else went home.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Mary stayed because she had nowhere else to go.
 
 Not because she had better theology than the disciples.
 
@@ -4255,15 +5487,30 @@ Jesus appeared to her there. In the place of her grief. Before the triumph. Befo
 
 *He came to the one who stayed.*
 
-**And He sent her to tell the world.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], Jesus appeared to the one who stayed.
+**And He sent her to tell the world.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], Jesus appeared to the one who stayed.
 
 Peter and John saw the empty tomb and went home. Mary stayed, weeping, with nowhere else to go — and He came to her there, before the triumph, before anyone else had even processed what happened.
 
-Who couldn't leave. Who had nowhere else to go.
+She stayed because she couldn't leave. Because the tomb — even empty — was the last place she had been close to Him.
 
-*He says your name too.*`, practiceToday: `Remember [name] — Mary stayed when everyone else went home. Jesus came to where she was.\n\nToday — stay. Don't leave the place of grief or confusion or unanswered questions.\n\nHe comes to the ones who stay.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for choosing Mary first.
+*He says your name too.*`,
+        practiceToday: `Remember [name] — Mary stayed when everyone else went home. Jesus came to where she was.
+
+Today — stay. Don't leave the place of grief or confusion or unanswered questions.
+
+He comes to the ones who stay.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for choosing Mary first.
 
 Thank You that You come to the ones who stay — even when everyone else has gone home.
 
@@ -4271,7 +5518,8 @@ Help me to stay in the place of grief or confusion long enough to hear You say m
 
 I'm not leaving.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4281,22 +5529,29 @@ In Jesus' name, Amen.` },
     title: `Do Not Be Anxious — What Paul Didn't Mean`,
     scripture: `Philippians 4:6-7 - Do not be anxious, present your requests to God.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `One of the most quoted verses about anxiety in scripture.\n\nAnd one of the most misapplied.\n\nBecause most people read it as a command to stop feeling anxious.`,
+    teaser: `One of the most quoted verses about anxiety in scripture.
+
+And one of the most misapplied.
+
+Because most people read it as a command to stop feeling anxious.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
-        body: `*Do not be anxious about anything.*
+        body: `Paul wrote *do not be anxious about anything* from prison.
 
-Most people read it as a command to stop feeling anxious.
+He had been beaten, shipwrecked, imprisoned multiple times.
 
-As if Paul is saying — just decide not to be. And if you're still anxious after that — your faith is insufficient.
+**He was not telling people to pretend anxiety wasn't real.**
 
-Paul was in prison when he wrote this. He had been beaten, shipwrecked, imprisoned multiple times.
+He had more reasons to be anxious than almost anyone reading this.
 
-**He knew what it felt like to have reasons to be anxious.**
-
-He was not telling people to pretend they didn't.` },
-      { id: 2, label: `The Story`,
+*He was prescribing a practice. Not commanding a feeling.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `The verse continues — *but in every situation, by prayer and petition, with thanksgiving, present your requests to God.*
 
@@ -4306,8 +5561,11 @@ Paul is describing a practice — something you do with the anxiety rather than 
 
 And the result — *the peace of God which transcends all understanding will guard your hearts and minds.*
 
-*The anxiety may still be there. The peace guards you in the middle of it.*` },
-      { id: 3, label: `The Turn`,
+*The anxiety may still be there. The peace guards you in the middle of it.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `Paul is not commanding a feeling.
 
@@ -4321,17 +5579,32 @@ Not — pretend the anxiety isn't there.
 
 The practice does not make the anxiety stop immediately.
 
-From your shoulders — to the God who can actually do something with it.
+But the weight shifts — from your shoulders to the God who can actually carry it.
 
-*And then the peace guards.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], do not be anxious is not a command about feeling.
+*And then the peace guards.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], do not be anxious is not a command about feeling.
 
 Paul wrote it from a prison cell, having survived shipwrecks and beatings — he wasn't pretending anxiety wasn't real, he was prescribing a practice: pray it specifically, give thanks, and let the peace stand guard over what's left.
 
 It is a direction toward practice.
 
-*Pray. Present your requests. With thanksgiving. Do that.*`, practiceToday: `Remember [name] — the alternative to anxiety Paul describes is a practice. Not a feeling.\n\nToday — name the specific anxiety. Then pray it specifically. Then find one thing to be thankful for.\n\nThat's the practice. Do it once today.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for a practice — not just a command.
+*Pray. Present your requests. With thanksgiving. Do that.*`,
+        practiceToday: `Remember [name] — the alternative to anxiety Paul describes is a practice. Not a feeling.
+
+Today — name the specific anxiety. Then pray it specifically. Then find one thing to be thankful for.
+
+That's the practice. Do it once today.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for a practice — not just a command.
 
 Thank You that I can bring the anxiety specifically and You receive it.
 
@@ -4339,7 +5612,8 @@ Help me to pray it today — with thanksgiving — even when the feeling doesn't
 
 Guard my heart and my mind with Your peace.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4349,22 +5623,33 @@ In Jesus' name, Amen.` },
     title: `God Only Loves the Cleaned-Up Version of You`,
     scripture: `Romans 5:8 - While we were still sinners, Christ died for us.`,
     illustrationPrompt: `sunset sky`,
-    teaser: `The timing in Romans 5:8 is everything.\n\nNot after you cleaned yourself up.\n\nNot when you were trying harder.\n\nWhile you were still sinners.`,
+    teaser: `The timing in Romans 5:8 is everything.
+
+Not after you cleaned yourself up.
+
+Not when you were trying harder.
+
+While you were still sinners.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
-        body: `There is a version of God that most people carry without realizing it.
+        body: `*While we were still sinners — Christ died for us.*
 
-A God who loves the potential version of you. The improved version. The one who has finally dealt with the thing.
+Not after.
 
-And the unspoken belief is — *get there first. Then come.*
+Not when we were trying harder.
 
-*But God demonstrates his own love for us in this:*
+**While.**
 
-**While we were still sinners — Christ died for us.**
+That word is doing everything in that sentence.
 
-*While.* **Not after. While.**` },
-      { id: 2, label: `The Story`,
+*The timing is the whole argument.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Paul builds to this.
 
@@ -4378,8 +5663,13 @@ The love was demonstrated at the worst possible moment.
 
 Not the moment of greatest potential. Not the moment of greatest effort.
 
-*That is when He moved.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The cleaned-up version of you is not who God loves.
+*That is when He moved.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The cleaned-up version of you is not who God loves.
 
 God loves you.
 
@@ -4393,15 +5683,30 @@ Which means the love you're trying to earn —
 
 **Already exists.**
 
-*You cannot earn what has already been given.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the love was demonstrated at your worst.
+*You cannot earn what has already been given.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the love was demonstrated at your worst.
 
 Not the moment you finally got it together. Not the moment your effort paid off. *While we were still sinners* — that is the exact moment Christ died, on purpose, so there would be no confusion about when the love started.
 
 Not your best.
 
-*While you were still. It's already there.*`, practiceToday: `Remember [name] — while. Not after. Not when. While.\n\nToday — come as you are. Don't clean up first. Don't wait until you're better.\n\nThe love is already there. Right now. For this version of you.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the timing in Romans 5:8.
+*While you were still a sinner. It's already there.*`,
+        practiceToday: `Remember [name] — while. Not after. Not when. While.
+
+Today — come as you are. Don't clean up first. Don't wait until you're better.
+
+The love is already there. Right now. For this version of you.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for the timing in Romans 5:8.
 
 Thank You that the love was demonstrated at my worst — not my best.
 
@@ -4409,7 +5714,8 @@ Help me to receive what's already here instead of trying to earn what I already 
 
 I come as I am.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4419,9 +5725,17 @@ In Jesus' name, Amen.` },
     title: `I Used To Think I Was Too Far Gone`,
     scripture: `1 Timothy 1:16 - I was shown mercy, Christ might display his patience.`,
     illustrationPrompt: `sunrise sky`,
-    teaser: `Dear God,\n\nI used to think there was a limit.\n\nA point past which grace couldn't reach.\n\nA version of myself that was too far gone to come back from.`,
+    teaser: `Dear God,
+
+I used to think there was a limit.
+
+A point past which grace couldn't reach.
+
+A version of myself that was too far gone to come back from.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `Dear God,
 
@@ -4433,8 +5747,11 @@ I had made the same mistakes enough times that starting over felt dishonest.
 
 I didn't say this out loud. I kept going through the motions.
 
-*But underneath everything I believed I was too far gone.*` },
-      { id: 2, label: `The Story`,
+*But underneath everything I believed I was too far gone.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Paul wrote — *Christ Jesus came into the world to save sinners — of whom I am the worst.*
 
@@ -4446,10 +5763,13 @@ And then he wrote — *for this very reason I was shown mercy — so that in me,
 
 **His story was supposed to be the proof.**
 
-*That if grace reached Paul — it reaches anyone.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `I'm writing this because I was wrong about the limit.
-
-There isn't one.
+*That if grace reached Paul — it reaches anyone.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `There isn't one.
 
 I came back from the place I thought was too far.
 
@@ -4461,15 +5781,30 @@ And what I found on the other side of *too far gone* was not a God barely willin
 
 *It was a God who had been waiting.*
 
-**The limit I believed in was never in Him. It was always in me.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `There is no too far gone, [name].
+**The limit I believed in was never in Him. It was always in me.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `There is no too far gone, [name].
 
 Paul called himself the worst of sinners and meant it literally — a man who had Christians killed — and then said his own story was the proof that grace reaches anyone, anywhere, in the middle of anything, no matter how far it's gone.
 
 Paul proved it. I proved it.
 
-*You can prove it too.*`, practiceToday: `Remember [name] — Paul said he was the worst. And then said his story was the proof that grace reaches anyone.\n\nToday — what is the thing you think puts you past the limit?\n\nBring it. Paul's story says it's not the last word.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for Paul's story and what it proves.
+*You can prove it too.*`,
+        practiceToday: `Remember [name] — Paul said he was the worst. And then said his story was the proof that grace reaches anyone.
+
+Today — what is the thing you think puts you past the limit?
+
+Bring it. Paul's story says it's not the last word.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for Paul's story and what it proves.
 
 Thank You that the limit I believed in was never in You.
 
@@ -4477,7 +5812,8 @@ Help me to come back from wherever I think is too far.
 
 I trust that You have been waiting.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4487,9 +5823,15 @@ In Jesus' name, Amen.` },
     title: `For the Anxious`,
     scripture: `Matthew 6:34 - Do not worry about tomorrow.`,
     illustrationPrompt: `stars night sky`,
-    teaser: `Jesus said something simple about worry.\n\nNot a command to stop feeling it.\n\nJust a reminder about which day you're actually in.`,
+    teaser: `Jesus said something simple about worry.
+
+Not a command to stop feeling it.
+
+Just a reminder about which day you're actually in.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `Jesus said something simple about worry.
 
@@ -4503,8 +5845,11 @@ He didn't say people of faith never worry.
 
 He said — you're carrying tomorrow's weight on today's back.
 
-*You are living in the wrong day.*` },
-      { id: 2, label: `The Story`,
+*You are living in the wrong day.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Jesus said this after talking about birds and flowers.
 
@@ -4518,28 +5863,46 @@ Not the future that hasn't happened yet.
 
 *What is happening right now — in the world around you — is evidence of a God who provides.*
 
-**Today is the evidence.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Anxiety lives in the future.
+**Today is the evidence.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Anxiety lives in the future.
 
 It takes you out of the present and puts you in the place where the worst thing has already happened — even though it hasn't.
 
 **Jesus is calling you back to today.**
 
-Not because tomorrow doesn't matter.
-
-Because you cannot live in tomorrow. You can only live in today.
+You cannot live in tomorrow. You can only live in today. You can only live in today.
 
 And today — *your heavenly Father knows what you need.*
 
-**That is enough to live on.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Today, [name].
+**That is enough to live on.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `Today, [name].
 
 Jesus didn't say worry is a sin. He said you're carrying tomorrow's weight on today's back, and today already has enough — pointing to birds fed and flowers clothed as evidence that the same provision is already covering you right now.
 
 **Just today.**
 
-*Tomorrow will worry about itself. He knows what you need.*`, practiceToday: `Remember [name] — Jesus said each day has enough trouble of its own. You're only responsible for today.\n\nToday — set down one thing you've been carrying about tomorrow.\n\nJust today. Tomorrow is not yours yet.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You know what I need — today, tomorrow, and every day after.
+*Tomorrow will worry about itself. He knows what you need.*`,
+        practiceToday: `Remember [name] — Jesus said each day has enough trouble of its own. You're only responsible for today.
+
+Today — set down one thing you've been carrying about tomorrow.
+
+Just today. Tomorrow is not yours yet.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You know what I need — today, tomorrow, and every day after.
 
 Thank You that I don't have to carry tomorrow before it gets here.
 
@@ -4547,7 +5910,8 @@ Help me to live in today. To find the evidence of Your provision in what's alrea
 
 Today is enough. You are enough.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4557,22 +5921,31 @@ In Jesus' name, Amen.` },
     title: `What Worship Actually Is`,
     scripture: `Romans 12:1 - Offer your bodies, this is your true and proper worship.`,
     illustrationPrompt: `sunrise field`,
-    teaser: `Most people think worship is the music part of a church service.\n\nPaul had a different definition.\n\nAnd it changes what the rest of your week looks like.`,
+    teaser: `Most people think worship is the music part of a church service.
+
+Paul had a different definition.
+
+And it changes what the rest of your week looks like.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
-        body: `Most people think worship is the music part of a church service.
+        body: `*Offer your bodies as a living sacrifice — holy and pleasing to God.*
 
-The part where you stand and sing. Where the words appear on a screen.
+Paul doesn't say — this is one form of worship.
 
-*Offer your bodies as a living sacrifice — holy and pleasing to God.*
+He says — **this is your true and proper worship.**
 
-Not — this is one form of worship. Not — this is what worship looks like with music.
+The body. Daily. All of it.
 
-**This is your true and proper worship.**
-
-The body. Daily. All of it.` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `In the Old Testament a sacrifice was brought to the altar and killed.
+*Monday morning included.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `In the Old Testament a sacrifice was brought to the altar and killed.
 
 It was complete. Final. Done.
 
@@ -4582,8 +5955,13 @@ Which means the sacrifice is ongoing. Continuous. Not a single moment of surrend
 
 The phrase he uses — *do not conform to the pattern of this world but be transformed by the renewing of your mind* — is the description of what living sacrifice looks like in practice.
 
-**Not one dramatic decision. The daily small decisions.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Worship does not begin and end with a song.
+**Not one dramatic decision. The daily small decisions.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Worship does not begin and end with a song.
 
 It begins when you wake up and ends when you sleep.
 
@@ -4591,19 +5969,32 @@ It begins when you wake up and ends when you sleep.
 
 Making coffee. Going to work. Being kind when kindness is inconvenient.
 
-Paul is not diminishing the music. He is expanding the definition.
-
 *The whole life is the offering.*
 
-**Monday morning is as sacred as Sunday morning.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the ordinary day is the offering.
+**Monday morning is as sacred as Sunday morning.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the ordinary day is the offering.
 
 Not a single dramatic decision once — a daily recommitment, made in the coffee, the commute, the hard conversation handled with patience. Monday morning was never less sacred than Sunday morning in Paul's definition of worship.
 
 Every part of it.
 
-*That is your true and proper worship.*`, practiceToday: `Remember [name] — Paul said the body offered daily is the true worship. Not just Sunday.\n\nToday — pick one ordinary thing. Do it as an act of worship. With awareness.\n\nThe whole life is the altar.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that worship is bigger than I thought.
+*That is your true and proper worship.*`,
+        practiceToday: `Remember [name] — Paul said the body offered daily is the true worship. Not just Sunday.
+
+Today — pick one ordinary thing. Do it as an act of worship. With awareness.
+
+The whole life is the altar.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that worship is bigger than I thought.
 
 Thank You that the ordinary day is the offering.
 
@@ -4611,7 +6002,8 @@ Help me to live today as an act of worship — not just the moments that feel sp
 
 I offer what I have. All of it.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4621,9 +6013,19 @@ In Jesus' name, Amen.` },
     title: `Loaves and Fish`,
     scripture: `John 6:11 - Jesus took the loaves and gave thanks.`,
     illustrationPrompt: `golden field sky`,
-    teaser: `Five loaves. Two fish.\n\nFive thousand people.\n\nThe disciples saw a problem that couldn't be solved.\n\nJesus saw a different kind of math.`,
+    teaser: `Five loaves. Two fish.
+
+Five thousand people.
+
+The disciples saw a problem that couldn't be solved.
+
+Jesus saw a different kind of math.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Five loaves. Two fish. Five thousand people.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Five loaves. Two fish. Five thousand people.
 
 The disciples did the math. *Eight months' wages wouldn't buy enough bread for each person to have even a bite.*
 
@@ -4633,8 +6035,11 @@ They came to Jesus with the inventory.
 
 They were right about the problem.
 
-**They were wrong about who was standing next to them.**` },
-      { id: 2, label: `The Story`,
+**They were wrong about who was standing next to them.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Jesus said — *have the people sit down.*
 
@@ -4650,8 +6055,13 @@ Not barely enough. *As much as they wanted.*
 
 When they gathered the leftovers — **twelve baskets full.**
 
-More remaining than what they started with.` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The disciples identified what they didn't have. *We only have five loaves and two fish.*
+More remaining than what they started with.`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The disciples identified what they didn't have. *We only have five loaves and two fish.*
 
 Jesus didn't argue with their assessment.
 
@@ -4659,19 +6069,32 @@ Jesus didn't argue with their assessment.
 
 He started with what existed — not what was needed.
 
-That is how He tends to work.
-
 Not with what you wish you had. With *what you actually have.*
 
-**Bring what you have. Let Him do the math.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the five loaves were enough.
+**Bring what you have. Let Him do the math.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the five loaves were enough.
 
 Not because the math worked out — it didn't, by the disciples' own calculation. Jesus took what little they had, gave thanks for it before it multiplied, and started handing it out before there was any evidence it would be enough.
 
 Because He was there.
 
-*Bring what you have.*`, practiceToday: `Remember [name] — Jesus started with what existed. He gave thanks for it first.\n\nToday — bring the small thing. The insufficient thing. The five loaves version of what you have.\n\nGive thanks for it. Then hand it over.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You start with what exists — not what's ideal.
+*Bring what you have.*`,
+        practiceToday: `Remember [name] — Jesus started with what existed. He gave thanks for it first.
+
+Today — bring the small thing. The insufficient thing. The five loaves version of what you have.
+
+Give thanks for it. Then hand it over.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You start with what exists — not what's ideal.
 
 Thank You that what I bring to You comes back as more than I started with.
 
@@ -4679,7 +6102,8 @@ Help me to bring what I actually have today — not wait until I have more.
 
 Take it. Give thanks. Multiply it.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4689,9 +6113,14 @@ In Jesus' name, Amen.` },
     title: `To God Be The Glory`,
     scripture: `Psalm 115:1 - Not to us, Lord, but to your name be the glory.`,
     illustrationPrompt: `sky clouds`,
-    teaser: `To God be the glory, great things He hath done.\nFanny Crosby wrote it in 1872.\nShe never knew it would become famous.\nNeither did anyone in America for nearly 80 years.`,
+    teaser: `To God be the glory, great things He hath done.
+Fanny Crosby wrote it in 1872.
+She never knew it would become famous.
+Neither did anyone in America for nearly 80 years.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `*To God be the glory, great things He hath done.*
 *So loved He the world that He gave us His Son.*
@@ -4702,42 +6131,49 @@ It was popular in Britain. Used in Moody's crusades there.
 
 But the woman who wrote it lived and died without knowing it would become one of the most beloved hymns in history.
 
-**And she wrote it anyway.**` },
-      { id: 2, label: `The Story`,
+**And she wrote it anyway.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `In 1954 Billy Graham's team was preparing for a crusade.
 
 Someone handed them the sheet music for a hymn that had been popular in Britain.
 
-Frances Havergal once described Fanny — *She is a blind lady whose heart can see splendidly in the sunshine of God's love.*
+A contemporary poet named Frances Havergal — herself a hymn writer — once described her: *She is a blind lady whose heart can see splendidly in the sunshine of God's love.*
 
 A woman who couldn't see the world wrote hymns that helped the world see God.
 
-*And she gave all the glory away before she ever knew the hymn was famous.*` },
-      { id: 3, label: `The Turn`,
+*And she gave all the glory away before she ever knew the hymn was famous.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
-        body: `Most of Fanny's hymns were about personal experience.
-
-**It is not about her at all.**
-
-It is entirely about God.
-
-*To God be the glory. Great things He hath done.*
-
-She wrote it as a pure act of worship — not testimony, not petition.
-
-Just — *He is glorious. He is worthy. He did great things.*
-
-**That is the clearest kind of worship.**
-
-The kind that doesn't need anything back.` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Fanny wrote this hymn and never knew what it became, [name].
+        body: `Most of Fanny's hymns were written in the first person — testimony, petition, personal experience. This one isn't. *To God Be The Glory* is entirely about God. No Fanny in it at all. Just — He is worthy.`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `Fanny wrote this hymn and never knew what it became, [name].
 
 Unknown in America for nearly 80 years, popular only in Britain in her lifetime, she gave all the glory away on paper before she ever knew the hymn was famous — because the glory was never about her seeing the outcome.
 
 *Praise the Lord, praise the Lord,*
-***Give Him the glory — great things He hath done.***`, practiceToday: `Remember [name] — Fanny gave the glory away before she knew the outcome.\n\nToday — do one thing for God without needing to know what comes of it.\n\nGive the glory away.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for what You have done.
+***Give Him the glory — great things He hath done.***`,
+        practiceToday: `Remember [name] — Fanny gave the glory away before she knew the outcome.
+
+Today — do one thing for God without needing to know what comes of it.
+
+Give the glory away.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for what You have done.
 
 Thank You that You are worthy of glory regardless of whether I can see the full picture yet.
 
@@ -4745,7 +6181,8 @@ Help me to worship You today without needing anything back.
 
 To You be the glory. Great things You have done.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4755,22 +6192,29 @@ In Jesus' name, Amen.` },
     title: `For God So Loved the World — What You've Been Missing`,
     scripture: `John 3:16 - For God so loved the world that he gave his one and only Son.`,
     illustrationPrompt: `stars space`,
-    teaser: `The most famous verse in the Bible.\n\nSo familiar that most people stopped reading it years ago.\n\nThere are two words in it that most people have never fully absorbed.`,
+    teaser: `The most famous verse in the Bible.
+
+So familiar that most people stopped reading it years ago.
+
+There are two words in it that most people have never fully absorbed.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
-        body: `The most famous verse in the Bible.
+        body: `The word *so* in John 3:16 is the Greek word *houtos.*
 
-You've seen it on signs at football games. On bumper stickers. In hotel room drawers.
+It means — in this way. To this extent.
 
-**So familiar that most people stopped reading it years ago.**
+**The giving is the definition of the loving.**
 
-But there are two words in it that most people have never fully absorbed.
+God didn't just love the world. God loved it *like this* —
 
-The word *so* in Greek is *houtos* — meaning *in this way.* To this extent.
-
-**The giving is the definition of the loving.**` },
-      { id: 2, label: `The Story`,
+*that He gave His one and only Son.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Jesus said this to Nicodemus — a religious leader who came to Him at night. Secretly.
 
@@ -4782,8 +6226,11 @@ And then — in explaining what that means — He said this.
 
 **He was describing the cross. Before it happened.**
 
-*The giving was always going to be this.*` },
-      { id: 3, label: `The Turn`,
+*The giving was always going to be this.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `*The world* in this verse is not a category of good people.
 
@@ -4797,15 +6244,30 @@ Not — gave with conditions. Not — gave to those who would appreciate it prop
 
 Not the especially sincere. Not the consistent.
 
-*Whoever.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], whoever includes you.
+*Whoever.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], whoever includes you.
 
 Not the especially sincere, not the consistent ones who never missed a day — the single most inclusive word available was the one God chose, deliberately, to describe who the giving was for.
 
 Specifically. Right now. In whatever condition.
 
-*You are the whoever.*`, practiceToday: `Remember [name] — whoever is doing enormous work in that verse. It's the most inclusive word in scripture.\n\nToday — say the verse with your name in it. For God so loved [name] that He gave.\n\nLet it be personal. It was meant to be.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the way You loved — not just that You loved.
+*You are the whoever.*`,
+        practiceToday: `Remember [name] — whoever is doing enormous work in that verse. It's the most inclusive word in scripture.
+
+Today — say the verse with your name in it. For God so loved [name] that He gave.
+
+Let it be personal. It was meant to be.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for the way You loved — not just that You loved.
 
 Thank You that whoever means me — right now, in this condition.
 
@@ -4813,7 +6275,8 @@ Help me to receive the fullness of what that verse actually says.
 
 I believe in Him.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4823,9 +6286,15 @@ In Jesus' name, Amen.` },
     title: `Can God Still Love Me After What I've Done?`,
     scripture: `Romans 8:38-39 - Nothing will separate us from the love of God.`,
     illustrationPrompt: `blue sky clouds`,
-    teaser: `Paul lists everything he can think of that might separate you from God's love.\n\nThen says none of it can.\n\nNotice what's on the list.`,
+    teaser: `Paul lists everything he can think of that might separate you from God's love.
+
+Then says none of it can.
+
+Notice what's on the list.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `Paul lists everything he can think of that might separate you from the love of God.
 
@@ -4837,8 +6306,11 @@ Things that have already happened. Things happening now.
 
 And then he says — none of it.
 
-*None of it will be able to separate us.*` },
-      { id: 2, label: `The Story`,
+*None of it will be able to separate us.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Paul wrote this after cataloguing everything he had suffered.
 
@@ -4850,8 +6322,11 @@ And from that place he wrote — **I am convinced.**
 
 **He had tested the love against the worst the world had — and the love had held.**
 
-*Nothing had separated him.*` },
-      { id: 3, label: `The Turn`,
+*Nothing had separated him.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `The question *can God still love me after what I've done* assumes that what you've done is the determining factor.
 
@@ -4865,15 +6340,28 @@ What you did is part of creation.
 
 **It is on the list.**
 
-And Paul says it cannot separate you.` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], what you've done is on the list.
+And Paul says it cannot separate you.`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], what you've done is on the list.
 
 Paul named everything he could think of — death, life, angels, demons, height, depth, anything else in all creation — and then said none of it, including the worst thing you've ever done, can separate you from this.
 
-*And the list says none of it.*
+*And the list says none of it.*`,
+        practiceToday: `Remember [name] — Paul said anything else in all creation. What you've done is part of creation. It's on the list.
 
-Nothing can separate you from the love of God.`, practiceToday: `Remember [name] — Paul said anything else in all creation. What you've done is part of creation. It's on the list.\n\nToday — say it out loud. Nothing can separate me from the love of God.\n\nSay it until you start to believe it.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for Romans 8:38-39 and how thorough it is.
+Today — say it out loud. Nothing can separate me from the love of God.
+
+Say it until you start to believe it.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for Romans 8:38-39 and how thorough it is.
 
 Thank You that what I've done is on the list — and the list says none of it separates me.
 
@@ -4881,7 +6369,8 @@ Help me to believe what Paul was convinced of.
 
 Nothing can separate me from Your love.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4891,9 +6380,15 @@ In Jesus' name, Amen.` },
     title: `Paul — The Man God Used Despite Everything`,
     scripture: `1 Corinthians 15:9-10 - By the grace of God I am what I am.`,
     illustrationPrompt: `sunrise road`,
-    teaser: `Paul never forgot what he had been.\n\nHe referenced it regularly. Not for sympathy.\n\nBecause the distance between what he had been and what he became was the whole argument for grace.`,
+    teaser: `Paul never forgot what he had been.
+
+He referenced it regularly. Not for sympathy.
+
+Because the distance between what he had been and what he became was the whole argument for grace.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `Paul never forgot what he had been.
 
@@ -4905,8 +6400,11 @@ Not past tense in the forgetful way. **Present tense in the remembering way.**
 
 *But by the grace of God — I am what I am.*
 
-*What I was. What I am now. Grace is the only explanation.*` },
-      { id: 2, label: `The Story`,
+*What I was. What I am now. Grace is the only explanation.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Before his conversion Paul was Saul.
 
@@ -4918,8 +6416,13 @@ He was heading to Damascus to arrest more when the light struck him blind and Je
 
 Not after he had reflected and decided to change. Not after a better moment.
 
-**Grace didn't wait for a better moment. It intercepted him in the middle of the worst one.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Paul's story was designed to be a proof.
+**Grace didn't wait for a better moment. It intercepted him in the middle of the worst one.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Paul's story was designed to be a proof.
 
 *For this very reason I was shown mercy — so that in me, the worst of sinners, Christ might display his immense patience as an example.*
 
@@ -4931,15 +6434,30 @@ Paul's story is the direct rebuttal.
 
 If grace reached Saul on the road to Damascus — it reaches anyone anywhere in the middle of anything.
 
-*By the grace of God I am what I am.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], Paul was the proof of concept.
+*By the grace of God I am what I am.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], Paul was the proof of concept.
 
 A man who hunted Christians down, intercepted mid-mission on the road to do more of it — grace didn't wait for a better moment to reach him, and it was not without effect once it did.
 
 The worst case. And grace was not without effect in him.
 
-*By the grace of God — I am what I am. That's available to you.*`, practiceToday: `Remember [name] — by the grace of God I am what I am. Paul held the before and after together.\n\nToday — think about who you were before and who you are becoming.\n\nGrace is the distance between those two things. Name it.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for Paul's story and what it proves.
+*By the grace of God — I am what I am.*`,
+        practiceToday: `Remember [name] — by the grace of God I am what I am. Paul held the before and after together.
+
+Today — think about who you were before and who you are becoming.
+
+Grace is the distance between those two things. Name it.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for Paul's story and what it proves.
 
 Thank You that grace intercepted him on the road — in the middle of the worst moment.
 
@@ -4947,7 +6465,8 @@ Help me to believe that grace can reach me wherever I am right now.
 
 By the grace of God — I am what I am. And the grace is not without effect.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -4957,20 +6476,31 @@ In Jesus' name, Amen.` },
     title: `The Kingdom Is Upside Down`,
     scripture: `Matthew 5:3 - Blessed are the poor in spirit, theirs is the kingdom of heaven.`,
     illustrationPrompt: `blue sky horizon`,
-    teaser: `The Beatitudes are the most counterintuitive statements Jesus ever made.\n\nBlessed are the poor in spirit. The mourning. The meek.\n\nThis is not how the world works. That's the point.`,
+    teaser: `The Beatitudes are the most counterintuitive statements Jesus ever made.
+
+Blessed are the poor in spirit. The mourning. The meek.
+
+This is not how the world works. That's the point.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `The Beatitudes are the most counterintuitive statements Jesus ever made.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Jesus looked at a crowd of ordinary people.
 
-*Blessed are the poor in spirit. Blessed are those who mourn. Blessed are the meek.*
+Tired people. Struggling people. People who didn't have it together.
 
-**This is not how the world works.**
+**And He said — blessed.**
 
-The world blesses the confident. The successful. The ones who have it together.
+*Blessed are the poor in spirit.*
 
-Jesus looked at a crowd of ordinary people and said — **blessed are the ones who know they don't.**
+Not the confident. Not the ones who had figured it out.
 
-*That is the upside down kingdom.*` },
-      { id: 2, label: `The Story`,
+*The empty ones.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `*Poor in spirit* doesn't mean financially poor.
 
@@ -4984,8 +6514,13 @@ Not — this is a state you need to get out of quickly.
 
 Present tense. Right now. In the emptiness.
 
-**The kingdom belongs to the empty ones.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The world tells you that emptiness is a problem to fix.
+**The kingdom belongs to the empty ones.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The world tells you that emptiness is a problem to fix.
 
 That the goal is to be strong, certain, sufficient.
 
@@ -4997,15 +6532,30 @@ Full people don't need filling.
 
 *The poor in spirit are the ones who know they need what only God can give.*
 
-**That need is not a failure. It is the entrance.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the emptiness is the entrance.
+**That need is not a failure. It is the entrance.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the emptiness is the entrance.
 
 Full people don't need filling. The poor in spirit Jesus called blessed were the ones who had run out of their own resources entirely — and the kingdom was promised to them in the present tense, not someday once they fixed it.
 
 Not the thing you need to overcome before you qualify.
 
-*Blessed are the poor in spirit. That might be you today.*`, practiceToday: `Remember [name] — poor in spirit means out of your own resources. Empty. And Jesus says blessed.\n\nToday — name the area where you're empty. Where you've run out.\n\nBring the emptiness. That's the entrance.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the upside-down kingdom.
+*Blessed are the poor in spirit. That might be you today.*`,
+        practiceToday: `Remember [name] — poor in spirit means out of your own resources. Empty. And Jesus says blessed.
+
+Today — name the area where you're empty. Where you've run out.
+
+Bring the emptiness. That's the entrance.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for the upside-down kingdom.
 
 Thank You that the emptiness is not disqualifying — it's the entrance.
 
@@ -5013,7 +6563,8 @@ Help me to bring the poverty of spirit today instead of pretending I have more t
 
 I am poor in spirit. I need what only You can give.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5023,9 +6574,17 @@ In Jesus' name, Amen.` },
     title: `He Prayed For Us`,
     scripture: `John 17:20 - I pray also for those who will believe in me.`,
     illustrationPrompt: `night sky stars`,
-    teaser: `The night before the cross Jesus prayed.\n\nNot just for the disciples in the room.\n\nFor everyone who would ever believe because of their message.\n\nThat includes you.`,
+    teaser: `The night before the cross Jesus prayed.
+
+Not just for the disciples in the room.
+
+For everyone who would ever believe because of their message.
+
+That includes you.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `The night before the cross Jesus prayed.
 
@@ -5037,8 +6596,13 @@ And then He said — *my prayer is not for them alone.*
 
 Two generations away. Ten generations. Twenty.
 
-**He prayed for you. Two thousand years before you were born.**` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `The prayer is specific.
+**He prayed for you. Two thousand years before you were born.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `The prayer is specific.
 
 He prays that future believers would be one. As He and the Father are one.
 
@@ -5052,28 +6616,46 @@ Not to be remembered by them.
 
 *To be in them.*
 
-The intimacy He describes for future believers — for you — is the same intimacy He has with the Father.` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Jesus knew what the next twelve hours held.
+The intimacy He describes for future believers — for you — is the same intimacy He has with the Father.`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Jesus knew what the next twelve hours held.
 
 The arrest. The trial. The cross.
 
-And in the hours before all of it — **He prayed for you.**
+**And He prayed for you.**
 
-Not — He thought about you. Not — He included you in a general blessing.
-
-He prayed. Specifically. For the ones who would come after.
+Specifically. For the ones who would come after.
 
 Which means before you ever prayed your first prayer —
 
-**You had already been prayed for.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], He prayed for you that night.
+*you had already been prayed for.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], He prayed for you that night.
 
 Two thousand years before you were born, the night before the cross, with the arrest and the trial and the weight of everything coming hours away — He used some of that time specifically for the people who would come after.
 
 The night before He died.
 
-*You were already in the prayer.*`, practiceToday: `Remember [name] — Jesus prayed for you before you existed. Before your first doubt. Before your first failure.\n\nToday — let that land. Sit with it for a moment.\n\nYou were already in the prayer.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that Jesus prayed for me the night before the cross.
+*You were already in the prayer.*`,
+        practiceToday: `Remember [name] — Jesus prayed for you before you existed. Before your first doubt. Before your first failure.
+
+Today — let that land. Sit with it for a moment.
+
+You were already in the prayer.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that Jesus prayed for me the night before the cross.
 
 Thank You that I was in the prayer before I ever prayed one of my own.
 
@@ -5081,7 +6663,8 @@ Help me to receive the intimacy He was asking for — that He would be in me.
 
 I want what He was praying for.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5091,9 +6674,15 @@ In Jesus' name, Amen.` },
     title: `Grace Means Keep Living However You Want`,
     scripture: `Romans 6:1-2 - We are those who have died to sin.`,
     illustrationPrompt: `sunrise sky`,
-    teaser: `Paul anticipated this objection.\n\nIf grace covers everything — why change anything?\n\nHe answered it directly. And the answer is not what most people expect.`,
+    teaser: `Paul anticipated this objection.
+
+If grace covers everything — why change anything?
+
+He answered it directly. And the answer is not what most people expect.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `Paul anticipated this objection before anyone raised it.
 
@@ -5107,8 +6696,11 @@ It is a question.
 
 *By no means. We are those who have died to sin — how can we live in it any longer?*
 
-*Not — you'd better not. How can we?*` },
-      { id: 2, label: `The Story`,
+*Not — you'd better not. How can we?*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Paul's argument is about identity — not rules.
 
@@ -5120,8 +6712,13 @@ Going back to sin is not just choosing something bad — it is choosing to live 
 
 *You can try. But you were made for something different now.*
 
-**The grace didn't just forgive the old self. It created a new one.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Grace is not permission to stay the same.
+**The grace didn't just forgive the old self. It created a new one.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Grace is not permission to stay the same.
 
 **It is power to become something different.**
 
@@ -5135,15 +6732,30 @@ Not — I can do whatever I want because I'm covered.
 
 That is the transformation grace produces.
 
-*Not rule-following. A changed want.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], grace didn't just forgive you.
+*Not rule-following. A changed want.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], grace didn't just forgive you.
 
 Paul's argument was never about willpower or rule-following — it was about a death and a resurrection that made the old self someone you no longer are, which means the wanting itself can actually change, not just the behavior.
 
 It made you someone new.
 
-*How can we live in it any longer? That question is yours now.*`, practiceToday: `Remember [name] — Paul's question is how can we? Not you'd better not.\n\nToday — ask yourself honestly. In the area you keep returning to.\n\nHow can I? I'm not who I used to be.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that grace does more than forgive — it transforms.
+*How can we live in it any longer? That question is yours now.*`,
+        practiceToday: `Remember [name] — Paul's question is how can we? Not you'd better not.
+
+Today — ask yourself honestly. In the area you keep returning to.
+
+How can I? I'm not who I used to be.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that grace does more than forgive — it transforms.
 
 Thank You that I am not who I used to be.
 
@@ -5151,7 +6763,8 @@ Help me to live from that new identity today — not from the old one.
 
 Change what I want. That's what grace is supposed to produce.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5161,22 +6774,33 @@ In Jesus' name, Amen.` },
     title: `The Version of Me That Shows Up Consistently`,
     scripture: `Lamentations 3:22-23 - His mercies are new every morning.`,
     illustrationPrompt: `sunrise field`,
-    teaser: `Most people have a version of themselves they're trying to become.\n\nThe consistent one. The disciplined one.\n\nThat version is not the point.`,
+    teaser: `Most people have a version of themselves they're trying to become.
+
+The consistent one. The disciplined one.
+
+That version is not the point.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
-        body: `Most people have a version of themselves they're trying to become.
+        body: `You got close. Then missed a day.
 
-The consistent one. The disciplined one. The one who never misses a day.
+Then it had been a week and starting over felt embarrassing.
 
-**That version is always slightly out of reach.**
+**So you waited until Monday. Then the first of the month. Then the new year.**
 
-You get close. Then miss a day. Then it's been a week and starting over feels embarrassing.
+Jeremiah wrote from the ruins of everything.
 
-*Until the guilt accumulates enough and you try again.*
+*His mercies are new every morning.*
 
-**This is the cycle. And it is built on a completely wrong foundation.**` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `Lamentations is written in the ruins.
+Not every Monday. *Every morning.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `Lamentations is written in the ruins.
 
 Jerusalem had been destroyed. Everything the people built their identity on — gone.
 
@@ -5188,28 +6812,44 @@ And Jeremiah wrote — **His mercies are new every morning.**
 
 Not a continuation of yesterday's performance.
 
-*A new beginning. Regardless of what yesterday was.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The consistent version of you is not the goal.
+*A new beginning. Regardless of what yesterday was.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The goal is not the streak.
 
-**The present version — showing up today — is the goal.**
+**The goal is today.**
 
-Consistency is built one day at a time. Not as a streak to maintain but as a series of individual choices to begin again.
+One day at a time. Not as a performance to maintain but as a single choice to begin again.
 
-The mercy that is new every morning means every morning is a new chance.
+The mercy that is new every morning means every morning is a fresh start.
 
-Not — to make up for yesterday.
-
-*Just to be here today.*
-
-**That is always enough.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], this morning counted as a new one.
+*Just today. That is always enough.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], this morning counted as a new one.
 
 Not a continuation of yesterday's streak, not a reward for consistency you didn't manage to keep — a beginning, the same as every morning before it, regardless of how many days you missed getting here.
 
 You're here.
 
-*That's the whole thing.*`, practiceToday: `Remember [name] — new every morning means today is a beginning. Not a continuation of yesterday's failure.\n\nToday — just today. Not the streak. Not the version of yourself you're trying to become.\n\nJust show up today. That's enough.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that this morning is new.
+*That's the whole thing.*`,
+        practiceToday: `Remember [name] — new every morning means today is a beginning. Not a continuation of yesterday's failure.
+
+Today — just today. Not the streak. Not the version of yourself you're trying to become.
+
+Just show up today. That's enough.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that this morning is new.
 
 Thank You that I don't have to be the consistent version of myself before You receive me.
 
@@ -5217,7 +6857,8 @@ Help me to just show up today — not perform, not maintain a streak.
 
 Just be here. That's what I'm doing.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5227,21 +6868,31 @@ In Jesus' name, Amen.` },
     title: `How Great Thou Art`,
     scripture: `Psalm 8:3-4 - When I consider your heavens, what is mankind that you are mindful of them.`,
     illustrationPrompt: `stars night sky`,
-    teaser: `O Lord my God, when I in awesome wonder\nConsider all the worlds Thy hands have made.\nCarl Boberg wrote those words in Swedish in 1885.\nHe had no idea what he had started.`,
+    teaser: `O Lord my God, when I in awesome wonder
+Consider all the worlds Thy hands have made.
+Carl Boberg wrote those words in Swedish in 1885.
+He had no idea what he had started.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `*O Lord my God, when I in awesome wonder*
 *Consider all the worlds Thy hands have made.*
 
-In 1885 a 26-year-old Swedish pastor named Carl Boberg was walking home from church.
+In 1885 a young Swedish pastor named Carl Boberg was walking home from church when a violent storm came in from the sea.
 
-Then just as quickly — it passed. The birds returned. Church bells rang.
+Lightning. Thunder. Driving rain.
+
+**Then just as quickly — it passed.** The birds returned. The church bells rang across the water.
 
 Boberg stood at his window in the sudden calm and something broke open in him.
 
-*He had no intention of writing a hymn.*` },
-      { id: 2, label: `The Story`,
+*He had no intention of writing a hymn.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `A few years later Boberg attended a church service and heard a congregation singing his poem — someone had set it to a Swedish folk tune without telling him.
 
@@ -5253,8 +6904,13 @@ He never knew that in 1957 at a Billy Graham crusade his hymn would be sung 99 t
 
 He wrote a poem about a thunderstorm and submitted it to a local newspaper.
 
-*God took it from there.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The Psalmist asks the same question Boberg's poem asks.
+*God took it from there.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The Psalmist asks the same question Boberg's poem asks.
 
 *When I consider your heavens — what is mankind that you are mindful of them?*
 
@@ -5266,14 +6922,29 @@ And He is *mindful of you.*
 
 Specifically. By name.
 
-*That is the thing that produces worship.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Boberg watched a storm pass and had to write something down, [name].
+*That is the thing that produces worship.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `Boberg watched a storm pass and had to write something down, [name].
 
 A poem about a thunderstorm submitted to a local newspaper, never intended as a hymn, traveled through four languages over sixty years until it reached a stage he never lived to see.
 
 *I see the stars, I hear the rolling thunder —*
-***Then sings my soul, my Saviour God to Thee: how great Thou art.***`, practiceToday: `Remember [name] — Boberg's worship started with paying attention. A storm. A clearing sky. Birds singing.\n\nToday — find one thing in the natural world and actually look at it.\n\nLet it do what it did for Boberg. Then sings my soul.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the storm and the calm that follows it.
+***Then sings my soul, my Saviour God to Thee: how great Thou art.***`,
+        practiceToday: `Remember [name] — Boberg's worship started with paying attention. A storm. A clearing sky. Birds singing.
+
+Today — find one thing in the natural world and actually look at it.
+
+Let it do what it did for Boberg. Then sings my soul.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for the storm and the calm that follows it.
 
 Thank You that You made everything and You are still mindful of me.
 
@@ -5281,7 +6952,8 @@ Help me to notice what You've made today — and let it produce worship.
 
 How great Thou art. I mean that.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5291,9 +6963,15 @@ In Jesus' name, Amen.` },
     title: `Seek First the Kingdom — What Jesus Was Actually Asking`,
     scripture: `Matthew 6:33 - Seek first his kingdom, all these things will be given to you.`,
     illustrationPrompt: `sunrise sky`,
-    teaser: `This verse is often quoted as a promise about provision.\n\nIf you seek first — God will take care of the rest.\n\nThat's true. But it misses what Jesus meant by seeking first.`,
+    teaser: `This verse is often quoted as a promise about provision.
+
+If you seek first — God will take care of the rest.
+
+That's true. But it misses what Jesus meant by seeking first.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `*Seek first His kingdom and His righteousness — and all these things will be given to you as well.*
 
@@ -5303,8 +6981,13 @@ He had just spent the previous verses talking about anxiety. About worrying over
 
 Not — seek first and then you'll get what you were grasping for.
 
-*Seek first — and the grasping becomes unnecessary.*` },
-      { id: 2, label: `The Story`, isPrayer: false, body: `Jesus points to birds and flowers.
+*Seek first — and the grasping becomes unnecessary.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
+        isPrayer: false,
+        body: `Jesus points to birds and flowers.
 
 *Your heavenly Father knows that you need all these things.*
 
@@ -5316,8 +6999,13 @@ It is a reorientation of the whole way you move through the world.
 
 **From anxious grasping — to trusting pursuit.**
 
-*The things that cause anxiety become secondary — not because they don't matter but because you trust who is holding them.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Seeking first means orienting your whole life toward God's kingdom — not just the morning quiet time.
+*The things that cause anxiety become secondary — not because they don't matter but because you trust who is holding them.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Seeking first means orienting your whole life toward God's kingdom — not just the morning quiet time.
 
 **Not — spend time with God and then go back to normal anxious living.**
 
@@ -5325,17 +7013,30 @@ It is a posture. A direction. The way you lean when life is uncertain.
 
 *Toward God. First.*
 
-Because **the one seeking His kingdom has a foundation that anxious grasping cannot provide.**
-
-*Seek first — and the anxiety loosens its grip.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], seek first is not about the list.
+Because **the one seeking His kingdom has a foundation that anxious grasping cannot provide.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], seek first is not about the list.
 
 It's not a transaction where God handles the rest once He's checked off first place — it's a direction, a posture, the way you lean before the anxiety even has a chance to take hold of what comes next.
 
 Face toward Him. First. Today.
 
-*Everything else follows from there.*`, practiceToday: `Remember [name] — seek first is a direction not a transaction.\n\nToday — before the to-do list. Before the phone. Face toward God.\n\nOne minute. That's seeking first. Everything else follows.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that seek first is an invitation — not a transaction.
+*Everything else follows from there.*`,
+        practiceToday: `Remember [name] — seek first is a direction not a transaction.
+
+Today — before the to-do list. Before the phone. Face toward God.
+
+One minute. That's seeking first. Everything else follows.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that seek first is an invitation — not a transaction.
 
 Thank You that orienting toward You is its own reward.
 
@@ -5343,7 +7044,8 @@ Help me to face toward You today before I face everything else.
 
 You know what I need. I'm seeking You first.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5353,9 +7055,17 @@ In Jesus' name, Amen.` },
     title: `For the Grieving`,
     scripture: `Psalm 34:18 - The Lord is close to the brokenhearted.`,
     illustrationPrompt: `mountains mist`,
-    teaser: `Not every night needs a lesson.\n\nSome nights just need the truth that God is close.\n\nEspecially the brokenhearted ones.`,
+    teaser: `Not every night needs a lesson.
+
+Some nights just need the truth that God is close.
+
+Especially the brokenhearted ones.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Not every night needs a lesson.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Not every night needs a lesson.
 
 Some nights the weight of loss is the only thing in the room.
 
@@ -5367,8 +7077,11 @@ Not — the Lord will fix the brokenhearted.
 
 *Close.*
 
-**In the room with the grief.**` },
-      { id: 2, label: `The Story`,
+**In the room with the grief.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `David wrote this psalm from a place of genuine danger.
 
@@ -5382,8 +7095,11 @@ And David — who knew loss, who knew grief — said it from experience.
 
 Not watching from a safe distance while you grieve.
 
-*In the grief.*` },
-      { id: 3, label: `The Turn`,
+*In the grief.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `There is nothing to learn today. No application. No three steps.
 
@@ -5395,15 +7111,30 @@ That the grief you feel is not felt alone. That the broken heart is the very pla
 
 The crushing is not the absence of God.
 
-*It is the place of His nearness.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Today, [name].
+*It is the place of His nearness.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `Today, [name].
 
 The Lord is close to the brokenhearted — not fixing first, not explaining first, just close, present in the room with the grief the same way David found Him present in his own. There is nothing else to learn today.
 
 **He is close.**
 
-*Right here. In this. You are not grieving alone.*`, practiceToday: `Remember [name] — close means present. In the room. In the grief.\n\nToday — you don't have to do anything. Just let Him be close.\n\nSit in it. You're not alone in it.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for being close — not distant — in the broken places.
+*Right here. In this. You are not grieving alone.*`,
+        practiceToday: `Remember [name] — close means present. In the room. In the grief.
+
+Today — you don't have to do anything. Just let Him be close.
+
+Sit in it. You're not alone in it.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for being close — not distant — in the broken places.
 
 Thank You that grief is not the absence of You but the place of Your nearness.
 
@@ -5411,7 +7142,8 @@ Be close today. I need that more than answers.
 
 I am not grieving alone.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5421,9 +7153,17 @@ In Jesus' name, Amen.` },
     title: `Why Doesn't God Just Fix Everything?`,
     scripture: `2 Corinthians 4:17 - Our troubles are achieving for us an eternal glory.`,
     illustrationPrompt: `sunlight clouds`,
-    teaser: `Paul called his troubles light and momentary.\n\nHe had been beaten five times with thirty-nine lashes. Three times shipwrecked.\n\nThat is the context for this verse.`,
+    teaser: `Paul called his troubles light and momentary.
+
+He had been beaten five times with thirty-nine lashes. Three times shipwrecked.
+
+That is the context for this verse.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Paul called his troubles *light and momentary.*
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Paul called his troubles *light and momentary.*
 
 He had been beaten five times with thirty-nine lashes. Three times beaten with rods. Once stoned. Three times shipwrecked.
 
@@ -5435,8 +7175,11 @@ Not — God allowed it for reasons I don't understand.
 
 *Achieving.*
 
-**Present tense. Active. Productive.**` },
-      { id: 2, label: `The Story`,
+**Present tense. Active. Productive.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `The verse continues — *so we fix our eyes not on what is seen, but on what is unseen. Since what is seen is temporary — but what is unseen is eternal.*
 
@@ -5448,28 +7191,46 @@ The trouble is real. And it is achieving something real.
 
 *An eternal glory that far outweighs them all.*
 
-**He is putting it in its actual context.**` },
-      { id: 3, label: `The Turn`,
+**He is putting it in its actual context.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `God doesn't fix everything immediately because He is working toward something that the immediate fix would interrupt.
 
-**The potter does not remove the clay from the wheel because the clay is uncomfortable with the pressure.**
+Paul experienced this firsthand.
 
-The pressure is what makes it into something.
+Shipwrecks. Beatings. Imprisonment.
 
-Paul experienced this firsthand and arrived at a conclusion only the other side of suffering can produce.
+**And from inside all of it — he arrived at a conclusion.**
 
 Not — it will be okay someday.
 
-**It is working. Right now. Toward something eternal.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the trouble is achieving something.
+*It is working. Right now. Toward something eternal.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the trouble is achieving something.
 
 Paul called beatings, shipwrecks, and stoning *light and momentary* — not because they were small, but because he had learned to fix his eyes on what they were producing rather than only on what they cost.
 
 Right now. In this.
 
-*An eternal glory that far outweighs it all. Paul believed that from inside the shipwreck.*`, practiceToday: `Remember [name] — Paul called his troubles light and momentary after everything he had been through. That came from fixing his eyes on what was unseen.\n\nToday — look past the immediate. What might this be achieving?\n\nYou don't have to see it clearly. Just look in that direction.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that Paul was honest about suffering and confident about what it achieves.
+*An eternal glory that far outweighs it all. Paul believed that from inside the shipwreck.*`,
+        practiceToday: `Remember [name] — Paul called his troubles light and momentary after everything he had been through. That came from fixing his eyes on what was unseen.
+
+Today — look past the immediate. What might this be achieving?
+
+You don't have to see it clearly. Just look in that direction.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that Paul was honest about suffering and confident about what it achieves.
 
 Thank You that the trouble is not wasted — that it is working toward something real.
 
@@ -5477,7 +7238,8 @@ Help me to fix my eyes on what is unseen today.
 
 I trust that something is being achieved.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5487,22 +7249,29 @@ In Jesus' name, Amen.` },
     title: `The Posture of Humility`,
     scripture: `James 4:10 - Humble yourselves before the Lord, and he will lift you up.`,
     illustrationPrompt: `valley sunrise`,
-    teaser: `Humility is one of the most misunderstood virtues in Christianity.\n\nMost people think it means thinking poorly of yourself.\n\nIt doesn't.`,
-    panels: [
-      { id: 1, label: `The Hook`,
-        isPrayer: false,
-        body: `Humility is one of the most misunderstood virtues in Christianity.
+    teaser: `Humility is one of the most misunderstood virtues in Christianity.
 
 Most people think it means thinking poorly of yourself.
 
-Deflecting compliments. Minimizing your abilities.
+It doesn't.`,
+    panels: [
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `James wrote — *humble yourselves before the Lord and He will lift you up.*
 
-**That's not humility. That's false modesty.**
+He wrote it after describing people grasping for status and recognition.
 
-True humility is thinking accurately about yourself.
+Fighting. Striving. Trying to force outcomes.
 
-*Humble yourselves before the Lord — and He will lift you up.*` },
-      { id: 2, label: `The Story`,
+**His prescription wasn't — try harder.**
+
+*Stop trying to do God's job.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `James writes in the context of pride and conflict.
 
@@ -5516,8 +7285,13 @@ Not — work harder. Not — be more strategic.
 
 The decision to stop trying to be the one in control.
 
-**The lifting is His job. Not yours.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The posture of humility is not a crouched, self-deprecating thing.
+**The lifting is His job. Not yours.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The posture of humility is not a crouched, self-deprecating thing.
 
 It is standing straight and looking clearly at what is true.
 
@@ -5529,15 +7303,30 @@ And from that position — not grasping, not striving —
 
 *He lifts.*
 
-**The lifting comes after the humbling. Not because you've earned it. Because you've stopped doing His job.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], stop trying to lift yourself.
+**The lifting comes after the humbling. Not because you've earned it. Because you've stopped doing His job.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], stop trying to lift yourself.
 
 The posture James describes isn't a crouched, self-deprecating thing — it's standing straight and seeing clearly what's true: that you are not God, and that the lifting was always His to do, not yours to manufacture.
 
 That is His job.
 
-*Humble yourself. He will lift you up.*`, practiceToday: `Remember [name] — humility is accurate assessment. Not self-deprecation.\n\nToday — name one area where you've been trying to do God's job. Where you've been forcing instead of trusting.\n\nHand it back. That's the posture.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that humility is honest — not self-deprecating.
+*Humble yourself. He will lift you up.*`,
+        practiceToday: `Remember [name] — humility is accurate assessment. Not self-deprecation.
+
+Today — name one area where you've been trying to do God's job. Where you've been forcing instead of trusting.
+
+Hand it back. That's the posture.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that humility is honest — not self-deprecating.
 
 Thank You that the lifting is Your job and not mine.
 
@@ -5545,7 +7334,8 @@ Help me to humble myself today — to stop grasping for what only You can provid
 
 I give back what I've been trying to control.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5555,9 +7345,15 @@ In Jesus' name, Amen.` },
     title: `The Triumphal Entry`,
     scripture: `Mark 11:9 - Hosanna, blessed is he who comes in the name of the Lord.`,
     illustrationPrompt: `blue sky palm trees`,
-    teaser: `Palm Sunday is usually told as a celebration.\n\nAnd it was.\n\nBut Jesus knew something the crowd didn't know about what week it was.`,
+    teaser: `Palm Sunday is usually told as a celebration.
+
+And it was.
+
+But Jesus knew something the crowd didn't know about what week it was.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `Palm Sunday is usually told as a celebration.
 
@@ -5569,8 +7365,11 @@ And it was a celebration. The crowd was genuinely excited.
 
 He knew that the same crowd cheering *Hosanna* on Sunday would be shouting *Crucify him* by Friday.
 
-**And He rode in anyway.**` },
-      { id: 2, label: `The Story`,
+**And He rode in anyway.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Luke records that as Jesus approached Jerusalem — He wept over it.
 
@@ -5584,8 +7383,13 @@ They were cheering for the wrong thing.
 
 **He was bringing the right thing.**
 
-*He rode in anyway.*` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `The crowd wanted a king who would fix their political problem.
+*He rode in anyway.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `The crowd wanted a king who would fix their political problem.
 
 Jesus was something different.
 
@@ -5599,15 +7403,30 @@ They were shouting the right word for the wrong reason.
 
 Just not the way they expected.
 
-**He always comes to save — just not always the way we're expecting.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], He rode toward what was coming.
+*Just not the way they expected.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], He rode toward what was coming.
 
 Eyes open, weeping over the very city that would call for His death within the week — and He rode in anyway, on a donkey instead of a warhorse, bringing a different kind of salvation than the crowd was shouting for.
 
 Knowing the week.
 
-*And He came anyway. For you.*`, practiceToday: `Remember [name] — Jesus rode toward Jerusalem knowing what the week held. He came anyway.\n\nToday — think about what He was moving toward. For you.\n\nLet that settle. He came anyway.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that Jesus rode toward the cross with His eyes open.
+*And He came anyway. For you.*`,
+        practiceToday: `Remember [name] — Jesus rode toward Jerusalem knowing what the week held. He came anyway.
+
+Today — think about what He was moving toward. For you.
+
+Let that settle. He came anyway.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that Jesus rode toward the cross with His eyes open.
 
 Thank You that He came anyway — knowing the week, knowing the crowd.
 
@@ -5615,7 +7434,8 @@ Help me to receive what He was moving toward on my behalf.
 
 He came for me. Help me to live like I believe that.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5625,9 +7445,15 @@ In Jesus' name, Amen.` },
     title: `Jonah — The Prophet Who Ran`,
     scripture: `Jonah 2:9 - Salvation comes from the Lord.`,
     illustrationPrompt: `ocean sunrise`,
-    teaser: `God told Jonah to go to Nineveh.\n\nJonah boarded a ship going in the exact opposite direction.\n\nWhat happens next is not primarily a story about a fish.`,
+    teaser: `God told Jonah to go to Nineveh.
+
+Jonah boarded a ship going in the exact opposite direction.
+
+What happens next is not primarily a story about a fish.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `God told Jonah to go to Nineveh — the capital of Assyria, Israel's brutal enemy.
 
@@ -5639,8 +7465,11 @@ Not — he struggled and went anyway. Not — he prayed about it and obeyed.
 
 And what happens next is not primarily a story about a fish.
 
-**It is a story about how far God is willing to go to redirect a person who is running the wrong way.**` },
-      { id: 2, label: `The Story`,
+**It is a story about how far God is willing to go to redirect a person who is running the wrong way.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `The storm came. The sailors discovered Jonah was the cause. He told them to throw him overboard.
 
@@ -5654,8 +7483,11 @@ Jonah went. He preached. The city repented. God relented.
 
 Not relieved. Not glad the mission succeeded.
 
-*Furious. Because he had been right that God would show mercy to his enemies.*` },
-      { id: 3, label: `The Turn`,
+*Furious. Because he had been right that God would show mercy to his enemies.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `The book of Jonah ends without resolution.
 
@@ -5669,15 +7501,30 @@ Is it right to be angry when God shows mercy to people you think don't deserve i
 
 *And God's mercy is wider than our preferences.*
 
-**Wider than our enemies list. Wider than what we're willing to accept.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], God went after Jonah when he ran.
+**Wider than our enemies list. Wider than what we're willing to accept.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], God went after Jonah when he ran.
 
 A storm, a fish, three days in the dark before Jonah prayed — God didn't give up on him or send someone else to Nineveh in his place. He went after the one who was running, however far that took.
 
-He didn't give up on him or find someone else.
+He went after the one who was running, however far that took.
 
-*He goes after you too.*`, practiceToday: `Remember [name] — God redirected Jonah through a fish. He's creative about bringing people back.\n\nToday — is there a direction you've been running from? A call you've been avoiding?\n\nTurn around. He's been following you.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that You went after Jonah even when he ran the other way.
+*He goes after you too.*`,
+        practiceToday: `Remember [name] — God redirected Jonah through a fish. He's creative about bringing people back.
+
+Today — is there a direction you've been running from? A call you've been avoiding?
+
+Turn around. He's been following you.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that You went after Jonah even when he ran the other way.
 
 Thank You that You don't give up when I run.
 
@@ -5685,7 +7532,8 @@ Help me to turn around and face the direction You've been calling me toward.
 
 I don't want to end up on the wrong ship.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5695,9 +7543,17 @@ In Jesus' name, Amen.` },
     title: `What I Know Now That I Didn't Know Then`,
     scripture: `Psalm 116:12 - What shall I return to the Lord for all his goodness.`,
     illustrationPrompt: `sunset field`,
-    teaser: `Dear God,\n\nThere are things I know now that I didn't know when I first started following You.\n\nI want to write some of them down.`,
+    teaser: `Dear God,
+
+There are things I know now that I didn't know when I first started following You.
+
+I want to write some of them down.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Dear God,
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Dear God,
 
 There are things I know now that I didn't know when I first started following You.
 
@@ -5709,8 +7565,11 @@ I thought it would get easier. That the longer I followed You the more certain I
 
 It got deeper. Not easier.
 
-*Deeper is better. But nobody told me that going in.*` },
-      { id: 2, label: `The Story`,
+*Deeper is better. But nobody told me that going in.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `I know now that You are faithful in the ordinary days.
 
@@ -5726,14 +7585,13 @@ I know now that the doubts didn't destroy my faith.
 
 The questions I was afraid to ask made me understand more — not less.
 
-*I wish I had asked them sooner.*` },
-      { id: 3, label: `The Turn`,
+*I wish I had asked them sooner.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
-        body: `I'm writing this because the person reading it might be in the part of the story that is before knowing these things.
-
-Where faith feels fragile and doubts feel dangerous.
-
-**I was there.**
+        body: `I was there.
 
 And what I want you to know is that the things that felt like they were going to break everything —
 
@@ -5741,15 +7599,28 @@ The faith held.
 
 Not because I held onto it perfectly.
 
-**Because something held me. And it will hold you too.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `What shall I return to the Lord for all His goodness, [name]?
-
-Just this — the telling of it. The things I know now that I didn't know when I started, written down so someone earlier in the story than me could know it's possible to come out the other side.
+**Because something held me. And it will hold you too.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `What shall I return to the Lord for all His goodness, [name]?
 
 Just this — the telling of it.
 
-*Sincerely, someone further down the road.*`, practiceToday: `Remember [name] — this letter was written so someone else could know it's possible.\n\nToday — think of one thing you know now that you didn't know before.\n\nWrite it down. That's a letter worth writing.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for what the hard seasons taught me that the easy ones couldn't.
+*Sincerely, someone further down the road.*`,
+        practiceToday: `Remember [name] — this letter was written so someone else could know it's possible.
+
+Today — think of one thing you know now that you didn't know before.
+
+Write it down. That's a letter worth writing.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for what the hard seasons taught me that the easy ones couldn't.
 
 Thank You that the door was always open — even when I didn't know it.
 
@@ -5757,7 +7628,8 @@ Help me to pass on what I know to whoever needs to hear it today.
 
 What shall I return to You? The telling of it.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5767,24 +7639,31 @@ In Jesus' name, Amen.` },
     title: `You Have To Feel It To Believe It`,
     scripture: `2 Corinthians 5:7 - We live by faith, not by sight.`,
     illustrationPrompt: `mountains fog`,
-    teaser: `Most people treat their feelings as the most reliable indicator of whether God is real.\n\nWhen they feel His presence — they believe.\n\nPaul had a different framework entirely.`,
+    teaser: `Most people treat their feelings as the most reliable indicator of whether God is real.
+
+When they feel His presence — they believe.
+
+Paul had a different framework entirely.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
-        body: `Most people treat their feelings as the most reliable indicator of whether God is real.
+        body: `Some days the feelings are there. Worship moves you. Prayer feels close.
 
-When worship makes them cry — they believe.
+Some days nothing comes.
 
-When prayer feels warm and close — they believe.
+**And on those days the thought creeps in — if I can't feel it, maybe it isn't real.**
 
-**And when none of that happens — they doubt.**
+Paul had a different framework.
 
-*Paul had a different framework entirely.*
+*We live by faith. Not by sight.*
 
-Not by feeling. **Not by sensation.**
-
-*By faith.*` },
-      { id: 2, label: `The Story`,
+Not by feeling either.`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Paul wrote this describing the distance between what we experience now and what we will experience fully later.
 
@@ -5794,30 +7673,46 @@ Which means faith is designed for the space between what we can see and what is 
 
 The feelings are responses to the faith. Sometimes they come. Sometimes they don't.
 
-**But the faith — the actual trust in what is true — is not dependent on the feeling arriving.**` },
-      { id: 3, label: `The Turn`,
+**But the faith — the actual trust in what is true — is not dependent on the feeling arriving.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `You can believe without feeling it.
-
-That is not a consolation prize for people with weak emotional responses.
-
-Trust in what is true when you can't see it or feel it.
 
 The disciples believed in the resurrection before they felt joy about it.
 
 *They believed on the basis of the empty tomb — not on the basis of a feeling.*
 
-**You don't have to feel close to God to be close to God.**
+The feeling came later. Sometimes much later.
 
-*Live by faith. Not by feeling.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the feeling is not the faith.
+**The faith didn't wait for it.**
+
+*Live by faith. Not by feeling.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the feeling is not the faith.
 
 The disciples believed in the resurrection on the basis of an empty tomb before they ever felt the joy of it — the feeling came later, sometimes much later, but the faith didn't wait around for the feeling to show up first.
 
 The faith is the trust.
 
-*You can trust without feeling. That's not weak faith. That's how it works.*`, practiceToday: `Remember [name] — faith is trust in what is true when you can't see or feel it.\n\nToday — choose to trust one specific thing about God regardless of how you feel.\n\nThat choice is faith. It counts.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that faith is trust — not feeling.
+*You can trust without feeling. That's not weak faith. That's how it works.*`,
+        practiceToday: `Remember [name] — faith is trust in what is true when you can't see or feel it.
+
+Today — choose to trust one specific thing about God regardless of how you feel.
+
+That choice is faith. It counts.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that faith is trust — not feeling.
 
 Thank You that I can believe even when I don't feel it.
 
@@ -5825,7 +7720,8 @@ Help me to live by faith today — not by whatever my feelings tell me about You
 
 I trust what is true even when I can't feel it.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5835,9 +7731,14 @@ In Jesus' name, Amen.` },
     title: `Rock of Ages`,
     scripture: `1 Corinthians 10:4 - That rock was Christ.`,
     illustrationPrompt: `mountains rocks`,
-    teaser: `Rock of Ages, cleft for me,\nLet me hide myself in Thee.\nAugustus Toplady wrote those words and died at 38.\nBut he understood something about grace that most people spend a lifetime missing.`,
+    teaser: `Rock of Ages, cleft for me,
+Let me hide myself in Thee.
+Augustus Toplady wrote those words and died at 38.
+But he understood something about grace that most people spend a lifetime missing.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `*Rock of Ages, cleft for me,*
 *Let me hide myself in Thee.*
@@ -5848,8 +7749,11 @@ He was converted at 16 listening to an uneducated preacher in a barn in Ireland.
 
 The legend says he wrote the first lines sheltering in a rock cleft during a storm.
 
-**He was not describing shelter from a storm. He was describing the only shelter that matters.**` },
-      { id: 2, label: `The Story`,
+**He was not describing shelter from a storm. He was describing the only shelter that matters.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Toplady died of tuberculosis at 38.
 
@@ -5863,8 +7767,11 @@ And from that hiding place — he had peace that his body was failing at 38.
 
 He arrived at the end with nothing in his hands.
 
-*And he was not afraid.*` },
-      { id: 3, label: `The Turn`,
+*And he was not afraid.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `The rock Toplady was describing is not effort.
 
@@ -5878,14 +7785,29 @@ The hiding place is not your goodness.
 
 That is the whole thing. For everyone who has come with nothing in their hands.
 
-*That is enough.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Toplady died at 38 with nothing in his hands, [name] — and was not afraid.
+*That is enough.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `Toplady died at 38 with nothing in his hands, [name] — and was not afraid.
 
 No performance to point to, no record of consistency to lean on at the end. Just the cross he had spent his whole short life clinging to, which turned out to be enough the entire time.
 
 *Nothing in my hand I bring,*
-***Simply to Thy cross I cling.***`, practiceToday: `Remember [name] — Toplady arrived at the end with nothing in his hands. And was not afraid.\n\nToday — put down whatever you've been trying to bring. The performance. The record.\n\nSimply to Thy cross I cling. That's enough.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for a hiding place that doesn't require me to earn it.
+***Simply to Thy cross I cling.***`,
+        practiceToday: `Remember [name] — Toplady arrived at the end with nothing in his hands. And was not afraid.
+
+Today — put down whatever you've been trying to bring. The performance. The record.
+
+Simply to Thy cross I cling. That's enough.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for a hiding place that doesn't require me to earn it.
 
 Thank You that simply clinging to the cross is enough.
 
@@ -5893,7 +7815,8 @@ Help me to come today with nothing in my hands.
 
 Rock of Ages — let me hide myself in You.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5903,13 +7826,19 @@ In Jesus' name, Amen.` },
     title: `The Vine and the Branches — What Abiding Actually Means`,
     scripture: `John 15:5 - I am the vine, you are the branches.`,
     illustrationPrompt: `green vineyard field`,
-    teaser: `Jesus called Himself the vine and His followers the branches.\n\nThe image is simple. The implications are enormous.\n\nEspecially the last four words.`,
+    teaser: `Jesus called Himself the vine and His followers the branches.
+
+The image is simple. The implications are enormous.
+
+Especially the last four words.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `*I am the vine — you are the branches.*
 
-The image is simple. Everyone understands how vines work.
+*I am the vine — you are the branches.*
 
 The branch doesn't produce fruit through effort. It doesn't will the grapes into existence.
 
@@ -5919,8 +7848,11 @@ And then Jesus said the last four words that most people try very hard not to th
 
 *Apart from me — you can do nothing.*
 
-**Nothing.**` },
-      { id: 2, label: `The Story`,
+**Nothing.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `The word Jesus uses for *remain* — or *abide* — is the Greek word *meno.*
 
@@ -5934,28 +7866,48 @@ It produces no fruit. And it withers.
 
 **The connection is the source.**
 
-Which means the most productive thing a branch can do is not try harder. **It is stay connected.**` },
-      { id: 3, label: `The Turn`,
+Which means the most productive thing a branch can do is not try harder. **It is stay connected.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
-        body: `Most people approach their faith like a project.
+        body: `A branch doesn't try to produce fruit.
 
-Something to work on. To improve. To produce results from.
+It stays connected to the vine.
 
-**Jesus is describing something more like breathing.**
+**And the fruit appears.**
 
-You don't produce the breath. You receive it. You stay connected to the source of it.
+That is the whole model. Not effort — connection.
 
-**Connected. Staying. Making your home in the presence of God.**
+*Apart from me — you can do nothing.*
 
-And from that position — not from effort but from connection — fruit appears.` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the job is not to produce.
+Which means the most productive thing you can do today is not try harder.
+
+*It is stay.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the job is not to produce.
 
 A branch doesn't will the fruit into existence — it stays connected, and the fruit follows from that connection alone, not from effort applied separately to the staying. Cut off, it doesn't slowly fade. It withers immediately, because the connection was never optional. It was the source.
 
 The job is to stay connected.
 
-*The fruit follows the abiding. Stay.*`, practiceToday: `Remember [name] — abiding means staying. Making your home. Not visiting.\n\nToday — do one thing that keeps you connected to the vine. Not producing. Staying.\n\nThat's abiding. The fruit comes from that.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that the job is connection — not production.
+*The fruit follows the abiding. Stay.*`,
+        practiceToday: `Remember [name] — abiding means staying. Making your home. Not visiting.
+
+Today — do one thing that keeps you connected to the vine. Not producing. Staying.
+
+That's abiding. The fruit comes from that.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that the job is connection — not production.
 
 Thank You that apart from You I can do nothing — and that changes where I focus.
 
@@ -5963,7 +7915,8 @@ Help me to stay connected today. To abide — not just visit.
 
 I want to make my home in Your presence.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -5973,22 +7926,29 @@ In Jesus' name, Amen.` },
     title: `Is the Bible Actually True?`,
     scripture: `2 Timothy 3:16 - All Scripture is God breathed and is useful for teaching.`,
     illustrationPrompt: `blue sky horizon`,
-    teaser: `This is the question most Christians are afraid to ask out loud.\n\nBecause asking it feels like the beginning of losing your faith.\n\nIt's actually the beginning of a more honest one.`,
+    teaser: `This is the question most Christians are afraid to ask out loud.
+
+Because asking it feels like the beginning of losing your faith.
+
+It's actually the beginning of a more honest one.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
-        body: `This is the question most Christians are afraid to ask out loud.
+        body: `You've read it long enough to notice things that don't seem to fit together.
 
-Not — is it beautiful. Not — does it contain wisdom.
+Things that seem to contradict. Passages that are hard to explain.
 
-Because if you've read it long enough — you've noticed things that don't seem to fit together. Things that seem to contradict.
+**And the question underneath everything is — is this actually true?**
 
-**And asking the question feels dangerous.**
+Not a weak question. The most important one.
 
-Like the beginning of losing your faith.
-
-*It is actually the beginning of a more honest one.*` },
-      { id: 2, label: `The Story`,
+*Bring it directly. The Bible has survived two thousand years of it.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Paul's description — *all Scripture is God-breathed* — uses a word that means breathed through human writers.
 
@@ -5998,28 +7958,46 @@ Not — God dictated every word to a transcriptionist.
 
 Which is why different writers describe the same events differently. Why Paul sounds different from John. Why Proverbs and Job seem to be in tension.
 
-It is a library with many voices — all pointing toward the same God.` },
-      { id: 3, label: `The Turn`,
+It is a library with many voices — all pointing toward the same God.`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `The question *is the Bible true* is the right question.
 
 It deserves to be asked honestly and investigated seriously.
 
-**And the people who have done that — who brought their genuine doubt to the text — have not generally come away with less.**
+The people who have done that — who brought their genuine doubt to the text and stayed in the investigation — have not walked away with less.
 
-Because the Bible has survived two thousand years of serious questioning.
+**The Bible has survived two thousand years of serious questioning.**
 
-It has been read by skeptics and scholars and ordinary people in crisis.
+By skeptics. By scholars. By ordinary people in real crisis.
 
-*Not despite the hard questions. Through them.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], the question is allowed.
+*It is still here. Still being read. Still changing people.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], the question is allowed.
 
 The Bible has survived two thousand years of serious questioning — by skeptics, scholars, and ordinary people in real crisis — and something keeps coming through, not despite the hard questions but through them.
 
 God can handle it.
 
-*Bring the honest version. The Bible has been through worse than your doubts.*`, practiceToday: `Remember [name] — the honest question is the beginning of a more honest faith.\n\nToday — bring the specific doubt. The passage that doesn't make sense.\n\nBring it directly. God can handle it.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that honest questions don't threaten You.
+*Bring the honest version. The Bible has been through worse than your doubts.*`,
+        practiceToday: `Remember [name] — the honest question is the beginning of a more honest faith.
+
+Today — bring the specific doubt. The passage that doesn't make sense.
+
+Bring it directly. God can handle it.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that honest questions don't threaten You.
 
 Thank You that the Bible has survived serious questioning for two thousand years.
 
@@ -6027,7 +8005,8 @@ Help me to bring my genuine doubts — not perform certainty I don't have.
 
 I want a faith that has been tested — not one that avoids the test.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -6037,9 +8016,15 @@ In Jesus' name, Amen.` },
     title: `For Those Who Are Exhausted`,
     scripture: `Matthew 11:28 - Come to me all you who are weary, I will give you rest.`,
     illustrationPrompt: `soft clouds sky`,
-    teaser: `Some nights the most spiritual thing you can do is rest.\n\nJesus said so.`,
+    teaser: `Some nights the most spiritual thing you can do is rest.
+
+Jesus said so.`,
     panels: [
-      { id: 1, label: `The Hook`, isPrayer: false, body: `Some nights the most spiritual thing you can do is rest.
+      {
+        id: 1,
+        label: `The Hook`,
+        isPrayer: false,
+        body: `Some nights the most spiritual thing you can do is rest.
 
 Not pray for an hour. Not read more scripture. Not work harder at becoming who you're trying to become.
 
@@ -6051,8 +8036,11 @@ Not — come to me and I will give you more to do.
 
 *Rest.*
 
-**That is the offer. Today.**` },
-      { id: 2, label: `The Story`,
+**That is the offer. Today.**`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Elijah ran into the wilderness and asked God to take his life.
 
@@ -6066,30 +8054,46 @@ He ate. Slept. The angel came again.
 
 *Get up and eat — the journey is too much for you.*
 
-**The word came after the rest. Not instead of it.**` },
-      { id: 3, label: `The Turn`, isPrayer: false, body: `Rest is not the absence of faith.
+**The word came after the rest. Not instead of it.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
+        isPrayer: false,
+        body: `Rest is not the absence of faith.
 
 **It is an act of trust.**
 
-The decision to stop striving — to put down the weight — to let the body and mind recover — is not spiritual failure.
+The decision to stop striving — to put down the weight — is not spiritual failure.
 
 It is obedience to a God who designed human beings to need rest.
 
-*Even Jesus withdrew to lonely places and rested.*
+Jesus withdrew to lonely places. The disciples were told to come away and rest.
 
-*Even the disciples were told to come away and rest.*
-
-The work will continue tomorrow.
-
-*Today — rest.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `Today, [name].
+*The work will continue tomorrow. Today — rest.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `Today, [name].
 
 Elijah was fed and allowed to sleep — twice — before God ever spoke another word to him. The word came after the rest, not instead of it, because the journey really was too much for him to carry without stopping first.
 
 **Put it down.**
 
-*The weight. The striving. Come. He will give you rest.*`, practiceToday: `Remember [name] — God fed Elijah and let him sleep before giving him the next assignment.\n\nToday — actually rest. Not scroll. Rest.\n\nThe journey is too much for you to carry without it.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You that rest is Your idea — not a sign of weakness.
+*The weight. The striving. Come. He will give you rest.*`,
+        practiceToday: `Remember [name] — God fed Elijah and let him sleep before giving him the next assignment.
+
+Today — actually rest. Not scroll. Rest.
+
+The journey is too much for you to carry without it.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You that rest is Your idea — not a sign of weakness.
 
 Thank You that You fed Elijah before You spoke to him.
 
@@ -6097,7 +8101,8 @@ Help me to receive rest today as a gift — not a failure.
 
 I come to You weary. Give me rest.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -6107,9 +8112,15 @@ In Jesus' name, Amen.` },
     title: `He Is Risen — What That Actually Changes`,
     scripture: `1 Corinthians 15:17 - If Christ has not been raised, your faith is futile.`,
     illustrationPrompt: `sunrise field`,
-    teaser: `Paul staked everything on the resurrection.\n\nNot as a metaphor.\n\nAs a historical event that either happened or didn't.`,
+    teaser: `Paul staked everything on the resurrection.
+
+Not as a metaphor.
+
+As a historical event that either happened or didn't.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `Paul staked everything on the resurrection.
 
@@ -6121,8 +8132,11 @@ Not as a metaphor. Not as a spiritual concept about new beginnings.
 
 If the resurrection didn't happen — Christianity is a lie and none of this matters.
 
-*If it did happen — everything changes.*` },
-      { id: 2, label: `The Story`,
+*If it did happen — everything changes.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Paul lists the witnesses.
 
@@ -6130,10 +8144,13 @@ If the resurrection didn't happen — Christianity is a lie and none of this mat
 
 Paul wrote this within twenty to thirty years of the event. The witnesses were alive. They could be questioned.
 
-The man who had been hunting Christians down. Then used to spread the message of the risen Jesus across the known world.
+The man who had been hunting Christians down was now being used to spread the message of the risen Jesus across the known world.
 
-**The resurrection changed Paul from persecutor to apostle. That change required an explanation.**` },
-      { id: 3, label: `The Turn`,
+**The resurrection changed Paul from persecutor to apostle. That change required an explanation.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `If the resurrection is true — death is not the end.
 
@@ -6147,15 +8164,30 @@ It is the template for what God does with things that look finished.
 
 Which means the worst thing that can happen —
 
-**is not the last thing that will happen.**` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], He is risen.
+**is not the last thing that will happen.**`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], He is risen.
 
 Paul staked his entire faith on it being a historical fact, citing five hundred living witnesses who could be questioned directly — not a metaphor about new beginnings, but an event that either happened or didn't, and changes everything if it did.
 
 That is not a religious phrase.
 
-*It is the hinge on which everything turns.*`, practiceToday: `Remember [name] — Paul staked everything on this. It either happened or it didn't.\n\nToday — sit with the claim. Not as a doctrine. As a fact that is either true or isn't.\n\nIf it's true — what does that change about today?` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the resurrection — not as a metaphor but as an event.
+*It is the hinge on which everything turns.*`,
+        practiceToday: `Remember [name] — Paul staked everything on this. It either happened or it didn't.
+
+Today — sit with the claim. Not as a doctrine. As a fact that is either true or isn't.
+
+If it's true — what does that change about today?`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for the resurrection — not as a metaphor but as an event.
 
 Thank You that death is not the end of the story You are telling.
 
@@ -6163,7 +8195,8 @@ Help me to live today in light of what the resurrection actually means.
 
 He is risen. That changes everything.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -6173,9 +8206,17 @@ In Jesus' name, Amen.` },
     title: `Job — The Man Who Argued With God and Wasn't Wrong`,
     scripture: `Job 42:5 - My ears had heard of you, now my eyes have seen you.`,
     illustrationPrompt: `stars desert`,
-    teaser: `At the end of the book of Job — God spoke.\n\nNot to commend the friends who gave careful theological explanations.\n\nTo commend Job — the one who argued.\n\nGod called it truth.`,
+    teaser: `At the end of the book of Job — God spoke.
+
+Not to commend the friends who gave careful theological explanations.
+
+To commend Job — the one who argued.
+
+God called it truth.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `At the end of the book of Job — after everything — God spoke.
 
@@ -6187,8 +8228,11 @@ Not at Job — who had questioned Him, argued with Him, demanded an audience.
 
 The careful explainers were wrong.
 
-*That is not how most people expect God to respond.*` },
-      { id: 2, label: `The Story`,
+*That is not how most people expect God to respond.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `Job's friends offered explanations.
 
@@ -6202,8 +8246,11 @@ Job responded — *now my eyes have seen You.*
 
 *You have not spoken the truth about me — as my servant Job has.*
 
-**Not the friends. Job.**` },
-      { id: 3, label: `The Turn`,
+**Not the friends. Job.**`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `The friends got the theology right and missed God entirely.
 
@@ -6217,15 +8264,30 @@ Which means when you bring your real version to God —
 
 **you are closer to the truth than the person performing certainty they don't have.**
 
-*Honest faith is what God calls truth.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], God called Job's honest arguing truth.
+*Honest faith is what God calls truth.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], God called Job's honest arguing truth.
 
 Not the friends' careful, theologically correct explanations — Job's messy, demanding, uncomfortable questions were the ones God called accurate, because the honesty mattered more than the polish.
 
 The messy version. The demanding version.
 
-*Bring your version. He calls it truth.*`, practiceToday: `Remember [name] — God commended Job's honesty over his friends' careful theology.\n\nToday — bring the messy version. The argument. The question you've been afraid to ask.\n\nGod calls that truth.` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for validating Job's honest arguing over his friends' careful theology.
+*Bring your version. He calls it truth.*`,
+        practiceToday: `Remember [name] — God commended Job's honesty over his friends' careful theology.
+
+Today — bring the messy version. The argument. The question you've been afraid to ask.
+
+God calls that truth.`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for validating Job's honest arguing over his friends' careful theology.
 
 Thank You that truth looks like honesty — not performance.
 
@@ -6233,7 +8295,8 @@ Help me to bring the real version today.
 
 Receive my honest question as the truth that it is.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 
@@ -6243,9 +8306,15 @@ In Jesus' name, Amen.` },
     title: `It Is Finished`,
     scripture: `John 19:30 - It is finished.`,
     illustrationPrompt: `sunrise sky`,
-    teaser: `Three words.\n\nThe last thing Jesus said from the cross.\n\nAnd the most important three words ever spoken.`,
+    teaser: `Three words.
+
+The last thing Jesus said from the cross.
+
+And the most important three words ever spoken.`,
     panels: [
-      { id: 1, label: `The Hook`,
+      {
+        id: 1,
+        label: `The Hook`,
         isPrayer: false,
         body: `Three words.
 
@@ -6261,8 +8330,11 @@ He said — **it is finished.**
 
 The work. The debt. The requirement.
 
-*Done.*` },
-      { id: 2, label: `The Story`,
+*Done.*`,
+      },
+      {
+        id: 2,
+        label: `The Story`,
         isPrayer: false,
         body: `The cross looked like defeat.
 
@@ -6274,8 +8346,11 @@ Everything Jesus had built appeared to be ending in failure.
 
 And the word *tetelestai* — paid in full — turned out to be the most accurate thing ever said.
 
-*The debt was cancelled. Permanently. Completely.*` },
-      { id: 3, label: `The Turn`,
+*The debt was cancelled. Permanently. Completely.*`,
+      },
+      {
+        id: 3,
+        label: `The Turn`,
         isPrayer: false,
         body: `Ninety days ago you started something.
 
@@ -6289,15 +8364,30 @@ You are not trying to earn something still being decided.
 
 You are living in the reality of something already done.
 
-*Paid in full. Your name on the receipt.*` },
-      { id: 4, label: `The Landing`, isPrayer: false, body: `[name], it is finished.
+*Paid in full. Your name on the receipt.*`,
+      },
+      {
+        id: 4,
+        label: `The Landing`,
+        isPrayer: false,
+        body: `[name], it is finished.
 
 Not becoming finished, not finished pending your consistency from here on — *tetelestai*, paid in full, the same word stamped on a settled account, spoken before the tomb was even sealed.
 
 Right now. For you. Permanently.
 
-***Tetelestai. Paid in full.***`, practiceToday: `Remember [name] — tetelestai. Paid in full. Your name on the receipt.\n\nToday — live from that. Not toward it. From it.\n\nWhat would you do differently today if you truly believed the debt was already cancelled?` },
-      { id: 5, label: `The Prayer`, isPrayer: true, body: `God thank You for the word tetelestai.
+***Tetelestai. Paid in full.***`,
+        practiceToday: `Remember [name] — tetelestai. Paid in full. Your name on the receipt.
+
+Today — live from that. Not toward it. From it.
+
+What would you do differently today if you truly believed the debt was already cancelled?`,
+      },
+      {
+        id: 5,
+        label: `The Prayer`,
+        isPrayer: true,
+        body: `God thank You for the word tetelestai.
 
 Thank You that it is finished — not being finished. Not will be finished. Is.
 
@@ -6305,7 +8395,8 @@ Help me to live from the completed work today — not toward it.
 
 The debt is cancelled. I receive that.
 
-In Jesus' name, Amen.` },
+In Jesus' name, Amen.`,
+      },
     ],
   },
 ];

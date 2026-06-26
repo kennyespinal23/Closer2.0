@@ -10,14 +10,16 @@
     "runtimeVersion": "exposdk:54.0.0",
     "splash": {
       "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.espinalcapital.closer",
       "appleTeamId": "7ZKDS4X5B9",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Allow Closer to access your photos.",
+        "NSPhotoLibraryAddUsageDescription": "Allow Closer to save scripture images to your photo library."
       }
     },
     "android": {
@@ -39,6 +41,13 @@
           "ios": {
             "deploymentTarget": "16.0"
           }
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Closer to access your photos.",
+          "savePhotosPermission": "Allow Closer to save scripture images to your photo library."
         }
       ],
       [

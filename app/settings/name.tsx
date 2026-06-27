@@ -154,7 +154,7 @@ export default function EditNameScreen() {
           </View>
 
           <Text
-            className="text-ink-subtle text-[12.5px] leading-[18px] mt-5"
+            className="text-ink-subtle text-[13px] leading-[18px] mt-5"
             style={{ fontFamily: "System", fontWeight: "400" }}
           >
             Lives only on this device. Closer never sends your name anywhere.

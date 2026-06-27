@@ -13,6 +13,8 @@ cd "$(dirname "$0")/.."
 
 MESSAGE="${1:-Closer OTA update}"
 
+export EAS_SKIP_AUTO_FINGERPRINT=1
+
 EAS_SKIP_AUTO_FINGERPRINT=1 npx eas-cli update \
   --channel testflight \
   --message "${MESSAGE}" \

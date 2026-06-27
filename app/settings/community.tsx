@@ -46,7 +46,7 @@ export default function CommunityScreen() {
             A quiet place{"\n"}for the rest of us.
           </Text>
           <Text
-            className="text-ink-muted text-[13.5px] leading-[20px] mt-2.5"
+            className="text-ink-muted text-[13px] leading-[20px] mt-2.5"
             style={{ fontFamily: "System", fontWeight: "400" }}
           >
             We&apos;re building a small community for people on the same

@@ -42,7 +42,7 @@ export default function UserGuideScreen() {
             Closer in five minutes.
           </Text>
           <Text
-            className="text-ink-muted text-[13.5px] leading-[20px] mt-2.5"
+            className="text-ink-muted text-[13px] leading-[20px] mt-2.5"
             style={{ fontFamily: "System", fontWeight: "400" }}
           >
             One screen at a time, here&apos;s every place worth knowing —
@@ -163,7 +163,7 @@ function GuideSection({
             {title}
           </Text>
           <Text
-            className="text-ink-muted text-[13.5px] leading-[20px] mt-2"
+            className="text-ink-muted text-[13px] leading-[20px] mt-2"
             style={{ fontFamily: "System", fontWeight: "400" }}
           >
             {body}

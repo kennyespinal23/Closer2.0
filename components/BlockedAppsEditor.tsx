@@ -159,9 +159,9 @@ export function BlockedAppsEditor({
                 fontFamily: "System",
                 fontWeight: "400",
                 color: colors.inkMuted,
-                fontSize: 13.5,
+                fontSize: 13,
                 lineHeight: 19,
-                paddingHorizontal: 24,
+                paddingHorizontal: 20,
                 paddingBottom: 14,
               }}
             >

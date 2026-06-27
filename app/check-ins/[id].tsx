@@ -168,7 +168,7 @@ export default function CheckInDetailScreen() {
             That check-in isn&apos;t here anymore.
           </Text>
           <Text
-            className="text-ink-muted text-[13.5px] text-center mt-2 leading-[20px]"
+            className="text-ink-muted text-[13px] text-center mt-2 leading-[20px]"
             style={{ fontFamily: "System", fontWeight: "400" }}
           >
             It may have been deleted, or this link is from an older
@@ -317,7 +317,7 @@ export default function CheckInDetailScreen() {
               className="rounded-2xl bg-surface px-5 py-4"
             >
               <Text
-                className="text-ink text-[14.5px] leading-[22px]"
+                className="text-ink text-[15px] leading-[22px]"
                 style={{ fontFamily: "System", fontWeight: "400" }}
               >
                 {journalText}
@@ -372,7 +372,7 @@ export default function CheckInDetailScreen() {
                 Add a reflection
               </Text>
               <Text
-                className="text-ink-muted text-[12.5px] mt-1 text-center leading-[18px]"
+                className="text-ink-muted text-[13px] mt-1 text-center leading-[18px]"
                 style={{ fontFamily: "System", fontWeight: "400" }}
               >
                 Capture what you&apos;re carrying, what stood out, or

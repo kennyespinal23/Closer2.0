@@ -349,7 +349,7 @@ export function TimeBlockEditor({
                       fontFamily: "System",
                       fontWeight: "400",
                       color: colors.inkSubtle,
-                      fontSize: 12.5,
+                      fontSize: 13,
                       lineHeight: 17,
                       marginTop: 10,
                       paddingHorizontal: 4,

@@ -277,7 +277,7 @@ export default function VerseDeliveryScreen() {
               {echoHeadline(mood.echo)}
             </Text>
             <Text
-              className="text-ink-muted text-[13.5px] mt-2.5 text-center leading-[20px] px-4"
+              className="text-ink-muted text-[13px] mt-2.5 text-center leading-[20px] px-4"
               style={{ fontFamily: "System", fontWeight: "400" }}
             >
               Here&apos;s a verse for you.
@@ -356,7 +356,7 @@ export default function VerseDeliveryScreen() {
         <FadeIn delayMs={1100} durationMs={1100}>
           <View className="px-8 mt-12">
             <Text
-              className="text-ink-muted text-[14.5px] text-center leading-[22px]"
+              className="text-ink-muted text-[15px] text-center leading-[22px]"
               style={{
                 fontFamily: "System",
                 fontWeight: "500",

@@ -114,7 +114,7 @@ export default function RatingScreen() {
             <View className="items-center mt-10 mb-4">
               <StarRow color={colors.accent} />
               <Text
-                className="text-ink-muted text-[12.5px] tracking-[2px] mt-3 uppercase"
+                className="text-ink-muted text-[13px] tracking-[2px] mt-3 uppercase"
                 style={{ fontFamily: "System", fontWeight: "600" }}
               >
                 Tap once to rate

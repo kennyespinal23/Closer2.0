@@ -126,7 +126,7 @@ export default function FocusSettingsScreen() {
               />
               <View className="flex-1 ml-2.5">
                 <Text
-                  className="text-ink text-[14.5px]"
+                  className="text-ink text-[15px]"
                   style={{ fontFamily: "System", fontWeight: "600" }}
                 >
                   {screenTimeSummary
@@ -200,7 +200,7 @@ export default function FocusSettingsScreen() {
               Preview next shield
             </Text>
             <Text
-              className="text-ink-subtle text-[11.5px] tracking-[1px] uppercase"
+              className="text-ink-subtle text-[12px] tracking-[1px] uppercase"
               style={{ fontFamily: "System", fontWeight: "700" }}
             >
               {previewAppId
@@ -287,7 +287,7 @@ function AppRow({
             <BrandGlyph appId={app.id} size="sm" />
           </View>
           <Text
-            className="text-ink text-[14.5px] flex-1"
+            className="text-ink text-[15px] flex-1"
             style={{ fontFamily: "System", fontWeight: "600" }}
           >
             {app.name}
@@ -310,14 +310,14 @@ function AppRow({
       >
         <View className="flex-row items-start px-4 pb-3.5 pl-[60px] pr-4">
           <Text
-            className="text-ink-muted text-[12.5px] leading-[18px] flex-1 pr-3"
+            className="text-ink-muted text-[13px] leading-[18px] flex-1 pr-3"
             style={{ fontFamily: "System", fontWeight: "500" }}
             numberOfLines={2}
           >
             &ldquo;{app.quietMessage}&rdquo;
           </Text>
           <Text
-            className="text-[11.5px] tracking-[1.5px] uppercase"
+            className="text-[12px] tracking-[1.5px] uppercase"
             style={{
               fontFamily: "System",
               fontWeight: "700",

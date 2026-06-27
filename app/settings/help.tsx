@@ -153,7 +153,7 @@ function FAQRow({
       <Pressable onPress={toggle}>
         <View className="flex-row items-center px-4 py-3.5">
           <Text
-            className="text-ink text-[14.5px] flex-1 pr-3"
+            className="text-ink text-[15px] flex-1 pr-3"
             style={{ fontFamily: "System", fontWeight: "600" }}
           >
             {question}
@@ -175,7 +175,7 @@ function FAQRow({
       <Animated.View style={{ opacity, maxHeight, overflow: "hidden" }}>
         <View className="px-4 pb-4 -mt-1">
           <Text
-            className="text-ink-muted text-[13.5px] leading-[20px]"
+            className="text-ink-muted text-[13px] leading-[20px]"
             style={{ fontFamily: "System", fontWeight: "400" }}
           >
             {answer}

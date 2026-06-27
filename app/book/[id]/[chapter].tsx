@@ -2054,7 +2054,7 @@ function EndMatterPage({
             fontFamily: "System",
             fontWeight: "500",
             color: colors.inkSubtle,
-            fontSize: 11.5,
+            fontSize: 12,
             lineHeight: 16,
           }}
         >
@@ -2218,7 +2218,7 @@ function Header({
         <View className="flex-1 items-center">
           {pagesLeftLabel ? (
             <Text
-              className="text-ink-subtle text-[11.5px]"
+              className="text-ink-subtle text-[12px]"
               style={{ fontFamily: "System", fontWeight: "500" }}
               numberOfLines={1}
             >
@@ -3661,7 +3661,7 @@ function ContentsModal({
               {bookName}
             </Text>
             <Text
-              className="text-ink-subtle text-[11.5px] mt-0.5"
+              className="text-ink-subtle text-[12px] mt-0.5"
               style={{ fontFamily: "System", fontWeight: "500" }}
             >
               Chapter {currentChapter} of {totalChapters}
@@ -3780,7 +3780,7 @@ function GoalToast({
           Today&apos;s reading goal achieved
         </Text>
         <Text
-          className="text-ink-subtle text-[11.5px] ml-2"
+          className="text-ink-subtle text-[12px] ml-2"
           style={{ fontFamily: "System", fontWeight: "500" }}
         >
           · {goalMinutes} min

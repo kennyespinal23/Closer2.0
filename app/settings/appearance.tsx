@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   helperText: {
     fontFamily: "System",
     fontWeight: "500",
-    fontSize: 12.5,
+    fontSize: 13,
     lineHeight: 17,
     marginTop: 10,
     marginLeft: 2,

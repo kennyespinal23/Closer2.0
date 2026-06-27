@@ -218,7 +218,7 @@ export default function StatsScreen() {
                 <View className="flex-row items-center mt-4">
                   <BookmarkIcon />
                   <Text
-                    className="text-ink-muted text-[12.5px] ml-2"
+                    className="text-ink-muted text-[13px] ml-2"
                     style={{ fontFamily: "System", fontWeight: "500" }}
                   >
                     Last read · {formatChapterRef(lastReadChapter)}
@@ -271,7 +271,7 @@ export default function StatsScreen() {
                       </View>
                       {h.verseText ? (
                         <Text
-                          className="text-ink-muted text-[12.5px] mt-1 leading-[18px]"
+                          className="text-ink-muted text-[13px] mt-1 leading-[18px]"
                           style={{ fontFamily: "System", fontWeight: "400" }}
                           numberOfLines={1}
                         >
@@ -327,7 +327,7 @@ export default function StatsScreen() {
                         </Text>
                       </View>
                       <Text
-                        className="text-ink text-[13.5px] mt-1.5 leading-[19px]"
+                        className="text-ink text-[13px] mt-1.5 leading-[19px]"
                         style={{ fontFamily: "System", fontWeight: "500" }}
                         numberOfLines={2}
                       >
@@ -436,7 +436,7 @@ function TypeRow({
             {type.name}
           </Text>
           <Text
-            className="text-ink-subtle text-[11.5px] mt-0.5"
+            className="text-ink-subtle text-[12px] mt-0.5"
             style={{ fontFamily: "System", fontWeight: "500" }}
             numberOfLines={1}
           >

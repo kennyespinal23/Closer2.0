@@ -96,7 +96,7 @@ export function VerseActionSheet({
               {previewText && (
                 <Text
                   numberOfLines={2}
-                  className="text-ink text-[14.5px] mt-2 leading-[20px]"
+                  className="text-ink text-[15px] mt-2 leading-[20px]"
                   style={{ fontFamily: "System", fontWeight: "400" }}
                 >
                   &ldquo;{previewText}&rdquo;
@@ -223,7 +223,7 @@ export function VerseActionSheet({
                           >
                             <View className="w-2 h-2 rounded-full bg-primary mt-2 mr-3" />
                             <Text
-                              className="text-ink text-[13.5px] flex-1 leading-[19px]"
+                              className="text-ink text-[13px] flex-1 leading-[19px]"
                               style={{
                                 fontFamily: "System",
                                 fontWeight: "500",

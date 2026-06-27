@@ -240,7 +240,7 @@ export default function StreakScreen() {
               />
             </Svg>
             <Text
-              className="text-[10.5px] tracking-[2.5px] uppercase ml-2"
+              className="text-[11px] tracking-[2.5px] uppercase ml-2"
               style={{
                 fontFamily: "System",
                 fontWeight: "700",
@@ -291,7 +291,7 @@ export default function StreakScreen() {
         </Text>
 
         <Text
-          className="text-ink-muted text-[14.5px] leading-[22px] text-center mt-3.5 px-4"
+          className="text-ink-muted text-[15px] leading-[22px] text-center mt-3.5 px-4"
           style={{ fontFamily: "System", fontWeight: "400" }}
         >
           {streakSubcopy(days, isMilestone)}

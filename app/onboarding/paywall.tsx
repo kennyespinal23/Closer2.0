@@ -193,7 +193,7 @@ function ValueLine({ text }: { text: string }) {
           color: colors.ink,
           fontFamily: "System",
           fontWeight: "500",
-          fontSize: 15.5,
+          fontSize: 15,
           lineHeight: 23,
           flex: 1,
         }}

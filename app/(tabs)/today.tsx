@@ -788,7 +788,7 @@ function ReadingPill({
           ) : null}
         </View>
         <Text
-          className="text-ink-subtle text-[11.5px] mt-0.5"
+          className="text-ink-subtle text-[12px] mt-0.5"
           style={{ fontFamily: "System", fontWeight: "500" }}
           numberOfLines={1}
         >
@@ -4381,7 +4381,7 @@ function ReadAgainPill({ accent }: { accent: string }) {
           style={{
             fontFamily: "System",
             fontWeight: "700",
-            fontSize: 14.5,
+            fontSize: 15,
             color: accent,
             marginLeft: 8,
             letterSpacing: 0.2,
@@ -4627,7 +4627,7 @@ const RhythmGrid = memo(function RhythmGrid({
               fontFamily: "System",
               fontWeight: "700",
               color: colors.ink,
-              fontSize: 15.5,
+              fontSize: 15,
               letterSpacing: -0.2,
             }}
           >
@@ -5559,7 +5559,7 @@ function WeekStrip({
               "honored today" vs "today is still waiting", which
               the number alone can't communicate. */}
           <Text
-            className="text-ink-subtle text-[11.5px] leading-[16px] mt-0.5"
+            className="text-ink-subtle text-[12px] leading-[16px] mt-0.5"
             style={{ fontFamily: "System", fontWeight: "500" }}
           >
             {prompt}
@@ -5810,7 +5810,7 @@ function NextSermonPill({
       {/* Small subtle counter chip — uses inkSubtle so it reads as
           metadata, not as the action itself. */}
       <Text
-        className="text-ink-subtle text-[11.5px] ml-2.5 tracking-[1px] uppercase"
+        className="text-ink-subtle text-[12px] ml-2.5 tracking-[1px] uppercase"
         style={{ fontFamily: "System", fontWeight: "700" }}
       >
         {position} / {total}
@@ -5965,7 +5965,7 @@ function RoutineCard({
               {title}
             </Text>
             <Text
-              className="text-ink-muted text-[12.5px] mt-0.5"
+              className="text-ink-muted text-[13px] mt-0.5"
               style={{ fontFamily: "System", fontWeight: "500" }}
               numberOfLines={1}
             >
@@ -6035,7 +6035,7 @@ function RoutineCard({
         >
           <AppGlyphStack ids={featured.apps} maxVisible={5} />
           <Text
-            className="text-ink-muted text-[12.5px] ml-3 flex-1"
+            className="text-ink-muted text-[13px] ml-3 flex-1"
             style={{ fontFamily: "System", fontWeight: "500" }}
             numberOfLines={1}
           >
@@ -6178,7 +6178,7 @@ function PreviewShieldPill({ onPress }: { onPress: () => void }) {
         Preview Shield
       </Text>
       <Text
-        className="text-ink-subtle text-[11.5px] ml-2.5 tracking-[1px] uppercase"
+        className="text-ink-subtle text-[12px] ml-2.5 tracking-[1px] uppercase"
         style={{ fontFamily: "System", fontWeight: "700" }}
       >
         Next App
@@ -6304,7 +6304,7 @@ function LastCheckInCard({
           {moodLabel}
         </Text>
         <Text
-          className="text-ink-muted text-[12.5px] mt-1.5"
+          className="text-ink-muted text-[13px] mt-1.5"
           style={{ fontFamily: "System", fontWeight: "500" }}
           numberOfLines={1}
         >
@@ -6646,7 +6646,7 @@ function TodayRhythm({
             Today's rhythm
           </Text>
           <Text
-            className="text-ink-muted text-[12.5px] leading-[18px] mt-0.5"
+            className="text-ink-muted text-[13px] leading-[18px] mt-0.5"
             style={{ fontFamily: "System", fontWeight: "500" }}
           >
             What&apos;s planned, what&apos;s done.
@@ -6713,13 +6713,13 @@ function TodayRhythm({
             }}
           >
             <Text
-              className="text-ink text-[13.5px] text-center"
+              className="text-ink text-[13px] text-center"
               style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Nothing scheduled today
             </Text>
             <Text
-              className="text-ink-muted text-[12.5px] text-center mt-1.5 leading-[18px]"
+              className="text-ink-muted text-[13px] text-center mt-1.5 leading-[18px]"
               style={{ fontFamily: "System", fontWeight: "400" }}
             >
               Add a routine from Practice to start shaping your day.
@@ -6885,7 +6885,7 @@ function RhythmRow({
             finished business without losing legibility. */}
         <View className="flex-1 pl-3 pr-2" style={{ opacity: titleOpacity }}>
           <Text
-            className="text-ink text-[14.5px] leading-[19px]"
+            className="text-ink text-[15px] leading-[19px]"
             style={{
               fontFamily: "System",
               fontWeight: "700",

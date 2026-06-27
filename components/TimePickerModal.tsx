@@ -135,7 +135,7 @@ export function TimePickerModal({
               Pick your time
             </Text>
             <Text
-              className="text-ink-subtle text-[11.5px] mt-0.5"
+              className="text-ink-subtle text-[12px] mt-0.5"
               style={{ fontFamily: "System", fontWeight: "500" }}
             >
               {formatReminderTime(draft)}

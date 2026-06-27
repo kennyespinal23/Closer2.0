@@ -372,7 +372,7 @@ function BlockRenderer({
           </Text>
           {block.attribution && (
             <Text
-              className="text-ink-subtle text-[12.5px] mt-2"
+              className="text-ink-subtle text-[13px] mt-2"
               style={{ fontFamily: "System", fontWeight: "600" }}
             >
               — {block.attribution}
@@ -412,7 +412,7 @@ function BlockRenderer({
             </View>
             {block.text && (
               <Text
-                className="text-ink text-[15.5px] mt-2.5"
+                className="text-ink text-[15px] mt-2.5"
                 style={{
                   fontFamily: "System",
                   fontWeight: "500",
@@ -655,7 +655,7 @@ function ActionPill({
           style={{
             fontFamily: "System",
             fontWeight: "700",
-            fontSize: 13.5,
+            fontSize: 13,
             color: tint ?? colors.ink,
             marginLeft: 8,
           }}

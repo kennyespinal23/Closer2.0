@@ -8,6 +8,7 @@ import {
   routeForVerse,
 } from "@/lib/annotationsFormat";
 import { typography } from "@/lib/typography";
+import { SCREEN_H_PAD } from "@/lib/layout";
 import { type Note, useAnnotations } from "@/state/annotations";
 import { type ColorPalette } from "@/constants/theme";
 import { useColors } from "@/state/theme";
@@ -142,7 +143,7 @@ function NoteCard({
           />
 
           <Text
-            style={[typography.body, { color: colors.ink, fontSize: 14.5, lineHeight: 21 }]}
+            style={[typography.body, { color: colors.ink, lineHeight: 22 }]}
             numberOfLines={6}
           >
             {note.text}
@@ -206,7 +207,7 @@ function EmptyState({ colors }: { colors: ColorPalette }) {
         style={{
           fontFamily: "System",
           fontWeight: "400",
-          fontSize: 13.5,
+          fontSize: 13,
           lineHeight: 20,
           color: colors.inkMuted,
           marginTop: 8,
@@ -235,20 +236,20 @@ function Header({
       style={{
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 16,
+        paddingHorizontal: SCREEN_H_PAD,
         paddingTop: 8,
         paddingBottom: 12,
       }}
     >
       <Pressable
         onPress={() => router.back()}
-        hitSlop={12}
+        hitSlop={8}
         accessibilityRole="button"
         accessibilityLabel="Back"
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
+          width: 44,
+          height: 44,
+          borderRadius: 22,
           alignItems: "center",
           justifyContent: "center",
         }}
@@ -299,7 +300,7 @@ function Header({
           </Text>
         </View>
       ) : (
-        <View style={{ width: 40, height: 40 }} />
+        <View style={{ width: 44, height: 44 }} />
       )}
     </View>
   );

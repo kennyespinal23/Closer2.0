@@ -86,7 +86,7 @@ export default function ReadingGoalScreen() {
             <View className="flex-row items-center mt-3">
               <FlameIcon />
               <Text
-                className="text-ink text-[12.5px] ml-2"
+                className="text-ink text-[13px] ml-2"
                 style={{ fontFamily: "System", fontWeight: "600" }}
               >
                 Today&apos;s reading goal reached.
@@ -94,7 +94,7 @@ export default function ReadingGoalScreen() {
             </View>
           ) : (
             <Text
-              className="text-ink-muted text-[12.5px] mt-3 leading-[18px]"
+              className="text-ink-muted text-[13px] mt-3 leading-[18px]"
               style={{ fontFamily: "System", fontWeight: "500" }}
             >
               {minutesLeftCopy(goalMinutes - todayMinutes)}

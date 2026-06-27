@@ -110,7 +110,7 @@ export function FocusBanner() {
             Focus mode active
           </Text>
           <Text
-            className="text-ink-muted text-[11.5px] mt-0.5"
+            className="text-ink-muted text-[12px] mt-0.5"
             style={{ fontFamily: "System", fontWeight: "500" }}
             numberOfLines={1}
           >
@@ -130,7 +130,7 @@ export function FocusBanner() {
           })}
         >
           <Text
-            className="text-[11.5px] tracking-[0.5px]"
+            className="text-[12px] tracking-[0.5px]"
             style={{
               fontFamily: "System",
               fontWeight: "700",

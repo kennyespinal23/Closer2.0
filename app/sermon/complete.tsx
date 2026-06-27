@@ -661,7 +661,7 @@ function UpNextCard({
               fontFamily: "System",
               fontWeight: "700",
               color: inkColor,
-              fontSize: 15.5,
+              fontSize: 15,
               lineHeight: 20,
               letterSpacing: -0.2,
             }}

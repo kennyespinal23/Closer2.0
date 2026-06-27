@@ -81,7 +81,7 @@ export default function BookOverviewScreen() {
             We don&apos;t know that book.
           </Text>
           <Text
-            className="text-ink-muted text-[13.5px] mt-2 text-center"
+            className="text-ink-muted text-[13px] mt-2 text-center"
             style={{ fontFamily: "System", fontWeight: "400" }}
           >
             Head back to the Library and try another.
@@ -565,7 +565,7 @@ function ChipAction({
       >
         {icon}
         <Text
-          className="text-ink text-[12.5px] ml-2"
+          className="text-ink text-[13px] ml-2"
           style={{ fontFamily: "System", fontWeight: "700" }}
         >
           {label}
@@ -600,7 +600,7 @@ function AboutBlurb({ text }: { text: string }) {
   return (
     <View>
       <Text
-        className="text-ink text-[14.5px] leading-[22px]"
+        className="text-ink text-[15px] leading-[22px]"
         style={{ fontFamily: "System", fontWeight: "400" }}
         numberOfLines={expanded ? undefined : 4}
       >
@@ -617,7 +617,7 @@ function AboutBlurb({ text }: { text: string }) {
           className="mt-2"
         >
           <Text
-            className="text-primary text-[12.5px]"
+            className="text-primary text-[13px]"
             style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {expanded ? "Show less" : "Read more"}
@@ -744,7 +744,7 @@ function SiblingCard({ book, onPress }: { book: Book; onPress: () => void }) {
         <BookCover book={book} variant="card" />
       </View>
       <Text
-        className="text-ink text-[12.5px] mt-2.5"
+        className="text-ink text-[13px] mt-2.5"
         style={{ fontFamily: "System", fontWeight: "700" }}
         numberOfLines={1}
       >

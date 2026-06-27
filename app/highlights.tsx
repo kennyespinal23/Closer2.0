@@ -8,6 +8,7 @@ import {
   relativeTime,
   routeForVerse,
 } from "@/lib/annotationsFormat";
+import { SCREEN_H_PAD } from "@/lib/layout";
 import {
   HIGHLIGHT_COLORS,
   type Highlight,
@@ -217,7 +218,7 @@ function HighlightCard({
 
         {highlight.verseText ? (
           <Text
-            className="text-ink text-[14.5px] mt-2 leading-[21px]"
+            className="text-ink text-[15px] mt-2 leading-[22px]"
             style={{ fontFamily: "System", fontWeight: "400" }}
             numberOfLines={4}
           >
@@ -266,7 +267,7 @@ function EmptyState() {
         Nothing highlighted yet
       </Text>
       <Text
-        className="text-ink-muted text-[13.5px] mt-2 text-center leading-[20px]"
+        className="text-ink-muted text-[13px] mt-2 text-center leading-[20px]"
         style={{ fontFamily: "System", fontWeight: "400" }}
       >
         Tap any verse while reading and pick a color. Highlights
@@ -291,13 +292,16 @@ function Header({
   const router = useRouter();
   const colors = useColors();
   return (
-    <View className="flex-row items-center px-4 pt-2 pb-3">
+    <View
+      className="flex-row items-center pt-2 pb-3"
+      style={{ paddingHorizontal: SCREEN_H_PAD }}
+    >
       <Pressable
         onPress={() => router.back()}
-        hitSlop={12}
+        hitSlop={8}
         accessibilityRole="button"
         accessibilityLabel="Back"
-        className="w-10 h-10 rounded-full items-center justify-center"
+        className="w-11 h-11 rounded-full items-center justify-center"
       >
         <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
           <Path
@@ -325,7 +329,7 @@ function Header({
           </Text>
         </View>
       ) : (
-        <View className="w-10 h-10" />
+        <View className="w-11 h-11" />
       )}
     </View>
   );

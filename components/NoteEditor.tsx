@@ -164,7 +164,7 @@ export function NoteEditor({
                 style={{
                   fontFamily: "System",
                   fontWeight: "400",
-                  fontSize: 13.5,
+                  fontSize: 13,
                   lineHeight: 20,
                   color: colors.ink,
                 }}

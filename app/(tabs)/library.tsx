@@ -24,6 +24,7 @@ import {
   OT_CATEGORY_ORDER,
 } from "@/constants/books";
 import { hasBookCover } from "@/constants/bookCovers";
+import { SCREEN_H_PAD } from "@/lib/layout";
 import { useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
@@ -150,7 +151,7 @@ export default function LibraryScreen() {
             established the single-word page label as the
             convention. */}
         <FadeIn delayMs={0} durationMs={700}>
-          <View className="px-6 pt-2 pb-1">
+          <View className="pt-2 pb-1" style={{ paddingHorizontal: SCREEN_H_PAD }}>
             <Text
               className="text-ink"
               style={{
@@ -173,7 +174,7 @@ export default function LibraryScreen() {
             to read" — never both fighting for the first scroll. */}
         {continueReading && (
           <FadeIn delayMs={70} durationMs={800}>
-            <View className="px-6 mt-5">
+            <View className="mt-5" style={{ paddingHorizontal: SCREEN_H_PAD }}>
               <ContinueReadingHero
                 book={continueReading.book}
                 chapter={continueReading.chapter}
@@ -255,7 +256,7 @@ function FilterPills({
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{
-        paddingHorizontal: 20,
+        paddingHorizontal: SCREEN_H_PAD,
         paddingTop: 16,
         paddingBottom: 4,
       }}
@@ -330,7 +331,7 @@ function FilterPill({
           style={{
             fontFamily: "System",
             fontWeight: active ? "700" : "600",
-            fontSize: 13.5,
+            fontSize: 13,
             color: active ? blue : colors.inkMuted,
             letterSpacing: -0.1,
           }}
@@ -358,7 +359,10 @@ function SectionHeader({
 }) {
   const colors = useColors();
   return (
-    <View className="px-6 mt-7 mb-4 flex-row items-baseline justify-between">
+    <View
+      className="mt-7 mb-4 flex-row items-baseline justify-between"
+      style={{ paddingHorizontal: SCREEN_H_PAD }}
+    >
       <Text
         className="text-ink text-[22px] tracking-[-0.3px]"
         style={{ fontFamily: "System", fontWeight: "800" }}
@@ -406,7 +410,7 @@ function BookGrid({
   onPick: (b: Book) => void;
 }) {
   const { width: screenWidth } = useWindowDimensions();
-  const SIDE = 24;
+  const SIDE = SCREEN_H_PAD;
   const GAP = 16;
   const COLS = 2;
   const colWidth = Math.floor(
@@ -496,7 +500,7 @@ function BookGridTile({
         style={{
           fontFamily: "System",
           fontWeight: "700",
-          fontSize: 14.5,
+          fontSize: 15,
           color: colors.ink,
           letterSpacing: -0.2,
           marginTop: 10,
@@ -509,7 +513,7 @@ function BookGridTile({
         style={{
           fontFamily: "System",
           fontWeight: "500",
-          fontSize: 11.5,
+          fontSize: 12,
           color: colors.inkSubtle,
           marginTop: 2,
         }}
@@ -549,7 +553,7 @@ function SearchField({
     //     placeholder contrast, not a hairline outline.
     <View
       style={{
-        marginHorizontal: 20,
+        marginHorizontal: SCREEN_H_PAD,
         marginTop: 20,
         flexDirection: "row",
         alignItems: "center",
@@ -595,7 +599,7 @@ function SearchField({
 function EmptyState({ query }: { query: string }) {
   const colors = useColors();
   return (
-    <View className="px-6 mt-12 items-center">
+    <View className="mt-12 items-center" style={{ paddingHorizontal: SCREEN_H_PAD }}>
       <View className="w-12 h-12 rounded-2xl bg-surface border border-border items-center justify-center mb-4">
         <SearchIcon size={18} stroke={colors.inkSubtle} />
       </View>
@@ -681,7 +685,7 @@ function ContinueReadingHero({
           {book.name} {chapter}
         </Text>
         <Text
-          className="text-ink-muted text-[12.5px] mt-1.5"
+          className="text-ink-muted text-[13px] mt-1.5"
           style={{ fontFamily: "System", fontWeight: "500" }}
           numberOfLines={1}
         >

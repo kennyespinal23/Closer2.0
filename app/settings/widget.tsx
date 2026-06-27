@@ -51,7 +51,7 @@ export default function WidgetScreen() {
         </Text>
         <WidgetMock />
         <Text
-          className="text-ink-subtle text-[11.5px] mt-3"
+          className="text-ink-subtle text-[12px] mt-3"
           style={{ fontFamily: "System", fontWeight: "500" }}
         >
           Approximate — final design may differ.

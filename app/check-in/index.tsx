@@ -411,7 +411,7 @@ function ConfirmationPanel({
               {renderedMood.label}
             </Text>
             <Text
-              className="text-ink-muted text-[12.5px] leading-[17px] mt-1"
+              className="text-ink-muted text-[13px] leading-[17px] mt-1"
               style={{ fontFamily: "System", fontWeight: "400" }}
               numberOfLines={2}
             >

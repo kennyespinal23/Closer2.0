@@ -157,7 +157,7 @@ export default function WelcomeScreen() {
               color: colors.ink,
               fontFamily: "System",
               fontWeight: "600",
-              fontSize: 15.5,
+              fontSize: 15,
               lineHeight: 22,
               letterSpacing: -0.1,
               textAlign: "center",

@@ -124,7 +124,7 @@ export default function HowItWorksScreen() {
         <View className="flex-1 px-6">
           <FadeIn delayMs={0}>
             <Text
-              className="text-ink-muted text-[12.5px] tracking-[2.4px] uppercase mt-4"
+              className="text-ink-muted text-[13px] tracking-[2.4px] uppercase mt-4"
               style={{ fontFamily: "System", fontWeight: "700" }}
             >
               How it works
@@ -208,7 +208,7 @@ export default function HowItWorksScreen() {
                     color: "#C2C2C7",
                     fontFamily: "System",
                     fontWeight: "400",
-                    fontSize: 14.5,
+                    fontSize: 15,
                     lineHeight: 22,
                     marginTop: 6,
                   }}

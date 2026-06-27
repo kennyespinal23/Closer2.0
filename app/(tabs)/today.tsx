@@ -41,6 +41,7 @@ import {
   type FocusStatusSheetState,
 } from "@/components/FocusStatusSheet";
 import * as haptics from "@/lib/haptics";
+import { SCREEN_H_PAD } from "@/lib/layout";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { buildCurrentWeek, type RhythmCellState } from "@/lib/rhythm";
 import {
@@ -847,7 +848,7 @@ const AppBlocksList = memo(function AppBlocksList({
   // section-header pattern); the elevated surface below holds
   // only the schedule rows or the empty-state explainer.
   return (
-    <View style={{ marginHorizontal: 16 }}>
+    <View style={{ marginHorizontal: SCREEN_H_PAD }}>
       <Text
         style={{
           fontFamily: "System",
@@ -865,7 +866,7 @@ const AppBlocksList = memo(function AppBlocksList({
       <View
         style={{
           marginTop: 16,
-          paddingHorizontal: 24,
+          paddingHorizontal: SCREEN_H_PAD,
           paddingTop: isEmpty ? 24 : 8,
           paddingBottom: isEmpty ? 24 : 8,
           borderRadius: 24,
@@ -958,7 +959,7 @@ const AppBlocksEmptyState = memo(function AppBlocksEmptyState({
             backgroundColor: colors.surfaceTertiary,
             borderRadius: 16,
             paddingVertical: 16,
-            paddingHorizontal: 24,
+            paddingHorizontal: SCREEN_H_PAD,
             alignItems: "center",
             justifyContent: "center",
             minHeight: 48,
@@ -1911,7 +1912,7 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              paddingHorizontal: 24,
+              paddingHorizontal: SCREEN_H_PAD,
               // Spec: status-bar → Home = 20pt. SafeAreaView
               // handles the status-bar inset; this is the
               // additional gap inside the safe area before
@@ -2095,7 +2096,7 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
             equivalent grouping affordance.) */}
         <View
           style={{
-            marginHorizontal: 16,
+            marginHorizontal: SCREEN_H_PAD,
             // Spec: 24pt horizontal/top/bottom padding,
             // 28pt corner radius. The devotional card runs
             // on its own `devotionalSurface` theme token —
@@ -2104,7 +2105,7 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
             // anchor reads as the deepest meditative tier);
             // light mode: #FFFFFF (pure white, lifts off
             // the warm-cream page bg #F8F7F4).
-            paddingHorizontal: 24,
+            paddingHorizontal: SCREEN_H_PAD,
             paddingTop: 24,
             paddingBottom: 24,
             borderRadius: 28,
@@ -2374,7 +2375,7 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
                 // pill buttons in Books / Music).
                 height: 56,
                 borderRadius: 28,
-                paddingHorizontal: 24,
+                paddingHorizontal: SCREEN_H_PAD,
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
@@ -2453,7 +2454,7 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
             the cleanest "these are siblings, not nested"
             signal in the design system. */}
         {onShowStatus && statusPills && statusPills.length > 0 ? (
-          <View style={{ marginTop: 24, marginHorizontal: 16 }}>
+          <View style={{ marginTop: 24, marginHorizontal: SCREEN_H_PAD }}>
             <HeroStatusRow
               value={statusPills[0].value}
               tone={statusPills[0].tone}
@@ -2764,7 +2765,7 @@ const SermonCard = memo(function SermonCard({
             <View
               className="items-center"
               pointerEvents="none"
-              style={{ paddingHorizontal: 24 }}
+              style={{ paddingHorizontal: SCREEN_H_PAD }}
             >
               <Text
                 className="text-[11px] tracking-[3px] uppercase"
@@ -3414,7 +3415,7 @@ function ImprintCardVisual({
             <View
               style={{
                 flex: 1,
-                paddingHorizontal: 24,
+                paddingHorizontal: SCREEN_H_PAD,
                 paddingTop: 16,
                 paddingBottom: 16,
                 alignItems: "center",
@@ -3497,7 +3498,7 @@ function ImprintPreviewPill({ label }: { label: string }) {
       <View
         style={{
           backgroundColor: "rgba(255, 255, 255, 0.08)",
-          paddingHorizontal: 24,
+          paddingHorizontal: SCREEN_H_PAD,
           paddingVertical: 8,
           borderRadius: 999,
           borderWidth: 1,
@@ -3509,7 +3510,7 @@ function ImprintPreviewPill({ label }: { label: string }) {
             color: "rgba(255, 255, 255, 0.7)",
             fontFamily: "System",
             fontWeight: "600",
-            fontSize: 12.5,
+            fontSize: 13,
             letterSpacing: 1,
             textTransform: "uppercase",
           }}
@@ -5454,7 +5455,7 @@ function StreakChip({ count }: { count: number }) {
           fontFamily: "System",
           fontWeight: "700",
           color: FIRE_AMBER,
-          fontSize: 12.5,
+          fontSize: 13,
           marginLeft: 4,
         }}
       >

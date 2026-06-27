@@ -152,7 +152,7 @@ export function DistractedPhoneVisual({
           <Text
             style={{
               fontFamily: "System",
-              fontWeight: "300",
+              fontWeight: "400",
               fontSize: clockSize,
               lineHeight: clockSize + 4,
               letterSpacing: -1.2,

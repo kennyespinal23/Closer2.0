@@ -538,9 +538,9 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
                 fontFamily: "System",
                 fontWeight: "700",
                 color: colors.ink,
-                fontSize: 14.5,
+                fontSize: 15,
                 letterSpacing: 0.05,
-                lineHeight: 18,
+                lineHeight: 20,
               }}
             >
               {todaysMoment.title}
@@ -551,7 +551,7 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
                 fontFamily: "System",
                 fontWeight: "500",
                 color: colors.inkMuted,
-                fontSize: 11.5,
+                fontSize: 12,
                 marginTop: 2,
                 letterSpacing: 0.05,
                 opacity: isPaused ? 0.65 : 1,

@@ -367,7 +367,7 @@ export function SettingsLinkRow({
           )}
           <View className="flex-1 pr-2">
             <Text
-              className="text-[14.5px]"
+              className="text-[15px]"
               style={{
                 fontFamily: "System",
                 fontWeight: "600",
@@ -460,7 +460,7 @@ export function SettingsToggleRow({
         )}
         <View className="flex-1 pr-3">
           <Text
-            className="text-ink text-[14.5px]"
+            className="text-ink text-[15px]"
             style={{ fontFamily: "System", fontWeight: "600" }}
           >
             {label}
@@ -545,7 +545,7 @@ export function SettingsStaticRow({
         )}
         <View className="flex-1 pr-2">
           <Text
-            className="text-ink text-[14.5px]"
+            className="text-ink text-[15px]"
             style={{ fontFamily: "System", fontWeight: "600" }}
           >
             {label}
@@ -619,7 +619,7 @@ export function SettingsChoiceRow({
           )}
           <View className="flex-1 pr-2">
             <Text
-              className="text-ink text-[14.5px]"
+              className="text-ink text-[15px]"
               style={{ fontFamily: "System", fontWeight: "600" }}
             >
               {label}

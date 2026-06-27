@@ -12,6 +12,8 @@ import {
   SettingsStaticRow,
 } from "@/components/SettingsScaffold";
 import * as haptics from "@/lib/haptics";
+import { SCREEN_H_PAD } from "@/lib/layout";
+import { typography } from "@/lib/typography";
 import {
   formatRef,
   relativeTime,
@@ -200,20 +202,16 @@ export default function ProfileTabScreen() {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingHorizontal: 24,
+            paddingHorizontal: SCREEN_H_PAD,
             paddingTop: 4,
             paddingBottom: 16,
           }}
         >
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: colors.ink,
-              fontSize: 32,
-              lineHeight: 38,
-              letterSpacing: -0.6,
-            }}
+            style={[
+              typography.pageTitle,
+              { color: colors.ink, fontSize: 34, lineHeight: 41 },
+            ]}
             accessibilityRole="header"
           >
             My Profile
@@ -252,7 +250,7 @@ export default function ProfileTabScreen() {
             rather than the previous Day streak / Longest /
             Sermons engagement triplet, so the card ties directly
             into the Notes + Highlights sections it sits above. */}
-        <View style={{ paddingHorizontal: 16 }}>
+        <View style={{ paddingHorizontal: SCREEN_H_PAD }}>
           <View
             style={{
               borderRadius: 26,
@@ -260,7 +258,7 @@ export default function ProfileTabScreen() {
               borderColor: colors.border,
               backgroundColor: colors.surface,
               paddingTop: 20,
-              paddingHorizontal: 16,
+              paddingHorizontal: SCREEN_H_PAD,
               paddingBottom: 16,
               alignItems: "center",
             }}
@@ -767,7 +765,7 @@ function ProfileNoteRow({
           borderWidth: 1,
           borderColor: colors.border,
           backgroundColor: colors.surface,
-          paddingHorizontal: 16,
+          paddingHorizontal: SCREEN_H_PAD,
           paddingVertical: 16,
         }}
       >
@@ -789,7 +787,7 @@ function ProfileNoteRow({
               fontFamily: "System",
               fontWeight: "500",
               color: colors.inkSubtle,
-              fontSize: 11.5,
+              fontSize: 12,
             }}
           >
             {relativeTime(note.updatedAt || note.createdAt)}
@@ -800,8 +798,8 @@ function ProfileNoteRow({
             fontFamily: "System",
             fontWeight: "500",
             color: colors.ink,
-            fontSize: 14,
-            lineHeight: 19,
+            fontSize: 15,
+            lineHeight: 22,
             marginTop: 4,
           }}
           numberOfLines={2}
@@ -848,7 +846,7 @@ function ProfileHighlightRow({
           borderWidth: 1,
           borderColor: colors.border,
           backgroundColor: colors.surface,
-          paddingHorizontal: 16,
+          paddingHorizontal: SCREEN_H_PAD,
           paddingVertical: 16,
           flexDirection: "row",
         }}
@@ -881,7 +879,7 @@ function ProfileHighlightRow({
                 fontFamily: "System",
                 fontWeight: "500",
                 color: colors.inkSubtle,
-                fontSize: 11.5,
+                fontSize: 12,
               }}
             >
               {relativeTime(highlight.updatedAt)}
@@ -892,7 +890,7 @@ function ProfileHighlightRow({
               fontFamily: "System",
               fontWeight: "400",
               color: colors.inkMuted,
-              fontSize: 13.5,
+              fontSize: 13,
               lineHeight: 19,
               marginTop: 4,
               fontStyle: "italic",
@@ -951,7 +949,7 @@ function ProfileSavedSermonRow({
           borderWidth: 1,
           borderColor: colors.border,
           backgroundColor: colors.surface,
-          paddingHorizontal: 16,
+          paddingHorizontal: SCREEN_H_PAD,
           paddingVertical: 16,
           flexDirection: "row",
           overflow: "hidden",
@@ -985,7 +983,7 @@ function ProfileSavedSermonRow({
               fontFamily: "System",
               fontWeight: "700",
               color: colors.ink,
-              fontSize: 15.5,
+              fontSize: 15,
               lineHeight: 20,
               letterSpacing: -0.2,
               marginTop: 6,
@@ -1022,7 +1020,7 @@ function ProfileEmptyCard({
           borderWidth: 1,
           borderColor: colors.border,
           backgroundColor: colors.surface,
-          paddingHorizontal: 16,
+          paddingHorizontal: SCREEN_H_PAD,
           paddingVertical: 16,
         }}
       >
@@ -1042,7 +1040,7 @@ function ProfileEmptyCard({
             fontFamily: "System",
             fontWeight: "400",
             color: colors.inkMuted,
-            fontSize: 12.5,
+            fontSize: 13,
             lineHeight: 17,
             marginTop: 4,
           }}

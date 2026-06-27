@@ -42,7 +42,7 @@ import {
 } from "@/state/studySessions";
 import { useColors } from "@/state/theme";
 
-const H_PAD = 20;
+import { SCREEN_H_PAD } from "@/lib/layout";
 
 export type AppBlocksScreenProps = {
   /** When true, show a back chevron (stack / settings entry). */
@@ -204,7 +204,7 @@ export function AppBlocksScreen({
         showsVerticalScrollIndicator={false}
       >
         {/* Large Title — 34pt per HIG / Espinal standards */}
-        <View style={{ paddingHorizontal: H_PAD, paddingTop: showBack ? 0 : 8 }}>
+        <View style={{ paddingHorizontal: SCREEN_H_PAD, paddingTop: showBack ? 0 : 8 }}>
           <Text
             style={[
               typography.pageTitle,
@@ -363,7 +363,7 @@ export function AppBlocksScreen({
               color: colors.inkSubtle,
               textAlign: "center",
               marginTop: 16,
-              paddingHorizontal: H_PAD + 8,
+              paddingHorizontal: SCREEN_H_PAD + 8,
             }}
           >
             {scheduleSummary}
@@ -410,7 +410,7 @@ function BlockCard({
     <View
       style={[
         {
-          marginHorizontal: H_PAD,
+          marginHorizontal: SCREEN_H_PAD,
           borderRadius: 20,
           borderWidth: StyleSheet.hairlineWidth,
           borderColor: colors.border,

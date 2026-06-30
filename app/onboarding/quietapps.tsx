@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Alert,
-  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -27,10 +25,10 @@ import {
   getScreenTimeSelectionSummary,
   hasScreenTimeAppSelection,
   isNativeScreenTimeAvailable,
-  requestScreenTimeAuthorization,
 } from "@/lib/deviceActivityShield";
 import { findSocialApp } from "@/lib/focus";
 import { syncAllScheduledAppBlocks } from "@/lib/scheduledAppBlocks";
+import { ensureScreenTimeReadyForPicker } from "@/lib/screenTimePicker";
 import { useFocus } from "@/state/focus";
 import { useOnboarding } from "@/state/onboarding";
 import { useStudySessions } from "@/state/studySessions";
@@ -97,19 +95,10 @@ export default function QuietAppsScreen() {
     setBusy(true);
     try {
       haptics.soft();
-      const next = await requestScreenTimeAuthorization();
+      const gate = await ensureScreenTimeReadyForPicker();
       refresh();
-      if (next === AuthorizationStatus.approved) {
+      if (gate.ok) {
         setPickerOpen(true);
-      } else if (next === AuthorizationStatus.denied) {
-        Alert.alert(
-          "Screen Time is off",
-          "Open Settings → Screen Time to allow Closer to manage app limits.",
-          [
-            { text: "Not now", style: "cancel" },
-            { text: "Open Settings", onPress: () => Linking.openSettings() },
-          ],
-        );
       }
     } finally {
       setBusy(false);
@@ -225,9 +214,10 @@ export default function QuietAppsScreen() {
                         : "Opens Apple's picker — social, games, categories, and more."
                     }
                     cta={hasSelection ? "Update" : "Choose apps"}
-                    onCta={() => {
+                    onCta={async () => {
                       haptics.soft();
-                      setPickerOpen(true);
+                      const gate = await ensureScreenTimeReadyForPicker();
+                      if (gate.ok) setPickerOpen(true);
                     }}
                   />
                 </FadeIn>

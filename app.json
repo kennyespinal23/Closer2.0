@@ -3,7 +3,8 @@
     "name": "Closer",
     "slug": "closer",
     "version": "0.1.0",
-    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+  "orientation": "portrait",
     "scheme": "closer",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -24,7 +25,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#141416"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#000000"
       },
       "package": "com.espinalcapital.closer"
     },

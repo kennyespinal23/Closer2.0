@@ -14,7 +14,6 @@ import {
   getScreenTimeSelectionSummary,
   hasScreenTimeAppSelection,
   isNativeScreenTimeAvailable,
-  requestScreenTimeAuthorization,
   getScreenTimeAuthorizationStatus,
 } from "@/lib/deviceActivityShield";
 import { typography } from "@/lib/typography";
@@ -30,11 +29,9 @@ export type FamilyActivityAppsEditorProps = {
 /**
  * Presents Apple's FamilyActivityPicker in a full-screen modal.
  *
- * The library's invisible 1×1 "sheet anchor" pattern is unreliable
- * inside React Navigation — iOS often never presents the picker. A
- * page-sheet modal with the inline `DeviceActivitySelectionViewPersisted`
- * is the approach Apple documents as the customizable fallback and
- * works consistently on device.
+ * Authorization must happen in the caller's button handler (see
+ * `ensureScreenTimeReadyForPicker`) — this component only opens the
+ * picker when Screen Time is already approved.
  */
 export function FamilyActivityAppsEditor({
   visible,
@@ -43,7 +40,6 @@ export function FamilyActivityAppsEditor({
 }: FamilyActivityAppsEditorProps) {
   const colors = useColors();
   const [modalOpen, setModalOpen] = useState(false);
-  const [authorizing, setAuthorizing] = useState(false);
 
   const close = useCallback(() => {
     setModalOpen(false);
@@ -72,45 +68,12 @@ export function FamilyActivityAppsEditor({
       return;
     }
 
-    let cancelled = false;
+    if (getScreenTimeAuthorizationStatus() !== AuthorizationStatus.approved) {
+      close();
+      return;
+    }
 
-    (async () => {
-      setAuthorizing(true);
-      try {
-        const status = getScreenTimeAuthorizationStatus();
-        const resolved =
-          status === AuthorizationStatus.approved
-            ? status
-            : await requestScreenTimeAuthorization();
-
-        if (cancelled) return;
-
-        if (resolved !== AuthorizationStatus.approved) {
-          Alert.alert(
-            "Screen Time permission needed",
-            "Closer needs Screen Time access to block apps. You can enable it in Settings → Screen Time.",
-          );
-          close();
-          return;
-        }
-
-        setModalOpen(true);
-      } catch {
-        if (!cancelled) {
-          Alert.alert(
-            "Couldn't open app picker",
-            "Screen Time authorization failed. Try again.",
-          );
-          close();
-        }
-      } finally {
-        if (!cancelled) setAuthorizing(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    setModalOpen(true);
   }, [visible, close]);
 
   const summary = getScreenTimeSelectionSummary();
@@ -121,7 +84,7 @@ export function FamilyActivityAppsEditor({
 
   return (
     <Modal
-      visible={visible && modalOpen && !authorizing}
+      visible={visible && modalOpen}
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={close}

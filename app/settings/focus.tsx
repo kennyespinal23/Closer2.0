@@ -19,6 +19,7 @@ import {
   type SocialApp,
   type SocialAppId,
 } from "@/lib/focus";
+import { ensureScreenTimeReadyForPicker } from "@/lib/screenTimePicker";
 import { useFocus } from "@/state/focus";
 import { useColors } from "@/state/theme";
 
@@ -112,7 +113,10 @@ export default function FocusSettingsScreen() {
           footer={formatScreenTimeSelectionSummary(screenTimeSummary)}
         >
           <Pressable
-            onPress={() => setNativeAppsEditorOpen(true)}
+            onPress={async () => {
+              const gate = await ensureScreenTimeReadyForPicker();
+              if (gate.ok) setNativeAppsEditorOpen(true);
+            }}
             accessibilityRole="button"
             accessibilityLabel="Choose apps to block with Screen Time"
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}

@@ -51,12 +51,44 @@ export function isScreenTimeAuthorized(): boolean {
   );
 }
 
+/**
+ * Request Screen Time authorization. Must be called from a direct user
+ * gesture (button press) — iOS rejects or throws when the prompt is
+ * triggered from useEffect / async chains detached from the tap.
+ *
+ * Never throws; returns the resolved status after the system dialog.
+ */
 export async function requestScreenTimeAuthorization(): Promise<AuthorizationStatusType> {
   if (!isNativeScreenTimeAvailable()) {
     return AuthorizationStatus.notDetermined;
   }
-  await requestAuthorization("individual");
-  return pollAuthorizationStatus();
+  if (getScreenTimeAuthorizationStatus() === AuthorizationStatus.approved) {
+    return AuthorizationStatus.approved;
+  }
+  try {
+    await requestAuthorization("individual");
+  } catch (error) {
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.warn("[screen-time] requestAuthorization failed", error);
+    }
+    return getScreenTimeAuthorizationStatus();
+  }
+  return pollAuthorizationStatus({
+    maxAttempts: 24,
+    pollIntervalMs: 300,
+  });
+}
+
+/** Count of native picker items (apps + categories + sites). */
+export function countScreenTimeSelectionItems(): number {
+  const summary = getScreenTimeSelectionSummary();
+  if (!summary) return 0;
+  return (
+    summary.applicationCount +
+    summary.categoryCount +
+    summary.webDomainCount
+  );
 }
 
 export function hasScreenTimeAppSelection(): boolean {

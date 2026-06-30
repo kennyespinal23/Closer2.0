@@ -16,6 +16,7 @@ import {
   getFamilyActivitySelectionId,
   isAvailable,
   isShieldActive,
+  onAuthorizationStatusChange,
   pollAuthorizationStatus,
   requestAuthorization,
   resetBlocks,
@@ -52,9 +53,9 @@ export function isScreenTimeAuthorized(): boolean {
 }
 
 /**
- * Request Screen Time authorization. Must be called from a direct user
- * gesture (button press) — iOS rejects or throws when the prompt is
- * triggered from useEffect / async chains detached from the tap.
+ * Request Screen Time authorization. Call from a direct `onPress`
+ * handler (the in-modal Allow button). iOS only shows the system
+ * sheet when the native call is tied to an active user gesture.
  *
  * Never throws; returns the resolved status after the system dialog.
  */
@@ -62,9 +63,26 @@ export async function requestScreenTimeAuthorization(): Promise<AuthorizationSta
   if (!isNativeScreenTimeAvailable()) {
     return AuthorizationStatus.notDetermined;
   }
-  if (getScreenTimeAuthorizationStatus() === AuthorizationStatus.approved) {
+
+  const existing = getScreenTimeAuthorizationStatus();
+  if (existing === AuthorizationStatus.approved) {
     return AuthorizationStatus.approved;
   }
+
+  let subscription: ReturnType<typeof onAuthorizationStatusChange> | undefined;
+  const statusFromEvent = new Promise<AuthorizationStatusType>((resolve) => {
+    const timeout = setTimeout(() => {
+      resolve(getAuthorizationStatus());
+    }, 120_000);
+
+    subscription = onAuthorizationStatusChange((event) => {
+      if (event.authorizationStatus !== AuthorizationStatus.notDetermined) {
+        clearTimeout(timeout);
+        resolve(event.authorizationStatus);
+      }
+    });
+  });
+
   try {
     await requestAuthorization("individual");
   } catch (error) {
@@ -72,12 +90,20 @@ export async function requestScreenTimeAuthorization(): Promise<AuthorizationSta
       // eslint-disable-next-line no-console
       console.warn("[screen-time] requestAuthorization failed", error);
     }
+    subscription?.remove();
     return getScreenTimeAuthorizationStatus();
   }
-  return pollAuthorizationStatus({
-    maxAttempts: 24,
-    pollIntervalMs: 300,
-  });
+
+  const resolved = await Promise.race([
+    statusFromEvent,
+    pollAuthorizationStatus({
+      maxAttempts: 60,
+      pollIntervalMs: 500,
+    }),
+  ]);
+
+  subscription?.remove();
+  return resolved;
 }
 
 /** Count of native picker items (apps + categories + sites). */

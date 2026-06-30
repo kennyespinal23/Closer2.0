@@ -28,7 +28,6 @@ import {
 } from "@/lib/deviceActivityShield";
 import { findSocialApp } from "@/lib/focus";
 import { syncAllScheduledAppBlocks } from "@/lib/scheduledAppBlocks";
-import { ensureScreenTimeReadyForPicker } from "@/lib/screenTimePicker";
 import { useFocus } from "@/state/focus";
 import { useOnboarding } from "@/state/onboarding";
 import { useStudySessions } from "@/state/studySessions";
@@ -90,19 +89,12 @@ export default function QuietAppsScreen() {
     }
   }, [nativeShield, authorized, hasSelection, pickerOpen, previewOpen]);
 
-  const handleAllowScreenTime = async () => {
+  const handleAllowScreenTime = () => {
     if (busy) return;
     setBusy(true);
-    try {
-      haptics.soft();
-      const gate = await ensureScreenTimeReadyForPicker();
-      refresh();
-      if (gate.ok) {
-        setPickerOpen(true);
-      }
-    } finally {
-      setBusy(false);
-    }
+    haptics.soft();
+    setPickerOpen(true);
+    setBusy(false);
   };
 
   const handlePickerSaved = () => {
@@ -214,10 +206,9 @@ export default function QuietAppsScreen() {
                         : "Opens Apple's picker — social, games, categories, and more."
                     }
                     cta={hasSelection ? "Update" : "Choose apps"}
-                    onCta={async () => {
+                    onCta={() => {
                       haptics.soft();
-                      const gate = await ensureScreenTimeReadyForPicker();
-                      if (gate.ok) setPickerOpen(true);
+                      setPickerOpen(true);
                     }}
                   />
                 </FadeIn>

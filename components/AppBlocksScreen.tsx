@@ -30,7 +30,6 @@ import {
 import {
   countScreenTimeSelectionItems,
 } from "@/lib/deviceActivityShield";
-import { ensureScreenTimeReadyForPicker } from "@/lib/screenTimePicker";
 import {
   formatReminderTime,
   type WeekdayIndex,
@@ -100,11 +99,9 @@ export function AppBlocksScreen({
       ? sessions.find((s) => s.id === timeTarget)
       : undefined;
 
-  const openAppsPicker = useCallback(async () => {
+  const openAppsPicker = useCallback(() => {
     haptics.soft();
     if (nativeShield) {
-      const gate = await ensureScreenTimeReadyForPicker();
-      if (!gate.ok) return;
       setNativeAppsEditorOpen(true);
     } else {
       setAppsEditorOpen(true);

@@ -28,10 +28,7 @@ const FIRE_STREAK_ANIMATION = require("../assets/lottie/FireStreakAnimation.json
  *   └────────────────────────────────────────┘
  */
 
-const STREAK_AMBER_LIGHT = "#FFB672";
-const STREAK_AMBER_DEEP = "#B45309";
-const STREAK_AMBER_FILL_LIGHT = "#F59E0B";
-const STREAK_AMBER_FILL_DARK = "#FB923C";
+import { TAB_ACCENT_RED } from "@/constants/theme";
 
 export type StreakDashboardProps = {
   /**
@@ -48,10 +45,8 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
   const scheme = useResolvedScheme();
   const { engagedDates, streak } = useProgress();
 
-  const STREAK_TEXT_AMBER =
-    scheme === "light" ? STREAK_AMBER_DEEP : STREAK_AMBER_LIGHT;
-  const STREAK_FILL_AMBER =
-    scheme === "light" ? STREAK_AMBER_FILL_LIGHT : STREAK_AMBER_FILL_DARK;
+  const STREAK_TEXT_AMBER = TAB_ACCENT_RED;
+  const STREAK_FILL_AMBER = TAB_ACCENT_RED;
 
   const days = daysOverride && daysOverride > 0 ? daysOverride : streak.current;
 

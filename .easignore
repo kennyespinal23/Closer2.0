@@ -3,3 +3,11 @@
 # NOTE: Do NOT exclude `targets/` — Screen Time extensions
 # (ActivityMonitor, ShieldAction, ShieldConfiguration) and their
 # generated.entitlements must be present for iOS native builds.
+#
+# Exclude stale prebuild output — when `ios/` or `android/` exist
+# locally, EAS uses the native AppIcon in that folder instead of
+# app.json `icon`. An old blank placeholder icon was shipping on
+# every TestFlight build until these are ignored and EAS prebuilds
+# fresh from app.config.js.
+ios/
+android/

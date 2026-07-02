@@ -18,6 +18,7 @@ import { progressFor } from "@/constants/onboarding";
 import { CLOSER_ACCENT } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
 import {
+  applyScreenTimeConfiguration,
   AuthorizationStatus,
   configureCloserShieldUI,
   formatScreenTimeSelectionSummary,
@@ -25,6 +26,9 @@ import {
   getScreenTimeSelectionSummary,
   hasScreenTimeAppSelection,
   isNativeScreenTimeAvailable,
+  openNativeAppPickerWithAuth,
+  primeScreenTimeAuthorizationFromGesture,
+  waitForScreenTimeAuthorizationResult,
 } from "@/lib/deviceActivityShield";
 import { findSocialApp } from "@/lib/focus";
 import { syncAllScheduledAppBlocks } from "@/lib/scheduledAppBlocks";
@@ -79,27 +83,24 @@ export default function QuietAppsScreen() {
 
   const authorized = authStatus === AuthorizationStatus.approved;
 
-  // First visit: if Screen Time is already on but nothing picked yet,
-  // open the picker immediately so the user isn't stuck on a dead end.
-  useEffect(() => {
-    if (!nativeShield) return;
-    if (authorized && !hasSelection && !pickerOpen && !previewOpen) {
-      const t = setTimeout(() => setPickerOpen(true), 400);
-      return () => clearTimeout(t);
-    }
-  }, [nativeShield, authorized, hasSelection, pickerOpen, previewOpen]);
-
-  const handleAllowScreenTime = () => {
+  const openPickerWithAuth = useCallback(() => {
     if (busy) return;
     setBusy(true);
-    haptics.soft();
-    setPickerOpen(true);
-    setBusy(false);
-  };
+    openNativeAppPickerWithAuth({
+      onAuthorized: () => {
+        setPickerOpen(true);
+        setBusy(false);
+      },
+    });
+    void waitForScreenTimeAuthorizationResult().then(() => {
+      refresh();
+      setBusy(false);
+    });
+  }, [busy, refresh]);
 
   const handlePickerSaved = () => {
     refresh();
-    configureCloserShieldUI();
+    applyScreenTimeConfiguration();
     setEnabled(true);
     setAnswer("screenTimeConfigured", true);
     void syncAllScheduledAppBlocks(sessions).catch(() => {});
@@ -172,47 +173,26 @@ export default function QuietAppsScreen() {
             <>
               <FadeIn delayMs={700}>
                 <StatusCard
-                  icon={authorized ? "checkmark.circle.fill" : "hourglass"}
-                  iconColor={authorized ? "#22C55E" : colors.ink as string}
+                  icon={hasSelection ? "apps.ipad" : "plus.circle.fill"}
+                  iconColor={CLOSER_ACCENT}
                   title={
-                    authorized
-                      ? "Screen Time allowed"
-                      : "Allow Screen Time"
+                    hasSelection
+                      ? formatScreenTimeSelectionSummary(selectionSummary)
+                      : "Choose apps from your phone"
                   }
                   subtitle={
-                    authorized
-                      ? "Closer can block apps on this device."
-                      : "Required to physically quiet apps — Apple will ask once."
+                    hasSelection
+                      ? "Tap to update your list anytime."
+                      : authorized
+                        ? "Opens Apple's picker — social, games, categories, and more."
+                        : "Apple will ask to connect Screen Time, then you pick apps."
                   }
-                  cta={authorized ? undefined : "Allow"}
-                  onCta={authorized ? undefined : handleAllowScreenTime}
+                  cta={hasSelection ? "Update" : "Choose apps"}
+                  onPressIn={() => primeScreenTimeAuthorizationFromGesture()}
+                  onCta={openPickerWithAuth}
                   busy={busy}
                 />
               </FadeIn>
-
-              {authorized ? (
-                <FadeIn delayMs={900}>
-                  <StatusCard
-                    icon={hasSelection ? "apps.ipad" : "plus.circle.fill"}
-                    iconColor={CLOSER_ACCENT}
-                    title={
-                      hasSelection
-                        ? formatScreenTimeSelectionSummary(selectionSummary)
-                        : "Choose apps from your phone"
-                    }
-                    subtitle={
-                      hasSelection
-                        ? "Tap to update your list anytime."
-                        : "Opens Apple's picker — social, games, categories, and more."
-                    }
-                    cta={hasSelection ? "Update" : "Choose apps"}
-                    onCta={() => {
-                      haptics.soft();
-                      setPickerOpen(true);
-                    }}
-                  />
-                </FadeIn>
-              ) : null}
 
               {hasSelection ? (
                 <FadeIn delayMs={1100}>
@@ -335,8 +315,9 @@ export default function QuietAppsScreen() {
       <View className="px-6 pb-2">
         <Button
           label={canContinue ? "Continue" : "Choose apps to continue"}
-          onPress={handleContinue}
-          disabled={nativeShield && (!authorized || !hasSelection)}
+          onPress={canContinue ? handleContinue : openPickerWithAuth}
+          loading={busy}
+          disabled={busy}
         />
         {nativeShield && !canContinue ? (
           <Pressable
@@ -393,6 +374,7 @@ function StatusCard({
   subtitle,
   cta,
   onCta,
+  onPressIn,
   busy,
 }: {
   icon: string;
@@ -401,6 +383,7 @@ function StatusCard({
   subtitle: string;
   cta?: string;
   onCta?: () => void;
+  onPressIn?: () => void;
   busy?: boolean;
 }) {
   const colors = useColors();
@@ -461,6 +444,7 @@ function StatusCard({
       </View>
       {cta && onCta ? (
         <Pressable
+          onPressIn={onPressIn}
           onPress={onCta}
           disabled={busy}
           accessibilityRole="button"

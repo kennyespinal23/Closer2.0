@@ -28,6 +28,7 @@ import {
 import * as haptics from "@/lib/haptics";
 import { parseInlineEmphasis } from "@/lib/inlineEmphasis";
 import { resolveSermonTypeForMoment } from "@/lib/moments";
+import { useFocus } from "@/state/focus";
 import { useMoments } from "@/state/moments";
 import { useOnboarding } from "@/state/onboarding";
 import { useProgress } from "@/state/progress";
@@ -161,6 +162,7 @@ export default function SermonPanelScreen() {
   const router = useRouter();
   const { todaysMoment } = useMoments();
   const { recordCompletion } = useProgress();
+  const { endSession: endFocusSession } = useFocus();
   const { answers } = useOnboarding();
   const type = resolveSermonTypeForMoment(todaysMoment);
 
@@ -489,6 +491,13 @@ export default function SermonPanelScreen() {
       // dev "Next Sermon" pill leaves the new card stuck reading
       // as "Read Again" for a moment that hasn't been heard yet.
       day: todaysMoment.day,
+    });
+    // Tear down the Screen Time shield immediately — don't wait for
+    // the celebration screen mount. ScheduledBlockGuard respects
+    // `hasCompletedSermonToday` so it won't re-raise the shield
+    // inside an active block window after this.
+    void endFocusSession().catch(() => {
+      /* shield stop is best-effort */
     });
     router.replace({
       pathname: "/sermon/complete",

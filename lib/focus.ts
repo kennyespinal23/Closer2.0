@@ -311,8 +311,11 @@ export function shouldOfferManualFocusShield(prefs: {
   enabled: boolean;
   blockedAppIds: ReadonlyArray<string>;
 }): boolean {
+  // Screen Time configured = user opted into real blocking; don't
+  // require the legacy honor-mode master toggle on top.
+  if (isScreenTimeShieldReady()) return true;
   if (!prefs.enabled) return false;
-  return isScreenTimeShieldReady() || prefs.blockedAppIds.length > 0;
+  return prefs.blockedAppIds.length > 0;
 }
 
 /**

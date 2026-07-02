@@ -39,6 +39,9 @@ export const CLOSER_ACCENT = "#FC8344";
 /** Pressed / dimmed state for orange primary buttons. */
 export const CLOSER_ACCENT_PRESSED = "#E6743A";
 
+/** iOS tab-bar selected tint — matches NativeTabs in app/(tabs)/_layout. */
+export const TAB_ACCENT_RED = "#FF3B30";
+
 export type ColorPalette = {
   bg: string;
   surface: string;

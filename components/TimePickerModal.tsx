@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Platform, View, useWindowDimensions } from "react-native";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { AppleSheet } from "@/components/AppleSheet";
+import { SheetModalHeader } from "@/components/SheetModalHeader";
 import {
   formatReminderTime,
   type DailyReminderTime,
@@ -64,6 +65,8 @@ export function TimePickerModal({
 }: TimePickerModalProps) {
   const colors = useColors();
   const scheme = useResolvedScheme();
+  const { width: screenWidth } = useWindowDimensions();
+  const pickerWidth = screenWidth - 32;
 
   // Local draft of the in-progress pick — committed to the parent
   // only on Save. We seed it from `initial` whenever the modal
@@ -102,83 +105,28 @@ export function TimePickerModal({
       detents={["auto"]}
       backgroundColor={colors.bg}
     >
-      <View>
-        {/* Header — Cancel | Title | Save. Mirrors the iOS modal
-            header convention so the controls land where muscle
-            memory expects them. The grabber pill is supplied by
-            AppleSheet at the very top edge, so this header sits
-            just below it. */}
-        <View className="flex-row items-center px-5 pt-3 pb-2">
-          <Pressable
-            onPress={onClose}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="Cancel time picker"
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-          >
-            <Text
-              className="text-[15px]"
-              style={{
-                fontFamily: "System",
-                fontWeight: "500",
-                color: colors.inkMuted,
-              }}
-            >
-              Cancel
-            </Text>
-          </Pressable>
-          <View className="flex-1 items-center px-3">
-            <Text
-              className="text-ink text-[14px]"
-              style={{ fontFamily: "System", fontWeight: "700" }}
-            >
-              Pick your time
-            </Text>
-            <Text
-              className="text-ink-subtle text-[12px] mt-0.5"
-              style={{ fontFamily: "System", fontWeight: "500" }}
-            >
-              {formatReminderTime(draft)}
-            </Text>
-          </View>
-          <Pressable
-            onPress={handleSave}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="Save time selection"
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-          >
-            <Text
-              className="text-[15px]"
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: colors.primary,
-              }}
-            >
-              Save
-            </Text>
-          </Pressable>
-        </View>
+      <View style={{ width: "100%" }}>
+        <SheetModalHeader
+          title="Pick your time"
+          onCancel={onClose}
+          onSave={handleSave}
+        />
 
-        {/* The wheel itself. textColor only takes effect on iOS —
-            Android uses system colors regardless. We pass ink so
-            the spinner numerals follow the active theme (light
-            text on dark canvas, dark text on light). */}
-        <View className="px-4 pb-6">
+        <View
+          style={{
+            width: "100%",
+            alignItems: "center",
+            paddingBottom: 24,
+          }}
+        >
           <DateTimePicker
             value={draftAsDate}
             mode="time"
             display={Platform.OS === "ios" ? "spinner" : "spinner"}
             onChange={handleChange}
             textColor={colors.ink}
-            // Hint to the native picker which palette to use for
-            // non-text elements (iOS divider lines, etc). Without
-            // this, an iOS device in system-dark would render
-            // bright dividers even when our app is forced light,
-            // and vice versa.
             themeVariant={scheme === "dark" ? "dark" : "light"}
-            style={{ alignSelf: "stretch" }}
+            style={{ width: pickerWidth, height: 216 }}
           />
         </View>
       </View>

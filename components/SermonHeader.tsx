@@ -31,7 +31,7 @@ type SermonHeaderProps = {
  * continuation of the home card the user just tapped Begin on,
  * not an unrelated palette taking over mid-journey.
  */
-import { CLOSER_ACCENT } from "@/constants/theme";
+import { TAB_ACCENT_RED } from "@/constants/theme";
 
 /**
  * Sermon header — used by both the intro (no progress) and the
@@ -120,7 +120,7 @@ export function SermonHeader({ step, stepProgress }: SermonHeaderProps) {
               total={step.total}
               currentIndex={step.index}
               currentFraction={stepProgress ?? 0}
-              fillColor={CLOSER_ACCENT}
+              fillColor={TAB_ACCENT_RED}
               trackColor={highContrast ? "#8E8E93" : "#5C5C5C"}
             />
           </View>

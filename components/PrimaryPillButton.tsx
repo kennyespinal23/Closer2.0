@@ -9,6 +9,7 @@ import {
 import type { PressableProps } from "react-native";
 import { SFSymbol } from "@/components/Symbol";
 import {
+  COMPLETED_READ_GREEN,
   PRIMARY_PILL_BG,
   PRIMARY_PILL_INK,
   PRIMARY_PILL_SHADOW,
@@ -17,16 +18,21 @@ import * as haptics from "@/lib/haptics";
 import { typography } from "@/lib/typography";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
+export type PrimaryPillVariant = "primary" | "completed";
+
 type PrimaryPillButtonProps = {
   label: string;
   sublabel?: string;
   onPress?: PressableProps["onPress"];
+  onPressIn?: PressableProps["onPressIn"];
   disabled?: boolean;
   loading?: boolean;
   showArrow?: boolean;
   fullWidth?: boolean;
   heavy?: boolean;
   accessibilityLabel?: string;
+  /** `completed` — green pill + checkmark for post-devotional states. */
+  variant?: PrimaryPillVariant;
 };
 
 /**
@@ -37,14 +43,19 @@ export function PrimaryPillButton({
   label,
   sublabel,
   onPress,
+  onPressIn,
   disabled = false,
   loading = false,
   showArrow = false,
   fullWidth = true,
   heavy = false,
   accessibilityLabel,
+  variant = "primary",
 }: PrimaryPillButtonProps) {
   const isDisabled = disabled || loading;
+  const isCompleted = variant === "completed";
+  const pillBg = isCompleted ? COMPLETED_READ_GREEN : PRIMARY_PILL_BG;
+  const pillInk = isCompleted ? "#FFFFFF" : PRIMARY_PILL_INK;
   const reducedMotion = useReducedMotion();
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -61,8 +72,9 @@ export function PrimaryPillButton({
     }).start();
   };
 
-  const handlePressIn = () => {
+  const handlePressIn: PressableProps["onPressIn"] = (event) => {
     if (isDisabled) return;
+    onPressIn?.(event);
     if (heavy) {
       haptics.thud();
     } else {
@@ -91,6 +103,9 @@ export function PrimaryPillButton({
         disabled={isDisabled}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityHint={
+          isCompleted ? "You've already completed today's devotional" : undefined
+        }
         accessibilityState={{ disabled: isDisabled }}
         style={({ pressed }) => ({
           opacity: isDisabled ? 0.45 : pressed ? 0.92 : 1,
@@ -99,7 +114,7 @@ export function PrimaryPillButton({
       >
         <View
           style={{
-            backgroundColor: PRIMARY_PILL_BG,
+            backgroundColor: pillBg,
             borderRadius: 999,
             paddingVertical: 16,
             paddingHorizontal: 24,
@@ -107,11 +122,11 @@ export function PrimaryPillButton({
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
-            ...PRIMARY_PILL_SHADOW,
+            ...(isCompleted ? {} : PRIMARY_PILL_SHADOW),
           }}
         >
           {loading ? (
-            <ActivityIndicator color={PRIMARY_PILL_INK} />
+            <ActivityIndicator color={pillInk} />
           ) : (
             <View style={{ alignItems: "center" }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -119,18 +134,25 @@ export function PrimaryPillButton({
                   style={[
                     typography.button,
                     {
-                      color: PRIMARY_PILL_INK,
-                      marginRight: showArrow ? 8 : 0,
+                      color: pillInk,
+                      marginRight: showArrow || isCompleted ? 8 : 0,
                     },
                   ]}
                 >
                   {label}
                 </Text>
-                {showArrow ? (
+                {isCompleted ? (
+                  <SFSymbol
+                    name="checkmark"
+                    size={15}
+                    color={pillInk}
+                    weight="semibold"
+                  />
+                ) : showArrow ? (
                   <SFSymbol
                     name="arrow.right"
                     size={15}
-                    color={PRIMARY_PILL_INK}
+                    color={pillInk}
                     weight="semibold"
                   />
                 ) : null}

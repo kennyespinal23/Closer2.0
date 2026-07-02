@@ -17,9 +17,17 @@ module.exports = ({ config }) => {
     return includeDeviceActivity || name !== "react-native-device-activity";
   });
 
+  const { ios, icon, ...rest } = appJson.expo;
+
   return {
     ...config,
-    ...appJson.expo,
+    ...rest,
+    icon,
+    ios: {
+      ...config.ios,
+      ...ios,
+      icon: ios.icon ?? icon,
+    },
     plugins,
   };
 };

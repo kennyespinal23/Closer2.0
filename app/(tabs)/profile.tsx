@@ -180,10 +180,11 @@ export default function ProfileTabScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.bg }}
+      style={{ flex: 1, backgroundColor: colors.bg, overflow: "hidden" }}
       edges={["top"]}
     >
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: TAB_BAR_TOTAL_HEIGHT + 24 }}
         showsVerticalScrollIndicator={false}
       >

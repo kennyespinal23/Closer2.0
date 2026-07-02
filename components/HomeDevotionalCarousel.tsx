@@ -244,6 +244,7 @@ const HomeHeroSlide = memo(function HomeHeroSlide({
         {card.active ? (
           <PrimaryPillButton
             label={ctaLabel}
+            variant={card.completed ? "completed" : "primary"}
             onPress={onReadPress}
             showArrow={!card.completed}
           />

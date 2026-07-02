@@ -17,7 +17,8 @@ import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
 import { SFSymbol } from "@/components/Symbol";
 import { TimeBlockEditor } from "@/components/TimeBlockEditor";
-import { CLOSER_ACCENT } from "@/constants/theme";
+import { PrimaryPillButton } from "@/components/PrimaryPillButton";
+import { TAB_ACCENT_RED } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
 import {
   countSilencedTargets,
@@ -28,7 +29,10 @@ import {
   type SocialAppId,
 } from "@/lib/focus";
 import {
+  applyScreenTimeConfiguration,
   countScreenTimeSelectionItems,
+  openNativeAppPickerWithAuth,
+  primeScreenTimeAuthorizationFromGesture,
 } from "@/lib/deviceActivityShield";
 import {
   formatReminderTime,
@@ -68,7 +72,7 @@ export function AppBlocksScreen({
   const focusPillSpacing = useFocusMiniPlayerSpacing();
   const { sessions, addSession, updateSession, removeSession, toggleSession } =
     useStudySessions();
-  const { prefs: focusPrefs, setBlockedAppIds } = useFocus();
+  const { prefs: focusPrefs, setBlockedAppIds, setEnabled } = useFocus();
 
   const nativeShield = isShieldSupported();
   const [timeTarget, setTimeTarget] = useState<null | "new" | string>(null);
@@ -100,10 +104,12 @@ export function AppBlocksScreen({
       : undefined;
 
   const openAppsPicker = useCallback(() => {
-    haptics.soft();
     if (nativeShield) {
-      setNativeAppsEditorOpen(true);
+      openNativeAppPickerWithAuth({
+        onAuthorized: () => setNativeAppsEditorOpen(true),
+      });
     } else {
+      haptics.soft();
       setAppsEditorOpen(true);
     }
   }, [nativeShield]);
@@ -176,7 +182,10 @@ export function AppBlocksScreen({
     bottomInset + focusPillSpacing + (showBack ? 32 : TAB_BAR_TOTAL_HEIGHT + 24);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.bg, overflow: "hidden" }}
+      edges={["top"]}
+    >
       {showBack ? (
         <View
           style={{
@@ -205,6 +214,7 @@ export function AppBlocksScreen({
       ) : null}
 
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom }}
         showsVerticalScrollIndicator={false}
       >
@@ -255,25 +265,29 @@ export function AppBlocksScreen({
               ))}
             </View>
           ) : (
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "400",
-                fontSize: 13,
-                lineHeight: 18,
-                color: colors.inkMuted,
-                marginBottom: 16,
-              }}
-            >
-              {appsSummary}
-            </Text>
+          <Text
+            style={{
+              fontFamily: "System",
+              fontWeight: "400",
+              fontSize: 13,
+              lineHeight: 18,
+              color: colors.inkMuted,
+              marginBottom: 16,
+            }}
+          >
+            {nativeShield && blockedCount > 0
+              ? "Apps block when you tap Read Now or during your block times."
+              : appsSummary}
+          </Text>
           )}
 
           <PrimaryCardButton
             label={
               blockedCount > 0 ? "Update blocked apps" : "Choose apps to block"
             }
-            icon="lock.fill"
+            onPressIn={() => {
+              if (nativeShield) primeScreenTimeAuthorizationFromGesture();
+            }}
             onPress={openAppsPicker}
           />
         </BlockCard>
@@ -309,7 +323,7 @@ export function AppBlocksScreen({
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
-                <SFSymbol name="plus" size={18} color={CLOSER_ACCENT} weight="semibold" />
+                <SFSymbol name="plus" size={18} color={colors.ink} weight="semibold" />
               </Pressable>
             ) : null}
           </View>
@@ -330,7 +344,6 @@ export function AppBlocksScreen({
           {sessions.length === 0 ? (
             <PrimaryCardButton
               label="Add block time"
-              icon="plus"
               onPress={() => {
                 haptics.soft();
                 setTimeTarget("new");
@@ -395,6 +408,8 @@ export function AppBlocksScreen({
         visible={nativeShield && nativeAppsEditorOpen}
         onClose={() => setNativeAppsEditorOpen(false)}
         onSaved={() => {
+          applyScreenTimeConfiguration();
+          setEnabled(true);
           setSelectionRevision((n) => n + 1);
           void syncAllScheduledAppBlocks(sessions).catch(() => {});
         }}
@@ -450,7 +465,7 @@ function CardHeader({
         marginBottom: inline ? 0 : 12,
       }}
     >
-      <SFSymbol name={icon} size={16} color={CLOSER_ACCENT} weight="semibold" />
+      <SFSymbol name={icon} size={16} color={colors.ink} weight="semibold" />
       <Text
         style={{
           fontFamily: "System",
@@ -471,7 +486,7 @@ function CardHeader({
             height: 28,
             borderRadius: 14,
             paddingHorizontal: 8,
-            backgroundColor: `${CLOSER_ACCENT}22`,
+            backgroundColor: colors.surfaceTertiary,
             alignItems: "center",
             justifyContent: "center",
           }}
@@ -481,7 +496,7 @@ function CardHeader({
               fontFamily: "System",
               fontWeight: "700",
               fontSize: 13,
-              color: CLOSER_ACCENT,
+              color: colors.ink,
             }}
           >
             {badge}
@@ -494,42 +509,15 @@ function CardHeader({
 
 function PrimaryCardButton({
   label,
-  icon,
   onPress,
+  onPressIn,
 }: {
   label: string;
-  icon: "lock.fill" | "plus";
   onPress: () => void;
+  onPressIn?: () => void;
 }) {
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
-    >
-      <View
-        style={{
-          borderRadius: 14,
-          backgroundColor: CLOSER_ACCENT,
-          paddingVertical: 16,
-          minHeight: 48,
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "row",
-        }}
-      >
-        <SFSymbol name={icon} size={15} color="#FFFFFF" weight="semibold" />
-        <Text
-          style={[
-            typography.button,
-            { color: "#FFFFFF", marginLeft: 8, fontSize: 17 },
-          ]}
-        >
-          {label}
-        </Text>
-      </View>
-    </Pressable>
+    <PrimaryPillButton label={label} onPress={onPress} onPressIn={onPressIn} />
   );
 }
 
@@ -595,7 +583,7 @@ function TimeBlockRow({
         <Switch
           value={session.enabled}
           onValueChange={onToggle}
-          trackColor={{ false: colors.border as string, true: CLOSER_ACCENT }}
+          trackColor={{ false: colors.border as string, true: TAB_ACCENT_RED }}
           ios_backgroundColor={colors.border as string}
           accessibilityLabel={`Toggle block at ${formatReminderTime(session.time)}`}
         />

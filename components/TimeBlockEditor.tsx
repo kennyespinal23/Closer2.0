@@ -6,14 +6,15 @@ import {
   StyleSheet,
   Text,
   UIManager,
+  useWindowDimensions,
   View,
 } from "react-native";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { AppleSheet } from "@/components/AppleSheet";
+import { SheetModalHeader } from "@/components/SheetModalHeader";
 import { SFSymbol } from "@/components/Symbol";
-import { CLOSER_ACCENT } from "@/constants/theme";
 import type { WeekdayIndex } from "@/lib/notifications";
 import {
   WEEKDAY_LABELS,
@@ -60,11 +61,6 @@ export type TimeBlockEditorProps = {
   onSubmit: (result: TimeBlockEditorResult) => void | Promise<void>;
 };
 
-/** Same accent we use elsewhere for primary CTA (e.g. the Begin pill
- *  on the home sermon card). Reads unambiguously as a tap target in
- *  both themes and pairs with the wheel's iOS-spinner chrome. */
-const PRIMARY_ACCENT = CLOSER_ACCENT;
-
 // LayoutAnimation enablement for Android — no-op on iOS. Guarded so
 // hot reloads don't repeatedly flip the experimental flag.
 if (
@@ -98,6 +94,8 @@ export function TimeBlockEditor({
 }: TimeBlockEditorProps) {
   const colors = useColors();
   const scheme = useResolvedScheme();
+  const { width: screenWidth } = useWindowDimensions();
+  const pickerWidth = screenWidth - 32;
 
   const seed = useCallback((): TimeBlockEditorResult => {
     if (existing) {
@@ -169,74 +167,22 @@ export function TimeBlockEditor({
       detents={["auto"]}
       backgroundColor={colors.bg}
     >
-      <View>
-            {/* Header — Cancel / title / Save. Mirrors the
-                  reference exactly. Title is centered so the
-                  three-up reads as one balanced row. */}
-              <View className="flex-row items-center px-5 pt-2 pb-3">
-                <Pressable
-                  onPress={onClose}
-                  hitSlop={10}
-                  accessibilityRole="button"
-                  accessibilityLabel="Cancel"
-                  style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-                >
-                  <Text
-                    style={{
-                      fontFamily: "System",
-                      fontWeight: "500",
-                      color: colors.inkMuted,
-                      fontSize: 15,
-                    }}
-                  >
-                    Cancel
-                  </Text>
-                </Pressable>
-                <View className="flex-1 items-center px-3">
-                  <Text
-                    style={{
-                      fontFamily: "System",
-                      fontWeight: "700",
-                      color: colors.ink,
-                      fontSize: 17,
-                      letterSpacing: -0.3,
-                    }}
-                    accessibilityRole="header"
-                  >
-                    {existing ? "Edit time" : "Add a time"}
-                  </Text>
-                </View>
-                <Pressable
-                  onPress={handleSave}
-                  disabled={!canSave}
-                  hitSlop={10}
-                  accessibilityRole="button"
-                  accessibilityLabel="Save"
-                  style={({ pressed }) => ({
-                    opacity: pressed || !canSave ? 0.4 : 1,
-                  })}
-                >
-                  <Text
-                    style={{
-                      fontFamily: "System",
-                      fontWeight: "700",
-                      color: PRIMARY_ACCENT,
-                      fontSize: 15,
-                    }}
-                  >
-                    Save
-                  </Text>
-                </Pressable>
-              </View>
+      <View style={{ width: "100%" }}>
+        <SheetModalHeader
+          title={existing ? "Edit time" : "Add a time"}
+          onCancel={onClose}
+          onSave={handleSave}
+          saveDisabled={!canSave || submitting}
+        />
 
-              {/* Time wheel — iOS-native 3-column spinner. We
-                  use display="spinner" to force the wheel UI on
-                  both platforms; the compact iOS variant opens
-                  its OWN sheet which fights with ours. The
-                  textColor pulls the spinner numerals into our
-                  theme; themeVariant tells the native picker
-                  which dividers to draw. */}
-              <View className="px-4 pb-1" style={{ marginTop: 4 }}>
+              <View
+                style={{
+                  width: "100%",
+                  alignItems: "center",
+                  marginTop: 4,
+                  paddingBottom: 4,
+                }}
+              >
                 <DateTimePicker
                   value={timeAsDate}
                   mode="time"
@@ -253,18 +199,11 @@ export function TimeBlockEditor({
                   }}
                   textColor={colors.ink}
                   themeVariant={scheme === "dark" ? "dark" : "light"}
-                  style={{ alignSelf: "stretch" }}
+                  style={{ width: pickerWidth, height: 216 }}
                 />
               </View>
 
-              {/* Repeat row — single pill that expands inline.
-                  The reference uses a pill labelled "repeat
-                  · every day >". We do the same: the row shows
-                  a friendly summary on the right (Every day,
-                  Weekdays, custom days), and tapping it reveals
-                  a 7-chip weekday selector underneath without
-                  pushing another sheet on top of this one. */}
-              <View className="px-5" style={{ marginTop: 12 }}>
+              <View style={{ marginTop: 12, paddingHorizontal: 20 }}>
                 <Pressable
                   onPress={() => {
                     LayoutAnimation.configureNext(SMOOTH_LAYOUT);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { FamilyActivityAppsEditor } from "@/components/FamilyActivityAppsEditor";
@@ -19,6 +19,14 @@ import {
   type SocialApp,
   type SocialAppId,
 } from "@/lib/focus";
+import {
+  applyScreenTimeConfiguration,
+  openNativeAppPickerWithAuth,
+  primeScreenTimeAuthorizationFromGesture,
+  waitForScreenTimeAuthorizationResult,
+} from "@/lib/deviceActivityShield";
+import { syncAllScheduledAppBlocks } from "@/lib/scheduledAppBlocks";
+import { useStudySessions } from "@/state/studySessions";
 import { useFocus } from "@/state/focus";
 import { useColors } from "@/state/theme";
 
@@ -47,6 +55,7 @@ export default function FocusSettingsScreen() {
     toggleAppBlocked,
     setAutoStart,
   } = useFocus();
+  const { sessions } = useStudySessions();
 
   const supported = isShieldSupported();
   const shieldReady = isShieldActiveCapable();
@@ -59,6 +68,15 @@ export default function FocusSettingsScreen() {
   // button on each app row + the dev "Preview every shield"
   // cycler at the bottom.
   const [previewAppId, setPreviewAppId] = useState<string | null>(null);
+
+  const openNativePicker = useCallback(() => {
+    openNativeAppPickerWithAuth({
+      onAuthorized: () => setNativeAppsEditorOpen(true),
+    });
+    void waitForScreenTimeAuthorizationResult().then(() => {
+      setSelectionRevision((n) => n + 1);
+    });
+  }, []);
 
   return (
     <SettingsScaffold title="Focus mode">
@@ -112,7 +130,8 @@ export default function FocusSettingsScreen() {
           footer={formatScreenTimeSelectionSummary(screenTimeSummary)}
         >
           <Pressable
-            onPress={() => setNativeAppsEditorOpen(true)}
+            onPressIn={() => primeScreenTimeAuthorizationFromGesture()}
+            onPress={openNativePicker}
             accessibilityRole="button"
             accessibilityLabel="Choose apps to block with Screen Time"
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
@@ -236,7 +255,12 @@ export default function FocusSettingsScreen() {
       <FamilyActivityAppsEditor
         visible={supported && nativeAppsEditorOpen}
         onClose={() => setNativeAppsEditorOpen(false)}
-        onSaved={() => setSelectionRevision((n) => n + 1)}
+        onSaved={() => {
+          applyScreenTimeConfiguration();
+          setEnabled(true);
+          setSelectionRevision((n) => n + 1);
+          void syncAllScheduledAppBlocks(sessions).catch(() => {});
+        }}
       />
     </SettingsScaffold>
   );

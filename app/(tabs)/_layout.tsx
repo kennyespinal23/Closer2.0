@@ -12,17 +12,7 @@ import {
 } from "@/components/NativeBottomTabsNavigator";
 import { useColors } from "@/state/theme";
 
-/**
- * Active tint for the tab bar — iOS systemRed (#FF3B30). Reads as
- * the canonical Apple "selected tab" red across Health, Fitness,
- * Music, and Photos. We use the iOS hex (not our editorial
- * #E11D48) so the tab bar slots into the iOS first-party visual
- * language — the rest of the app keeps its editorial red for
- * brand-anchored surfaces (Daily Devotional header, sermon flow
- * Continue pill, Read Now CTA). Easy to flip back to the
- * editorial red if we want one accent everywhere.
- */
-const TAB_BAR_ACTIVE = "#FF3B30";
+import { TAB_ACCENT_RED } from "@/constants/theme";
 // #AAAAAA per explicit direction. Resolves to ~7.2:1 contrast
 // against pure black — comfortably above the WCAG AA 4.5:1 floor
 // for navigation text. Applied via `experimentalBakedTintColors`
@@ -128,7 +118,7 @@ export default function TabsLayout() {
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <View style={{ flex: 1 }}>
         <NativeTabs
-          tabBarActiveTintColor={TAB_BAR_ACTIVE}
+          tabBarActiveTintColor={TAB_ACCENT_RED}
           tabBarInactiveTintColor={TAB_BAR_INACTIVE}
           // Force our custom tints onto the iOS 26+ Liquid Glass
           // tab bar. Without this the package returns nil for the

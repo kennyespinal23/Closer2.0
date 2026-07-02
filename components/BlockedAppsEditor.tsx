@@ -7,10 +7,10 @@ import {
   View,
 } from "react-native";
 import { AppleSheet } from "@/components/AppleSheet";
+import { SheetModalHeader } from "@/components/SheetModalHeader";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import { SFSymbol } from "@/components/Symbol";
 import { SOCIAL_APPS, type SocialAppId } from "@/lib/focus";
-import { CLOSER_ACCENT } from "@/constants/theme";
 import { useColors } from "@/state/theme";
 
 /**
@@ -43,8 +43,6 @@ export type BlockedAppsEditorProps = {
   onClose: () => void;
   onSubmit: (next: SocialAppId[]) => void | Promise<void>;
 };
-
-const PRIMARY_ACCENT = CLOSER_ACCENT;
 
 export function BlockedAppsEditor({
   visible,
@@ -94,65 +92,13 @@ export function BlockedAppsEditor({
       backgroundColor={colors.bg}
       scrollable
     >
-      <View>
-            {/* Header — Cancel / title / Save. Same chrome as
-                TimeBlockEditor so stacking the two sheets feels
-                like one coherent modal vocabulary. */}
-            <View className="flex-row items-center px-5 pt-3 pb-3">
-              <Pressable
-                onPress={onClose}
-                hitSlop={10}
-                accessibilityRole="button"
-                accessibilityLabel="Cancel"
-                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-              >
-                <Text
-                  style={{
-                    fontFamily: "System",
-                    fontWeight: "500",
-                    color: colors.inkMuted,
-                    fontSize: 15,
-                  }}
-                >
-                  Cancel
-                </Text>
-              </Pressable>
-              <View className="flex-1 items-center px-3">
-                <Text
-                  style={{
-                    fontFamily: "System",
-                    fontWeight: "700",
-                    color: colors.ink,
-                    fontSize: 17,
-                    letterSpacing: -0.3,
-                  }}
-                  accessibilityRole="header"
-                >
-                  Blocked Apps
-                </Text>
-              </View>
-              <Pressable
-                onPress={handleSave}
-                disabled={submitting}
-                hitSlop={10}
-                accessibilityRole="button"
-                accessibilityLabel="Save blocked apps"
-                style={({ pressed }) => ({
-                  opacity: pressed || submitting ? 0.4 : 1,
-                })}
-              >
-                <Text
-                  style={{
-                    fontFamily: "System",
-                    fontWeight: "700",
-                    color: PRIMARY_ACCENT,
-                    fontSize: 15,
-                  }}
-                >
-                  Save
-                </Text>
-              </Pressable>
-            </View>
+      <View style={{ width: "100%" }}>
+        <SheetModalHeader
+          title="Blocked Apps"
+          onCancel={onClose}
+          onSave={handleSave}
+          saveDisabled={submitting}
+        />
 
             <Text
               style={{
@@ -226,9 +172,7 @@ function AppRow({
       accessibilityState={{ selected }}
       style={({ pressed }) => ({
         opacity: pressed ? 0.7 : 1,
-        backgroundColor: selected
-          ? withAlphaHex(PRIMARY_ACCENT, 0.08)
-          : "transparent",
+        backgroundColor: selected ? colors.selectSoft : "transparent",
       })}
     >
       <View
@@ -260,7 +204,7 @@ function AppRow({
               width: 24,
               height: 24,
               borderRadius: 12,
-              backgroundColor: PRIMARY_ACCENT,
+              backgroundColor: colors.select,
               alignItems: "center",
               justifyContent: "center",
             }}

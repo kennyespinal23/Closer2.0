@@ -11,6 +11,7 @@ import {
   cleanUpAfterActivity,
   configureActions,
   getActivities,
+  isShieldActive,
   startMonitoring,
   stopMonitoring,
   type DeviceActivitySchedule,
@@ -20,7 +21,10 @@ import {
   FOCUS_FAMILY_ACTIVITY_SELECTION_ID,
   isNativeScreenTimeAvailable,
   isScreenTimeShieldReady,
+  startNativeScreenTimeShield,
+  stopNativeScreenTimeShield,
 } from "@/lib/deviceActivityShield";
+import type { WeekdayIndex } from "@/lib/notifications";
 import type { StudySession } from "@/state/studySessions";
 
 const ACTIVITY_PREFIX = "closer-block-";
@@ -121,6 +125,88 @@ function sessionShouldAutoBlock(session: StudySession): boolean {
   return session.source === "user";
 }
 
+/** True when `now` falls inside a session's recurring block window. */
+function isNowInsideBlockWindow(session: StudySession, now: Date): boolean {
+  const weekday = now.getDay() as WeekdayIndex;
+  if (!session.daysOfWeek.includes(weekday)) return false;
+
+  const durationMin =
+    typeof session.durationMinutes === "number" && session.durationMinutes > 0
+      ? session.durationMinutes
+      : DEFAULT_BLOCK_MINUTES;
+  const startMin = session.time.hour * 60 + session.time.minute;
+  const endMin = startMin + durationMin;
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  if (endMin <= 24 * 60) {
+    return nowMin >= startMin && nowMin < endMin;
+  }
+  // Window crosses midnight.
+  const endWrapped = endMin % (24 * 60);
+  return nowMin >= startMin || nowMin < endWrapped;
+}
+
+/** True when `now` falls inside any enabled block-time window. */
+export function isInsideAnyActiveBlockWindow(
+  sessions: ReadonlyArray<StudySession>,
+  now: Date = new Date(),
+): boolean {
+  return sessions.some(
+    (session) =>
+      sessionShouldAutoBlock(session) && isNowInsideBlockWindow(session, now),
+  );
+}
+
+/**
+ * Raise or lower the OS shield to match the current clock vs block
+ * schedules. Called from ScheduledBlockGuard on a timer + foreground.
+ */
+export async function syncScheduledBlockShieldState(
+  sessions: ReadonlyArray<StudySession>,
+  options?: {
+    focusSessionActive?: boolean;
+    /** When true, today's sermon unlock loop is satisfied — keep
+     *  apps open even inside a scheduled block window. */
+    sermonUnlockSatisfied?: boolean;
+  },
+): Promise<void> {
+  if (!isNativeScreenTimeAvailable() || !isScreenTimeShieldReady()) {
+    return;
+  }
+
+  if (options?.focusSessionActive) {
+    return;
+  }
+
+  if (options?.sermonUnlockSatisfied) {
+    if (isShieldActive()) {
+      stopNativeScreenTimeShield();
+    }
+    return;
+  }
+
+  const inWindow = isInsideAnyActiveBlockWindow(sessions);
+  if (inWindow) {
+    const raised = await startNativeScreenTimeShield();
+    if (!raised && __DEV__) {
+      // eslint-disable-next-line no-console
+      console.warn("[scheduledAppBlocks] shield did not activate in block window");
+    }
+    return;
+  }
+
+  if (isShieldActive()) {
+    stopNativeScreenTimeShield();
+  }
+}
+
+/** @deprecated Use syncScheduledBlockShieldState */
+export async function reapplyShieldDuringActiveBlockWindows(
+  sessions: ReadonlyArray<StudySession>,
+): Promise<void> {
+  await syncScheduledBlockShieldState(sessions);
+}
+
 function collectSchedulableSlots(
   sessions: ReadonlyArray<StudySession>,
 ): { session: StudySession; weekday: number }[] {
@@ -177,6 +263,9 @@ export async function syncAllScheduledAppBlocks(
   for (const { session, weekday } of capped) {
     const activityName = scheduledBlockActivityName(session.id, weekday);
     try {
+      if (existing.includes(activityName)) {
+        stopMonitoring([activityName]);
+      }
       ensureBlockActions(activityName);
       await startMonitoring(
         activityName,
@@ -193,4 +282,6 @@ export async function syncAllScheduledAppBlocks(
       }
     }
   }
+
+  await syncScheduledBlockShieldState(sessions);
 }

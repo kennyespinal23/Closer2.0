@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  Linking,
   Pressable,
   StyleSheet,
   Text,
@@ -13,7 +12,8 @@ import {
   getScreenTimeSelectionSummary,
   hasScreenTimeAppSelection,
   isNativeScreenTimeAvailable,
-  requestScreenTimeAuthorization,
+  openNativeAppPickerWithAuth,
+  waitForScreenTimeAuthorizationResult,
 } from "@/lib/deviceActivityShield";
 import { useColors } from "@/state/theme";
 
@@ -49,6 +49,22 @@ export function ScreenTimePermissionRow({
     refresh();
   }, [refresh]);
 
+  const requestAllowFlow = useCallback(() => {
+    if (busy) return;
+    setBusy(true);
+    openNativeAppPickerWithAuth({
+      onAuthorized: () => {
+        refresh();
+        onOpenAppPicker?.();
+        setBusy(false);
+      },
+    });
+    void waitForScreenTimeAuthorizationResult().then(() => {
+      refresh();
+      setBusy(false);
+    });
+  }, [busy, onOpenAppPicker, refresh]);
+
   if (!isNativeScreenTimeAvailable()) {
     return null;
   }
@@ -81,28 +97,16 @@ export function ScreenTimePermissionRow({
     iconBg = "rgba(245, 158, 11, 0.16)";
     iconStroke = "#F59E0B";
     title = "Screen Time blocked";
-    subtitle = "Open Settings to allow Closer to manage app limits.";
-    ctaLabel = "Settings";
-    onPress = () => Linking.openSettings();
+    subtitle = "Tap Allow — Apple will ask to connect Screen Time.";
+    ctaLabel = "Allow";
+    onPress = requestAllowFlow;
   } else {
     iconBg = "rgba(255, 255, 255, 0.12)";
     iconStroke = colors.ink as string;
     title = "Allow Screen Time";
     subtitle = "Required to physically block apps during focus.";
     ctaLabel = "Allow";
-    onPress = async () => {
-      if (busy) return;
-      setBusy(true);
-      try {
-        const next = await requestScreenTimeAuthorization();
-        refresh();
-        if (next === AuthorizationStatus.approved) {
-          onOpenAppPicker?.();
-        }
-      } finally {
-        setBusy(false);
-      }
-    };
+    onPress = requestAllowFlow;
   }
 
   const summary = getScreenTimeSelectionSummary();

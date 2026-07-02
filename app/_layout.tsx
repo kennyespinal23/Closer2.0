@@ -14,6 +14,7 @@ import * as SplashScreen from "expo-splash-screen";
 // source of truth for which weight + size each surface uses.
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { LaunchSplash } from "@/components/LaunchSplash";
+import { ScheduledBlockGuard } from "@/components/ScheduledBlockGuard";
 import { UpdatesGate } from "@/components/UpdatesGate";
 import {
   configureForegroundDisplay,
@@ -174,6 +175,7 @@ function AppShell() {
           lib/notificationDeepLink.tsx for the three paths
           this handles (cold / warm / foreground). */}
       <NotificationDeepLinkHandler />
+      <ScheduledBlockGuard />
       {/* LaunchSplash — the white-on-black cross + Closer
           wordmark intro. Sits as an absolutely-positioned
           overlay above the entire navigator and self-unmounts

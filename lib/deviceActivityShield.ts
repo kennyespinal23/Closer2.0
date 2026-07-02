@@ -18,8 +18,8 @@ import {
   isShieldActive,
   onAuthorizationStatusChange,
   pollAuthorizationStatus,
+  refreshManagedSettingsStore,
   requestAuthorization,
-  resetBlocks,
   unblockSelection,
   updateShield,
   type AuthorizationStatusType,
@@ -53,19 +53,29 @@ export function isScreenTimeAuthorized(): boolean {
 }
 
 /**
- * Request Screen Time authorization. Call from a direct `onPress`
- * handler (the in-modal Allow button). iOS only shows the system
- * sheet when the native call is tied to an active user gesture.
- *
- * Never throws; returns the resolved status after the system dialog.
+ * Fire Apple's Screen Time authorization sheet. Must be the first
+ * native call in a button `onPress` — no `await` before this.
  */
-export async function requestScreenTimeAuthorization(): Promise<AuthorizationStatusType> {
+export function kickOffScreenTimeAuthorizationFromGesture(): void {
+  if (!isNativeScreenTimeAvailable()) return;
+  if (getScreenTimeAuthorizationStatus() === AuthorizationStatus.approved) {
+    return;
+  }
+  void requestAuthorization("individual");
+}
+
+/** Earliest hook in a touch — pair with `openNativeAppPickerWithAuth` on `onPress`. */
+export function primeScreenTimeAuthorizationFromGesture(): void {
+  kickOffScreenTimeAuthorizationFromGesture();
+}
+
+/** Wait for the system authorization dialog to resolve (poll + events). */
+export async function waitForScreenTimeAuthorizationResult(): Promise<AuthorizationStatusType> {
   if (!isNativeScreenTimeAvailable()) {
     return AuthorizationStatus.notDetermined;
   }
 
-  const existing = getScreenTimeAuthorizationStatus();
-  if (existing === AuthorizationStatus.approved) {
+  if (getScreenTimeAuthorizationStatus() === AuthorizationStatus.approved) {
     return AuthorizationStatus.approved;
   }
 
@@ -76,23 +86,15 @@ export async function requestScreenTimeAuthorization(): Promise<AuthorizationSta
     }, 120_000);
 
     subscription = onAuthorizationStatusChange((event) => {
-      if (event.authorizationStatus !== AuthorizationStatus.notDetermined) {
+      if (event.authorizationStatus === AuthorizationStatus.approved) {
         clearTimeout(timeout);
-        resolve(event.authorizationStatus);
+        resolve(AuthorizationStatus.approved);
+      } else if (event.authorizationStatus === AuthorizationStatus.denied) {
+        clearTimeout(timeout);
+        resolve(AuthorizationStatus.denied);
       }
     });
   });
-
-  try {
-    await requestAuthorization("individual");
-  } catch (error) {
-    if (__DEV__) {
-      // eslint-disable-next-line no-console
-      console.warn("[screen-time] requestAuthorization failed", error);
-    }
-    subscription?.remove();
-    return getScreenTimeAuthorizationStatus();
-  }
 
   const resolved = await Promise.race([
     statusFromEvent,
@@ -104,6 +106,49 @@ export async function requestScreenTimeAuthorization(): Promise<AuthorizationSta
 
   subscription?.remove();
   return resolved;
+}
+
+/**
+ * One-tap flow: fire Apple's authorization sheet from the gesture, then
+ * run `onAuthorized` (e.g. present the native app picker) once approved.
+ */
+export function openNativeAppPickerWithAuth({
+  onAuthorized,
+}: {
+  onAuthorized: () => void;
+}): void {
+  if (!isNativeScreenTimeAvailable()) return;
+
+  if (getScreenTimeAuthorizationStatus() === AuthorizationStatus.approved) {
+    onAuthorized();
+    return;
+  }
+
+  kickOffScreenTimeAuthorizationFromGesture();
+  void waitForScreenTimeAuthorizationResult().then((status) => {
+    if (status === AuthorizationStatus.approved) {
+      onAuthorized();
+    }
+  });
+}
+
+/**
+ * Request Screen Time authorization end-to-end. Prefer
+ * `openNativeAppPickerWithAuth` at button sites so the system sheet
+ * fires in the same gesture turn.
+ */
+export async function requestScreenTimeAuthorization(): Promise<AuthorizationStatusType> {
+  if (!isNativeScreenTimeAvailable()) {
+    return AuthorizationStatus.notDetermined;
+  }
+
+  const existing = getScreenTimeAuthorizationStatus();
+  if (existing === AuthorizationStatus.approved) {
+    return AuthorizationStatus.approved;
+  }
+
+  kickOffScreenTimeAuthorizationFromGesture();
+  return waitForScreenTimeAuthorizationResult();
 }
 
 /** Count of native picker items (apps + categories + sites). */
@@ -202,15 +247,30 @@ export function configureCloserShieldUI(): void {
   );
 }
 
+/** Call after the user saves apps in Apple's picker. */
+export function applyScreenTimeConfiguration(): void {
+  if (!isNativeScreenTimeAvailable()) return;
+  configureCloserShieldUI();
+}
+
 export async function startNativeScreenTimeShield(): Promise<boolean> {
   if (!isScreenTimeShieldReady()) return false;
+  if (countScreenTimeSelectionItems() === 0) return false;
 
   try {
     configureCloserShieldUI();
+    refreshManagedSettingsStore();
     blockSelection(
       { activitySelectionId: FOCUS_FAMILY_ACTIVITY_SELECTION_ID },
       "closer-shield-start",
     );
+    if (!isShieldActive()) {
+      refreshManagedSettingsStore();
+      blockSelection(
+        { activitySelectionId: FOCUS_FAMILY_ACTIVITY_SELECTION_ID },
+        "closer-shield-start-retry",
+      );
+    }
     return isShieldActive();
   } catch (error) {
     if (__DEV__) {
@@ -228,5 +288,4 @@ export function stopNativeScreenTimeShield(): void {
     { activitySelectionId: FOCUS_FAMILY_ACTIVITY_SELECTION_ID },
     "closer-shield-stop",
   );
-  resetBlocks("closer-shield-stop");
 }

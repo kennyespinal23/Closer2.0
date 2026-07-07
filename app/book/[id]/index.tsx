@@ -18,10 +18,14 @@ import Svg, {
   Stop,
 } from "react-native-svg";
 import { BookCover } from "@/components/BookCover";
-import { BookMetaRow } from "@/components/BookMetaRow";
 import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { SFSymbol } from "@/components/Symbol";
 import { typography } from "@/lib/typography";
+import {
+  getBookAuthor,
+  getChapterCountLabel,
+  getTestamentPositionLabel,
+} from "@/lib/bookAuthors";
 import { type Book, findBookById, siblingBooks } from "@/constants/books";
 import {
   CATEGORY_COVER_PALETTE,
@@ -117,9 +121,16 @@ function BookDetail({ book }: { book: Book }) {
   const { bg, border, primary, ink, inkMuted } = useColors();
   const blurb = useMemo(() => getBookBlurb(book.id), [book.id]);
   const siblings = useMemo(() => siblingBooks(book.id), [book.id]);
+  const author = useMemo(() => getBookAuthor(book.id), [book.id]);
+  const testamentPosition = useMemo(
+    () => getTestamentPositionLabel(book),
+    [book],
+  );
+  const chapterCountLabel = useMemo(
+    () => getChapterCountLabel(book.chapters),
+    [book.chapters],
+  );
 
-  const testamentLabel =
-    book.testament === "old" ? "Old Testament" : "New Testament";
   const chapters = Array.from({ length: book.chapters }, (_, i) => i + 1);
 
   const openChapter = (chapter: number) => {
@@ -152,8 +163,6 @@ function BookDetail({ book }: { book: Book }) {
   // precision."
   const estMinutes = book.chapters * 4;
 
-  const blurbTeaser = blurb ? firstParagraph(blurb) : null;
-
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
       <PageBackdrop book={book} />
@@ -173,34 +182,17 @@ function BookDetail({ book }: { book: Book }) {
               {book.name}
             </Text>
 
-            <View style={{ marginTop: 12 }}>
-              <BookMetaRow
-                chapters={book.chapters}
-                readMinutes={estMinutes}
-                testamentLabel={testamentLabel}
-                category={book.category}
-                order={book.order}
-                mutedColor={inkMuted}
-              />
+            <View style={{ marginTop: 12, gap: 6 }}>
+              <Text style={[typography.body, { color: inkMuted }]}>
+                Author: {author}
+              </Text>
+              <Text style={[typography.body, { color: inkMuted }]}>
+                {testamentPosition}
+              </Text>
+              <Text style={[typography.body, { color: inkMuted }]}>
+                {chapterCountLabel}
+              </Text>
             </View>
-
-            {blurbTeaser ? (
-              <>
-                <View
-                  style={{
-                    width: 32,
-                    height: 1,
-                    backgroundColor: border,
-                    marginTop: 14,
-                    marginBottom: 12,
-                    borderRadius: 1,
-                  }}
-                />
-                <Text style={[typography.body, { color: ink }]}>
-                  {blurbTeaser}
-                </Text>
-              </>
-            ) : null}
           </View>
 
           {/* ─── Action row ─────────────────────────────────── */}
@@ -574,15 +566,6 @@ function ChipAction({
       </View>
     </Pressable>
   );
-}
-
-function firstParagraph(text: string): string {
-  const trimmed = text.trim();
-  const split = trimmed.split(/\n\n+/);
-  if (split[0]?.length) return split[0].trim();
-  const sentenceEnd = trimmed.search(/[.!?]\s/);
-  if (sentenceEnd > 0) return trimmed.slice(0, sentenceEnd + 1).trim();
-  return trimmed;
 }
 
 // ─────────────────────────────────────────────────────────────────

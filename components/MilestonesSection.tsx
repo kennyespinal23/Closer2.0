@@ -11,20 +11,24 @@ import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { SFSymbol } from "@/components/Symbol";
 import type { Milestone } from "@/lib/milestones";
-import { isMilestoneUnlocked, MILESTONES } from "@/lib/milestones";
+import {
+  getMilestoneAccent,
+  isMilestoneUnlocked,
+  MILESTONES,
+} from "@/lib/milestones";
 import { getMilestoneBadge } from "@/lib/milestoneBadges";
-import { TAB_ACCENT_RED } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
-import { typography } from "@/lib/typography";
 import { useColors } from "@/state/theme";
 
 type MilestonesSectionProps = {
   longestStreak: number;
 };
 
-const GRID_GAP = 12;
-const SECTION_PADDING = 16;
-const CARD_HEIGHT = 188;
+const GRID_GAP_X = 20;
+const GRID_GAP_Y = 16;
+const CARD_PADDING = 16;
+const ICON_SIZE = 64;
+const LANDMARK_GOLD = "#E8B84A";
 
 export function MilestonesSection({
   longestStreak,
@@ -46,13 +50,13 @@ export function MilestonesSection({
     return out;
   }, []);
 
-  const unlockedCount = useMemo(
+  const collectedCount = useMemo(
     () => MILESTONES.filter((m) => isMilestoneUnlocked(m, longestStreak)).length,
     [longestStreak],
   );
 
-  const unlockedLabel =
-    unlockedCount === 1 ? "1 Unlocked" : `${unlockedCount} Unlocked`;
+  const collectedLabel =
+    collectedCount === 1 ? "1 collected" : `${collectedCount} collected`;
 
   const openMilestone = (milestone: Milestone) => {
     haptics.soft();
@@ -60,19 +64,19 @@ export function MilestonesSection({
   };
 
   return (
-    <View
-      style={{
-        marginTop: 16,
-        borderRadius: 20,
-        backgroundColor: colors.surfaceSecondary,
-        padding: SECTION_PADDING,
-      }}
-    >
-      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+    <View style={{ marginTop: 24 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "baseline",
+          flexWrap: "wrap",
+          gap: 8,
+        }}
+      >
         <Text
           style={{
             fontFamily: "System",
-            fontWeight: "700",
+            fontWeight: "600",
             color: colors.ink,
             fontSize: 20,
             lineHeight: 26,
@@ -85,13 +89,13 @@ export function MilestonesSection({
         <Text
           style={{
             fontFamily: "System",
-            fontWeight: "700",
-            color: TAB_ACCENT_RED,
+            fontWeight: "500",
+            color: colors.inkMuted,
             fontSize: 15,
             lineHeight: 20,
           }}
         >
-          {unlockedLabel}
+          {collectedLabel}
         </Text>
       </View>
 
@@ -108,11 +112,11 @@ export function MilestonesSection({
         Gathered along the way — meaning to keep, never points to chase.
       </Text>
 
-      <View style={{ marginTop: 16, gap: GRID_GAP }}>
+      <View style={{ marginTop: 24, gap: GRID_GAP_Y }}>
         {rows.map((row) => (
           <View
             key={`row-${row[0]!.milestone.day}`}
-            style={{ flexDirection: "row", gap: GRID_GAP, width: "100%" }}
+            style={{ flexDirection: "row", gap: GRID_GAP_X, width: "100%" }}
           >
             {row.map(({ milestone, badgeIndex }) => (
               <MilestoneCard
@@ -126,6 +130,34 @@ export function MilestonesSection({
             {row.length === 1 ? <View style={{ flex: 1, flexBasis: 0 }} /> : null}
           </View>
         ))}
+      </View>
+
+      <View
+        style={{
+          marginTop: 24,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+        }}
+      >
+        <SFSymbol
+          name="sparkles"
+          size={14}
+          color={colors.inkSubtle}
+          weight="regular"
+        />
+        <Text
+          style={{
+            fontFamily: "System",
+            fontWeight: "400",
+            color: colors.inkSubtle,
+            fontSize: 13,
+            lineHeight: 18,
+          }}
+        >
+          More milestones ahead.
+        </Text>
       </View>
     </View>
   );
@@ -142,24 +174,23 @@ function MilestoneCardChrome({
   unlocked: boolean;
   colors: ReturnType<typeof useColors>;
 }) {
+  const { color: accentColor, label: categoryLabel } =
+    getMilestoneAccent(milestone);
+
   return (
     <>
-      <View
-        pointerEvents="none"
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          paddingHorizontal: 10,
-        }}
-      >
+      <View style={{ alignItems: "center" }}>
         <View
           style={{
-            width: 64,
-            height: 64,
-            borderRadius: 32,
+            width: ICON_SIZE,
+            height: ICON_SIZE,
+            borderRadius: ICON_SIZE / 2,
             padding: 2,
-            backgroundColor: "rgba(255,255,255,0.12)",
+            borderWidth: 1,
+            borderColor: unlocked
+              ? "rgba(255,255,255,0.28)"
+              : "rgba(255,255,255,0.16)",
+            backgroundColor: "rgba(255,255,255,0.06)",
             overflow: "hidden",
           }}
         >
@@ -168,45 +199,49 @@ function MilestoneCardChrome({
             style={{
               width: "100%",
               height: "100%",
-              borderRadius: 30,
+              borderRadius: ICON_SIZE / 2,
             }}
-            blurRadius={unlocked ? 0 : Platform.OS === "ios" ? 16 : 8}
+            blurRadius={unlocked ? 0 : Platform.OS === "ios" ? 14 : 8}
             resizeMode="cover"
             accessibilityIgnoresInvertColors
           />
         </View>
-        <Text
-          style={[
-            typography.smallLabel,
-            {
-              color: unlocked ? TAB_ACCENT_RED : colors.inkSubtle,
-              textTransform: "uppercase",
-              textAlign: "center",
-              marginTop: 10,
-            },
-          ]}
-        >
-          DAY {milestone.day}
-        </Text>
-        <Text
-          numberOfLines={2}
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            color: colors.ink,
-            fontSize: 15,
-            lineHeight: 20,
-            textAlign: "center",
-            marginTop: 6,
-          }}
-        >
-          {milestone.title}
-        </Text>
       </View>
+
+      <Text
+        numberOfLines={2}
+        style={{
+          fontFamily: "System",
+          fontWeight: "700",
+          color: colors.ink,
+          fontSize: 15,
+          lineHeight: 20,
+          textAlign: "center",
+          marginTop: 16,
+        }}
+      >
+        {milestone.title}
+      </Text>
+
+      <Text
+        style={{
+          fontFamily: "System",
+          fontWeight: "400",
+          fontSize: 11,
+          lineHeight: 16,
+          letterSpacing: 0.2,
+          marginTop: 8,
+          textAlign: "center",
+          textTransform: "uppercase",
+        }}
+      >
+        <Text style={{ color: colors.inkMuted }}>Day {milestone.day} • </Text>
+        <Text style={{ color: accentColor }}>{categoryLabel}</Text>
+      </Text>
 
       {!unlocked ? (
         <BlurView
-          intensity={Platform.OS === "ios" ? 48 : 90}
+          intensity={Platform.OS === "ios" ? 44 : 88}
           tint="dark"
           style={StyleSheet.absoluteFillObject}
           pointerEvents="none"
@@ -216,13 +251,13 @@ function MilestoneCardChrome({
               flex: 1,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: "rgba(0,0,0,0.28)",
+              backgroundColor: "rgba(0,0,0,0.24)",
             }}
           >
             <SFSymbol
               name="lock.fill"
-              size={28}
-              color="#E8B84A"
+              size={24}
+              color={LANDMARK_GOLD}
               weight="regular"
             />
           </View>
@@ -244,24 +279,19 @@ function MilestoneCard({
   onPress: () => void;
 }) {
   const colors = useColors();
-  const borderColor = unlocked ? TAB_ACCENT_RED : "rgba(255, 255, 255, 0.22)";
 
   const cardStyle = {
     width: "100%" as const,
-    height: CARD_HEIGHT,
     borderRadius: 16,
-    backgroundColor: "#000000",
-    borderWidth: unlocked ? 2 : 1,
-    borderColor,
+    backgroundColor: colors.surfaceSecondary,
+    borderWidth: 1,
+    borderColor: unlocked
+      ? "rgba(255, 255, 255, 0.18)"
+      : "rgba(255, 255, 255, 0.12)",
     overflow: "hidden" as const,
-    ...(unlocked && Platform.OS === "ios"
-      ? {
-          shadowColor: TAB_ACCENT_RED,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.45,
-          shadowRadius: 10,
-        }
-      : null),
+    padding: CARD_PADDING,
+    minHeight: 176,
+    alignItems: "center" as const,
   };
 
   return (
@@ -288,7 +318,7 @@ function MilestoneCard({
           />
         </TouchableOpacity>
       ) : (
-        <View style={{ ...cardStyle, opacity: 0.85 }} accessibilityElementsHidden>
+        <View style={cardStyle} accessibilityElementsHidden>
           <MilestoneCardChrome
             milestone={milestone}
             badgeIndex={badgeIndex}

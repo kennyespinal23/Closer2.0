@@ -1,5 +1,13 @@
 export type MilestoneType = "MARKER" | "BLESSING";
 
+/** Display category for the streaks grid — color-coded per design spec. */
+export type MilestoneCategory =
+  | "JOURNEY"
+  | "REFLECTION"
+  | "PRAYER"
+  | "BLESSING"
+  | "MARKER";
+
 export type Milestone = {
   day: number;
   type: MilestoneType;

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   Animated,
   Easing,
@@ -11,8 +11,8 @@ import {
 } from "react-native";
 import Svg, { Defs, Line, RadialGradient, Rect, Stop } from "react-native-svg";
 import type { Milestone } from "@/lib/milestones";
+import { getMilestoneAccent } from "@/lib/milestones";
 import { getMilestoneBadge } from "@/lib/milestoneBadges";
-import { TAB_ACCENT_RED } from "@/constants/theme";
 import { typography } from "@/lib/typography";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useColors } from "@/state/theme";
@@ -26,23 +26,20 @@ type MilestoneUnlockViewProps = {
 const BADGE_SIZE = 156;
 const GLOW_SIZE = 320;
 const BURST_SIZE = 300;
-
-const BURST_COLORS = [
-  TAB_ACCENT_RED,
-  "#FF8A4C",
-  "#C77DFF",
-  "#FFFFFF",
-  "#FFB347",
-] as const;
+const LANDMARK_GOLD = "#E8B84A";
 
 function milestoneDayLine(day: number): string {
   return day === 1 ? "1 Day" : `${day} Days`;
 }
 
+function burstColorsForAccent(accent: string): string[] {
+  return [accent, "#FFFFFF", accent, "#FF8A4C", "#C77DFF"];
+}
+
 /**
  * Post-sermon milestone unlock — shown after the streak screen.
- * Hierarchy mirrors a celebration moment: big "Hooray!", softer
- * subtitle, badge with burst, title, day count, and a detail link.
+ * Accent color follows the milestone category (journey, reflection,
+ * prayer, blessing, marker).
  */
 export function MilestoneUnlockView({
   milestone,
@@ -51,6 +48,14 @@ export function MilestoneUnlockView({
 }: MilestoneUnlockViewProps) {
   const colors = useColors();
   const reducedMotion = useReducedMotion();
+  const { color: accentColor, label: categoryLabel, isLandmark } =
+    getMilestoneAccent(milestone);
+  const ringColor = isLandmark ? LANDMARK_GOLD : accentColor;
+  const burstColors = useMemo(
+    () => burstColorsForAccent(accentColor),
+    [accentColor],
+  );
+
   const enter = useRef(new Animated.Value(reducedMotion ? 1 : 0)).current;
   const badgePop = useRef(new Animated.Value(reducedMotion ? 1 : 0)).current;
   const glowPulse = useRef(new Animated.Value(0)).current;
@@ -174,7 +179,7 @@ export function MilestoneUnlockView({
                 },
               ]}
             >
-              <CelebrationBurst size={BURST_SIZE} />
+              <CelebrationBurst size={BURST_SIZE} colors={burstColors} />
             </Animated.View>
 
             <Animated.View
@@ -191,6 +196,7 @@ export function MilestoneUnlockView({
                 size={GLOW_SIZE}
                 opacity={1}
                 gradientId="milestoneGlowOuter"
+                accentColor={accentColor}
               />
             </Animated.View>
 
@@ -215,6 +221,7 @@ export function MilestoneUnlockView({
                 size={GLOW_SIZE * 0.72}
                 opacity={0.9}
                 gradientId="milestoneGlowInner"
+                accentColor={accentColor}
               />
             </Animated.View>
 
@@ -222,9 +229,12 @@ export function MilestoneUnlockView({
               <View
                 style={[
                   styles.badgeCard,
+                  {
+                    borderColor: ringColor,
+                  },
                   Platform.OS === "ios"
                     ? {
-                        shadowColor: TAB_ACCENT_RED,
+                        shadowColor: ringColor,
                         shadowOffset: { width: 0, height: 0 },
                         shadowOpacity: 0.55,
                         shadowRadius: 16,
@@ -241,6 +251,20 @@ export function MilestoneUnlockView({
               </View>
             </View>
           </View>
+
+          <Text
+            style={[
+              typography.smallLabel,
+              {
+                color: accentColor,
+                textTransform: "uppercase",
+                textAlign: "center",
+                marginTop: 24,
+              },
+            ]}
+          >
+            Day {milestone.day} • {categoryLabel}
+          </Text>
 
           <Text
             style={[styles.milestoneTitle, { color: colors.ink }]}
@@ -263,7 +287,9 @@ export function MilestoneUnlockView({
                 pressed && { opacity: 0.72 },
               ]}
             >
-              <Text style={styles.viewLink}>View milestone</Text>
+              <Text style={[styles.viewLink, { color: accentColor }]}>
+                View milestone
+              </Text>
             </Pressable>
           ) : null}
         </Animated.View>
@@ -276,7 +302,13 @@ export function MilestoneUnlockView({
   );
 }
 
-function CelebrationBurst({ size }: { size: number }) {
+function CelebrationBurst({
+  size,
+  colors: burstPalette,
+}: {
+  size: number;
+  colors: string[];
+}) {
   const cx = size / 2;
   const cy = size / 2;
   const rayCount = 20;
@@ -291,7 +323,7 @@ function CelebrationBurst({ size }: { size: number }) {
         const y1 = cy + Math.sin(angle) * innerR;
         const x2 = cx + Math.cos(angle) * outerR;
         const y2 = cy + Math.sin(angle) * outerR;
-        const color = BURST_COLORS[i % BURST_COLORS.length];
+        const color = burstPalette[i % burstPalette.length]!;
         return (
           <Line
             key={i}
@@ -314,18 +346,28 @@ function BadgeGlowRing({
   size,
   opacity,
   gradientId,
+  accentColor,
 }: {
   size: number;
   opacity: number;
   gradientId: string;
+  accentColor: string;
 }) {
   return (
     <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       <Defs>
         <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor={TAB_ACCENT_RED} stopOpacity={0.55 * opacity} />
-          <Stop offset="42%" stopColor={TAB_ACCENT_RED} stopOpacity={0.22 * opacity} />
-          <Stop offset="100%" stopColor={TAB_ACCENT_RED} stopOpacity={0} />
+          <Stop
+            offset="0%"
+            stopColor={accentColor}
+            stopOpacity={0.55 * opacity}
+          />
+          <Stop
+            offset="42%"
+            stopColor={accentColor}
+            stopOpacity={0.22 * opacity}
+          />
+          <Stop offset="100%" stopColor={accentColor} stopOpacity={0} />
         </RadialGradient>
       </Defs>
       <Rect
@@ -406,7 +448,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: "#000000",
     borderWidth: 2,
-    borderColor: TAB_ACCENT_RED,
   },
   badgeImage: {
     width: "100%",
@@ -415,11 +456,11 @@ const styles = StyleSheet.create({
   milestoneTitle: {
     fontFamily: "System",
     fontWeight: "700",
-    fontSize: 28,
-    lineHeight: 34,
-    letterSpacing: -0.4,
+    fontSize: 24,
+    lineHeight: 30,
+    letterSpacing: -0.3,
     textAlign: "center",
-    marginTop: 28,
+    marginTop: 12,
     maxWidth: 300,
   },
   dayLine: {
@@ -440,7 +481,6 @@ const styles = StyleSheet.create({
   viewLink: {
     ...typography.body,
     fontWeight: "600",
-    color: TAB_ACCENT_RED,
     textAlign: "center",
   },
   footer: {

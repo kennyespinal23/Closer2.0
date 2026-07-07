@@ -1,4 +1,12 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -13,6 +21,7 @@ import {
   Text,
   type TextLayoutEventData,
   type NativeSyntheticEvent,
+  type NativeScrollEvent,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -56,6 +65,7 @@ import {
   TEXT_SIZES,
   type TextSizeId,
   type Translation,
+  type TranslationId,
   usePreferences,
 } from "@/state/preferences";
 import { useProgress } from "@/state/progress";
@@ -136,16 +146,6 @@ type ReaderListItem =
   /** Swipe target after the last verse page — triggers next chapter. */
   | { kind: "nextBridge"; key: string };
 
-type FrozenPagerSnapshot = {
-  bookId: string;
-  bookName: string;
-  chapter: number;
-  data: Chapter;
-  items: ReaderListItem[];
-  pageIdx: number;
-  width: number;
-};
-
 const readerPaginationCache = new Map<string, ReaderPage[]>();
 
 function readerPaginationKey(
@@ -157,6 +157,107 @@ function readerPaginationKey(
   pageContentHeight: number,
 ): string {
   return `${translationId}:${bookId}:${chapter}:${textSizeId}:${Math.round(pageContentWidth)}x${Math.round(pageContentHeight)}`;
+}
+
+type ReaderPaginationContext = {
+  translationId: TranslationId;
+  textSizeId: TextSizeId;
+  pageContentWidth: number;
+  pageContentHeight: number;
+};
+
+function getCachedChapterPageCount(
+  bookId: string,
+  chapterNum: number,
+  ctx: ReaderPaginationContext,
+): number | null {
+  const cached = readerPaginationCache.get(
+    readerPaginationKey(
+      bookId,
+      chapterNum,
+      ctx.translationId,
+      ctx.textSizeId,
+      ctx.pageContentWidth,
+      ctx.pageContentHeight,
+    ),
+  );
+  return cached?.length ?? null;
+}
+
+function resolveChapterPageCounts(
+  book: { id: string; chapters: number },
+  currentChapter: number,
+  currentChapterPageCount: number,
+  currentVerseCount: number,
+  ctx: ReaderPaginationContext,
+  translationId: TranslationId,
+): number[] {
+  const counts: number[] = [];
+
+  for (let c = 1; c <= book.chapters; c++) {
+    const count =
+      c === currentChapter
+        ? currentChapterPageCount
+        : getCachedChapterPageCount(book.id, c, ctx);
+    counts.push(count ?? 0);
+  }
+
+  const pagesPerVerse =
+    currentVerseCount > 0 && currentChapterPageCount > 0
+      ? currentChapterPageCount / currentVerseCount
+      : null;
+
+  for (let i = 0; i < counts.length; i++) {
+    const c = i + 1;
+    if (counts[i] > 0) continue;
+    const chData = getCachedChapter(book.id, c, translationId);
+    if (chData && pagesPerVerse) {
+      counts[i] = Math.max(
+        1,
+        Math.round(chData.verses.length * pagesPerVerse),
+      );
+    }
+  }
+
+  const known = counts.filter((n) => n > 0);
+  const avg =
+    known.length > 0
+      ? known.reduce((sum, n) => sum + n, 0) / known.length
+      : Math.max(1, currentChapterPageCount);
+
+  return counts.map((n) => (n > 0 ? n : Math.max(1, Math.round(avg))));
+}
+
+function computeBookPagination(
+  book: { id: string; chapters: number },
+  currentChapter: number,
+  chapterPageOneBased: number,
+  currentChapterPageCount: number,
+  currentVerseCount: number,
+  ctx: ReaderPaginationContext,
+  translationId: TranslationId,
+) {
+  const chapterCounts = resolveChapterPageCounts(
+    book,
+    currentChapter,
+    currentChapterPageCount,
+    currentVerseCount,
+    ctx,
+    translationId,
+  );
+
+  let pagesBefore = 0;
+  for (let c = 1; c < currentChapter; c++) {
+    pagesBefore += chapterCounts[c - 1] ?? 1;
+  }
+
+  const bookPage = pagesBefore + chapterPageOneBased;
+  const bookTotalPages = chapterCounts.reduce((sum, n) => sum + n, 0);
+  const bookPagesLeft = Math.max(0, bookTotalPages - bookPage);
+  const bookProgress =
+    bookTotalPages > 1 ? (bookPage - 1) / (bookTotalPages - 1) : 1;
+
+  return { bookPage, bookTotalPages, bookProgress, bookPagesLeft };
 }
 
 function buildReaderItems(
@@ -177,6 +278,19 @@ function buildReaderItems(
     items.push({ kind: "endMatter", key: "end" });
   }
   return items;
+}
+
+function landingPageIdx(
+  pageCount: number,
+  bookId: string,
+  chapterNum: number,
+  landOnLast: boolean,
+): number {
+  const chapterPrev = getAdjacent(bookId, chapterNum, "prev");
+  const lastVerseIdx = chapterPrev
+    ? pageCount
+    : Math.max(0, pageCount - 1);
+  return landOnLast ? lastVerseIdx : chapterPrev ? 1 : 0;
 }
 
 function linesToReaderPages(
@@ -269,9 +383,26 @@ export default function ChapterReaderScreen() {
     Number.isFinite(routeChapter) ? routeChapter : 1,
   );
   const internalNavRef = useRef(false);
+  const readerTargetRef = useRef({
+    bookId: routeBookId,
+    chapter: Number.isFinite(routeChapter) ? routeChapter : 1,
+  });
   const pendingLandOnLastPageRef = useRef(false);
-  const [frozenSnapshot, setFrozenSnapshot] =
-    useState<FrozenPagerSnapshot | null>(null);
+  /** Chapter key we already positioned the pager for (book:chapter). */
+  const placedPageForChapterRef = useRef<string | null>(null);
+  /** Pagination cache key used for the current placement. */
+  const placedPaginationKeyRef = useRef<string | null>(null);
+  const [viewportBookId, setViewportBookId] = useState(routeBookId);
+  const [viewportChapter, setViewportChapter] = useState(
+    Number.isFinite(routeChapter) ? routeChapter : 1,
+  );
+  const [pagerMountKey, setPagerMountKey] = useState("");
+  const [measureTarget, setMeasureTarget] = useState<{
+    bookId: string;
+    chapter: number;
+    data: Chapter;
+    landOnLast: boolean;
+  } | null>(null);
 
   const book = findBookById(readerBookId);
   const chapter = readerChapter;
@@ -310,6 +441,13 @@ export default function ChapterReaderScreen() {
   const [error, setError] = useState<Error | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
+  useEffect(() => {
+    readerTargetRef.current = {
+      bookId: readerBookId,
+      chapter: readerChapter,
+    };
+  }, [readerBookId, readerChapter]);
+
   // Keep in-reader chapter swaps on this screen instance — updating
   // params instead of replace avoids a navigation flash. External
   // entry (overview tap, deep link) still syncs from the route.
@@ -318,10 +456,18 @@ export default function ChapterReaderScreen() {
       internalNavRef.current = false;
       return;
     }
+    const nextChapter = Number.isFinite(routeChapter) ? routeChapter : 1;
     setReaderBookId(routeBookId);
-    setReaderChapter(Number.isFinite(routeChapter) ? routeChapter : 1);
+    setReaderChapter(nextChapter);
+    setViewportBookId(routeBookId);
+    setViewportChapter(nextChapter);
     pendingLandOnLastPageRef.current = false;
-    setFrozenSnapshot(null);
+    placedPageForChapterRef.current = null;
+    placedPaginationKeyRef.current = null;
+    setData(null);
+    setPages(null);
+    setMeasureTarget(null);
+    setPagerMountKey("");
   }, [routeBookId, routeChapter]);
 
   // Action-sheet / note-editor state ────────────────────────────
@@ -468,6 +614,9 @@ export default function ChapterReaderScreen() {
 
   const prev = getAdjacent(book.id, chapter, "prev");
   const next = getAdjacent(book.id, chapter, "next");
+  const viewportBook = findBookById(viewportBookId) ?? book;
+  const viewportPrev = getAdjacent(viewportBookId, viewportChapter, "prev");
+  const viewportNext = getAdjacent(viewportBookId, viewportChapter, "next");
   const headerTitle = `${book.name} ${chapter}`;
 
   // Resolve the verse currently shown in the action sheet (or note
@@ -563,6 +712,10 @@ export default function ChapterReaderScreen() {
 
   const [pages, setPages] = useState<ReaderPage[] | null>(null);
   const [currentPageIdx, setCurrentPageIdx] = useState(0);
+  const [paginationRevision, setPaginationRevision] = useState(0);
+  const bumpPaginationRevision = useCallback(() => {
+    setPaginationRevision((n) => n + 1);
+  }, []);
 
   // Verse → line-index map. Built during the measurement pass so the
   // focus-verse deep-link can jump to the right PAGE (not just scroll
@@ -572,27 +725,80 @@ export default function ChapterReaderScreen() {
   const pageIdxAtDragStartRef = useRef(0);
   const dragStartOffsetRef = useRef(0);
 
+  const tryCommitTargetChapter = useCallback(
+    (
+      targetBookId: string,
+      targetChapter: number,
+      landOnLast: boolean,
+    ): boolean => {
+      const pKey = readerPaginationKey(
+        targetBookId,
+        targetChapter,
+        translation.id,
+        textSize.id,
+        pageContentWidth,
+        pageContentHeight,
+      );
+      const cached = getCachedChapter(
+        targetBookId,
+        targetChapter,
+        translation.id,
+      );
+      const cachedPages = readerPaginationCache.get(pKey);
+      if (!cached || !cachedPages?.length) return false;
+
+      const landIdx = landingPageIdx(
+        cachedPages.length,
+        targetBookId,
+        targetChapter,
+        landOnLast,
+      );
+      setData(cached);
+      setPages(cachedPages);
+      setViewportBookId(targetBookId);
+      setViewportChapter(targetChapter);
+      setCurrentPageIdx(landIdx);
+      setPagerMountKey(`${targetBookId}-${targetChapter}-${textSize.id}`);
+      placedPageForChapterRef.current = `${targetBookId}:${targetChapter}`;
+      placedPaginationKeyRef.current = pKey;
+      pageIdxAtDragStartRef.current = landIdx;
+      pendingLandOnLastPageRef.current = false;
+      advanceLockRef.current = false;
+      setMeasureTarget(null);
+      setError(null);
+      return true;
+    },
+    [
+      translation.id,
+      textSize.id,
+      pageContentWidth,
+      pageContentHeight,
+    ],
+  );
+
+  const queueMeasureTarget = useCallback(
+    (
+      targetBookId: string,
+      targetChapter: number,
+      chapterData: Chapter,
+      landOnLast: boolean,
+    ) => {
+      setMeasureTarget({
+        bookId: targetBookId,
+        chapter: targetChapter,
+        data: chapterData,
+        landOnLast,
+      });
+    },
+    [],
+  );
+
   const goto = (
     target: { bookId: string; chapter: number },
     opts?: { lastPage?: boolean },
   ) => {
-    pendingLandOnLastPageRef.current = opts?.lastPage === true;
-
-    if (data && pages && book) {
-      setFrozenSnapshot({
-        bookId: book.id,
-        bookName: book.name,
-        chapter,
-        data,
-        items: pages.map((p, idx) => ({
-          kind: "page" as const,
-          key: `frozen-${idx}`,
-          page: p,
-        })),
-        pageIdx: currentPageIdx,
-        width: screenWidth,
-      });
-    }
+    const landOnLast = opts?.lastPage === true;
+    pendingLandOnLastPageRef.current = landOnLast;
 
     internalNavRef.current = true;
     setReaderBookId(target.bookId);
@@ -603,44 +809,114 @@ export default function ChapterReaderScreen() {
     } else {
       router.setParams({ chapter: String(target.chapter) });
     }
+
+    if (
+      !tryCommitTargetChapter(target.bookId, target.chapter, landOnLast)
+    ) {
+      const cached = getCachedChapter(
+        target.bookId,
+        target.chapter,
+        translation.id,
+      );
+      if (cached) {
+        queueMeasureTarget(
+          target.bookId,
+          target.chapter,
+          cached,
+          landOnLast,
+        );
+      }
+    }
   };
 
   const advanceToNextChapter = () => {
-    if (!next || advanceLockRef.current) return;
+    if (!viewportNext || advanceLockRef.current) return;
     advanceLockRef.current = true;
-    if (!alreadyRead) {
-      recordChapterRead(book.id, chapter);
+    prefetchChapter(viewportNext.bookId, viewportNext.chapter, translation.id);
+    const leavingRead =
+      hasReadChapter(viewportBookId, viewportChapter) || justMarked;
+    if (!leavingRead) {
+      recordChapterRead(viewportBookId, viewportChapter);
       setJustMarked(true);
       haptics.success();
     } else {
       haptics.tap();
     }
-    goto(next);
+    goto(viewportNext);
   };
 
   const retreatToPreviousChapter = () => {
-    if (!prev || advanceLockRef.current) return;
+    if (!viewportPrev || advanceLockRef.current) return;
     advanceLockRef.current = true;
     haptics.tap();
-    prefetchChapter(prev.bookId, prev.chapter, translation.id);
-    goto(prev, { lastPage: true });
+    prefetchChapter(viewportPrev.bookId, viewportPrev.chapter, translation.id);
+    goto(viewportPrev, { lastPage: true });
   };
 
   const handlePageSettled = (pageIdx: number) => {
+    if (advanceLockRef.current) return;
     if (!pages) return;
-    const firstVerseIdx = prev ? 1 : 0;
+    const chapterPrev = getAdjacent(viewportBookId, viewportChapter, "prev");
+    const firstVerseIdx = chapterPrev ? 1 : 0;
     const nextBridgeIdx = firstVerseIdx + pages.length;
 
-    if (prev && pageIdx === 0) {
+    if (chapterPrev && pageIdx === 0) {
       retreatToPreviousChapter();
       return;
     }
-    if (next && pageIdx >= nextBridgeIdx) {
+    if (viewportNext && pageIdx >= nextBridgeIdx) {
       advanceToNextChapter();
       return;
     }
     setCurrentPageIdx(pageIdx);
   };
+
+  const handleMeasureReady = useCallback(
+    (
+      targetBookId: string,
+      targetChapter: number,
+      chapterData: Chapter,
+      computed: ReaderPage[],
+      landOnLast: boolean,
+    ) => {
+      const target = readerTargetRef.current;
+      if (
+        target.bookId !== targetBookId ||
+        target.chapter !== targetChapter
+      ) {
+        return;
+      }
+
+      const landIdx = landingPageIdx(
+        computed.length,
+        targetBookId,
+        targetChapter,
+        landOnLast,
+      );
+      setData(chapterData);
+      setPages(computed);
+      setViewportBookId(targetBookId);
+      setViewportChapter(targetChapter);
+      setCurrentPageIdx(landIdx);
+      setPagerMountKey(`${targetBookId}-${targetChapter}-${textSize.id}`);
+      placedPageForChapterRef.current = `${targetBookId}:${targetChapter}`;
+      placedPaginationKeyRef.current = readerPaginationKey(
+        targetBookId,
+        targetChapter,
+        translation.id,
+        textSize.id,
+        pageContentWidth,
+        pageContentHeight,
+      );
+      pageIdxAtDragStartRef.current = landIdx;
+      pendingLandOnLastPageRef.current = false;
+      advanceLockRef.current = false;
+      setMeasureTarget(null);
+      setError(null);
+      bumpPaginationRevision();
+    },
+    [textSize.id, pageContentWidth, pageContentHeight, translation.id, bumpPaginationRevision],
+  );
 
   /**
    * Capture the off-screen line measurement and recompute pages.
@@ -650,6 +926,8 @@ export default function ChapterReaderScreen() {
   const handleMeasureLines = useCallback(
     (lines: ReadonlyArray<TextLayoutLine>) => {
       if (!lines || lines.length === 0 || !data) return;
+      if (book.id !== readerBookId || chapter !== readerChapter) return;
+
       const map = new Map<number, number>();
       const maxVerseNum = data.verses[data.verses.length - 1]?.number ?? 0;
       let nextExpected = data.verses[0]?.number ?? 1;
@@ -688,85 +966,163 @@ export default function ChapterReaderScreen() {
         computed,
       );
 
-      if (pendingLandOnLastPageRef.current) {
-        const lastIdx = prev
-          ? computed.length
-          : Math.max(0, computed.length - 1);
-        setCurrentPageIdx(lastIdx);
-        pageIdxAtDragStartRef.current = lastIdx;
-        pendingLandOnLastPageRef.current = false;
-      } else {
-        const startIdx = prev ? 1 : 0;
-        setCurrentPageIdx(startIdx);
-        pageIdxAtDragStartRef.current = startIdx;
+      const chapterKey = `${readerBookId}:${readerChapter}`;
+      const skipPageUpdate =
+        placedPageForChapterRef.current === chapterKey &&
+        !pendingLandOnLastPageRef.current;
+
+      if (!skipPageUpdate) {
+        const needsPlacement =
+          pendingLandOnLastPageRef.current ||
+          placedPageForChapterRef.current !== chapterKey;
+
+        if (needsPlacement) {
+          const landIdx = landingPageIdx(
+            computed.length,
+            readerBookId,
+            readerChapter,
+            pendingLandOnLastPageRef.current,
+          );
+          setCurrentPageIdx(landIdx);
+          pageIdxAtDragStartRef.current = landIdx;
+          pendingLandOnLastPageRef.current = false;
+          placedPageForChapterRef.current = chapterKey;
+          placedPaginationKeyRef.current = readerPaginationKey(
+            readerBookId,
+            readerChapter,
+            translation.id,
+            textSize.id,
+            pageContentWidth,
+            pageContentHeight,
+          );
+        }
+
+        setPages(computed);
+        bumpPaginationRevision();
       }
-      setPages(computed);
+
+      advanceLockRef.current = false;
     },
     [
       data,
       book.id,
       chapter,
-      translation.id,
-      textSize.id,
-      pageContentWidth,
-      pageContentHeight,
-      FIRST_PAGE_HEADING_HEIGHT,
-    ],
-  );
-
-  // Load chapter text + pagination whenever the reader target changes.
-  useEffect(() => {
-    if (!book || !Number.isFinite(chapter)) return;
-    let cancelled = false;
-
-    const pKey = readerPaginationKey(
       readerBookId,
       readerChapter,
       translation.id,
       textSize.id,
       pageContentWidth,
       pageContentHeight,
+      FIRST_PAGE_HEADING_HEIGHT,
+      bumpPaginationRevision,
+    ],
+  );
+
+  const paginationCtx = useMemo(
+    () => ({
+      translationId: translation.id,
+      textSizeId: textSize.id,
+      pageContentWidth,
+      pageContentHeight,
+    }),
+    [translation.id, textSize.id, pageContentWidth, pageContentHeight],
+  );
+
+  // Load chapter text + pagination whenever the reader target changes.
+  // useLayoutEffect so cached chapter swaps land before paint.
+  useLayoutEffect(() => {
+    if (!book || !Number.isFinite(chapter)) return;
+    let cancelled = false;
+
+    const targetBookId = readerBookId;
+    const targetChapter = readerChapter;
+    const pKey = readerPaginationKey(
+      targetBookId,
+      targetChapter,
+      translation.id,
+      textSize.id,
+      pageContentWidth,
+      pageContentHeight,
     );
-    const cached = getCachedChapter(readerBookId, readerChapter, translation.id);
-    const cachedPages = readerPaginationCache.get(pKey);
-    const landOnLast = pendingLandOnLastPageRef.current;
+    const targetKey = `${targetBookId}:${targetChapter}`;
+    const alreadyPlaced =
+      placedPageForChapterRef.current === targetKey &&
+      placedPaginationKeyRef.current === pKey;
 
-    if (cached) {
-      setData(cached);
-      setError(null);
-    } else {
-      setData(null);
-      setError(null);
-    }
     setJustMarked(false);
+    setError(null);
 
-    if (cachedPages && cachedPages.length > 0) {
-      const chapterPrev = getAdjacent(readerBookId, readerChapter, "prev");
-      const landIdx = landOnLast
-        ? chapterPrev
-          ? cachedPages.length
-          : cachedPages.length - 1
-        : chapterPrev
-          ? 1
-          : 0;
-      setPages(cachedPages);
-      setCurrentPageIdx(landIdx);
-      pageIdxAtDragStartRef.current = landIdx;
-      pendingLandOnLastPageRef.current = false;
-    } else {
-      setPages(null);
-      verseToLineRef.current = new Map();
-      pageIdxAtDragStartRef.current = 0;
-      dragStartOffsetRef.current = 0;
-      if (!landOnLast) {
-        const chapterPrev = getAdjacent(readerBookId, readerChapter, "prev");
-        setCurrentPageIdx(chapterPrev ? 1 : 0);
-        advanceLockRef.current = false;
+    if (!alreadyPlaced) {
+      const landOnLast = pendingLandOnLastPageRef.current;
+
+      if (tryCommitTargetChapter(targetBookId, targetChapter, landOnLast)) {
+        const prevAdj = getAdjacent(targetBookId, targetChapter, "prev");
+        const nextAdj = getAdjacent(targetBookId, targetChapter, "next");
+        if (prevAdj) {
+          prefetchChapter(prevAdj.bookId, prevAdj.chapter, translation.id);
+        }
+        if (nextAdj) {
+          prefetchChapter(nextAdj.bookId, nextAdj.chapter, translation.id);
+        }
+        return;
+      }
+
+      const cached = getCachedChapter(
+        targetBookId,
+        targetChapter,
+        translation.id,
+      );
+      if (cached) {
+        queueMeasureTarget(targetBookId, targetChapter, cached, landOnLast);
+      } else if (!data) {
+        setData(null);
+        setPages(null);
+        fetchChapter(targetBookId, targetChapter, translation.id)
+          .then((c) => {
+            if (cancelled) return;
+            const target = readerTargetRef.current;
+            if (
+              target.bookId !== targetBookId ||
+              target.chapter !== targetChapter
+            ) {
+              return;
+            }
+            queueMeasureTarget(
+              targetBookId,
+              targetChapter,
+              c,
+              pendingLandOnLastPageRef.current,
+            );
+          })
+          .catch((e: Error) => {
+            if (!cancelled) setError(e);
+          });
+      } else {
+        fetchChapter(targetBookId, targetChapter, translation.id)
+          .then((c) => {
+            if (cancelled) return;
+            const target = readerTargetRef.current;
+            if (
+              target.bookId !== targetBookId ||
+              target.chapter !== targetChapter
+            ) {
+              return;
+            }
+            queueMeasureTarget(
+              targetBookId,
+              targetChapter,
+              c,
+              pendingLandOnLastPageRef.current,
+            );
+          })
+          .catch((e: Error) => {
+            if (!cancelled) setError(e);
+          });
       }
     }
 
-    const prevAdj = getAdjacent(readerBookId, readerChapter, "prev");
-    const nextAdj = getAdjacent(readerBookId, readerChapter, "next");
+    const prevAdj = getAdjacent(targetBookId, targetChapter, "prev");
+    const nextAdj = getAdjacent(targetBookId, targetChapter, "next");
     if (prevAdj) {
       prefetchChapter(prevAdj.bookId, prevAdj.chapter, translation.id);
     }
@@ -774,14 +1130,6 @@ export default function ChapterReaderScreen() {
       prefetchChapter(nextAdj.bookId, nextAdj.chapter, translation.id);
     }
 
-    fetchChapter(readerBookId, readerChapter, translation.id)
-      .then((c) => {
-        if (cancelled) return;
-        setData(c);
-      })
-      .catch((e: Error) => {
-        if (!cancelled) setError(e);
-      });
     return () => {
       cancelled = true;
     };
@@ -795,18 +1143,21 @@ export default function ChapterReaderScreen() {
     pageContentWidth,
     pageContentHeight,
     reloadKey,
+    data,
+    tryCommitTargetChapter,
+    queueMeasureTarget,
   ]);
 
   // Derived presentation: verse pages only when a next chapter exists
   // (swiping past the last page advances directly). End-matter card is
   // appended only at the canonical end of a book / the Bible.
   const versePageCount = pages?.length ?? 0;
-  const hasEndMatter = !next;
+  const hasEndMatter = !viewportNext;
   const totalPages = Math.max(
     1,
     versePageCount + (data && hasEndMatter ? 1 : 0),
   );
-  const firstVerseListIdx = prev ? 1 : 0;
+  const firstVerseListIdx = viewportPrev ? 1 : 0;
   const versePageIdx =
     pages && pages.length > 0
       ? Math.max(
@@ -817,11 +1168,34 @@ export default function ChapterReaderScreen() {
   const currentPage = Math.min(totalPages, versePageIdx + 1);
   const pagesLeft = Math.max(0, totalPages - currentPage);
 
-  // A 0–1 progress value derived from page state. Drives the thin
-  // bar in the header AND feeds the auto-mark logic below (which
-  // used to consume scrollProgress directly).
+  const bookPagination = useMemo(() => {
+    if (!pages?.length) return null;
+    return computeBookPagination(
+      book,
+      chapter,
+      currentPage,
+      versePageCount,
+      data?.verses.length ?? 0,
+      paginationCtx,
+      translation.id,
+    );
+  }, [
+    book,
+    chapter,
+    currentPage,
+    versePageCount,
+    data?.verses.length,
+    pages,
+    paginationCtx,
+    translation.id,
+    paginationRevision,
+  ]);
+
+  // Chapter-scoped progress — still drives auto-mark-as-read.
   const pageProgress =
     totalPages > 1 ? versePageIdx / (totalPages - 1) : 1;
+  const headerProgress = bookPagination?.bookProgress ?? pageProgress;
+  const headerPagesLeft = bookPagination?.bookPagesLeft ?? pagesLeft;
 
   // ─── Auto-mark as read — page-based ─────────────────────────────
   // Same intent as the old scroll-based auto-mark: count the chapter
@@ -978,7 +1352,7 @@ export default function ChapterReaderScreen() {
       (p) => verseLine >= p.startLine && verseLine <= p.endLine,
     );
     if (versePageIdx < 0) return;
-    const listIdx = versePageIdx + (prev ? 1 : 0);
+    const listIdx = versePageIdx + (viewportPrev ? 1 : 0);
 
     // De-dupe by route + verse so reloads / translation swaps inside
     // the same focus session don't replay the animation.
@@ -1008,7 +1382,7 @@ export default function ChapterReaderScreen() {
         useNativeDriver: false,
       }),
     ]).start();
-  }, [focusVerse, data, pages, focusGlow, book.id, chapter, prev]);
+  }, [focusVerse, data, pages, focusGlow, viewportBookId, viewportChapter, viewportPrev]);
 
   // Clear the dedupe token when the user navigates to a different
   // chapter so a later check-in to the same verse re-plays the glow.
@@ -1022,38 +1396,39 @@ export default function ChapterReaderScreen() {
   // card at the canonical end of a book.
   const readerItems: ReaderListItem[] = useMemo(() => {
     if (!data || !pages) return [];
-    return buildReaderItems(pages, !!prev, !!next);
-  }, [data, pages, prev, next]);
+    return buildReaderItems(pages, !!viewportPrev, !!viewportNext);
+  }, [data, pages, viewportPrev, viewportNext]);
 
   const pagerReady = !!data && !!pages;
 
-  // Drop the frozen overlay once the new chapter pager is mounted
-  // at the correct index — keeps chapter swaps from flashing.
-  useEffect(() => {
-    if (!frozenSnapshot || !pagerReady) return;
+  const handleChapterEdgeScroll = (x: number) => {
+    if (advanceLockRef.current || !pages) return;
+    const chapterPrev = getAdjacent(viewportBookId, viewportChapter, "prev");
+    const firstVerseIdx = chapterPrev ? 1 : 0;
+    const lastVerseIdx = firstVerseIdx + pages.length - 1;
+    const progress = x / screenWidth;
 
-    let innerFrame = 0;
-    const outerFrame = requestAnimationFrame(() => {
-      pagerRef.current?.scrollToIndex({
-        index: currentPageIdx,
-        animated: false,
-      });
-      innerFrame = requestAnimationFrame(() => {
-        setFrozenSnapshot(null);
-        advanceLockRef.current = false;
-      });
+    if (viewportNext && progress > lastVerseIdx + 0.04) {
+      advanceToNextChapter();
+      return;
+    }
+    if (viewportPrev && chapterPrev && progress < firstVerseIdx - 0.04) {
+      retreatToPreviousChapter();
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (!pagerReady || readerItems.length === 0) return;
+    const safeIdx = Math.min(currentPageIdx, readerItems.length - 1);
+    pagerRef.current?.scrollToIndex({
+      index: safeIdx,
+      animated: false,
     });
-
-    return () => {
-      cancelAnimationFrame(outerFrame);
-      if (innerFrame) cancelAnimationFrame(innerFrame);
-    };
   }, [
-    frozenSnapshot,
     pagerReady,
     currentPageIdx,
-    readerBookId,
-    readerChapter,
+    pagerMountKey,
+    readerItems.length,
   ]);
 
   return (
@@ -1062,8 +1437,10 @@ export default function ChapterReaderScreen() {
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <Header
           translationTag={translation.tag}
-          pagesLeftLabel={data && pages ? pagesLeftLabel(pagesLeft) : ""}
-          progress={pageProgress}
+          pagesLeftLabel={
+            data && pages ? pagesLeftLabel(headerPagesLeft, true) : ""
+          }
+          progress={headerProgress}
         />
 
         <View style={{ flex: 1 }}>
@@ -1072,7 +1449,7 @@ export default function ChapterReaderScreen() {
             grab onTextLayout's `lines` array and compute page breaks.
             Positioned far off-screen + opacity:0 so it's never seen
             by the user but still participates in layout. */}
-        {data && (
+        {data && !measureTarget && (
           <View
             pointerEvents="none"
             style={{
@@ -1085,8 +1462,8 @@ export default function ChapterReaderScreen() {
           >
             <VerseFlow
               verses={data.verses}
-              bookId={book.id}
-              chapter={chapter}
+              bookId={viewportBookId}
+              chapter={viewportChapter}
               scale={textSize.scale}
               onVersePress={() => {}}
               focusVerse={null}
@@ -1097,6 +1474,25 @@ export default function ChapterReaderScreen() {
             />
           </View>
         )}
+
+        {measureTarget ? (
+          <PendingChapterMeasurer
+            target={measureTarget}
+            cacheKey={readerPaginationKey(
+              measureTarget.bookId,
+              measureTarget.chapter,
+              translation.id,
+              textSize.id,
+              pageContentWidth,
+              pageContentHeight,
+            )}
+            pageContentWidth={pageContentWidth}
+            pageContentHeight={pageContentHeight}
+            firstPageHeadingHeight={FIRST_PAGE_HEADING_HEIGHT}
+            scale={textSize.scale}
+            onReady={handleMeasureReady}
+          />
+        ) : null}
 
         {/* Pre-measure adjacent chapters so retreat/advance can swap
             from cache without a visible reload flash. */}
@@ -1121,6 +1517,7 @@ export default function ChapterReaderScreen() {
               pageContentHeight={pageContentHeight}
               firstPageHeadingHeight={FIRST_PAGE_HEADING_HEIGHT}
               scale={textSize.scale}
+              onMeasured={bumpPaginationRevision}
             />
           )}
         {next &&
@@ -1144,6 +1541,7 @@ export default function ChapterReaderScreen() {
               pageContentHeight={pageContentHeight}
               firstPageHeadingHeight={FIRST_PAGE_HEADING_HEIGHT}
               scale={textSize.scale}
+              onMeasured={bumpPaginationRevision}
             />
           )}
 
@@ -1171,16 +1569,18 @@ export default function ChapterReaderScreen() {
               />
             )}
           </View>
-        ) : !data ? (
+        ) : !data && !pages ? (
           <View className="flex-1 items-center justify-center">
             <LoadingView />
           </View>
-        ) : !pagerReady ? (
-          <View style={{ flex: 1, backgroundColor: colors.bg }} />
-        ) : (
+        ) : data && pages ? (
+          <View style={{ flex: 1 }}>
           <FlatList
             ref={pagerRef}
-            key={`${book.id}-${chapter}`}
+            key={
+              pagerMountKey ||
+              `${viewportBookId}-${viewportChapter}-${textSize.id}`
+            }
             data={readerItems}
             horizontal
             pagingEnabled
@@ -1192,17 +1592,26 @@ export default function ChapterReaderScreen() {
               offset: screenWidth * index,
               index,
             })}
+            scrollEventThrottle={16}
+            onScroll={(e) => {
+              handleChapterEdgeScroll(e.nativeEvent.contentOffset.x);
+            }}
+            onScrollToIndexFailed={(info) => {
+              requestAnimationFrame(() => {
+                pagerRef.current?.scrollToIndex({
+                  index: Math.min(info.index, readerItems.length - 1),
+                  animated: false,
+                });
+              });
+            }}
             onScrollBeginDrag={(e) => {
+              if (advanceLockRef.current) return;
               const x = e.nativeEvent.contentOffset.x;
               pageIdxAtDragStartRef.current = Math.round(x / screenWidth);
               dragStartOffsetRef.current = x;
             }}
             onMomentumScrollEnd={(e) => {
-              const x = e.nativeEvent.contentOffset.x;
-              const idx = Math.round(x / screenWidth);
-              handlePageSettled(idx);
-            }}
-            onScrollEndDrag={(e) => {
+              if (advanceLockRef.current) return;
               const x = e.nativeEvent.contentOffset.x;
               const idx = Math.round(x / screenWidth);
               handlePageSettled(idx);
@@ -1219,11 +1628,14 @@ export default function ChapterReaderScreen() {
                   <EndMatterPage
                     width={screenWidth}
                     paddingX={PAGE_PAD_X}
-                    book={book}
-                    chapter={chapter}
-                    alreadyRead={alreadyRead}
+                    book={viewportBook}
+                    chapter={viewportChapter}
+                    alreadyRead={
+                      hasReadChapter(viewportBookId, viewportChapter) ||
+                      justMarked
+                    }
                     onMarkRead={() => {
-                      recordChapterRead(book.id, chapter);
+                      recordChapterRead(viewportBookId, viewportChapter);
                       setJustMarked(true);
                     }}
                     translationName={data.translation}
@@ -1231,8 +1643,8 @@ export default function ChapterReaderScreen() {
                     onChangeTranslation={() =>
                       router.push("/settings/translation")
                     }
-                    prev={prev}
-                    next={next}
+                    prev={viewportPrev}
+                    next={viewportNext}
                     onGoto={goto}
                   />
                 );
@@ -1244,13 +1656,13 @@ export default function ChapterReaderScreen() {
                   paddingTop={PAGE_PAD_Y_TOP}
                   paddingBottom={PAGE_PAD_Y_BOTTOM}
                   isFirst={item.page.isFirst}
-                  bookName={book.name}
-                  chapter={chapter}
+                  bookName={viewportBook.name}
+                  chapter={viewportChapter}
                   scale={textSize.scale}
                   verses={data.verses}
                   startVerseIdx={item.page.startVerseIdx}
                   endVerseIdx={item.page.endVerseIdx}
-                  bookId={book.id}
+                  bookId={viewportBookId}
                   onVersePress={(n) => {
                     // While the user is in multi-select mode, a tap
                     // toggles membership instead of opening the
@@ -1291,20 +1703,6 @@ export default function ChapterReaderScreen() {
               );
             }}
           />
-        )}
-
-        {frozenSnapshot ? (
-          <View
-            style={[StyleSheet.absoluteFillObject, { zIndex: 2 }]}
-            pointerEvents="none"
-          >
-            <FrozenChapterPager
-              snapshot={frozenSnapshot}
-              paddingX={PAGE_PAD_X}
-              paddingTop={PAGE_PAD_Y_TOP}
-              paddingBottom={PAGE_PAD_Y_BOTTOM}
-              scale={textSize.scale}
-            />
           </View>
         ) : null}
 
@@ -1326,7 +1724,8 @@ export default function ChapterReaderScreen() {
               className="text-ink-subtle text-[11px] tracking-[1.5px]"
               style={{ fontFamily: "System", fontWeight: "500" }}
             >
-              Page {currentPage} of {totalPages}
+              Page {bookPagination?.bookPage ?? currentPage} of{" "}
+              {bookPagination?.bookTotalPages ?? totalPages}
             </Text>
           </View>
         ) : null}
@@ -1436,7 +1835,7 @@ export default function ChapterReaderScreen() {
           the right provider method. */}
       {editingNote !== null ? (
       <NoteEditor
-        visible
+        visible={editingNote !== null}
         reference={editingReference}
         verseText={editingVerseData?.text ?? ""}
         initialNote={editingNoteInitialText}
@@ -1876,61 +2275,109 @@ function VerseFlow({
   );
 }
 
-const EMPTY_VERSE_SET = new Set<number>();
-
-function FrozenChapterPager({
-  snapshot,
-  paddingX,
-  paddingTop,
-  paddingBottom,
+function PendingChapterMeasurer({
+  target,
+  cacheKey,
+  pageContentWidth,
+  pageContentHeight,
+  firstPageHeadingHeight,
   scale,
+  onReady,
 }: {
-  snapshot: FrozenPagerSnapshot;
-  paddingX: number;
-  paddingTop: number;
-  paddingBottom: number;
+  target: {
+    bookId: string;
+    chapter: number;
+    data: Chapter;
+    landOnLast: boolean;
+  };
+  cacheKey: string;
+  pageContentWidth: number;
+  pageContentHeight: number;
+  firstPageHeadingHeight: number;
   scale: number;
+  onReady: (
+    bookId: string,
+    chapter: number,
+    data: Chapter,
+    pages: ReaderPage[],
+    landOnLast: boolean,
+  ) => void;
 }) {
   const noopGlow = useRef(new Animated.Value(0)).current;
-  return (
-    <FlatList
-      data={snapshot.items}
-      horizontal
-      pagingEnabled
-      scrollEnabled={false}
-      showsHorizontalScrollIndicator={false}
-      initialScrollIndex={snapshot.pageIdx}
-      keyExtractor={(item) => item.key}
-      getItemLayout={(_, index) => ({
-        length: snapshot.width,
-        offset: snapshot.width * index,
-        index,
-      })}
-      renderItem={({ item }) =>
-        item.kind === "page" ? (
-          <ReaderPageView
-            width={snapshot.width}
-            paddingX={paddingX}
-            paddingTop={paddingTop}
-            paddingBottom={paddingBottom}
-            isFirst={item.page.isFirst}
-            bookName={snapshot.bookName}
-            chapter={snapshot.chapter}
-            scale={scale}
-            verses={snapshot.data.verses}
-            startVerseIdx={item.page.startVerseIdx}
-            endVerseIdx={item.page.endVerseIdx}
-            bookId={snapshot.bookId}
-            onVersePress={() => {}}
-            onVerseLongPress={() => {}}
-            selectedSet={EMPTY_VERSE_SET}
-            focusVerse={null}
-            focusTint="#888888"
-            focusGlow={noopGlow}
-          />
-        ) : null
+  const committedRef = useRef(false);
+
+  const finish = useCallback(
+    (computed: ReaderPage[]) => {
+      if (committedRef.current || computed.length === 0) return;
+      committedRef.current = true;
+      readerPaginationCache.set(cacheKey, computed);
+      onReady(
+        target.bookId,
+        target.chapter,
+        target.data,
+        computed,
+        target.landOnLast,
+      );
+    },
+    [cacheKey, onReady, target],
+  );
+
+  const handleMeasure = useCallback(
+    (lines: ReadonlyArray<TextLayoutLine>) => {
+      if (!lines.length) return;
+      const cached = readerPaginationCache.get(cacheKey);
+      if (cached?.length) {
+        finish(cached);
+        return;
       }
-    />
+      const computed = linesToReaderPages(
+        lines,
+        target.data.verses,
+        pageContentHeight,
+        firstPageHeadingHeight,
+      );
+      finish(computed);
+    },
+    [
+      cacheKey,
+      finish,
+      firstPageHeadingHeight,
+      pageContentHeight,
+      target.data.verses,
+    ],
+  );
+
+  useEffect(() => {
+    const cached = readerPaginationCache.get(cacheKey);
+    if (cached?.length) {
+      finish(cached);
+    }
+  }, [cacheKey, finish]);
+
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        left: 0,
+        top: -150000,
+        opacity: 0,
+        width: pageContentWidth,
+      }}
+    >
+      <VerseFlow
+        verses={target.data.verses}
+        bookId={target.bookId}
+        chapter={target.chapter}
+        scale={scale}
+        onVersePress={() => {}}
+        focusVerse={null}
+        focusTint="#888888"
+        focusGlow={noopGlow}
+        onAnchors={() => {}}
+        onMeasureLines={handleMeasure}
+      />
+    </View>
   );
 }
 
@@ -1943,6 +2390,7 @@ function AdjacentChapterMeasurer({
   pageContentHeight,
   firstPageHeadingHeight,
   scale,
+  onMeasured,
 }: {
   bookId: string;
   chapter: number;
@@ -1952,6 +2400,7 @@ function AdjacentChapterMeasurer({
   pageContentHeight: number;
   firstPageHeadingHeight: number;
   scale: number;
+  onMeasured?: () => void;
 }) {
   const noopGlow = useRef(new Animated.Value(0)).current;
   const handleMeasure = useCallback(
@@ -1965,9 +2414,10 @@ function AdjacentChapterMeasurer({
       );
       if (computed.length > 0) {
         readerPaginationCache.set(cacheKey, computed);
+        onMeasured?.();
       }
     },
-    [cacheKey, verses, pageContentHeight, firstPageHeadingHeight],
+    [cacheKey, verses, pageContentHeight, firstPageHeadingHeight, onMeasured],
   );
 
   if (readerPaginationCache.has(cacheKey)) return null;
@@ -2734,14 +3184,15 @@ function Header({
 // ─────────────────────────────────────────────────────────────────
 
 /**
- * Apple-Books style caption: "N pages left in chapter" / "Last page".
+ * Apple-Books style caption: "N pages left in chapter/book".
  * Returns an empty string when we have nothing useful to say (only
  * happens before the first scroll measurement lands).
  */
-function pagesLeftLabel(pagesLeft: number): string {
+function pagesLeftLabel(pagesLeft: number, inBook = false): string {
   if (pagesLeft <= 0) return "Last page";
-  if (pagesLeft === 1) return "1 page left in chapter";
-  return `${pagesLeft} pages left in chapter`;
+  const scope = inBook ? "book" : "chapter";
+  if (pagesLeft === 1) return `1 page left in ${scope}`;
+  return `${pagesLeft} pages left in ${scope}`;
 }
 
 // ─────────────────────────────────────────────────────────────────

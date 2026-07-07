@@ -1,23 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { AppleSheet } from "@/components/AppleSheet";
 import { SFSymbol } from "@/components/Symbol";
 import { useColors } from "@/state/theme";
 
 /**
- * Full-screen modal for editing a note attached to a single verse.
+ * Full-screen note editor for a single verse (or multi-verse selection).
  *
- * Uses React Native's `Modal` instead of TrueSheet so the editor
- * never leaks a native sheet over unrelated routes (e.g. /notes)
- * when the user navigates away from the chapter reader mid-edit.
+ * Uses AppleSheet at the full-screen detent — same pattern as
+ * JournalEditor — so the native sheet dims and covers the reader
+ * completely instead of the RN Modal occasionally presenting at
+ * the wrong width over the horizontal chapter pager.
  */
 export function NoteEditor({
   visible,
@@ -44,203 +44,196 @@ export function NoteEditor({
   useEffect(() => {
     if (!visible) return;
     setText(initialNote);
-    const t = setTimeout(() => inputRef.current?.focus(), 250);
+    const t = setTimeout(() => inputRef.current?.focus(), 280);
     return () => clearTimeout(t);
   }, [visible, initialNote]);
 
   const dirty = text.trim() !== initialNote.trim();
   const canSave = text.trim().length > 0;
 
-  if (!visible) return null;
-
   return (
-    <Modal
-      visible
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={onCancel}
+    <AppleSheet
+      visible={visible}
+      onClose={onCancel}
+      detents={[1]}
+      grabber={false}
+      backgroundColor={colors.bg}
     >
-      <SafeAreaView
-        style={{ flex: 1, backgroundColor: colors.bg }}
-        edges={["top", "bottom"]}
-      >
-        <View style={{ flex: 1 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 16,
-              paddingTop: 12,
-              paddingBottom: 12,
-              borderBottomWidth: 1,
-              borderBottomColor: colors.border,
-            }}
+      <View style={{ flex: 1 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingTop: 12,
+            paddingBottom: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+          }}
+        >
+          <Pressable
+            onPress={onCancel}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Cancel"
+            style={{ paddingHorizontal: 8, paddingVertical: 4 }}
           >
-            <Pressable
-              onPress={onCancel}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="Cancel"
-              style={{ paddingHorizontal: 8, paddingVertical: 4 }}
-            >
-              <Text
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "500",
-                  fontSize: 15,
-                  color: colors.inkMuted,
-                }}
-              >
-                Cancel
-              </Text>
-            </Pressable>
             <Text
               style={{
-                flex: 1,
-                textAlign: "center",
+                fontFamily: "System",
+                fontWeight: "500",
+                fontSize: 15,
+                color: colors.inkMuted,
+              }}
+            >
+              Cancel
+            </Text>
+          </Pressable>
+          <Text
+            style={{
+              flex: 1,
+              textAlign: "center",
+              fontFamily: "System",
+              fontWeight: "700",
+              fontSize: 16,
+              color: colors.ink,
+            }}
+            numberOfLines={1}
+          >
+            {hasInitial ? "Edit Note" : "Add Note"}
+          </Text>
+          <Pressable
+            onPress={() => canSave && dirty && onSave(text)}
+            hitSlop={12}
+            disabled={!canSave || !dirty}
+            accessibilityRole="button"
+            accessibilityLabel="Save"
+            style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+          >
+            <Text
+              style={{
                 fontFamily: "System",
                 fontWeight: "700",
-                fontSize: 16,
+                fontSize: 15,
+                color: canSave && dirty ? colors.primary : colors.inkSubtle,
+              }}
+            >
+              Save
+            </Text>
+          </Pressable>
+        </View>
+
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 24}
+        >
+          <View
+            style={{
+              marginHorizontal: 20,
+              marginTop: 20,
+              marginBottom: 16,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+              paddingHorizontal: 20,
+              paddingVertical: 16,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "System",
+                fontWeight: "700",
+                fontSize: 11,
+                letterSpacing: 2.5,
+                textTransform: "uppercase",
+                color: colors.primary,
+                marginBottom: 8,
+              }}
+            >
+              {reference}
+            </Text>
+            <Text
+              style={{
+                fontFamily: "System",
+                fontWeight: "400",
+                fontSize: 13,
+                lineHeight: 20,
                 color: colors.ink,
               }}
-              numberOfLines={1}
+              numberOfLines={4}
             >
-              {hasInitial ? "Edit Note" : "Add Note"}
+              &ldquo;{verseText}&rdquo;
             </Text>
-            <Pressable
-              onPress={() => canSave && dirty && onSave(text)}
-              hitSlop={12}
-              disabled={!canSave || !dirty}
-              accessibilityRole="button"
-              accessibilityLabel="Save"
-              style={{ paddingHorizontal: 8, paddingVertical: 4 }}
-            >
-              <Text
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 15,
-                  color:
-                    canSave && dirty ? colors.primary : colors.inkSubtle,
-                }}
-              >
-                Save
-              </Text>
-            </Pressable>
           </View>
 
-          <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
-          >
-            <View
+          <View style={{ flex: 1, marginHorizontal: 20, marginBottom: 12 }}>
+            <TextInput
+              ref={inputRef}
+              multiline
+              value={text}
+              onChangeText={setText}
+              placeholder="Write what this verse means to you…"
+              placeholderTextColor={colors.inkSubtle}
+              textAlignVertical="top"
               style={{
-                marginHorizontal: 20,
-                marginTop: 20,
-                marginBottom: 16,
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: colors.border,
-                backgroundColor: colors.surface,
-                paddingHorizontal: 20,
-                paddingVertical: 16,
+                flex: 1,
+                color: colors.ink,
+                fontFamily: "System",
+                fontWeight: "400",
+                fontSize: 16,
+                lineHeight: 24,
+                paddingTop: 8,
               }}
-            >
-              <Text
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 11,
-                  letterSpacing: 2.5,
-                  textTransform: "uppercase",
-                  color: colors.primary,
-                  marginBottom: 8,
-                }}
-              >
-                {reference}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "400",
-                  fontSize: 13,
-                  lineHeight: 20,
-                  color: colors.ink,
-                }}
-                numberOfLines={4}
-              >
-                &ldquo;{verseText}&rdquo;
-              </Text>
-            </View>
+            />
+          </View>
 
-            <View style={{ flex: 1, marginHorizontal: 20, marginBottom: 12 }}>
-              <TextInput
-                ref={inputRef}
-                multiline
-                value={text}
-                onChangeText={setText}
-                placeholder="Write what this verse means to you…"
-                placeholderTextColor={colors.inkSubtle}
-                textAlignVertical="top"
-                style={{
-                  flex: 1,
-                  color: colors.ink,
-                  fontFamily: "System",
-                  fontWeight: "400",
-                  fontSize: 16,
-                  lineHeight: 24,
-                  paddingTop: 8,
-                }}
-              />
-            </View>
-
-            {hasInitial ? (
-              <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
-                <Pressable
-                  onPress={onDelete}
-                  accessibilityRole="button"
-                  accessibilityLabel="Delete note"
-                >
-                  {({ pressed }) => (
-                    <View
+          {hasInitial ? (
+            <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
+              <Pressable
+                onPress={onDelete}
+                accessibilityRole="button"
+                accessibilityLabel="Delete note"
+              >
+                {({ pressed }) => (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingVertical: 12,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      backgroundColor: colors.surface,
+                      opacity: pressed ? 0.7 : 1,
+                    }}
+                  >
+                    <SFSymbol
+                      name="trash"
+                      size={16}
+                      color="#FF6B6B"
+                      weight="medium"
+                    />
+                    <Text
                       style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingVertical: 12,
-                        borderRadius: 16,
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                        backgroundColor: colors.surface,
-                        opacity: pressed ? 0.7 : 1,
+                        fontFamily: "System",
+                        fontWeight: "600",
+                        fontSize: 14,
+                        color: "#FF6B6B",
+                        marginLeft: 8,
                       }}
                     >
-                      <SFSymbol
-                        name="trash"
-                        size={16}
-                        color="#FF6B6B"
-                        weight="medium"
-                      />
-                      <Text
-                        style={{
-                          fontFamily: "System",
-                          fontWeight: "600",
-                          fontSize: 14,
-                          color: "#FF6B6B",
-                          marginLeft: 8,
-                        }}
-                      >
-                        Delete note
-                      </Text>
-                    </View>
-                  )}
-                </Pressable>
-              </View>
-            ) : null}
-          </KeyboardAvoidingView>
-        </View>
-      </SafeAreaView>
-    </Modal>
+                      Delete note
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            </View>
+          ) : null}
+        </KeyboardAvoidingView>
+      </View>
+    </AppleSheet>
   );
 }

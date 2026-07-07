@@ -2,11 +2,13 @@ import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SFSymbol } from "@/components/Symbol";
 import type { Milestone } from "@/lib/milestones";
+import { getMilestoneAccent } from "@/lib/milestones";
 import { getMilestoneBadge } from "@/lib/milestoneBadges";
-import { TAB_ACCENT_RED } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
 import { NEW_YORK, typography } from "@/lib/typography";
 import { useColors } from "@/state/theme";
+
+const LANDMARK_GOLD = "#E8B84A";
 
 type MilestoneDetailViewProps = {
   milestone: Milestone;
@@ -24,6 +26,9 @@ export function MilestoneDetailView({
 }: MilestoneDetailViewProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { color: accentColor, label: categoryLabel, isLandmark } =
+    getMilestoneAccent(milestone);
+  const ringColor = isLandmark ? LANDMARK_GOLD : accentColor;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -80,8 +85,8 @@ export function MilestoneDetailView({
               borderRadius: 66,
               alignItems: "center",
               justifyContent: "center",
-              shadowColor: TAB_ACCENT_RED,
-              shadowOpacity: 0.35,
+              shadowColor: ringColor,
+              shadowOpacity: 0.4,
               shadowRadius: 18,
               shadowOffset: { width: 0, height: 0 },
             }}
@@ -91,8 +96,10 @@ export function MilestoneDetailView({
                 width: 120,
                 height: 120,
                 borderRadius: 60,
-                padding: 4,
-                backgroundColor: "rgba(255,255,255,0.22)",
+                padding: isLandmark ? 4 : 3,
+                borderWidth: isLandmark ? 3 : 2,
+                borderColor: ringColor,
+                backgroundColor: "rgba(255,255,255,0.08)",
               }}
             >
               <Image
@@ -112,14 +119,14 @@ export function MilestoneDetailView({
             style={[
               typography.smallLabel,
               {
-                color: TAB_ACCENT_RED,
+                color: accentColor,
                 textTransform: "uppercase",
                 marginTop: 24,
                 textAlign: "center",
               },
             ]}
           >
-            DAY {milestone.day}
+            Day {milestone.day} • {categoryLabel}
           </Text>
 
           <Text
@@ -127,9 +134,9 @@ export function MilestoneDetailView({
               fontFamily: "System",
               fontWeight: "700",
               color: colors.ink,
-              fontSize: 28,
-              lineHeight: 34,
-              letterSpacing: -0.4,
+              fontSize: 24,
+              lineHeight: 30,
+              letterSpacing: -0.3,
               textAlign: "center",
               marginTop: 12,
             }}
@@ -159,7 +166,7 @@ export function MilestoneDetailView({
             style={[
               typography.smallLabel,
               {
-                color: TAB_ACCENT_RED,
+                color: accentColor,
                 textTransform: "uppercase",
                 marginTop: 16,
                 textAlign: "center",
@@ -182,8 +189,8 @@ export function MilestoneDetailView({
           style={{
             fontFamily: "System",
             fontWeight: "400",
-            fontSize: 18,
-            lineHeight: 30,
+            fontSize: 17,
+            lineHeight: 28,
             color: colors.inkMuted,
           }}
         >

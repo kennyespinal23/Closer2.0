@@ -10,6 +10,7 @@ import {
   SettingsLinkRow,
   SettingsSection,
   SettingsStaticRow,
+  SettingsToggleRow,
 } from "@/components/SettingsScaffold";
 import * as haptics from "@/lib/haptics";
 import { SCREEN_H_PAD } from "@/lib/layout";
@@ -70,7 +71,11 @@ export default function ProfileTabScreen() {
     useAnnotations();
   const { saved: savedSermonDays, count: savedCount } = useSavedSermons();
   const { todaysMoment, catalogPosition, advanceToNextMoment } = useMoments();
-  const { enabled: devToolsEnabled } = useDevTools();
+  const {
+    enabled: devToolsEnabled,
+    unlockAllMilestones,
+    setUnlockAllMilestones,
+  } = useDevTools();
   const showDevShortcuts = isInternalBuild() || devToolsEnabled;
   const { resetApp, restartApp } = useDevAppReset();
   const colors = useColors();
@@ -549,6 +554,24 @@ export default function ProfileTabScreen() {
               sublabel={todaysMoment.title}
               value={`${catalogPosition.position} / ${catalogPosition.total}`}
               onPress={handleAdvanceSermon}
+              showDivider
+            />
+            <SettingsToggleRow
+              icon={
+                <SFSymbol
+                  name="rosette"
+                  size={16}
+                  color={colors.ink}
+                  weight="semibold"
+                />
+              }
+              label="Unlock all milestones"
+              sublabel="Browse every badge on Streaks"
+              value={unlockAllMilestones}
+              onValueChange={(next) => {
+                haptics.soft();
+                setUnlockAllMilestones(next);
+              }}
               showDivider
             />
             <SettingsLinkRow

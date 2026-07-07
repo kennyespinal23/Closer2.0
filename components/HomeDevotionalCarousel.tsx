@@ -18,7 +18,7 @@ import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { SFSymbol } from "@/components/Symbol";
 import * as haptics from "@/lib/haptics";
 import { typography } from "@/lib/typography";
-import { getSermonBackdrop } from "@/services/unsplashService";
+import { getSermonBackdrop, HERO_BACKDROP_FALLBACK } from "@/services/unsplashService";
 import {
   HERO_DIM_OVERLAY,
   HERO_GLASS_DISC,
@@ -141,19 +141,36 @@ const HomeHeroSlide = memo(function HomeHeroSlide({
   bottomInset: number;
 }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [useFallback, setUseFallback] = useState(false);
   const typeEmoji = TYPE_EMOJI[card.typeId] ?? "📖";
 
   useEffect(() => {
     let cancelled = false;
+    setUseFallback(false);
     const query =
       card.illustrationPrompt?.trim() || "peaceful spiritual nature landscape";
     getSermonBackdrop(query, card.sermonDay).then((url) => {
-      if (!cancelled) setImageUrl(url);
+      if (!cancelled) {
+        setImageUrl(url);
+        setUseFallback(!url);
+      }
     });
     return () => {
       cancelled = true;
     };
   }, [card.sermonDay, card.illustrationPrompt]);
+
+  const handleImageError = useCallback(() => {
+    setUseFallback(true);
+    const query =
+      card.illustrationPrompt?.trim() || "peaceful spiritual nature landscape";
+    getSermonBackdrop(query, card.sermonDay).then((url) => {
+      if (url) {
+        setImageUrl(url);
+        setUseFallback(false);
+      }
+    });
+  }, [card.illustrationPrompt, card.sermonDay]);
 
   const ctaLabel =
     card.ctaLabel ??
@@ -161,15 +178,14 @@ const HomeHeroSlide = memo(function HomeHeroSlide({
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
-      {imageUrl ? (
-        <Image
-          source={{ uri: imageUrl }}
-          style={StyleSheet.absoluteFillObject}
-          contentFit="cover"
-          transition={600}
-          accessibilityIgnoresInvertColors
-        />
-      ) : null}
+      <Image
+        source={useFallback || !imageUrl ? HERO_BACKDROP_FALLBACK : { uri: imageUrl }}
+        style={StyleSheet.absoluteFillObject}
+        contentFit="cover"
+        transition={600}
+        onError={handleImageError}
+        accessibilityIgnoresInvertColors
+      />
 
       {/* Same 55% dim as scripture — moody, legible, photo-forward. */}
       <View

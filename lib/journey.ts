@@ -14,6 +14,11 @@ import {
 } from "@/state/annotations";
 import type { CheckInsState } from "@/state/checkIns";
 import type { ChapterRead, ProgressState } from "@/state/progress";
+import {
+  MILESTONE_DAYS,
+  milestoneCopy,
+  milestoneLabel,
+} from "@/lib/milestones";
 
 /**
  * The Journey timeline.
@@ -391,17 +396,8 @@ function groupDayRows(
 // (days, dateISO-of-crossing) to keep the id stable + de-duped.
 // ─────────────────────────────────────────────────────────────────
 
-/**
- * Streak thresholds that earn a milestone celebration.
- *
- * Exported so the progress provider can detect a crossing the moment
- * a completion is recorded — the sermon flow uses this to decide
- * whether to route into the milestone screen after the regular
- * celebration. Order matters: ascending, no duplicates.
- */
-export const MILESTONE_DAYS: ReadonlyArray<number> = [
-  3, 7, 14, 21, 30, 50, 75, 100, 150, 200, 365,
-];
+// Milestone thresholds live in lib/milestones.ts (90 entries).
+// ─────────────────────────────────────────────────────────────────
 
 function deriveMilestones(
   engagedDates: ReadonlyArray<string>,
@@ -444,18 +440,8 @@ function deriveMilestones(
   return out;
 }
 
-export function milestoneLabel(days: number): string {
-  return `${days}-day streak`;
-}
-
-export function milestoneCopy(days: number): string {
-  if (days < 7) return "Day after day. Small faithfulness is real faithfulness.";
-  if (days < 14) return "One full week of showing up. A rhythm is forming.";
-  if (days < 30) return "Two-plus weeks of returning. You're becoming the kind of person who returns.";
-  if (days < 75) return "A full month of nearness. This is no longer an experiment — it's a practice.";
-  if (days < 200) return "Months of steady drawing-near. You're walking with Him.";
-  return "A year of seeking. May it be the first of many.";
-}
+// Re-export for consumers that import from lib/journey.
+export { MILESTONE_DAYS, milestoneCopy, milestoneLabel };
 
 // ─────────────────────────────────────────────────────────────────
 // Formatting helpers

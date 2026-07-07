@@ -18,6 +18,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.espinalcapital.closer",
       "appleTeamId": "7ZKDS4X5B9",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryUsageDescription": "Allow Closer to access your photos.",
@@ -37,6 +38,8 @@
     },
     "plugins": [
       "expo-router",
+      "expo-apple-authentication",
+      "expo-web-browser",
       "expo-font",
       [
         "expo-build-properties",

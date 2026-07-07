@@ -44,8 +44,8 @@ export function Input({
           }}
           placeholderTextColor={colors.inkSubtle}
           selectionColor={colors.primary}
-          className="flex-1 font-sans text-ink text-[16px] py-0"
-          style={{ fontFamily: "System", fontWeight: "400" }}
+          className="flex-1 font-sans text-ink text-[17px] py-0"
+          style={{ fontFamily: "System", fontWeight: "400", lineHeight: 22 }}
         />
         {trailing ? (
           <Pressable

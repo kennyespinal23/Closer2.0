@@ -93,6 +93,7 @@ function labelForFilter(f: LibraryFilter): string {
 
 export default function LibraryScreen() {
   const router = useRouter();
+  const { bg } = useColors();
   const [filter, setFilter] = useState<LibraryFilter>("all");
   const [query, setQuery] = useState("");
   const { lastVisited, hasReadChapter } = useProgress();
@@ -129,10 +130,10 @@ export default function LibraryScreen() {
   );
 
   return (
-    // SafeAreaView transparent (no bg-bg) so the layout-level
-    // AmbientAtmosphere bleeds through and the Library tab glows
-    // with the day's accent the same way Today does.
-    <SafeAreaView className="flex-1" edges={["top"]}>
+    // Opaque root so the previous tab's snapshot never shows through
+    // during native tab swaps. Scroll content still carries its own
+    // surface fills; cards and search sit on solid dark chrome.
+    <SafeAreaView className="flex-1" style={{ backgroundColor: bg }} edges={["top"]}>
       <ScrollView
         contentContainerStyle={{
           paddingBottom: TAB_BAR_TOTAL_HEIGHT + 24,

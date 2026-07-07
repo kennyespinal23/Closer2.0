@@ -41,10 +41,16 @@ const STORAGE_KEY = STORAGE_KEYS.devTools;
 type DevToolsState = {
   /** True when the dev panel should render on Today. */
   enabled: boolean;
+  /**
+   * QA override — treats every milestone badge as unlocked so the
+   * team can browse artwork + copy without faking a 365-day streak.
+   */
+  unlockAllMilestones: boolean;
 };
 
 type DevToolsContextValue = DevToolsState & {
   setEnabled: (enabled: boolean) => void;
+  setUnlockAllMilestones: (enabled: boolean) => void;
   /** True once persisted state has loaded (or no save existed). */
   hydrated: boolean;
 };
@@ -56,6 +62,7 @@ type DevToolsContextValue = DevToolsState & {
  */
 const DEFAULT: DevToolsState = {
   enabled: isInternalBuild(),
+  unlockAllMilestones: false,
 };
 
 const DevToolsContext = createContext<DevToolsContextValue | null>(null);
@@ -71,18 +78,26 @@ export function DevToolsProvider({ children }: { children: ReactNode }) {
     setState({
       enabled:
         typeof loaded.enabled === "boolean" ? loaded.enabled : DEFAULT.enabled,
+      unlockAllMilestones:
+        typeof loaded.unlockAllMilestones === "boolean"
+          ? loaded.unlockAllMilestones
+          : DEFAULT.unlockAllMilestones,
     });
   }, []);
 
   const hydrated = usePersistence(STORAGE_KEY, state, applyLoaded);
 
   const setEnabled = useCallback((enabled: boolean) => {
-    setState({ enabled });
+    setState((prev) => ({ ...prev, enabled }));
+  }, []);
+
+  const setUnlockAllMilestones = useCallback((unlockAllMilestones: boolean) => {
+    setState((prev) => ({ ...prev, unlockAllMilestones }));
   }, []);
 
   const value = useMemo<DevToolsContextValue>(
-    () => ({ ...state, setEnabled, hydrated }),
-    [state, setEnabled, hydrated],
+    () => ({ ...state, setEnabled, setUnlockAllMilestones, hydrated }),
+    [state, setEnabled, setUnlockAllMilestones, hydrated],
   );
 
   return (

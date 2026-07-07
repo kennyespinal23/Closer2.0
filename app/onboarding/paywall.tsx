@@ -1,11 +1,16 @@
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { useEffect } from "react";
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { FadeIn } from "@/components/FadeIn";
 import { CLOSER_ACCENT } from "@/constants/theme";
 import { useOnboarding } from "@/state/onboarding";
+import { useSubscription } from "@/state/subscription";
 import { useColors } from "@/state/theme";
+
+const TERMS_URL = "https://closer.app/terms";
+const PRIVACY_URL = "https://closer.app/privacy";
 
 const VALUE_LINES = [
   "One verse every morning. Before the noise.",
@@ -13,15 +18,85 @@ const VALUE_LINES = [
   "Check in whenever you drift. We\u2019ll be here.",
 ];
 
+function isPurchaseCancelled(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "userCancelled" in err &&
+    (err as { userCancelled?: boolean }).userCancelled === true
+  );
+}
+
 export default function PaywallScreen() {
   const router = useRouter();
   const colors = useColors();
   const { answers } = useOnboarding();
+  const {
+    configured,
+    isPro,
+    priceLabel,
+    purchasing,
+    purchaseMonthly,
+    restore,
+  } = useSubscription();
 
   const firstName = (answers.name || "").trim().split(" ")[0];
 
-  const handleStart = () => {
-    router.push("/onboarding/welcome");
+  useEffect(() => {
+    if (isPro) {
+      router.replace("/onboarding/welcome");
+    }
+  }, [isPro, router]);
+
+  const goToWelcome = () => router.push("/onboarding/welcome");
+
+  const handleStart = async () => {
+    if (!configured) {
+      Alert.alert(
+        "Subscriptions aren't ready",
+        "Finish RevenueCat setup, add your API key, and rebuild the app.",
+        [{ text: "OK" }],
+      );
+      return;
+    }
+
+    try {
+      const active = await purchaseMonthly();
+      if (active) goToWelcome();
+    } catch (err) {
+      if (isPurchaseCancelled(err)) return;
+      const message =
+        err instanceof Error ? err.message : "Couldn't start your trial.";
+      Alert.alert("Couldn't subscribe", message, [{ text: "OK" }]);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!configured) {
+      Alert.alert(
+        "Subscriptions aren't ready",
+        "Finish RevenueCat setup, add your API key, and rebuild the app.",
+        [{ text: "OK" }],
+      );
+      return;
+    }
+
+    try {
+      const active = await restore();
+      if (active) {
+        goToWelcome();
+        return;
+      }
+      Alert.alert(
+        "No subscription found",
+        "We couldn't find an active Closer subscription for this Apple ID.",
+        [{ text: "OK" }],
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Couldn't restore purchases.";
+      Alert.alert("Restore failed", message, [{ text: "OK" }]);
+    }
   };
 
   return (
@@ -81,7 +156,7 @@ export default function PaywallScreen() {
                       fontSize: 17,
                     }}
                   >
-                    $7.99 a month.
+                    {priceLabel}.
                   </Text>{" "}
                   Cancel anytime.
                 </Text>
@@ -128,23 +203,33 @@ export default function PaywallScreen() {
             <FadeIn delayMs={2200}>
               <View className="pt-6 pb-2">
                 <Pressable
-                  onPress={handleStart}
+                  onPress={() => {
+                    handleStart().catch(() => {});
+                  }}
+                  disabled={purchasing}
                   accessibilityRole="button"
                   accessibilityLabel="Start my free 7 days"
                   className="h-14 rounded-2xl items-center justify-center active:opacity-85"
-                  style={{ backgroundColor: CLOSER_ACCENT }}
+                  style={{
+                    backgroundColor: CLOSER_ACCENT,
+                    opacity: purchasing ? 0.75 : 1,
+                  }}
                 >
-                  <Text
-                    style={{
-                      color: "#FFFFFF",
-                      fontFamily: "System",
-                      fontWeight: "700",
-                      fontSize: 16,
-                      letterSpacing: 0.1,
-                    }}
-                  >
-                    Start my free 7 days
-                  </Text>
+                  {purchasing ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text
+                      style={{
+                        color: "#FFFFFF",
+                        fontFamily: "System",
+                        fontWeight: "700",
+                        fontSize: 16,
+                        letterSpacing: 0.1,
+                      }}
+                    >
+                      Start my free 7 days
+                    </Text>
+                  )}
                 </Pressable>
 
                 <View
@@ -156,11 +241,17 @@ export default function PaywallScreen() {
                     gap: 10,
                   }}
                 >
-                  <FootLink label="Restore purchase" />
+                  <FootLink label="Restore purchase" onPress={handleRestore} />
                   <FootDot />
-                  <FootLink label="Terms" />
+                  <FootLink
+                    label="Terms"
+                    onPress={() => Linking.openURL(TERMS_URL)}
+                  />
                   <FootDot />
-                  <FootLink label="Privacy" />
+                  <FootLink
+                    label="Privacy"
+                    onPress={() => Linking.openURL(PRIVACY_URL)}
+                  />
                 </View>
               </View>
             </FadeIn>
@@ -204,10 +295,16 @@ function ValueLine({ text }: { text: string }) {
   );
 }
 
-function FootLink({ label }: { label: string }) {
+function FootLink({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress?: () => void;
+}) {
   const colors = useColors();
   return (
-    <Pressable hitSlop={8}>
+    <Pressable hitSlop={8} onPress={onPress}>
       <Text
         style={{
           color: colors.inkSubtle,

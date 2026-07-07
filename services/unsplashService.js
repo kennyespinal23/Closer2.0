@@ -12,7 +12,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 //   EXPO_PUBLIC_UNSPLASH_ACCESS_KEY=your_access_key_here
 const UNSPLASH_ACCESS_KEY = process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY;
 
-export const fetchImageForQuery = async (query) => {
+/** Bundled fallback when the network fetch fails or the CDN 404s. */
+export const HERO_BACKDROP_FALLBACK = require('../assets/backdrops/sky.jpg');
+
+/** In-memory cache so tab remounts don't flash blank while AsyncStorage reads. */
+const memoryCache = new Map();
+
+export const fetchImageForQuery = async (query, attempt = 0) => {
   if (!UNSPLASH_ACCESS_KEY) {
     console.log('Unsplash: missing EXPO_PUBLIC_UNSPLASH_ACCESS_KEY');
     return null;
@@ -28,12 +34,20 @@ export const fetchImageForQuery = async (query) => {
     );
     if (!response.ok) {
       console.log('Unsplash fetch failed:', response.status);
+      if (attempt < 1) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        return fetchImageForQuery(query, attempt + 1);
+      }
       return null;
     }
     const data = await response.json();
     return data?.urls?.regular ?? null;
   } catch (error) {
     console.log('Unsplash fetch failed, using fallback');
+    if (attempt < 1) {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      return fetchImageForQuery(query, attempt + 1);
+    }
     return null;
   }
 };
@@ -44,6 +58,11 @@ async function getCachedImage(query, storageKey) {
     const dayKeyName = `${storageKey}_day`;
     const dateKeyName = `${storageKey}_date`;
     const urlKeyName = `${storageKey}_url`;
+    const memoryKey = `${storageKey}_${today}`;
+
+    if (memoryCache.has(memoryKey)) {
+      return memoryCache.get(memoryKey);
+    }
 
     const [storedDay, storedDate, storedUrl] = await Promise.all([
       AsyncStorage.getItem(dayKeyName),
@@ -52,6 +71,7 @@ async function getCachedImage(query, storageKey) {
     ]);
 
     if (storedDay === query && storedDate === today && storedUrl) {
+      memoryCache.set(memoryKey, storedUrl);
       return storedUrl;
     }
 
@@ -62,8 +82,18 @@ async function getCachedImage(query, storageKey) {
         [dateKeyName, today],
         [urlKeyName, url],
       ]);
+      memoryCache.set(memoryKey, url);
+      return url;
     }
-    return url;
+
+    // Network blip or rate limit — reuse the last good URL for this
+    // sermon day/query instead of leaving the hero blank.
+    if (storedUrl && storedDay === query) {
+      memoryCache.set(memoryKey, storedUrl);
+      return storedUrl;
+    }
+
+    return null;
   } catch {
     return null;
   }

@@ -85,6 +85,13 @@ export default function SermonLayout() {
           gestureEnabled: false,
         }}
       />
+      <Stack.Screen
+        name="milestone-unlock"
+        options={{
+          animation: "fade",
+          gestureEnabled: false,
+        }}
+      />
     </Stack>
   );
 }

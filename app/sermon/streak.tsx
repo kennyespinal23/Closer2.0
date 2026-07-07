@@ -2,21 +2,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
-import LottieView from "lottie-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { SermonBlurredBackdrop } from "@/components/SermonBlurredBackdrop";
-import { milestoneCopy } from "@/lib/journey";
+import { StreakFireAnimation } from "@/components/StreakFireAnimation";
+import { milestoneCopy } from "@/lib/milestones";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
-// Hero flame animation. Lottie JSON (500×690 native, portrait
-// aspect) lives in `assets/lottie/` and renders in `FlameMark`
-// below at 140×140 to drop-in-replace the static SVG flame
-// the streak screen shipped with. Lottie autoplays + loops
-// on mount, so the screen has live motion the moment it
-// lands — no separate JS-driven breath needed inside the
-// flame itself.
-const FIRE_STREAK_ANIMATION = require("../../assets/lottie/FireStreakAnimation.json");
+// Hero flame animation — see StreakFireAnimation for the
+// seamless loop that avoids the black flash at frame 0.
 
 /**
  * Streak update screen — the "fire" screen.
@@ -186,6 +180,13 @@ export default function StreakScreen() {
   });
 
   const handleContinue = () => {
+    if (isMilestone) {
+      router.replace({
+        pathname: "/sermon/milestone-unlock",
+        params: { day: String(milestone) },
+      });
+      return;
+    }
     router.replace("/today");
   };
 
@@ -387,12 +388,5 @@ function StreakHalo() {
  * Lottie scales cleanly to any size.
  */
 function FlameMark() {
-  return (
-    <LottieView
-      source={FIRE_STREAK_ANIMATION}
-      autoPlay
-      loop
-      style={{ width: 140, height: 140 }}
-    />
-  );
+  return <StreakFireAnimation size={140} />;
 }

@@ -6,7 +6,6 @@ import {
   type AppStateStatus,
   FlatList,
   Modal,
-  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -26,6 +25,7 @@ import Svg, {
   Rect,
   Stop,
 } from "react-native-svg";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { BlurView } from "expo-blur";
 import * as haptics from "@/lib/haptics";
 import { shareVerse, sharePassage } from "@/lib/share";
@@ -33,7 +33,7 @@ import { AppleSheet } from "@/components/AppleSheet";
 import { NoteEditor } from "@/components/NoteEditor";
 import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
-import { BOOKS, findBookById } from "@/constants/books";
+import { findBookById } from "@/constants/books";
 import {
   CATEGORY_COVER_PALETTE,
   getCoverBloom,
@@ -42,6 +42,7 @@ import {
   type Chapter,
   TranslationNotInstalledError,
   fetchChapter,
+  getCachedChapter,
   prefetchChapter,
 } from "@/lib/bible";
 import {
@@ -129,7 +130,87 @@ type ReaderPage = {
  */
 type ReaderListItem =
   | { kind: "page"; key: string; page: ReaderPage }
-  | { kind: "endMatter"; key: string };
+  | { kind: "endMatter"; key: string }
+  /** Swipe target before page 1 — triggers previous chapter. */
+  | { kind: "prevBridge"; key: string }
+  /** Swipe target after the last verse page — triggers next chapter. */
+  | { kind: "nextBridge"; key: string };
+
+type FrozenPagerSnapshot = {
+  bookId: string;
+  bookName: string;
+  chapter: number;
+  data: Chapter;
+  items: ReaderListItem[];
+  pageIdx: number;
+  width: number;
+};
+
+const readerPaginationCache = new Map<string, ReaderPage[]>();
+
+function readerPaginationKey(
+  bookId: string,
+  chapter: number,
+  translationId: string,
+  textSizeId: string,
+  pageContentWidth: number,
+  pageContentHeight: number,
+): string {
+  return `${translationId}:${bookId}:${chapter}:${textSizeId}:${Math.round(pageContentWidth)}x${Math.round(pageContentHeight)}`;
+}
+
+function buildReaderItems(
+  pages: ReaderPage[],
+  hasPrevChapter: boolean,
+  hasNextChapter: boolean,
+): ReaderListItem[] {
+  const items: ReaderListItem[] = [];
+  if (hasPrevChapter) {
+    items.push({ kind: "prevBridge", key: "prev-bridge" });
+  }
+  for (const [idx, p] of pages.entries()) {
+    items.push({ kind: "page", key: `page-${idx}`, page: p });
+  }
+  if (hasNextChapter) {
+    items.push({ kind: "nextBridge", key: "next-bridge" });
+  } else {
+    items.push({ kind: "endMatter", key: "end" });
+  }
+  return items;
+}
+
+function linesToReaderPages(
+  lines: ReadonlyArray<TextLayoutLine>,
+  verses: Chapter["verses"],
+  pageContentHeight: number,
+  firstPageHeadingHeight: number,
+): ReaderPage[] {
+  const map = new Map<number, number>();
+  const maxVerseNum = verses[verses.length - 1]?.number ?? 0;
+  let nextExpected = verses[0]?.number ?? 1;
+  for (let li = 0; li < lines.length; li++) {
+    const lineText = lines[li].text;
+    let cursor = 0;
+    while (nextExpected <= maxVerseNum) {
+      const found = findVerseMarker(lineText, nextExpected, cursor);
+      if (!found) break;
+      if (!map.has(nextExpected)) {
+        map.set(nextExpected, li);
+      }
+      cursor = found.end;
+      nextExpected += 1;
+    }
+    if (nextExpected > maxVerseNum) break;
+  }
+  const verseStartLines = Array.from(map.values()).sort((a, b) => a - b);
+  return paginateLines(
+    lines,
+    pageContentHeight,
+    firstPageHeadingHeight,
+    verseStartLines,
+    verses.length,
+  );
+}
 
 /**
  * Chapter reader.
@@ -154,10 +235,11 @@ type ReaderListItem =
  *
  * Navigation:
  *   • Back chevron returns to the book overview
- *   • Bottom nav has Prev / Next that crosses book boundaries
- *     (Genesis 50 → Exodus 1, Malachi 4 → Matthew 1)
- *   • Within-book navigation uses router.replace so the back stack
- *     doesn't bloat with every chapter the user reads
+ *   • Swiping past the last page advances to the next chapter
+ *     within the same book; swiping before page 1 retreats to
+ *     the previous chapter's last page
+ *   • Within-book chapter swaps use setParams + a frozen overlay
+ *     so the pager doesn't flash between chapters
  */
 export default function ChapterReaderScreen() {
   const {
@@ -179,8 +261,20 @@ export default function ChapterReaderScreen() {
   }>();
   const router = useRouter();
   const colors = useColors();
-  const book = id ? findBookById(id) : undefined;
-  const chapter = parseInt(chapterParam ?? "", 10);
+
+  const routeBookId = id ?? "";
+  const routeChapter = parseInt(chapterParam ?? "", 10);
+  const [readerBookId, setReaderBookId] = useState(routeBookId);
+  const [readerChapter, setReaderChapter] = useState(
+    Number.isFinite(routeChapter) ? routeChapter : 1,
+  );
+  const internalNavRef = useRef(false);
+  const pendingLandOnLastPageRef = useRef(false);
+  const [frozenSnapshot, setFrozenSnapshot] =
+    useState<FrozenPagerSnapshot | null>(null);
+
+  const book = findBookById(readerBookId);
+  const chapter = readerChapter;
 
   // Parse + sanity-check the focus number once per param change.
   // We treat any non-finite / out-of-range value as "no focus".
@@ -215,6 +309,20 @@ export default function ChapterReaderScreen() {
   // a generic network-error view for everything else.
   const [error, setError] = useState<Error | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  // Keep in-reader chapter swaps on this screen instance — updating
+  // params instead of replace avoids a navigation flash. External
+  // entry (overview tap, deep link) still syncs from the route.
+  useEffect(() => {
+    if (internalNavRef.current) {
+      internalNavRef.current = false;
+      return;
+    }
+    setReaderBookId(routeBookId);
+    setReaderChapter(Number.isFinite(routeChapter) ? routeChapter : 1);
+    pendingLandOnLastPageRef.current = false;
+    setFrozenSnapshot(null);
+  }, [routeBookId, routeChapter]);
 
   // Action-sheet / note-editor state ────────────────────────────
   // `activeVerse` is the verse number currently selected in the
@@ -346,29 +454,6 @@ export default function ChapterReaderScreen() {
     }
   }, [book, chapter, recordChapterVisit]);
 
-  // Reset + refetch when route OR translation changes. We include
-  // translation.id in the dep array so switching versions reloads.
-  useEffect(() => {
-    if (!book || !Number.isFinite(chapter)) return;
-    let cancelled = false;
-    setData(null);
-    setError(null);
-    setJustMarked(false);
-    fetchChapter(book.id, chapter, translation.id)
-      .then((c) => {
-        if (cancelled) return;
-        setData(c);
-        const next = getAdjacent(book.id, chapter, "next");
-        if (next) prefetchChapter(next.bookId, next.chapter, translation.id);
-      })
-      .catch((e: Error) => {
-        if (!cancelled) setError(e);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [book, chapter, translation.id, reloadKey]);
-
   // ─── Guards for malformed routes ──────────────────────────────
   if (!book) {
     return <NotFound message="We don&apos;t know that book." />;
@@ -384,10 +469,6 @@ export default function ChapterReaderScreen() {
   const prev = getAdjacent(book.id, chapter, "prev");
   const next = getAdjacent(book.id, chapter, "next");
   const headerTitle = `${book.name} ${chapter}`;
-
-  const goto = (target: { bookId: string; chapter: number }) => {
-    router.replace(`/book/${target.bookId}/${target.chapter}`);
-  };
 
   // Resolve the verse currently shown in the action sheet (or note
   // editor) into reference/text/key so the sheet has what it needs.
@@ -489,6 +570,40 @@ export default function ChapterReaderScreen() {
   const verseToLineRef = useRef<Map<number, number>>(new Map());
   const advanceLockRef = useRef(false);
   const pageIdxAtDragStartRef = useRef(0);
+  const dragStartOffsetRef = useRef(0);
+
+  const goto = (
+    target: { bookId: string; chapter: number },
+    opts?: { lastPage?: boolean },
+  ) => {
+    pendingLandOnLastPageRef.current = opts?.lastPage === true;
+
+    if (data && pages && book) {
+      setFrozenSnapshot({
+        bookId: book.id,
+        bookName: book.name,
+        chapter,
+        data,
+        items: pages.map((p, idx) => ({
+          kind: "page" as const,
+          key: `frozen-${idx}`,
+          page: p,
+        })),
+        pageIdx: currentPageIdx,
+        width: screenWidth,
+      });
+    }
+
+    internalNavRef.current = true;
+    setReaderBookId(target.bookId);
+    setReaderChapter(target.chapter);
+
+    if (target.bookId !== readerBookId) {
+      router.replace(`/book/${target.bookId}/${target.chapter}`);
+    } else {
+      router.setParams({ chapter: String(target.chapter) });
+    }
+  };
 
   const advanceToNextChapter = () => {
     if (!next || advanceLockRef.current) return;
@@ -503,20 +618,28 @@ export default function ChapterReaderScreen() {
     goto(next);
   };
 
-  const tryAdvanceFromLastPage = (
-    pageIdx: number,
-    velocityX: number | undefined,
-  ) => {
-    if (!pages || !next) return;
-    const lastVersePageIdx = pages.length - 1;
-    if (pageIdx < lastVersePageIdx) return;
-    // Only advance when the user was already on the last page and
-    // swipes forward again — not when they first land on it.
-    if (pageIdxAtDragStartRef.current < lastVersePageIdx) return;
-    // Finger moving left → forward into the next chapter.
-    if ((velocityX ?? 0) < -0.2) {
-      advanceToNextChapter();
+  const retreatToPreviousChapter = () => {
+    if (!prev || advanceLockRef.current) return;
+    advanceLockRef.current = true;
+    haptics.tap();
+    prefetchChapter(prev.bookId, prev.chapter, translation.id);
+    goto(prev, { lastPage: true });
+  };
+
+  const handlePageSettled = (pageIdx: number) => {
+    if (!pages) return;
+    const firstVerseIdx = prev ? 1 : 0;
+    const nextBridgeIdx = firstVerseIdx + pages.length;
+
+    if (prev && pageIdx === 0) {
+      retreatToPreviousChapter();
+      return;
     }
+    if (next && pageIdx >= nextBridgeIdx) {
+      advanceToNextChapter();
+      return;
+    }
+    setCurrentPageIdx(pageIdx);
   };
 
   /**
@@ -526,61 +649,153 @@ export default function ChapterReaderScreen() {
    */
   const handleMeasureLines = useCallback(
     (lines: ReadonlyArray<TextLayoutLine>) => {
-      if (!lines || lines.length === 0) return;
-      // Rebuild verse → line map from this measurement pass. Mirrors
-      // the loop in VerseFlow's handleTextLayout, but we save the
-      // line INDEX (not just y) here.
+      if (!lines || lines.length === 0 || !data) return;
       const map = new Map<number, number>();
-      if (data) {
-        const maxVerseNum = data.verses[data.verses.length - 1]?.number ?? 0;
-        let nextExpected = data.verses[0]?.number ?? 1;
-        for (let li = 0; li < lines.length; li++) {
-          const lineText = lines[li].text;
-          let cursor = 0;
-          while (nextExpected <= maxVerseNum) {
-            const found = findVerseMarker(lineText, nextExpected, cursor);
-            if (!found) break;
-            if (!map.has(nextExpected)) {
-              map.set(nextExpected, li);
-            }
-            cursor = found.end;
-            nextExpected += 1;
+      const maxVerseNum = data.verses[data.verses.length - 1]?.number ?? 0;
+      let nextExpected = data.verses[0]?.number ?? 1;
+      for (let li = 0; li < lines.length; li++) {
+        const lineText = lines[li].text;
+        let cursor = 0;
+        while (nextExpected <= maxVerseNum) {
+          const found = findVerseMarker(lineText, nextExpected, cursor);
+          if (!found) break;
+          if (!map.has(nextExpected)) {
+            map.set(nextExpected, li);
           }
-          if (nextExpected > maxVerseNum) break;
+          cursor = found.end;
+          nextExpected += 1;
         }
+        if (nextExpected > maxVerseNum) break;
       }
       verseToLineRef.current = map;
 
-      // Sorted list of line indices where each verse first appears.
-      // Sorting because Map iteration order matches insertion order,
-      // which already happens to be ascending, but we don't want a
-      // future refactor to silently break the page-break math.
-      const verseStartLines = Array.from(map.values()).sort(
-        (a, b) => a - b,
-      );
-
-      const computed = paginateLines(
+      const computed = linesToReaderPages(
         lines,
+        data.verses,
         pageContentHeight,
         FIRST_PAGE_HEADING_HEIGHT,
-        verseStartLines,
-        data?.verses.length ?? 0,
       );
+
+      readerPaginationCache.set(
+        readerPaginationKey(
+          book.id,
+          chapter,
+          translation.id,
+          textSize.id,
+          pageContentWidth,
+          pageContentHeight,
+        ),
+        computed,
+      );
+
+      if (pendingLandOnLastPageRef.current) {
+        const lastIdx = prev
+          ? computed.length
+          : Math.max(0, computed.length - 1);
+        setCurrentPageIdx(lastIdx);
+        pageIdxAtDragStartRef.current = lastIdx;
+        pendingLandOnLastPageRef.current = false;
+      } else {
+        const startIdx = prev ? 1 : 0;
+        setCurrentPageIdx(startIdx);
+        pageIdxAtDragStartRef.current = startIdx;
+      }
       setPages(computed);
     },
-    [data, pageContentHeight, FIRST_PAGE_HEADING_HEIGHT],
+    [
+      data,
+      book.id,
+      chapter,
+      translation.id,
+      textSize.id,
+      pageContentWidth,
+      pageContentHeight,
+      FIRST_PAGE_HEADING_HEIGHT,
+    ],
   );
 
-  // Reset pages + current index when the chapter content changes
-  // (route change, translation switch, font-size change). The off-
-  // screen measurer will hand us a fresh set on its next layout pass.
+  // Load chapter text + pagination whenever the reader target changes.
   useEffect(() => {
-    setPages(null);
-    setCurrentPageIdx(0);
-    verseToLineRef.current = new Map();
-    advanceLockRef.current = false;
-    pageIdxAtDragStartRef.current = 0;
-  }, [book.id, chapter, translation.id, textSize.id, pageContentHeight]);
+    if (!book || !Number.isFinite(chapter)) return;
+    let cancelled = false;
+
+    const pKey = readerPaginationKey(
+      readerBookId,
+      readerChapter,
+      translation.id,
+      textSize.id,
+      pageContentWidth,
+      pageContentHeight,
+    );
+    const cached = getCachedChapter(readerBookId, readerChapter, translation.id);
+    const cachedPages = readerPaginationCache.get(pKey);
+    const landOnLast = pendingLandOnLastPageRef.current;
+
+    if (cached) {
+      setData(cached);
+      setError(null);
+    } else {
+      setData(null);
+      setError(null);
+    }
+    setJustMarked(false);
+
+    if (cachedPages && cachedPages.length > 0) {
+      const chapterPrev = getAdjacent(readerBookId, readerChapter, "prev");
+      const landIdx = landOnLast
+        ? chapterPrev
+          ? cachedPages.length
+          : cachedPages.length - 1
+        : chapterPrev
+          ? 1
+          : 0;
+      setPages(cachedPages);
+      setCurrentPageIdx(landIdx);
+      pageIdxAtDragStartRef.current = landIdx;
+      pendingLandOnLastPageRef.current = false;
+    } else {
+      setPages(null);
+      verseToLineRef.current = new Map();
+      pageIdxAtDragStartRef.current = 0;
+      dragStartOffsetRef.current = 0;
+      if (!landOnLast) {
+        const chapterPrev = getAdjacent(readerBookId, readerChapter, "prev");
+        setCurrentPageIdx(chapterPrev ? 1 : 0);
+        advanceLockRef.current = false;
+      }
+    }
+
+    const prevAdj = getAdjacent(readerBookId, readerChapter, "prev");
+    const nextAdj = getAdjacent(readerBookId, readerChapter, "next");
+    if (prevAdj) {
+      prefetchChapter(prevAdj.bookId, prevAdj.chapter, translation.id);
+    }
+    if (nextAdj) {
+      prefetchChapter(nextAdj.bookId, nextAdj.chapter, translation.id);
+    }
+
+    fetchChapter(readerBookId, readerChapter, translation.id)
+      .then((c) => {
+        if (cancelled) return;
+        setData(c);
+      })
+      .catch((e: Error) => {
+        if (!cancelled) setError(e);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    book,
+    chapter,
+    readerBookId,
+    readerChapter,
+    translation.id,
+    textSize.id,
+    pageContentWidth,
+    pageContentHeight,
+    reloadKey,
+  ]);
 
   // Derived presentation: verse pages only when a next chapter exists
   // (swiping past the last page advances directly). End-matter card is
@@ -591,13 +806,22 @@ export default function ChapterReaderScreen() {
     1,
     versePageCount + (data && hasEndMatter ? 1 : 0),
   );
-  const currentPage = Math.min(totalPages, currentPageIdx + 1);
+  const firstVerseListIdx = prev ? 1 : 0;
+  const versePageIdx =
+    pages && pages.length > 0
+      ? Math.max(
+          0,
+          Math.min(pages.length - 1, currentPageIdx - firstVerseListIdx),
+        )
+      : 0;
+  const currentPage = Math.min(totalPages, versePageIdx + 1);
   const pagesLeft = Math.max(0, totalPages - currentPage);
 
   // A 0–1 progress value derived from page state. Drives the thin
   // bar in the header AND feeds the auto-mark logic below (which
   // used to consume scrollProgress directly).
-  const pageProgress = totalPages > 1 ? currentPageIdx / (totalPages - 1) : 1;
+  const pageProgress =
+    totalPages > 1 ? versePageIdx / (totalPages - 1) : 1;
 
   // ─── Auto-mark as read — page-based ─────────────────────────────
   // Same intent as the old scroll-based auto-mark: count the chapter
@@ -618,6 +842,26 @@ export default function ChapterReaderScreen() {
     data,
     alreadyRead,
     pageProgress,
+    book.id,
+    chapter,
+    recordChapterRead,
+  ]);
+
+  // Mark the chapter read the moment the user reaches its final page
+  // so the book overview grid can light up without waiting for the
+  // 30s dwell timer above.
+  useEffect(() => {
+    if (!data || !pages || pages.length === 0) return;
+    if (alreadyRead) return;
+    if (versePageIdx < pages.length - 1) return;
+    recordChapterRead(book.id, chapter);
+    setJustMarked(true);
+  }, [
+    data,
+    pages,
+    currentPageIdx,
+    versePageIdx,
+    alreadyRead,
     book.id,
     chapter,
     recordChapterRead,
@@ -730,10 +974,11 @@ export default function ChapterReaderScreen() {
     if (!data || !pages) return;
     const verseLine = verseToLineRef.current.get(focusVerse);
     if (verseLine == null) return;
-    const pageIdx = pages.findIndex(
+    const versePageIdx = pages.findIndex(
       (p) => verseLine >= p.startLine && verseLine <= p.endLine,
     );
-    if (pageIdx < 0) return;
+    if (versePageIdx < 0) return;
+    const listIdx = versePageIdx + (prev ? 1 : 0);
 
     // De-dupe by route + verse so reloads / translation swaps inside
     // the same focus session don't replay the animation.
@@ -742,7 +987,7 @@ export default function ChapterReaderScreen() {
     focusDoneRef.current = token;
 
     setTimeout(() => {
-      pagerRef.current?.scrollToIndex({ index: pageIdx, animated: true });
+      pagerRef.current?.scrollToIndex({ index: listIdx, animated: true });
     }, 80);
 
     // Glow: quick ramp up → hold → slow fade. Background colors
@@ -763,7 +1008,7 @@ export default function ChapterReaderScreen() {
         useNativeDriver: false,
       }),
     ]).start();
-  }, [focusVerse, data, pages, focusGlow, book.id, chapter]);
+  }, [focusVerse, data, pages, focusGlow, book.id, chapter, prev]);
 
   // Clear the dedupe token when the user navigates to a different
   // chapter so a later check-in to the same verse re-plays the glow.
@@ -772,21 +1017,44 @@ export default function ChapterReaderScreen() {
     setVerseAnchors({});
   }, [book.id, chapter]);
 
-  // Compose the renderable list: every verse page, then a final
-  // "end matter" card so the user can mark-as-read + advance to the
-  // next chapter without leaving the reader.
+  // Compose the renderable list: verse pages, then either a swipe
+  // bridge into the next chapter (when one exists) or the end-matter
+  // card at the canonical end of a book.
   const readerItems: ReaderListItem[] = useMemo(() => {
     if (!data || !pages) return [];
-    const verseCards: ReaderListItem[] = pages.map((p, idx) => ({
-      kind: "page",
-      key: `page-${idx}`,
-      page: p,
-    }));
-    if (!next) {
-      verseCards.push({ kind: "endMatter", key: "end" });
-    }
-    return verseCards;
-  }, [data, pages, next]);
+    return buildReaderItems(pages, !!prev, !!next);
+  }, [data, pages, prev, next]);
+
+  const pagerReady = !!data && !!pages;
+
+  // Drop the frozen overlay once the new chapter pager is mounted
+  // at the correct index — keeps chapter swaps from flashing.
+  useEffect(() => {
+    if (!frozenSnapshot || !pagerReady) return;
+
+    let innerFrame = 0;
+    const outerFrame = requestAnimationFrame(() => {
+      pagerRef.current?.scrollToIndex({
+        index: currentPageIdx,
+        animated: false,
+      });
+      innerFrame = requestAnimationFrame(() => {
+        setFrozenSnapshot(null);
+        advanceLockRef.current = false;
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(outerFrame);
+      if (innerFrame) cancelAnimationFrame(innerFrame);
+    };
+  }, [
+    frozenSnapshot,
+    pagerReady,
+    currentPageIdx,
+    readerBookId,
+    readerChapter,
+  ]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -830,6 +1098,55 @@ export default function ChapterReaderScreen() {
           </View>
         )}
 
+        {/* Pre-measure adjacent chapters so retreat/advance can swap
+            from cache without a visible reload flash. */}
+        {prev &&
+          getCachedChapter(prev.bookId, prev.chapter, translation.id) && (
+            <AdjacentChapterMeasurer
+              bookId={prev.bookId}
+              chapter={prev.chapter}
+              verses={
+                getCachedChapter(prev.bookId, prev.chapter, translation.id)!
+                  .verses
+              }
+              cacheKey={readerPaginationKey(
+                prev.bookId,
+                prev.chapter,
+                translation.id,
+                textSize.id,
+                pageContentWidth,
+                pageContentHeight,
+              )}
+              pageContentWidth={pageContentWidth}
+              pageContentHeight={pageContentHeight}
+              firstPageHeadingHeight={FIRST_PAGE_HEADING_HEIGHT}
+              scale={textSize.scale}
+            />
+          )}
+        {next &&
+          getCachedChapter(next.bookId, next.chapter, translation.id) && (
+            <AdjacentChapterMeasurer
+              bookId={next.bookId}
+              chapter={next.chapter}
+              verses={
+                getCachedChapter(next.bookId, next.chapter, translation.id)!
+                  .verses
+              }
+              cacheKey={readerPaginationKey(
+                next.bookId,
+                next.chapter,
+                translation.id,
+                textSize.id,
+                pageContentWidth,
+                pageContentHeight,
+              )}
+              pageContentWidth={pageContentWidth}
+              pageContentHeight={pageContentHeight}
+              firstPageHeadingHeight={FIRST_PAGE_HEADING_HEIGHT}
+              scale={textSize.scale}
+            />
+          )}
+
         {/* ─── Body ─────────────────────────────────────────────── */}
         {error ? (
           <View className="flex-1 items-center justify-center px-6">
@@ -854,17 +1171,21 @@ export default function ChapterReaderScreen() {
               />
             )}
           </View>
-        ) : !data || !pages ? (
+        ) : !data ? (
           <View className="flex-1 items-center justify-center">
             <LoadingView />
           </View>
+        ) : !pagerReady ? (
+          <View style={{ flex: 1, backgroundColor: colors.bg }} />
         ) : (
           <FlatList
             ref={pagerRef}
+            key={`${book.id}-${chapter}`}
             data={readerItems}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
+            initialScrollIndex={currentPageIdx}
             keyExtractor={(item) => item.key}
             getItemLayout={(_, index) => ({
               length: screenWidth,
@@ -874,21 +1195,25 @@ export default function ChapterReaderScreen() {
             onScrollBeginDrag={(e) => {
               const x = e.nativeEvent.contentOffset.x;
               pageIdxAtDragStartRef.current = Math.round(x / screenWidth);
+              dragStartOffsetRef.current = x;
             }}
             onMomentumScrollEnd={(e) => {
               const x = e.nativeEvent.contentOffset.x;
               const idx = Math.round(x / screenWidth);
-              setCurrentPageIdx(idx);
+              handlePageSettled(idx);
             }}
             onScrollEndDrag={(e) => {
               const x = e.nativeEvent.contentOffset.x;
               const idx = Math.round(x / screenWidth);
-              tryAdvanceFromLastPage(idx, e.nativeEvent.velocity?.x);
+              handlePageSettled(idx);
             }}
             initialNumToRender={1}
             maxToRenderPerBatch={2}
             windowSize={5}
             renderItem={({ item }) => {
+              if (item.kind === "prevBridge" || item.kind === "nextBridge") {
+                return <View style={{ width: screenWidth, flex: 1 }} />;
+              }
               if (item.kind === "endMatter") {
                 return (
                   <EndMatterPage
@@ -968,6 +1293,21 @@ export default function ChapterReaderScreen() {
           />
         )}
 
+        {frozenSnapshot ? (
+          <View
+            style={[StyleSheet.absoluteFillObject, { zIndex: 2 }]}
+            pointerEvents="none"
+          >
+            <FrozenChapterPager
+              snapshot={frozenSnapshot}
+              paddingX={PAGE_PAD_X}
+              paddingTop={PAGE_PAD_Y_TOP}
+              paddingBottom={PAGE_PAD_Y_BOTTOM}
+              scale={textSize.scale}
+            />
+          </View>
+        ) : null}
+
         {/* ─── Apple-Books page-of-N caption ─────────────────────
             Quiet "Page X of Y" caption sitting just above the
             bottom toolbar. Pointer-events off — purely informational. */}
@@ -1011,8 +1351,6 @@ export default function ChapterReaderScreen() {
             onContents={() => setContentsOpen(true)}
             textSizeId={textSize.id}
             onChangeTextSize={setTextSize}
-            translation={translation}
-            onChangeTranslation={() => router.push("/settings/translation")}
             todayMinutes={readingGoal.todayMinutes}
             goalMinutes={readingGoal.goalMinutes}
             onOpenReadingGoal={() => router.push("/settings/reading-goal")}
@@ -1535,6 +1873,129 @@ function VerseFlow({
         );
       })}
     </Text>
+  );
+}
+
+const EMPTY_VERSE_SET = new Set<number>();
+
+function FrozenChapterPager({
+  snapshot,
+  paddingX,
+  paddingTop,
+  paddingBottom,
+  scale,
+}: {
+  snapshot: FrozenPagerSnapshot;
+  paddingX: number;
+  paddingTop: number;
+  paddingBottom: number;
+  scale: number;
+}) {
+  const noopGlow = useRef(new Animated.Value(0)).current;
+  return (
+    <FlatList
+      data={snapshot.items}
+      horizontal
+      pagingEnabled
+      scrollEnabled={false}
+      showsHorizontalScrollIndicator={false}
+      initialScrollIndex={snapshot.pageIdx}
+      keyExtractor={(item) => item.key}
+      getItemLayout={(_, index) => ({
+        length: snapshot.width,
+        offset: snapshot.width * index,
+        index,
+      })}
+      renderItem={({ item }) =>
+        item.kind === "page" ? (
+          <ReaderPageView
+            width={snapshot.width}
+            paddingX={paddingX}
+            paddingTop={paddingTop}
+            paddingBottom={paddingBottom}
+            isFirst={item.page.isFirst}
+            bookName={snapshot.bookName}
+            chapter={snapshot.chapter}
+            scale={scale}
+            verses={snapshot.data.verses}
+            startVerseIdx={item.page.startVerseIdx}
+            endVerseIdx={item.page.endVerseIdx}
+            bookId={snapshot.bookId}
+            onVersePress={() => {}}
+            onVerseLongPress={() => {}}
+            selectedSet={EMPTY_VERSE_SET}
+            focusVerse={null}
+            focusTint="#888888"
+            focusGlow={noopGlow}
+          />
+        ) : null
+      }
+    />
+  );
+}
+
+function AdjacentChapterMeasurer({
+  bookId,
+  chapter,
+  verses,
+  cacheKey,
+  pageContentWidth,
+  pageContentHeight,
+  firstPageHeadingHeight,
+  scale,
+}: {
+  bookId: string;
+  chapter: number;
+  verses: Chapter["verses"];
+  cacheKey: string;
+  pageContentWidth: number;
+  pageContentHeight: number;
+  firstPageHeadingHeight: number;
+  scale: number;
+}) {
+  const noopGlow = useRef(new Animated.Value(0)).current;
+  const handleMeasure = useCallback(
+    (lines: ReadonlyArray<TextLayoutLine>) => {
+      if (!lines.length || readerPaginationCache.has(cacheKey)) return;
+      const computed = linesToReaderPages(
+        lines,
+        verses,
+        pageContentHeight,
+        firstPageHeadingHeight,
+      );
+      if (computed.length > 0) {
+        readerPaginationCache.set(cacheKey, computed);
+      }
+    },
+    [cacheKey, verses, pageContentHeight, firstPageHeadingHeight],
+  );
+
+  if (readerPaginationCache.has(cacheKey)) return null;
+
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        left: 0,
+        top: -200000,
+        opacity: 0,
+        width: pageContentWidth,
+      }}
+    >
+      <VerseFlow
+        verses={verses}
+        bookId={bookId}
+        chapter={chapter}
+        scale={scale}
+        onVersePress={() => {}}
+        focusVerse={null}
+        focusTint="#888888"
+        focusGlow={noopGlow}
+        onAnchors={() => {}}
+        onMeasureLines={handleMeasure}
+      />
+    </View>
   );
 }
 
@@ -2144,17 +2605,13 @@ function getAdjacent(
     if (chapter < book.chapters) {
       return { bookId, chapter: chapter + 1 };
     }
-    const nextBook = BOOKS.find((b) => b.order === book.order + 1);
-    return nextBook ? { bookId: nextBook.id, chapter: 1 } : null;
+    return null;
   }
 
   if (chapter > 1) {
     return { bookId, chapter: chapter - 1 };
   }
-  const prevBook = BOOKS.find((b) => b.order === book.order - 1);
-  return prevBook
-    ? { bookId: prevBook.id, chapter: prevBook.chapters }
-    : null;
+  return null;
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -2359,8 +2816,6 @@ function ReaderToolbar({
   onContents,
   textSizeId,
   onChangeTextSize,
-  translation,
-  onChangeTranslation,
   todayMinutes,
   goalMinutes,
   onOpenReadingGoal,
@@ -2368,8 +2823,6 @@ function ReaderToolbar({
   onContents: () => void;
   textSizeId: TextSizeId;
   onChangeTextSize: (id: TextSizeId) => void;
-  translation: Translation;
-  onChangeTranslation: () => void;
   todayMinutes: number;
   goalMinutes: number;
   onOpenReadingGoal: () => void;
@@ -2415,14 +2868,7 @@ function ReaderToolbar({
         {section === "themes" ? (
           <ThemesPopover
             textSizeId={textSizeId}
-            onChangeTextSize={(id) => {
-              onChangeTextSize(id);
-            }}
-            translation={translation}
-            onChangeTranslation={() => {
-              setSection(null);
-              onChangeTranslation();
-            }}
+            onChangeTextSize={onChangeTextSize}
           />
         ) : null}
         {section === "goal" ? (
@@ -2472,7 +2918,7 @@ function ReaderToolbar({
           </ToolbarIconButton>
           <ToolbarPipDivider />
           <ToolbarIconButton
-            accessibilityLabel="Text size and translation"
+            accessibilityLabel="Text size"
             onPress={() => toggle("themes")}
             active={section === "themes"}
           >
@@ -2610,41 +3056,31 @@ function GoalIconWithDot({ reached }: { reached: boolean }) {
 function ThemesPopover({
   textSizeId,
   onChangeTextSize,
-  translation,
-  onChangeTranslation,
 }: {
   textSizeId: TextSizeId;
   onChangeTextSize: (id: TextSizeId) => void;
-  translation: Translation;
-  onChangeTranslation: () => void;
 }) {
   const colors = useColors();
   const scheme = useResolvedScheme();
-  // Glass material flips with the active scheme — dark mode keeps
-  // a night-sky tint with a faint white hairline; light mode runs
-  // a milky-white tint with a warm hairline so the popover reads
-  // as Apple-Books-quality glass on the cream canvas instead of
-  // staying as a stamped dark rectangle in the middle of a light
-  // page. The shadow color also flips to a warmer near-black so
-  // the soft drop on cream doesn't pool as a cold grey blob.
   const isLight = scheme === "light";
-  const glassTint = isLight ? "light" : "dark";
-  const glassFill = isLight
-    ? "rgba(255, 255, 255, 0.78)"
-    : "rgba(14, 14, 16, 0.78)";
-  const glassHairline = isLight
-    ? "rgba(15, 15, 15, 0.08)"
-    : "rgba(255, 255, 255, 0.08)";
   const glassShadowOpacity = isLight ? 0.18 : 0.45;
+  const textSizeIndex = Math.max(
+    0,
+    TEXT_SIZES.findIndex((s) => s.id === textSizeId),
+  );
+  const currentTextSize = TEXT_SIZES[textSizeIndex] ?? TEXT_SIZES[1];
+
   return (
     <View
       style={{
-        width: 320,
+        width: 340,
         borderRadius: 22,
-        overflow: "hidden",
-        // Soft outer drop shadow so the popover lifts off the page
-        // — gives the glass material its sense of depth even on
-        // iOS where blur alone is subtle.
+        backgroundColor: colors.surfaceSecondary,
+        borderWidth: 1,
+        borderColor: colors.border,
+        paddingHorizontal: 16,
+        paddingTop: 16,
+        paddingBottom: 18,
         ...Platform.select({
           ios: {
             shadowColor: "#000",
@@ -2656,411 +3092,94 @@ function ThemesPopover({
         }),
       }}
     >
-      <BlurView
-        // Intensity is platform-tuned (iOS reads `intensity`
-        // directly; Android needs a higher value to reach a
-        // similar opacity) and tint flips with the resolved
-        // scheme so the material reads as the page's own glass
-        // rather than a foreign island.
-        intensity={Platform.OS === "ios" ? 60 : 90}
-        tint={glassTint}
-        style={{
-          // Translucent wash on top of the blur — without it,
-          // page text behind the popover bleeds through enough to
-          // hurt the chip labels' contrast on either canvas.
-          backgroundColor: glassFill,
-          borderRadius: 22,
-          // Subtle hairline keeps the edge crisp against any
-          // chapter bloom color behind it.
-          borderWidth: 1,
-          borderColor: glassHairline,
-        }}
-      >
-        {/* ─── Text Size ──────────────────────────────────────── */}
+        <Text
+          style={{
+            fontFamily: "System",
+            fontWeight: "700",
+            fontSize: 11,
+            color: colors.inkSubtle,
+            letterSpacing: 2.5,
+            textTransform: "uppercase",
+          }}
+        >
+          Text Size
+        </Text>
+
         <View
           style={{
-            paddingHorizontal: 16,
-            paddingTop: 16,
-            paddingBottom: 16,
+            flexDirection: "row",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            marginTop: 14,
+            marginBottom: 12,
+            paddingHorizontal: 2,
           }}
         >
           <Text
             style={{
               fontFamily: "System",
               fontWeight: "700",
-              fontSize: 11,
+              fontSize: 13,
+              lineHeight: 16,
               color: colors.inkSubtle,
-              letterSpacing: 2.5,
-              textTransform: "uppercase",
             }}
           >
-            Text Size
+            Aa
           </Text>
-          <TextSizeSlider
-            value={textSizeId}
-            onChange={(id) => {
-              onChangeTextSize(id);
+          <Text
+            style={{
+              fontFamily: "System",
+              fontWeight: "700",
+              fontSize: 21,
+              lineHeight: 24,
+              color: colors.inkSubtle,
             }}
-          />
+          >
+            Aa
+          </Text>
         </View>
 
-        {/* Hairline divider — same hairline color the popover
-            border uses so the rule reads as part of the same
-            glass material instead of a separate ink line. */}
-        <View
-          style={{
-            height: StyleSheet.hairlineWidth,
-            backgroundColor: glassHairline,
-            marginHorizontal: 16,
+        <SegmentedControl
+          appearance={scheme}
+          values={["Small", "Medium", "Large", "XL"]}
+          selectedIndex={textSizeIndex}
+          onChange={(event) => {
+            const nextIndex = event.nativeEvent.selectedSegmentIndex;
+            const next = TEXT_SIZES[nextIndex];
+            if (next && next.id !== textSizeId) {
+              haptics.tick();
+              onChangeTextSize(next.id);
+            }
+          }}
+          style={{ height: 32 }}
+          fontStyle={{
+            fontFamily: "System",
+            fontWeight: "500",
+            fontSize: 11,
+            color: colors.inkMuted,
+          }}
+          activeFontStyle={{
+            fontFamily: "System",
+            fontWeight: "700",
+            fontSize: 11,
+            color: colors.ink,
           }}
         />
 
-        {/* ─── Translation ────────────────────────────────────── */}
-        <Pressable
-          onPress={() => {
-            haptics.soft();
-            onChangeTranslation();
-          }}
-          style={({ pressed }) => ({
-            opacity: pressed ? 0.7 : 1,
-            paddingHorizontal: 16,
-            paddingTop: 16,
-            paddingBottom: 16,
-            flexDirection: "row",
-            alignItems: "center",
-          })}
-          accessibilityRole="button"
-          accessibilityLabel={`Change translation. Current: ${translation.fullName}`}
-        >
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                fontSize: 11,
-                color: colors.inkSubtle,
-                letterSpacing: 2.5,
-                textTransform: "uppercase",
-              }}
-            >
-              Translation
-            </Text>
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                fontSize: 15,
-                color: colors.ink,
-                marginTop: 4,
-              }}
-              numberOfLines={1}
-            >
-              {translation.fullName}
-            </Text>
-          </View>
-          {/* Right-side tag + chevron group reads as "current value
-              + this opens a picker", which is the iOS Settings
-              row idiom users already know. */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <View
-              style={{
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                borderRadius: 999,
-                backgroundColor: colors.selectSoft,
-                borderWidth: 1,
-                borderColor: "rgba(10, 132, 255, 0.45)",
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 11,
-                  color: colors.select,
-                  letterSpacing: 1.2,
-                }}
-              >
-                {translation.tag}
-              </Text>
-            </View>
-            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M9 6l6 6-6 6"
-                stroke={colors.inkSubtle}
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </View>
-        </Pressable>
-      </BlurView>
-    </View>
-  );
-}
-
-/**
- * Text-size slider — Apple-Books-style horizontal track with an
- * animated thumb that snaps between the four discrete TEXT_SIZES
- * positions (Small / Default / Large / Extra-Large).
- *
- * Why a slider instead of the old 4-cell segmented control:
- *   • The segmented control rendered four `Aa` glyphs at four
- *     wildly different sizes (11 / 15 / 19 / 23 pt) which read
- *     as visually noisy — especially with a tinted active cell
- *     dropped in the middle. The user described it as
- *     "unprofessional."
- *   • A slider mirrors the affordance every iOS-native reading
- *     app uses (Apple Books, Hallow, Kindle, Reeder) — a clean
- *     track with a thumb, tiny "Aa" / big "Aa" bookends. The
- *     scale is conveyed by the END labels, not by four discrete
- *     glyphs competing for attention.
- *   • The control is still discretized to TEXT_SIZES under the
- *     hood — small / default / large / x-large — so all reader
- *     code that depends on `TextSizeId` keeps working unchanged.
- *
- * Interaction:
- *   • Tap anywhere on the track → thumb springs to the nearest
- *     step and emits onChange.
- *   • Drag the track → thumb follows the touch and snaps to the
- *     nearest step on every change (haptic per snap, not per
- *     pixel). On release the thumb settles at the final step.
- *   • Each snap is a soft haptic so the slider feels "notched"
- *     rather than continuous.
- *
- * Layout math:
- *   • The interactive container takes the full popover width.
- *   • The visible track is inset 14pt from each side (THUMB_RADIUS)
- *     so the thumb has room at the extremes without clipping.
- *   • Steps are evenly spaced from x=14 to x=(width-14), so for
- *     N steps the gap between adjacent steps is (width-28)/(N-1).
- *   • The thumb's `translateX` drives its position — animated on
- *     spring so taps feel responsive but landings feel iOS-natural.
- */
-const THUMB_DIAMETER = 28;
-const THUMB_RADIUS = THUMB_DIAMETER / 2;
-
-function TextSizeSlider({
-  value,
-  onChange,
-}: {
-  value: TextSizeId;
-  onChange: (id: TextSizeId) => void;
-}) {
-  const colors = useColors();
-  const scheme = useResolvedScheme();
-  // Track / tick / thumb tints flip with the glass material —
-  // dark popover gets faint-white parts, light popover gets
-  // faint-ink parts, and the thumb adopts the ink color so it
-  // reads as a deliberate handle on either canvas (a pure-white
-  // thumb on cream glass would float without an edge).
-  const isLight = scheme === "light";
-  const trackColor = isLight
-    ? "rgba(15, 15, 15, 0.12)"
-    : "rgba(255, 255, 255, 0.12)";
-  const tickColor = isLight
-    ? "rgba(15, 15, 15, 0.30)"
-    : "rgba(255, 255, 255, 0.35)";
-  const thumbColor = isLight ? colors.ink : "#FFFFFF";
-  const stepCount = TEXT_SIZES.length;
-  const activeIndex = Math.max(
-    0,
-    TEXT_SIZES.findIndex((s) => s.id === value),
-  );
-
-  // Container width is measured at mount via onLayout. Until the
-  // first layout pass we render the thumb at translateX=0 — the
-  // useEffect below snaps it into the right slot as soon as we
-  // know the width. This avoids a flash of "thumb at left edge"
-  // on first paint because the thumb itself doesn't render until
-  // we know the geometry.
-  const [containerWidth, setContainerWidth] = useState(0);
-  const trackWidth = Math.max(0, containerWidth - THUMB_DIAMETER);
-  const stepWidth = stepCount > 1 ? trackWidth / (stepCount - 1) : 0;
-
-  // Animated thumb position (translateX from container left edge).
-  // We always render the thumb relative to the LEFT padding inset
-  // — translateX of 0 puts the thumb's left edge at x=0, which
-  // means its center sits at x=THUMB_RADIUS, which is exactly
-  // where step 0 lives.
-  const thumbX = useRef(new Animated.Value(0)).current;
-
-  // Spring the thumb whenever the active step changes or the
-  // container width is measured for the first time. We drive
-  // translateX (not `left`) so we can use the native driver.
-  useEffect(() => {
-    Animated.spring(thumbX, {
-      toValue: activeIndex * stepWidth,
-      tension: 110,
-      friction: 13,
-      useNativeDriver: true,
-    }).start();
-  }, [activeIndex, stepWidth, thumbX]);
-
-  // Map a touch x coordinate (in container coordinates) to a step
-  // index. Subtract the THUMB_RADIUS inset so the track origin is
-  // at the visible track's start, then round to the nearest step.
-  const indexFromX = useCallback(
-    (x: number): number => {
-      if (stepWidth <= 0) return activeIndex;
-      const local = x - THUMB_RADIUS;
-      const raw = local / stepWidth;
-      return Math.max(0, Math.min(stepCount - 1, Math.round(raw)));
-    },
-    [stepWidth, activeIndex, stepCount],
-  );
-
-  // PanResponder for tap + drag. Recreated whenever indexFromX
-  // changes (which only happens when the container width or the
-  // active step changes). onChange is captured in the closure;
-  // calling it triggers the parent's state update which re-runs
-  // the spring effect above to advance the thumb.
-  const panHandlers = useMemo(() => {
-    const handleAt = (x: number) => {
-      const idx = indexFromX(x);
-      if (idx !== activeIndex && idx >= 0 && idx < stepCount) {
-        haptics.soft();
-        onChange(TEXT_SIZES[idx]!.id);
-      }
-    };
-    return PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (e) => handleAt(e.nativeEvent.locationX),
-      onPanResponderMove: (e) => handleAt(e.nativeEvent.locationX),
-      onPanResponderTerminationRequest: () => false,
-    }).panHandlers;
-  }, [indexFromX, activeIndex, stepCount, onChange]);
-
-  return (
-    <View style={{ marginTop: 16 }}>
-      {/* End-label bookends — tiny "Aa" on the left to indicate
-          "smaller", larger "Aa" on the right to indicate "bigger".
-          Same visual idiom Apple Books / Hallow use. */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-          paddingHorizontal: 4,
-          marginBottom: 8,
-          height: 22,
-        }}
-      >
         <Text
           style={{
             fontFamily: "System",
-            fontWeight: "700",
+            fontWeight: "500",
             fontSize: 13,
-            lineHeight: 16,
             color: colors.inkSubtle,
+            marginTop: 10,
+            textAlign: "center",
           }}
         >
-          Aa
+          {currentTextSize.id === "default"
+            ? "Recommended"
+            : `${Math.round(currentTextSize.scale * 100)}% size`}
         </Text>
-        <Text
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            fontSize: 21,
-            lineHeight: 24,
-            color: colors.inkSubtle,
-          }}
-        >
-          Aa
-        </Text>
-      </View>
-
-      {/* Slider track — full-width touch area; the visible track
-          line lives inset by THUMB_RADIUS on either side so the
-          thumb never clips at the extremes. */}
-      <View
-        onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
-        style={{
-          height: THUMB_DIAMETER,
-          justifyContent: "center",
-        }}
-        accessibilityRole="adjustable"
-        accessibilityLabel="Text size"
-        accessibilityValue={{
-          min: 0,
-          max: stepCount - 1,
-          now: activeIndex,
-          text: TEXT_SIZES[activeIndex]?.name ?? "",
-        }}
-        {...panHandlers}
-      >
-        {/* Track line — sits inside the thumb-padded inset so it
-            visually starts/ends at the thumb's center positions. */}
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            left: THUMB_RADIUS,
-            right: THUMB_RADIUS,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: trackColor,
-          }}
-        />
-
-        {/* Tick marks — small dots at each step position to show
-            the snap targets. Hidden under the thumb at the active
-            step (the thumb visually replaces the tick). */}
-        {stepWidth > 0
-          ? TEXT_SIZES.map((_, i) => {
-              const isActive = i === activeIndex;
-              return (
-                <View
-                  key={i}
-                  pointerEvents="none"
-                  style={{
-                    position: "absolute",
-                    left: THUMB_RADIUS + i * stepWidth - 3,
-                    top: THUMB_RADIUS - 3,
-                    width: 6,
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: isActive ? "transparent" : tickColor,
-                  }}
-                />
-              );
-            })
-          : null}
-
-        {/* Animated thumb — circle that springs between step
-            positions. translateX is driven by the spring; the
-            base `left: 0` puts the thumb's left edge flush with
-            the container left, so translateX=0 places its center
-            at x=THUMB_RADIUS, which is exactly step 0. */}
-        {containerWidth > 0 ? (
-          <Animated.View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              width: THUMB_DIAMETER,
-              height: THUMB_DIAMETER,
-              borderRadius: THUMB_RADIUS,
-              backgroundColor: thumbColor,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: isLight ? 0.18 : 0.35,
-              shadowRadius: 3,
-              elevation: 4,
-              transform: [{ translateX: thumbX }],
-            }}
-          />
-        ) : null}
-      </View>
     </View>
   );
 }
@@ -3079,162 +3198,145 @@ function GoalPopover({
   onOpen: () => void;
 }) {
   const colors = useColors();
-  const scheme = useResolvedScheme();
   const pct = Math.min(100, Math.round((todayMinutes / goalMinutes) * 100));
   const reached = todayMinutes >= goalMinutes;
-  // Same theme-aware glass treatment as ThemesPopover so the two
-  // popovers read as one connected family of reader chrome on
-  // either canvas (dark night-sky glass / light milky glass).
-  const isLight = scheme === "light";
-  const glassTint = isLight ? "light" : "dark";
-  const glassFill = isLight
-    ? "rgba(255, 255, 255, 0.78)"
-    : "rgba(14, 14, 16, 0.78)";
-  const glassHairline = isLight
-    ? "rgba(15, 15, 15, 0.08)"
-    : "rgba(255, 255, 255, 0.08)";
-  const glassTrack = isLight
-    ? "rgba(15, 15, 15, 0.10)"
-    : "rgba(255, 255, 255, 0.10)";
-  const glassShadowOpacity = isLight ? 0.18 : 0.45;
+
   return (
     <View
       style={{
-        width: 320,
+        width: 340,
         borderRadius: 22,
-        overflow: "hidden",
+        backgroundColor: colors.surfaceSecondary,
+        borderWidth: 1,
+        borderColor: colors.border,
         ...Platform.select({
           ios: {
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 16 },
-            shadowOpacity: glassShadowOpacity,
+            shadowOpacity: 0.45,
             shadowRadius: 30,
           },
           android: { elevation: 18 },
         }),
       }}
     >
-      <BlurView
-        intensity={Platform.OS === "ios" ? 60 : 90}
-        tint={glassTint}
+      <View
         style={{
-          backgroundColor: glassFill,
-          borderRadius: 22,
-          borderWidth: 1,
-          borderColor: glassHairline,
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 14,
         }}
       >
         <View
           style={{
-            paddingHorizontal: 16,
-            paddingTop: 16,
-            paddingBottom: 16,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "baseline",
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                fontSize: 11,
-                color: colors.inkSubtle,
-                letterSpacing: 2.5,
-                textTransform: "uppercase",
-              }}
-            >
-              Today
-            </Text>
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "500",
-                fontSize: 11,
-                color: colors.inkSubtle,
-              }}
-            >
-              {formatGoalMinutes(todayMinutes)} / {goalMinutes} min
-            </Text>
-          </View>
-          <View
-            style={{
-              height: 6,
-              backgroundColor: glassTrack,
-              borderRadius: 3,
-              overflow: "hidden",
-              marginTop: 16,
-            }}
-          >
-            <View
-              style={{
-                height: "100%",
-                width: `${pct}%`,
-                backgroundColor: reached ? "#FFB672" : colors.primary,
-              }}
-            />
-          </View>
-          <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "500",
-              fontSize: 12,
-              color: colors.inkMuted,
-              lineHeight: 18,
-              marginTop: 8,
-            }}
-          >
-            {reached
-              ? "Today's reading goal reached."
-              : "Keep reading — your minutes count automatically."}
-          </Text>
-        </View>
-        <View
-          style={{
-            height: StyleSheet.hairlineWidth,
-            backgroundColor: glassHairline,
-            marginHorizontal: 16,
-          }}
-        />
-        <Pressable
-          onPress={() => {
-            haptics.soft();
-            onOpen();
-          }}
-          style={({ pressed }) => ({
-            opacity: pressed ? 0.7 : 1,
-            paddingHorizontal: 16,
-            paddingVertical: 16,
             flexDirection: "row",
-            alignItems: "center",
             justifyContent: "space-between",
-          })}
+            alignItems: "baseline",
+          }}
         >
           <Text
             style={{
               fontFamily: "System",
               fontWeight: "700",
-              fontSize: 14,
-              color: colors.ink,
+              fontSize: 11,
+              color: colors.inkSubtle,
+              letterSpacing: 2.5,
+              textTransform: "uppercase",
             }}
           >
-            Change goal
+            Today
           </Text>
-          <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M9 6l6 6-6 6"
-              stroke={colors.inkSubtle}
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
-        </Pressable>
-      </BlurView>
+          <Text
+            style={{
+              fontFamily: "System",
+              fontWeight: "500",
+              fontSize: 11,
+              color: colors.inkSubtle,
+            }}
+          >
+            {formatGoalMinutes(todayMinutes)} / {goalMinutes} min
+          </Text>
+        </View>
+        <View
+          style={{
+            height: 6,
+            backgroundColor: colors.border,
+            borderRadius: 3,
+            overflow: "hidden",
+            marginTop: 16,
+          }}
+        >
+          <View
+            style={{
+              height: "100%",
+              width: `${pct}%`,
+              backgroundColor: reached ? "#FFB672" : colors.primary,
+            }}
+          />
+        </View>
+        <Text
+          style={{
+            fontFamily: "System",
+            fontWeight: "500",
+            fontSize: 12,
+            color: colors.inkMuted,
+            lineHeight: 18,
+            marginTop: 8,
+          }}
+        >
+          {reached
+            ? "Today's reading goal reached."
+            : "Keep reading — your minutes count automatically."}
+        </Text>
+      </View>
+
+      <View
+        style={{
+          height: StyleSheet.hairlineWidth,
+          backgroundColor: colors.border,
+          marginHorizontal: 16,
+        }}
+      />
+
+      <Pressable
+        onPress={() => {
+          haptics.soft();
+          onOpen();
+        }}
+        style={({ pressed }) => ({
+          opacity: pressed ? 0.7 : 1,
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 20,
+          minHeight: 56,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        })}
+        accessibilityRole="button"
+        accessibilityLabel="Change reading goal"
+      >
+        <Text
+          style={{
+            fontFamily: "System",
+            fontWeight: "700",
+            fontSize: 15,
+            lineHeight: 20,
+            color: colors.ink,
+          }}
+        >
+          Change goal
+        </Text>
+        <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M9 6l6 6-6 6"
+            stroke={colors.inkSubtle}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+      </Pressable>
     </View>
   );
 }

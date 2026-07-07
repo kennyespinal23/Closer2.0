@@ -5,6 +5,9 @@ import {
   SettingsSection,
   SettingsToggleRow,
 } from "@/components/SettingsScaffold";
+import { SFSymbol } from "@/components/Symbol";
+import { MILESTONES } from "@/lib/milestones";
+import * as haptics from "@/lib/haptics";
 import { useDevTools } from "@/state/devTools";
 import { useColors } from "@/state/theme";
 
@@ -38,7 +41,8 @@ import { useColors } from "@/state/theme";
  *   without touching the toggle itself.
  */
 export default function DeveloperToolsScreen() {
-  const { enabled, setEnabled } = useDevTools();
+  const { enabled, setEnabled, unlockAllMilestones, setUnlockAllMilestones } =
+    useDevTools();
   const colors = useColors();
 
   return (
@@ -57,6 +61,24 @@ export default function DeveloperToolsScreen() {
           sublabel="Surface QA shortcuts on the Profile tab"
           value={enabled}
           onValueChange={setEnabled}
+          showDivider
+        />
+        <SettingsToggleRow
+          icon={
+            <SFSymbol
+              name="rosette"
+              size={18}
+              color={colors.ink}
+              weight="semibold"
+            />
+          }
+          label="Unlock all milestones"
+          sublabel={`Browse all ${MILESTONES.length} badges on the Streaks tab`}
+          value={unlockAllMilestones}
+          onValueChange={(next) => {
+            haptics.soft();
+            setUnlockAllMilestones(next);
+          }}
         />
       </SettingsSection>
 

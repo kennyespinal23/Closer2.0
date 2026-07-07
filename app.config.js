@@ -17,6 +17,14 @@ module.exports = ({ config }) => {
     return includeDeviceActivity || name !== "react-native-device-activity";
   });
 
+  const googleIosUrlScheme = process.env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME;
+  if (googleIosUrlScheme) {
+    plugins.push([
+      "@react-native-google-signin/google-signin",
+      { iosUrlScheme: googleIosUrlScheme },
+    ]);
+  }
+
   const { ios, icon, ...rest } = appJson.expo;
 
   return {

@@ -1,67 +1,150 @@
 import { Alert, Text, View } from "react-native";
 import {
   SettingsInfoBanner,
+  SettingsLinkRow,
   SettingsScaffold,
   SettingsSection,
 } from "@/components/SettingsScaffold";
 import { SocialButton } from "@/components/SocialButton";
+import { isGoogleSignInConfigured } from "@/lib/googleAuthConfig";
+import { getSupabaseRedirectUri } from "@/lib/supabaseRedirect";
+import { useAuth } from "@/state/auth";
 
-/**
- * Account — sign-in & sync.
- *
- * Linked from the profile drawer's "Email" row. Auth isn't wired
- * yet; this page exists so the row leads somewhere honest instead
- * of nowhere. The three SocialButton affordances render so the
- * screen feels like a real sign-in surface — but tapping any of
- * them surfaces an Alert that names the coming feature, so the
- * user understands we're not stalling, we just haven't shipped it.
- *
- * When auth lands:
- *   • Replace the three Alert handlers with the real sign-in calls
- *   • Move the "Why sign in" copy to a Section footer so it shrinks
- *   • Render a signed-in state (email, "Sign out" row) above the
- *     "Why sign in" copy when `authedUser` is non-null
- *
- * Everything in Closer works fully offline today; sync is purely a
- * "across devices" affordance, so we lead with that promise.
- */
 export default function AccountScreen() {
-  const notReady = () =>
+  const {
+    configured,
+    user,
+    signingIn,
+    signInWithApple,
+    signInWithGoogle,
+    signOut,
+  } = useAuth();
+
+  const handleSignInError = (err: unknown) => {
+    if (err instanceof Error && err.message === "Sign-in was cancelled.") {
+      return;
+    }
+    const message =
+      err instanceof Error ? err.message : "Something went wrong. Try again.";
+    Alert.alert("Couldn't sign in", message, [{ text: "OK" }]);
+  };
+
+  const handleApple = async () => {
+    try {
+      await signInWithApple();
+    } catch (err) {
+      handleSignInError(err);
+    }
+  };
+
+  const handleGoogle = async () => {
+    if (!configured) {
+      notConfigured();
+      return;
+    }
+    if (!isGoogleSignInConfigured()) {
+      Alert.alert(
+        "Google isn't ready yet",
+        "Finish Google Cloud setup, then paste your client IDs so we can add them to the project.",
+        [{ text: "OK" }],
+      );
+      return;
+    }
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      handleSignInError(err);
+    }
+  };
+
+  const handleSignOut = () => {
+    Alert.alert("Sign out?", "Your data stays on this device until sync ships.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign out",
+        style: "destructive",
+        onPress: () => {
+          signOut().catch((err) => handleSignInError(err));
+        },
+      },
+    ]);
+  };
+
+  const notConfigured = () =>
     Alert.alert(
-      "Coming soon",
-      "Sign-in arrives in a future update. Until then, everything you read and write stays safely on this device.",
-      [{ text: "OK", style: "default" }],
+      "Almost there",
+      "Sign-in isn't connected yet. Restart the app after Supabase is configured.",
+      [{ text: "OK" }],
     );
+
+  const signedInLabel =
+    user?.email ??
+    user?.user_metadata?.full_name ??
+    user?.app_metadata?.provider ??
+    "Signed in";
 
   return (
     <SettingsScaffold title="Account">
-      {/* Lead with what sign-in WILL do, framed honestly. We don't
-          hide that auth isn't wired — we tell the user what's coming
-          and why. Uses the shared SettingsInfoBanner so this screen
-          carries the same framing-card treatment as the other
-          settings detail pages. */}
       <SettingsInfoBanner
         title="One quiet rhythm, every device."
-        body="Sign in to carry your highlights, notes, and streak between your phone and tablet. Until then, everything lives only on this device."
+        body={
+          user
+            ? "You're signed in. Cross-device sync will light up in a follow-up — your highlights and streak still live on this device for now."
+            : "Sign in with Apple or Google to carry your highlights, notes, and streak between devices."
+        }
       />
 
-      <SettingsSection
-        title="Sign In"
-        footer="Closer is fully functional without an account. Sign-in only powers cross-device sync."
-      >
-        {/* The three SocialButtons live INSIDE the rounded section
-            card. To keep the section's padding consistent with other
-            settings screens we wrap them in a small inner view with
-            its own padding instead of relying on the buttons' default
-            spacing. */}
-        <View className="px-4 py-4">
-          <SocialButton provider="apple" onPress={notReady} />
-          <View className="h-2.5" />
-          <SocialButton provider="google" onPress={notReady} />
-          <View className="h-2.5" />
-          <SocialButton provider="email" onPress={notReady} />
+      {user ? (
+        <SettingsSection title="Signed In">
+          <SettingsLinkRow
+            label={signedInLabel}
+            sublabel="Account connected"
+            onPress={handleSignOut}
+            destructive
+          />
+        </SettingsSection>
+      ) : (
+        <SettingsSection
+          title="Sign In"
+          footer="Closer works fully offline without an account. Sign-in is for backup and sync across devices."
+        >
+          <View className="px-4 py-4">
+            <SocialButton
+              provider="apple"
+              onPress={
+                configured
+                  ? signingIn
+                    ? undefined
+                    : handleApple
+                  : notConfigured
+              }
+            />
+            <View className="h-2.5" />
+            <SocialButton
+              provider="google"
+              onPress={
+                configured
+                  ? signingIn
+                    ? undefined
+                    : handleGoogle
+                  : notConfigured
+              }
+            />
+          </View>
+        </SettingsSection>
+      )}
+
+      {!configured && __DEV__ ? (
+        <View className="px-6 mt-6">
+          <Text
+            className="text-ink-subtle text-[12px] leading-[18px] text-center"
+            style={{ fontFamily: "System", fontWeight: "400" }}
+          >
+            Dev: add Supabase env vars, then restart Metro. OAuth redirect:{" "}
+            {getSupabaseRedirectUri()}
+          </Text>
         </View>
-      </SettingsSection>
+      ) : null}
 
       <View className="px-6 mt-8">
         <Text

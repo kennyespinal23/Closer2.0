@@ -1,26 +1,69 @@
-import { ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
 import { SocialButton } from "@/components/SocialButton";
 import { progressFor } from "@/constants/onboarding";
+import { isGoogleSignInConfigured } from "@/lib/googleAuthConfig";
+import { useAuth } from "@/state/auth";
 
 export default function AccountScreen() {
   const router = useRouter();
+  const { configured, signingIn, signInWithApple, signInWithGoogle } = useAuth();
 
   const goToTime = () => router.push("/onboarding/time");
 
-  const handleApple = () => {
-    goToTime();
+  const handleSignInError = (err: unknown) => {
+    if (err instanceof Error && err.message === "Sign-in was cancelled.") {
+      return;
+    }
+    const message =
+      err instanceof Error ? err.message : "Something went wrong. Try again.";
+    Alert.alert("Couldn't sign in", message, [{ text: "OK" }]);
   };
 
-  const handleGoogle = () => {
-    goToTime();
+  const notConfigured = () =>
+    Alert.alert(
+      "Almost there",
+      "Supabase isn't connected yet. Try again after restarting the app.",
+      [{ text: "OK" }],
+    );
+
+  const handleApple = async () => {
+    if (!configured) {
+      notConfigured();
+      return;
+    }
+    if (signingIn) return;
+    try {
+      await signInWithApple();
+      goToTime();
+    } catch (err) {
+      handleSignInError(err);
+    }
   };
 
-  const handleEmail = () => {
-    goToTime();
+  const handleGoogle = async () => {
+    if (!configured) {
+      notConfigured();
+      return;
+    }
+    if (!isGoogleSignInConfigured()) {
+      Alert.alert(
+        "Google isn't ready yet",
+        "Finish Google Cloud setup, then paste your client IDs here so we can add them to the project.",
+        [{ text: "OK" }],
+      );
+      return;
+    }
+    if (signingIn) return;
+    try {
+      await signInWithGoogle();
+      goToTime();
+    } catch (err) {
+      handleSignInError(err);
+    }
   };
 
   return (
@@ -61,13 +104,12 @@ export default function AccountScreen() {
             <View className="gap-3">
               <SocialButton provider="apple" onPress={handleApple} />
               <SocialButton provider="google" onPress={handleGoogle} />
-              <SocialButton provider="email" onPress={handleEmail} />
             </View>
           </FadeIn>
 
           <FadeIn delayMs={2000}>
             <Text
-              className="text-ink-subtle text-[11px] leading-[16px] text-center mt-6 mb-2 px-4"
+              className="text-ink-subtle text-[11px] leading-[16px] text-center mt-4 mb-2 px-4"
               style={{ fontFamily: "System", fontWeight: "400" }}
             >
               By continuing, you agree to our{" "}

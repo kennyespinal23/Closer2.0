@@ -155,7 +155,7 @@ export default function CompleteScreen() {
     ]).start();
   }, [haloScale, haloOpacity, upNextEnter, reducedMotion]);
 
-  const headline = isFirstEver ? "Welcome to Closer." : "Well done.";
+  const headline = "Well done.";
 
   const handleUpNext = () => {
     // Roll the catalog forward so the rest of the app (home card,
@@ -171,9 +171,6 @@ export default function CompleteScreen() {
 
   const handleContinue = () => {
     if (streakAdvanced) {
-      // Chain into the fire screen. The milestone param is just a
-      // hint for an extra badge — empty string = no milestone, the
-      // screen still renders for plain everyday streak bumps.
       router.replace({
         pathname: "/sermon/streak",
         params: {
@@ -183,8 +180,64 @@ export default function CompleteScreen() {
       });
       return;
     }
+    if (milestoneDays > 0) {
+      router.replace({
+        pathname: "/sermon/milestone-unlock",
+        params: { day: String(milestoneDays) },
+      });
+      return;
+    }
     router.replace("/today");
   };
+
+  const completionFooter = (
+    <View className="px-6 pb-2">
+      <Animated.View
+        style={{
+          opacity: upNextEnter,
+          transform: [
+            {
+              translateY: upNextEnter.interpolate({
+                inputRange: [0, 1],
+                outputRange: [16, 0],
+              }),
+            },
+          ],
+        }}
+      >
+        <UpNextHeader colors={colors} />
+        <UpNextCard
+          moment={upNext}
+          accent={upNextType.accent}
+          illustration={upNextType.illustration ?? upNextType.hero}
+          inkColor={colors.ink}
+          mutedColor={colors.inkMuted}
+          subtleColor={colors.inkSubtle}
+          borderColor={colors.border}
+          surfaceColor={colors.surface}
+          onPress={handleUpNext}
+        />
+      </Animated.View>
+
+      <View style={{ height: 18 }} />
+
+      <SaveToggle
+        saved={saved}
+        accent={type.accent}
+        inkColor={colors.ink}
+        mutedColor={colors.inkMuted}
+        onPress={handleToggleSave}
+      />
+      <View style={{ height: 12 }} />
+      <Button
+        label="Continue"
+        onPress={() => {
+          haptics.soft();
+          handleContinue();
+        }}
+      />
+    </View>
+  );
 
   return (
     <View style={{ flex: 1 }}>
@@ -345,23 +398,6 @@ export default function CompleteScreen() {
 
         <View style={{ height: 18 }} />
 
-        {/* Save toggle — secondary action above the primary
-            Continue button. Lets the user keep today's sermon in
-            their Library "Saved" rail for re-reading later. The
-            row reads as a subtle pill (no fill, hairline outline
-            in the type's accent) so it sits one tier below the
-            solid Continue button — the saving is OPT-IN, not the
-            expected next tap. Filled state flips the bookmark
-            icon to its solid form and the label to "Saved" in
-            the accent color so the toggle's state is
-            immediately legible.
-
-            Lives in the bottom CTA block (between Up Next and
-            Continue) so the three actions read as a clear stack:
-            "open the next chapter → keep this for later → move
-            on for now". Putting save inline with the celebration
-            copy felt premature; the user has just finished the
-            sermon, save is something they decide on the way out. */}
         <SaveToggle
           saved={saved}
           accent={type.accent}

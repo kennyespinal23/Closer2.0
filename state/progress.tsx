@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { MILESTONE_DAYS } from "@/lib/journey";
+import { MILESTONE_DAYS } from "@/lib/milestones";
 import { removeKey, STORAGE_KEYS, usePersistence } from "@/lib/storage";
 
 /**

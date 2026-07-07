@@ -33,8 +33,9 @@ export function SheetModalHeader({
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 16,
-        paddingTop: 8,
-        paddingBottom: 12,
+        paddingTop: 4,
+        paddingBottom: 16,
+        minHeight: 44,
       }}
     >
       <View style={{ width: SIDE_WIDTH, alignItems: "flex-start" }}>

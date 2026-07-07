@@ -20,6 +20,7 @@ import Svg, {
 import { BookCover } from "@/components/BookCover";
 import { BookMetaRow } from "@/components/BookMetaRow";
 import { PrimaryPillButton } from "@/components/PrimaryPillButton";
+import { SFSymbol } from "@/components/Symbol";
 import { typography } from "@/lib/typography";
 import { type Book, findBookById, siblingBooks } from "@/constants/books";
 import {
@@ -685,6 +686,7 @@ function ChapterTile({
   onPress: () => void;
 }) {
   const { primary } = useColors();
+  const showReadGlow = read && !isResume;
   return (
     <View style={{ width: "20%", padding: 3 }}>
       <Pressable
@@ -695,34 +697,46 @@ function ChapterTile({
           className={`rounded-xl items-center justify-center ${
             isResume
               ? "bg-accent-soft border border-primary"
-              : "border border-border bg-surface"
+              : showReadGlow
+                ? "bg-accent-soft border border-primary"
+                : "border border-border bg-surface"
           }`}
-          style={{ aspectRatio: 1, position: "relative" }}
+          style={{
+            aspectRatio: 1,
+            position: "relative",
+            ...(showReadGlow
+              ? {
+                  shadowColor: primary,
+                  shadowOpacity: 0.45,
+                  shadowRadius: 10,
+                  shadowOffset: { width: 0, height: 0 },
+                }
+              : null),
+          }}
         >
           <Text
             className={`text-[14px] ${
-              isResume ? "text-primary" : "text-ink"
+              isResume || showReadGlow ? "text-primary" : "text-ink"
             }`}
             style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {number}
           </Text>
-          {/* Tiny dot in the upper-right corner marking chapters the
-              user has finished. Quiet on its own; the larger
-              "resume" treatment above takes precedence for the
-              single chapter the user is currently in. */}
-          {read && !isResume && (
+          {showReadGlow && (
             <View
               style={{
                 position: "absolute",
-                top: 6,
-                right: 6,
-                width: 5,
-                height: 5,
-                borderRadius: 3,
-                backgroundColor: primary,
+                top: 5,
+                right: 5,
               }}
-            />
+              accessibilityLabel="Chapter read"
+            >
+              <SFSymbol
+                name="checkmark.circle.fill"
+                size={14}
+                color={primary}
+              />
+            </View>
           )}
         </View>
       </Pressable>

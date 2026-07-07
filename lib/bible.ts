@@ -218,6 +218,15 @@ export async function fetchChapter(
   return result;
 }
 
+/** Synchronous cache peek — instant chapter swaps when prefetched. */
+export function getCachedChapter(
+  bookId: string,
+  chapter: number,
+  translation: TranslationId = DEFAULT_TRANSLATION,
+): Chapter | undefined {
+  return cache.get(`${translation}-${bookId}-${chapter}`);
+}
+
 /**
  * Pre-warm the cache for the next/previous chapter so navigation
  * feels instant. Fire-and-forget — failures are silent because this

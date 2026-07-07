@@ -21,6 +21,8 @@ import {
   ensureAndroidChannel,
 } from "@/lib/notifications";
 import { useNotificationDeepLink } from "@/lib/notificationDeepLink";
+import { AuthProvider, useAuth } from "@/state/auth";
+import { SubscriptionProvider } from "@/state/subscription";
 import { AnnotationsProvider, useAnnotations } from "@/state/annotations";
 import { CheckInsProvider, useCheckIns } from "@/state/checkIns";
 import { DevToolsProvider, useDevTools } from "@/state/devTools";
@@ -81,6 +83,8 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <UpdatesGate>
       <ThemeProvider>
+        <AuthProvider>
+        <SubscriptionProvider>
         <OnboardingProvider>
           <PreferencesProvider>
             <AnnotationsProvider>
@@ -144,6 +148,8 @@ export default function RootLayout() {
             </AnnotationsProvider>
           </PreferencesProvider>
         </OnboardingProvider>
+        </SubscriptionProvider>
+        </AuthProvider>
       </ThemeProvider>
       </UpdatesGate>
     </GestureHandlerRootView>
@@ -253,7 +259,9 @@ function AppShell() {
         />
         <Stack.Screen
           name="book"
-          options={{ animation: "slide_from_right" }}
+          options={{
+            animation: "slide_from_right",
+          }}
         />
         {/* Top-level personal-scripture screens — drill-down
             semantics like settings, since they're typically
@@ -314,6 +322,10 @@ function AppShell() {
             animation: "slide_from_bottom",
           }}
         />
+        <Stack.Screen
+          name="milestone/[day]"
+          options={{ animation: "slide_from_right" }}
+        />
         {/* Mood check-in. Presented as a full-screen modal
             (slide from bottom) so the user feels like
             they're entering a quiet, separate moment. Has
@@ -368,6 +380,7 @@ function AppShell() {
  * frame the user sees is THEIR app, not a default shell.
  */
 function HydrationGate({ children }: { children: React.ReactNode }) {
+  const { hydrated: authHydrated } = useAuth();
   const { hydrated: onboardingHydrated } = useOnboarding();
   const { hydrated: preferencesHydrated } = usePreferences();
   const { hydrated: progressHydrated } = useProgress();
@@ -382,6 +395,7 @@ function HydrationGate({ children }: { children: React.ReactNode }) {
   const { hydrated: devToolsHydrated } = useDevTools();
 
   const allReady =
+    authHydrated &&
     onboardingHydrated &&
     preferencesHydrated &&
     progressHydrated &&

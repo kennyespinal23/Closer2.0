@@ -1,33 +1,12 @@
 import { useMemo } from "react";
 import { ScrollView, Text, View } from "react-native";
-import LottieView from "lottie-react-native";
+import { MilestonesSection } from "@/components/MilestonesSection";
+import { StreakFireAnimation } from "@/components/StreakFireAnimation";
 import { SFSymbol } from "@/components/Symbol";
+import { useMilestoneUnlockStreak } from "@/lib/useMilestoneUnlockStreak";
 import { buildCurrentWeek, buildMonthGrid } from "@/lib/rhythm";
 import { useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
-
-const FIRE_STREAK_ANIMATION = require("../assets/lottie/FireStreakAnimation.json");
-
-/**
- * StreakDashboard — the shared body used by both the post-sermon
- * /sermon/streak celebration AND the /rhythm history modal.
- *
- * Layout — top to bottom:
- *
- *   ┌────────────────────────────────────────┐
- *   │  X Day Streak!              [🔥 lottie]│   hero card
- *   │  Great start! Keep going               │
- *   │                                          │
- *   │  Mon  Tue  Wed  Thu  Fri  Sat  Sun     │   week strip
- *   │   8   9    10   11   12   13   (14)    │   today = amber chip
- *   └────────────────────────────────────────┘
- *   ┌────────────────────────────────────────┐
- *   │   ‹    June 2026             ›         │   month calendar
- *   │   S M T W T F S                        │
- *   │   …  …  …                              │
- *   └────────────────────────────────────────┘
- */
-
 import { TAB_ACCENT_RED } from "@/constants/theme";
 
 export type StreakDashboardProps = {
@@ -44,6 +23,7 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
   const colors = useColors();
   const scheme = useResolvedScheme();
   const { engagedDates, streak } = useProgress();
+  const milestoneUnlockStreak = useMilestoneUnlockStreak();
 
   const STREAK_TEXT_AMBER = TAB_ACCENT_RED;
   const STREAK_FILL_AMBER = TAB_ACCENT_RED;
@@ -68,6 +48,7 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
     <ScrollView
       contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
       {/* Hero card — streak headline left, flame lottie right */}
       <View
@@ -117,12 +98,7 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
             </Text>
           </View>
 
-          <LottieView
-            source={FIRE_STREAK_ANIMATION}
-            autoPlay
-            loop
-            style={{ width: 88, height: 88 }}
-          />
+          <StreakFireAnimation size={88} />
         </View>
 
         {/* Week strip — Sun..Sat columns */}
@@ -268,6 +244,8 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
           </View>
         ))}
       </View>
+
+      <MilestonesSection longestStreak={milestoneUnlockStreak} />
     </ScrollView>
   );
 }

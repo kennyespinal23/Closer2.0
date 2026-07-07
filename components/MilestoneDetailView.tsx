@@ -1,0 +1,195 @@
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SFSymbol } from "@/components/Symbol";
+import type { Milestone } from "@/lib/milestones";
+import { getMilestoneBadge } from "@/lib/milestoneBadges";
+import { TAB_ACCENT_RED } from "@/constants/theme";
+import * as haptics from "@/lib/haptics";
+import { NEW_YORK, typography } from "@/lib/typography";
+import { useColors } from "@/state/theme";
+
+type MilestoneDetailViewProps = {
+  milestone: Milestone;
+  badgeIndex: number;
+  onClose: () => void;
+  /** When false, hides the back chevron (e.g. post-sermon unlock). */
+  showBack?: boolean;
+};
+
+export function MilestoneDetailView({
+  milestone,
+  badgeIndex,
+  onClose,
+  showBack = true,
+}: MilestoneDetailViewProps) {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <View
+        style={{
+          paddingTop: insets.top,
+          paddingHorizontal: 16,
+          paddingBottom: 8,
+        }}
+      >
+        {showBack ? (
+          <Pressable
+            onPress={() => {
+              haptics.soft();
+              onClose();
+            }}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            style={({ pressed }) => ({
+              width: 44,
+              height: 44,
+              alignItems: "flex-start",
+              justifyContent: "center",
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <SFSymbol
+              name="chevron.left"
+              size={18}
+              color={colors.ink}
+              weight="semibold"
+            />
+          </Pressable>
+        ) : (
+          <View style={{ height: 44 }} />
+        )}
+      </View>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingBottom: Math.max(insets.bottom, 24) + 16,
+        }}
+        showsVerticalScrollIndicator={false}
+        bounces
+      >
+        <View style={{ alignItems: "center" }}>
+          <View
+            style={{
+              width: 132,
+              height: 132,
+              borderRadius: 66,
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: TAB_ACCENT_RED,
+              shadowOpacity: 0.35,
+              shadowRadius: 18,
+              shadowOffset: { width: 0, height: 0 },
+            }}
+          >
+            <View
+              style={{
+                width: 120,
+                height: 120,
+                borderRadius: 60,
+                padding: 4,
+                backgroundColor: "rgba(255,255,255,0.22)",
+              }}
+            >
+              <Image
+                source={getMilestoneBadge(badgeIndex)}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: 56,
+                }}
+                resizeMode="cover"
+                accessibilityIgnoresInvertColors
+              />
+            </View>
+          </View>
+
+          <Text
+            style={[
+              typography.smallLabel,
+              {
+                color: TAB_ACCENT_RED,
+                textTransform: "uppercase",
+                marginTop: 24,
+                textAlign: "center",
+              },
+            ]}
+          >
+            DAY {milestone.day}
+          </Text>
+
+          <Text
+            style={{
+              fontFamily: "System",
+              fontWeight: "700",
+              color: colors.ink,
+              fontSize: 28,
+              lineHeight: 34,
+              letterSpacing: -0.4,
+              textAlign: "center",
+              marginTop: 12,
+            }}
+            accessibilityRole="header"
+          >
+            {milestone.title}
+          </Text>
+        </View>
+
+        <View style={{ marginTop: 28, marginBottom: 24, alignItems: "center" }}>
+          <Text
+            style={{
+              fontFamily: NEW_YORK,
+              fontStyle: "italic",
+              fontWeight: "400",
+              fontSize: 22,
+              lineHeight: 32,
+              textAlign: "center",
+              color: colors.ink,
+              width: "100%",
+              maxWidth: 340,
+            }}
+          >
+            &ldquo;{milestone.verse}&rdquo;
+          </Text>
+          <Text
+            style={[
+              typography.smallLabel,
+              {
+                color: TAB_ACCENT_RED,
+                textTransform: "uppercase",
+                marginTop: 16,
+                textAlign: "center",
+              },
+            ]}
+          >
+            {milestone.reference}
+          </Text>
+        </View>
+
+        <View
+          style={{
+            height: 1,
+            backgroundColor: colors.border,
+            marginBottom: 24,
+          }}
+        />
+
+        <Text
+          style={{
+            fontFamily: "System",
+            fontWeight: "400",
+            fontSize: 18,
+            lineHeight: 30,
+            color: colors.inkMuted,
+          }}
+        >
+          {milestone.message}
+        </Text>
+      </ScrollView>
+    </View>
+  );
+}

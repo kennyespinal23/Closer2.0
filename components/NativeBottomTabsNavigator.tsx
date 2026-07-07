@@ -11,7 +11,7 @@ import {
   useNavigationBuilder,
 } from "@react-navigation/native";
 import { createNavigatorFactory } from "@react-navigation/native";
-import type { ColorValue } from "react-native";
+import { View, type ColorValue } from "react-native";
 import TabView from "react-native-bottom-tabs";
 import type { AppleIcon } from "react-native-bottom-tabs";
 
@@ -212,7 +212,22 @@ function NativeBottomTabsNavigator({
             target: route.key,
           });
         }}
-        renderScene={({ route }) => descriptors[route.key]?.render() ?? null}
+        renderScene={({ route }) => (
+          // Opaque clip wrapper so inactive tab snapshots never bleed
+          // through the edges during UITabBarController scene swaps.
+          // (The previous tab's content was briefly visible on the
+          // left edge when switching to Bible — especially on
+          // transparent tab roots like Library.)
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "#000000",
+              overflow: "hidden",
+            }}
+          >
+            {descriptors[route.key]?.render() ?? null}
+          </View>
+        )}
         tabBarActiveTintColor={tabBarActiveTintColor}
         tabBarInactiveTintColor={tabBarInactiveTintColor}
         experimental_bakedTintColors={experimentalBakedTintColors}

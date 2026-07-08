@@ -13,6 +13,7 @@ import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
 import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { SFSymbol } from "@/components/Symbol";
@@ -20,8 +21,8 @@ import * as haptics from "@/lib/haptics";
 import { typography } from "@/lib/typography";
 import { getSermonBackdrop, HERO_BACKDROP_FALLBACK } from "@/services/unsplashService";
 import {
-  HERO_DIM_OVERLAY,
   HERO_GLASS_DISC,
+  HERO_TEXT_SCRIM_GRADIENT,
 } from "@/constants/heroChrome";
 
 /** Native iOS UITabBar visible height (above home indicator). */
@@ -187,11 +188,46 @@ const HomeHeroSlide = memo(function HomeHeroSlide({
         accessibilityIgnoresInvertColors
       />
 
-      {/* Same 55% dim as scripture — moody, legible, photo-forward. */}
-      <View
+      {/* Bottom text scrim — transparent top, ~65% black at the base.
+          Sits between the photo and the editorial block so white
+          type stays readable on bright sky / snow / sunrise crops
+          without dimming the upper portion of the image. */}
+      <Svg
         pointerEvents="none"
-        style={[StyleSheet.absoluteFillObject, { backgroundColor: HERO_DIM_OVERLAY }]}
-      />
+        style={StyleSheet.absoluteFillObject}
+        width="100%"
+        height="100%"
+        preserveAspectRatio="none"
+      >
+        <Defs>
+          <LinearGradient
+            id="homeHeroTextScrim"
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+            gradientUnits="objectBoundingBox"
+          >
+            <Stop offset="0" stopColor="#000000" stopOpacity={0} />
+            <Stop
+              offset={String(HERO_TEXT_SCRIM_GRADIENT.fadeStart)}
+              stopColor="#000000"
+              stopOpacity={0}
+            />
+            <Stop
+              offset={String(HERO_TEXT_SCRIM_GRADIENT.midOffset)}
+              stopColor="#000000"
+              stopOpacity={HERO_TEXT_SCRIM_GRADIENT.midOpacity}
+            />
+            <Stop
+              offset="1"
+              stopColor="#000000"
+              stopOpacity={HERO_TEXT_SCRIM_GRADIENT.bottomOpacity}
+            />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="100%" fill="url(#homeHeroTextScrim)" />
+      </Svg>
 
       <Animated.View
         style={{

@@ -43,6 +43,7 @@ export const ONBOARDING_STEPS = [
   "calculating",
   // The Pivot — personalized punch, anchor, name, proof.
   "punch",
+  "chat",
   "attention",
   "protected",
   "loop",

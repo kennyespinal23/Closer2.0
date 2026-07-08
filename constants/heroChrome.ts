@@ -22,8 +22,23 @@ export const HERO_GLASS_DISC = {
   borderColor: "rgba(255, 255, 255, 0.22)",
 };
 
-/** Uniform dim wash over full-bleed sermon photography. */
+/** Uniform dim wash over full-bleed sermon photography (scripture screen). */
 export const HERO_DIM_OVERLAY = "rgba(0, 0, 0, 0.55)";
+
+/**
+ * Bottom text scrim for the home featured hero — transparent at the
+ * top so photography stays full-brightness, ramping to ~65% black at
+ * the base where title / metadata / body / CTA sit.
+ */
+export const HERO_TEXT_SCRIM_GRADIENT = {
+  /** Gradient begins fading in at this fraction from the top (0–1). */
+  fadeStart: 0.45,
+  /** Fully opaque scrim target at the bottom edge. */
+  bottomOpacity: 0.68,
+  /** Mid-ramp stop between fade start and bottom. */
+  midOpacity: 0.58,
+  midOffset: 0.82,
+} as const;
 
 /** iOS system green — "Read Again" / completed sermon CTA. */
 export const COMPLETED_READ_GREEN = "#34C759";

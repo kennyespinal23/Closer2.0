@@ -3,6 +3,7 @@ import {
   Alert,
   Animated,
   Easing,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -35,10 +36,15 @@ export default function SermonScriptureScreen() {
   );
   const shotRef = useRef<View>(null);
   const [saving, setSaving] = useState(false);
+  const canShareImage = isPhotoSaveAvailable();
   const canSavePhoto =
-    isPhotoSaveAvailable() && isMediaLibraryAvailable();
+    canShareImage && isMediaLibraryAvailable();
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [exportBackdropReady, setExportBackdropReady] = useState(false);
+  useEffect(() => {
+    setExportBackdropReady(false);
+  }, [imageUrl]);
   useEffect(() => {
     let cancelled = false;
     const query =
@@ -107,20 +113,74 @@ export default function SermonScriptureScreen() {
     router.push("/sermon/panel/1");
   };
 
-  const handleShare = async () => {
-    haptics.soft();
-    if (!scripture.text) return;
-    await shareVerse({
-      text: scripture.text,
-      reference: scripture.reference,
+  const prepareExportShot = () => {
+    verseAnim.setValue(1);
+    backdropFade.setValue(1);
+  };
+
+  const waitForExportFrame = () =>
+    new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setTimeout(resolve, 32);
+        });
+      });
     });
+
+  const captureExportImage = async () => {
+    prepareExportShot();
+    await waitForExportFrame();
+    const { shareViewImage, captureViewToPhotos } = await import(
+      "@/lib/saveToPhotos"
+    );
+    return { shareViewImage, captureViewToPhotos };
+  };
+
+  const handleShare = async () => {
+    if (saving || !scripture.text) return;
+    haptics.soft();
+
+    if (!canShareImage) {
+      await shareVerse({
+        text: scripture.text,
+        reference: scripture.reference,
+      });
+      return;
+    }
+
+    if (!imageUrl || !exportBackdropReady) {
+      Alert.alert("One moment", "The backdrop is still loading. Try again.");
+      return;
+    }
+
+    setSaving(true);
+    const { shareViewImage } = await captureExportImage();
+    const result = await shareViewImage({
+      ref: shotRef,
+      filenameBase: scripture.reference,
+    });
+    setSaving(false);
+
+    if (result.status === "shared") {
+      haptics.success();
+      return;
+    }
+    if (result.status === "error") {
+      Alert.alert("Couldn't share", result.message);
+    }
   };
 
   const handleSavePhoto = async () => {
     if (saving) return;
     haptics.soft();
+
+    if (!imageUrl || !exportBackdropReady) {
+      Alert.alert("One moment", "The backdrop is still loading. Try again.");
+      return;
+    }
+
     setSaving(true);
-    const { captureViewToPhotos } = await import("@/lib/saveToPhotos");
+    const { captureViewToPhotos } = await captureExportImage();
     const saved = await captureViewToPhotos(shotRef);
     setSaving(false);
     if (saved) {
@@ -131,7 +191,7 @@ export default function SermonScriptureScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
-      <View ref={shotRef} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         {imageUrl ? (
           <Animated.Image
             source={{ uri: imageUrl }}
@@ -166,8 +226,7 @@ export default function SermonScriptureScreen() {
             flex: 1,
             justifyContent: "center",
             paddingHorizontal: 32,
-            paddingTop: insets.top + 72,
-            paddingBottom: insets.bottom + 120,
+            paddingVertical: 48,
           }}
         >
           {scripture.text ? (
@@ -222,6 +281,94 @@ export default function SermonScriptureScreen() {
               {scripture.reference}
             </Text>
           </Animated.View>
+        </View>
+      </View>
+
+      {/* Invisible export card — must stay in the viewport (opacity 0)
+          so iOS lays out and paints it; far off-screen views often
+          never load images or rasterize for view-shot. */}
+      <View
+        ref={shotRef}
+        collapsable={false}
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFillObject,
+          {
+            opacity: 0,
+            zIndex: -1,
+            backgroundColor: "#0A0A0A",
+          },
+        ]}
+      >
+        {imageUrl ? (
+          <Image
+            source={{ uri: imageUrl }}
+            style={StyleSheet.absoluteFillObject}
+            resizeMode="cover"
+            onLoad={() => setExportBackdropReady(true)}
+            accessibilityIgnoresInvertColors
+          />
+        ) : null}
+
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFillObject,
+            { backgroundColor: HERO_DIM_OVERLAY },
+          ]}
+        />
+
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            paddingHorizontal: 32,
+            paddingVertical: 48,
+          }}
+        >
+          {scripture.text ? (
+            <Text
+              style={{
+                color: "#FFFFFF",
+                fontFamily: NEW_YORK,
+                fontStyle: "italic",
+                fontWeight: "400",
+                fontSize: 26,
+                lineHeight: 40,
+                textAlign: "center",
+                textShadowColor: "rgba(0, 0, 0, 0.75)",
+                textShadowOffset: { width: 0, height: 1 },
+                textShadowRadius: 14,
+              }}
+            >
+              {scripture.text}
+            </Text>
+          ) : null}
+
+          <View style={{ alignItems: "center", marginTop: 32 }}>
+            <View
+              style={{
+                width: 32,
+                height: 1,
+                backgroundColor: "rgba(255, 255, 255, 0.45)",
+                marginBottom: 14,
+                borderRadius: 1,
+              }}
+            />
+            <Text
+              style={{
+                color: "rgba(255, 255, 255, 0.7)",
+                fontFamily: "System",
+                fontWeight: "700",
+                fontSize: 12,
+                letterSpacing: 2.5,
+                textTransform: "uppercase",
+                textAlign: "center",
+              }}
+            >
+              {scripture.reference}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -293,13 +440,14 @@ export default function SermonScriptureScreen() {
           onPress={handleShare}
           hitSlop={14}
           accessibilityRole="button"
-          accessibilityLabel="Share scripture"
+          accessibilityLabel="Share scripture image"
+          disabled={saving}
         >
           {({ pressed }) => (
             <View
               style={{
                 ...HERO_GLASS_DISC,
-                opacity: pressed ? 0.7 : 1,
+                opacity: saving ? 0.5 : pressed ? 0.7 : 1,
               }}
             >
               <SFSymbol

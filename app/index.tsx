@@ -36,7 +36,8 @@ import { useColors, useResolvedScheme } from "@/state/theme";
  * For Closer the falling objects are the social media apps the
  * user is being invited to quiet. The visual is the brief, before
  * any words: these are the things that own your morning. The copy
- * below names what we're replacing them with.
+ * below names what we're replacing them with — less scroll, more
+ * time with God.
  *
  * The cards animate in on mount: each one drops from above its
  * resting position with a spring, staggered ~120ms apart, with a
@@ -98,7 +99,7 @@ const PLACEMENTS: ReadonlyArray<CardPlacement> = [
   { app: "facebook",  dx:    8, dy: -122, rot: -10, width: 116, z: 2, delay: 200, swayMs: 3600, swayDelay: 750 },
   { app: "youtube",   dx: -148, dy:   58, rot: -10, width: 118, z: 2, delay: 280, swayMs: 5000, swayDelay: 900 },
   { app: "snapchat",  dx:  148, dy:   44, rot:  22, width: 112, z: 3, delay: 400, swayMs: 4100, swayDelay: 200 },
-  { app: "x",         dx:  -18, dy:  178, rot:   5, width: 110, z: 1, delay: 520, swayMs: 4700, swayDelay: 650 },
+  { app: "x",         dx:  -18, dy:  156, rot:   5, width: 110, z: 1, delay: 520, swayMs: 4700, swayDelay: 650 },
 ];
 
 // Amount of idle drift around the resting pose. Subtle — these
@@ -168,10 +169,13 @@ function GetStartedLanding() {
   const router = useRouter();
   const colors = useColors();
   const scheme = useResolvedScheme();
-  const { height: screenHeight } = useWindowDimensions();
+  const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const { answers, reset: resetOnboarding, setAnswer } = useOnboarding();
 
   const heroRingHeight = Math.min(HERO_RING_HEIGHT, screenHeight * 0.48);
+  const compactLanding = screenHeight < 740 || screenWidth < 390;
+  const headlineSize = compactLanding ? 32 : 36;
+  const headlineLineHeight = compactLanding ? 36 : 40;
 
   // One Animated.Value per card, driving its drop-in. 0 = above
   // the resting spot, 1 = settled. Spring physics give the
@@ -264,7 +268,7 @@ function GetStartedLanding() {
     // Returning users (completed === true) never hit this branch
     // because the useEffect above redirected them to /today.
     resetOnboarding();
-    router.push("/onboarding/attention");
+    router.push("/onboarding/chat");
   };
 
   const handleSignIn = () => {
@@ -386,6 +390,7 @@ function GetStartedLanding() {
             paddingHorizontal: 28,
             paddingBottom: 12,
             zIndex: 2,
+            alignItems: "center",
           }}
         >
           <FadeIn delayMs={900} durationMs={900}>
@@ -394,40 +399,45 @@ function GetStartedLanding() {
                 color: colors.ink,
                 fontFamily: "System",
                 fontWeight: "700",
-                fontSize: 42,
-                lineHeight: 46,
-                letterSpacing: -1.2,
+                fontSize: headlineSize,
+                lineHeight: headlineLineHeight,
+                letterSpacing: -0.8,
                 marginBottom: 14,
+                textAlign: "center",
               }}
+              accessibilityRole="header"
             >
-              Quiet the noise.{"\n"}Find the Word.
+              Less Social Media{"\n"}More Time with God
             </Text>
           </FadeIn>
 
           <FadeIn delayMs={1300} durationMs={900}>
             <Text
               style={{
-                color: colors.inkSecondary,
+                color: colors.ink,
                 fontFamily: "System",
-                fontWeight: "500",
-                fontSize: 15,
-                lineHeight: 22,
+                fontWeight: "400",
+                fontSize: 17,
+                lineHeight: 24,
                 marginBottom: 28,
-                maxWidth: 320,
+                maxWidth: 340,
+                textAlign: "center",
               }}
             >
-              Receive a personalized devotional before social media,
-              notifications, and the distractions of the day.
+              Block your distracting apps and make more time for God every
+              day.
             </Text>
           </FadeIn>
 
-          <FadeIn delayMs={1700} durationMs={800}>
-            <PrimaryPillButton
-              label="Get Started"
-              onPress={handleGetStarted}
-              heavy
-            />
-          </FadeIn>
+          <View style={{ alignSelf: "stretch" }}>
+            <FadeIn delayMs={1700} durationMs={800}>
+              <PrimaryPillButton
+                label="Get Started"
+                onPress={handleGetStarted}
+                heavy
+              />
+            </FadeIn>
+          </View>
 
           <FadeIn delayMs={2100} durationMs={700}>
             {/* Sign in row — flex-row + items-center come via

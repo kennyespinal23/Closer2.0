@@ -18,8 +18,20 @@ function squircleRadius(size: number): number {
   return Math.round(size * 0.225);
 }
 
+const CARD_SHADOW = {
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 10 },
+  shadowOpacity: 0.14,
+  shadowRadius: 16,
+  elevation: 10,
+} as const;
+
+/** Subtle grey rim so the black X icon doesn't disappear on #000. */
+const X_SUBTLE_OUTLINE = "rgba(255, 255, 255, 0.32)";
+
 export function SocialAppCard({ app, width = 118 }: Props) {
   const radius = squircleRadius(width);
+  const xOutline = app === "x";
 
   return (
     <View
@@ -27,11 +39,9 @@ export function SocialAppCard({ app, width = 118 }: Props) {
         width,
         height: width,
         borderRadius: radius,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.14,
-        shadowRadius: 16,
-        elevation: 10,
+        borderWidth: xOutline ? 1 : 0,
+        borderColor: xOutline ? X_SUBTLE_OUTLINE : "transparent",
+        ...CARD_SHADOW,
       }}
     >
       <Image

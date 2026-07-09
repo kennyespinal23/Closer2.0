@@ -150,8 +150,8 @@ function splitPanelParagraphs(body: string, isPrayer: boolean): string[] {
  *
  * Navigation:
  *   • Panels 1–4 push to `/sermon/panel/${id + 1}`
- *   • Panel  5  (prayer) records the completion and replaces into
- *     `/sermon/complete` — same chain the old prayer.tsx wired.
+ *   • Panel  5  (prayer) records the completion and chains into
+ *     the streak screen (first completion of the day) or home.
  *
  * The body field can contain blank-line paragraph breaks (`\n\n`)
  * that we split on so multi-paragraph beats read with breathing
@@ -477,8 +477,6 @@ export default function SermonPanelScreen() {
     // authored by named pastors); the field stays on the record
     // so old on-disk completions keep deserializing cleanly.
     const {
-      typeCount,
-      isFirstEver,
       newStreak,
       streakAdvanced,
       crossedMilestone,
@@ -499,16 +497,17 @@ export default function SermonPanelScreen() {
     void endFocusSession().catch(() => {
       /* shield stop is best-effort */
     });
-    router.replace({
-      pathname: "/sermon/complete",
-      params: {
-        typeCount: String(typeCount),
-        isFirstEver: String(isFirstEver),
-        streak: String(newStreak),
-        streakAdvanced: streakAdvanced ? "1" : "0",
-        milestone: crossedMilestone ? String(crossedMilestone) : "",
-      },
-    });
+    if (streakAdvanced) {
+      router.replace({
+        pathname: "/sermon/streak",
+        params: {
+          days: String(newStreak),
+          milestone: crossedMilestone ? String(crossedMilestone) : "",
+        },
+      });
+      return;
+    }
+    router.replace("/today");
   };
 
   return (

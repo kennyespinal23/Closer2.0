@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as haptics from "@/lib/haptics";
@@ -68,19 +67,29 @@ export default function CompletedSermonsScreen() {
             {subtitle}
           </Text>
 
-          {completed.map((entry, index) => (
-            <CompletedSermonRow
-              key={entry.id}
-              entry={entry}
-              colors={colors}
-              isFirst={index === 0}
-              onPress={() => {
-                if (entry.day == null) return;
-                haptics.soft();
-                router.push(`/saved-sermon/${entry.day}`);
-              }}
-            />
-          ))}
+          <View
+            style={{
+              borderRadius: 16,
+              backgroundColor: colors.surfaceSecondary,
+              borderWidth: 1,
+              borderColor: colors.border,
+              overflow: "hidden",
+            }}
+          >
+            {completed.map((entry, index) => (
+              <CompletedSermonRow
+                key={entry.id}
+                entry={entry}
+                colors={colors}
+                isLast={index === completed.length - 1}
+                onPress={() => {
+                  if (entry.day == null) return;
+                  haptics.soft();
+                  router.push(`/saved-sermon/${entry.day}`);
+                }}
+              />
+            ))}
+          </View>
         </ScrollView>
       )}
     </SafeAreaView>
@@ -103,18 +112,17 @@ function dedupeCompletionsByDay(
 function CompletedSermonRow({
   entry,
   colors,
-  isFirst,
+  isLast,
   onPress,
 }: {
   entry: SermonCompletion;
   colors: ColorPalette;
-  isFirst: boolean;
+  isLast: boolean;
   onPress: () => void;
 }) {
   const moment = entry.day != null ? findMomentByDay(entry.day) : null;
   const type = moment ? resolveSermonType(moment.type) : null;
   const accent = type?.accent ?? colors.primary;
-  const artwork = type?.illustration ?? type?.homeHero ?? type?.hero;
 
   return (
     <Pressable
@@ -126,138 +134,65 @@ function CompletedSermonRow({
       {({ pressed }) => (
         <View
           style={{
-            marginTop: isFirst ? 0 : 12,
-            borderRadius: 20,
-            backgroundColor: colors.surfaceSecondary,
-            borderWidth: 1,
-            borderColor: colors.border,
-            overflow: "hidden",
-            opacity: pressed ? 0.88 : 1,
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+            borderBottomWidth: isLast ? 0 : 1,
+            borderBottomColor: colors.border,
+            opacity: pressed ? 0.82 : 1,
           }}
         >
-          <View style={{ flexDirection: "row", padding: 14 }}>
-            <View
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text
+              style={[
+                typography.smallLabel,
+                {
+                  color: accent,
+                  textTransform: "uppercase",
+                  letterSpacing: 1.2,
+                },
+              ]}
+            >
+              {type?.name ?? entry.typeId}
+            </Text>
+            <Text
+              style={[
+                typography.body,
+                {
+                  color: colors.ink,
+                  fontWeight: "600",
+                  marginTop: 4,
+                },
+              ]}
+              numberOfLines={2}
+            >
+              {entry.title}
+            </Text>
+            <Text
               style={{
-                width: 76,
-                height: 96,
-                borderRadius: 14,
-                overflow: "hidden",
-                backgroundColor: colors.surfaceTertiary,
+                fontFamily: "System",
+                fontWeight: "500",
+                fontSize: 13,
+                lineHeight: 18,
+                color: colors.inkSubtle,
+                marginTop: 4,
               }}
             >
-              {artwork ? (
-                <Image
-                  source={artwork}
-                  style={{ width: 76, height: 96 }}
-                  contentFit="cover"
-                  transition={200}
-                />
-              ) : (
-                <View
-                  style={{
-                    flex: 1,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <SFSymbol
-                    name={type?.iconSymbol ?? "book.closed.fill"}
-                    size={28}
-                    color={accent}
-                    weight="medium"
-                  />
-                </View>
-              )}
-            </View>
-
-            <View style={{ flex: 1, marginLeft: 14, justifyContent: "center" }}>
-              <Text
-                style={[
-                  typography.smallLabel,
-                  {
-                    color: accent,
-                    textTransform: "uppercase",
-                    letterSpacing: 1.2,
-                  },
-                ]}
-              >
-                {type?.name ?? entry.typeId}
-              </Text>
-              <Text
-                style={[
-                  typography.devotionalTitle,
-                  {
-                    color: colors.ink,
-                    fontSize: 22,
-                    lineHeight: 28,
-                    marginTop: 6,
-                  },
-                ]}
-                numberOfLines={2}
-              >
-                {entry.title}
-              </Text>
-              {moment?.teaser ? (
-                <Text
-                  style={[typography.body, { color: colors.inkMuted, fontSize: 15, lineHeight: 22, marginTop: 8 }]}
-                  numberOfLines={2}
-                >
-                  {firstParagraph(moment.teaser)}
-                </Text>
-              ) : null}
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginTop: 12,
-                  gap: 12,
-                }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Text style={{ fontSize: 13, lineHeight: 18 }} allowFontScaling={false}>
-                    🕐
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: "System",
-                      fontWeight: "500",
-                      fontSize: 13,
-                      lineHeight: 18,
-                      color: colors.inkSubtle,
-                      marginLeft: 5,
-                    }}
-                  >
-                    {relativeTime(entry.completedAt)}
-                  </Text>
-                </View>
-                <Text
-                  style={{
-                    fontFamily: "System",
-                    fontWeight: "600",
-                    fontSize: 13,
-                    color: colors.ink,
-                  }}
-                >
-                  Read again
-                </Text>
-                <SFSymbol
-                  name="chevron.right"
-                  size={11}
-                  color={colors.inkSubtle}
-                  weight="semibold"
-                />
-              </View>
-            </View>
+              {relativeTime(entry.completedAt)}
+            </Text>
           </View>
+
+          <SFSymbol
+            name="chevron.right"
+            size={13}
+            color={colors.inkSubtle}
+            weight="semibold"
+          />
         </View>
       )}
     </Pressable>
   );
-}
-
-function firstParagraph(text: string): string {
-  return text.split(/\n\n+/)[0]?.trim() ?? text.trim();
 }
 
 function EmptyState({ colors }: { colors: ColorPalette }) {

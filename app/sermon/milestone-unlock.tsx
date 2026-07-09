@@ -8,10 +8,9 @@ import { getMilestoneByDay, getMilestoneIndex } from "@/lib/milestones";
 import * as haptics from "@/lib/haptics";
 
 /**
- * Milestone unlock — always shown AFTER the streak screen when a
+ * Milestone badge unlock — shown after the streak screen when a
  * completion crosses a milestone threshold. Chains from
- * `/sermon/streak` via the `milestone` param forwarded from
- * `/sermon/complete`.
+ * `/sermon/streak` via the `milestone` param.
  */
 export default function MilestoneUnlockScreen() {
   const router = useRouter();

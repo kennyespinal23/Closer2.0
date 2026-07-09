@@ -15,7 +15,7 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 /**
  * Streak update screen — the "fire" screen.
  *
- * Shown after the sermon completion celebration (`/sermon/complete`)
+ * Shown after the sermon prayer when the streak advances for the day.
  * whenever a sermon completion actually advanced the streak —
  * which is to say: the user just finished their first sermon of
  * the day. Re-completions on the same day skip this screen because

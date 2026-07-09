@@ -565,7 +565,7 @@ export default function ProfileTabScreen() {
                   weight="semibold"
                 />
               }
-              label="Unlock all milestones"
+              label="Unlock all milestone badges"
               sublabel="Browse every badge on Streaks"
               value={unlockAllMilestones}
               onValueChange={(next) => {

@@ -281,14 +281,14 @@ export function MilestoneUnlockView({
               onPress={onViewMilestone}
               hitSlop={12}
               accessibilityRole="link"
-              accessibilityLabel={`View milestone, ${milestone.title}`}
+              accessibilityLabel={`View milestone badge, ${milestone.title}`}
               style={({ pressed }) => [
                 styles.viewLinkHit,
                 pressed && { opacity: 0.72 },
               ]}
             >
               <Text style={[styles.viewLink, { color: accentColor }]}>
-                View milestone
+                View badge
               </Text>
             </Pressable>
           ) : null}

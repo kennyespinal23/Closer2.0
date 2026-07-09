@@ -72,7 +72,7 @@ export default function DeveloperToolsScreen() {
               weight="semibold"
             />
           }
-          label="Unlock all milestones"
+          label="Unlock all milestone badges"
           sublabel={`Browse all ${MILESTONES.length} badges on the Streaks tab`}
           value={unlockAllMilestones}
           onValueChange={(next) => {

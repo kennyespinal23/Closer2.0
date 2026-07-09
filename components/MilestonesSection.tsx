@@ -84,7 +84,7 @@ export function MilestonesSection({
           }}
           accessibilityRole="header"
         >
-          Milestones
+          Milestone Badges
         </Text>
         <Text
           style={{
@@ -156,7 +156,7 @@ export function MilestonesSection({
             lineHeight: 18,
           }}
         >
-          More milestones ahead.
+          More milestone badges ahead.
         </Text>
       </View>
     </View>

@@ -18,8 +18,7 @@
 #
 # Originals are NOT touched here — delete the .png siblings
 # from the repo after you've verified the .jpg outputs look
-# right. A safety backup of the originals lives at
-# /tmp/closer-cover-backup/ (created by the caller).
+# right.
 
 set -euo pipefail
 
@@ -27,72 +26,90 @@ SRC_DIR="assets/book-covers"
 QUALITY=85
 MAX_EDGE=1200
 
-# Map of {source-filename → bookId}. Ordering matches the
-# bookCovers.ts COVER_MAP so a diff is easy to scan.
+# Map of {source-filename → bookId}. Filenames must match the
+# assets on disk exactly (including trailing spaces before .PNG).
 declare -a MAPPING=(
   # The Law
-  "Book of Genesis  1.png|genesis"
-  "Book of Exodus  1.png|exodus"
-  "bookofleviticus 1.png|leviticus"
-  "Book of Deuteronomy 1.png|deuteronomy"
+  "Book of Genesis.PNG|genesis"
+  "Book of Exodus.PNG|exodus"
+  "Book of Leviticus 1.PNG|leviticus"
+  "Book of Numbers.PNG|numbers"
+  "Book of Deuteronomy 1.PNG|deuteronomy"
   # Historical
-  "bookofjoshua 1.png|joshua"
-  "Bookofjudgesupdated 1.png|judges"
-  "Book of Ruth  1.png|ruth"
-  "Book_Of_Kings_1 1.png|1-kings"
-  "Book of Chronicles 2 1.png|2-chronicles"
-  "BookofEzra_Updated 1.png|ezra"
+  "Book of Joshua.PNG|joshua"
+  "Book of Judges.png|judges"
+  "Book of Ruth.PNG|ruth"
+  "Book of Samuel 1.PNG|1-samuel"
+  "Book of Samuel 2.PNG|2-samuel"
+  "Book of kings .PNG|1-kings"
+  "Book of Kings 2.PNG|2-kings"
+  "Book of Chronicles 1.PNG|1-chronicles"
+  "Book of Chronicles 2.PNG|2-chronicles"
+  "Book of Ezra.PNG|ezra"
+  "Book of Nehemiah.PNG|nehemiah"
+  "Book of Esther.PNG|esther"
   # Wisdom
-  "thebookofjob.png|job"
-  "Book of Proverbs 1.png|proverbs"
-  "Ecclesiastes 2.png|ecclesiastes"
+  "Book of Job.PNG|job"
+  "Book of Psalms .PNG|psalms"
+  "Book of Proverbs .PNG|proverbs"
+  "Book of Ecclesiastes .PNG|ecclesiastes"
+  "Book of Song of Solomon .PNG|song-of-solomon"
   # Major Prophets
-  "Book_Of_Lamentations 1.png|lamentations"
-  "book of ezekial 1.png|ezekiel"
-  "Book_of_Daniel_ 1.png|daniel"
+  "Book of Isaiah .PNG|isaiah"
+  "Book of Jeremiah.PNG|jeremiah"
+  "Book of Lamentations .PNG|lamentations"
+  "Book of Ezekiel .PNG|ezekiel"
+  "Book of Daniel.PNG|daniel"
   # Minor Prophets
-  "bookofhosea 1.png|hosea"
-  "amos 1.png|amos"
-  "Book of Obadiah  1.png|obadiah"
-  "Book_Of_Jonah 1.png|jonah"
-  "Book_Of_Micah 1.png|micah"
-  "Book of Nahum 1.png|nahum"
-  "bookofhabakkuk 1.png|habakkuk"
-  "Book of Zephaniah  1.png|zephaniah"
-  "Book of Haggai  1.png|haggai"
-  "Book of Zachariah  1.png|zechariah"
-  "book of malachi 1.png|malachi"
+  "Book of Hosea.PNG|hosea"
+  "Book of Joel.PNG|joel"
+  "Book of Amos 1.PNG|amos"
+  "Book of Obadiah .PNG|obadiah"
+  "Book of Jonah.PNG|jonah"
+  "Book of Micah .PNG|micah"
+  "Book of Nahum.PNG|nahum"
+  "Book of Habakkuk 1.PNG|habakkuk"
+  "Book of Zephaniah.PNG|zephaniah"
+  "Book of Haggai.PNG|haggai"
+  "Book of Zachariah 1.PNG|zechariah"
+  "Book of Malachi 1.PNG|malachi"
   # Gospels
-  "Bookofmatthews.png|matthew"
-  "bookofmarksaturated 1.png|mark"
-  "bookofluke 1.png|luke"
-  "Book of John  1.png|john"
+  "Book of Matthews .PNG|matthew"
+  "Book of Mark.PNG|mark"
+  "Book of Luke.PNG|luke"
+  "Book of John .PNG|john"
   # Acts
-  "bookofacts.png|acts"
+  "Book of facts.PNG|acts"
   # Pauline
-  "Book_Of_Romans 1.png|romans"
-  "Book of Corinthians 1 1.png|1-corinthians"
-  "Book_Of_Galatians 1.png|galatians"
-  "Book_Of_Philippians 1.png|philippians"
-  "Book_Of_Colossians_ 1.png|colossians"
-  "Book_Of_Thessalonians_1 1.png|1-thessalonians"
-  "Book_Of_Thessalonians_2 1.png|2-thessalonians"
-  "Book_Of_Timothy_1 1.png|1-timothy"
-  "Book_Of_Timothy_2 1.png|2-timothy"
-  "Book_Of_Titus 1.png|titus"
-  "Book_Of_Philemon 1.png|philemon"
+  "Book of Romans .PNG|romans"
+  "Book of Corinthians .PNG|1-corinthians"
+  "Book of Corinthians 2.PNG|2-corinthians"
+  "Book of Galatians 1.PNG|galatians"
+  "Book of Ephesians.PNG|ephesians"
+  "Book of Philippians 1.PNG|philippians"
+  "Book of Colossians .PNG|colossians"
+  "Book of Thessalonians 1.PNG|1-thessalonians"
+  "Book of Thessalonians 2.PNG|2-thessalonians"
+  "Book of Timothy 1.PNG|1-timothy"
+  "Book of Timothy 2.PNG|2-timothy"
+  "Book of Titus.PNG|titus"
+  "Book of Philemon.PNG|philemon"
   # General Epistles
-  "bookofhebrews 1.png|hebrews"
-  "Book_Of_James 1.png|james"
-  "Book_Of_John_1 1.png|1-john"
-  "Book_Of_John_2 1.png|2-john"
-  "Book_Of_John_3 1.png|3-john"
+  "Book of hebrews .PNG|hebrews"
+  "Book of James.PNG|james"
+  "Book of Peter 1.PNG|1-peter"
+  "Book of Peter 2.PNG|2-peter"
+  "Book of John 1.PNG|1-john"
+  "Book of John 2.PNG|2-john"
+  "Book of John 3.PNG|3-john"
+  "Book of Jude.PNG|jude"
   # Apocalyptic
-  "Book_Of_Revelations 1.png|revelation"
+  "Book of Revelations .PNG|revelation"
 )
 
 total=${#MAPPING[@]}
 i=0
+missing=0
 for entry in "${MAPPING[@]}"; do
   i=$((i + 1))
   src="${entry%%|*}"
@@ -102,6 +119,7 @@ for entry in "${MAPPING[@]}"; do
 
   if [[ ! -f "${in_path}" ]]; then
     echo "[${i}/${total}] SKIP (missing): ${in_path}"
+    missing=$((missing + 1))
     continue
   fi
 
@@ -119,4 +137,4 @@ for entry in "${MAPPING[@]}"; do
 done
 
 echo
-echo "Done. New JPG files written to ${SRC_DIR}/{bookId}.jpg"
+echo "Done. Missing sources: ${missing}"

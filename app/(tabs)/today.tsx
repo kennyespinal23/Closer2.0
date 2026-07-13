@@ -48,8 +48,15 @@ import {
   momentDurationMin,
   nextMoment,
   resolveSermonTypeForMoment,
+  splitScripture,
   type Moment,
 } from "@/lib/moments";
+import {
+  getMilestoneAccent,
+  isMilestoneUnlocked,
+  MILESTONES,
+} from "@/lib/milestones";
+import { useMilestoneUnlockStreak } from "@/lib/useMilestoneUnlockStreak";
 import { formatMinutes, formatRemaining } from "@/lib/readingGoalFormat";
 import { getGreeting } from "@/lib/greeting";
 import { shouldOfferManualFocusShield, SOCIAL_APPS, type SocialAppId } from "@/lib/focus";
@@ -57,6 +64,11 @@ import { BrandGlyph } from "@/components/BrandGlyph";
 import { findMood } from "@/constants/moods";
 import { SERMON_TYPES, type SermonType } from "@/constants/sermonTypes";
 import { CLOSER_ACCENT, SYSTEM_COLORS_DARK } from "@/constants/theme";
+import {
+  HOME_CARD_PROTOTYPE_SAMPLE,
+  HOME_CARD_PROTOTYPE_USE_SAMPLE,
+  type FloatingScriptureCard,
+} from "@/constants/homePrototype";
 import { type CheckIn, useCheckIns } from "@/state/checkIns";
 import { useFocus } from "@/state/focus";
 import { useMoments } from "@/state/moments";
@@ -87,7 +99,10 @@ export default function TodayScreen() {
     streak,
     hasCompletedSermonToday,
     hasCompletedSermonForDay,
+    sermonCompletions,
+    recordCompletion,
   } = progress;
+  const milestoneUnlockStreak = useMilestoneUnlockStreak();
   // (engagedDates destructure removed alongside the home "Your
   // rhythm" RhythmGrid; the grid now lives only on the /rhythm
   // detail page reached from the top-right streak chip, and
@@ -367,6 +382,22 @@ export default function TodayScreen() {
     router,
   ]);
 
+  /** Prototype unlock loop: finishing a floating card saves + unlocks apps. */
+  const handleCompleteFloatingCard = useCallback(
+    (card: FloatingScriptureCard) => {
+      const todayType = resolveSermonTypeForMoment(todaysMoment);
+      recordCompletion(todayType.id, {
+        title: card.scriptureReference,
+        pastor: "",
+        day: todaysMoment.day,
+      });
+      void endFocusSession().catch(() => {
+        /* shield stop is best-effort */
+      });
+    },
+    [endFocusSession, recordCompletion, todaysMoment],
+  );
+
   const carouselCards = useMemo(() => {
     const todayType = resolveSermonTypeForMoment(todaysMoment);
     return [
@@ -391,6 +422,113 @@ export default function TodayScreen() {
     sermonDurationMin,
     hasCompletedSermonForDay,
     handlePlaySermon,
+  ]);
+
+  const homeCardContent = useMemo(() => {
+    const { reference, text } = splitScripture(todaysMoment.scripture);
+    const completion = sermonCompletions
+      .filter((c) => c.day === todaysMoment.day)
+      .sort((a, b) => b.completedAt - a.completedAt)[0];
+    const earnedMilestones = MILESTONES.filter((m) =>
+      isMilestoneUnlocked(m, milestoneUnlockStreak),
+    ).map((m) => ({
+      title: m.title,
+      accent: getMilestoneAccent(m).color,
+    }));
+    const insightRaw =
+      todaysMoment.teaser?.trim().split(/\n\n+/)[0]?.trim() ??
+      todaysMoment.panels[0]?.body?.trim().split(/\n\n+/)[0]?.trim() ??
+      "";
+    const insight = insightRaw
+      .replace(/\*\*([^*]+)\*\*/g, "$1")
+      .replace(/\*([^*]+)\*/g, "$1")
+      .replace(/_([^_]+)_/g, "$1");
+    const greeting = getGreeting();
+    const now = new Date();
+    const dateLabel = now.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    });
+    const blockedIds =
+      focusSession?.blockedAppIds ?? focusPrefs.blockedAppIds ?? [];
+    const hasEnabledSession = studySessions.some((s) => s.enabled);
+    const blocksOn =
+      focusSession !== null ||
+      (hasEnabledSession && blockedIds.length > 0);
+
+    let nextBreakLabel = "No app break scheduled yet";
+    if (focusSession !== null) {
+      nextBreakLabel = "App break is on now";
+    } else {
+      const now = new Date();
+      let best: Date | null = null;
+      for (const s of studySessions) {
+        if (!s.enabled) continue;
+        const when = computeNextOccurrence(s.time, s.daysOfWeek, now);
+        if (!when) continue;
+        if (!best || when.getTime() < best.getTime()) best = when;
+      }
+      if (best) {
+        const time = format12h({
+          hour: best.getHours(),
+          minute: best.getMinutes(),
+        });
+        const sameDay = best.toDateString() === now.toDateString();
+        if (sameDay) {
+          nextBreakLabel = `Next app break · Today ${time}`;
+        } else {
+          const tomorrow = new Date(now);
+          tomorrow.setDate(now.getDate() + 1);
+          if (best.toDateString() === tomorrow.toDateString()) {
+            nextBreakLabel = `Next app break · Tomorrow ${time}`;
+          } else {
+            const dayName = best.toLocaleDateString("en-US", {
+              weekday: "long",
+            });
+            nextBreakLabel = `Next app break · ${dayName} ${time}`;
+          }
+        }
+      }
+    }
+
+    const scriptureReference = HOME_CARD_PROTOTYPE_USE_SAMPLE
+      ? HOME_CARD_PROTOTYPE_SAMPLE.scriptureReference
+      : reference;
+    const scriptureText = HOME_CARD_PROTOTYPE_USE_SAMPLE
+      ? HOME_CARD_PROTOTYPE_SAMPLE.scriptureText
+      : text;
+    const verseInsightFinal = HOME_CARD_PROTOTYPE_USE_SAMPLE
+      ? HOME_CARD_PROTOTYPE_SAMPLE.verseInsight
+      : insight;
+
+    return {
+      scriptureReference,
+      scriptureText,
+      verseInsight: verseInsightFinal,
+      completedAt: completion?.completedAt ?? null,
+      earnedMilestones,
+      greetingText: greeting.text,
+      greetingEmoji: greeting.emoji,
+      dateLabel,
+      blocksOn,
+      blockedAppIds: blockedIds,
+      nextBreakLabel,
+      unlockedToday: hasCompletedSermonToday,
+      onCompleteCard: handleCompleteFloatingCard,
+    };
+  }, [
+    todaysMoment.scripture,
+    todaysMoment.teaser,
+    todaysMoment.panels,
+    todaysMoment.day,
+    sermonCompletions,
+    milestoneUnlockStreak,
+    focusSession,
+    focusPrefs.blockedAppIds,
+    studySessions,
+    hasCompletedSermonToday,
+    handleCompleteFloatingCard,
   ]);
 
   const handleOpenCompleted = useCallback(() => {
@@ -612,12 +750,13 @@ export default function TodayScreen() {
     ) : null;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#000000" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <HomeDevotionalCarousel
         cards={carouselCards}
         onCompletedPress={handleOpenCompleted}
         streakCount={streak.current}
         onStreakPress={handleOpenRhythm}
+        cardContent={homeCardContent}
       />
 
 

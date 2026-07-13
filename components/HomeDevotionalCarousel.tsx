@@ -17,13 +17,23 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
 import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { SFSymbol } from "@/components/Symbol";
-import * as haptics from "@/lib/haptics";
-import { typography } from "@/lib/typography";
-import { getSermonBackdrop, HERO_BACKDROP_FALLBACK } from "@/services/unsplashService";
+import { HomeFloatingPrayerHome } from "@/components/HomeFloatingPrayerHome";
 import {
+  HOME_CARD_PROTOTYPE,
+  type FloatingScriptureCard,
+} from "@/constants/homePrototype";
+import type { EarnedMilestoneChip } from "@/components/HomeDevotionalCardSlide";
+import {
+  FROSTED_CHROME_INK,
+  FROSTED_CHROME_PILL,
   HERO_GLASS_DISC,
   HERO_TEXT_SCRIM_GRADIENT,
 } from "@/constants/heroChrome";
+import * as haptics from "@/lib/haptics";
+import { useReducedMotion } from "@/lib/useReducedMotion";
+import { typography } from "@/lib/typography";
+import { getSermonBackdrop, HERO_BACKDROP_FALLBACK } from "@/services/unsplashService";
+import { useColors, useResolvedScheme } from "@/state/theme";
 
 /** Native iOS UITabBar visible height (above home indicator). */
 const TAB_BAR_VISIBLE_HEIGHT = 49;
@@ -73,6 +83,22 @@ export type HomeDevotionalCarouselProps = {
   onCompletedPress?: () => void;
   streakCount?: number;
   onStreakPress?: () => void;
+  /** Card-layout prototype — scripture + home header metadata. */
+  cardContent?: {
+    scriptureReference: string;
+    scriptureText: string;
+    verseInsight: string;
+    completedAt: number | null;
+    earnedMilestones: ReadonlyArray<EarnedMilestoneChip>;
+    greetingText: string;
+    greetingEmoji: string;
+    dateLabel: string;
+    blocksOn: boolean;
+    blockedAppIds: ReadonlyArray<string>;
+    nextBreakLabel: string;
+    unlockedToday: boolean;
+    onCompleteCard: (card: FloatingScriptureCard) => void;
+  };
 };
 
 /** Reserve space above the native tab bar (+ focus mini-player when live). */
@@ -332,8 +358,11 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
   onCompletedPress,
   streakCount = 0,
   onStreakPress,
+  cardContent,
 }: HomeDevotionalCarouselProps) {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const scheme = useResolvedScheme();
   const bottomInset = useHomeBottomInset();
   const card = cards[0];
   const todayLabel = useMemo(() => formatTodayDate(new Date()), []);
@@ -360,16 +389,32 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
 
   if (!card) return null;
 
-  return (
-    <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
-      <HomeHeroSlide
-        card={card}
-        todayLabel={todayLabel}
-        exitOpacity={exitOpacity}
-        onReadPress={runReadTransition}
-        bottomInset={bottomInset}
-      />
+  const useCardLayout = HOME_CARD_PROTOTYPE && cardContent != null;
+  const topClearance = insets.top + 8 + HERO_GLASS_DISC.height + 20;
+  const useFrostedChrome = useCardLayout && scheme === "light";
+  const bookDiscStyle = useFrostedChrome ? FROSTED_CHROME_PILL : HERO_GLASS_DISC;
+  const chromeInk = useFrostedChrome ? FROSTED_CHROME_INK : "#FFFFFF";
 
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      {useCardLayout ? (
+        <HomeFloatingPrayerHome
+          nextBreakLabel={cardContent.nextBreakLabel}
+          unlockedToday={cardContent.unlockedToday}
+          onCompleteCard={cardContent.onCompleteCard}
+          bottomInset={bottomInset}
+        />
+      ) : (
+        <HomeHeroSlide
+          card={card}
+          todayLabel={todayLabel}
+          exitOpacity={exitOpacity}
+          onReadPress={runReadTransition}
+          bottomInset={bottomInset}
+        />
+      )}
+
+      {!useCardLayout ? (
       <Animated.View
         pointerEvents="box-none"
         style={{
@@ -394,11 +439,11 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
           hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
-          <View style={HERO_GLASS_DISC}>
+          <View style={bookDiscStyle}>
             <SFSymbol
               name="book.closed.fill"
               size={16}
-              color="#FFFFFF"
+              color={chromeInk}
               weight="medium"
             />
           </View>
@@ -431,9 +476,13 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
                 paddingHorizontal: 14,
                 paddingVertical: 9,
                 borderRadius: 22,
-                backgroundColor: HERO_GLASS_DISC.backgroundColor,
-                borderWidth: HERO_GLASS_DISC.borderWidth,
-                borderColor: HERO_GLASS_DISC.borderColor,
+                backgroundColor: useFrostedChrome
+                  ? FROSTED_CHROME_PILL.backgroundColor
+                  : HERO_GLASS_DISC.backgroundColor,
+                borderWidth: useFrostedChrome ? 0 : HERO_GLASS_DISC.borderWidth,
+                borderColor: useFrostedChrome
+                  ? "transparent"
+                  : HERO_GLASS_DISC.borderColor,
                 minHeight: 44,
               }}
             >
@@ -445,7 +494,7 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
               </Text>
               <Text
                 style={{
-                  color: "#FFFFFF",
+                  color: chromeInk,
                   fontFamily: "System",
                   fontWeight: "700",
                   fontSize: 15,
@@ -459,6 +508,7 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
           </Pressable>
         ) : null}
       </Animated.View>
+      ) : null}
     </View>
   );
 });

@@ -1143,7 +1143,6 @@ export default function ChapterReaderScreen() {
     pageContentWidth,
     pageContentHeight,
     reloadKey,
-    data,
     tryCommitTargetChapter,
     queueMeasureTarget,
   ]);
@@ -2354,15 +2353,39 @@ function PendingChapterMeasurer({
     }
   }, [cacheKey, finish]);
 
+  // New Architecture / off-screen Text can skip onTextLayout forever.
+  // Fall back to a single full-chapter page so we never spin on
+  // "Drawing near" indefinitely.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (committedRef.current) return;
+      const verseCount = target.data.verses.length;
+      finish([
+        {
+          startLine: 0,
+          endLine: 0,
+          offsetY: 0,
+          contentHeight: pageContentHeight,
+          startVerseIdx: 0,
+          endVerseIdx: Math.max(0, verseCount - 1),
+          isFirst: true,
+        },
+      ]);
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, [finish, pageContentHeight, target.data.verses.length]);
+
   return (
     <View
       pointerEvents="none"
+      collapsable={false}
       style={{
         position: "absolute",
         left: 0,
-        top: -150000,
-        opacity: 0,
+        top: 0,
+        opacity: 0.01,
         width: pageContentWidth,
+        zIndex: -1,
       }}
     >
       <VerseFlow

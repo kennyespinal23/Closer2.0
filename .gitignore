@@ -39,3 +39,10 @@ expo-env.d.ts
 # / Gradle directly.
 ios/
 android/
+
+# Local CocoaPods CDN workarounds (agent/dev only)
+.cocoapods-specs/
+ios/.cp-home/
+ios/.cocoapods-specs/
+ios/pod-install.log
+ios/expo-run.log

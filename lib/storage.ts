@@ -102,6 +102,16 @@ export const STORAGE_KEYS = {
    */
   beforeNoiseNotificationId: "closer.beforeNoise.notificationId.v1",
   /**
+   * Index into HOME_FLOATING_PROMPTS — advances once per cold open
+   * so the home center line rotates through the list.
+   */
+  homeFloatingPromptIndex: "closer.homeFloatingPromptIndex.v1",
+  /**
+   * Index into HOME_FLOATING_CARDS — advances once per cold open so
+   * the auto-presented scripture card rotates through the deck.
+   */
+  homeFloatingCardIndex: "closer.homeFloatingCardIndex.v1",
+  /**
    * Focus-mode state — the Opal-style "social media is blocked while
    * I read scripture" feature. Persists both the user's preferences
    * (which apps to block, whether focus is enabled at all) and the

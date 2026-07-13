@@ -9,7 +9,8 @@ import type { BookCategory } from "./books";
  * named explicitly here. To add a new cover:
  *
  *   1. Drop the PNG into assets/book-covers/
- *   2. Add an entry below — at minimum a `require(...)` path, and
+ *   2. Add it to scripts/compress-covers.sh and run that script
+ *   3. Add an entry below — at minimum a `require(...)` path, and
  *      ideally a `bloom` palette sampled from the artwork (see
  *      `CoverBloom` below)
  *
@@ -42,252 +43,296 @@ type CoverEntry = {
   bloom?: CoverBloom;
 };
 
-// Bulk-loaded cover art for 49 books. Filenames follow the
-// canonical `{bookId}.jpg` convention so the bookCatalog id and
-// the asset path stay in lockstep.
+// Full 66-book cover set. Filenames follow the canonical
+// `{bookId}.jpg` convention so the bookCatalog id and the asset
+// path stay in lockstep.
 //
-// Originals shipped as multi-megabyte PNGs (~360 MB total). We
-// resampled the lot to 1200px on the long edge and re-encoded as
-// JPEG at quality 85 via scripts/compress-covers.sh, dropping the
-// payload to ~9 MB total with no visible quality loss at phone
-// screen sizes. Re-run that script whenever new originals land.
-//
-// `bloom` is only set for books where the artwork was hand-sampled.
-// Anything without an entry falls back to the warm amber default
-// inside `app/book/[id]/index.tsx` — see the `getCoverBloom() ?? {
-// inner: "#FFD49B", outer: "#A07040" }` line there.
-// Bloom palettes below were auto-sampled from each artwork via
-// scripts/extract-blooms.py (median-cut quantize + saturation/
-// brightness shaping). They're checked-in values, not runtime
-// computations, because:
-//   1. RN's Image loader doesn't expose pixel data without an
-//      extra native dep, so we can't sample at app-launch.
-//   2. The bloom needs to be CONSISTENT between cold launches
-//      (a sampled palette would jitter across releases as Pillow
-//      versions or the artwork itself evolves).
-// To regenerate for new covers: run `python3 scripts/extract-blooms.py`
-// and paste the inner/outer pairs into the right entries below.
+// Source PNGs ("Book of ….PNG") are compressed via
+// scripts/compress-covers.sh → ≤1200px JPEG @ q85.
+// Bloom palettes were auto-sampled via scripts/extract-blooms.py.
 const COVER_MAP: Partial<Record<string, CoverEntry>> = {
   // ─── The Law ──────────────────────────────────────────────────
   genesis: {
     image: require("../assets/book-covers/genesis.jpg"),
-    bloom: { inner: "#A1BD86", outer: "#273E1F" },
+    bloom: { inner: "#F3C055", outer: "#3B492B" },
   },
   exodus: {
     image: require("../assets/book-covers/exodus.jpg"),
-    bloom: { inner: "#EBBE5F", outer: "#560602" },
+    bloom: { inner: "#F59A38", outer: "#5F1C1B" },
   },
   leviticus: {
     image: require("../assets/book-covers/leviticus.jpg"),
-    bloom: { inner: "#B47928", outer: "#784412" },
+    bloom: { inner: "#F0B669", outer: "#754835" },
+  },
+  numbers: {
+    image: require("../assets/book-covers/numbers.jpg"),
+    bloom: { inner: "#FFB846", outer: "#432A16" },
   },
   deuteronomy: {
     image: require("../assets/book-covers/deuteronomy.jpg"),
-    bloom: { inner: "#D7A667", outer: "#53424B" },
+    bloom: { inner: "#FFBB62", outer: "#5D4243" },
   },
 
   // ─── Historical Books ─────────────────────────────────────────
   joshua: {
     image: require("../assets/book-covers/joshua.jpg"),
-    bloom: { inner: "#F4AA53", outer: "#8A5221" },
+    bloom: { inner: "#F49236", outer: "#7A3410" },
   },
   judges: {
     image: require("../assets/book-covers/judges.jpg"),
-    bloom: { inner: "#F07144", outer: "#320609" },
+    bloom: { inner: "#FF8E38", outer: "#63231D" },
   },
   ruth: {
     image: require("../assets/book-covers/ruth.jpg"),
-    bloom: { inner: "#FF9F3A", outer: "#602104" },
+    bloom: { inner: "#FF9538", outer: "#692D0C" },
+  },
+  "1-samuel": {
+    image: require("../assets/book-covers/1-samuel.jpg"),
+    bloom: { inner: "#FD8738", outer: "#87420E" },
+  },
+  "2-samuel": {
+    image: require("../assets/book-covers/2-samuel.jpg"),
+    bloom: { inner: "#914C67", outer: "#61344B" },
   },
   "1-kings": {
     image: require("../assets/book-covers/1-kings.jpg"),
-    bloom: { inner: "#C4622D", outer: "#2B0604" },
+    bloom: { inner: "#B45D36", outer: "#291517" },
+  },
+  "2-kings": {
+    image: require("../assets/book-covers/2-kings.jpg"),
+    bloom: { inner: "#FFA838", outer: "#5F2C03" },
+  },
+  "1-chronicles": {
+    image: require("../assets/book-covers/1-chronicles.jpg"),
+    bloom: { inner: "#FA8D37", outer: "#701C1A" },
   },
   "2-chronicles": {
     image: require("../assets/book-covers/2-chronicles.jpg"),
-    bloom: { inner: "#FFA93A", outer: "#27010E" },
+    bloom: { inner: "#FF9B38", outer: "#642A2B" },
   },
   ezra: {
     image: require("../assets/book-covers/ezra.jpg"),
-    bloom: { inner: "#D1822E", outer: "#270C01" },
+    bloom: { inner: "#FFAD38", outer: "#402613" },
+  },
+  nehemiah: {
+    image: require("../assets/book-covers/nehemiah.jpg"),
+    bloom: { inner: "#FFB538", outer: "#704519" },
+  },
+  esther: {
+    image: require("../assets/book-covers/esther.jpg"),
+    bloom: { inner: "#A8546D", outer: "#683B62" },
   },
 
   // ─── Wisdom & Poetry ──────────────────────────────────────────
   job: {
     image: require("../assets/book-covers/job.jpg"),
-    // Hand-tuned (kept verbatim from the original ship): the
-    // cyan-blue beam of light pouring down on the figure (inner
-    // highlight) → the deep night-sky blue behind the cosmic
-    // swirls (outer body). The auto-sampler picks duller blues
-    // here because the figure occupies most of the frame; the
-    // visual intent is the LIGHT, not the body.
-    bloom: { inner: "#90D4F2", outer: "#243A98" },
+    bloom: { inner: "#734BC1", outer: "#161B6A" },
+  },
+  psalms: {
+    image: require("../assets/book-covers/psalms.jpg"),
+    bloom: { inner: "#426E9B", outer: "#1A3456" },
   },
   proverbs: {
     image: require("../assets/book-covers/proverbs.jpg"),
-    bloom: { inner: "#C78750", outer: "#8B5532" },
+    bloom: { inner: "#F3B772", outer: "#84594F" },
   },
   ecclesiastes: {
     image: require("../assets/book-covers/ecclesiastes.jpg"),
-    bloom: { inner: "#BB5C29", outer: "#562107" },
+    bloom: { inner: "#FA6B37", outer: "#763B1E" },
+  },
+  "song-of-solomon": {
+    image: require("../assets/book-covers/song-of-solomon.jpg"),
+    bloom: { inner: "#FF8E86", outer: "#823561" },
   },
 
   // ─── Major Prophets ───────────────────────────────────────────
+  isaiah: {
+    image: require("../assets/book-covers/isaiah.jpg"),
+    bloom: { inner: "#FFB238", outer: "#183A28" },
+  },
+  jeremiah: {
+    image: require("../assets/book-covers/jeremiah.jpg"),
+    bloom: { inner: "#886B3A", outer: "#0B292E" },
+  },
   lamentations: {
     image: require("../assets/book-covers/lamentations.jpg"),
-    bloom: { inner: "#3C55B5", outer: "#1D2956" },
+    bloom: { inner: "#2C3256", outer: "#292C44" },
   },
   ezekiel: {
     image: require("../assets/book-covers/ezekiel.jpg"),
-    bloom: { inner: "#1B7679", outer: "#206C62" },
+    bloom: { inner: "#15614C", outer: "#072F27" },
   },
   daniel: {
     image: require("../assets/book-covers/daniel.jpg"),
-    bloom: { inner: "#E2A143", outer: "#043632" },
+    bloom: { inner: "#279BB1", outer: "#0A4752" },
   },
 
   // ─── Minor Prophets ───────────────────────────────────────────
   hosea: {
     image: require("../assets/book-covers/hosea.jpg"),
-    bloom: { inner: "#2EB4D1", outer: "#025F72" },
+    bloom: { inner: "#195870", outer: "#25545F" },
+  },
+  joel: {
+    image: require("../assets/book-covers/joel.jpg"),
+    bloom: { inner: "#C04436", outer: "#5E1D23" },
   },
   amos: {
     image: require("../assets/book-covers/amos.jpg"),
-    bloom: { inner: "#D97230", outer: "#331604" },
+    bloom: { inner: "#FF9338", outer: "#30212B" },
   },
   obadiah: {
     image: require("../assets/book-covers/obadiah.jpg"),
-    bloom: { inner: "#A02A30", outer: "#370B0F" },
+    bloom: { inner: "#A3303E", outer: "#3E1820" },
   },
   jonah: {
     image: require("../assets/book-covers/jonah.jpg"),
-    bloom: { inner: "#B53346", outer: "#033845" },
+    bloom: { inner: "#AB6C54", outer: "#26525B" },
   },
   micah: {
     image: require("../assets/book-covers/micah.jpg"),
-    bloom: { inner: "#E97F35", outer: "#78270E" },
+    bloom: { inner: "#FF8239", outer: "#714829" },
   },
   nahum: {
     image: require("../assets/book-covers/nahum.jpg"),
-    bloom: { inner: "#EA9343", outer: "#5B505E" },
+    bloom: { inner: "#E3833E", outer: "#835953" },
   },
   habakkuk: {
     image: require("../assets/book-covers/habakkuk.jpg"),
-    bloom: { inner: "#225F99", outer: "#031E46" },
+    bloom: { inner: "#2952A1", outer: "#0C1C4A" },
   },
   zephaniah: {
     image: require("../assets/book-covers/zephaniah.jpg"),
-    bloom: { inner: "#186C69", outer: "#133734" },
+    bloom: { inner: "#1F7369", outer: "#042527" },
   },
   haggai: {
     image: require("../assets/book-covers/haggai.jpg"),
-    bloom: { inner: "#FDB338", outer: "#653407" },
+    bloom: { inner: "#FFA438", outer: "#704016" },
   },
   zechariah: {
     image: require("../assets/book-covers/zechariah.jpg"),
-    bloom: { inner: "#F3B767", outer: "#352C42" },
+    bloom: { inner: "#FFCC74", outer: "#818063" },
   },
   malachi: {
     image: require("../assets/book-covers/malachi.jpg"),
-    bloom: { inner: "#AD9667", outer: "#355854" },
+    bloom: { inner: "#17635B", outer: "#052425" },
   },
 
   // ─── Gospels ──────────────────────────────────────────────────
   matthew: {
     image: require("../assets/book-covers/matthew.jpg"),
-    bloom: { inner: "#C67D2C", outer: "#2B2016" },
+    bloom: { inner: "#FFAB38", outer: "#2E2934" },
   },
   mark: {
     image: require("../assets/book-covers/mark.jpg"),
-    bloom: { inner: "#55BAD6", outer: "#074B5A" },
+    bloom: { inner: "#AB6837", outer: "#47708C" },
   },
   luke: {
     image: require("../assets/book-covers/luke.jpg"),
-    bloom: { inner: "#E1896E", outer: "#73412E" },
+    bloom: { inner: "#FF8876", outer: "#583D3E" },
   },
   john: {
     image: require("../assets/book-covers/john.jpg"),
-    bloom: { inner: "#5A55BA", outer: "#3C345E" },
+    bloom: { inner: "#AC6A59", outer: "#1C1E40" },
   },
 
   // ─── Acts ─────────────────────────────────────────────────────
   acts: {
     image: require("../assets/book-covers/acts.jpg"),
-    bloom: { inner: "#A27424", outer: "#2D1601" },
+    bloom: { inner: "#FFBA38", outer: "#33230D" },
   },
 
   // ─── Pauline Epistles ─────────────────────────────────────────
   romans: {
     image: require("../assets/book-covers/romans.jpg"),
-    bloom: { inner: "#217094", outer: "#002C4A" },
+    bloom: { inner: "#1B4379", outer: "#021539" },
   },
   "1-corinthians": {
     image: require("../assets/book-covers/1-corinthians.jpg"),
-    bloom: { inner: "#F76A36", outer: "#803C1C" },
+    bloom: { inner: "#F98537", outer: "#622F19" },
+  },
+  "2-corinthians": {
+    image: require("../assets/book-covers/2-corinthians.jpg"),
+    bloom: { inner: "#F8A149", outer: "#545755" },
   },
   galatians: {
     image: require("../assets/book-covers/galatians.jpg"),
-    bloom: { inner: "#2D6ACB", outer: "#36191B" },
+    bloom: { inner: "#FF9C39", outer: "#133F7E" },
+  },
+  ephesians: {
+    image: require("../assets/book-covers/ephesians.jpg"),
+    bloom: { inner: "#224165", outer: "#283B4F" },
   },
   philippians: {
     image: require("../assets/book-covers/philippians.jpg"),
-    bloom: { inner: "#CF6E60", outer: "#452928" },
+    bloom: { inner: "#E86A7C", outer: "#893F4A" },
   },
   colossians: {
     image: require("../assets/book-covers/colossians.jpg"),
-    bloom: { inner: "#2465A2", outer: "#010A23" },
+    bloom: { inner: "#2968B9", outer: "#13325A" },
   },
   "1-thessalonians": {
     image: require("../assets/book-covers/1-thessalonians.jpg"),
-    bloom: { inner: "#D1692E", outer: "#3E1708" },
+    bloom: { inner: "#FFA45D", outer: "#7E3A27" },
   },
   "2-thessalonians": {
     image: require("../assets/book-covers/2-thessalonians.jpg"),
-    bloom: { inner: "#2AABBE", outer: "#03535F" },
+    bloom: { inner: "#18546E", outer: "#072E42" },
   },
   "1-timothy": {
     image: require("../assets/book-covers/1-timothy.jpg"),
-    bloom: { inner: "#FFB438", outer: "#01414C" },
+    bloom: { inner: "#A4793E", outer: "#0A324C" },
   },
   "2-timothy": {
     image: require("../assets/book-covers/2-timothy.jpg"),
-    bloom: { inner: "#D96F30", outer: "#7A3309" },
+    bloom: { inner: "#713E4D", outer: "#332340" },
   },
   titus: {
     image: require("../assets/book-covers/titus.jpg"),
-    bloom: { inner: "#C1632A", outer: "#54432C" },
+    bloom: { inner: "#FA8237", outer: "#843F22" },
   },
   philemon: {
     image: require("../assets/book-covers/philemon.jpg"),
-    bloom: { inner: "#FF8A38", outer: "#1D170F" },
+    bloom: { inner: "#FF9838", outer: "#3A382D" },
   },
 
   // ─── General Epistles ─────────────────────────────────────────
   hebrews: {
     image: require("../assets/book-covers/hebrews.jpg"),
-    bloom: { inner: "#2B79C3", outer: "#143D64" },
+    bloom: { inner: "#316398", outer: "#103560" },
   },
   james: {
     image: require("../assets/book-covers/james.jpg"),
-    bloom: { inner: "#DD7C5D", outer: "#2F2C33" },
+    bloom: { inner: "#926160", outer: "#3E343D" },
+  },
+  "1-peter": {
+    image: require("../assets/book-covers/1-peter.jpg"),
+    bloom: { inner: "#FFA038", outer: "#3A1B21" },
+  },
+  "2-peter": {
+    image: require("../assets/book-covers/2-peter.jpg"),
+    bloom: { inner: "#FF835D", outer: "#462A3F" },
   },
   "1-john": {
     image: require("../assets/book-covers/1-john.jpg"),
-    bloom: { inner: "#8135C8", outer: "#4B2B6D" },
+    bloom: { inner: "#E7925B", outer: "#53335B" },
   },
   "2-john": {
     image: require("../assets/book-covers/2-john.jpg"),
-    bloom: { inner: "#856AC4", outer: "#3B317B" },
+    bloom: { inner: "#CB8CE0", outer: "#755181" },
   },
   "3-john": {
     image: require("../assets/book-covers/3-john.jpg"),
-    bloom: { inner: "#5B3D9E", outer: "#35296D" },
+    bloom: { inner: "#5A3779", outer: "#241A3D" },
+  },
+  jude: {
+    image: require("../assets/book-covers/jude.jpg"),
+    bloom: { inner: "#5F3886", outer: "#1D1949" },
   },
 
   // ─── Apocalyptic ──────────────────────────────────────────────
   revelation: {
     image: require("../assets/book-covers/revelation.jpg"),
-    bloom: { inner: "#7661E4", outer: "#453985" },
+    bloom: { inner: "#DC95B2", outer: "#514782" },
   },
 };
 

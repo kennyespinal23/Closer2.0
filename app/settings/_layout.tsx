@@ -4,39 +4,50 @@ import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
 import { useColors } from "@/state/theme";
 
 /**
- * Nested stack for the `/settings/*` group.
+ * Nested stack for `/settings/*`.
  *
- * Currently each settings page is a leaf (you never navigate from
- * Privacy to Appearance, say) — so this layout exists mostly to
- * group the routes for the outer router. The outer Stack
- * (app/_layout.tsx) is the one that controls the slide-from-right
- * animation used when entering the group from the profile drawer.
- *
- * The FocusMiniPlayer is mounted here (aboveTabBar={false}, since
- * the settings stack pushes OVER the tabs and no GlassTabBar is
- * visible) so an active focus session keeps a persistent "now
- * playing" strip while the user manages preferences. The
- * mini-player replaces the top-anchored GlobalFocusBanner that
- * used to sit here — moving it to the bottom keeps the top of
- * every settings page free for its own SettingsScaffold header.
- *
- * Same per-layout mounting pattern as in (tabs) and book — the
- * mini-player MUST live inside a layout's screen container (not at
- * the root) because react-native-screens' native view controllers
- * occlude root-level React siblings on iOS.
+ * Uses the native UINavigationBar (headerShown) so back chevron,
+ * titles, and interactive pop gesture match system Settings. Leaf
+ * screens still compose body chrome via SettingsScaffold, which now
+ * only renders the scroll body and syncs `title` into the nav bar.
  */
 export default function SettingsLayout() {
-  const { bg } = useColors();
+  const colors = useColors();
   return (
-    <View style={{ flex: 1, backgroundColor: bg }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <View style={{ flex: 1 }}>
         <Stack
           screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: bg },
+            headerShown: true,
+            headerShadowVisible: false,
+            headerBackButtonDisplayMode: "minimal",
+            headerTintColor: colors.ink,
+            headerStyle: { backgroundColor: colors.bg },
+            headerTitleStyle: {
+              fontFamily: "System",
+              fontWeight: "600",
+              fontSize: 17,
+              color: colors.ink,
+            },
+            contentStyle: { backgroundColor: colors.bg },
             animation: "slide_from_right",
           }}
-        />
+        >
+          <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
+          <Stack.Screen name="appearance" options={{ title: "Appearance" }} />
+          <Stack.Screen name="reading-goal" options={{ title: "Reading Goal" }} />
+          <Stack.Screen name="translation" options={{ title: "Bible Translation" }} />
+          <Stack.Screen name="focus" options={{ title: "Focus mode" }} />
+          <Stack.Screen name="privacy" options={{ title: "Privacy" }} />
+          <Stack.Screen name="help" options={{ title: "Help & Support" }} />
+          <Stack.Screen name="account" options={{ title: "Account" }} />
+          <Stack.Screen name="name" options={{ title: "Your Name" }} />
+          <Stack.Screen name="community" options={{ title: "Community" }} />
+          <Stack.Screen name="widget" options={{ title: "Home Screen Widget" }} />
+          <Stack.Screen name="user-guide" options={{ title: "User Guide" }} />
+          <Stack.Screen name="developer" options={{ title: "Developer Tools" }} />
+          <Stack.Screen name="study-sessions" options={{ title: "App Blocks" }} />
+        </Stack>
       </View>
       <FocusMiniPlayer aboveTabBar={false} />
     </View>

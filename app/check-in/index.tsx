@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   Text,
+  StyleSheet,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -13,7 +14,9 @@ import type { ImageSourcePropType } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
+import { AppleSheet, SheetContent } from "@/components/AppleSheet";
 import { FadeIn } from "@/components/FadeIn";
+import { SFSymbol } from "@/components/Symbol";
 import * as haptics from "@/lib/haptics";
 import { MOODS, type Mood } from "@/constants/moods";
 import { useColors } from "@/state/theme";
@@ -202,7 +205,6 @@ export default function MoodSelectScreen() {
           in-place when the selection changes. */}
       <ConfirmationPanel
         mood={selected}
-        bottomInset={insets.bottom}
         onConfirm={handleConfirm}
         onDismiss={handleDismissPanel}
       />
@@ -289,216 +291,157 @@ function MoodCard({
 }
 
 // ─────────────────────────────────────────────────────────────────
-// ConfirmationPanel — slides up when a mood is selected
+// ConfirmationPanel — native sheet when a mood is selected
 // ─────────────────────────────────────────────────────────────────
-
 function ConfirmationPanel({
   mood,
-  bottomInset,
   onConfirm,
   onDismiss,
 }: {
   mood: Mood | null;
-  bottomInset: number;
   onConfirm: () => void;
   onDismiss: () => void;
 }) {
   const colors = useColors();
-  // We keep a "last mood" buffer so the panel can finish its exit
-  // animation showing the previous mood's content (otherwise the
-  // contents would flash blank on dismiss).
   const [renderedMood, setRenderedMood] = useState<Mood | null>(mood);
-  const slide = useRef(new Animated.Value(0)).current; // 0 = hidden, 1 = shown
 
   useEffect(() => {
-    if (mood) {
-      setRenderedMood(mood);
-      Animated.timing(slide, {
-        toValue: 1,
-        duration: 280,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(slide, {
-        toValue: 0,
-        duration: 220,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        // Clear the buffer once the panel is fully off-screen so the
-        // next selection starts from the bottom again.
-        if (finished) setRenderedMood(null);
-      });
-    }
-  }, [mood, slide]);
+    if (mood) setRenderedMood(mood);
+  }, [mood]);
 
-  if (!renderedMood) return null;
-
-  const translateY = slide.interpolate({
-    inputRange: [0, 1],
-    outputRange: [PANEL_HEIGHT_PX + bottomInset + 32, 0],
-  });
+  const visible = mood != null;
+  const active = renderedMood;
 
   return (
-    <Animated.View
-      pointerEvents={mood ? "auto" : "none"}
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        paddingBottom: Math.max(bottomInset, 16),
-        paddingHorizontal: 16,
-        transform: [{ translateY }],
+    <AppleSheet
+      visible={visible}
+      onClose={onDismiss}
+      onDidDismiss={() => {
+        if (!mood) setRenderedMood(null);
       }}
+      detents={["auto"]}
+      grabber
+      backgroundColor={colors.surface}
     >
-      <View
-        style={{
-          backgroundColor: colors.surface,
-          borderColor: hexAlpha(renderedMood.swatch, 0.32),
-          borderWidth: 1,
-          borderRadius: 22,
-          padding: 16,
-          // Soft glow tied to the mood's swatch — gives the card a
-          // hint of the color that the verse halo will also use.
-          shadowColor: renderedMood.swatch,
-          shadowOpacity: 0.35,
-          shadowRadius: 24,
-          shadowOffset: { width: 0, height: 8 },
-          elevation: 12,
-        }}
-      >
-        {/* Top row: image + name/description + dismiss chip */}
-        <View className="flex-row items-center">
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 16,
-              backgroundColor: hexAlpha(renderedMood.swatch, 0.14),
-              borderWidth: 1,
-              borderColor: hexAlpha(renderedMood.swatch, 0.28),
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Image
-              source={renderedMood.image}
-              style={{ width: 52, height: 52 }}
-              resizeMode="contain"
-              accessibilityIgnoresInvertColors
-            />
-          </View>
-
-          <View style={{ flex: 1, marginLeft: 14 }}>
-            <Text
-              className="text-[11px] tracking-[2.5px] uppercase"
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: renderedMood.swatch,
-              }}
-              numberOfLines={1}
-            >
-              You picked
-            </Text>
-            <Text
-              className="text-ink text-[20px] mt-0.5"
-              style={{ fontFamily: "System", fontWeight: "700" }}
-              numberOfLines={1}
-            >
-              {renderedMood.label}
-            </Text>
-            <Text
-              className="text-ink-muted text-[13px] leading-[17px] mt-1"
-              style={{ fontFamily: "System", fontWeight: "400" }}
-              numberOfLines={2}
-            >
-              {renderedMood.prompt}.
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={onDismiss}
-            accessibilityRole="button"
-            accessibilityLabel="Clear selection"
-            hitSlop={10}
-            style={({ pressed }) => ({ opacity: pressed ? 0.55 : 1, marginLeft: 6 })}
-          >
+      {active ? (
+        <SheetContent style={{ paddingTop: 4, paddingBottom: 20 }}>
+          <View className="flex-row items-center">
             <View
               style={{
-                width: 30,
-                height: 30,
-                borderRadius: 15,
-                borderColor: colors.border,
+                width: 64,
+                height: 64,
+                borderRadius: 16,
+                backgroundColor: hexAlpha(active.swatch, 0.14),
                 borderWidth: 1,
+                borderColor: hexAlpha(active.swatch, 0.28),
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Svg width={11} height={11} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M6 6l12 12M18 6L6 18"
-                  stroke={colors.inkMuted}
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-              </Svg>
+              <Image
+                source={active.image}
+                style={{ width: 52, height: 52 }}
+                resizeMode="contain"
+                accessibilityIgnoresInvertColors
+              />
             </View>
-          </Pressable>
-        </View>
 
-        {/* Primary CTA — swatch-tinted, full width.
-            Pressable just owns the tap; the View inside owns the
-            box (height/background/etc.). Putting those styles on
-            Pressable's style function caused the button to collapse
-            on iOS — same pattern as the SelectionBar fix. */}
-        <Pressable
-          onPress={onConfirm}
-          accessibilityRole="button"
-          accessibilityLabel="Receive your verse"
-          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, marginTop: 14 })}
-        >
-          <View
-            style={{
-              height: 50,
-              borderRadius: 14,
-              backgroundColor: renderedMood.swatch,
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "row",
-            }}
+            <View style={{ flex: 1, marginLeft: 14 }}>
+              <Text
+                className="text-[11px] tracking-[2.5px] uppercase"
+                style={{
+                  fontFamily: "System",
+                  fontWeight: "700",
+                  color: active.swatch,
+                }}
+                numberOfLines={1}
+              >
+                You picked
+              </Text>
+              <Text
+                className="text-ink text-[20px] mt-0.5"
+                style={{ fontFamily: "System", fontWeight: "700" }}
+                numberOfLines={1}
+              >
+                {active.label}
+              </Text>
+              <Text
+                className="text-ink-muted text-[13px] leading-[17px] mt-1"
+                style={{ fontFamily: "System", fontWeight: "400" }}
+                numberOfLines={2}
+              >
+                {active.prompt}.
+              </Text>
+            </View>
+
+            <Pressable
+              onPress={onDismiss}
+              accessibilityRole="button"
+              accessibilityLabel="Clear selection"
+              hitSlop={10}
+              style={({ pressed }) => ({
+                opacity: pressed ? 0.55 : 1,
+                marginLeft: 6,
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                borderColor: colors.border,
+                borderWidth: StyleSheet.hairlineWidth,
+                alignItems: "center",
+                justifyContent: "center",
+              })}
+            >
+              <SFSymbol
+                name="xmark"
+                size={14}
+                color={colors.inkMuted}
+                weight="semibold"
+              />
+            </Pressable>
+          </View>
+
+          <Pressable
+            onPress={onConfirm}
+            accessibilityRole="button"
+            accessibilityLabel="Receive your verse"
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.85 : 1,
+              marginTop: 16,
+            })}
           >
-            <Text
-              className="text-[14px] tracking-[0.2px]"
+            <View
               style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: pickReadableText(renderedMood.swatch),
+                height: 50,
+                borderRadius: 14,
+                backgroundColor: active.swatch,
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "row",
               }}
             >
-              Receive your verse
-            </Text>
-            <Svg
-              width={14}
-              height={14}
-              viewBox="0 0 24 24"
-              fill="none"
-              style={{ marginLeft: 8 }}
-            >
-              <Path
-                d="M5 12h14M13 5l7 7-7 7"
-                stroke={pickReadableText(renderedMood.swatch)}
-                strokeWidth={2.2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </View>
-        </Pressable>
-      </View>
-    </Animated.View>
+              <Text
+                className="text-[14px] tracking-[0.2px]"
+                style={{
+                  fontFamily: "System",
+                  fontWeight: "700",
+                  color: pickReadableText(active.swatch),
+                }}
+              >
+                Receive your verse
+              </Text>
+              <View style={{ marginLeft: 8 }}>
+                <SFSymbol
+                  name="arrow.right"
+                  size={14}
+                  color={pickReadableText(active.swatch)}
+                  weight="semibold"
+                />
+              </View>
+            </View>
+          </Pressable>
+        </SheetContent>
+      ) : null}
+    </AppleSheet>
   );
 }
 

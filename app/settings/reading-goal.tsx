@@ -1,47 +1,45 @@
 import { Text, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
+import * as haptics from "@/lib/haptics";
+import { SFSymbol } from "@/components/Symbol";
 import {
-  SettingsChoiceRow,
   SettingsScaffold,
   SettingsSection,
 } from "@/components/SettingsScaffold";
 import { useReadingGoal } from "@/state/readingGoal";
-import { useColors } from "@/state/theme";
+import { useColors, useResolvedScheme } from "@/state/theme";
 
 /**
- * Daily reading-goal picker.
- *
- * The user picks how many minutes of in-reader time counts as "today,
- * I drew near." We curate a tight set of options (5/10/15/20/30) so
- * picking is a one-tap decision and so the choices map naturally to
- * the rhythms a real person can sustain.
- *
- * State + persistence live in state/readingGoal.tsx; this page is
- * pure UI. The reader picks the current `goalMinutes` value up from
- * the same hook and fires a celebration toast the first time the
- * accumulated minutes cross it on a given day.
+ * Daily reading-goal picker — native UISegmentedControl for the
+ * short fixed set (5/10/15/20/30), matching Appearance.
  */
 const OPTIONS: ReadonlyArray<{
   minutes: number;
   label: string;
   sublabel: string;
 }> = [
-  { minutes: 5, label: "5 minutes", sublabel: "A short, faithful pause" },
+  { minutes: 5, label: "5", sublabel: "A short, faithful pause" },
   {
     minutes: 10,
-    label: "10 minutes",
+    label: "10",
     sublabel: "Recommended · a rhythm most can keep",
   },
-  { minutes: 15, label: "15 minutes", sublabel: "A fuller sit-down" },
-  { minutes: 20, label: "20 minutes", sublabel: "Deeper reading" },
-  { minutes: 30, label: "30 minutes", sublabel: "A real quiet hour, halved" },
+  { minutes: 15, label: "15", sublabel: "A fuller sit-down" },
+  { minutes: 20, label: "20", sublabel: "Deeper reading" },
+  { minutes: 30, label: "30", sublabel: "A real quiet hour, halved" },
 ];
 
 export default function ReadingGoalScreen() {
   const { goalMinutes, todayMinutes, reachedToday, setGoalMinutes } =
     useReadingGoal();
   const colors = useColors();
+  const scheme = useResolvedScheme();
 
+  const selectedIndex = Math.max(
+    0,
+    OPTIONS.findIndex((o) => o.minutes === goalMinutes),
+  );
+  const selected = OPTIONS[selectedIndex] ?? OPTIONS[1];
   const todayLabel = formatMinutes(todayMinutes);
 
   return (
@@ -84,7 +82,7 @@ export default function ReadingGoalScreen() {
           </View>
           {reachedToday ? (
             <View className="flex-row items-center mt-3">
-              <FlameIcon />
+              <SFSymbol name="flame.fill" size={16} color="#FFB672" />
               <Text
                 className="text-ink text-[13px] ml-2"
                 style={{ fontFamily: "System", fontWeight: "600" }}
@@ -107,31 +105,38 @@ export default function ReadingGoalScreen() {
         title="Daily goal"
         footer="Minutes spent in the chapter reader count toward your goal. Sermons, check-ins, and the rest of the app don't — this is specifically about time with Scripture."
       >
-        {OPTIONS.map((opt, i) => (
-          <SettingsChoiceRow
-            key={opt.minutes}
-            icon={<ClockIcon />}
-            label={opt.label}
-            sublabel={opt.sublabel}
-            selected={goalMinutes === opt.minutes}
-            onPress={() => setGoalMinutes(opt.minutes)}
-            showDivider={i < OPTIONS.length - 1}
+        <View className="px-4 py-4">
+          <Text
+            className="text-ink-subtle text-[11px] tracking-[1.5px] uppercase mb-3"
+            style={{ fontFamily: "System", fontWeight: "600" }}
+          >
+            Minutes
+          </Text>
+          <SegmentedControl
+            appearance={scheme}
+            values={OPTIONS.map((o) => o.label)}
+            selectedIndex={selectedIndex}
+            onChange={(event) => {
+              const next = OPTIONS[event.nativeEvent.selectedSegmentIndex];
+              if (next && next.minutes !== goalMinutes) {
+                haptics.tick();
+                setGoalMinutes(next.minutes);
+              }
+            }}
+            style={{ height: 32 }}
           />
-        ))}
+          <Text
+            className="text-ink-muted text-[13px] mt-3 leading-[18px]"
+            style={{ fontFamily: "System", fontWeight: "500" }}
+          >
+            {selected.sublabel}
+          </Text>
+        </View>
       </SettingsSection>
     </SettingsScaffold>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────
-
-/**
- * Show today's accumulated minutes as a clean "M:SS" when partial,
- * or just "N min" when the value rounds to a whole minute. Keeps the
- * progress feedback feeling alive rather than padded with decimals.
- */
 function formatMinutes(m: number): string {
   if (m <= 0) return "0 min";
   if (m >= 1) {
@@ -148,41 +153,5 @@ function minutesLeftCopy(left: number): string {
   if (left <= 0) return "Today's goal is just ahead.";
   if (left < 1) return "Less than a minute to go today.";
   const rounded = Math.ceil(left);
-  return `${rounded} ${rounded === 1 ? "minute" : "minutes"} left for today.`;
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Icons
-// ─────────────────────────────────────────────────────────────────
-
-const ICON_PROPS_BASE = {
-  strokeWidth: 1.7,
-  fill: "none",
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
-function ClockIcon() {
-  const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M12 21a9 9 0 100-18 9 9 0 000 18z" {...props} />
-      <Path d="M12 7v5l3 2" {...props} />
-    </Svg>
-  );
-}
-
-function FlameIcon() {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path
-        d="M12 3c2 3 5 5 5 9a5 5 0 11-10 0c0-2 1-3 2-4 0 2 1 3 2 3-1-3 0-6 1-8z"
-        fill="#FFB672"
-        stroke="#FFB672"
-        strokeWidth={1.6}
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
+  return `${rounded} minute${rounded === 1 ? "" : "s"} to go today.`;
 }

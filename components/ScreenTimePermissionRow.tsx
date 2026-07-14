@@ -5,7 +5,7 @@ import {
   Text,
   View,
 } from "react-native";
-import Svg, { Path } from "react-native-svg";
+import { SFSymbol } from "@/components/Symbol";
 import {
   AuthorizationStatus,
   getScreenTimeAuthorizationStatus,
@@ -16,13 +16,6 @@ import {
   waitForScreenTimeAuthorizationResult,
 } from "@/lib/deviceActivityShield";
 import { useColors } from "@/state/theme";
-
-const ICON_BASE = {
-  strokeWidth: 1.7,
-  fill: "none" as const,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
 
 type ScreenTimePermissionRowProps = {
   onOpenAppPicker?: () => void;
@@ -145,9 +138,19 @@ export function ScreenTimePermissionRow({
           }}
         >
           {authorized && hasSelection ? (
-            <CheckGlyph stroke={iconStroke} />
+            <SFSymbol
+              name="checkmark"
+              size={16}
+              color={iconStroke}
+              weight="semibold"
+            />
           ) : (
-            <HourglassGlyph stroke={iconStroke} />
+            <SFSymbol
+              name="hourglass"
+              size={16}
+              color={iconStroke}
+              weight="medium"
+            />
           )}
         </View>
         <View style={{ flex: 1, paddingRight: 8 }}>
@@ -207,25 +210,5 @@ export function ScreenTimePermissionRow({
         ) : null}
       </View>
     </View>
-  );
-}
-
-function CheckGlyph({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={16} height={16} viewBox="0 0 24 24">
-      <Path d="M5 12l5 5L20 7" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
-}
-
-function HourglassGlyph({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={16} height={16} viewBox="0 0 24 24">
-      <Path
-        d="M6 3h12M6 21h12M8 3v4l4 4-4 4v4M16 3v4l-4 4 4 4v4"
-        {...ICON_BASE}
-        stroke={stroke}
-      />
-    </Svg>
   );
 }

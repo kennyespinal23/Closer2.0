@@ -49,9 +49,9 @@ export function SheetModalHeader({
           <Text
             style={{
               fontFamily: "System",
-              fontWeight: "500",
+              fontWeight: "400",
               color: colors.inkMuted,
-              fontSize: 15,
+              fontSize: 17,
             }}
           >
             {cancelLabel}
@@ -91,9 +91,9 @@ export function SheetModalHeader({
             <Text
               style={{
                 fontFamily: "System",
-                fontWeight: "700",
-                color: colors.ink,
-                fontSize: 15,
+                fontWeight: "600",
+                color: saveDisabled ? colors.inkSubtle : "#007AFF",
+                fontSize: 17,
               }}
             >
               {saveLabel}

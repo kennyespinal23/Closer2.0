@@ -1,6 +1,8 @@
 import { useCallback, useState, type ReactNode } from "react";
 import {
+  ActionSheetIOS,
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -162,18 +164,33 @@ export function AppBlocksScreen({
         );
         return;
       }
-      Alert.alert(
-        "Delete this time?",
-        `${formatReminderTime(session.time)} will be removed.`,
-        [
-          { text: "Cancel", style: "cancel" },
+      const timeLabel = formatReminderTime(session.time);
+      if (Platform.OS === "ios") {
+        ActionSheetIOS.showActionSheetWithOptions(
           {
-            text: "Delete",
-            style: "destructive",
-            onPress: () => removeSession(session.id),
+            options: ["Delete Block", "Cancel"],
+            destructiveButtonIndex: 0,
+            cancelButtonIndex: 1,
+            title: "Delete this time?",
+            message: `${timeLabel} will be removed.`,
           },
-        ],
-      );
+          (buttonIndex) => {
+            if (buttonIndex === 0) {
+              haptics.soft();
+              removeSession(session.id);
+            }
+          },
+        );
+        return;
+      }
+      Alert.alert("Delete this time?", `${timeLabel} will be removed.`, [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => removeSession(session.id),
+        },
+      ]);
     },
     [removeSession],
   );

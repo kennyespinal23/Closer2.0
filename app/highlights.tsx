@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { SFSymbol } from "@/components/Symbol";
 import Svg, { Path } from "react-native-svg";
 import {
   formatRef,
@@ -303,15 +304,12 @@ function Header({
         accessibilityLabel="Back"
         className="w-11 h-11 rounded-full items-center justify-center"
       >
-        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M15 6l-6 6 6 6"
-            stroke={colors.ink}
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        <SFSymbol
+          name="chevron.left"
+          size={18}
+          color={colors.ink}
+          weight="semibold"
+        />
       </Pressable>
       <Text
         className="text-ink text-[17px] flex-1 text-center"

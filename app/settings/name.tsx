@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -8,100 +8,59 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import Svg, { Path } from "react-native-svg";
+import { useNavigation, useRouter } from "expo-router";
 import { useOnboarding } from "@/state/onboarding";
 import { useColors } from "@/state/theme";
 
 /**
- * Edit your display name.
- *
- * Linked from the profile drawer's "Your name" row. The drawer
- * surfaces the current name; this screen lets the user change it
- * in-place. Persistence flows through `useOnboarding().setAnswer`
- * — the same provider the original onboarding step writes to —
- * so the new value shows up everywhere the app greets the user
- * (home greeting, drawer header, etc.) on the next render.
- *
- * Layout intentionally mirrors `onboarding/name.tsx`:
- *   • Underlined hero input
- *   • Quiet supporting copy
- *   • Save CTA pinned to the bottom safe area
- *
- * Why a bespoke header instead of `SettingsScaffold`? The other
- * settings pages are all read-mostly lists. This one is a single
- * focused form, and we want the CTA visually anchored to the
- * keyboard via KeyboardAvoidingView — which a generic scaffold
- * with a ScrollView gets in the way of.
+ * Edit your display name — body form under the native UINavigationBar
+ * (Save lives in headerRight so it matches iOS edit-profile sheets).
  */
 export default function EditNameScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const colors = useColors();
   const { answers, setAnswer } = useOnboarding();
   const [name, setName] = useState(answers.name);
   const [focused, setFocused] = useState(false);
 
-  // Trim before validating so " " (just spaces) doesn't pass the
-  // length check. The persisted value is also the trimmed form
-  // so re-opening the screen later doesn't show ghost whitespace.
   const trimmed = useMemo(() => name.trim(), [name]);
   const canSave = trimmed.length >= 2 && trimmed !== answers.name;
 
-  const handleSave = () => {
-    if (!canSave) return;
+  const handleSave = useCallback(() => {
+    if (!(trimmed.length >= 2 && trimmed !== answers.name)) return;
     setAnswer("name", trimmed);
     router.back();
-  };
+  }, [trimmed, answers.name, setAnswer, router]);
 
-  return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
-      {/* Inline header so the Save action can live next to Back —
-          cleaner than wedging a primary CTA into a footer toolbar. */}
-      <View className="flex-row items-center px-4 pt-2 pb-3">
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          className="w-10 h-10 rounded-full items-center justify-center"
-        >
-          <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M15 6l-6 6 6 6"
-              stroke={colors.ink}
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
-        </Pressable>
-        <Text
-          className="text-ink text-[17px] flex-1 text-center"
-          style={{ fontFamily: "System", fontWeight: "700" }}
-        >
-          Your name
-        </Text>
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
         <Pressable
           onPress={handleSave}
           disabled={!canSave}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Save"
-          className="w-12 h-10 items-end justify-center pr-1"
+          style={({ pressed }) => ({ opacity: pressed && canSave ? 0.6 : 1 })}
         >
           <Text
             style={{
               fontFamily: "System",
-              fontWeight: "700",
-              color: canSave ? colors.primary : colors.inkSubtle,
-              fontSize: 15,
+              fontWeight: "600",
+              fontSize: 17,
+              color: canSave ? "#007AFF" : colors.inkSubtle,
             }}
           >
             Save
           </Text>
         </Pressable>
-      </View>
+      ),
+    });
+  }, [navigation, canSave, colors.inkSubtle, handleSave]);
 
+  return (
+    <SafeAreaView className="flex-1 bg-bg" edges={["bottom"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"
@@ -132,33 +91,22 @@ export default function EditNameScreen() {
               onBlur={() => setFocused(false)}
               placeholder="Your name"
               placeholderTextColor={colors.inkSubtle}
-              selectionColor={colors.primary}
               autoCapitalize="words"
-              autoComplete="given-name"
               autoCorrect={false}
-              autoFocus
               returnKeyType="done"
               onSubmitEditing={handleSave}
-              maxLength={40}
-              className="text-ink text-[28px] py-2"
-              style={{ fontFamily: "System", fontWeight: "600" }}
-            />
-            <View
-              className="h-[2px] rounded-full"
               style={{
-                backgroundColor: focused
-                  ? colors.primary
-                  : colors.borderStrong,
+                fontFamily: "System",
+                fontWeight: "600",
+                fontSize: 28,
+                lineHeight: 34,
+                color: colors.ink,
+                paddingVertical: 8,
+                borderBottomWidth: 2,
+                borderBottomColor: focused ? colors.primary : colors.border,
               }}
             />
           </View>
-
-          <Text
-            className="text-ink-subtle text-[13px] leading-[18px] mt-5"
-            style={{ fontFamily: "System", fontWeight: "400" }}
-          >
-            Lives only on this device. Closer never sends your name anywhere.
-          </Text>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

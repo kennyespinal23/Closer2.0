@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  ActionSheetIOS,
   LayoutAnimation,
   Platform,
   Pressable,
@@ -137,6 +138,44 @@ export function TimeBlockEditor({
     });
   };
 
+  const setDays = (days: WeekdayIndex[]) => {
+    LayoutAnimation.configureNext(SMOOTH_LAYOUT);
+    setDraft((cur) => ({
+      ...cur,
+      daysOfWeek: [...days].sort((a, b) => a - b) as WeekdayIndex[],
+    }));
+  };
+
+  const openRepeatChooser = () => {
+    if (Platform.OS !== "ios") {
+      LayoutAnimation.configureNext(SMOOTH_LAYOUT);
+      setRepeatOpen((v) => !v);
+      return;
+    }
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ["Every day", "Weekdays", "Weekends", "Custom…", "Cancel"],
+        cancelButtonIndex: 4,
+        title: "Repeat",
+      },
+      (buttonIndex) => {
+        if (buttonIndex === 0) {
+          setDays([0, 1, 2, 3, 4, 5, 6]);
+          setRepeatOpen(false);
+        } else if (buttonIndex === 1) {
+          setDays([1, 2, 3, 4, 5]);
+          setRepeatOpen(false);
+        } else if (buttonIndex === 2) {
+          setDays([0, 6]);
+          setRepeatOpen(false);
+        } else if (buttonIndex === 3) {
+          LayoutAnimation.configureNext(SMOOTH_LAYOUT);
+          setRepeatOpen(true);
+        }
+      },
+    );
+  };
+
   const handleSave = async () => {
     if (!canSave) return;
     setSubmitting(true);
@@ -205,10 +244,7 @@ export function TimeBlockEditor({
 
               <View style={{ marginTop: 12, paddingHorizontal: 20 }}>
                 <Pressable
-                  onPress={() => {
-                    LayoutAnimation.configureNext(SMOOTH_LAYOUT);
-                    setRepeatOpen((v) => !v);
-                  }}
+                  onPress={openRepeatChooser}
                   accessibilityRole="button"
                   accessibilityLabel="Repeat"
                   accessibilityHint="Choose which days this block runs"
@@ -339,7 +375,7 @@ function DayChip({
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: selected
-              ? PRIMARY_ACCENT
+              ? colors.primary
               : withAlphaHex(colors.ink, 0.06),
             borderWidth: selected ? 0 : StyleSheet.hairlineWidth,
             borderColor: withAlphaHex(colors.ink, 0.12),

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useLayoutEffect, type ReactNode } from "react";
 import {
   Linking,
   Pressable,
@@ -8,22 +8,18 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useNavigation } from "expo-router";
 import * as haptics from "@/lib/haptics";
 import { SFSymbol } from "@/components/Symbol";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
 /**
- * Shared chrome for everything reachable from the profile drawer
- * (Notifications, Appearance, Help & Support, Privacy).
+ * Shared body chrome for settings leaves.
  *
- * The pattern is intentionally minimal:
- *   • Back chevron (top-left)         — pops to wherever we came from
- *   • Centered title                  — visually balanced by spacer
- *   • ScrollView body                 — receives Section / Row children
- *
- * Each settings page is just a thin file that imports this scaffold
- * and renders a handful of Sections inside.
+ * Navigation chrome is the native UINavigationBar from
+ * `app/settings/_layout.tsx`. This scaffold only:
+ *   • syncs `title` into that bar (so callers stay declarative)
+ *   • provides the scroll body for Section / Row children
  */
 export function SettingsScaffold({
   title,
@@ -32,54 +28,14 @@ export function SettingsScaffold({
   title: string;
   children: ReactNode;
 }) {
-  const router = useRouter();
-  const colors = useColors();
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ title });
+  }, [navigation, title]);
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
-      {/* Nav bar — mirrors the iOS Settings header pattern shown in
-          Apple Health / Apple Music / first-party reference apps:
-          a back chevron sitting in a FILLED soft-grey circle on the
-          leading edge, centered title in semibold body weight, and a
-          balancing spacer on the trailing edge so the title stays
-          optically centered. The filled-circle back affordance is
-          what Apple uses for the dismiss / back glyph in modal
-          sheets (Maps location card, App Store details), and it
-          reads as more clearly tappable than a bare chevron because
-          the chip itself signals "this is a control".
-          
-          The chip uses `surfaceSecondary` (#1C1C1E dark, #FFFFFF
-          light against the cream page bg) which gives the same
-          subtle elevation Apple's chip uses in both themes. */}
-      <View className="flex-row items-center px-4 pt-2 pb-3">
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          style={({ pressed }) => ({
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: colors.surfaceSecondary,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <BackChevronIcon />
-        </Pressable>
-        <Text
-          className="text-ink text-[17px] flex-1 text-center"
-          style={{ fontFamily: "System", fontWeight: "700" }}
-        >
-          {title}
-        </Text>
-        {/* Spacer matches the back chip dimensions to keep the
-            title optically centered. */}
-        <View style={{ width: 36, height: 36 }} />
-      </View>
-
+    <SafeAreaView className="flex-1 bg-bg" edges={["bottom"]}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
@@ -652,18 +608,6 @@ export function SettingsChoiceRow({
 // ─────────────────────────────────────────────────────────────────
 // Icons (kept here so settings screens don't repeat themselves)
 // ─────────────────────────────────────────────────────────────────
-
-function BackChevronIcon() {
-  const colors = useColors();
-  return (
-    <SFSymbol
-      name="chevron.left"
-      size={20}
-      color={colors.ink}
-      weight="semibold"
-    />
-  );
-}
 
 function ChevronIcon() {
   const colors = useColors();

@@ -23,9 +23,9 @@ import { Platform, type TextStyle } from "react-native";
  * since iOS 13), so we don't ship font files for them. Setting
  * `fontFamily: "System"` tells React Native to pick the platform
  * default — SF Pro on iOS, Roboto on Android. Setting
- * `fontFamily: "New York"` on iOS picks the serif companion
- * directly; on Android we fall back to Georgia (the closest
- * editorial serif the Android system ships).
+ * `fontFamily: NEW_YORK` (which is `"ui-serif"` on iOS) picks the
+ * system serif design — New York. Raw `"New York"` does NOT work
+ * in React Native; see the NEW_YORK export comment.
  *
  * The role tokens below are the canonical vocabulary every screen
  * should reach for. Spread them into a Text `style` prop instead
@@ -56,15 +56,22 @@ import { Platform, type TextStyle } from "react-native";
 export const SF_PRO = "System";
 
 /**
- * The reflection face. iOS 13+ ships New York as a system font;
- * everywhere else we fall back to Georgia, which is the only
- * pre-installed Android serif close enough in voice not to feel
- * out-of-place inside a blockquote. The italic shape comes from
- * pairing this family with `fontStyle: "italic"` in the role
- * preset below.
+ * The reflection / reading face (Apple New York on iOS).
+ *
+ * IMPORTANT — do NOT set `fontFamily: "New York"`.
+ * RCTFont looks that string up via `UIFont fontNamesForFamilyName:` /
+ * `fontWithName:`, which fails for New York (it's a private system
+ * face: `.NewYork-Regular`). RN then logs "Unrecognized font family"
+ * and silently falls back to SF Pro — which is what we were seeing
+ * on the Genesis reader and the scripture screen.
+ *
+ * The supported RN/iOS bridge for Apple's system serif design is
+ * `"ui-serif"` (same family as `"ui-rounded"` / `"ui-monospace"`).
+ * That path goes through `UIFontDescriptorSystemDesignSerif`, which
+ * is New York on every iOS 13+ device. Android falls back to Georgia.
  */
 export const NEW_YORK = Platform.select({
-  ios: "New York",
+  ios: "ui-serif",
   default: "Georgia",
 }) as string;
 
@@ -184,6 +191,24 @@ const reflectiveQuote: TextStyle = {
   letterSpacing: 0,
 };
 
+/**
+ * Reader body — continuous Bible chapter prose in the chapter
+ * reader. Upright New York (not italic) so long-form scripture
+ * matches Apple Books' system-serif reading surface. SF Pro stays
+ * on chrome (page indicators, toolbars, headers). Callers still
+ * multiply size/leading via scale; this token only locks the face.
+ *
+ * iOS resolves New York via `NEW_YORK` (`"ui-serif"` — see the
+ * NEW_YORK export comment). Do not pass `"New York"` directly.
+ */
+const readerBody: TextStyle = {
+  fontFamily: NEW_YORK,
+  fontWeight: fontWeight.regular,
+  fontSize: 18,
+  lineHeight: 30,
+  letterSpacing: -0.1,
+};
+
 export const typography = {
   pageTitle,
   devotionalTitle,
@@ -191,6 +216,7 @@ export const typography = {
   button,
   smallLabel,
   reflectiveQuote,
+  readerBody,
 } as const;
 
 // ─── Legacy compatibility ─────────────────────────────────────

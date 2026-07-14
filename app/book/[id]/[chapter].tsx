@@ -8,7 +8,6 @@ import {
   useState,
 } from "react";
 import {
-  ActionSheetIOS,
   ActivityIndicator,
   Animated,
   AppState,
@@ -28,13 +27,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import Svg, {
-  Defs,
-  LinearGradient as SvgLinearGradient,
-  Path,
-  Rect,
-  Stop,
-} from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { BlurView } from "expo-blur";
 import * as haptics from "@/lib/haptics";
@@ -43,11 +36,8 @@ import { AppleSheet, SheetContent } from "@/components/AppleSheet";
 import { NoteEditor } from "@/components/NoteEditor";
 import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
+import { SFSymbol } from "@/components/Symbol";
 import { findBookById } from "@/constants/books";
-import {
-  CATEGORY_COVER_PALETTE,
-  getCoverBloom,
-} from "@/constants/bookCovers";
 import {
   type Chapter,
   TranslationNotInstalledError,
@@ -70,9 +60,11 @@ import {
   type TranslationId,
   usePreferences,
 } from "@/state/preferences";
+import { hasLocalBundle } from "@/lib/localBibles";
 import { useProgress } from "@/state/progress";
 import { useReadingGoal } from "@/state/readingGoal";
 import { useColors, useResolvedScheme } from "@/state/theme";
+import { NEW_YORK, SF_PRO } from "@/lib/typography";
 
 /**
  * Color of the inline note marker drawn next to verse numbers that
@@ -363,6 +355,7 @@ export default function ChapterReaderScreen() {
     chapter: chapterParam,
     focus: focusParam,
     tint: tintParam,
+    chrome: chromeParam,
   } = useLocalSearchParams<{
     id: string;
     chapter: string;
@@ -374,6 +367,11 @@ export default function ChapterReaderScreen() {
     focus?: string;
     /** URL-encoded hex color used for the focus glow. */
     tint?: string;
+    /**
+     * Dev-only: open a reader chrome sheet on mount (`version` |
+     * `textsize`) so we can screenshot system surfaces.
+     */
+    chrome?: string;
   }>();
   const router = useRouter();
   const colors = useColors();
@@ -1453,9 +1451,9 @@ export default function ChapterReaderScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <ChapterBackdrop book={book} />
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <Header
+          bookId={book.id}
           pagesLeftLabel={
             data && pages ? pagesLeftLabel(headerPagesLeft, true) : ""
           }
@@ -1725,26 +1723,41 @@ export default function ChapterReaderScreen() {
           </View>
         ) : null}
 
-        {/* ─── Apple-Books page-of-N caption ─────────────────────
-            Quiet "Page X of Y" caption sitting just above the
-            bottom toolbar. Pointer-events off — purely informational. */}
+        {/* ─── Apple Books page caption ─────────────────────────
+            Single muted row: "N of M" · "X pages left in chapter".
+            SF Pro only — not New York (chrome, not reading prose). */}
         {data && pages ? (
           <View
             pointerEvents="none"
             style={{
               position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: 78,
+              left: 20,
+              right: 20,
+              bottom: 90,
+              flexDirection: "row",
               alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
             <Text
-              className="text-ink-subtle text-[11px] tracking-[1.5px]"
-              style={{ fontFamily: "System", fontWeight: "500" }}
+              style={{
+                fontFamily: SF_PRO,
+                fontWeight: "400",
+                fontSize: 12,
+                color: colors.inkSubtle,
+              }}
             >
-              Page {bookPagination?.bookPage ?? currentPage} of{" "}
-              {bookPagination?.bookTotalPages ?? totalPages}
+              {currentPage} of {totalPages}
+            </Text>
+            <Text
+              style={{
+                fontFamily: SF_PRO,
+                fontWeight: "400",
+                fontSize: 12,
+                color: colors.inkSubtle,
+              }}
+            >
+              {pagesLeftLabel(pagesLeft, false)}
             </Text>
           </View>
         ) : null}
@@ -1771,6 +1784,11 @@ export default function ChapterReaderScreen() {
             onChangeTextSize={setTextSize}
             translation={translation}
             onChangeTranslation={setTranslation}
+            initialSheet={
+              __DEV__ && (chromeParam === "version" || chromeParam === "textsize")
+                ? chromeParam
+                : undefined
+            }
           />
         )}
 
@@ -1895,125 +1913,6 @@ export default function ChapterReaderScreen() {
       />
       ) : null}
       </SafeAreaView>
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Chapter backdrop — per-book bloom wash at the top of the reader
-// ─────────────────────────────────────────────────────────────────
-
-/**
- * Subtle top-anchored gradient that tints the reading screen with
- * the current book's bloom palette. The effect should feel like
- * the book's color quietly leaning into the page — not a stain
- * the eye fights while reading.
- *
- * Design constraints (the reading screen is the longest-dwell
- * surface in the entire app):
- *   • Peak opacity is INTENTIONALLY low (~16%). Anything stronger
- *     gives serif body text a tinted ground that the eye has to
- *     do extra work against — even in peripheral vision.
- *   • Anchored to the very top and fades to fully transparent
- *     by ~280px down. The chapter body lives well below that, so
- *     the bloom stays in the chrome region (status bar, header,
- *     progress indicator) and never touches the verse text.
- *   • Always uses the bloom's OUTER color (the deeper, atmospheric
- *     stop), never the inner highlight. The highlight is meant to
- *     glow behind the cover artwork; on a flat reading page it
- *     would read as "saturated band" instead of "atmosphere."
- *   • Falls back to the book's category palette when no bloom is
- *     registered, so placeholder-covered books still get a tinted
- *     wash that differentiates them from each other.
- *   • pointerEvents: "none" — never intercepts taps on the header
- *     or first page chrome.
- */
-function ChapterBackdrop({ book }: { book: { id: string; category: string } }) {
-  const { width: screenWidth } = useWindowDimensions();
-  const colors = useColors();
-
-  // 360px gives the wash enough vertical run to read as a real
-  // "page warming with the book's color," not a thin ribbon at
-  // the top. We still fade to fully transparent before the wash
-  // could reach the verse column on any phone size — verse text
-  // always sits on the clean page background.
-  const HEIGHT = 360;
-
-  const coverBloom = getCoverBloom(book.id);
-  const palette =
-    CATEGORY_COVER_PALETTE[book.category as keyof typeof CATEGORY_COVER_PALETTE];
-  const tint = coverBloom?.outer ?? palette?.top ?? colors.bg;
-  // Layer a quieter inner-color stop on top of the outer wash so
-  // the gradient has visible depth (a touch of the cover's
-  // highlight peeking through) instead of reading as a single
-  // flat tint. Falls back to the same outer color when no inner
-  // is available so the rendering stays safe.
-  const innerTint = coverBloom?.inner ?? palette?.accent ?? tint;
-
-  return (
-    <View
-      pointerEvents="none"
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: HEIGHT,
-      }}
-    >
-      <Svg width={screenWidth} height={HEIGHT}>
-        <Defs>
-          {/* Primary wash — the cover's deep atmospheric color
-              bleeding down from the status bar. */}
-          <SvgLinearGradient
-            id="chapterBackdrop"
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="1"
-          >
-            {/* Top stop: clearly perceptible now (~30%) so the
-                book's color story actually lands on the reader's
-                eye when the chapter opens. */}
-            <Stop offset="0" stopColor={tint} stopOpacity="0.32" />
-            {/* Mid stop carries the wash about halfway down. */}
-            <Stop offset="0.55" stopColor={tint} stopOpacity="0.14" />
-            {/* Fully transparent before we reach the reading
-                column so verse text always sits on the clean
-                page background. */}
-            <Stop offset="1" stopColor={tint} stopOpacity="0" />
-          </SvgLinearGradient>
-          {/* Highlight overlay — a quieter inner-color stop that
-              gives the wash dimension. Without this the backdrop
-              reads as a single flat color; with it the gradient
-              shimmers with the cover's actual palette. */}
-          <SvgLinearGradient
-            id="chapterBackdropHighlight"
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="1"
-          >
-            <Stop offset="0" stopColor={innerTint} stopOpacity="0.12" />
-            <Stop offset="0.6" stopColor={innerTint} stopOpacity="0.04" />
-            <Stop offset="1" stopColor={innerTint} stopOpacity="0" />
-          </SvgLinearGradient>
-        </Defs>
-        <Rect
-          x={0}
-          y={0}
-          width={screenWidth}
-          height={HEIGHT}
-          fill="url(#chapterBackdrop)"
-        />
-        <Rect
-          x={0}
-          y={0}
-          width={screenWidth}
-          height={HEIGHT}
-          fill="url(#chapterBackdropHighlight)"
-        />
-      </Svg>
     </View>
   );
 }
@@ -2172,7 +2071,7 @@ function VerseFlow({
     <Text
       onTextLayout={handleTextLayout}
       style={{
-        fontFamily: "System",
+        fontFamily: NEW_YORK,
         fontWeight: "400",
         fontSize: baseFontSize,
         lineHeight: baseLineHeight,
@@ -2225,7 +2124,17 @@ function VerseFlow({
             >
               {"  "}
             </Text>
-            <Text>{v.text}</Text>
+            <Text
+              style={{
+                fontFamily: NEW_YORK,
+                fontWeight: "400",
+                fontSize: baseFontSize,
+                lineHeight: baseLineHeight,
+                letterSpacing: -0.1,
+              }}
+            >
+              {v.text}
+            </Text>
           </>
         );
 
@@ -2267,7 +2176,15 @@ function VerseFlow({
                     ? () => onVerseLongPress(v.number)
                     : undefined
                 }
-                style={{ backgroundColor: focusBg }}
+                style={{
+                  fontFamily: NEW_YORK,
+                  fontWeight: "400",
+                  fontSize: baseFontSize,
+                  lineHeight: baseLineHeight,
+                  letterSpacing: -0.1,
+                  color: colors.ink,
+                  backgroundColor: focusBg,
+                }}
               >
                 {inner}
               </Animated.Text>
@@ -2280,6 +2197,12 @@ function VerseFlow({
                     : undefined
                 }
                 style={{
+                  fontFamily: NEW_YORK,
+                  fontWeight: "400",
+                  fontSize: baseFontSize,
+                  lineHeight: baseLineHeight,
+                  letterSpacing: -0.1,
+                  color: colors.ink,
                   backgroundColor: baseBg,
                 }}
               >
@@ -3121,9 +3044,11 @@ function getAdjacent(
 // ─────────────────────────────────────────────────────────────────
 
 function Header({
+  bookId,
   pagesLeftLabel,
   progress,
 }: {
+  bookId?: string;
   /** Caption like "4 pages left in chapter" — empty while loading. */
   pagesLeftLabel: string;
   progress: number;
@@ -3140,32 +3065,64 @@ function Header({
     }).start();
   }, [progress, widthAnim]);
 
+  const goBack = () => {
+    haptics.soft();
+    // Chapter paging uses `replace`, so `router.back()` often no-ops
+    // even when `canGoBack()` is true. Always exit the reader to the
+    // book overview (or Library if we somehow have no book id).
+    if (bookId) {
+      router.replace(`/book/${bookId}`);
+      return;
+    }
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace("/(tabs)/library");
+  };
+
   return (
-    <View>
-      <View className="flex-row items-center px-4 pt-2 pb-3">
+    <View style={{ zIndex: 30, elevation: 30, backgroundColor: colors.bg }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 8,
+          paddingTop: 2,
+          paddingBottom: 8,
+          minHeight: 44,
+        }}
+      >
         <Pressable
-          onPress={() => router.back()}
-          hitSlop={12}
+          onPress={goBack}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           accessibilityRole="button"
           accessibilityLabel="Back"
-          className="w-10 h-10 rounded-full items-center justify-center"
+          style={({ pressed }) => ({
+            width: 44,
+            height: 44,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed ? 0.45 : 1,
+          })}
         >
-          <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M15 6l-6 6 6 6"
-              stroke={colors.ink}
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
+          <SFSymbol
+            name="chevron.left"
+            size={20}
+            color={colors.ink}
+            weight="semibold"
+          />
         </Pressable>
 
-        <View className="flex-1 items-center">
+        <View style={{ flex: 1, alignItems: "center", paddingHorizontal: 8 }}>
           {pagesLeftLabel ? (
             <Text
-              className="text-ink-subtle text-[12px]"
-              style={{ fontFamily: "System", fontWeight: "500" }}
+              style={{
+                fontFamily: "System",
+                fontWeight: "500",
+                fontSize: 13,
+                color: colors.inkSubtle,
+              }}
               numberOfLines={1}
             >
               {pagesLeftLabel}
@@ -3173,8 +3130,8 @@ function Header({
           ) : null}
         </View>
 
-        {/* Balance the back chevron so the caption stays centered */}
-        <View className="w-10 h-10" />
+        {/* Balance the back control so the caption stays centered */}
+        <View style={{ width: 44, height: 44 }} />
       </View>
 
       <View
@@ -3267,57 +3224,19 @@ function Diamond() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Bottom toolbar — native iOS reader chrome
+// Bottom toolbar — Kindle-style discrete high-contrast chips
 //
-//   • Contents — chapter sheet (UISheetPresentationController)
-//   • Version  — ActionSheetIOS (UIAlertController action sheet)
-//   • Aa       — AppleSheet + UISegmentedControl
-//   • Pill     — BlurView (UIVisualEffectView) over high-contrast fill
-//
-// Note: do NOT use @react-native-menu/menu here until a clean native
-// rebuild links a binary that matches the JS package — MenuView has
-// been crashing on setThemeVariant: / setActionsHash:.
+// Centered hug-content row (not a stretched track):
+//   [ list capsule ]  [ VERSION capsule ]  [ Aa circle ]
+// Version → mid-detent AppleSheet list. Aa → Books-style size stepper.
 // ─────────────────────────────────────────────────────────────────
 
-/** Public-domain translations shown in the native version picker. */
-const PICKABLE_TRANSLATIONS = TRANSLATIONS.filter((t) => !t.localOnly);
+const READER_CHIP_SIZE = 48;
+const READER_CHIP_GAP = 16;
 
-function openNativeVersionPicker(
-  current: Translation,
-  onChange: (id: TranslationId) => void,
-) {
-  // ActionSheetIOS is RN's bridge to UIAlertController (.actionSheet).
-  // Prefer this over @react-native-menu/menu here — the installed native
-  // MenuView binary rejects props the JS package sends (themeVariant /
-  // actionsHash) and hard-crashes the reader.
-  if (Platform.OS !== "ios") return;
-  const options = [
-    ...PICKABLE_TRANSLATIONS.map((t) => t.fullName),
-    "Cancel",
-  ];
-  const cancelButtonIndex = options.length - 1;
-  ActionSheetIOS.showActionSheetWithOptions(
-    {
-      options,
-      cancelButtonIndex,
-      title: "Bible version",
-    },
-    (buttonIndex) => {
-      if (
-        buttonIndex == null ||
-        buttonIndex === cancelButtonIndex ||
-        buttonIndex < 0 ||
-        buttonIndex >= PICKABLE_TRANSLATIONS.length
-      ) {
-        return;
-      }
-      const next = PICKABLE_TRANSLATIONS[buttonIndex];
-      if (next && next.id !== current.id) {
-        haptics.soft();
-        onChange(next.id);
-      }
-    },
-  );
+/** Translations shown in the version sheet (NWT only when installed). */
+function pickableTranslations() {
+  return TRANSLATIONS.filter((t) => !t.localOnly || hasLocalBundle(t.id));
 }
 
 function ReaderToolbar({
@@ -3326,27 +3245,65 @@ function ReaderToolbar({
   onChangeTextSize,
   translation,
   onChangeTranslation,
+  initialSheet,
 }: {
   onContents: () => void;
   textSizeId: TextSizeId;
   onChangeTextSize: (id: TextSizeId) => void;
   translation: Translation;
   onChangeTranslation: (id: TranslationId) => void;
+  initialSheet?: "version" | "textsize";
 }) {
   const colors = useColors();
   const scheme = useResolvedScheme();
   const isLight = scheme === "light";
-  const [textSizeOpen, setTextSizeOpen] = useState(false);
+  const [textSizeOpen, setTextSizeOpen] = useState(initialSheet === "textsize");
+  const [versionOpen, setVersionOpen] = useState(initialSheet === "version");
 
-  const pillFg = isLight ? "#000000" : "#FFFFFF";
-  const pillBg = isLight ? "#FFFFFF" : "#000000";
-  const pillBorder = isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.22)";
-  const pillDivider = isLight ? "rgba(0,0,0,0.14)" : "rgba(255,255,255,0.22)";
+  useEffect(() => {
+    if (initialSheet === "version") setVersionOpen(true);
+    if (initialSheet === "textsize") setTextSizeOpen(true);
+  }, [initialSheet]);
+
+  // Kindle high-contrast chips: always ink-on-paper against the
+  // reader page (cream in light, panel in dark) — do not rely on
+  // Pressable backgroundColor, which can fail to composite.
+  const chipBg = isLight ? "#000000" : "#FFFFFF";
+  const chipFg = isLight ? "#FFFFFF" : "#000000";
+  const systemBlue = isLight ? "#007AFF" : "#0A84FF";
 
   const textSizeIndex = Math.max(
     0,
     TEXT_SIZES.findIndex((s) => s.id === textSizeId),
   );
+  const versions = pickableTranslations();
+
+  const chipShadow = Platform.select({
+    ios: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: isLight ? 0.22 : 0.55,
+      shadowRadius: 10,
+    },
+    android: { elevation: 8 },
+  });
+
+  const stepTextSize = (delta: -1 | 1) => {
+    const next = TEXT_SIZES[textSizeIndex + delta];
+    if (!next || next.id === textSizeId) return;
+    haptics.tick();
+    onChangeTextSize(next.id);
+  };
+
+  const circleChip = {
+    width: READER_CHIP_SIZE,
+    height: READER_CHIP_SIZE,
+    borderRadius: READER_CHIP_SIZE / 2,
+    backgroundColor: chipBg,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    ...chipShadow,
+  };
 
   return (
     <>
@@ -3358,102 +3315,85 @@ function ReaderToolbar({
           right: 0,
           bottom: 18,
           alignItems: "center",
-          paddingHorizontal: 20,
+          paddingHorizontal: 24,
+          zIndex: 40,
         }}
       >
         <View
           style={{
-            borderRadius: 999,
-            overflow: "hidden",
-            borderWidth: StyleSheet.hairlineWidth,
-            borderColor: pillBorder,
-            minWidth: 248,
-            backgroundColor: pillBg,
-            ...Platform.select({
-              ios: {
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: isLight ? 0.12 : 0.45,
-                shadowRadius: 16,
-              },
-              android: { elevation: 10 },
-            }),
+            flexDirection: "row",
+            alignItems: "center",
+            columnGap: READER_CHIP_GAP,
           }}
         >
-          <BlurView
-            intensity={isLight ? 40 : 55}
-            tint={isLight ? "light" : "dark"}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 4,
-              paddingVertical: 4,
-              backgroundColor: isLight
-                ? "rgba(255,255,255,0.72)"
-                : "rgba(0,0,0,0.55)",
-            }}
-          >
+          {/* Contents — Kindle left circle */}
+          <View style={circleChip}>
             <Pressable
               onPress={onContents}
               accessibilityRole="button"
               accessibilityLabel="Open chapter contents"
-              hitSlop={8}
               style={({ pressed }) => ({
-                width: 48,
-                height: 44,
+                ...StyleSheet.absoluteFillObject,
                 alignItems: "center",
                 justifyContent: "center",
-                opacity: pressed ? 0.55 : 1,
+                opacity: pressed ? 0.7 : 1,
               })}
             >
-              <ContentsListIcon color={pillFg} />
+              <SFSymbol
+                name="list.bullet"
+                size={20}
+                color={chipFg}
+                weight="medium"
+              />
             </Pressable>
+          </View>
 
-            <View
-              style={{
-                width: StyleSheet.hairlineWidth,
-                height: 22,
-                backgroundColor: pillDivider,
-              }}
-            />
-
+          {/* Version — Kindle-style center capsule */}
+          <View
+            style={{
+              height: READER_CHIP_SIZE,
+              minWidth: 92,
+              paddingHorizontal: 20,
+              borderRadius: READER_CHIP_SIZE / 2,
+              backgroundColor: chipBg,
+              alignItems: "center",
+              justifyContent: "center",
+              ...chipShadow,
+            }}
+          >
             <Pressable
-              onPress={() => openNativeVersionPicker(translation, onChangeTranslation)}
+              onPress={() => {
+                haptics.soft();
+                setVersionOpen(true);
+              }}
               accessibilityRole="button"
               accessibilityLabel={`Bible version ${translation.tag}. Change version`}
-              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
               style={({ pressed }) => ({
-                flex: 1,
-                minHeight: 44,
-                paddingHorizontal: 14,
+                ...StyleSheet.absoluteFillObject,
                 alignItems: "center",
                 justifyContent: "center",
-                opacity: pressed ? 0.55 : 1,
+                opacity: pressed ? 0.7 : 1,
               })}
             >
               <Text
                 style={{
                   fontFamily: "System",
                   fontWeight: "700",
-                  fontSize: 13,
-                  letterSpacing: 1.4,
-                  color: pillFg,
+                  fontSize: 15,
+                  letterSpacing: 0.8,
+                  color: chipFg,
                   textTransform: "uppercase",
+                  textAlign: "center",
                 }}
                 allowFontScaling={false}
               >
                 {translation.tag}
               </Text>
             </Pressable>
+          </View>
 
-            <View
-              style={{
-                width: StyleSheet.hairlineWidth,
-                height: 22,
-                backgroundColor: pillDivider,
-              }}
-            />
-
+          {/* Aa — Kindle right circle */}
+          <View style={circleChip}>
             <Pressable
               onPress={() => {
                 haptics.soft();
@@ -3461,40 +3401,40 @@ function ReaderToolbar({
               }}
               accessibilityRole="button"
               accessibilityLabel="Text size"
-              hitSlop={8}
               style={({ pressed }) => ({
-                width: 48,
-                height: 44,
+                ...StyleSheet.absoluteFillObject,
                 alignItems: "center",
                 justifyContent: "center",
-                opacity: pressed ? 0.55 : 1,
+                opacity: pressed ? 0.7 : 1,
               })}
             >
               <Text
                 style={{
                   fontFamily: "System",
                   fontWeight: "700",
-                  fontSize: 16,
-                  color: pillFg,
+                  fontSize: 17,
+                  color: chipFg,
+                  textAlign: "center",
                 }}
                 allowFontScaling={false}
               >
                 Aa
               </Text>
             </Pressable>
-          </BlurView>
+          </View>
         </View>
       </View>
 
-      {textSizeOpen ? (
+      {versionOpen ? (
         <AppleSheet
-          visible={textSizeOpen}
-          onClose={() => setTextSizeOpen(false)}
-          detents={["auto"]}
+          visible={versionOpen}
+          onClose={() => setVersionOpen(false)}
+          detents={[0.5]}
           grabber
+          scrollable
           backgroundColor={colors.surface}
         >
-          <SheetContent style={{ paddingTop: 4, paddingBottom: 28 }}>
+          <SheetContent style={{ paddingTop: 4, paddingBottom: 28, paddingHorizontal: 16 }}>
             <Text
               style={{
                 fontFamily: "System",
@@ -3504,66 +3444,256 @@ function ReaderToolbar({
                 textTransform: "uppercase",
                 letterSpacing: 0.8,
                 textAlign: "center",
-                marginBottom: 16,
+                marginBottom: 12,
               }}
             >
-              Text Size
+              Bible Version
             </Text>
-            <SegmentedControl
-              appearance={scheme}
-              values={["Small", "Medium", "Large", "XL"]}
-              selectedIndex={textSizeIndex}
-              onChange={(event) => {
-                const nextIndex = event.nativeEvent.selectedSegmentIndex;
-                const next = TEXT_SIZES[nextIndex];
-                if (next && next.id !== textSizeId) {
-                  haptics.tick();
-                  onChangeTextSize(next.id);
-                }
-              }}
-              style={{ height: 32 }}
-            />
-            <Pressable
-              onPress={() => setTextSizeOpen(false)}
-              accessibilityRole="button"
-              accessibilityLabel="Done"
+            {/*
+              IMPORTANT: do NOT use NativeWind `className` colors
+              inside TrueSheet — the sheet portals outside the
+              theme `vars()` root, so `text-ink` resolves to
+              transparent. Always use palette hex via `style`.
+            */}
+            <View
               style={{
-                marginTop: 20,
-                minHeight: 44,
+                borderRadius: 14,
+                overflow: "hidden",
+                backgroundColor: colors.surfaceTertiary,
+              }}
+            >
+              {versions.map((t, index) => {
+                const selected = t.id === translation.id;
+                return (
+                  <Pressable
+                    key={t.id}
+                    onPress={() => {
+                      if (t.id !== translation.id) {
+                        haptics.soft();
+                        onChangeTranslation(t.id);
+                      }
+                      setVersionOpen(false);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={t.fullName}
+                  >
+                    <View
+                      style={{
+                        minHeight: 52,
+                        paddingHorizontal: 16,
+                        paddingVertical: 12,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        borderTopWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
+                        borderTopColor: colors.border,
+                      }}
+                    >
+                      <View style={{ flex: 1, paddingRight: 12 }}>
+                        <Text
+                          style={{
+                            fontFamily: "System",
+                            fontWeight: "600",
+                            fontSize: 17,
+                            color: colors.ink,
+                          }}
+                        >
+                          {t.fullName}
+                        </Text>
+                        <Text
+                          style={{
+                            fontFamily: "System",
+                            fontWeight: "400",
+                            fontSize: 13,
+                            color: colors.inkMuted,
+                            marginTop: 2,
+                          }}
+                        >
+                          {t.tag}
+                        </Text>
+                      </View>
+                      {selected ? (
+                        <View
+                          style={{
+                            width: 22,
+                            height: 22,
+                            borderRadius: 11,
+                            backgroundColor: systemBlue,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <SFSymbol
+                            name="checkmark"
+                            size={12}
+                            color="#FFFFFF"
+                            weight="bold"
+                          />
+                        </View>
+                      ) : (
+                        <View style={{ width: 22 }} />
+                      )}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </SheetContent>
+        </AppleSheet>
+      ) : null}
+
+      {textSizeOpen ? (
+        <AppleSheet
+          visible={textSizeOpen}
+          onClose={() => setTextSizeOpen(false)}
+          detents={["auto"]}
+          grabber
+          backgroundColor={colors.surface}
+        >
+          <SheetContent style={{ paddingTop: 8, paddingBottom: 28, paddingHorizontal: 20 }}>
+            <View
+              style={{
+                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
+                marginBottom: 20,
               }}
             >
               <Text
                 style={{
-                  fontFamily: "System",
+                  flex: 1,
+                  fontFamily: SF_PRO,
                   fontWeight: "600",
                   fontSize: 17,
-                  color: colors.primary,
+                  color: colors.ink,
+                  textAlign: "center",
                 }}
               >
-                Done
+                Themes & Settings
               </Text>
-            </Pressable>
+              <Pressable
+                onPress={() => setTextSizeOpen(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+                hitSlop={8}
+                style={({ pressed }) => ({
+                  position: "absolute",
+                  right: 0,
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: isLight
+                    ? "rgba(120,120,128,0.16)"
+                    : "rgba(120,120,128,0.36)",
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
+                <SFSymbol
+                  name="xmark"
+                  size={13}
+                  color={colors.inkMuted}
+                  weight="semibold"
+                />
+              </Pressable>
+            </View>
+
+            {/*
+              Apple Books Themes & Settings size control:
+              one material pill, two equal tap halves (small A | large A).
+              Discrete steps through TEXT_SIZES — no slider / drag.
+              Appearance toggle intentionally omitted (not built yet).
+            */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "stretch",
+                width: "100%",
+                height: 52,
+                borderRadius: 12,
+                overflow: "hidden",
+                backgroundColor: isLight
+                  ? "rgba(120,120,128,0.16)"
+                  : "rgba(120,120,128,0.36)",
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Pressable
+                  onPress={() => stepTextSize(-1)}
+                  disabled={textSizeIndex <= 0}
+                  accessibilityRole="button"
+                  accessibilityLabel="Decrease text size"
+                  style={({ pressed }) => ({
+                    ...StyleSheet.absoluteFillObject,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity:
+                      textSizeIndex <= 0 ? 0.35 : pressed ? 0.55 : 1,
+                  })}
+                >
+                  <Text
+                    style={{
+                      fontFamily: NEW_YORK,
+                      fontWeight: "400",
+                      fontSize: 15,
+                      color: colors.ink,
+                    }}
+                    allowFontScaling={false}
+                  >
+                    A
+                  </Text>
+                </Pressable>
+              </View>
+
+              <View
+                style={{
+                  width: StyleSheet.hairlineWidth,
+                  marginVertical: 10,
+                  backgroundColor: isLight
+                    ? "rgba(60,60,67,0.29)"
+                    : "rgba(84,84,88,0.65)",
+                }}
+              />
+
+              <View style={{ flex: 1 }}>
+                <Pressable
+                  onPress={() => stepTextSize(1)}
+                  disabled={textSizeIndex >= TEXT_SIZES.length - 1}
+                  accessibilityRole="button"
+                  accessibilityLabel="Increase text size"
+                  style={({ pressed }) => ({
+                    ...StyleSheet.absoluteFillObject,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity:
+                      textSizeIndex >= TEXT_SIZES.length - 1
+                        ? 0.35
+                        : pressed
+                          ? 0.55
+                          : 1,
+                  })}
+                >
+                  <Text
+                    style={{
+                      fontFamily: NEW_YORK,
+                      fontWeight: "400",
+                      fontSize: 26,
+                      color: colors.ink,
+                    }}
+                    allowFontScaling={false}
+                  >
+                    A
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Reserved: theme / appearance circular control later */}
+            <View style={{ height: 8 }} />
           </SheetContent>
         </AppleSheet>
       ) : null}
     </>
-  );
-}
-
-function ContentsListIcon({ color }: { color?: string }) {
-  const colors = useColors();
-  const stroke = color ?? colors.ink;
-  return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M4 6h12M4 12h12M4 18h12M19 6h1M19 12h1M19 18h1"
-        stroke={stroke}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-      />
-    </Svg>
   );
 }
 
@@ -4710,7 +4840,10 @@ function NotFound({ message }: { message: string }) {
           {message}
         </Text>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => {
+            if (router.canGoBack()) router.back();
+            else router.replace("/(tabs)/library");
+          }}
           className="mt-6 px-5 py-3 rounded-full bg-primary"
         >
           <Text

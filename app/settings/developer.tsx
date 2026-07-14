@@ -1,6 +1,8 @@
 import { Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import {
+  SettingsLinkRow,
   SettingsScaffold,
   SettingsSection,
   SettingsToggleRow,
@@ -44,6 +46,7 @@ export default function DeveloperToolsScreen() {
   const { enabled, setEnabled, unlockAllMilestones, setUnlockAllMilestones } =
     useDevTools();
   const colors = useColors();
+  const router = useRouter();
 
   return (
     <SettingsScaffold title="Developer Tools">
@@ -81,6 +84,27 @@ export default function DeveloperToolsScreen() {
           }}
         />
       </SettingsSection>
+
+      {__DEV__ ? (
+        <SettingsSection
+          title="Native UI"
+          footer="Isolated @expo/ui Host + Button check. Requires a native rebuild after installing the package."
+        >
+          <SettingsLinkRow
+            icon={
+              <SFSymbol
+                name="cube"
+                size={18}
+                color={colors.ink}
+                weight="semibold"
+              />
+            }
+            label="@expo/ui smoke test"
+            sublabel="SwiftUI Host + Button"
+            onPress={() => router.push("/settings/expo-ui-smoke")}
+          />
+        </SettingsSection>
+      ) : null}
 
       <View className="px-6 mt-8">
         <Text

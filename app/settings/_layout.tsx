@@ -46,6 +46,10 @@ export default function SettingsLayout() {
           <Stack.Screen name="widget" options={{ title: "Home Screen Widget" }} />
           <Stack.Screen name="user-guide" options={{ title: "User Guide" }} />
           <Stack.Screen name="developer" options={{ title: "Developer Tools" }} />
+          <Stack.Screen
+            name="expo-ui-smoke"
+            options={{ title: "@expo/ui Smoke" }}
+          />
           <Stack.Screen name="study-sessions" options={{ title: "App Blocks" }} />
         </Stack>
       </View>

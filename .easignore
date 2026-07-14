@@ -11,3 +11,6 @@
 # fresh from app.config.js.
 ios/
 android/
+
+# Source cover masters — app uses compressed *.jpg only (see constants/bookCovers.ts).
+assets/book-covers/Book of*

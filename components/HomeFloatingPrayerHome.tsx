@@ -37,11 +37,12 @@ const IMAGE_RADIUS = 8;
 const IMAGE_ASPECT = 16 / 9;
 const LIQUID_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const LIQUID_IN = Easing.bezier(0.4, 0, 0.2, 1);
-const HERO_HINT_DELAY_MS = 1200;
+const HERO_HINT_DELAY_MS = 1600;
 const HOLD_UNLOCK_MS = 1600;
 const SWIPE_DOWN_COMMIT_DY = 40;
 const SWIPE_DOWN_COMMIT_VY = 400;
-const CLOSE_MS = 280;
+const OPEN_MS = 820;
+const CLOSE_MS = 380;
 
 /** Floating cream card / quote-screen cream shell. */
 const CARD_BG = "#F4F0E6";
@@ -380,6 +381,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
 
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
   const [active, setActive] = useState<FloatingScriptureCard | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -465,11 +467,10 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
       }
 
       requestAnimationFrame(() => {
-        Animated.spring(openProgress, {
+        Animated.timing(openProgress, {
           toValue: 1,
-          damping: 22,
-          stiffness: 280,
-          mass: 0.85,
+          duration: OPEN_MS,
+          easing: LIQUID_OUT,
           useNativeDriver: true,
         }).start(({ finished }) => {
           if (!finished) return;
@@ -478,7 +479,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
             setShowSwipeHint(true);
             Animated.timing(hintOpacity, {
               toValue: 1,
-              duration: 300,
+              duration: 380,
               easing: LIQUID_OUT,
               useNativeDriver: true,
             }).start();
@@ -671,12 +672,12 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   );
 
   const shellOpacity = openProgress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 1],
+    inputRange: [0, 0.35, 1],
+    outputRange: [0, 0.85, 1],
   });
   const shellScale = openProgress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.88, 1],
+    outputRange: [0.96, 1],
   });
   const heroOpacity = detailProgress.interpolate({
     inputRange: [0, 0.55],
@@ -796,6 +797,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                     { backgroundColor: "rgba(0,0,0,0.48)" },
                   ]}
                 />
+
                 <View
                   pointerEvents="none"
                   style={{
@@ -901,44 +903,22 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                   { backgroundColor: CARD_BG, opacity: detailOpacity },
                 ]}
               >
-                <Pressable
-                  onPress={closeExpanded}
-                  hitSlop={12}
-                  accessibilityRole="button"
-                  accessibilityLabel="Close"
-                  style={({ pressed }) => ({
-                    position: "absolute",
-                    top: Math.max(insets.top, 12) + 4,
-                    left: 16,
-                    zIndex: 20,
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: "rgba(20, 20, 20, 0.12)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: pressed ? 0.7 : 1,
-                  })}
-                >
-                  <SFSymbol
-                    name="xmark"
-                    size={15}
-                    color={CARD_INK}
-                    weight="semibold"
-                  />
-                </Pressable>
-
                 <ScrollView
                   style={{ flex: 1 }}
                   contentContainerStyle={{
                     paddingBottom: insets.bottom + 28,
                   }}
+                  contentInsetAdjustmentBehavior="never"
+                  automaticallyAdjustContentInsets={false}
+                  contentInset={{ top: 0, left: 0, bottom: 0, right: 0 }}
+                  scrollIndicatorInsets={{ top: 0 }}
                   showsVerticalScrollIndicator={false}
                 >
                   <View
                     style={{
                       width: "100%",
-                      aspectRatio: 4 / 5,
+                      height: Math.round(windowWidth * 1.15) + insets.top,
+                      marginTop: -insets.top,
                       overflow: "hidden",
                       backgroundColor: "#D8D2C6",
                       marginBottom: 8,
@@ -1040,37 +1020,55 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                       </>
                     ) : null}
 
-                    {unlockedToday ? (
-                      <Pressable
-                        onPress={finishCard}
-                        accessibilityRole="button"
-                        accessibilityLabel="Done"
-                        style={({ pressed }) => ({
-                          marginTop: 32,
-                          minHeight: 56,
-                          borderRadius: 999,
-                          backgroundColor: CARD_INK,
-                          alignItems: "center",
-                          justifyContent: "center",
-                          opacity: pressed ? 0.85 : 1,
-                        })}
-                      >
-                        <Text style={[typography.button, { color: "#FFFFFF" }]}>
-                          Done
-                        </Text>
-                      </Pressable>
-                    ) : (
+                    {!unlockedToday ? (
                       <HoldToUnlockButton
                         label="Hold to unlock"
                         holdingLabel="Keep holding…"
                         onComplete={finishCard}
                         reducedMotion={reducedMotion}
                       />
-                    )}
+                    ) : null}
                   </View>
                 </ScrollView>
               </Animated.View>
             </Animated.View>
+
+            {/* Outside the opacity/scale shell so nothing can hide it */}
+            <Pressable
+              onPress={closeExpanded}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              style={({ pressed }) => ({
+                position: "absolute",
+                top: Math.max(insets.top, 12) + 4,
+                left: 16,
+                zIndex: 9999,
+                elevation: 9999,
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: "rgba(0,0,0,0.72)",
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: "rgba(255,255,255,0.55)",
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Text
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: 20,
+                  fontWeight: "700",
+                  lineHeight: 22,
+                  marginTop: -1,
+                }}
+                allowFontScaling={false}
+              >
+                ✕
+              </Text>
+            </Pressable>
           </View>
         </GestureHandlerRootView>
       </Modal>

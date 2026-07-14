@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import {
+  ActionSheetIOS,
   ActivityIndicator,
   Animated,
   AppState,
@@ -38,7 +39,7 @@ import SegmentedControl from "@react-native-segmented-control/segmented-control"
 import { BlurView } from "expo-blur";
 import * as haptics from "@/lib/haptics";
 import { shareVerse, sharePassage } from "@/lib/share";
-import { AppleSheet } from "@/components/AppleSheet";
+import { AppleSheet, SheetContent } from "@/components/AppleSheet";
 import { NoteEditor } from "@/components/NoteEditor";
 import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
@@ -63,6 +64,7 @@ import {
 } from "@/state/annotations";
 import {
   TEXT_SIZES,
+  TRANSLATIONS,
   type TextSizeId,
   type Translation,
   type TranslationId,
@@ -428,7 +430,7 @@ export default function ChapterReaderScreen() {
     hasReadChapter,
     recordChapterVisit,
   } = useProgress();
-  const { translation, textSize, setTextSize } = usePreferences();
+  const { translation, textSize, setTextSize, setTranslation } = usePreferences();
   const annotations = useAnnotations();
 
   const [data, setData] = useState<Chapter | null>(null);
@@ -451,12 +453,23 @@ export default function ChapterReaderScreen() {
   // Keep in-reader chapter swaps on this screen instance — updating
   // params instead of replace avoids a navigation flash. External
   // entry (overview tap, deep link) still syncs from the route.
+  //
+  // Critical: on first mount readerBookId/chapter already match the
+  // route. Wiping measureTarget here used to cancel the layout-effect
+  // measure pass after book-overview prefetch — leaving "Drawing near"
+  // forever. Only reset when the route actually points somewhere else.
   useEffect(() => {
     if (internalNavRef.current) {
       internalNavRef.current = false;
       return;
     }
     const nextChapter = Number.isFinite(routeChapter) ? routeChapter : 1;
+    if (
+      readerBookId === routeBookId &&
+      readerChapter === nextChapter
+    ) {
+      return;
+    }
     setReaderBookId(routeBookId);
     setReaderChapter(nextChapter);
     setViewportBookId(routeBookId);
@@ -468,7 +481,7 @@ export default function ChapterReaderScreen() {
     setPages(null);
     setMeasureTarget(null);
     setPagerMountKey("");
-  }, [routeBookId, routeChapter]);
+  }, [routeBookId, routeChapter, readerBookId, readerChapter]);
 
   // Action-sheet / note-editor state ────────────────────────────
   // `activeVerse` is the verse number currently selected in the
@@ -884,6 +897,14 @@ export default function ChapterReaderScreen() {
         target.bookId !== targetBookId ||
         target.chapter !== targetChapter
       ) {
+        // Stale measure — clear so a newer target can take over.
+        setMeasureTarget((cur) =>
+          cur &&
+          cur.bookId === targetBookId &&
+          cur.chapter === targetChapter
+            ? null
+            : cur,
+        );
         return;
       }
 
@@ -1435,7 +1456,6 @@ export default function ChapterReaderScreen() {
       <ChapterBackdrop book={book} />
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <Header
-          translationTag={translation.tag}
           pagesLeftLabel={
             data && pages ? pagesLeftLabel(headerPagesLeft, true) : ""
           }
@@ -1749,9 +1769,8 @@ export default function ChapterReaderScreen() {
             onContents={() => setContentsOpen(true)}
             textSizeId={textSize.id}
             onChangeTextSize={setTextSize}
-            todayMinutes={readingGoal.todayMinutes}
-            goalMinutes={readingGoal.goalMinutes}
-            onOpenReadingGoal={() => router.push("/settings/reading-goal")}
+            translation={translation}
+            onChangeTranslation={setTranslation}
           />
         )}
 
@@ -2371,7 +2390,7 @@ function PendingChapterMeasurer({
           isFirst: true,
         },
       ]);
-    }, 1800);
+    }, 600);
     return () => clearTimeout(timer);
   }, [finish, pageContentHeight, target.data.verses.length]);
 
@@ -2382,10 +2401,9 @@ function PendingChapterMeasurer({
       style={{
         position: "absolute",
         left: 0,
-        top: 0,
-        opacity: 0.01,
+        top: -100000,
+        opacity: 0,
         width: pageContentWidth,
-        zIndex: -1,
       }}
     >
       <VerseFlow
@@ -3103,11 +3121,9 @@ function getAdjacent(
 // ─────────────────────────────────────────────────────────────────
 
 function Header({
-  translationTag,
   pagesLeftLabel,
   progress,
 }: {
-  translationTag: string;
   /** Caption like "4 pages left in chapter" — empty while loading. */
   pagesLeftLabel: string;
   progress: number;
@@ -3157,25 +3173,8 @@ function Header({
           ) : null}
         </View>
 
-        {translationTag ? (
-          <Pressable
-            onPress={() => router.push("/settings/translation")}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="Change Bible version"
-            className="h-10 px-3 rounded-full border border-border items-center justify-center"
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-          >
-            <Text
-              className="text-ink-muted text-[11px] tracking-[1.5px]"
-              style={{ fontFamily: "System", fontWeight: "700" }}
-            >
-              {translationTag}
-            </Text>
-          </Pressable>
-        ) : (
-          <View className="w-10 h-10" />
-        )}
+        {/* Balance the back chevron so the caption stays centered */}
+        <View className="w-10 h-10" />
       </View>
 
       <View
@@ -3268,96 +3267,89 @@ function Diamond() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Bottom toolbar — compact icon pill with tap-to-expand popovers
+// Bottom toolbar — native iOS reader chrome
 //
-// Apple Books treats the bottom of the reader as a calm row of icons
-// that DON'T cover scripture. Each icon is its own affordance:
-//   • Contents — full-screen chapter list (opens a modal)
-//   • Aa       — text size + translation, expands a small popover
-//                ABOVE the toolbar
-//   • Goal     — today's progress, expands a small popover above
+//   • Contents — chapter sheet (UISheetPresentationController)
+//   • Version  — ActionSheetIOS (UIAlertController action sheet)
+//   • Aa       — AppleSheet + UISegmentedControl
+//   • Pill     — BlurView (UIVisualEffectView) over high-contrast fill
 //
-// Tapping the same icon while its popover is open collapses it.
-// Tapping outside also collapses (the transparent backdrop captures
-// that gesture and routes it through to the page below). The pill
-// itself stays anchored to the bottom safe area at all times so
-// users always have a one-tap path back to chapter chrome.
+// Note: do NOT use @react-native-menu/menu here until a clean native
+// rebuild links a binary that matches the JS package — MenuView has
+// been crashing on setThemeVariant: / setActionsHash:.
 // ─────────────────────────────────────────────────────────────────
 
-type ToolbarSection = "themes" | "goal" | null;
+/** Public-domain translations shown in the native version picker. */
+const PICKABLE_TRANSLATIONS = TRANSLATIONS.filter((t) => !t.localOnly);
+
+function openNativeVersionPicker(
+  current: Translation,
+  onChange: (id: TranslationId) => void,
+) {
+  // ActionSheetIOS is RN's bridge to UIAlertController (.actionSheet).
+  // Prefer this over @react-native-menu/menu here — the installed native
+  // MenuView binary rejects props the JS package sends (themeVariant /
+  // actionsHash) and hard-crashes the reader.
+  if (Platform.OS !== "ios") return;
+  const options = [
+    ...PICKABLE_TRANSLATIONS.map((t) => t.fullName),
+    "Cancel",
+  ];
+  const cancelButtonIndex = options.length - 1;
+  ActionSheetIOS.showActionSheetWithOptions(
+    {
+      options,
+      cancelButtonIndex,
+      title: "Bible version",
+    },
+    (buttonIndex) => {
+      if (
+        buttonIndex == null ||
+        buttonIndex === cancelButtonIndex ||
+        buttonIndex < 0 ||
+        buttonIndex >= PICKABLE_TRANSLATIONS.length
+      ) {
+        return;
+      }
+      const next = PICKABLE_TRANSLATIONS[buttonIndex];
+      if (next && next.id !== current.id) {
+        haptics.soft();
+        onChange(next.id);
+      }
+    },
+  );
+}
 
 function ReaderToolbar({
   onContents,
   textSizeId,
   onChangeTextSize,
-  todayMinutes,
-  goalMinutes,
-  onOpenReadingGoal,
+  translation,
+  onChangeTranslation,
 }: {
   onContents: () => void;
   textSizeId: TextSizeId;
   onChangeTextSize: (id: TextSizeId) => void;
-  todayMinutes: number;
-  goalMinutes: number;
-  onOpenReadingGoal: () => void;
+  translation: Translation;
+  onChangeTranslation: (id: TranslationId) => void;
 }) {
   const colors = useColors();
-  const [section, setSection] = useState<ToolbarSection>(null);
-  const goalReached = todayMinutes >= goalMinutes;
+  const scheme = useResolvedScheme();
+  const isLight = scheme === "light";
+  const [textSizeOpen, setTextSizeOpen] = useState(false);
 
-  const toggle = (next: ToolbarSection) =>
-    setSection((cur) => (cur === next ? null : next));
+  const pillFg = isLight ? "#000000" : "#FFFFFF";
+  const pillBg = isLight ? "#FFFFFF" : "#000000";
+  const pillBorder = isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.22)";
+  const pillDivider = isLight ? "rgba(0,0,0,0.14)" : "rgba(255,255,255,0.22)";
+
+  const textSizeIndex = Math.max(
+    0,
+    TEXT_SIZES.findIndex((s) => s.id === textSizeId),
+  );
 
   return (
     <>
-      {/* Backdrop: invisible, taps it to dismiss any open popover.
-          Only rendered while a popover is open so it doesn't eat
-          taps on the page text the rest of the time. */}
-      {section ? (
-        <Pressable
-          onPress={() => setSection(null)}
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: 0,
-            bottom: 0,
-          }}
-        />
-      ) : null}
-
-      {/* Popover container — sits above the page caption + icon
-          pill so the two read as a connected stack and the popover
-          never visually clashes with the chapter caption. */}
-      <View
-        pointerEvents="box-none"
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 100,
-          alignItems: "center",
-        }}
-      >
-        {section === "themes" ? (
-          <ThemesPopover
-            textSizeId={textSizeId}
-            onChangeTextSize={onChangeTextSize}
-          />
-        ) : null}
-        {section === "goal" ? (
-          <GoalPopover
-            todayMinutes={todayMinutes}
-            goalMinutes={goalMinutes}
-            onOpen={() => {
-              setSection(null);
-              onOpenReadingGoal();
-            }}
-          />
-        ) : null}
-      </View>
-
-      {/* The always-visible icon pill itself. */}
       <View
         pointerEvents="box-none"
         style={{
@@ -3366,114 +3358,208 @@ function ReaderToolbar({
           right: 0,
           bottom: 18,
           alignItems: "center",
+          paddingHorizontal: 20,
         }}
       >
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-            borderWidth: 1,
             borderRadius: 999,
-            paddingHorizontal: 4,
-            paddingVertical: 4,
+            overflow: "hidden",
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: pillBorder,
+            minWidth: 248,
+            backgroundColor: pillBg,
+            ...Platform.select({
+              ios: {
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: isLight ? 0.12 : 0.45,
+                shadowRadius: 16,
+              },
+              android: { elevation: 10 },
+            }),
           }}
         >
-          <ToolbarIconButton
-            accessibilityLabel="Open chapter contents"
-            onPress={() => {
-              setSection(null);
-              onContents();
+          <BlurView
+            intensity={isLight ? 40 : 55}
+            tint={isLight ? "light" : "dark"}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 4,
+              paddingVertical: 4,
+              backgroundColor: isLight
+                ? "rgba(255,255,255,0.72)"
+                : "rgba(0,0,0,0.55)",
             }}
-            active={false}
           >
-            <ContentsListIcon />
-          </ToolbarIconButton>
-          <ToolbarPipDivider />
-          <ToolbarIconButton
-            accessibilityLabel="Text size"
-            onPress={() => toggle("themes")}
-            active={section === "themes"}
-          >
+            <Pressable
+              onPress={onContents}
+              accessibilityRole="button"
+              accessibilityLabel="Open chapter contents"
+              hitSlop={8}
+              style={({ pressed }) => ({
+                width: 48,
+                height: 44,
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: pressed ? 0.55 : 1,
+              })}
+            >
+              <ContentsListIcon color={pillFg} />
+            </Pressable>
+
+            <View
+              style={{
+                width: StyleSheet.hairlineWidth,
+                height: 22,
+                backgroundColor: pillDivider,
+              }}
+            />
+
+            <Pressable
+              onPress={() => openNativeVersionPicker(translation, onChangeTranslation)}
+              accessibilityRole="button"
+              accessibilityLabel={`Bible version ${translation.tag}. Change version`}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              style={({ pressed }) => ({
+                flex: 1,
+                minHeight: 44,
+                paddingHorizontal: 14,
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: pressed ? 0.55 : 1,
+              })}
+            >
+              <Text
+                style={{
+                  fontFamily: "System",
+                  fontWeight: "700",
+                  fontSize: 13,
+                  letterSpacing: 1.4,
+                  color: pillFg,
+                  textTransform: "uppercase",
+                }}
+                allowFontScaling={false}
+              >
+                {translation.tag}
+              </Text>
+            </Pressable>
+
+            <View
+              style={{
+                width: StyleSheet.hairlineWidth,
+                height: 22,
+                backgroundColor: pillDivider,
+              }}
+            />
+
+            <Pressable
+              onPress={() => {
+                haptics.soft();
+                setTextSizeOpen(true);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Text size"
+              hitSlop={8}
+              style={({ pressed }) => ({
+                width: 48,
+                height: 44,
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: pressed ? 0.55 : 1,
+              })}
+            >
+              <Text
+                style={{
+                  fontFamily: "System",
+                  fontWeight: "700",
+                  fontSize: 16,
+                  color: pillFg,
+                }}
+                allowFontScaling={false}
+              >
+                Aa
+              </Text>
+            </Pressable>
+          </BlurView>
+        </View>
+      </View>
+
+      {textSizeOpen ? (
+        <AppleSheet
+          visible={textSizeOpen}
+          onClose={() => setTextSizeOpen(false)}
+          detents={["auto"]}
+          grabber
+          backgroundColor={colors.surface}
+        >
+          <SheetContent style={{ paddingTop: 4, paddingBottom: 28 }}>
             <Text
               style={{
                 fontFamily: "System",
-                fontWeight: "700",
-                fontSize: 16,
-                color: colors.ink,
+                fontWeight: "600",
+                fontSize: 13,
+                color: colors.inkSubtle,
+                textTransform: "uppercase",
+                letterSpacing: 0.8,
+                textAlign: "center",
+                marginBottom: 16,
               }}
             >
-              Aa
+              Text Size
             </Text>
-          </ToolbarIconButton>
-          <ToolbarPipDivider />
-          <ToolbarIconButton
-            accessibilityLabel="Reading goal"
-            onPress={() => toggle("goal")}
-            active={section === "goal"}
-          >
-            <GoalIconWithDot reached={goalReached} />
-          </ToolbarIconButton>
-        </View>
-      </View>
+            <SegmentedControl
+              appearance={scheme}
+              values={["Small", "Medium", "Large", "XL"]}
+              selectedIndex={textSizeIndex}
+              onChange={(event) => {
+                const nextIndex = event.nativeEvent.selectedSegmentIndex;
+                const next = TEXT_SIZES[nextIndex];
+                if (next && next.id !== textSizeId) {
+                  haptics.tick();
+                  onChangeTextSize(next.id);
+                }
+              }}
+              style={{ height: 32 }}
+            />
+            <Pressable
+              onPress={() => setTextSizeOpen(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Done"
+              style={{
+                marginTop: 20,
+                minHeight: 44,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "System",
+                  fontWeight: "600",
+                  fontSize: 17,
+                  color: colors.primary,
+                }}
+              >
+                Done
+              </Text>
+            </Pressable>
+          </SheetContent>
+        </AppleSheet>
+      ) : null}
     </>
   );
 }
 
-function ToolbarIconButton({
-  onPress,
-  children,
-  accessibilityLabel,
-  active,
-}: {
-  onPress: () => void;
-  children: React.ReactNode;
-  accessibilityLabel: string;
-  active: boolean;
-}) {
+function ContentsListIcon({ color }: { color?: string }) {
   const colors = useColors();
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.6 : 1,
-        width: 48,
-        height: 38,
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 999,
-        backgroundColor: active ? colors.accentSoft : "transparent",
-      })}
-    >
-      {children}
-    </Pressable>
-  );
-}
-
-function ToolbarPipDivider() {
-  const colors = useColors();
-  return (
-    <View
-      style={{
-        width: 1,
-        height: 18,
-        backgroundColor: colors.border,
-      }}
-    />
-  );
-}
-
-function ContentsListIcon() {
-  const colors = useColors();
+  const stroke = color ?? colors.ink;
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
       <Path
         d="M4 6h12M4 12h12M4 18h12M19 6h1M19 12h1M19 18h1"
-        stroke={colors.ink}
+        stroke={stroke}
         strokeWidth={1.8}
         strokeLinecap="round"
       />
@@ -4613,7 +4699,6 @@ function NotFound({ message }: { message: string }) {
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
       <Header
-        translationTag=""
         pagesLeftLabel=""
         progress={0}
       />

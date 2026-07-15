@@ -192,6 +192,22 @@ const reflectiveQuote: TextStyle = {
 };
 
 /**
+ * Photo-overlaid verse / title — upright New York on dimmed
+ * photography (home verse-share hero, photo heroes). Italic
+ * Playfair / reflectiveQuote tested poorly at length; upright
+ * keeps legibility once the image brightness ceiling is locked.
+ */
+const photoQuote: TextStyle = {
+  fontFamily: NEW_YORK,
+  fontStyle: "normal",
+  fontWeight: fontWeight.regular,
+  fontSize: 26,
+  lineHeight: 36,
+  textAlign: "center",
+  letterSpacing: 0,
+};
+
+/**
  * Reader body — continuous Bible chapter prose in the chapter
  * reader. Upright New York (not italic) so long-form scripture
  * matches Apple Books' system-serif reading surface. SF Pro stays
@@ -216,6 +232,7 @@ export const typography = {
   button,
   smallLabel,
   reflectiveQuote,
+  photoQuote,
   readerBody,
 } as const;
 

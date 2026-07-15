@@ -20,7 +20,7 @@ import { useColors } from "@/state/theme";
  * of the Today screen on builds where it's hidden by default.
  *
  * Why this screen exists:
- *   Closer ships its dev shortcuts (Next Sermon, Reset / Restart
+ *   Closer ships its QA shortcuts (Next Reading, Reset / Restart
  *   App) gated by `__DEV__` or Settings → Developer Tools, which
  *   is stripped from production-channel builds by default. That's
  *   the right default for end users — but it leaves the team unable
@@ -54,8 +54,8 @@ export default function DeveloperToolsScreen() {
         title="Internal QA"
         footer={
           enabled
-            ? "The developer section is visible on the Profile tab — Next Sermon, Reset App, and Restart App."
-            : "Turn on to show the developer section on Profile — Next Sermon, Reset App, and Restart App."
+            ? "The developer section is visible on the Profile tab — Next Reading, Reset App, and Restart App."
+            : "Turn on to show the developer section on Profile — Next Reading, Reset App, and Restart App."
         }
       >
         <SettingsToggleRow

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { FamilyActivityAppsEditor } from "@/components/FamilyActivityAppsEditor";
@@ -21,11 +21,14 @@ import {
 } from "@/lib/focus";
 import {
   applyScreenTimeConfiguration,
+  configureCloserShieldUIForPath,
   openNativeAppPickerWithAuth,
   primeScreenTimeAuthorizationFromGesture,
+  resolveShieldPrimaryPath,
   waitForScreenTimeAuthorizationResult,
 } from "@/lib/deviceActivityShield";
 import { syncAllScheduledAppBlocks } from "@/lib/scheduledAppBlocks";
+import type { ShieldPrimaryPath } from "@/lib/shieldCopy";
 import { useStudySessions } from "@/state/studySessions";
 import { useFocus } from "@/state/focus";
 import { useColors } from "@/state/theme";
@@ -65,9 +68,21 @@ export default function FocusSettingsScreen() {
   const [selectionRevision, setSelectionRevision] = useState(0);
   void selectionRevision;
   // or null when no preview is open. Driven by the "Preview"
-  // button on each app row + the dev "Preview every shield"
-  // cycler at the bottom.
+  // button on each app row + the dual-path demos below.
   const [previewAppId, setPreviewAppId] = useState<string | null>(null);
+  const [previewPath, setPreviewPath] = useState<ShieldPrimaryPath>("manual");
+  const [livePath, setLivePath] = useState<ShieldPrimaryPath>("manual");
+
+  useEffect(() => {
+    void resolveShieldPrimaryPath().then(setLivePath);
+  }, []);
+
+  const openPreview = useCallback((appId: string, path: ShieldPrimaryPath) => {
+    setPreviewPath(path);
+    setPreviewAppId(appId);
+    // Keep native shield UserDefaults aligned with the path we're demoting.
+    void configureCloserShieldUIForPath(path);
+  }, []);
 
   const openNativePicker = useCallback(() => {
     openNativeAppPickerWithAuth({
@@ -183,13 +198,67 @@ export default function FocusSettingsScreen() {
                 app={app}
                 checked={checked}
                 onToggle={() => toggleAppBlocked(app.id)}
-                onPreview={() => setPreviewAppId(app.id)}
+                onPreview={() => openPreview(app.id, livePath)}
                 showDivider={i < SOCIAL_APPS.length - 1}
               />
             );
           })}
         </SettingsSection>
       )}
+
+      {/* Dual-path shield demos — always available so we can verify
+          notification-granted vs manual fallback without flipping
+          OS permission mid-session. */}
+      <SettingsSection
+        title="Shield return"
+        footer={
+          livePath === "notify"
+            ? "Notifications are on — the live shield fires a banner that opens today's reading when tapped. Preview both paths below."
+            : "Notifications are off — the live shield tells the user to open Closer themselves. Preview both paths below."
+        }
+      >
+        <Pressable
+          onPress={() => openPreview("instagram", "notify")}
+          className="px-4 py-3.5 flex-row items-center"
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          accessibilityRole="button"
+          accessibilityLabel="Preview shield with notification"
+        >
+          <SFSymbol
+            name="bell.badge.fill"
+            size={18}
+            color={colors.ink}
+            weight="semibold"
+          />
+          <Text
+            className="text-ink text-[14px] ml-2.5 flex-1"
+            style={{ fontFamily: "System", fontWeight: "600" }}
+          >
+            Preview: notification path
+          </Text>
+        </Pressable>
+        <View className="h-px bg-border mx-4" />
+        <Pressable
+          onPress={() => openPreview("instagram", "manual")}
+          className="px-4 py-3.5 flex-row items-center"
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          accessibilityRole="button"
+          accessibilityLabel="Preview shield manual fallback"
+        >
+          <SFSymbol
+            name="arrow.up.forward.app"
+            size={18}
+            color={colors.ink}
+            weight="semibold"
+          />
+          <Text
+            className="text-ink text-[14px] ml-2.5 flex-1"
+            style={{ fontFamily: "System", fontWeight: "600" }}
+          >
+            Preview: open Closer yourself
+          </Text>
+        </Pressable>
+      </SettingsSection>
 
       {/* Dev tools — gated behind __DEV__ so it strips from prod.
           The cycler runs through SOCIAL_APPS in order so a reviewer
@@ -206,7 +275,7 @@ export default function FocusSettingsScreen() {
                 ? SOCIAL_APPS.findIndex((a) => a.id === previewAppId)
                 : -1;
               const nextIdx = (currentIdx + 1) % SOCIAL_APPS.length;
-              setPreviewAppId(SOCIAL_APPS[nextIdx]!.id);
+              openPreview(SOCIAL_APPS[nextIdx]!.id, previewPath);
             }}
             className="px-4 py-3.5 flex-row items-center"
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
@@ -249,6 +318,7 @@ export default function FocusSettingsScreen() {
       <ShieldOverlay
         appId={previewAppId ?? "instagram"}
         visible={previewAppId !== null}
+        primaryPath={previewPath}
         onClose={() => setPreviewAppId(null)}
       />
 

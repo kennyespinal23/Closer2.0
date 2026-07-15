@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { SFSymbol } from "@/components/Symbol";
 import { findSocialApp } from "@/lib/focus";
 import {
+  NATIVE_SHIELD_PRIMARY_LABEL,
   SHIELD_EYEBROW,
   shieldBodyForApp,
   shieldFooterTagline,
@@ -31,7 +32,9 @@ export type ShieldScreenProps = {
   appId?: string;
   /** Override when the blocked target isn't in our catalog. */
   appDisplayName?: string;
-  /** Primary CTA label — "OK" mirrors the native shield button. */
+  /** Override body copy (notify vs manual shield path). */
+  bodyOverride?: string;
+  /** Primary CTA label — mirrors the native shield button. */
   primaryLabel?: string;
   onPrimaryPress: () => void;
   /** Optional secondary action (e.g. End focus). */
@@ -51,7 +54,8 @@ const LOCK_DISC = "rgba(255, 255, 255, 0.12)";
 export function ShieldScreen({
   appId,
   appDisplayName,
-  primaryLabel = "OK",
+  bodyOverride,
+  primaryLabel = NATIVE_SHIELD_PRIMARY_LABEL,
   onPrimaryPress,
   secondaryLabel,
   onSecondaryPress,
@@ -64,7 +68,9 @@ export function ShieldScreen({
   );
   const name = appDisplayName ?? app?.name ?? "This app";
   const brandColor = app?.color ?? "#4285F4";
-  const body = appId ? shieldBodyForApp(appId) : shieldBodyForApp("instagram");
+  const body =
+    bodyOverride ??
+    (appId ? shieldBodyForApp(appId) : shieldBodyForApp("instagram"));
 
   const isDevice = variant === "device";
   const bg = isDevice ? DEVICE_BG : undefined;

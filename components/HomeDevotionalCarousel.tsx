@@ -13,7 +13,6 @@ import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
 import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { SFSymbol } from "@/components/Symbol";
@@ -27,7 +26,9 @@ import {
   FROSTED_CHROME_INK,
   FROSTED_CHROME_PILL,
   HERO_GLASS_DISC,
-  HERO_TEXT_SCRIM_GRADIENT,
+  PHOTO_DIM_OVERLAY,
+  PHOTO_OVERLAY_INK,
+  PHOTO_OVERLAY_INK_MUTED,
 } from "@/constants/heroChrome";
 import * as haptics from "@/lib/haptics";
 import { useReducedMotion } from "@/lib/useReducedMotion";
@@ -83,11 +84,9 @@ export type HomeDevotionalCarouselProps = {
   onCompletedPress?: () => void;
   streakCount?: number;
   onStreakPress?: () => void;
-  /** Card-layout prototype — scripture + home header metadata. */
+  /** Card-layout — today's single scripture card + chrome. */
   cardContent?: {
-    scriptureReference: string;
-    scriptureText: string;
-    verseInsight: string;
+    card: FloatingScriptureCard;
     completedAt: number | null;
     earnedMilestones: ReadonlyArray<EarnedMilestoneChip>;
     greetingText: string;
@@ -144,7 +143,7 @@ function EmojiMeta({ emoji, label }: { emoji: string; label: string }) {
           fontWeight: "500",
           fontSize: 13,
           lineHeight: 18,
-          color: "rgba(255,255,255,0.72)",
+          color: PHOTO_OVERLAY_INK_MUTED,
           marginLeft: 5,
         }}
       >
@@ -214,46 +213,11 @@ const HomeHeroSlide = memo(function HomeHeroSlide({
         accessibilityIgnoresInvertColors
       />
 
-      {/* Bottom text scrim — transparent top, ~65% black at the base.
-          Sits between the photo and the editorial block so white
-          type stays readable on bright sky / snow / sunrise crops
-          without dimming the upper portion of the image. */}
-      <Svg
+      {/* Uniform brightness ceiling — see PHOTO_DIM_OVERLAY. */}
+      <View
         pointerEvents="none"
-        style={StyleSheet.absoluteFillObject}
-        width="100%"
-        height="100%"
-        preserveAspectRatio="none"
-      >
-        <Defs>
-          <LinearGradient
-            id="homeHeroTextScrim"
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="1"
-            gradientUnits="objectBoundingBox"
-          >
-            <Stop offset="0" stopColor="#000000" stopOpacity={0} />
-            <Stop
-              offset={String(HERO_TEXT_SCRIM_GRADIENT.fadeStart)}
-              stopColor="#000000"
-              stopOpacity={0}
-            />
-            <Stop
-              offset={String(HERO_TEXT_SCRIM_GRADIENT.midOffset)}
-              stopColor="#000000"
-              stopOpacity={HERO_TEXT_SCRIM_GRADIENT.midOpacity}
-            />
-            <Stop
-              offset="1"
-              stopColor="#000000"
-              stopOpacity={HERO_TEXT_SCRIM_GRADIENT.bottomOpacity}
-            />
-          </LinearGradient>
-        </Defs>
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#homeHeroTextScrim)" />
-      </Svg>
+        style={[StyleSheet.absoluteFillObject, { backgroundColor: PHOTO_DIM_OVERLAY }]}
+      />
 
       <Animated.View
         style={{
@@ -270,7 +234,18 @@ const HomeHeroSlide = memo(function HomeHeroSlide({
           bounces={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={[typography.pageTitle, { color: "#FFFFFF" }]}>
+          <Text
+            style={[
+              typography.photoQuote,
+              {
+                color: PHOTO_OVERLAY_INK,
+                fontSize: 34,
+                lineHeight: 40,
+                fontWeight: "700",
+                textAlign: "left",
+              },
+            ]}
+          >
             {card.title}
           </Text>
 
@@ -304,10 +279,7 @@ const HomeHeroSlide = memo(function HomeHeroSlide({
                 style={[
                   typography.body,
                   {
-                    color: "rgba(255, 255, 255, 0.88)",
-                    textShadowColor: "rgba(0, 0, 0, 0.75)",
-                    textShadowOffset: { width: 0, height: 1 },
-                    textShadowRadius: 12,
+                    color: PHOTO_OVERLAY_INK,
                   },
                 ]}
               >
@@ -399,6 +371,7 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {useCardLayout ? (
         <HomeFloatingPrayerHome
+          card={cardContent.card}
           nextBreakLabel={cardContent.nextBreakLabel}
           unlockedToday={cardContent.unlockedToday}
           onCompleteCard={cardContent.onCompleteCard}

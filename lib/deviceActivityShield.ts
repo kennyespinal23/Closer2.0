@@ -24,16 +24,31 @@ import {
   updateShield,
   type AuthorizationStatusType,
 } from "react-native-device-activity";
+import { getNotificationPermission } from "@/lib/notifications";
 import {
-  NATIVE_SHIELD_PRIMARY_LABEL,
-  NATIVE_SHIELD_SUBTITLE,
   NATIVE_SHIELD_TITLE,
+  SHIELD_RETURN_NOTIFICATION,
+  shieldNativeSubtitle,
+  shieldPrimaryLabel,
+  type ShieldPrimaryPath,
 } from "@/lib/shieldCopy";
 
 export { AuthorizationStatus, type AuthorizationStatusType };
 
 /** Persisted FamilyActivitySelection id — shared by picker + shield. */
 export const FOCUS_FAMILY_ACTIVITY_SELECTION_ID = "closer-focus-selection";
+
+/**
+ * Home route for the shield-return notification tap handler
+ * (`lib/notificationDeepLink.tsx`). Scheme form is `closer://today`.
+ */
+export const CLOSER_TODAY_DEEP_LINK = "closer://today";
+
+/** Resolve which primary path the native shield should use right now. */
+export async function resolveShieldPrimaryPath(): Promise<ShieldPrimaryPath> {
+  const permission = await getNotificationPermission();
+  return permission === "granted" ? "notify" : "manual";
+}
 
 export function isNativeScreenTimeAvailable(): boolean {
   return Platform.OS === "ios" && isAvailable();
@@ -219,15 +234,64 @@ export function isScreenTimeShieldReady(): boolean {
   );
 }
 
-/** Install Closer-branded shield UI into the app-group UserDefaults. */
+/**
+ * Install Closer-branded shield UI + primary action into app-group
+ * UserDefaults.
+ *
+ * Permission granted → primary fires an immediate local notification
+ * (`type: "sendNotification"`) whose tap routes to `/today`.
+ * Otherwise → honest manual-open copy; primary only closes the shield.
+ *
+ * Public entry stays sync so existing callers don't await; the
+ * permission read runs async and updates shield config when ready.
+ */
 export function configureCloserShieldUI(): void {
   if (!isNativeScreenTimeAvailable()) return;
+  void configureCloserShieldUIForPath();
+}
+
+/** Force a specific path — used by previews and after an await. */
+export async function configureCloserShieldUIForPath(
+  path?: ShieldPrimaryPath,
+): Promise<ShieldPrimaryPath> {
+  if (!isNativeScreenTimeAvailable()) {
+    return path ?? "manual";
+  }
+
+  const resolved = path ?? (await resolveShieldPrimaryPath());
+  const subtitle = shieldNativeSubtitle(resolved);
+  const primaryButtonLabel = shieldPrimaryLabel(resolved);
+
+  const actions =
+    resolved === "notify"
+      ? {
+          primary: {
+            type: "sendNotification" as const,
+            behavior: "close" as const,
+            payload: {
+              title: SHIELD_RETURN_NOTIFICATION.title,
+              body: SHIELD_RETURN_NOTIFICATION.body,
+              sound: "default" as const,
+              // Best-effort through Focus when the system allows it —
+              // Closer does not have a Time Sensitive entitlement, so
+              // Focus can still suppress this.
+              interruptionLevel: "timeSensitive" as const,
+              userInfo: {
+                kind: SHIELD_RETURN_NOTIFICATION.kind,
+                route: SHIELD_RETURN_NOTIFICATION.route,
+              },
+            },
+          },
+        }
+      : {
+          primary: { behavior: "close" as const },
+        };
 
   updateShield(
     {
       title: NATIVE_SHIELD_TITLE,
-      subtitle: NATIVE_SHIELD_SUBTITLE,
-      primaryButtonLabel: NATIVE_SHIELD_PRIMARY_LABEL,
+      subtitle,
+      primaryButtonLabel,
       iconSystemName: "lock.shield.fill",
       backgroundBlurStyle: 19,
       titleColor: { red: 255, green: 255, blue: 255 },
@@ -240,11 +304,11 @@ export function configureCloserShieldUI(): void {
       },
       primaryButtonLabelColor: { red: 255, green: 255, blue: 255 },
     },
-    {
-      primary: { behavior: "close" },
-    },
+    actions as Parameters<typeof updateShield>[1],
     "closer-configure-shield",
   );
+
+  return resolved;
 }
 
 /** Call after the user saves apps in Apple's picker. */
@@ -258,7 +322,7 @@ export async function startNativeScreenTimeShield(): Promise<boolean> {
   if (countScreenTimeSelectionItems() === 0) return false;
 
   try {
-    configureCloserShieldUI();
+    await configureCloserShieldUIForPath();
     refreshManagedSettingsStore();
     blockSelection(
       { activitySelectionId: FOCUS_FAMILY_ACTIVITY_SELECTION_ID },

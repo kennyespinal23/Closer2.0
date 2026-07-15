@@ -40,15 +40,17 @@ import {
   FocusStatusSheet,
   type FocusStatusSheetState,
 } from "@/components/FocusStatusSheet";
+import { resolveShieldPrimaryPath } from "@/lib/deviceActivityShield";
 import * as haptics from "@/lib/haptics";
 import { SCREEN_H_PAD } from "@/lib/layout";
+import type { ShieldPrimaryPath } from "@/lib/shieldCopy";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { buildCurrentWeek, type RhythmCellState } from "@/lib/rhythm";
 import {
   momentDurationMin,
   nextMoment,
   resolveSermonTypeForMoment,
-  splitScripture,
+  toHomeCard,
   type Moment,
 } from "@/lib/moments";
 import {
@@ -64,11 +66,7 @@ import { BrandGlyph } from "@/components/BrandGlyph";
 import { findMood } from "@/constants/moods";
 import { SERMON_TYPES, type SermonType } from "@/constants/sermonTypes";
 import { CLOSER_ACCENT, SYSTEM_COLORS_DARK } from "@/constants/theme";
-import {
-  HOME_CARD_PROTOTYPE_SAMPLE,
-  HOME_CARD_PROTOTYPE_USE_SAMPLE,
-  type FloatingScriptureCard,
-} from "@/constants/homePrototype";
+import { type FloatingScriptureCard } from "@/constants/homePrototype";
 import { type CheckIn, useCheckIns } from "@/state/checkIns";
 import { useFocus } from "@/state/focus";
 import { useMoments } from "@/state/moments";
@@ -275,6 +273,12 @@ export default function TodayScreen() {
   // app whose shield is currently being previewed, or null when no
   // preview is showing. Only ever set from the __DEV__ tools row.
   const [previewAppId, setPreviewAppId] = useState<string | null>(null);
+  const [shieldPreviewPath, setShieldPreviewPath] =
+    useState<ShieldPrimaryPath>("manual");
+
+  useEffect(() => {
+    void resolveShieldPrimaryPath().then(setShieldPreviewPath);
+  }, []);
 
   // Focus-status sheet visibility. Toggled by the eye-button on
   // the Gentler-Streak hero (next to "Hi {firstName},") and by the
@@ -319,11 +323,10 @@ export default function TodayScreen() {
   // Home-card editorial preview — full teaser, collapsed to single-
   // spaced body copy (catalog authors `\n\n` between beats; double
   // newlines read as awkward gaps on the hero).
-  const homeBlurb = useMemo(() => {
-    const teaser = todaysMoment.teaser?.trim();
-    if (teaser) return formatHomeTeaser(teaser);
-    return firstParagraphOf(todaysMoment.panels[0]?.body ?? "");
-  }, [todaysMoment.teaser, todaysMoment.panels]);
+  const homeBlurb = useMemo(
+    () => firstParagraphOf(todaysMoment.story),
+    [todaysMoment.story],
+  );
   // Used by the sermon card meta line + the intro screen; computed
   // here (rather than re-derived inside SermonCard) so the same
   // number renders in both places.
@@ -382,20 +385,32 @@ export default function TodayScreen() {
     router,
   ]);
 
-  /** Prototype unlock loop: finishing a floating card saves + unlocks apps. */
+  /**
+   * Floating-card hold-to-unlock: save completion, clear focus,
+   * then streak → milestone when the day advances.
+   */
   const handleCompleteFloatingCard = useCallback(
     (card: FloatingScriptureCard) => {
-      const todayType = resolveSermonTypeForMoment(todaysMoment);
-      recordCompletion(todayType.id, {
-        title: card.scriptureReference,
-        pastor: "",
-        day: todaysMoment.day,
-      });
+      const { newStreak, streakAdvanced, crossedMilestone } =
+        recordCompletion("daily", {
+          title: card.title || card.scriptureReference,
+          pastor: "",
+          day: card.day,
+        });
       void endFocusSession().catch(() => {
         /* shield stop is best-effort */
       });
+      if (streakAdvanced) {
+        router.replace({
+          pathname: "/sermon/streak",
+          params: {
+            days: String(newStreak),
+            milestone: crossedMilestone ? String(crossedMilestone) : "",
+          },
+        });
+      }
     },
-    [endFocusSession, recordCompletion, todaysMoment],
+    [endFocusSession, recordCompletion, router],
   );
 
   const carouselCards = useMemo(() => {
@@ -410,7 +425,7 @@ export default function TodayScreen() {
         readMinutes: sermonDurationMin,
         typeId: todayType.id,
         sermonDay: todaysMoment.day,
-        illustrationPrompt: todaysMoment.illustrationPrompt,
+        illustrationPrompt: todaysMoment.title,
         active: true,
         completed: hasCompletedSermonForDay(todaysMoment.day),
         onPress: handlePlaySermon,
@@ -425,7 +440,7 @@ export default function TodayScreen() {
   ]);
 
   const homeCardContent = useMemo(() => {
-    const { reference, text } = splitScripture(todaysMoment.scripture);
+    const card = toHomeCard(todaysMoment);
     const completion = sermonCompletions
       .filter((c) => c.day === todaysMoment.day)
       .sort((a, b) => b.completedAt - a.completedAt)[0];
@@ -435,14 +450,6 @@ export default function TodayScreen() {
       title: m.title,
       accent: getMilestoneAccent(m).color,
     }));
-    const insightRaw =
-      todaysMoment.teaser?.trim().split(/\n\n+/)[0]?.trim() ??
-      todaysMoment.panels[0]?.body?.trim().split(/\n\n+/)[0]?.trim() ??
-      "";
-    const insight = insightRaw
-      .replace(/\*\*([^*]+)\*\*/g, "$1")
-      .replace(/\*([^*]+)\*/g, "$1")
-      .replace(/_([^_]+)_/g, "$1");
     const greeting = getGreeting();
     const now = new Date();
     const dateLabel = now.toLocaleDateString("en-US", {
@@ -461,7 +468,6 @@ export default function TodayScreen() {
     if (focusSession !== null) {
       nextBreakLabel = "App break is on now";
     } else {
-      const now = new Date();
       let best: Date | null = null;
       for (const s of studySessions) {
         if (!s.enabled) continue;
@@ -492,20 +498,8 @@ export default function TodayScreen() {
       }
     }
 
-    const scriptureReference = HOME_CARD_PROTOTYPE_USE_SAMPLE
-      ? HOME_CARD_PROTOTYPE_SAMPLE.scriptureReference
-      : reference;
-    const scriptureText = HOME_CARD_PROTOTYPE_USE_SAMPLE
-      ? HOME_CARD_PROTOTYPE_SAMPLE.scriptureText
-      : text;
-    const verseInsightFinal = HOME_CARD_PROTOTYPE_USE_SAMPLE
-      ? HOME_CARD_PROTOTYPE_SAMPLE.verseInsight
-      : insight;
-
     return {
-      scriptureReference,
-      scriptureText,
-      verseInsight: verseInsightFinal,
+      card,
       completedAt: completion?.completedAt ?? null,
       earnedMilestones,
       greetingText: greeting.text,
@@ -518,10 +512,7 @@ export default function TodayScreen() {
       onCompleteCard: handleCompleteFloatingCard,
     };
   }, [
-    todaysMoment.scripture,
-    todaysMoment.teaser,
-    todaysMoment.panels,
-    todaysMoment.day,
+    todaysMoment,
     sermonCompletions,
     milestoneUnlockStreak,
     focusSession,
@@ -768,6 +759,7 @@ export default function TodayScreen() {
       <ShieldOverlay
         appId={previewAppId ?? "instagram"}
         visible={previewAppId !== null}
+        primaryPath={shieldPreviewPath}
         onClose={() => setPreviewAppId(null)}
       />
 
@@ -5925,7 +5917,7 @@ function NextSermonPill({
       hitSlop={12}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Advance to next sermon. Currently on ${position} of ${total}.`}
+      accessibilityLabel={`Advance to next reading. Currently on ${position} of ${total}.`}
       className="flex-row items-center px-4 py-3 rounded-full border border-border bg-surface"
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >
@@ -5944,7 +5936,7 @@ function NextSermonPill({
         className="text-ink-muted text-[13px] ml-2"
         style={{ fontFamily: "System", fontWeight: "600" }}
       >
-        Next Sermon
+        Next Reading
       </Text>
       {/* Small subtle counter chip — uses inkSubtle so it reads as
           metadata, not as the action itself. */}

@@ -145,7 +145,7 @@ export const BEFORE_THE_NOISE = {
    *  scripture). That page was retired when the user flattened the
    *  sermon flow — the verse screen is now the first beat, so we
    *  deep-link straight there. */
-  route: "/sermon/scripture" as const,
+  route: "/today" as const,
 } as const;
 
 export type DailyReminderTime = {

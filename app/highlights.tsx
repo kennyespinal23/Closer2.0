@@ -1,14 +1,16 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { SFSymbol } from "@/components/Symbol";
-import Svg, { Path } from "react-native-svg";
+import { minTouchTarget, spacing } from "@/constants/spacing";
 import {
   formatRef,
   relativeTime,
   routeForVerse,
 } from "@/lib/annotationsFormat";
+import * as haptics from "@/lib/haptics";
 import { SCREEN_H_PAD } from "@/lib/layout";
 import {
   HIGHLIGHT_COLORS,
@@ -16,7 +18,7 @@ import {
   type HighlightColorId,
   useAnnotations,
 } from "@/state/annotations";
-import { useColors } from "@/state/theme";
+import { useColors, useResolvedScheme } from "@/state/theme";
 
 /**
  * All highlighted verses, newest first. Each card carries:
@@ -24,29 +26,27 @@ import { useColors } from "@/state/theme";
  *   • the verse reference + relative timestamp
  *   • the verse text (cached at highlight-time)
  *
- * A color filter strip across the top lets the user narrow down to
- * one color — useful when they've adopted a personal color code
- * (e.g. amber = promise, ocean = command).
+ * Color filter is a native UISegmentedControl (All + 5 color names)
+ * — short fixed option set, same pattern as Appearance / Reading Goal.
  */
+const FILTER_VALUES = ["All", ...HIGHLIGHT_COLORS.map((c) => c.name)] as const;
+
 export default function HighlightsScreen() {
   const router = useRouter();
   const { allHighlights } = useAnnotations();
   const highlights = allHighlights();
+  const scheme = useResolvedScheme();
+  const colors = useColors();
 
   const [activeFilter, setActiveFilter] = useState<HighlightColorId | null>(
     null,
   );
 
-  // Per-color totals (regardless of which filter is currently
-  // selected) — used both for the filter swatches' "active" state
-  // and for the empty filter result message.
-  const counts = useMemo(() => {
-    const c: Partial<Record<HighlightColorId, number>> = {};
-    for (const h of highlights) {
-      c[h.color.id] = (c[h.color.id] ?? 0) + 1;
-    }
-    return c;
-  }, [highlights]);
+  const selectedIndex = useMemo(() => {
+    if (!activeFilter) return 0;
+    const i = HIGHLIGHT_COLORS.findIndex((c) => c.id === activeFilter);
+    return i >= 0 ? i + 1 : 0;
+  }, [activeFilter]);
 
   const visible = useMemo(
     () =>
@@ -61,9 +61,7 @@ export default function HighlightsScreen() {
       <Header
         title="Highlights"
         countLabel={
-          highlights.length > 0
-            ? `${highlights.length}`
-            : undefined
+          highlights.length > 0 ? `${highlights.length}` : undefined
         }
       />
 
@@ -71,16 +69,55 @@ export default function HighlightsScreen() {
         <EmptyState />
       ) : (
         <ScrollView
-          contentContainerStyle={{ paddingBottom: 32 }}
+          contentContainerStyle={{ paddingBottom: spacing[32] }}
           showsVerticalScrollIndicator={false}
         >
-          <ColorFilterRow
-            counts={counts}
-            active={activeFilter}
-            onChange={setActiveFilter}
-          />
+          <View
+            style={{
+              paddingHorizontal: SCREEN_H_PAD,
+              paddingTop: spacing[16],
+              paddingBottom: spacing[8],
+              minHeight: minTouchTarget,
+              justifyContent: "center",
+            }}
+          >
+            <SegmentedControl
+              appearance={scheme}
+              values={[...FILTER_VALUES]}
+              selectedIndex={selectedIndex}
+              onChange={(event) => {
+                const nextIndex = event.nativeEvent.selectedSegmentIndex;
+                haptics.tick();
+                if (nextIndex <= 0) {
+                  setActiveFilter(null);
+                  return;
+                }
+                const color = HIGHLIGHT_COLORS[nextIndex - 1];
+                setActiveFilter(color?.id ?? null);
+              }}
+              style={styles.segmented}
+              fontStyle={{
+                fontFamily: "System",
+                fontWeight: "500",
+                fontSize: 13,
+                color: colors.inkMuted,
+              }}
+              activeFontStyle={{
+                fontFamily: "System",
+                fontWeight: "700",
+                fontSize: 13,
+                color: colors.ink,
+              }}
+            />
+          </View>
           {visible.length === 0 ? (
-            <View className="items-center mt-16 px-10">
+            <View
+              style={{
+                alignItems: "center",
+                marginTop: spacing[32],
+                paddingHorizontal: spacing[40],
+              }}
+            >
               <Text
                 className="text-ink-muted text-[13px] text-center"
                 style={{ fontFamily: "System", fontWeight: "400" }}
@@ -103,82 +140,12 @@ export default function HighlightsScreen() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Filter row — color swatches across the top
-// ─────────────────────────────────────────────────────────────────
-
-function ColorFilterRow({
-  counts,
-  active,
-  onChange,
-}: {
-  counts: Partial<Record<HighlightColorId, number>>;
-  active: HighlightColorId | null;
-  onChange: (next: HighlightColorId | null) => void;
-}) {
-  const colors = useColors();
-  return (
-    <View className="px-5 pt-4 pb-1 flex-row items-center">
-      {/* "All" pill */}
-      <Pressable
-        onPress={() => onChange(null)}
-        hitSlop={6}
-        accessibilityRole="button"
-        accessibilityLabel="All colors"
-        style={({ pressed }) => ({
-          opacity: pressed ? 0.7 : 1,
-          marginRight: 12,
-        })}
-      >
-        <View
-          className={`h-9 px-3.5 rounded-full items-center justify-center border ${
-            active === null ? "border-primary bg-accent-soft" : "border-border"
-          }`}
-        >
-          <Text
-            className="text-ink text-[12px]"
-            style={{ fontFamily: "System", fontWeight: "700" }}
-          >
-            All
-          </Text>
-        </View>
-      </Pressable>
-
-      {HIGHLIGHT_COLORS.map((c) => {
-        const total = counts[c.id] ?? 0;
-        const selected = active === c.id;
-        return (
-          <Pressable
-            key={c.id}
-            onPress={() => onChange(selected ? null : c.id)}
-            hitSlop={6}
-            accessibilityRole="button"
-            accessibilityLabel={`${c.name} (${total})`}
-            style={({ pressed }) => ({
-              opacity: pressed ? 0.6 : total === 0 ? 0.35 : 1,
-              marginRight: 10,
-            })}
-          >
-            <View
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                backgroundColor: c.swatch,
-                borderWidth: selected ? 2.5 : 0,
-                borderColor: colors.ink,
-              }}
-            />
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Card
-// ─────────────────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+  segmented: {
+    // Native control paints at ~32–36; wrap ensures 44pt hit area via parent.
+    height: 36,
+  },
+});
 
 function HighlightCard({
   highlight,
@@ -190,11 +157,12 @@ function HighlightCard({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.85 : 1,
+        minHeight: minTouchTarget,
+      })}
       className="mx-5 mt-3 rounded-2xl border border-border bg-surface overflow-hidden flex-row"
     >
-      {/* Color stripe — the visual cue that this is a highlight,
-          and which color the user picked. */}
       <View
         style={{
           width: 5,
@@ -238,10 +206,6 @@ function HighlightCard({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Empty state
-// ─────────────────────────────────────────────────────────────────
-
 function EmptyState() {
   return (
     <View className="flex-1 items-center justify-center px-10">
@@ -271,17 +235,12 @@ function EmptyState() {
         className="text-ink-muted text-[13px] mt-2 text-center leading-[20px]"
         style={{ fontFamily: "System", fontWeight: "400" }}
       >
-        Tap any verse while reading and pick a color. Highlights
-        gather here for easy returning.
+        Tap any verse while reading and pick a color. Highlights gather here
+        for easy returning.
       </Text>
     </View>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────
-// Header (duplicated with notes.tsx — small enough that the cost of
-// inline duplication is lower than the cost of a new shared file)
-// ─────────────────────────────────────────────────────────────────
 
 function Header({
   title,
@@ -302,7 +261,13 @@ function Header({
         hitSlop={8}
         accessibilityRole="button"
         accessibilityLabel="Back"
-        className="w-11 h-11 rounded-full items-center justify-center"
+        style={{
+          width: minTouchTarget,
+          height: minTouchTarget,
+          borderRadius: minTouchTarget / 2,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
         <SFSymbol
           name="chevron.left"
@@ -327,7 +292,7 @@ function Header({
           </Text>
         </View>
       ) : (
-        <View className="w-11 h-11" />
+        <View style={{ width: minTouchTarget, height: minTouchTarget }} />
       )}
     </View>
   );

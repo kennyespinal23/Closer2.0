@@ -104,7 +104,7 @@ export default function ProfileTabScreen() {
       .map((day) => {
         const moment = findMomentByDay(day);
         if (!moment) return null;
-        return { moment, type: resolveSermonType(moment.type) };
+        return { moment, type: resolveSermonType() };
       })
       .filter(
         (
@@ -550,7 +550,7 @@ export default function ProfileTabScreen() {
                   weight="semibold"
                 />
               }
-              label="Next sermon"
+              label="Next reading"
               sublabel={todaysMoment.title}
               value={`${catalogPosition.position} / ${catalogPosition.total}`}
               onPress={handleAdvanceSermon}

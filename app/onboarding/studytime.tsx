@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
+import { TimeCard } from "@/components/TimeCard";
 import { progressFor } from "@/constants/onboarding";
+import { spacing } from "@/constants/spacing";
 import { useOnboarding } from "@/state/onboarding";
 import type { DailyReminderTime } from "@/lib/notifications";
 
@@ -154,8 +156,8 @@ export default function StudyTimeScreen() {
               flex-wrap intermittently dropped a card on the iOS
               renderer, two explicit rows fix it. */}
           <FadeIn delayMs={1000}>
-            <View className="mt-10" style={{ gap: 12 }}>
-              <View style={{ flexDirection: "row", gap: 12 }}>
+            <View className="mt-10" style={{ gap: spacing[12] }}>
+              <View style={{ flexDirection: "row", gap: spacing[12] }}>
                 <TimeCard
                   label={TIME_OPTIONS[0].label}
                   meta={TIME_OPTIONS[0].meta}
@@ -169,7 +171,7 @@ export default function StudyTimeScreen() {
                   onPress={() => setSelectedKey(TIME_OPTIONS[1].key)}
                 />
               </View>
-              <View style={{ flexDirection: "row", gap: 12 }}>
+              <View style={{ flexDirection: "row", gap: spacing[12] }}>
                 <TimeCard
                   label={TIME_OPTIONS[2].label}
                   meta={TIME_OPTIONS[2].meta}
@@ -198,66 +200,5 @@ export default function StudyTimeScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-/**
- * Single time card — same visual language as the sermon-time
- * picker. Selected state inverts the colors (filled chip)
- * the same way the OptionCard does for radio rows. NativeWind
- * classes for the chrome (border + bg); inline flex:1 for the
- * one Tailwind shorthand we don't have in scope.
- */
-function TimeCard({
-  label,
-  meta,
-  selected,
-  onPress,
-}: {
-  label: string;
-  meta: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    // iOS-blue selection — see app/onboarding/time.tsx for the
-    // rationale (dark surface + blue border-and-tint, ink stays
-    // legible across both states without flipping foreground).
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${label}, ${meta}`}
-      accessibilityState={{ selected }}
-      style={{ flex: 1 }}
-      className={[
-        "rounded-2xl py-5 px-3 items-center border-2 active:opacity-80",
-        selected
-          ? "bg-select-soft border-select"
-          : "bg-accent-soft border-border-strong",
-      ].join(" ")}
-    >
-      <Text
-        className="text-ink"
-        style={{
-          fontFamily: "System",
-          fontWeight: "700",
-          fontSize: 22,
-          letterSpacing: -0.3,
-        }}
-      >
-        {label}
-      </Text>
-      <Text
-        className="text-ink-muted"
-        style={{
-          fontFamily: "System",
-          fontWeight: "500",
-          fontSize: 12,
-          marginTop: 4,
-        }}
-      >
-        {meta}
-      </Text>
-    </Pressable>
   );
 }

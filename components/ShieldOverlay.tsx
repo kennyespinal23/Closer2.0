@@ -1,13 +1,20 @@
-import { Modal, Pressable } from "react-native";
+import * as Notifications from "expo-notifications";
+import { Modal } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { ShieldScreen } from "@/components/ShieldScreen";
+import {
+  SHIELD_RETURN_NOTIFICATION,
+  shieldBodyForPath,
+  shieldPrimaryLabel,
+  type ShieldPrimaryPath,
+} from "@/lib/shieldCopy";
 
 /**
  * ShieldOverlay — full-screen preview of the OS block shield.
  *
- * Used in settings (per-app quiet-message preview) and dev tools.
- * Composes ShieldScreen so the preview matches what Screen Time
- * shows on device.
+ * Used in settings (per-app quiet-message preview) and to demo the
+ * two primary paths: notify (fires immediate local notif → /today)
+ * and manual (honest copy, dismiss only).
  */
 
 export type ShieldOverlayProps = {
@@ -15,6 +22,12 @@ export type ShieldOverlayProps = {
   visible: boolean;
   onClose: () => void;
   onEndFocus?: () => void;
+  /**
+   * Which shield primary path to preview. Defaults to `"manual"` so
+   * a settings preview never silently no-ops when permission is off.
+   * Focus settings passes the live / forced path.
+   */
+  primaryPath?: ShieldPrimaryPath;
 };
 
 export function ShieldOverlay({
@@ -22,7 +35,31 @@ export function ShieldOverlay({
   visible,
   onClose,
   onEndFocus,
+  primaryPath = "manual",
 }: ShieldOverlayProps) {
+  const label = shieldPrimaryLabel(primaryPath);
+  const body = shieldBodyForPath(primaryPath, appId);
+
+  const handlePrimary = () => {
+    if (primaryPath === "notify") {
+      void Notifications.scheduleNotificationAsync({
+        content: {
+          title: SHIELD_RETURN_NOTIFICATION.title,
+          body: SHIELD_RETURN_NOTIFICATION.body,
+          sound: "default",
+          // Mirrors native shield action — best-effort through Focus.
+          interruptionLevel: "timeSensitive",
+          data: {
+            kind: SHIELD_RETURN_NOTIFICATION.kind,
+            route: SHIELD_RETURN_NOTIFICATION.route,
+          },
+        },
+        trigger: null,
+      });
+    }
+    onClose();
+  };
+
   return (
     <Modal
       visible={visible}
@@ -34,8 +71,9 @@ export function ShieldOverlay({
       <ShieldScreen
         appId={appId}
         variant="device"
-        primaryLabel="OK"
-        onPrimaryPress={onClose}
+        bodyOverride={body}
+        primaryLabel={label}
+        onPrimaryPress={handlePrimary}
         secondaryLabel={onEndFocus ? "End focus" : undefined}
         onSecondaryPress={onEndFocus}
       />

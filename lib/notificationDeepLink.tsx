@@ -25,13 +25,9 @@ import type { Href } from "expo-router";
  * root <Stack> has mounted (which is true by the time this hook
  * runs, since it's mounted inside the layout itself).
  *
- * Why route to `/sermon/scripture` instead of the first panel?
- *   The spec says "open directly to the experience" — the scripture
- *   screen IS the experience entry point now (the antechamber intro
- *   page was retired so the verse IS the first beat of the day's
- *   word). Skipping straight to /sermon/panel/1 would drop the
- *   user into the middle of the flow without giving the verse its
- *   moment.
+ * Why route to `/today`?
+ *   The day's card on Home is the experience entry point now.
+ *   The old `/sermon/scripture` antechamber is retired.
  */
 export function useNotificationDeepLink(): void {
   const router = useRouter();
@@ -73,7 +69,11 @@ export function useNotificationDeepLink(): void {
  *  lib/notifications.ts). Keeping the allow-list narrow means a
  *  malformed or untrusted notification payload can never coerce
  *  the router into navigating to an arbitrary screen. */
-const KNOWN_KINDS = new Set(["before-the-noise", "study-session"]);
+const KNOWN_KINDS = new Set([
+  "before-the-noise",
+  "study-session",
+  "shield-return",
+]);
 
 /**
  * Read the deep-link route off a notification response's data

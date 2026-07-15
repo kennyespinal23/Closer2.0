@@ -12,16 +12,19 @@ import {
   View,
 } from "react-native";
 import { Image } from "expo-image";
-import { useFonts } from "expo-font";
-import { PlayfairDisplay_500Medium_Italic } from "@expo-google-fonts/playfair-display";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SFSymbol } from "@/components/Symbol";
 import {
-  HOME_FLOATING_CARDS,
+  PHOTO_DIM_OVERLAY,
+  PHOTO_OVERLAY_INK,
+  PHOTO_OVERLAY_INK_MUTED,
+} from "@/constants/heroChrome";
+import {
   HOME_FLOATING_PROMPTS,
   type FloatingScriptureCard,
 } from "@/constants/homePrototype";
+import { minTouchTarget } from "@/constants/spacing";
 import * as haptics from "@/lib/haptics";
 import { loadJSON, saveJSON, STORAGE_KEYS } from "@/lib/storage";
 import { typography } from "@/lib/typography";
@@ -35,6 +38,7 @@ import { useColors } from "@/state/theme";
 const CARD_RADIUS = 22;
 const IMAGE_RADIUS = 8;
 const IMAGE_ASPECT = 16 / 9;
+const MINI_CARD_WIDTH_RATIO = 0.72;
 const LIQUID_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const LIQUID_IN = Easing.bezier(0.4, 0, 0.2, 1);
 const HERO_HINT_DELAY_MS = 1600;
@@ -48,14 +52,6 @@ const CLOSE_MS = 380;
 const CARD_BG = "#F4F0E6";
 const CARD_INK = "#141414";
 const CARD_INK_SOFT = "rgba(20, 20, 20, 0.72)";
-const QUOTE_INK = "#F4F0E6";
-const QUOTE_REF_INK = "rgba(244, 240, 230, 0.72)";
-
-/**
- * Quote text on the full-bleed verse-share hero ONLY.
- * Loaded locally in this file — never registered as a global default.
- */
-const QUOTE_PLAYFAIR = "PlayfairDisplay_500Medium_Italic";
 
 type ExpandPhase = "hero" | "detail";
 
@@ -121,7 +117,7 @@ function useFloatingCardImage(item: FloatingScriptureCard) {
   useEffect(() => {
     let cancelled = false;
     setUseFallback(false);
-    getSermonBackdrop(item.illustrationPrompt, item.id.length).then((url) => {
+    getSermonBackdrop(item.illustrationPrompt, item.day).then((url) => {
       if (!cancelled) {
         setImageUrl(url);
         setUseFallback(!url);
@@ -130,7 +126,7 @@ function useFloatingCardImage(item: FloatingScriptureCard) {
     return () => {
       cancelled = true;
     };
-  }, [item.id, item.illustrationPrompt]);
+  }, [item.day, item.id, item.illustrationPrompt]);
 
   const source =
     useFallback || !imageUrl ? HERO_BACKDROP_FALLBACK : { uri: imageUrl };
@@ -234,7 +230,7 @@ function HoldToUnlockButton({
       accessibilityHint="Hold to unlock your apps"
       style={{
         marginTop: 32,
-        minHeight: 56,
+        minHeight: Math.max(56, minTouchTarget),
         borderRadius: 999,
         backgroundColor: CARD_INK,
         overflow: "hidden",
@@ -258,33 +254,32 @@ function HoldToUnlockButton({
 }
 
 function FloatingMiniCard({
-  item,
+  card,
   onPress,
   hidden,
 }: {
-  item: FloatingScriptureCard;
+  card: FloatingScriptureCard;
   onPress: () => void;
   hidden?: boolean;
 }) {
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const { width: windowWidth } = useWindowDimensions();
   const { book, passage } = useMemo(
-    () => splitScriptureReference(item.scriptureReference),
-    [item.scriptureReference],
+    () => splitScriptureReference(card.scriptureReference),
+    [card.scriptureReference],
   );
-  const cardWidth = windowWidth * item.width;
-  const { source, setUseFallback } = useFloatingCardImage(item);
+  const cardWidth = windowWidth * MINI_CARD_WIDTH_RATIO;
+  const { source, setUseFallback } = useFloatingCardImage(card);
 
   return (
     <Pressable
       onPress={onPress}
       hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={`${book}${passage ? ` ${passage}` : ""} scripture card`}
       style={{
-        position: "absolute",
-        left: windowWidth * item.x,
-        top: windowHeight * item.y,
         width: cardWidth,
-        zIndex: item.z,
-        transform: [{ rotate: `${item.rotate}deg` }],
+        minWidth: minTouchTarget,
+        minHeight: minTouchTarget,
         opacity: hidden ? 0 : 1,
       }}
     >
@@ -362,7 +357,46 @@ function FloatingMiniCard({
   );
 }
 
+function DetailSectionBlock({
+  eyebrow,
+  body,
+}: {
+  eyebrow: string;
+  body: string;
+}) {
+  const trimmed = body.trim();
+  if (!trimmed) return null;
+  return (
+    <>
+      <View
+        style={{
+          height: 1,
+          backgroundColor: "rgba(20, 20, 20, 0.12)",
+          marginTop: 28,
+          marginBottom: 16,
+        }}
+      />
+      <Text
+        style={[
+          typography.smallLabel,
+          {
+            color: CARD_INK_SOFT,
+            textTransform: "uppercase",
+            letterSpacing: 1.1,
+          },
+        ]}
+      >
+        {eyebrow}
+      </Text>
+      <Text style={[typography.body, { color: CARD_INK, marginTop: 8 }]}>
+        {trimmed}
+      </Text>
+    </>
+  );
+}
+
 export type HomeFloatingPrayerHomeProps = {
+  card: FloatingScriptureCard;
   nextBreakLabel: string;
   unlockedToday: boolean;
   onCompleteCard: (card: FloatingScriptureCard) => void;
@@ -370,20 +404,16 @@ export type HomeFloatingPrayerHomeProps = {
 };
 
 export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
+  card,
   nextBreakLabel,
   unlockedToday,
   onCompleteCard,
 }: HomeFloatingPrayerHomeProps) {
-  // Local-only — does not gate other screens or set a global default.
-  const [fontsLoaded] = useFonts({
-    [QUOTE_PLAYFAIR]: PlayfairDisplay_500Medium_Italic,
-  });
-
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
-  const [active, setActive] = useState<FloatingScriptureCard | null>(null);
+  const [active, setActive] = useState<FloatingScriptureCard>(card);
   const [expanded, setExpanded] = useState(false);
   const [expandPhase, setExpandPhase] = useState<ExpandPhase>("hero");
   const [showSwipeHint, setShowSwipeHint] = useState(false);
@@ -396,17 +426,26 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   const heroDragY = useRef(new Animated.Value(0)).current;
 
   const expandPhaseRef = useRef<ExpandPhase>("hero");
+  const expandedRef = useRef(false);
   const [promptLine, setPromptLine] = useState<string>(
     HOME_FLOATING_PROMPTS[0],
   );
 
-  const activeImage = useFloatingCardImage(
-    active ?? HOME_FLOATING_CARDS[0]!,
-  );
+  const activeImage = useFloatingCardImage(active);
 
   useEffect(() => {
     expandPhaseRef.current = expandPhase;
   }, [expandPhase]);
+
+  useEffect(() => {
+    expandedRef.current = expanded;
+  }, [expanded]);
+
+  // When the day advances, sync the home card unless the expand modal is open.
+  useEffect(() => {
+    if (expandedRef.current) return;
+    setActive(card);
+  }, [card]);
 
   useEffect(() => {
     let cancelled = false;
@@ -419,14 +458,11 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   }, []);
 
   const activeLines = useMemo(
-    () => (active ? buildVerseLines(active.scriptureText) : []),
+    () => buildVerseLines(active.scriptureText),
     [active],
   );
   const activeHeader = useMemo(
-    () =>
-      active
-        ? splitScriptureReference(active.scriptureReference)
-        : { book: "", passage: "" },
+    () => splitScriptureReference(active.scriptureReference),
     [active],
   );
   const heroQuote = useMemo(() => firstVerseLine(activeLines), [activeLines]);
@@ -543,7 +579,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     if (reducedMotion) {
       resetExpandState();
       setExpanded(false);
-      setActive(null);
+      setActive(card);
       return;
     }
     Animated.parallel([
@@ -567,9 +603,10 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
       if (!finished) return;
       resetExpandState();
       setExpanded(false);
-      setActive(null);
+      setActive(card);
     });
   }, [
+    card,
     detailProgress,
     hintOpacity,
     openProgress,
@@ -578,14 +615,13 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   ]);
 
   const finishCard = useCallback(() => {
-    if (!active) return;
     haptics.tap();
-    const card = active;
+    const completed = active;
     if (reducedMotion) {
       resetExpandState();
       setExpanded(false);
-      setActive(null);
-      onCompleteCard(card);
+      setActive(card);
+      onCompleteCard(completed);
       return;
     }
     Animated.parallel([
@@ -604,11 +640,12 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
       if (!finished) return;
       resetExpandState();
       setExpanded(false);
-      setActive(null);
-      onCompleteCard(card);
+      setActive(card);
+      onCompleteCard(completed);
     });
   }, [
     active,
+    card,
     detailProgress,
     onCompleteCard,
     openProgress,
@@ -697,17 +734,19 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <View
-        style={{ ...StyleSheet.absoluteFillObject, overflow: "hidden" }}
+        style={{
+          ...StyleSheet.absoluteFillObject,
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
+        }}
         pointerEvents="box-none"
       >
-        {HOME_FLOATING_CARDS.map((item) => (
-          <FloatingMiniCard
-            key={item.id}
-            item={item}
-            onPress={() => openCard(item)}
-            hidden={expanded && active?.id === item.id}
-          />
-        ))}
+        <FloatingMiniCard
+          card={card}
+          onPress={() => openCard(card)}
+          hidden={expanded}
+        />
       </View>
 
       <View
@@ -761,7 +800,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
       </View>
 
       <Modal
-        visible={expanded && active != null}
+        visible={expanded}
         animationType="none"
         presentationStyle="overFullScreen"
         transparent
@@ -794,7 +833,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                   pointerEvents="none"
                   style={[
                     StyleSheet.absoluteFillObject,
-                    { backgroundColor: "rgba(0,0,0,0.48)" },
+                    { backgroundColor: PHOTO_DIM_OVERLAY },
                   ]}
                 />
 
@@ -809,16 +848,10 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                 >
                   <View style={{ maxWidth: "85%", alignItems: "center" }}>
                     <Text
-                      style={{
-                        fontFamily: fontsLoaded
-                          ? QUOTE_PLAYFAIR
-                          : typography.reflectiveQuote.fontFamily,
-                        fontSize: 26,
-                        lineHeight: 36,
-                        fontWeight: "500",
-                        textAlign: "center",
-                        color: QUOTE_INK,
-                      }}
+                      style={[
+                        typography.photoQuote,
+                        { color: PHOTO_OVERLAY_INK },
+                      ]}
                     >
                       {heroQuote}
                     </Text>
@@ -827,7 +860,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                         style={[
                           typography.smallLabel,
                           {
-                            color: QUOTE_REF_INK,
+                            color: PHOTO_OVERLAY_INK_MUTED,
                             textTransform: "uppercase",
                             letterSpacing: 1.2,
                             marginTop: 16,
@@ -860,14 +893,14 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                     <SFSymbol
                       name="chevron.down"
                       size={18}
-                      color="rgba(255,255,255,0.85)"
+                      color={PHOTO_OVERLAY_INK_MUTED}
                       weight="semibold"
                     />
                     <Text
                       style={[
                         typography.smallLabel,
                         {
-                          color: "rgba(255,255,255,0.72)",
+                          color: PHOTO_OVERLAY_INK_MUTED,
                           textTransform: "uppercase",
                           marginTop: 8,
                           letterSpacing: 1.2,
@@ -936,7 +969,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                       pointerEvents="none"
                       style={{
                         ...StyleSheet.absoluteFillObject,
-                        backgroundColor: "rgba(0,0,0,0.28)",
+                        backgroundColor: PHOTO_DIM_OVERLAY,
                       }}
                     />
                     <View
@@ -950,11 +983,12 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                     >
                       <Text
                         style={{
-                          fontFamily: typography.body.fontFamily,
-                          fontWeight: "800",
+                          fontFamily: typography.photoQuote.fontFamily,
+                          fontStyle: "normal",
+                          fontWeight: "700",
                           fontSize: 40,
                           lineHeight: 42,
-                          color: QUOTE_INK,
+                          color: PHOTO_OVERLAY_INK,
                           letterSpacing: -0.6,
                         }}
                       >
@@ -963,11 +997,12 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                       {activeHeader.passage ? (
                         <Text
                           style={{
-                            fontFamily: typography.body.fontFamily,
-                            fontWeight: "800",
+                            fontFamily: typography.photoQuote.fontFamily,
+                            fontStyle: "normal",
+                            fontWeight: "700",
                             fontSize: 34,
                             lineHeight: 38,
-                            color: QUOTE_INK,
+                            color: PHOTO_OVERLAY_INK,
                             marginTop: 2,
                           }}
                         >
@@ -987,38 +1022,8 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                       </View>
                     ))}
 
-                    {active?.verseInsight ? (
-                      <>
-                        <View
-                          style={{
-                            height: 1,
-                            backgroundColor: "rgba(20, 20, 20, 0.12)",
-                            marginTop: 28,
-                            marginBottom: 16,
-                          }}
-                        />
-                        <Text
-                          style={[
-                            typography.smallLabel,
-                            {
-                              color: CARD_INK_SOFT,
-                              textTransform: "uppercase",
-                              letterSpacing: 1.1,
-                            },
-                          ]}
-                        >
-                          Insight
-                        </Text>
-                        <Text
-                          style={[
-                            typography.body,
-                            { color: CARD_INK, marginTop: 8 },
-                          ]}
-                        >
-                          {active.verseInsight}
-                        </Text>
-                      </>
-                    ) : null}
+                    <DetailSectionBlock eyebrow="Story" body={active.story} />
+                    <DetailSectionBlock eyebrow="Insight" body={active.insight} />
 
                     {!unlockedToday ? (
                       <HoldToUnlockButton
@@ -1045,9 +1050,9 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                 left: 16,
                 zIndex: 9999,
                 elevation: 9999,
-                width: 44,
-                height: 44,
-                borderRadius: 22,
+                width: minTouchTarget,
+                height: minTouchTarget,
+                borderRadius: minTouchTarget / 2,
                 backgroundColor: "rgba(0,0,0,0.72)",
                 borderWidth: StyleSheet.hairlineWidth,
                 borderColor: "rgba(255,255,255,0.55)",

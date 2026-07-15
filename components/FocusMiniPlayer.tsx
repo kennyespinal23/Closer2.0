@@ -289,7 +289,7 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
       // Antechamber intro page was removed; scripture is the
       // first sermon beat now, so the unlock CTA on the mini
       // player drops the user straight into the verse screen.
-      router.push("/sermon/scripture");
+      router.push("/today");
     } else {
       router.push("/settings/study-sessions");
     }

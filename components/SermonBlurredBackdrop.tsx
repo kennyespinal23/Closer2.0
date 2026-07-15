@@ -27,15 +27,14 @@ export function SermonBlurredBackdrop() {
   useEffect(() => {
     let cancelled = false;
     const query =
-      todaysMoment.illustrationPrompt?.trim() ||
-      "peaceful spiritual nature landscape";
+      todaysMoment.title?.trim() || "peaceful spiritual nature landscape";
     getSermonBackdrop(query, todaysMoment.day).then((url) => {
       if (!cancelled) setImageUrl(url);
     });
     return () => {
       cancelled = true;
     };
-  }, [todaysMoment.day, todaysMoment.illustrationPrompt]);
+  }, [todaysMoment.day, todaysMoment.title]);
 
   const overlayColor = isDark
     ? "rgba(0, 0, 0, 0.62)"

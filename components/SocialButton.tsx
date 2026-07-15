@@ -1,6 +1,8 @@
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
 import Svg, { Path } from "react-native-svg";
-import { useColors } from "@/state/theme";
+import { minTouchTarget, spacing } from "@/constants/spacing";
+import { useColors, useResolvedScheme } from "@/state/theme";
 
 type Provider = "apple" | "google" | "email";
 
@@ -17,16 +19,6 @@ const labelByProvider: Record<Provider, string> = {
 
 function ProviderGlyph({ provider }: { provider: Provider }) {
   const colors = useColors();
-  if (provider === "apple") {
-    return (
-      <Svg width={18} height={20} viewBox="0 0 18 20" fill="none">
-        <Path
-          d="M14.94 10.62c-.03-2.7 2.21-4 2.31-4.06-1.26-1.84-3.22-2.1-3.92-2.13-1.67-.17-3.26.98-4.11.98-.86 0-2.16-.96-3.55-.93-1.83.03-3.51 1.06-4.45 2.7C-.65 10.5.77 15.2 2.62 17.78c.9 1.26 1.97 2.67 3.36 2.62 1.35-.05 1.86-.87 3.49-.87 1.63 0 2.09.87 3.52.84 1.45-.02 2.37-1.28 3.26-2.55 1.03-1.46 1.45-2.88 1.47-2.95-.03-.01-2.82-1.08-2.78-4.25zM12.36 2.86c.75-.9 1.25-2.16 1.12-3.4-1.08.04-2.39.72-3.16 1.62-.69.8-1.3 2.07-1.14 3.3 1.2.1 2.43-.61 3.18-1.52z"
-          fill={colors.ink}
-        />
-      </Svg>
-    );
-  }
   if (provider === "google") {
     return (
       <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
@@ -69,18 +61,64 @@ function ProviderGlyph({ provider }: { provider: Provider }) {
   );
 }
 
+/**
+ * Auth provider button. Apple uses the system
+ * `ASAuthorizationAppleIDButton` (App Store requirement). Google /
+ * email stay as Closer-styled rows — no equivalent native standard.
+ */
 export function SocialButton({ provider, onPress }: SocialButtonProps) {
+  const colors = useColors();
+  const scheme = useResolvedScheme();
+
+  if (provider === "apple" && Platform.OS === "ios") {
+    return (
+      <AppleAuthentication.AppleAuthenticationButton
+        buttonType={
+          AppleAuthentication.AppleAuthenticationButtonType.CONTINUE
+        }
+        buttonStyle={
+          scheme === "dark"
+            ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+            : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+        }
+        cornerRadius={spacing[16]}
+        style={{
+          width: "100%",
+          height: Math.max(56, minTouchTarget),
+        }}
+        onPress={onPress ?? (() => {})}
+      />
+    );
+  }
+
   return (
     <Pressable
       onPress={onPress}
-      className="h-14 w-full rounded-2xl flex-row items-center justify-center px-5 bg-surface border border-border active:bg-bg"
+      accessibilityRole="button"
+      accessibilityLabel={labelByProvider[provider]}
+      style={{
+        minHeight: Math.max(56, minTouchTarget),
+        width: "100%",
+        borderRadius: spacing[16],
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: spacing[16],
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+      }}
     >
-      <View className="mr-3">
+      <View style={{ marginRight: spacing[12] }}>
         <ProviderGlyph provider={provider} />
       </View>
       <Text
-        className="text-ink text-[16px]"
-        style={{ fontFamily: "System", fontWeight: "600" }}
+        style={{
+          color: colors.ink,
+          fontSize: 16,
+          fontFamily: "System",
+          fontWeight: "600",
+        }}
       >
         {labelByProvider[provider]}
       </Text>

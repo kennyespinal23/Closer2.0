@@ -121,7 +121,7 @@ function CompletedSermonRow({
   onPress: () => void;
 }) {
   const moment = entry.day != null ? findMomentByDay(entry.day) : null;
-  const type = moment ? resolveSermonType(moment.type) : null;
+  const type = moment ? resolveSermonType() : null;
   const accent = type?.accent ?? colors.primary;
 
   return (

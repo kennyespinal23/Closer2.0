@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
+import { TimeCard } from "@/components/TimeCard";
 import { progressFor } from "@/constants/onboarding";
+import { spacing } from "@/constants/spacing";
 import { useOnboarding, type WakeBucket } from "@/state/onboarding";
 import {
   scheduleDailyReminder,
@@ -164,8 +166,8 @@ export default function TimeScreen() {
               cards render and the columns are exactly equal width
               regardless of measured parent width. */}
           <FadeIn delayMs={1000}>
-            <View className="mt-10" style={{ gap: 12 }}>
-              <View style={{ flexDirection: "row", gap: 12 }}>
+            <View className="mt-10" style={{ gap: spacing[12] }}>
+              <View style={{ flexDirection: "row", gap: spacing[12] }}>
                 <TimeCard
                   label={TIME_OPTIONS[0].label}
                   meta={TIME_OPTIONS[0].meta}
@@ -179,7 +181,7 @@ export default function TimeScreen() {
                   onPress={() => setSelectedKey(TIME_OPTIONS[1].key)}
                 />
               </View>
-              <View style={{ flexDirection: "row", gap: 12 }}>
+              <View style={{ flexDirection: "row", gap: spacing[12] }}>
                 <TimeCard
                   label={TIME_OPTIONS[2].label}
                   meta={TIME_OPTIONS[2].meta}
@@ -208,75 +210,5 @@ export default function TimeScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-/**
- * Single time card. Two-line content — large time on top, dimmer
- * label below. Selected state inverts the colors (filled chip)
- * the same way the OptionCard does for radio rows. Border-width
- * is pinned in the inline style so the iOS render is consistent
- * (see notes on TimeChip in the old reminders screen).
- */
-function TimeCard({
-  label,
-  meta,
-  selected,
-  onPress,
-}: {
-  label: string;
-  meta: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    // NativeWind classes for the chrome (border + bg) — the original
-    // inline `style={() => ({borderWidth, borderColor, backgroundColor})}`
-    // approach bundled correctly but rendered chromeless on iOS in
-    // RN 0.81 (the Pressable layer appeared to ignore the function-
-    // returned style for border / bg props specifically). Switching
-    // to className tokens (the same pattern OptionCard uses) paints
-    // reliably. `flex: 1` stays inline because there's no Tailwind
-    // shorthand for it in the codebase config.
-    // iOS-blue selection: the chip stays a dark surface but adopts
-    // a blue border + soft-blue tint when selected, and the ink/
-    // muted text colors stay readable on the dark tint (no need to
-    // flip to primary-fg the way the old white-on-white scheme did).
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${label}, ${meta}`}
-      accessibilityState={{ selected }}
-      style={{ flex: 1 }}
-      className={[
-        "rounded-2xl py-5 px-3 items-center border-2 active:opacity-80",
-        selected
-          ? "bg-select-soft border-select"
-          : "bg-accent-soft border-border-strong",
-      ].join(" ")}
-    >
-      <Text
-        className="text-ink"
-        style={{
-          fontFamily: "System",
-          fontWeight: "700",
-          fontSize: 22,
-          letterSpacing: -0.3,
-        }}
-      >
-        {label}
-      </Text>
-      <Text
-        className="text-ink-muted"
-        style={{
-          fontFamily: "System",
-          fontWeight: "500",
-          fontSize: 12,
-          marginTop: 4,
-        }}
-      >
-        {meta}
-      </Text>
-    </Pressable>
   );
 }

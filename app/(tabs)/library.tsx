@@ -10,20 +10,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import Svg, { Path } from "react-native-svg";
 import { SFSymbol } from "@/components/Symbol";
 import { BookCover } from "@/components/BookCover";
 import { FadeIn } from "@/components/FadeIn";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
-import {
-  type Book,
-  type BookCategory,
-  BOOKS,
-  findBookById,
-  NT_CATEGORY_ORDER,
-  OT_CATEGORY_ORDER,
-} from "@/constants/books";
+import { type Book, BOOKS, findBookById } from "@/constants/books";
 import { hasBookCover } from "@/constants/bookCovers";
+import { minTouchTarget, spacing } from "@/constants/spacing";
+import * as haptics from "@/lib/haptics";
 import { SCREEN_H_PAD } from "@/lib/layout";
 import { useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
@@ -31,76 +27,31 @@ import { useColors, useResolvedScheme } from "@/state/theme";
 /**
  * Library — Imprint-inspired browse grid.
  *
- * Anatomy (top → bottom):
- *
- *   ┌──────────────────────────────────────────┐
- *   │  Explore All 66 Books        (big title) │
- *   │                                          │
- *   │  [ search field ]                        │
- *   │                                          │
- *   │  ( All ) ( The Law ) ( Wisdom ) …        │ ← horizontal pill rail
- *   │                                          │
- *   │  All (66 books)                          │ ← section title for active filter
- *   │  ┌─────────┐  ┌─────────┐                │
- *   │  │  cover  │  │  cover  │                │ ← 2-col grid of book tiles
- *   │  │  GEN    │  │  EX     │                │
- *   │  └─────────┘  └─────────┘                │
- *   │   Genesis     Exodus                     │
- *   │   50 chapters 40 chapters                │
- *   │  …                                       │
- *   └──────────────────────────────────────────┘
- *
- * Why this shape (vs. the old curated rails):
- *   Imprint's library is a flat browsable surface. One filter
- *   axis (here: canon category instead of academic topic), one
- *   grid. Easier to scan, fewer modes, no testament toggle to
- *   pre-filter the rails. The Continue Reading hero from the
- *   old layout moved to the Today screen — Library is now pure
- *   discovery.
- *
- * Filter semantics:
- *   • "all"          → every book in canonical order
- *   • "Old"          → all OT books
- *   • "New"          → all NT books
- *   • <BookCategory> → just that grouping (Wisdom & Poetry, etc.)
+ * Filter axis is just the two testaments (Old / New) via a native
+ * UISegmentedControl — short fixed option set.
  *
  * Search overrides the filter — when the user types, we ignore
- * the active pill and search across the full canon. (Matches
- * Apple Books' behavior: search is a mode, not a filter.)
+ * the active segment and search across the full canon.
  */
-type LibraryFilter = "all" | "old" | "new" | BookCategory;
+type LibraryFilter = "old" | "new";
 
-/**
- * Ordered list of filters surfaced as pills. "All" first, then
- * the two testaments, then every category in canonical order
- * (OT first, then NT — same order the user encounters them
- * cracking open the book).
- */
-const FILTERS: ReadonlyArray<LibraryFilter> = [
-  "all",
-  "old",
-  "new",
-  ...OT_CATEGORY_ORDER,
-  ...NT_CATEGORY_ORDER,
-];
+const FILTER_SEGMENTS = ["Old Testament", "New Testament"] as const;
 
 function labelForFilter(f: LibraryFilter): string {
-  if (f === "all") return "All";
-  if (f === "old") return "Old Testament";
-  if (f === "new") return "New Testament";
-  return f;
+  return f === "old" ? "Old Testament" : "New Testament";
 }
 
 export default function LibraryScreen() {
   const router = useRouter();
   const { bg } = useColors();
-  const [filter, setFilter] = useState<LibraryFilter>("all");
+  const colors = useColors();
+  const scheme = useResolvedScheme();
+  const [filter, setFilter] = useState<LibraryFilter>("old");
   const [query, setQuery] = useState("");
   const { lastVisited, hasReadChapter } = useProgress();
 
-  // Search takes precedence over the active filter — when the user
-  // types we hide the section header and surface a flat match grid.
   const isSearching = query.trim().length > 0;
+  const filterIndex = filter === "old" ? 0 : 1;
 
   const filteredBooks = useMemo(() => {
     if (isSearching) {
@@ -111,10 +62,7 @@ export default function LibraryScreen() {
           b.abbr.toLowerCase().includes(q),
       );
     }
-    if (filter === "all") return BOOKS;
-    if (filter === "old") return BOOKS.filter((b) => b.testament === "old");
-    if (filter === "new") return BOOKS.filter((b) => b.testament === "new");
-    return BOOKS.filter((b) => b.category === filter);
+    return BOOKS.filter((b) => b.testament === filter);
   }, [filter, query, isSearching]);
 
   // Continue Reading — moved here from the Home screen. Surfaces
@@ -200,18 +148,43 @@ export default function LibraryScreen() {
         {/* ─── Search ─────────────────────────────────────────── */}
         <SearchField value={query} onChangeText={setQuery} />
 
-        {/* ─── Filter pills — horizontal scroll ───────────────── */}
-        <FilterPills
-          value={filter}
-          onChange={(next) => {
-            setFilter(next);
-            // Clear search when the user picks a filter so the new
-            // section reflects the pill they just tapped, not the
-            // search residue.
-            if (query.length > 0) setQuery("");
+        {/* ─── Testament segmented control ────────────────────── */}
+        <View
+          style={{
+            paddingHorizontal: SCREEN_H_PAD,
+            paddingTop: spacing[16],
+            paddingBottom: spacing[8],
+            minHeight: minTouchTarget,
+            justifyContent: "center",
+            opacity: isSearching ? 0.45 : 1,
           }}
-          disabled={isSearching}
-        />
+          pointerEvents={isSearching ? "none" : "auto"}
+        >
+          <SegmentedControl
+            appearance={scheme}
+            values={[...FILTER_SEGMENTS]}
+            selectedIndex={filterIndex}
+            onChange={(event) => {
+              const nextIndex = event.nativeEvent.selectedSegmentIndex;
+              haptics.tick();
+              setFilter(nextIndex === 1 ? "new" : "old");
+              if (query.length > 0) setQuery("");
+            }}
+            style={{ height: 36 }}
+            fontStyle={{
+              fontFamily: "System",
+              fontWeight: "500",
+              fontSize: 13,
+              color: colors.inkMuted,
+            }}
+            activeFontStyle={{
+              fontFamily: "System",
+              fontWeight: "700",
+              fontSize: 13,
+              color: colors.ink,
+            }}
+          />
+        </View>
 
         {/* ─── Section header (current filter or search count) ── */}
         <SectionHeader
@@ -234,116 +207,6 @@ export default function LibraryScreen() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Filter pills — horizontal rail
-// ─────────────────────────────────────────────────────────────────
-
-/**
- * Imprint-style filter pills. Active = primary outline + ink text;
- * inactive = surface fill + muted text. Disabled (during search)
- * dims the whole rail so it reads as inert.
- */
-function FilterPills({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: LibraryFilter;
-  onChange: (next: LibraryFilter) => void;
-  disabled: boolean;
-}) {
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{
-        paddingHorizontal: SCREEN_H_PAD,
-        paddingTop: 16,
-        paddingBottom: 4,
-      }}
-      style={{ opacity: disabled ? 0.45 : 1 }}
-      scrollEnabled={!disabled}
-    >
-      {FILTERS.map((f, i) => (
-        <View key={f} style={{ marginRight: i === FILTERS.length - 1 ? 0 : 8 }}>
-          <FilterPill
-            label={labelForFilter(f)}
-            active={value === f}
-            onPress={() => !disabled && onChange(f)}
-          />
-        </View>
-      ))}
-    </ScrollView>
-  );
-}
-
-function FilterPill({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  const colors = useColors();
-  const scheme = useResolvedScheme();
-  // iOS systemBlue — Apple's universal "selected filter" tint.
-  // Music genre chips, App Store filter rails, News topic
-  // pills all use blue-on-blue-tint for active state. We mirror
-  // exactly so the rail reads as a first-party iOS control.
-  const blue = scheme === "light" ? "#007AFF" : "#0A84FF";
-  // Active fill — a low-alpha wash of the same systemBlue, the
-  // ".tinted" button style Apple introduced in iOS 15. Inactive
-  // chips sit on `surfaceSecondary` (the same secondary-grey
-  // surface Apple uses for unfilled chips against an off-white
-  // canvas).
-  const activeFill =
-    scheme === "light" ? "rgba(0, 122, 255, 0.12)" : "rgba(10, 132, 255, 0.20)";
-  return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={6}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-    >
-      {/* Pill — iOS-native ".tinted" capsule. Active uses a
-          systemBlue wash + blue ink + bold weight to read as
-          the selected filter; inactive sits on the secondary
-          surface with muted ink. Border dropped entirely on
-          the active state because the tinted fill itself
-          communicates selection (less chrome = more iOS).
-          
-          paddingVertical 8 keeps the chip compact while the
-          surrounding ScrollView's vertical padding + the chip's
-          own hitSlop=6 keep the total tap region comfortably
-          above HIG's 44pt floor. */}
-      <View
-        style={{
-          paddingHorizontal: 14,
-          paddingVertical: 8,
-          borderRadius: 999,
-          backgroundColor: active ? activeFill : colors.surfaceSecondary,
-          borderWidth: active ? 0 : StyleSheet.hairlineWidth,
-          borderColor: colors.border,
-        }}
-      >
-        <Text
-          style={{
-            fontFamily: "System",
-            fontWeight: active ? "700" : "600",
-            fontSize: 13,
-            color: active ? blue : colors.inkMuted,
-            letterSpacing: -0.1,
-          }}
-          numberOfLines={1}
-        >
-          {label}
-        </Text>
-      </View>
-    </Pressable>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────────
 // Section header — title of the active filter + book count

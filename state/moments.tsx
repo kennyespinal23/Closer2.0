@@ -20,37 +20,24 @@ import { removeKey, STORAGE_KEYS, usePersistence } from "@/lib/storage";
 /**
  * Daily moment provider.
  *
- * Owns one piece of persisted state: today's assignment, keyed by
- * the local date.
+ * Owns one piece of persisted state: this user's reading assignment.
  *
  *   {
- *     dateISO: "2026-05-31",
- *     day: 1,        // 1-based catalog day
+ *     dateISO: "2026-05-31",  // last local calendar day we assigned for
+ *     day: 1,                 // their personal catalog day (1…365)
  *   }
  *
- * On the first launch of a new calendar day, the assignment
- * advances to the next moment in the catalog (wrapping at 90 → 1
- * after a full vault cycle). On the same day, the same moment is
- * reused — opening the app at 8am and again at 8pm always shows
- * the same sermon.
- *
- * Why no mood-check-in routing anymore?
- *   Earlier revisions used the user's most recent check-in mood
- *   to route into emotion-specific content pools. The current
- *   vault is a single sequence authored to be read in order, so
- *   the routing collapses to a straight "today is day N → show
- *   sermon N" rule. The check-in feature is still there for
- *   journaling — it just no longer changes the sermon.
+ * Per-user progression (NOT calendar-date mapping):
+ *   • First launch → Day 1 (Genesis), every new person.
+ *   • Each new local calendar day they open the app → advance
+ *     exactly one catalog day (wrap at 365 → 1). Skipping calendar
+ *     days does NOT skip content — coming back later still gives
+ *     the next unread day, not "today's date in the year."
+ *   • Same calendar day → same assignment (idempotent via dateISO).
  *
  * What this provider does NOT do:
- *   • Schedule notifications. The notification scheduler reads
- *     from this provider but firing logic lives in
- *     `lib/notifications.ts`.
- *   • Record completions. The sermon flow continues to call
- *     `useProgress().recordCompletion(typeId, { title, pastor })`
- *     — the title comes from `useMoments().todaysMoment.title`.
- *     The pastor field is intentionally always empty string since
- *     the June 2026 schema dropped the `voice` attribution.
+ *   • Schedule notifications (`lib/notifications.ts`).
+ *   • Record completions (`useProgress().recordCompletion`).
  */
 
 // ─────────────────────────────────────────────────────────────────
@@ -90,17 +77,13 @@ type MomentsContextValue = {
   todaysMoment: Moment;
   /**
    * Position of `todaysMoment` in the catalog plus the total
-   * count, e.g. `{ position: 14, total: 90 }`. Surfaced for the
-   * dev "Next Sermon" pill so a content reviewer can see exactly
-   * where they are during a walkthrough.
+   * count, e.g. `{ position: 14, total: 365 }`. Surfaced for the
+   * Profile "Next Reading" QA control.
    */
   catalogPosition: { position: number; total: number };
   /**
-   * Replace today's assignment with the NEXT moment in the
-   * catalog (wrapping at the end). Dev-only — used by the home
-   * screen's "Next Sermon" shortcut so a content reviewer can
-   * walk through all 90 moments end-to-end without waiting for
-   * the daily rollover.
+   * Replace today's assignment with the NEXT catalog day
+   * (wrapping at the end). Dev/QA — Profile "Next Reading".
    */
   advanceToNextMoment: () => void;
   /** True once persisted assignment has loaded. */
@@ -168,9 +151,8 @@ export function MomentsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Advance: if we had a yesterday-pick, walk forward one day
-    // in the catalog. If we had nothing (first launch), start at
-    // Day 1.
+    // Advance one personal catalog day when the local date rolls.
+    // First launch (no assignment) → Day 1 via nextMoment(null).
     const next = nextMoment(existing?.day ?? null);
     setState({
       assignment: { dateISO: today, day: next.day },

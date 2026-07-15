@@ -1,3 +1,25 @@
+/**
+ * Uniform darken wash over photography when white text sits on the
+ * image. Calibrated so even a pure-white photo pixel lands at or
+ * under {@link PHOTO_BRIGHTNESS_CEILING} (0–255), giving #FFFFFF
+ * text ≥ 4.5:1 everywhere without position-dependent scrims.
+ *
+ *   out = source × (1 − α)           // black overlay, src-over
+ *   255 × (1 − α) ≤ 110  →  α ≥ 1 − 110/255 ≈ 0.5686
+ */
+export const PHOTO_BRIGHTNESS_CEILING = 110;
+
+export const PHOTO_DIM_OVERLAY_ALPHA =
+  1 - PHOTO_BRIGHTNESS_CEILING / 255;
+
+export const PHOTO_DIM_OVERLAY = `rgba(0, 0, 0, ${PHOTO_DIM_OVERLAY_ALPHA})`;
+
+/** Pure white — required partner to {@link PHOTO_DIM_OVERLAY}. */
+export const PHOTO_OVERLAY_INK = "#FFFFFF";
+
+/** Secondary label on dimmed photos (reference, hints). */
+export const PHOTO_OVERLAY_INK_MUTED = "rgba(255, 255, 255, 0.85)";
+
 /** Frosted white chrome pill — completed-sermons screen, etc. */
 export const FROSTED_CHROME_PILL = {
   width: 44,
@@ -22,8 +44,8 @@ export const HERO_GLASS_DISC = {
   borderColor: "rgba(255, 255, 255, 0.22)",
 };
 
-/** Uniform dim wash over full-bleed sermon photography (scripture screen). */
-export const HERO_DIM_OVERLAY = "rgba(0, 0, 0, 0.55)";
+/** Uniform dim wash over full-bleed sermon photography (legacy). Prefer {@link PHOTO_DIM_OVERLAY}. */
+export const HERO_DIM_OVERLAY = PHOTO_DIM_OVERLAY;
 
 /**
  * Bottom text scrim for the home featured hero — transparent at the

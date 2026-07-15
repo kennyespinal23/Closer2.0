@@ -13,7 +13,7 @@ import { isInternalBuild } from "@/lib/isInternalBuild";
  * Developer Tools provider.
  *
  * The Profile tab ships with a small Developer section of internal
- * QA shortcuts (Next Sermon, Reset App, Restart App). In a local-dev
+ * QA shortcuts (Next Reading, Reset App, Restart App). In a local-dev
  * (`__DEV__`) build that section renders automatically. In a
  * production-channel build it's hidden so end users don't see it.
  *

@@ -95,6 +95,7 @@ export type HomeDevotionalCarouselProps = {
     blocksOn: boolean;
     blockedAppIds: ReadonlyArray<string>;
     nextBreakLabel: string;
+    nextBreakTone: "live" | "armed" | "muted";
     unlockedToday: boolean;
     onCompleteCard: (card: FloatingScriptureCard) => void;
   };
@@ -174,7 +175,9 @@ const HomeHeroSlide = memo(function HomeHeroSlide({
     let cancelled = false;
     setUseFallback(false);
     const query =
-      card.illustrationPrompt?.trim() || "peaceful spiritual nature landscape";
+      card.illustrationPrompt?.trim() ||
+      // Nature pool — never fall back to a free-text title.
+      "peaceful mountain sunrise mist landscape";
     getSermonBackdrop(query, card.sermonDay).then((url) => {
       if (!cancelled) {
         setImageUrl(url);
@@ -189,7 +192,9 @@ const HomeHeroSlide = memo(function HomeHeroSlide({
   const handleImageError = useCallback(() => {
     setUseFallback(true);
     const query =
-      card.illustrationPrompt?.trim() || "peaceful spiritual nature landscape";
+      card.illustrationPrompt?.trim() ||
+      // Nature pool — never fall back to a free-text title.
+      "peaceful mountain sunrise mist landscape";
     getSermonBackdrop(query, card.sermonDay).then((url) => {
       if (url) {
         setImageUrl(url);
@@ -373,6 +378,7 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
         <HomeFloatingPrayerHome
           card={cardContent.card}
           nextBreakLabel={cardContent.nextBreakLabel}
+          nextBreakTone={cardContent.nextBreakTone}
           unlockedToday={cardContent.unlockedToday}
           onCompleteCard={cardContent.onCompleteCard}
           bottomInset={bottomInset}
@@ -387,8 +393,9 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
         />
       )}
 
-      {!useCardLayout ? (
-      <Animated.View
+      {/* Top chrome — completed + streak. Shown on both the photo
+          hero and the floating-card Home so streaks stay reachable. */}
+      <View
         pointerEvents="box-none"
         style={{
           position: "absolute",
@@ -399,36 +406,51 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          opacity: exitOpacity,
         }}
       >
-        <Pressable
-          onPress={() => {
-            haptics.soft();
-            onCompletedPress?.();
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Open completed sermons"
-          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-        >
-          <View style={bookDiscStyle}>
-            <SFSymbol
-              name="book.closed.fill"
-              size={16}
-              color={chromeInk}
-              weight="medium"
-            />
-          </View>
-        </Pressable>
+        {onCompletedPress ? (
+          <Pressable
+            onPress={() => {
+              haptics.soft();
+              onCompletedPress();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Open completed sermons"
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <View
+              style={
+                useCardLayout
+                  ? {
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      backgroundColor:
+                        scheme === "dark"
+                          ? colors.surfaceTertiary
+                          : FROSTED_CHROME_PILL.backgroundColor,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }
+                  : bookDiscStyle
+              }
+            >
+              <SFSymbol
+                name="book.closed.fill"
+                size={16}
+                color={useCardLayout ? colors.ink : chromeInk}
+                weight="medium"
+              />
+            </View>
+          </Pressable>
+        ) : (
+          <View style={{ width: 44 }} />
+        )}
 
         {onStreakPress ? (
           <Pressable
             onPress={() => {
               haptics.soft();
-              // Defer navigation one frame so the press opacity
-              // settles and the native tab bar doesn't fight the
-              // modal transition on the same tick.
               InteractionManager.runAfterInteractions(() => {
                 onStreakPress();
               });
@@ -436,11 +458,10 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
             accessibilityRole="button"
             accessibilityLabel={
               streakCount > 0
-                ? `${streakCount}-day streak. Tap to open Rhythm.`
-                : "Start a streak. Tap to open Rhythm."
+                ? `${streakCount}-day streak. Tap to open Streaks.`
+                : "Start a streak. Tap to open Streaks."
             }
             hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
             <View
               style={{
@@ -449,13 +470,21 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
                 paddingHorizontal: 14,
                 paddingVertical: 9,
                 borderRadius: 22,
-                backgroundColor: useFrostedChrome
-                  ? FROSTED_CHROME_PILL.backgroundColor
-                  : HERO_GLASS_DISC.backgroundColor,
-                borderWidth: useFrostedChrome ? 0 : HERO_GLASS_DISC.borderWidth,
-                borderColor: useFrostedChrome
-                  ? "transparent"
-                  : HERO_GLASS_DISC.borderColor,
+                backgroundColor: useCardLayout
+                  ? scheme === "dark"
+                    ? colors.surfaceTertiary
+                    : FROSTED_CHROME_PILL.backgroundColor
+                  : useFrostedChrome
+                    ? FROSTED_CHROME_PILL.backgroundColor
+                    : HERO_GLASS_DISC.backgroundColor,
+                borderWidth:
+                  useCardLayout || useFrostedChrome
+                    ? 0
+                    : HERO_GLASS_DISC.borderWidth,
+                borderColor:
+                  useCardLayout || useFrostedChrome
+                    ? "transparent"
+                    : HERO_GLASS_DISC.borderColor,
                 minHeight: 44,
               }}
             >
@@ -467,7 +496,7 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
               </Text>
               <Text
                 style={{
-                  color: chromeInk,
+                  color: useCardLayout ? colors.ink : chromeInk,
                   fontFamily: "System",
                   fontWeight: "700",
                   fontSize: 15,
@@ -480,8 +509,7 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
             </View>
           </Pressable>
         ) : null}
-      </Animated.View>
-      ) : null}
+      </View>
     </View>
   );
 });

@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import { BlurView } from "expo-blur";
-import { getSermonBackdrop } from "@/services/unsplashService";
+import {
+  getSermonBackdrop,
+  natureBackdropQueryForDay,
+} from "@/services/unsplashService";
 import { useMoments } from "@/state/moments";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
@@ -26,15 +29,14 @@ export function SermonBlurredBackdrop() {
 
   useEffect(() => {
     let cancelled = false;
-    const query =
-      todaysMoment.title?.trim() || "peaceful spiritual nature landscape";
+    const query = natureBackdropQueryForDay(todaysMoment.day);
     getSermonBackdrop(query, todaysMoment.day).then((url) => {
       if (!cancelled) setImageUrl(url);
     });
     return () => {
       cancelled = true;
     };
-  }, [todaysMoment.day, todaysMoment.title]);
+  }, [todaysMoment.day]);
 
   const overlayColor = isDark
     ? "rgba(0, 0, 0, 0.62)"

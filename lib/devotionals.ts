@@ -15,6 +15,7 @@
 
 import DEVOTIONALS_RAW from "@/assets/data/devotionals.json";
 import type { DevotionalDay } from "@/assets/data/devotionals";
+import { natureBackdropQueryForDay } from "@/services/unsplashService";
 
 export type { DevotionalDay };
 
@@ -84,7 +85,8 @@ export function devotionalDurationMin(day: DevotionalDay): number {
 
 /**
  * Map a catalog day into the home card DTO the floating UI expects.
- * Illustration prompt falls back to the title for Unsplash search.
+ * Illustration prompt is a curated nature/atmosphere Unsplash
+ * query (never the sermon title — titles return random portraits).
  */
 export function toHomeCard(day: DevotionalDay): {
   id: string;
@@ -103,7 +105,7 @@ export function toHomeCard(day: DevotionalDay): {
     story: day.story,
     insight: day.insight,
     title: day.title,
-    illustrationPrompt: day.title,
+    illustrationPrompt: natureBackdropQueryForDay(day.day),
     day: day.day,
   };
 }

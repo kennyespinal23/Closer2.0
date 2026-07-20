@@ -61,12 +61,14 @@ import {
 import { useMilestoneUnlockStreak } from "@/lib/useMilestoneUnlockStreak";
 import { formatMinutes, formatRemaining } from "@/lib/readingGoalFormat";
 import { getGreeting } from "@/lib/greeting";
+import { systemText, typography } from "@/lib/typography";
 import { shouldOfferManualFocusShield, SOCIAL_APPS, type SocialAppId } from "@/lib/focus";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import { findMood } from "@/constants/moods";
 import { SERMON_TYPES, type SermonType } from "@/constants/sermonTypes";
 import { CLOSER_ACCENT, SYSTEM_COLORS_DARK } from "@/constants/theme";
 import { type FloatingScriptureCard } from "@/constants/homePrototype";
+import { natureBackdropQueryForDay } from "@/services/unsplashService";
 import { type CheckIn, useCheckIns } from "@/state/checkIns";
 import { useFocus } from "@/state/focus";
 import { useMoments } from "@/state/moments";
@@ -425,7 +427,7 @@ export default function TodayScreen() {
         readMinutes: sermonDurationMin,
         typeId: todayType.id,
         sermonDay: todaysMoment.day,
-        illustrationPrompt: todaysMoment.title,
+        illustrationPrompt: natureBackdropQueryForDay(todaysMoment.day),
         active: true,
         completed: hasCompletedSermonForDay(todaysMoment.day),
         onPress: handlePlaySermon,
@@ -465,8 +467,10 @@ export default function TodayScreen() {
       (hasEnabledSession && blockedIds.length > 0);
 
     let nextBreakLabel = "No app break scheduled yet";
+    let nextBreakTone: "live" | "armed" | "muted" = "muted";
     if (focusSession !== null) {
       nextBreakLabel = "App break is on now";
+      nextBreakTone = "live";
     } else {
       let best: Date | null = null;
       for (const s of studySessions) {
@@ -476,6 +480,7 @@ export default function TodayScreen() {
         if (!best || when.getTime() < best.getTime()) best = when;
       }
       if (best) {
+        nextBreakTone = "armed";
         const time = format12h({
           hour: best.getHours(),
           minute: best.getMinutes(),
@@ -508,6 +513,7 @@ export default function TodayScreen() {
       blocksOn,
       blockedAppIds: blockedIds,
       nextBreakLabel,
+      nextBreakTone,
       unlockedToday: hasCompletedSermonToday,
       onCompleteCard: handleCompleteFloatingCard,
     };
@@ -883,7 +889,7 @@ function ReadingPill({
       />
       <View className="flex-1 ml-4">
         <Text
-          className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase"
+          className="text-ink-muted text-[11px] tracking-[1px] uppercase"
           style={{ fontFamily: "System", fontWeight: "700" }}
         >
           Drawing Near
@@ -910,7 +916,7 @@ function ReadingPill({
           </Text>
           {headlineSuffix ? (
             <Text
-              className="text-ink-subtle text-[13px] leading-[18px]"
+              className="text-ink-muted text-[13px] leading-[18px]"
               style={{ fontFamily: "System", fontWeight: "500" }}
               numberOfLines={1}
             >
@@ -919,7 +925,7 @@ function ReadingPill({
           ) : null}
         </View>
         <Text
-          className="text-ink-subtle text-[12px] mt-0.5"
+          className="text-ink-muted text-[12px] mt-0.5"
           style={{ fontFamily: "System", fontWeight: "500" }}
           numberOfLines={1}
         >
@@ -981,14 +987,7 @@ const AppBlocksList = memo(function AppBlocksList({
   return (
     <View style={{ marginHorizontal: SCREEN_H_PAD }}>
       <Text
-        style={{
-          fontFamily: "System",
-          fontWeight: "700",
-          color: colors.ink,
-          fontSize: 22,
-          lineHeight: 28,
-          letterSpacing: -0.4,
-        }}
+        style={[systemText.title2, { color: colors.ink }]}
         accessibilityRole="header"
       >
         My App Blocks
@@ -1049,27 +1048,15 @@ const AppBlocksEmptyState = memo(function AppBlocksEmptyState({
   return (
     <View>
       <Text
-        style={{
-          fontFamily: "System",
-          fontWeight: "600",
-          color: colors.ink,
-          fontSize: 17,
-          lineHeight: 24,
-          letterSpacing: -0.2,
-        }}
+        style={[systemText.headline, { color: colors.ink }]}
       >
         Schedule your first block
       </Text>
       <Text
-        style={{
-          fontFamily: "System",
-          fontWeight: "400",
-          color: colors.inkSecondary,
-          fontSize: 15,
-          lineHeight: 22,
-          letterSpacing: -0.1,
-          marginTop: 8,
-        }}
+        style={[
+          systemText.subheadline,
+          { color: colors.inkSecondary, marginTop: 8 },
+        ]}
       >
         Quiet the apps that pull on you most during the time
         you set aside for God.
@@ -1173,27 +1160,16 @@ const AppBlockRow = memo(function AppBlockRow({
             them, but the row reads cleanly at a glance for
             users who haven't named anything. */}
         <Text
-          style={{
-            fontFamily: "System",
-            fontWeight: "600",
-            color: colors.ink,
-            fontSize: 17,
-            lineHeight: 22,
-            letterSpacing: -0.2,
-          }}
+          style={[systemText.headline, { color: colors.ink }]}
           numberOfLines={1}
         >
           {formatTimeOfDay(session.time)}
         </Text>
         <Text
-          style={{
-            fontFamily: "System",
-            fontWeight: "400",
-            color: colors.inkMuted,
-            fontSize: 13,
-            lineHeight: 18,
-            marginTop: 4,
-          }}
+          style={[
+            systemText.footnote,
+            { color: colors.inkMuted, marginTop: 4 },
+          ]}
           numberOfLines={1}
         >
           {formatDaysOfWeek(session.daysOfWeek)} ·{" "}
@@ -1567,35 +1543,25 @@ const HeroStatusRow = ({
         <View style={{ flex: 1 }}>
           <Text
             numberOfLines={1}
-            style={{
-              // SemiBold (not Bold) per the audit — the row sits
-              // inside the devotional card where the editorial
-              // title carries the heavy weight; this status row
-              // must feel like supporting chrome, not a second
-              // headline. Apple uses SemiBold for the title of
-              // Settings disclosure rows (Battery, Focus,
-              // Screen Time) for the same reason.
-              fontFamily: "System",
-              fontWeight: "600",
-              color: titleColor,
-              fontSize: 15,
-              lineHeight: 20,
-              letterSpacing: -0.2,
-            }}
+            style={[
+              systemText.subheadline,
+              {
+                fontWeight: "600",
+                color: titleColor,
+              },
+            ]}
           >
             {title}
           </Text>
           <Text
             numberOfLines={1}
-            style={{
-              fontFamily: "System",
-              fontWeight: "400",
-              color: subtitleColor,
-              fontSize: 13,
-              lineHeight: 18,
-              letterSpacing: -0.05,
-              marginTop: 2,
-            }}
+            style={[
+              systemText.footnote,
+              {
+                color: subtitleColor,
+                marginTop: 2,
+              },
+            ]}
           >
             {subtitle}
           </Text>
@@ -1925,13 +1891,10 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
               accessibilityLabel="Today's devotional, not yet read"
             >
               <Text
-                style={{
-                  color: "#000000",
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 11,
-                  letterSpacing: 1.5,
-                }}
+                style={[
+                  systemText.captionEmphasized,
+                  { color: "#000000", fontWeight: "700" },
+                ]}
               >
                 TODAY'S DEVOTIONAL
               </Text>
@@ -2063,45 +2026,20 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
                 hour bucket. */}
             <View style={{ flex: 1 }}>
               <Text
-                style={{
-                  // V3: settled on 34pt 800 ExtraBold — Apple's
-                  // standard Large Title size for iOS tab page
-                  // anchors (Health, Fitness, App Store, News
-                  // all pitch their tab page titles here). 48pt
-                  // overshot and dominated the page; 40pt sat
-                  // near-parity with the 36pt streak number.
-                  // 34pt 800 with the heavier weight delivers
-                  // the optical density of a hero title at the
-                  // size iOS itself uses — meaning the title
-                  // reads as "this is the page" without
-                  // crowding the streak chip on the right.
-                  fontFamily: "System",
-                  fontWeight: "800",
-                  color: colors.ink,
-                  fontSize: 34,
-                  lineHeight: 40,
-                  letterSpacing: -0.6,
-                }}
+                style={[systemText.largeTitle, { color: colors.ink }]}
                 accessibilityRole="header"
               >
                 Home
               </Text>
               <Text
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "400",
-                  // Spec: opacity 65% on white (rather than the
-                  // 60% inkSecondary token) so the line and its
-                  // emoji glyph share the same alpha — `color`
-                  // alone wouldn't dim the emoji.
-                  color: colors.ink,
-                  opacity: 0.65,
-                  fontSize: 17,
-                  lineHeight: 22,
-                  letterSpacing: -0.2,
-                  // Spec: Home → Good Evening = 4pt.
-                  marginTop: 4,
-                }}
+                style={[
+                  systemText.body,
+                  {
+                    color: colors.ink,
+                    opacity: 0.65,
+                    marginTop: 4,
+                  },
+                ]}
                 accessibilityLabel={greeting.text}
               >
                 {greeting.text} {greeting.emoji}
@@ -2301,14 +2239,14 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
                 />
               </View>
               <Text
-                style={{
-                  color: CLOSER_ACCENT,
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 12,
-                  letterSpacing: 1.5,
-                  marginLeft: 10,
-                }}
+                style={[
+                  typography.smallLabel,
+                  {
+                    color: CLOSER_ACCENT,
+                    textTransform: "uppercase",
+                    marginLeft: 10,
+                  },
+                ]}
               >
                 TODAY'S WORD
               </Text>
@@ -2373,15 +2311,15 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
               below separates the title cluster from the body
               prose. */}
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: colors.ink,
-              fontSize: 28,
-              lineHeight: 32,
-              letterSpacing: -0.6,
-              marginTop: 12,
-            }}
+            style={[
+              typography.devotionalTitle,
+              {
+                color: colors.ink,
+                fontSize: 28,
+                lineHeight: 32,
+                marginTop: 12,
+              },
+            ]}
             accessibilityRole="header"
           >
             {title}
@@ -2389,27 +2327,15 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
 
           {/* Editorial blurb — spec: 17pt regular, 28pt line
               height, 20pt above (from title), 32pt below (to
-              CTA). Color stays at #CCCCCC for ~8.7:1 contrast
-              on the new #151515 surface — comfortably past
-              the WCAG AAA 7:1 floor. */}
+              CTA). */}
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "400",
-              // Theme-aware body copy color. Dark mode lands on
-              // ~85% white (`colors.inkMuted`, AAA on #151515);
-              // light mode lands on the same token (#3A3A3F-ish
-              // muted ink), which delivers AAA on the white
-              // devotional surface. Previously hardcoded
-              // #CCCCCC for dark-only contrast — that pinned
-              // the body copy to a low-contrast gray in light
-              // mode (almost invisible on white).
-              color: colors.inkMuted,
-              fontSize: 17,
-              lineHeight: 28,
-              letterSpacing: -0.1,
-              marginTop: 20,
-            }}
+            style={[
+              typography.body,
+              {
+                color: colors.inkMuted,
+                marginTop: 20,
+              },
+            ]}
           >
             {blurb}
           </Text>
@@ -2806,7 +2732,7 @@ const SermonCard = memo(function SermonCard({
             >
               <View className="flex-row items-baseline">
                 <Text
-                  className="text-[11px] tracking-[3px] uppercase"
+                  className="text-[11px] tracking-[1px] uppercase"
                   style={{
                     fontFamily: "System",
                     fontWeight: "700",
@@ -2823,7 +2749,7 @@ const SermonCard = memo(function SermonCard({
                   {type.name}
                 </Text>
                 <Text
-                  className="text-[11px] tracking-[2.5px] uppercase"
+                  className="text-[11px] tracking-[1px] uppercase"
                   style={{
                     fontFamily: "System",
                     fontWeight: "500",
@@ -2899,7 +2825,7 @@ const SermonCard = memo(function SermonCard({
               style={{ paddingHorizontal: SCREEN_H_PAD }}
             >
               <Text
-                className="text-[11px] tracking-[3px] uppercase"
+                className="text-[11px] tracking-[1px] uppercase"
                 style={{
                   fontFamily: "System",
                   fontWeight: "700",
@@ -2989,7 +2915,7 @@ const SermonCard = memo(function SermonCard({
             joined by a middot. Caps-tracked so it reads as
             credit metadata rather than headline text. */}
         <Text
-          className="text-ink-subtle text-[11px] tracking-[2px] uppercase mt-3.5"
+          className="text-ink-muted text-[11px] tracking-[1px] uppercase mt-3.5"
           style={{
             fontFamily: "System",
             fontWeight: "600",
@@ -3555,15 +3481,13 @@ function ImprintCardVisual({
             >
               <View style={{ alignItems: "center" }}>
                 <Text
-                  style={{
-                    color: "#FFFFFF",
-                    fontFamily: "System",
-                    fontWeight: "700",
-                    fontSize: 20,
-                    lineHeight: 26,
-                    letterSpacing: -0.3,
-                    textAlign: "center",
-                  }}
+                  style={[
+                    systemText.title3,
+                    {
+                      color: "#FFFFFF",
+                      textAlign: "center",
+                    },
+                  ]}
                   numberOfLines={2}
                 >
                   {title}
@@ -3637,14 +3561,13 @@ function ImprintPreviewPill({ label }: { label: string }) {
         }}
       >
         <Text
-          style={{
-            color: "rgba(255, 255, 255, 0.7)",
-            fontFamily: "System",
-            fontWeight: "600",
-            fontSize: 13,
-            letterSpacing: 1,
-            textTransform: "uppercase",
-          }}
+          style={[
+            typography.smallLabel,
+            {
+              color: "rgba(255, 255, 255, 0.7)",
+              textTransform: "uppercase",
+            },
+          ]}
         >
           {label}
         </Text>
@@ -4014,7 +3937,7 @@ function ActiveFocusHero({
                 </Svg>
               </Animated.View>
               <Text
-                className="text-[11px] tracking-[3px] uppercase"
+                className="text-[11px] tracking-[1px] uppercase"
                 style={{
                   fontFamily: "System",
                   fontWeight: "700",
@@ -4052,7 +3975,7 @@ function ActiveFocusHero({
                 }}
               />
               <Text
-                className="text-[11px] tracking-[3px] uppercase"
+                className="text-[11px] tracking-[1px] uppercase"
                 style={{
                   fontFamily: "System",
                   fontWeight: "700",
@@ -4184,7 +4107,7 @@ function ActiveFocusHero({
                 the path forward, not "END". */}
             <View className="flex-row items-center justify-between mt-4">
               <Text
-                className="text-ink-subtle text-[12px]"
+                className="text-ink-muted text-[12px]"
                 style={{
                   fontFamily: "System",
                   fontWeight: "500",
@@ -4209,7 +4132,7 @@ function ActiveFocusHero({
                 })}
               >
                 <Text
-                  className="text-ink-subtle text-[11px] tracking-[1.6px] uppercase"
+                  className="text-ink-muted text-[11px] tracking-[1.6px] uppercase"
                   style={{ fontFamily: "System", fontWeight: "700" }}
                 >
                   End focus
@@ -4254,7 +4177,7 @@ function ActiveFocusHero({
                 {timeLabel}
               </Text>
               <Text
-                className="text-ink-subtle text-[11px] tracking-[3px] uppercase mt-1"
+                className="text-ink-muted text-[11px] tracking-[1px] uppercase mt-1"
                 style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 {timeMetaLabel}
@@ -4383,7 +4306,7 @@ function CompletedBadge() {
         />
       </Svg>
       <Text
-        className="text-ink text-[11px] tracking-[2px] uppercase ml-1.5"
+        className="text-ink text-[11px] tracking-[1px] uppercase ml-1.5"
         style={{ fontFamily: "System", fontWeight: "700" }}
       >
         Heard
@@ -4754,24 +4677,18 @@ const RhythmGrid = memo(function RhythmGrid({
           }}
         >
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: colors.ink,
-              fontSize: 15,
-              letterSpacing: -0.2,
-            }}
+            style={[
+              systemText.subheadline,
+              { fontWeight: "700", color: colors.ink },
+            ]}
           >
             This week
           </Text>
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "600",
-              color: colors.inkSubtle,
-              fontSize: 12,
-              letterSpacing: 0.2,
-            }}
+            style={[
+              systemText.caption1,
+              { fontWeight: "600", color: colors.inkMuted },
+            ]}
           >
             {weekRangeLabel}
           </Text>
@@ -4796,13 +4713,10 @@ const RhythmGrid = memo(function RhythmGrid({
               }}
             >
               <Text
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  color: colors.inkSubtle,
-                  fontSize: 11,
-                  letterSpacing: 1,
-                }}
+                style={[
+                  systemText.captionEmphasized,
+                  { color: colors.inkMuted },
+                ]}
               >
                 {letter}
               </Text>
@@ -5383,15 +5297,10 @@ function Stat({
         </Text>
       </View>
       <Text
-        style={{
-          fontFamily: "System",
-          fontWeight: "700",
-          color: colors.inkSubtle,
-          fontSize: 11,
-          letterSpacing: 2,
-          textTransform: "uppercase",
-          marginTop: 8,
-        }}
+        style={[
+          systemText.captionEmphasized,
+          { color: colors.inkMuted, marginTop: 8 },
+        ]}
       >
         {label}
       </Text>
@@ -5690,7 +5599,7 @@ function WeekStrip({
               "honored today" vs "today is still waiting", which
               the number alone can't communicate. */}
           <Text
-            className="text-ink-subtle text-[12px] leading-[16px] mt-0.5"
+            className="text-ink-muted text-[12px] leading-[16px] mt-0.5"
             style={{ fontFamily: "System", fontWeight: "500" }}
           >
             {prompt}
@@ -5941,7 +5850,7 @@ function NextSermonPill({
       {/* Small subtle counter chip — uses inkSubtle so it reads as
           metadata, not as the action itself. */}
       <Text
-        className="text-ink-subtle text-[12px] ml-2.5 tracking-[1px] uppercase"
+        className="text-ink-muted text-[12px] ml-2.5 tracking-[1px] uppercase"
         style={{ fontFamily: "System", fontWeight: "700" }}
       >
         {position} / {total}
@@ -6309,7 +6218,7 @@ function PreviewShieldPill({ onPress }: { onPress: () => void }) {
         Preview Shield
       </Text>
       <Text
-        className="text-ink-subtle text-[12px] ml-2.5 tracking-[1px] uppercase"
+        className="text-ink-muted text-[12px] ml-2.5 tracking-[1px] uppercase"
         style={{ fontFamily: "System", fontWeight: "700" }}
       >
         Next App
@@ -6422,7 +6331,7 @@ function LastCheckInCard({
       <View style={{ width: 4, backgroundColor: accent }} />
       <View className="flex-1 px-5 py-4">
         <Text
-          className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase"
+          className="text-ink-muted text-[11px] tracking-[1px] uppercase"
           style={{ fontFamily: "System", fontWeight: "700" }}
         >
           Last check in
@@ -7055,13 +6964,10 @@ function RhythmRow({
         <View style={{ alignItems: "flex-end", justifyContent: "center" }}>
           {isDone ? (
             <Text
-              className="text-ink-subtle text-[11px]"
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                letterSpacing: 0.4,
-                textTransform: "uppercase",
-              }}
+              style={[
+                systemText.captionEmphasized,
+                { color: colors.inkMuted },
+              ]}
             >
               Done
             </Text>
@@ -7075,14 +6981,10 @@ function RhythmRow({
               }}
             >
               <Text
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 11,
-                  color: "#0A84FF",
-                  letterSpacing: 0.4,
-                  textTransform: "uppercase",
-                }}
+                style={[
+                  systemText.captionEmphasized,
+                  { color: "#0A84FF" },
+                ]}
               >
                 Now
               </Text>
@@ -7090,7 +6992,7 @@ function RhythmRow({
           ) : (
             <View className="flex-row items-center">
               <Text
-                className="text-ink-subtle text-[11px]"
+                className="text-ink-muted text-[11px]"
                 style={{
                   fontFamily: "System",
                   fontWeight: "500",

@@ -15,6 +15,7 @@ import { Image } from "expo-image";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SFSymbol } from "@/components/Symbol";
+import { ScriptureStickerNote } from "@/components/ScriptureStickerNote";
 import {
   PHOTO_DIM_OVERLAY,
   PHOTO_OVERLAY_INK,
@@ -165,6 +166,30 @@ function VerseLineText({ line }: { line: VerseLine }) {
         {line.text}
       </Text>
     </View>
+  );
+}
+
+function ContinueButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={() => {
+        haptics.soft();
+        onPress();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel="Continue"
+      style={{
+        marginTop: 32,
+        minHeight: Math.max(56, minTouchTarget),
+        borderRadius: 999,
+        backgroundColor: CARD_INK,
+        overflow: "hidden",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text style={[typography.button, { color: "#FFFFFF" }]}>Continue</Text>
+    </Pressable>
   );
 }
 
@@ -382,7 +407,6 @@ function DetailSectionBlock({
           {
             color: CARD_INK_SOFT,
             textTransform: "uppercase",
-            letterSpacing: 1.1,
           },
         ]}
       >
@@ -395,9 +419,17 @@ function DetailSectionBlock({
   );
 }
 
+/** Status-dot tints — mirror StatusPill's semantic tone palette. */
+const BREAK_TONE_DOT: Record<"live" | "armed" | "muted", string> = {
+  live: "#22C55E",
+  armed: "#F59E0B",
+  muted: "#9CA3AF",
+};
+
 export type HomeFloatingPrayerHomeProps = {
   card: FloatingScriptureCard;
   nextBreakLabel: string;
+  nextBreakTone: "live" | "armed" | "muted";
   unlockedToday: boolean;
   onCompleteCard: (card: FloatingScriptureCard) => void;
   bottomInset: number;
@@ -406,6 +438,7 @@ export type HomeFloatingPrayerHomeProps = {
 export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   card,
   nextBreakLabel,
+  nextBreakTone,
   unlockedToday,
   onCompleteCard,
 }: HomeFloatingPrayerHomeProps) {
@@ -417,6 +450,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   const [expanded, setExpanded] = useState(false);
   const [expandPhase, setExpandPhase] = useState<ExpandPhase>("hero");
   const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const [closePressed, setClosePressed] = useState(false);
 
   // Separate native-driver values only — never mix with layout props.
   const openProgress = useRef(new Animated.Value(0)).current;
@@ -424,6 +458,10 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   const hintOpacity = useRef(new Animated.Value(0)).current;
   const hintPulse = useRef(new Animated.Value(0)).current;
   const heroDragY = useRef(new Animated.Value(0)).current;
+  const verseOpacity = useRef(new Animated.Value(0)).current;
+
+  // Live block = apps are currently gated; otherwise the CTA is Continue.
+  const hasOngoingAppBlock = nextBreakTone === "live";
 
   const expandPhaseRef = useRef<ExpandPhase>("hero");
   const expandedRef = useRef(false);
@@ -432,6 +470,18 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   );
 
   const activeImage = useFloatingCardImage(active);
+
+  // The card is the daily "unlock gate", so it only appears once per
+  // day around the person's scheduled app block:
+  //   • "live"  — a block is firing right now → show the card (the
+  //               gate to unlock apps).
+  //   • "muted" — nothing scheduled at all → still show it so a
+  //               brand-new user can read / unlock manually.
+  //   • "armed" — a block is scheduled for later → hide the card and
+  //               leave just the prompt + status pill until it fires.
+  // Once today's card is saved (unlockedToday) it stays hidden for
+  // the rest of the day.
+  const showCard = !unlockedToday && nextBreakTone !== "armed";
 
   useEffect(() => {
     expandPhaseRef.current = expandPhase;
@@ -479,14 +529,35 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     hintOpacity.stopAnimation();
     hintPulse.stopAnimation();
     heroDragY.stopAnimation();
+    verseOpacity.stopAnimation();
     openProgress.setValue(0);
     detailProgress.setValue(0);
     hintOpacity.setValue(0);
     hintPulse.setValue(0);
     heroDragY.setValue(0);
+    verseOpacity.setValue(0);
     setExpandPhase("hero");
     setShowSwipeHint(false);
-  }, [detailProgress, heroDragY, hintOpacity, hintPulse, openProgress]);
+  }, [
+    detailProgress,
+    heroDragY,
+    hintOpacity,
+    hintPulse,
+    openProgress,
+    verseOpacity,
+  ]);
+
+  const fadeInVerse = useCallback(() => {
+    verseOpacity.stopAnimation();
+    verseOpacity.setValue(0);
+    Animated.timing(verseOpacity, {
+      toValue: 1,
+      duration: reducedMotion ? 220 : 900,
+      delay: reducedMotion ? 40 : 280,
+      easing: LIQUID_OUT,
+      useNativeDriver: true,
+    }).start();
+  }, [reducedMotion, verseOpacity]);
 
   const openCard = useCallback(
     (item: FloatingScriptureCard) => {
@@ -496,13 +567,35 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
       setExpanded(true);
 
       if (reducedMotion) {
-        openProgress.setValue(1);
-        detailProgress.setValue(1);
-        setExpandPhase("detail");
+        // Reduced motion: swap the scale/slide expand for a plain
+        // opacity cross-fade (HIG: replace motion with a fade rather
+        // than snapping). Land on the hero quote like the full-motion
+        // path so the experience is identical minus the zoom.
+        detailProgress.setValue(0);
+        openProgress.setValue(0);
+        requestAnimationFrame(() => {
+          fadeInVerse();
+          Animated.timing(openProgress, {
+            toValue: 1,
+            duration: 260,
+            easing: LIQUID_OUT,
+            useNativeDriver: true,
+          }).start(({ finished }) => {
+            if (!finished || expandPhaseRef.current !== "hero") return;
+            setShowSwipeHint(true);
+            Animated.timing(hintOpacity, {
+              toValue: 1,
+              duration: 200,
+              easing: LIQUID_OUT,
+              useNativeDriver: true,
+            }).start();
+          });
+        });
         return;
       }
 
       requestAnimationFrame(() => {
+        fadeInVerse();
         Animated.timing(openProgress, {
           toValue: 1,
           duration: OPEN_MS,
@@ -523,7 +616,14 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
         });
       });
     },
-    [detailProgress, hintOpacity, openProgress, reducedMotion, resetExpandState],
+    [
+      detailProgress,
+      fadeInVerse,
+      hintOpacity,
+      openProgress,
+      reducedMotion,
+      resetExpandState,
+    ],
   );
 
   useEffect(() => {
@@ -566,8 +666,10 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
         useNativeDriver: true,
       }),
       Animated.timing(detailProgress, {
+        // Hero→detail is already an opacity cross-fade, so keep a short
+        // fade even under reduced motion rather than snapping.
         toValue: 1,
-        duration: reducedMotion ? 0 : 360,
+        duration: reducedMotion ? 220 : 360,
         easing: LIQUID_OUT,
         useNativeDriver: true,
       }),
@@ -577,9 +679,18 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   const closeExpanded = useCallback(() => {
     haptics.soft();
     if (reducedMotion) {
-      resetExpandState();
-      setExpanded(false);
-      setActive(card);
+      // Reduced motion: fade the shell out instead of snapping away.
+      Animated.timing(openProgress, {
+        toValue: 0,
+        duration: 200,
+        easing: LIQUID_IN,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (!finished) return;
+        resetExpandState();
+        setExpanded(false);
+        setActive(card);
+      });
       return;
     }
     Animated.parallel([
@@ -618,10 +729,19 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     haptics.tap();
     const completed = active;
     if (reducedMotion) {
-      resetExpandState();
-      setExpanded(false);
-      setActive(card);
-      onCompleteCard(completed);
+      // Reduced motion: fade out instead of snapping, then complete.
+      Animated.timing(openProgress, {
+        toValue: 0,
+        duration: 200,
+        easing: LIQUID_IN,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (!finished) return;
+        resetExpandState();
+        setExpanded(false);
+        setActive(card);
+        onCompleteCard(completed);
+      });
       return;
     }
     Animated.parallel([
@@ -733,30 +853,16 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <View
-        style={{
-          ...StyleSheet.absoluteFillObject,
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-        }}
-        pointerEvents="box-none"
-      >
-        <FloatingMiniCard
-          card={card}
-          onPress={() => openCard(card)}
-          hidden={expanded}
-        />
-      </View>
-
+      {/* Single centered column: prompt copy sits ABOVE the card so the
+          two never overlap. (They were previously two separate
+          absolute-fill layers both centered, which stacked the card on
+          top of the text.) */}
       <View
         pointerEvents="box-none"
         style={{
           ...StyleSheet.absoluteFillObject,
           alignItems: "center",
           justifyContent: "center",
-          paddingHorizontal: 40,
-          zIndex: 20,
         }}
       >
         <View
@@ -764,8 +870,8 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
           style={{
             alignItems: "center",
             maxWidth: 300,
-            paddingVertical: 28,
             paddingHorizontal: 20,
+            marginBottom: showCard ? 28 : 0,
           }}
         >
           <Text
@@ -781,22 +887,72 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
           >
             {unlockedToday ? "Apps unlocked" : promptLine}
           </Text>
-          <Text
-            style={{
-              fontFamily: typography.body.fontFamily,
-              fontWeight: "500",
-              fontSize: 15,
-              lineHeight: 22,
-              color: colors.inkMuted,
-              textAlign: "center",
-              marginTop: 10,
-            }}
-          >
-            {unlockedToday
-              ? "Today's card is saved. Your apps are free for the rest of the day."
-              : nextBreakLabel}
-          </Text>
+          {unlockedToday ? (
+            <Text
+              style={{
+                fontFamily: typography.body.fontFamily,
+                fontWeight: "500",
+                fontSize: 15,
+                lineHeight: 22,
+                color: colors.inkMuted,
+                textAlign: "center",
+                marginTop: 10,
+              }}
+            >
+              Today&apos;s card is saved. Your apps are free for the rest of the
+              day.
+            </Text>
+          ) : (
+            <View
+              style={{
+                marginTop: 16,
+                flexDirection: "row",
+                alignItems: "center",
+                alignSelf: "center",
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                borderRadius: 999,
+                backgroundColor: colors.surface,
+                shadowColor: "#000",
+                shadowOpacity: 0.08,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 2 },
+              }}
+            >
+              <View
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 999,
+                  marginRight: 7,
+                  backgroundColor: BREAK_TONE_DOT[nextBreakTone],
+                }}
+              />
+              <Text
+                style={{
+                  fontFamily: typography.body.fontFamily,
+                  fontWeight: "600",
+                  fontSize: 13,
+                  lineHeight: 16,
+                  letterSpacing: -0.08,
+                  color: colors.inkMuted,
+                  textAlign: "center",
+                }}
+                numberOfLines={1}
+              >
+                {nextBreakLabel}
+              </Text>
+            </View>
+          )}
         </View>
+
+        {showCard ? (
+          <FloatingMiniCard
+            card={card}
+            onPress={() => openCard(card)}
+            hidden={expanded}
+          />
+        ) : null}
       </View>
 
       <Modal
@@ -813,7 +969,12 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
               style={{
                 flex: 1,
                 opacity: shellOpacity,
-                transform: [{ scale: shellScale }, { translateY: heroDragY }],
+                // Under reduced motion we drop the scale zoom and lean on
+                // the opacity cross-fade alone (heroDragY stays — it's a
+                // direct-manipulation gesture, not decorative motion).
+                transform: reducedMotion
+                  ? [{ translateY: heroDragY }]
+                  : [{ scale: shellScale }, { translateY: heroDragY }],
               }}
             >
               {/* Hero quote screen */}
@@ -833,46 +994,26 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                   pointerEvents="none"
                   style={[
                     StyleSheet.absoluteFillObject,
-                    { backgroundColor: PHOTO_DIM_OVERLAY },
+                    { backgroundColor: "rgba(0, 0, 0, 0.1)" },
                   ]}
                 />
 
-                <View
+                <Animated.View
                   pointerEvents="none"
                   style={{
                     ...StyleSheet.absoluteFillObject,
                     justifyContent: "center",
                     alignItems: "center",
-                    paddingHorizontal: 36,
+                    paddingHorizontal: 28,
+                    opacity: verseOpacity,
                   }}
                 >
-                  <View style={{ maxWidth: "85%", alignItems: "center" }}>
-                    <Text
-                      style={[
-                        typography.photoQuote,
-                        { color: PHOTO_OVERLAY_INK },
-                      ]}
-                    >
-                      {heroQuote}
-                    </Text>
-                    {heroReference ? (
-                      <Text
-                        style={[
-                          typography.smallLabel,
-                          {
-                            color: PHOTO_OVERLAY_INK_MUTED,
-                            textTransform: "uppercase",
-                            letterSpacing: 1.2,
-                            marginTop: 16,
-                            textAlign: "center",
-                          },
-                        ]}
-                      >
-                        {heroReference}
-                      </Text>
-                    ) : null}
-                  </View>
-                </View>
+                  <ScriptureStickerNote
+                    quote={heroQuote}
+                    reference={heroReference || undefined}
+                    maxWidth={windowWidth * 0.82}
+                  />
+                </Animated.View>
 
                 <Animated.View
                   pointerEvents="none"
@@ -893,17 +1034,16 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                     <SFSymbol
                       name="chevron.down"
                       size={18}
-                      color={PHOTO_OVERLAY_INK_MUTED}
+                      color="rgba(20, 20, 20, 0.72)"
                       weight="semibold"
                     />
                     <Text
                       style={[
                         typography.smallLabel,
                         {
-                          color: PHOTO_OVERLAY_INK_MUTED,
+                          color: "rgba(20, 20, 20, 0.72)",
                           textTransform: "uppercase",
                           marginTop: 8,
-                          letterSpacing: 1.2,
                         },
                       ]}
                     >
@@ -1026,25 +1166,34 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                     <DetailSectionBlock eyebrow="Insight" body={active.insight} />
 
                     {!unlockedToday ? (
-                      <HoldToUnlockButton
-                        label="Hold to unlock"
-                        holdingLabel="Keep holding…"
-                        onComplete={finishCard}
-                        reducedMotion={reducedMotion}
-                      />
+                      hasOngoingAppBlock ? (
+                        <HoldToUnlockButton
+                          label="Hold to Unlock your apps"
+                          holdingLabel="Keep holding…"
+                          onComplete={finishCard}
+                          reducedMotion={reducedMotion}
+                        />
+                      ) : (
+                        <ContinueButton onPress={finishCard} />
+                      )
                     ) : null}
                   </View>
                 </ScrollView>
               </Animated.View>
             </Animated.View>
 
-            {/* Outside the opacity/scale shell so nothing can hide it */}
+            {/* Outside the opacity/scale shell so nothing can hide it.
+                High-contrast disc — the previous dark pill disappeared
+                into the sky photo on the detail phase (screenshot
+                audit: users reported "no back button"). */}
             <Pressable
               onPress={closeExpanded}
-              hitSlop={12}
+              onPressIn={() => setClosePressed(true)}
+              onPressOut={() => setClosePressed(false)}
+              hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Close"
-              style={({ pressed }) => ({
+              style={{
                 position: "absolute",
                 top: Math.max(insets.top, 12) + 4,
                 left: 16,
@@ -1053,26 +1202,24 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                 width: minTouchTarget,
                 height: minTouchTarget,
                 borderRadius: minTouchTarget / 2,
-                backgroundColor: "rgba(0,0,0,0.72)",
+                backgroundColor: "rgba(255,255,255,0.92)",
                 borderWidth: StyleSheet.hairlineWidth,
-                borderColor: "rgba(255,255,255,0.55)",
+                borderColor: "rgba(0,0,0,0.12)",
                 alignItems: "center",
                 justifyContent: "center",
-                opacity: pressed ? 0.7 : 1,
-              })}
+                opacity: closePressed ? 0.75 : 1,
+                shadowColor: "#000",
+                shadowOpacity: 0.18,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 4 },
+              }}
             >
-              <Text
-                style={{
-                  color: "#FFFFFF",
-                  fontSize: 20,
-                  fontWeight: "700",
-                  lineHeight: 22,
-                  marginTop: -1,
-                }}
-                allowFontScaling={false}
-              >
-                ✕
-              </Text>
+              <SFSymbol
+                name="xmark"
+                size={16}
+                color="#0F0F0F"
+                weight="semibold"
+              />
             </Pressable>
           </View>
         </GestureHandlerRootView>

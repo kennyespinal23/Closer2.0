@@ -18,6 +18,8 @@ import { AppleSheet, SheetContent } from "@/components/AppleSheet";
 import { FadeIn } from "@/components/FadeIn";
 import { SFSymbol } from "@/components/Symbol";
 import * as haptics from "@/lib/haptics";
+import { goBackOr } from "@/lib/navigation";
+import { systemText } from "@/lib/typography";
 import { MOODS, type Mood } from "@/constants/moods";
 import { useColors } from "@/state/theme";
 
@@ -103,7 +105,8 @@ export default function MoodSelectScreen() {
   };
 
   const handleClose = () => {
-    router.back();
+    if (router.canDismiss()) router.dismiss();
+    else goBackOr(router, "/(tabs)/today");
   };
 
   return (
@@ -130,8 +133,8 @@ export default function MoodSelectScreen() {
         {/* ─── Top bar — Close button only ─────────────────── */}
         <View className="px-6 pt-2 flex-row items-center justify-between">
           <Text
-            className="text-ink-subtle text-[11px] tracking-[3px] uppercase"
-            style={{ fontFamily: "System", fontWeight: "700" }}
+            className="text-ink-muted"
+            style={[systemText.captionEmphasized, { fontWeight: "700" }]}
           >
             Check-in
           </Text>
@@ -143,14 +146,7 @@ export default function MoodSelectScreen() {
             className="w-9 h-9 rounded-full bg-accent-soft border border-border items-center justify-center"
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M6 6l12 12M18 6l-6 6-6 6"
-                stroke={colors.ink}
-                strokeWidth={2}
-                strokeLinecap="round"
-              />
-            </Svg>
+            <SFSymbol name="xmark" size={13} color={colors.ink} weight="semibold" />
           </Pressable>
         </View>
 
@@ -278,8 +274,8 @@ function MoodCard({
             accessibilityIgnoresInvertColors
           />
           <Text
-            className="text-ink text-[11px] mt-1.5 text-center px-0.5"
-            style={{ fontFamily: "System", fontWeight: "700" }}
+            className="text-ink mt-1.5 text-center px-0.5"
+            style={[systemText.caption2, { fontWeight: "700" }]}
             numberOfLines={2}
           >
             {label}
@@ -324,7 +320,7 @@ function ConfirmationPanel({
       backgroundColor={colors.surface}
     >
       {active ? (
-        <SheetContent style={{ paddingTop: 4, paddingBottom: 20 }}>
+        <SheetContent style={{ paddingTop: 20, paddingBottom: 20 }}>
           <View className="flex-row items-center">
             <View
               style={{
@@ -348,26 +344,22 @@ function ConfirmationPanel({
 
             <View style={{ flex: 1, marginLeft: 14 }}>
               <Text
-                className="text-[11px] tracking-[2.5px] uppercase"
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  color: active.swatch,
-                }}
+                className=""
+                style={[systemText.captionEmphasized, { fontWeight: "700", color: active.swatch }]}
                 numberOfLines={1}
               >
                 You picked
               </Text>
               <Text
-                className="text-ink text-[20px] mt-0.5"
-                style={{ fontFamily: "System", fontWeight: "700" }}
+                className="text-ink mt-0.5"
+                style={[systemText.title3, { fontWeight: "700" }]}
                 numberOfLines={1}
               >
                 {active.label}
               </Text>
               <Text
-                className="text-ink-muted text-[13px] leading-[17px] mt-1"
-                style={{ fontFamily: "System", fontWeight: "400" }}
+                className="text-ink-muted mt-1"
+                style={[systemText.footnote, { lineHeight: 17 }]}
                 numberOfLines={2}
               >
                 {active.prompt}.

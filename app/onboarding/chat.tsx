@@ -375,7 +375,7 @@ export default function OnboardingChatScreen() {
                 style={{
                   alignSelf: "flex-end",
                   fontSize: 13,
-                  color: colors.inkSubtle,
+                  color: colors.inkMuted,
                   marginBottom: 10,
                   marginRight: 4,
                 }}

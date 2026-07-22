@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import * as haptics from "@/lib/haptics";
 import { useOsReducedMotion } from "@/lib/useReducedMotion";
+import { NEW_YORK } from "@/lib/typography";
 import {
   SettingsLinkRow,
   SettingsScaffold,
@@ -155,7 +156,7 @@ export default function AppearanceScreen() {
               selection. Mirrors the per-row sublabel users got
               with the old SettingsChoiceRow layout so the
               guidance copy doesn't disappear with the swap. */}
-          <Text style={[styles.helperText, { color: colors.inkSubtle }]}>
+          <Text style={[styles.helperText, { color: colors.inkMuted }]}>
             {themeSublabel}
           </Text>
         </View>
@@ -174,7 +175,7 @@ export default function AppearanceScreen() {
             <Text
               style={{
                 color: colors.ink,
-                fontFamily: "EBGaramond_500Medium",
+                fontFamily: NEW_YORK,
                 fontSize: Math.round(20 * currentTextSize.scale),
                 lineHeight: Math.round(28 * currentTextSize.scale),
               }}
@@ -208,7 +209,7 @@ export default function AppearanceScreen() {
               color: colors.ink,
             }}
           />
-          <Text style={[styles.helperText, { color: colors.inkSubtle }]}>
+          <Text style={[styles.helperText, { color: colors.inkMuted }]}>
             {currentTextSize.id === "default"
               ? "Recommended"
               : `Scaled to ${Math.round(currentTextSize.scale * 100)}%`}
@@ -279,7 +280,7 @@ export default function AppearanceScreen() {
 
       <View className="px-6 mt-8">
         <Text
-          className="text-ink-subtle text-[12px] leading-[18px] text-center"
+          className="text-ink-muted text-[12px] leading-[18px] text-center"
           style={{ fontFamily: "System", fontWeight: "400" }}
         >
           These preferences apply only to Closer.

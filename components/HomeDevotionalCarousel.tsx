@@ -97,7 +97,7 @@ export type HomeDevotionalCarouselProps = {
     nextBreakLabel: string;
     nextBreakTone: "live" | "armed" | "muted";
     unlockedToday: boolean;
-    onCompleteCard: (card: FloatingScriptureCard) => void;
+    onCompleteCard: (card: FloatingScriptureCard) => boolean;
   };
 };
 

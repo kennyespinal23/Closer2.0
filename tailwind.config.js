@@ -54,6 +54,7 @@ module.exports = {
           DEFAULT: "var(--color-select)",
           soft: "var(--color-select-soft)",
         },
+        destructive: "var(--color-destructive)",
       },
       // June 2026 typography reset: the app now lives on the iOS
       // system fonts. SF Pro (resolved via fontFamily: "System"

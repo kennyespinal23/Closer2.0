@@ -6,6 +6,7 @@ import {
   SettingsScaffold,
   SettingsSection,
 } from "@/components/SettingsScaffold";
+import { systemText } from "@/lib/typography";
 import { useColors } from "@/state/theme";
 
 /**
@@ -44,14 +45,14 @@ export default function WidgetScreen() {
           interactive thing. */}
       <View className="px-6 mt-7 items-center">
         <Text
-          className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+          className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-3"
           style={{ fontFamily: "System", fontWeight: "700" }}
         >
           Preview
         </Text>
         <WidgetMock />
         <Text
-          className="text-ink-subtle text-[12px] mt-3"
+          className="text-ink-muted text-[12px] mt-3"
           style={{ fontFamily: "System", fontWeight: "500" }}
         >
           Approximate — final design may differ.
@@ -106,14 +107,7 @@ function WidgetMock() {
     >
       <View>
         <Text
-          style={{
-            color: colors.inkSubtle,
-            fontSize: 11,
-            letterSpacing: 2.2,
-            textTransform: "uppercase",
-            fontFamily: "System",
-            fontWeight: "700",
-          }}
+          style={[systemText.captionEmphasized, { color: colors.inkMuted, fontWeight: "700" }]}
         >
           Today
         </Text>
@@ -132,12 +126,7 @@ function WidgetMock() {
       </View>
       <View className="flex-row items-center justify-between">
         <Text
-          style={{
-            color: colors.inkMuted,
-            fontSize: 11,
-            fontFamily: "System",
-            fontWeight: "600",
-          }}
+          style={[systemText.caption2, { color: colors.inkMuted, fontWeight: "600" }]}
         >
           James 4:8
         </Text>

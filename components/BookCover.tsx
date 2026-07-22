@@ -227,9 +227,9 @@ function eyebrowForVariant(v: Variant) {
     case "thumb":
       return { fontSize: 11, letterSpacing: 0.8 };
     case "card":
-      return { fontSize: 11, letterSpacing: 1.2 };
+      return { fontSize: 11, letterSpacing: 1 };
     case "hero":
-      return { fontSize: 11, letterSpacing: 2 };
+      return { fontSize: 11, letterSpacing: 1 };
   }
 }
 

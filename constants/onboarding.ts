@@ -29,6 +29,8 @@
  * via `progressFor()`.
  */
 export const ONBOARDING_STEPS = [
+  // Name leads — captured right after Get Started.
+  "name",
   // The Audit — pre-brand, full-bleed black canvas.
   "stat",
   "apps",
@@ -41,14 +43,13 @@ export const ONBOARDING_STEPS = [
   // a hat.
   "pattern",
   "calculating",
-  // The Pivot — personalized punch, anchor, name, proof.
+  // The Pivot — personalized punch, anchor, proof.
   "punch",
   "chat",
   "attention",
   "protected",
   "loop",
   "why",
-  "name",
   "proof",
   "rating",
   // The Welcome — Closer is named for the first time.

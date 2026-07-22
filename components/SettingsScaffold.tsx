@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "expo-router";
 import * as haptics from "@/lib/haptics";
+import { systemText } from "@/lib/typography";
 import { SFSymbol } from "@/components/Symbol";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
@@ -159,28 +160,22 @@ export function SettingsInfoBanner({
       >
         {eyebrow ? (
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: isInfo ? blue : colors.inkSubtle,
-              fontSize: 11,
-              letterSpacing: 2.5,
-              textTransform: "uppercase",
-              marginBottom: 12,
-            }}
+            style={[
+              systemText.captionEmphasized,
+              {
+                color: isInfo ? blue : colors.inkSubtle,
+                marginBottom: 12,
+              },
+            ]}
           >
             {eyebrow}
           </Text>
         ) : null}
         <Text
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            color: colors.ink,
-            fontSize: 17,
-            lineHeight: 22,
-            letterSpacing: -0.2,
-          }}
+          style={[
+            systemText.headline,
+            { fontWeight: "700", color: colors.ink },
+          ]}
         >
           {title}
         </Text>
@@ -224,14 +219,10 @@ export function SettingsInfoBanner({
               color={blue}
             />
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: blue,
-                fontSize: 13,
-                letterSpacing: -0.1,
-                marginLeft: 6,
-              }}
+              style={[
+                systemText.footnote,
+                { fontWeight: "700", color: blue, marginLeft: 6 },
+              ]}
             >
               {learnMoreLabel}
             </Text>
@@ -260,7 +251,7 @@ export function SettingsSection({
     <View className="px-5 mt-7">
       {title && (
         <Text
-          className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-2.5 ml-1"
+          className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-2.5 ml-1"
           style={{ fontFamily: "System", fontWeight: "700" }}
         >
           {title}
@@ -271,7 +262,7 @@ export function SettingsSection({
       </View>
       {footer && (
         <Text
-          className="text-ink-subtle text-[12px] leading-[18px] mt-2.5 px-1"
+          className="text-ink-muted text-[12px] leading-[18px] mt-2.5 px-1"
           style={{ fontFamily: "System", fontWeight: "400" }}
         >
           {footer}
@@ -311,10 +302,10 @@ export function SettingsLinkRow({
   destructive?: boolean;
 }) {
   const colors = useColors();
-  const labelColor = destructive ? "#FF6B6B" : colors.ink;
+  const labelColor = destructive ? colors.destructive : colors.ink;
   return (
     <View>
-      <Pressable onPress={onPress}>
+      <Pressable onPress={onPress} style={{ minHeight: 44 }}>
         <View className="flex-row items-center px-4 py-3.5">
           {icon && (
             <View className="w-8 h-8 rounded-xl bg-accent-soft items-center justify-center mr-3">
@@ -334,7 +325,7 @@ export function SettingsLinkRow({
             </Text>
             {sublabel && (
               <Text
-                className="text-ink-subtle text-[12px] mt-0.5"
+                className="text-ink-muted text-[12px] mt-0.5"
                 style={{ fontFamily: "System", fontWeight: "400" }}
               >
                 {sublabel}
@@ -400,12 +391,16 @@ export function SettingsToggleRow({
   disabled?: boolean;
 }) {
   const colors = useColors();
+  const scheme = useResolvedScheme();
   // The "off" track / iOS background need different alpha against
   // a light vs dark canvas — a 10%-white wash disappears on white.
   // We pick a calm 8% ink-over-bg in both modes so the switch reads
   // as a soft pill regardless of theme.
   const trackOff = withAlpha(colors.ink, 0.1);
   const trackBg = withAlpha(colors.ink, 0.08);
+  // iOS system green — UIColor.systemGreen (#30D158 dark, #34C759 light).
+  // This is the canonical "on" track color for iOS toggles.
+  const trackOn = scheme === "dark" ? "#30D158" : "#34C759";
   return (
     <View style={disabled ? { opacity: 0.55 } : undefined}>
       <View className="flex-row items-center px-4 py-3.5">
@@ -423,7 +418,7 @@ export function SettingsToggleRow({
           </Text>
           {sublabel && (
             <Text
-              className="text-ink-subtle text-[12px] mt-0.5 leading-[17px]"
+              className="text-ink-muted text-[12px] mt-0.5 leading-[17px]"
               style={{ fontFamily: "System", fontWeight: "400" }}
             >
               {sublabel}
@@ -444,8 +439,8 @@ export function SettingsToggleRow({
             haptics.tick();
             onValueChange(next);
           }}
-          trackColor={{ false: trackOff, true: "#3D8B6A" }}
-          thumbColor="#F4F4F5"
+          trackColor={{ false: trackOff, true: trackOn }}
+          thumbColor="#FFFFFF"
           ios_backgroundColor={trackBg}
         />
       </View>
@@ -508,7 +503,7 @@ export function SettingsStaticRow({
           </Text>
           {sublabel && (
             <Text
-              className="text-ink-subtle text-[12px] mt-0.5"
+              className="text-ink-muted text-[12px] mt-0.5"
               style={{ fontFamily: "System", fontWeight: "400" }}
             >
               {sublabel}
@@ -582,7 +577,7 @@ export function SettingsChoiceRow({
             </Text>
             {sublabel && (
               <Text
-                className="text-ink-subtle text-[12px] mt-0.5"
+                className="text-ink-muted text-[12px] mt-0.5"
                 style={{ fontFamily: "System", fontWeight: "400" }}
               >
                 {sublabel}

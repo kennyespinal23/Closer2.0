@@ -1,9 +1,8 @@
 /**
  * One-shot launch splash per cold start.
  *
- * Suppressed while the returning-user router decides between the
- * rotating-moment beat and home, and for the whole session when
- * the moment screen opens first.
+ * Armed when a returning user is routed home; consumed once the
+ * branded overlay finishes so it never replays mid-session.
  */
 let launchSplashConsumed = false;
 let launchSplashArmed = true;

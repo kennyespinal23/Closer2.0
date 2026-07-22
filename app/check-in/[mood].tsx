@@ -9,7 +9,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
+import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
+import { SFSymbol } from "@/components/Symbol";
 import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { JournalEditor } from "@/components/JournalEditor";
@@ -219,18 +220,10 @@ export default function VerseDeliveryScreen() {
             className="w-9 h-9 rounded-full bg-accent-soft border border-border items-center justify-center"
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M15 6l-6 6 6 6"
-                stroke={colors.ink}
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
+            <SFSymbol name="chevron.left" size={14} color={colors.ink} weight="semibold" />
           </Pressable>
           <Text
-            className="text-ink-subtle text-[11px] tracking-[3px] uppercase"
+            className="text-ink-muted text-[11px] tracking-[1px] uppercase"
             style={{ fontFamily: "System", fontWeight: "700" }}
           >
             Check-in
@@ -259,7 +252,7 @@ export default function VerseDeliveryScreen() {
               }}
             >
               <Text
-                className="text-[11px] tracking-[2.5px] uppercase"
+                className="text-[11px] tracking-[1px] uppercase"
                 style={{
                   fontFamily: "System",
                   fontWeight: "700",
@@ -330,7 +323,7 @@ export default function VerseDeliveryScreen() {
                   style={{ backgroundColor: mood.swatch }}
                 />
                 <Text
-                  className="text-[11px] tracking-[3px] uppercase"
+                  className="text-[11px] tracking-[1px] uppercase"
                   style={{
                     fontFamily: "System",
                     fontWeight: "700",
@@ -388,7 +381,7 @@ export default function VerseDeliveryScreen() {
             >
               <View className="flex-row items-center justify-between mb-2">
                 <Text
-                  className="text-[11px] tracking-[2.5px] uppercase"
+                  className="text-[11px] tracking-[1px] uppercase"
                   style={{
                     fontFamily: "System",
                     fontWeight: "700",
@@ -398,7 +391,7 @@ export default function VerseDeliveryScreen() {
                   Your reflection
                 </Text>
                 <Text
-                  className="text-ink-subtle text-[11px]"
+                  className="text-ink-muted text-[11px]"
                   style={{ fontFamily: "System", fontWeight: "500" }}
                 >
                   Edit
@@ -523,31 +516,11 @@ function ChipButton({
 }
 
 function ShareGlyph({ color }: { color: string }) {
-  return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 3v12M12 3l-4 4M12 3l4 4M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"
-        stroke={color}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
+  return <SFSymbol name="square.and.arrow.up" size={16} color={color} weight="medium" />;
 }
 
 function PenGlyph({ color }: { color: string }) {
-  return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M4 20h4l10-10-4-4L4 16v4z M14 6l4 4"
-        stroke={color}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
+  return <SFSymbol name="pencil" size={16} color={color} weight="medium" />;
 }
 
 // ─────────────────────────────────────────────────────────────────

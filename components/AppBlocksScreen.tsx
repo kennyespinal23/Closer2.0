@@ -19,7 +19,6 @@ import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
 import { SFSymbol } from "@/components/Symbol";
 import { TimeBlockEditor } from "@/components/TimeBlockEditor";
-import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { TAB_ACCENT_RED } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
 import {
@@ -41,7 +40,7 @@ import {
   type WeekdayIndex,
 } from "@/lib/notifications";
 import { syncAllScheduledAppBlocks } from "@/lib/scheduledAppBlocks";
-import { typography } from "@/lib/typography";
+import { systemText, typography } from "@/lib/typography";
 import { useFocus } from "@/state/focus";
 import {
   formatDaysOfWeek,
@@ -235,13 +234,10 @@ export function AppBlocksScreen({
         contentContainerStyle={{ paddingBottom }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Large Title — 34pt per HIG / Espinal standards */}
+        {/* Apple Large Title — systemText.largeTitle (34pt) */}
         <View style={{ paddingHorizontal: SCREEN_H_PAD, paddingTop: showBack ? 0 : 8 }}>
           <Text
-            style={[
-              typography.pageTitle,
-              { color: colors.ink, fontSize: 34, lineHeight: 41 },
-            ]}
+            style={[systemText.largeTitle, { color: colors.ink }]}
             accessibilityRole="header"
           >
             App Blocks
@@ -395,7 +391,7 @@ export function AppBlocksScreen({
               fontWeight: "400",
               fontSize: 13,
               lineHeight: 18,
-              color: colors.inkSubtle,
+              color: colors.inkMuted,
               textAlign: "center",
               marginTop: 16,
               paddingHorizontal: SCREEN_H_PAD + 8,
@@ -407,7 +403,6 @@ export function AppBlocksScreen({
       </ScrollView>
 
       <TimeBlockEditor
-        key={timeTarget ?? "closed-time"}
         visible={timeTarget !== null}
         existing={editingSession}
         onClose={() => setTimeTarget(null)}
@@ -533,8 +528,38 @@ function PrimaryCardButton({
   onPress: () => void;
   onPressIn?: () => void;
 }) {
+  const colors = useColors();
+  const [pressed, setPressed] = useState(false);
+
+  // Do NOT use Pressable function-form `style` — in this app it
+  // silently drops layout (bg / padding), which left white label
+  // text on the white card with no pill behind it.
   return (
-    <PrimaryPillButton label={label} onPress={onPress} onPressIn={onPressIn} />
+    <Pressable
+      onPress={onPress}
+      onPressIn={() => {
+        setPressed(true);
+        onPressIn?.();
+      }}
+      onPressOut={() => setPressed(false)}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={{
+        alignSelf: "stretch",
+        minHeight: 52,
+        borderRadius: 999,
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        backgroundColor: colors.ink,
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: pressed ? 0.88 : 1,
+      }}
+    >
+      <Text style={[typography.button, { color: colors.surface }]}>
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 

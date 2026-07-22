@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
+import { SFSymbol } from "@/components/Symbol";
 import {
   SettingsScaffold,
   SettingsSection,
+  SettingsLinkRow,
   SettingsToggleRow,
 } from "@/components/SettingsScaffold";
 import { TimePickerModal } from "@/components/TimePickerModal";
@@ -55,17 +56,6 @@ export default function NotificationsScreen() {
 
   const enabled = answers.notificationsEnabled ?? false;
   const time = answers.dailyReminderTime ?? DEFAULT_REMINDER_TIME;
-
-  // True when the active time isn't one of the chip presets —
-  // tells the chip row to highlight the Custom chip and surface
-  // the picked time as its label.
-  const isCustomTime = useMemo(
-    () =>
-      !ALL_PRESETS.some(
-        (p) => p.hour === time.hour && p.minute === time.minute,
-      ),
-    [time],
-  );
 
   // Read permission on mount so the disabled / "Open Settings"
   // state on the toggle is accurate even before the user interacts.
@@ -186,45 +176,12 @@ export default function NotificationsScreen() {
             user can adjust without drilling into a sub-screen. Only
             visible when the reminder is actually enabled. */}
         {enabled && permission === "granted" && (
-          <View className="px-4 pt-4 pb-4">
-            <Text
-              className="text-ink-subtle text-[11px] tracking-[2px] uppercase mb-3"
-              style={{ fontFamily: "System", fontWeight: "700" }}
-            >
-              Time
-            </Text>
-            <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-              {ALL_PRESETS.map((preset) => {
-                // A preset chip is "selected" only when the active
-                // time matches the preset AND no custom time is
-                // active. (Custom times that happen to equal a
-                // preset are treated as that preset by isCustomTime,
-                // so this check is redundant-safe but explicit.)
-                const selected =
-                  !isCustomTime &&
-                  preset.hour === time.hour &&
-                  preset.minute === time.minute;
-                return (
-                  <TimeChip
-                    key={`${preset.hour}-${preset.minute}`}
-                    label={formatReminderTime(preset)}
-                    selected={selected}
-                    onPress={() => handlePickTime(preset)}
-                  />
-                );
-              })}
-              {/* Custom chip — opens the wheel modal. Same
-                  pattern as the onboarding screen so the picker
-                  feels like the same affordance in both places. */}
-              <CustomTimeChip
-                selected={isCustomTime}
-                label={
-                  isCustomTime ? formatReminderTime(time) : "Custom"
-                }
-                onPress={() => setPickerOpen(true)}
-              />
-            </View>
-          </View>
+          <SettingsLinkRow
+            label="Reminder time"
+            sublabel="Opens the native time picker"
+            value={formatReminderTime(time)}
+            onPress={() => setPickerOpen(true)}
+          />
         )}
       </SettingsSection>
 
@@ -266,7 +223,7 @@ export default function NotificationsScreen() {
 
       <View className="px-6 mt-6">
         <Text
-          className="text-ink-subtle text-[12px] leading-[18px] text-center"
+          className="text-ink-muted text-[12px] leading-[18px] text-center"
           style={{ fontFamily: "System", fontWeight: "400" }}
         >
           You can mute everything from your phone&apos;s Settings app at any time.
@@ -285,151 +242,6 @@ export default function NotificationsScreen() {
         onClose={() => setPickerOpen(false)}
       />
     </SettingsScaffold>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Time picker chips — a wider set than onboarding (every 30 min
-// from 5:00 AM → 9:30 AM, plus a few late-night times) so settings
-// can accommodate non-morning rhythms onboarding doesn't optimize for.
-// ─────────────────────────────────────────────────────────────────
-
-const ALL_PRESETS: ReadonlyArray<DailyReminderTime> = [
-  { hour: 5, minute: 30 },
-  { hour: 6, minute: 0 },
-  { hour: 6, minute: 30 },
-  { hour: 7, minute: 0 },
-  { hour: 7, minute: 30 },
-  { hour: 8, minute: 0 },
-  { hour: 8, minute: 30 },
-  { hour: 9, minute: 0 },
-  { hour: 9, minute: 30 },
-  { hour: 22, minute: 0 },
-  { hour: 22, minute: 30 },
-  { hour: 23, minute: 0 },
-];
-
-function TimeChip({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  const colors = useColors();
-  return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={8}
-      accessibilityRole="button"
-      accessibilityLabel={`Set time to ${label}`}
-      accessibilityState={{ selected }}
-      className="rounded-full px-3.5 py-2 border"
-      style={({ pressed }) => ({
-        backgroundColor: selected ? colors.primary : "transparent",
-        borderColor: selected ? colors.primary : colors.borderStrong,
-        opacity: pressed ? 0.85 : 1,
-      })}
-    >
-      <Text
-        className="text-[13px] tracking-[-0.1px]"
-        style={{
-          fontFamily: "System",
-          fontWeight: "700",
-          color: selected ? colors.primaryFg : colors.ink,
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-/**
- * Custom-time chip — opens the bottom-sheet wheel picker. When
- * a custom time has been picked, the chip shows that time so the
- * user can see what they've set; otherwise it reads "Custom" with
- * a leading clock glyph hinting "this opens a chooser". Mirrors
- * the same component on the onboarding screen for visual + interaction
- * consistency across the two surfaces that own this setting.
- */
-function CustomTimeChip({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  const colors = useColors();
-  return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={8}
-      accessibilityRole="button"
-      accessibilityLabel={
-        selected ? `Custom time: ${label}. Tap to change.` : "Pick a custom time"
-      }
-      accessibilityState={{ selected }}
-      className="rounded-full pl-2.5 pr-3.5 py-2 border flex-row items-center"
-      style={({ pressed }) => ({
-        backgroundColor: selected ? colors.primary : "transparent",
-        borderColor: selected ? colors.primary : colors.borderStrong,
-        opacity: pressed ? 0.85 : 1,
-      })}
-    >
-      {selected ? (
-        <PencilGlyph stroke={selected ? colors.primaryFg : colors.ink} />
-      ) : (
-        <ClockGlyph stroke={selected ? colors.primaryFg : colors.ink} />
-      )}
-      <Text
-        className="text-[13px] tracking-[-0.1px] ml-1.5"
-        style={{
-          fontFamily: "System",
-          fontWeight: "700",
-          color: selected ? colors.primaryFg : colors.ink,
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-function ClockGlyph({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 21a9 9 0 100-18 9 9 0 000 18z"
-        stroke={stroke}
-        strokeWidth={1.7}
-      />
-      <Path
-        d="M12 7v5l3 2"
-        stroke={stroke}
-        strokeWidth={1.7}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function PencilGlyph({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={11} height={11} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M4 20l4-1 11-11-3-3L5 16zM14 5l3 3"
-        stroke={stroke}
-        strokeWidth={1.7}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
   );
 }
 
@@ -482,7 +294,7 @@ function NotificationPreview({
             {title}
           </Text>
           <Text
-            className="text-ink-subtle text-[11px] ml-2"
+            className="text-ink-muted text-[11px] ml-2"
             style={{ fontFamily: "System", fontWeight: "500" }}
           >
             now
@@ -521,43 +333,17 @@ function withInkAlpha(hex: string, alpha: number): string {
 // Icons
 // ─────────────────────────────────────────────────────────────────
 
-const ICON_PROPS_BASE = {
-  strokeWidth: 1.7,
-  fill: "none",
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
 function SunriseIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M12 14a4 4 0 014 4H8a4 4 0 014-4z" {...props} />
-      <Path d="M3 18h18M12 4v2M5 7l1.5 1.5M19 7l-1.5 1.5" {...props} />
-    </Svg>
-  );
+  return <SFSymbol name="sunrise" size={14} color={ink} weight="medium" />;
 }
 
 function BellIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path
-        d="M18 16v-5a6 6 0 10-12 0v5l-2 2h16zM10 21a2 2 0 004 0"
-        {...props}
-      />
-    </Svg>
-  );
+  return <SFSymbol name="bell" size={14} color={ink} weight="medium" />;
 }
 
 function ExternalIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M14 4h6v6M10 14L20 4M19 13v6H5V5h6" {...props} />
-    </Svg>
-  );
+  return <SFSymbol name="arrow.up.right.square" size={14} color={ink} weight="medium" />;
 }

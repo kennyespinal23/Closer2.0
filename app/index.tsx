@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -14,10 +14,7 @@ import { useVideoPlayer, VideoView } from "expo-video";
 import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { FadeIn } from "@/components/FadeIn";
 import * as haptics from "@/lib/haptics";
-import {
-  armLaunchSplash,
-  suppressLaunchSplashUntilRouted,
-} from "@/lib/launchSplashSession";
+import { armLaunchSplash } from "@/lib/launchSplashSession";
 import { useOnboarding } from "@/state/onboarding";
 
 const SIGN_IN_VIDEO = require("@/assets/videos/signinpage.mp4");
@@ -27,57 +24,22 @@ function hasNativeExpoVideo(): boolean {
   return requireOptionalNativeModule("ExpoVideo") != null;
 }
 
-type ReturningHref = "/rotating-moment" | "/today";
-
 /**
  * Root launch gate.
  *
  * Returning users (`completed === true`) never see the Get Started
- * landing — they route straight to the rotating moment or home.
- * New users see the video Get Started landing below.
+ * landing — they route straight home. New users see the video
+ * Get Started landing below.
  */
 export default function IndexScreen() {
   const { answers } = useOnboarding();
-  const [returningHref, setReturningHref] = useState<ReturningHref | null>(
-    null,
-  );
 
   useEffect(() => {
-    if (!answers.completed) return;
-
-    suppressLaunchSplashUntilRouted();
-    let cancelled = false;
-
-    void (async () => {
-      try {
-        const { shouldShowRotatingMoment } = await import(
-          "@/lib/rotatingMomentStorage"
-        );
-        const showMoment = await shouldShowRotatingMoment();
-        if (cancelled) return;
-        if (showMoment) {
-          setReturningHref("/rotating-moment");
-        } else {
-          armLaunchSplash();
-          setReturningHref("/today");
-        }
-      } catch {
-        if (cancelled) return;
-        armLaunchSplash();
-        setReturningHref("/today");
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    if (answers.completed) armLaunchSplash();
   }, [answers.completed]);
 
   if (answers.completed) {
-    if (!returningHref) {
-      return <View style={{ flex: 1, backgroundColor: "#000000" }} />;
-    }
-    return <Redirect href={returningHref} />;
+    return <Redirect href="/today" />;
   }
 
   return <GetStartedLanding />;
@@ -118,7 +80,7 @@ function GetStartedLanding() {
   const handleGetStarted = () => {
     haptics.thud();
     resetOnboarding();
-    router.push("/onboarding/chat");
+    router.push("/onboarding/name");
   };
 
   const handleSignIn = () => {
@@ -157,7 +119,7 @@ function GetStartedLanding() {
               }}
               accessibilityRole="header"
             >
-              Less Social Media{"\n"}More Time with God
+              Welcome to Closer.
             </Text>
           </FadeIn>
 
@@ -200,7 +162,7 @@ function GetStartedLanding() {
             >
               <Text
                 style={{
-                  color: "rgba(255,255,255,0.72)",
+                  color: "rgba(255,255,255,0.88)",
                   fontFamily: "System",
                   fontWeight: "400",
                   fontSize: 14,

@@ -105,7 +105,7 @@ export function TimePickerModal({
       detents={["auto"]}
       backgroundColor={colors.bg}
     >
-      <View style={{ width: "100%" }}>
+      <View>
         <SheetModalHeader
           title="Pick your time"
           onCancel={onClose}
@@ -114,7 +114,6 @@ export function TimePickerModal({
 
         <View
           style={{
-            width: "100%",
             alignItems: "center",
             paddingBottom: 24,
           }}

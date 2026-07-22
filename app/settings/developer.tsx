@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
@@ -9,6 +10,14 @@ import {
 } from "@/components/SettingsScaffold";
 import { SFSymbol } from "@/components/Symbol";
 import { MILESTONES } from "@/lib/milestones";
+import {
+  advanceHomeQuotePreview,
+  allHomeQuotes,
+  clearHomeQuotePreview,
+  getHomeQuotePreviewIndex,
+  isHomeQuotePreviewActive,
+  subscribeHomeQuotePreview,
+} from "@/lib/homeQuotes";
 import * as haptics from "@/lib/haptics";
 import { useDevTools } from "@/state/devTools";
 import { useColors } from "@/state/theme";
@@ -47,6 +56,31 @@ export default function DeveloperToolsScreen() {
     useDevTools();
   const colors = useColors();
   const router = useRouter();
+  const quoteCount = allHomeQuotes().length;
+  const [quotePreview, setQuotePreview] = useState(() => ({
+    active: isHomeQuotePreviewActive(),
+    index: getHomeQuotePreviewIndex(),
+  }));
+
+  useEffect(() => {
+    return subscribeHomeQuotePreview(() => {
+      setQuotePreview({
+        active: isHomeQuotePreviewActive(),
+        index: getHomeQuotePreviewIndex(),
+      });
+    });
+  }, []);
+
+  const syncQuotePreview = () => {
+    setQuotePreview({
+      active: isHomeQuotePreviewActive(),
+      index: getHomeQuotePreviewIndex(),
+    });
+  };
+
+  const quoteSublabel = quotePreview.active
+    ? `Preview ${(quotePreview.index ?? 0) + 1} of ${quoteCount}`
+    : `${quoteCount} quotes · daily rotation`;
 
   return (
     <SettingsScaffold title="Developer Tools">
@@ -85,6 +119,51 @@ export default function DeveloperToolsScreen() {
         />
       </SettingsSection>
 
+      <SettingsSection
+        title="Home quotes"
+        footer="Steps through the quote catalog on Home. Preview clears on app restart, or tap Reset."
+      >
+        <SettingsLinkRow
+          icon={
+            <SFSymbol
+              name="text.quote"
+              size={18}
+              color={colors.ink}
+              weight="semibold"
+            />
+          }
+          label="Next home quote"
+          sublabel={quoteSublabel}
+          onPress={() => {
+            haptics.tick();
+            advanceHomeQuotePreview();
+            syncQuotePreview();
+          }}
+          showDivider
+        />
+        <SettingsLinkRow
+          icon={
+            <SFSymbol
+              name="arrow.counterclockwise"
+              size={18}
+              color={colors.ink}
+              weight="semibold"
+            />
+          }
+          label="Reset to daily quote"
+          sublabel={
+            quotePreview.active
+              ? "Clear preview · use morning/evening/night"
+              : "Already on daily rotation"
+          }
+          onPress={() => {
+            haptics.soft();
+            clearHomeQuotePreview();
+            syncQuotePreview();
+          }}
+        />
+      </SettingsSection>
+
       {__DEV__ ? (
         <SettingsSection
           title="Native UI"
@@ -108,7 +187,7 @@ export default function DeveloperToolsScreen() {
 
       <View className="px-6 mt-8">
         <Text
-          className="text-ink-subtle text-[12px] leading-[18px] text-center"
+          className="text-ink-muted text-[12px] leading-[18px] text-center"
           style={{ fontFamily: "System", fontWeight: "400" }}
         >
           This panel exists for the team to QA new content and

@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, type Href } from "expo-router";
-import Svg, { Path } from "react-native-svg";
+import { Image } from "expo-image";
 import { SFSymbol } from "@/components/Symbol";
+import { AvatarPickerSheet } from "@/components/AvatarPickerSheet";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
 import {
   SettingsInfoBanner,
@@ -12,9 +13,10 @@ import {
   SettingsStaticRow,
   SettingsToggleRow,
 } from "@/components/SettingsScaffold";
+import { findAvatar } from "@/constants/avatars";
 import * as haptics from "@/lib/haptics";
 import { SCREEN_H_PAD } from "@/lib/layout";
-import { typography } from "@/lib/typography";
+import { systemText } from "@/lib/typography";
 import {
   formatRef,
   relativeTime,
@@ -27,17 +29,29 @@ import {
   useAnnotations,
 } from "@/state/annotations";
 import { useOnboarding } from "@/state/onboarding";
+import { useProgress } from "@/state/progress";
 import { useDevAppReset } from "@/lib/useDevAppReset";
 import { isInternalBuild } from "@/lib/isInternalBuild";
 import { useDevTools } from "@/state/devTools";
 import { useMoments } from "@/state/moments";
 import { useSavedSermons } from "@/state/savedSermons";
 import {
+  advanceHomeQuotePreview,
+  allHomeQuotes,
+  clearHomeQuotePreview,
+  getHomeQuotePreviewIndex,
+  isHomeQuotePreviewActive,
+  subscribeHomeQuotePreview,
+} from "@/lib/homeQuotes";
+import {
   useColors,
   useResolvedScheme,
   useTheme,
   type ThemePref,
 } from "@/state/theme";
+
+/** Profile hero avatar diameter — large enough to read as identity. */
+const AVATAR_SIZE = 140;
 
 /**
  * Profile tab — the third tab in the consolidated Home / Library /
@@ -66,7 +80,7 @@ import {
  */
 export default function ProfileTabScreen() {
   const router = useRouter();
-  const { answers } = useOnboarding();
+  const { answers, setAnswer } = useOnboarding();
   const { allNotes, allHighlights, counts: annotationCounts } =
     useAnnotations();
   const { saved: savedSermonDays, count: savedCount } = useSavedSermons();
@@ -78,11 +92,45 @@ export default function ProfileTabScreen() {
   } = useDevTools();
   const showDevShortcuts = isInternalBuild() || devToolsEnabled;
   const { resetApp, restartApp } = useDevAppReset();
+  const { streak } = useProgress();
   const colors = useColors();
   const { pref: themePref } = useTheme();
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const quoteCount = allHomeQuotes().length;
+  const [quotePreview, setQuotePreview] = useState(() => ({
+    active: isHomeQuotePreviewActive(),
+    index: getHomeQuotePreviewIndex(),
+  }));
+
+  useEffect(() => {
+    return subscribeHomeQuotePreview(() => {
+      setQuotePreview({
+        active: isHomeQuotePreviewActive(),
+        index: getHomeQuotePreviewIndex(),
+      });
+    });
+  }, []);
 
   const firstName = (answers.name || "").trim().split(" ")[0] || "Friend";
+  const selectedAvatar = findAvatar(answers.avatarId);
   const appearanceValue = APPEARANCE_LABEL[themePref];
+
+  // Legacy installs completed onboarding before `joinedAt` existed —
+  // stamp once so Profile can show a join date going forward.
+  useEffect(() => {
+    if (answers.completed && typeof answers.joinedAt !== "number") {
+      setAnswer("joinedAt", Date.now());
+    }
+  }, [answers.completed, answers.joinedAt, setAnswer]);
+
+  const joinedLabel = useMemo(() => {
+    if (typeof answers.joinedAt !== "number") return null;
+    const when = new Date(answers.joinedAt).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+    return `Joined ${when}`;
+  }, [answers.joinedAt]);
 
   // Newest-first slices. We render at most 3 previews of each so
   // the page stays scannable; the "See all" link routes to the
@@ -214,10 +262,7 @@ export default function ProfileTabScreen() {
           }}
         >
           <Text
-            style={[
-              typography.pageTitle,
-              { color: colors.ink, fontSize: 34, lineHeight: 41 },
-            ]}
+            style={[systemText.largeTitle, { color: colors.ink }]}
             accessibilityRole="header"
           >
             My Profile
@@ -263,50 +308,111 @@ export default function ProfileTabScreen() {
               borderWidth: StyleSheet.hairlineWidth,
               borderColor: colors.border,
               backgroundColor: colors.surface,
-              paddingTop: 20,
+              paddingTop: 28,
               paddingHorizontal: SCREEN_H_PAD,
-              paddingBottom: 16,
+              paddingBottom: 20,
               alignItems: "center",
             }}
           >
-            <View
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 36,
-                backgroundColor: colors.accentSoft,
-                borderWidth: 2,
-                borderColor: colors.border,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 12,
+            <Pressable
+              onPress={() => {
+                haptics.tick();
+                setAvatarPickerOpen(true);
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Change profile avatar"
+              hitSlop={8}
+              style={({ pressed }) => ({
+                width: AVATAR_SIZE,
+                height: AVATAR_SIZE,
+                marginBottom: 16,
+                opacity: pressed ? 0.88 : 1,
+              })}
             >
-              <Text
+              <View
                 style={{
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  color: colors.primary,
-                  fontSize: 28,
-                  letterSpacing: -0.5,
+                  width: AVATAR_SIZE,
+                  height: AVATAR_SIZE,
+                  borderRadius: AVATAR_SIZE / 2,
+                  backgroundColor: colors.accentSoft,
+                  borderWidth: 2,
+                  borderColor: colors.border,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
                 }}
               >
-                {firstName.charAt(0).toUpperCase()}
-              </Text>
-            </View>
+                {selectedAvatar ? (
+                  <Image
+                    source={selectedAvatar.source}
+                    style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
+                    contentFit="cover"
+                  />
+                ) : (
+                  <Text
+                    style={{
+                      fontFamily: "System",
+                      fontWeight: "700",
+                      color: colors.primary,
+                      fontSize: 56,
+                      letterSpacing: -0.5,
+                    }}
+                  >
+                    {firstName.charAt(0).toUpperCase()}
+                  </Text>
+                )}
+              </View>
+              <View
+                pointerEvents="none"
+                style={{
+                  position: "absolute",
+                  right: 2,
+                  bottom: 2,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: colors.surface,
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: colors.border,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <SFSymbol
+                  name="pencil"
+                  size={15}
+                  color={colors.ink}
+                  weight="semibold"
+                />
+              </View>
+            </Pressable>
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: colors.ink,
-                fontSize: 22,
-                lineHeight: 26,
-                letterSpacing: -0.4,
-              }}
+              style={[
+                systemText.title1,
+                {
+                  color: colors.ink,
+                  fontSize: 26,
+                  lineHeight: 30,
+                },
+              ]}
               numberOfLines={1}
             >
               {firstName}
             </Text>
+            {joinedLabel ? (
+              <Text
+                style={{
+                  fontFamily: "System",
+                  fontWeight: "500",
+                  color: colors.inkMuted,
+                  fontSize: 14,
+                  lineHeight: 18,
+                  marginTop: 6,
+                }}
+              >
+                {joinedLabel}
+              </Text>
+            ) : null}
 
             {/* Stat strip — 3 columns separated by hairline rules.
                 Reframed as spiritual-journey artifacts (see the
@@ -342,6 +448,22 @@ export default function ProfileTabScreen() {
             </View>
           </View>
         </View>
+
+        {/* Streaks — high on Profile so the dashboard is one scroll-
+            free tap away (Home also has the 🔥 chip). */}
+        <SettingsSection title="Streaks">
+          <SettingsLinkRow
+            icon={<FlameIcon stroke={colors.ink} />}
+            label="Your streak"
+            value={
+              streak.current > 0
+                ? `${streak.current} day${streak.current === 1 ? "" : "s"}`
+                : "Start"
+            }
+            sublabel="Calendar, milestones, and reading history"
+            onPress={() => navigateTo("/rhythm")}
+          />
+        </SettingsSection>
 
         {/* ─── Saved sermons (personal-artifact preview) ────────
             Moved here from the Library tab in June 2026 per
@@ -556,6 +678,58 @@ export default function ProfileTabScreen() {
               onPress={handleAdvanceSermon}
               showDivider
             />
+            <SettingsLinkRow
+              icon={
+                <SFSymbol
+                  name="text.quote"
+                  size={14}
+                  color={colors.ink}
+                  weight="semibold"
+                />
+              }
+              label="Next home quote"
+              sublabel={
+                quotePreview.active
+                  ? `Preview ${(quotePreview.index ?? 0) + 1} of ${quoteCount}`
+                  : `${quoteCount} quotes · tap to preview`
+              }
+              onPress={() => {
+                haptics.tick();
+                advanceHomeQuotePreview();
+                setQuotePreview({
+                  active: isHomeQuotePreviewActive(),
+                  index: getHomeQuotePreviewIndex(),
+                });
+                router.navigate("/today");
+              }}
+              showDivider
+            />
+            <SettingsLinkRow
+              icon={
+                <SFSymbol
+                  name="arrow.uturn.backward"
+                  size={14}
+                  color={colors.ink}
+                  weight="semibold"
+                />
+              }
+              label="Reset home quote"
+              sublabel={
+                quotePreview.active
+                  ? "Back to morning/evening/night rotation"
+                  : "Already on daily rotation"
+              }
+              onPress={() => {
+                haptics.soft();
+                clearHomeQuotePreview();
+                setQuotePreview({
+                  active: isHomeQuotePreviewActive(),
+                  index: getHomeQuotePreviewIndex(),
+                });
+                router.navigate("/today");
+              }}
+              showDivider
+            />
             <SettingsToggleRow
               icon={
                 <SFSymbol
@@ -579,7 +753,7 @@ export default function ProfileTabScreen() {
                 <SFSymbol
                   name="arrow.counterclockwise"
                   size={14}
-                  color="#FF6B6B"
+                  color={colors.destructive}
                   weight="semibold"
                 />
               }
@@ -594,7 +768,7 @@ export default function ProfileTabScreen() {
                 <SFSymbol
                   name="power"
                   size={14}
-                  color="#FF6B6B"
+                  color={colors.destructive}
                   weight="semibold"
                 />
               }
@@ -642,6 +816,20 @@ export default function ProfileTabScreen() {
           />
         </SettingsSection>
       </ScrollView>
+
+      <AvatarPickerSheet
+        visible={avatarPickerOpen}
+        selectedId={answers.avatarId}
+        onSelect={(id) => {
+          haptics.tick();
+          setAnswer("avatarId", id);
+        }}
+        onClear={() => {
+          haptics.tick();
+          setAnswer("avatarId", undefined);
+        }}
+        onClose={() => setAvatarPickerOpen(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -699,14 +887,7 @@ function SectionHeader({
     >
       <View className="flex-row items-baseline">
         <Text
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            color: ink,
-            fontSize: 22,
-            lineHeight: 26,
-            letterSpacing: -0.5,
-          }}
+          style={[systemText.title2, { color: ink }]}
           accessibilityRole="header"
         >
           {title}
@@ -795,14 +976,10 @@ function ProfileNoteRow({
       >
         <View className="flex-row items-baseline justify-between">
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: colors.ink,
-              fontSize: 11,
-              letterSpacing: 1.6,
-              textTransform: "uppercase",
-            }}
+            style={[
+              systemText.captionEmphasized,
+              { color: colors.ink },
+            ]}
           >
             {formatRef(note)}
           </Text>
@@ -810,7 +987,7 @@ function ProfileNoteRow({
             style={{
               fontFamily: "System",
               fontWeight: "500",
-              color: colors.inkSubtle,
+              color: colors.inkMuted,
               fontSize: 12,
             }}
           >
@@ -887,14 +1064,10 @@ function ProfileHighlightRow({
         <View style={{ flex: 1 }}>
           <View className="flex-row items-baseline justify-between">
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: colors.ink,
-                fontSize: 11,
-                letterSpacing: 1.6,
-                textTransform: "uppercase",
-              }}
+              style={[
+                systemText.captionEmphasized,
+                { color: colors.ink },
+              ]}
             >
               {formatRef(highlight)}
             </Text>
@@ -902,7 +1075,7 @@ function ProfileHighlightRow({
               style={{
                 fontFamily: "System",
                 fontWeight: "500",
-                color: colors.inkSubtle,
+                color: colors.inkMuted,
                 fontSize: 12,
               }}
             >
@@ -990,28 +1163,23 @@ function ProfileSavedSermonRow({
         />
         <View style={{ flex: 1 }}>
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: accent,
-              fontSize: 11,
-              letterSpacing: 1.6,
-              textTransform: "uppercase",
-            }}
+            style={[
+              systemText.captionEmphasized,
+              { color: accent },
+            ]}
             numberOfLines={1}
           >
             {typeName}
           </Text>
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: colors.ink,
-              fontSize: 15,
-              lineHeight: 20,
-              letterSpacing: -0.2,
-              marginTop: 6,
-            }}
+            style={[
+              systemText.subheadline,
+              {
+                fontWeight: "700",
+                color: colors.ink,
+                marginTop: 6,
+              },
+            ]}
             numberOfLines={2}
           >
             {title}
@@ -1090,27 +1258,15 @@ function HeroStat({ value, label }: { value: string; label: string }) {
   return (
     <View style={{ flex: 1, alignItems: "center" }}>
       <Text
-        style={{
-          fontFamily: "System",
-          fontWeight: "700",
-          color: colors.ink,
-          fontSize: 22,
-          lineHeight: 26,
-          letterSpacing: -0.4,
-        }}
+        style={[systemText.title2, { color: colors.ink }]}
       >
         {value}
       </Text>
       <Text
-        style={{
-          fontFamily: "System",
-          fontWeight: "600",
-          color: colors.inkSubtle,
-          fontSize: 11,
-          letterSpacing: 1.4,
-          textTransform: "uppercase",
-          marginTop: 4,
-        }}
+        style={[
+          systemText.captionEmphasized,
+          { color: colors.inkMuted, marginTop: 4 },
+        ]}
         numberOfLines={1}
       >
         {label}
@@ -1174,12 +1330,6 @@ const APPEARANCE_LABEL: Record<ThemePref, string> = {
 
 type IconProps = { stroke: string };
 
-const ICON_BASE = {
-  strokeWidth: 1.7,
-  fill: "none" as const,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
 
 /**
  * GearIcon — the chrome-row affordance in the top-right of the
@@ -1189,66 +1339,27 @@ const ICON_BASE = {
  * the tap target is comfortable without dominating the header.
  */
 function GearIcon({ stroke }: IconProps) {
-  return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 15a3 3 0 100-6 3 3 0 000 6z"
-        {...ICON_BASE}
-        stroke={stroke}
-      />
-      <Path
-        d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 005 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 5a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09A1.65 1.65 0 0015 5a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019 9c.13.32.39.57.71.71"
-        {...ICON_BASE}
-        stroke={stroke}
-      />
-    </Svg>
-  );
+  return <SFSymbol name="gearshape" size={16} color={stroke} weight="medium" />;
 }
 
 function UserIcon({ stroke }: IconProps) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path
-        d="M12 12a4 4 0 100-8 4 4 0 000 8z"
-        {...ICON_BASE}
-        stroke={stroke}
-      />
-      <Path d="M4 21c0-4 4-7 8-7s8 3 8 7" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
+  return <SFSymbol name="person.circle" size={14} color={stroke} weight="medium" />;
 }
 
 function MailIcon({ stroke }: IconProps) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M3 6h18v12H3z" {...ICON_BASE} stroke={stroke} />
-      <Path d="M3 7l9 7 9-7" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
+  return <SFSymbol name="envelope" size={14} color={stroke} weight="medium" />;
 }
 
 function BellIcon({ stroke }: IconProps) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path
-        d="M18 16v-5a6 6 0 10-12 0v5l-2 2h16zM10 20a2 2 0 004 0"
-        {...ICON_BASE}
-        stroke={stroke}
-      />
-    </Svg>
-  );
+  return <SFSymbol name="bell" size={14} color={stroke} weight="medium" />;
+}
+
+function FlameIcon({ stroke }: IconProps) {
+  return <SFSymbol name="flame.fill" size={14} color={stroke} weight="medium" />;
 }
 
 function MoonIcon({ stroke }: IconProps) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path
-        d="M20 14.5A8 8 0 119.5 4 7 7 0 0020 14.5z"
-        {...ICON_BASE}
-        stroke={stroke}
-      />
-    </Svg>
-  );
+  return <SFSymbol name="moon" size={14} color={stroke} weight="medium" />;
 }
 
 function HeartIcon({ stroke }: IconProps) {
@@ -1256,33 +1367,13 @@ function HeartIcon({ stroke }: IconProps) {
 }
 
 function DocIcon({ stroke }: IconProps) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M6 3h9l5 5v13H6z" {...ICON_BASE} stroke={stroke} />
-      <Path d="M14 3v6h6" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
+  return <SFSymbol name="doc.text" size={14} color={stroke} weight="medium" />;
 }
 
 function InfoIcon({ stroke }: IconProps) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path
-        d="M12 21a9 9 0 100-18 9 9 0 000 18z"
-        {...ICON_BASE}
-        stroke={stroke}
-      />
-      <Path d="M12 11v6M12 7.5v.5" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
+  return <SFSymbol name="info.circle" size={14} color={stroke} weight="medium" />;
 }
 
 function CodeIcon({ stroke }: IconProps) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M8 9L4 12L8 15" {...ICON_BASE} stroke={stroke} />
-      <Path d="M16 9L20 12L16 15" {...ICON_BASE} stroke={stroke} />
-      <Path d="M14 5L10 19" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
+  return <SFSymbol name="chevron.left.forwardslash.chevron.right" size={14} color={stroke} weight="medium" />;
 }

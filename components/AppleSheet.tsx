@@ -190,15 +190,36 @@ const AppleSheetInner = forwardRef<TrueSheet, AppleSheetProps>(
     const hasPresentedRef = useRef(false);
     useEffect(() => {
       if (!isControlled) return;
-      const node = internalRef.current;
-      if (!node) return;
+
+      let cancelled = false;
+      let attempts = 0;
+
       if (visible) {
-        node.present().catch(() => {});
-        hasPresentedRef.current = true;
+        // Present after the native view attaches. Remounting (or
+        // opening on the same tick the sheet first mounts) can leave
+        // internalRef null for a frame — retry briefly instead of
+        // silently no-op'ing and leaving the user with a dead tap.
+        const tryPresent = () => {
+          if (cancelled) return;
+          const node = internalRef.current;
+          if (!node) {
+            if (attempts++ < 12) {
+              requestAnimationFrame(tryPresent);
+            }
+            return;
+          }
+          node.present().catch(() => {});
+          hasPresentedRef.current = true;
+        };
+        tryPresent();
       } else if (hasPresentedRef.current) {
-        node.dismiss().catch(() => {});
+        internalRef.current?.dismiss().catch(() => {});
         hasPresentedRef.current = false;
       }
+
+      return () => {
+        cancelled = true;
+      };
     }, [isControlled, visible]);
 
     useEffect(() => {
@@ -263,7 +284,7 @@ export function SheetContent({
       style={[
         {
           paddingHorizontal: 24,
-          paddingTop: 8,
+          paddingTop: 20,
           paddingBottom: 32,
         },
         style,

@@ -43,7 +43,7 @@ export function OnboardingLoopDiagram() {
             fontFamily: "System",
             fontWeight: "500",
             fontSize: 12,
-            color: colors.inkSubtle,
+            color: colors.inkMuted,
             letterSpacing: 0.2,
           }}
         >

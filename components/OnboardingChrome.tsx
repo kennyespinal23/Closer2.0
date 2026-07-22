@@ -42,12 +42,19 @@ type OnboardingChromeProps = {
    * proof screen.
    */
   tone?: "auto" | "dark" | "light";
+  /**
+   * Override the default `router.back()`. Used by multi-step
+   * screens (e.g. howitworks) that need to step back inside the
+   * screen before leaving the route.
+   */
+  onBack?: () => void;
 };
 
 export function OnboardingChrome({
   mode,
   progress = 0,
   tone = "auto",
+  onBack,
 }: OnboardingChromeProps) {
   const router = useRouter();
   const colors = useColors();
@@ -72,13 +79,14 @@ export function OnboardingChrome({
         : colors.primary;
 
   const clamped = Math.max(0, Math.min(1, progress));
+  const handleBack = onBack ?? (() => router.back());
 
   return (
     <View className="px-6 pt-2 pb-3">
       <View className="flex-row items-center">
         <Pressable
           hitSlop={14}
-          onPress={() => router.back()}
+          onPress={handleBack}
           accessibilityRole="button"
           accessibilityLabel="Go back"
           style={({ pressed }) => ({

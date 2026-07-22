@@ -2,11 +2,12 @@ import { useMemo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { goBackOr } from "@/lib/navigation";
 import * as haptics from "@/lib/haptics";
 import { SFSymbol } from "@/components/Symbol";
 import { type ColorPalette } from "@/constants/theme";
 import { relativeTime } from "@/lib/annotationsFormat";
-import { typography } from "@/lib/typography";
+import { systemText, typography } from "@/lib/typography";
 import { findMomentByDay, resolveSermonType } from "@/lib/moments";
 import { type SermonCompletion, useProgress } from "@/state/progress";
 import { useColors } from "@/state/theme";
@@ -38,7 +39,7 @@ export default function CompletedSermonsScreen() {
       style={{ flex: 1, backgroundColor: colors.bg }}
       edges={["top", "bottom"]}
     >
-      <NavBar colors={colors} onBack={() => router.back()} />
+      <NavBar colors={colors} onBack={() => goBackOr(router, "/(tabs)/today")} />
 
       {completed.length === 0 ? (
         <EmptyState colors={colors} />
@@ -50,7 +51,7 @@ export default function CompletedSermonsScreen() {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[typography.pageTitle, { color: colors.ink }]}>
+          <Text style={[systemText.largeTitle, { color: colors.ink }]}>
             Completed
           </Text>
           <Text
@@ -138,6 +139,7 @@ function CompletedSermonRow({
             alignItems: "center",
             paddingHorizontal: 16,
             paddingVertical: 14,
+            minHeight: 44,
             borderBottomWidth: isLast ? 0 : 1,
             borderBottomColor: colors.border,
             opacity: pressed ? 0.82 : 1,
@@ -150,7 +152,6 @@ function CompletedSermonRow({
                 {
                   color: accent,
                   textTransform: "uppercase",
-                  letterSpacing: 1.2,
                 },
               ]}
             >
@@ -175,7 +176,7 @@ function CompletedSermonRow({
                 fontWeight: "500",
                 fontSize: 13,
                 lineHeight: 18,
-                color: colors.inkSubtle,
+                color: colors.inkMuted,
                 marginTop: 4,
               }}
             >

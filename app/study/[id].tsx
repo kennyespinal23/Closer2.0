@@ -213,7 +213,7 @@ export default function StudyLandingScreen() {
               style={{ backgroundColor: STUDY_ACCENT }}
             />
             <Text
-              className="text-[11px] tracking-[3px] uppercase"
+              className="text-[11px] tracking-[1px] uppercase"
               style={{
                 fontFamily: "System",
                 fontWeight: "700",
@@ -275,7 +275,7 @@ export default function StudyLandingScreen() {
 
           {/* Framing copy */}
           <Text
-            className="text-ink-subtle text-[14px] leading-[22px] text-center mt-7 px-3"
+            className="text-ink-muted text-[14px] leading-[22px] text-center mt-7 px-3"
             style={{ fontFamily: "System", fontWeight: "400" }}
           >
             The time you set aside is here. Open your Bible, pick a

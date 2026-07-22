@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { goBackOr } from "@/lib/navigation";
 import Svg, { Path } from "react-native-svg";
 import { SFSymbol } from "@/components/Symbol";
 import { FadeIn } from "@/components/FadeIn";
@@ -64,7 +65,7 @@ export default function StatsScreen() {
           destinations (Notifications, Translation, etc.). */}
       <View className="flex-row items-center px-4 pt-2 pb-3">
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => goBackOr(router, "/(tabs)/profile")}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Back"
@@ -89,7 +90,7 @@ export default function StatsScreen() {
         <FadeIn delayMs={150} durationMs={900}>
           <View className="px-6 mt-3">
             <Text
-              className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-3"
+              className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-3"
               style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Your Rhythm
@@ -135,7 +136,7 @@ export default function StatsScreen() {
         <FadeIn delayMs={300} durationMs={900}>
           <View className="px-6 mt-8">
             <Text
-              className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-3"
+              className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-3"
               style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Streak
@@ -156,7 +157,7 @@ export default function StatsScreen() {
                 </Text>
               </View>
               <Text
-                className="text-ink-subtle text-[12px] mt-1.5 tracking-[0.5px]"
+                className="text-ink-muted text-[12px] mt-1.5 tracking-[0.5px]"
                 style={{ fontFamily: "System", fontWeight: "600" }}
               >
                 {streak.longest > streak.current
@@ -169,7 +170,7 @@ export default function StatsScreen() {
               <View className="h-[1px] bg-border my-5" />
 
               <Text
-                className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+                className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-3"
                 style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 Last 7 days
@@ -192,7 +193,7 @@ export default function StatsScreen() {
         <FadeIn delayMs={450} durationMs={900}>
           <View className="px-6 mt-8">
             <Text
-              className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-3"
+              className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-3"
               style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Reading
@@ -263,7 +264,7 @@ export default function StatsScreen() {
                           {formatRef(h)}
                         </Text>
                         <Text
-                          className="text-ink-subtle text-[11px]"
+                          className="text-ink-muted text-[11px]"
                           style={{ fontFamily: "System", fontWeight: "500" }}
                         >
                           {relativeTime(h.updatedAt)}
@@ -314,13 +315,13 @@ export default function StatsScreen() {
                     >
                       <View className="flex-row items-baseline justify-between">
                         <Text
-                          className="text-primary text-[11px] tracking-[2px] uppercase"
+                          className="text-primary text-[11px] tracking-[1px] uppercase"
                           style={{ fontFamily: "System", fontWeight: "700" }}
                         >
                           {formatRef(n)}
                         </Text>
                         <Text
-                          className="text-ink-subtle text-[11px]"
+                          className="text-ink-muted text-[11px]"
                           style={{ fontFamily: "System", fontWeight: "500" }}
                         >
                           {relativeTime(n.updatedAt)}
@@ -348,7 +349,7 @@ export default function StatsScreen() {
         <FadeIn delayMs={650} durationMs={900}>
           <View className="px-6 mt-8">
             <Text
-              className="text-ink-subtle text-[11px] tracking-[3px] uppercase mb-4"
+              className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-4"
               style={{ fontFamily: "System", fontWeight: "700" }}
             >
               By Sermon Type
@@ -436,7 +437,7 @@ function TypeRow({
             {type.name}
           </Text>
           <Text
-            className="text-ink-subtle text-[12px] mt-0.5"
+            className="text-ink-muted text-[12px] mt-0.5"
             style={{ fontFamily: "System", fontWeight: "500" }}
             numberOfLines={1}
           >
@@ -447,7 +448,7 @@ function TypeRow({
         </View>
 
         <Text
-          className={`text-[18px] ${touched ? "text-ink" : "text-ink-subtle"}`}
+          className={`text-[18px] ${touched ? "text-ink" : "text-ink-muted"}`}
           style={{
             fontFamily: "System",
             fontWeight: "700",
@@ -488,7 +489,7 @@ function MiniDot({
       />
       <Text
         className={`text-[11px] mt-2 ${
-          isToday ? "text-primary" : "text-ink-subtle"
+          isToday ? "text-primary" : "text-ink-muted"
         }`}
         style={{ fontFamily: "System", fontWeight: "700" }}
       >
@@ -527,7 +528,7 @@ function SectionHeader({
     <View className="flex-row items-baseline justify-between mb-3">
       <View className="flex-row items-baseline">
         <Text
-          className="text-ink-subtle text-[11px] tracking-[3px] uppercase"
+          className="text-ink-muted text-[11px] tracking-[1px] uppercase"
           style={{ fontFamily: "System", fontWeight: "700" }}
         >
           {title}
@@ -592,14 +593,6 @@ function formatChapterRef(c: { bookId: string; chapter: number }): string {
 function BackChevronIcon() {
   const colors = useColors();
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M15 6l-6 6 6 6"
-        stroke={colors.ink}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol name="chevron.left" size={17} color={colors.ink} weight="semibold" />
   );
 }

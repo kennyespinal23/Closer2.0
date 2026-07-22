@@ -16,18 +16,21 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-g
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SFSymbol } from "@/components/Symbol";
 import { ScriptureStickerNote } from "@/components/ScriptureStickerNote";
+import { HomeQuoteText } from "@/components/HomeQuoteText";
 import {
   PHOTO_DIM_OVERLAY,
   PHOTO_OVERLAY_INK,
   PHOTO_OVERLAY_INK_MUTED,
 } from "@/constants/heroChrome";
-import {
-  HOME_FLOATING_PROMPTS,
-  type FloatingScriptureCard,
-} from "@/constants/homePrototype";
+import { type FloatingScriptureCard } from "@/constants/homePrototype";
 import { minTouchTarget } from "@/constants/spacing";
+import { CLOSER_ACCENT } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
-import { loadJSON, saveJSON, STORAGE_KEYS } from "@/lib/storage";
+import {
+  resolveHomeQuote,
+  subscribeHomeQuotePreview,
+  type HomeQuote,
+} from "@/lib/homeQuotes";
 import { typography } from "@/lib/typography";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import {
@@ -42,7 +45,7 @@ const IMAGE_ASPECT = 16 / 9;
 const MINI_CARD_WIDTH_RATIO = 0.72;
 const LIQUID_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const LIQUID_IN = Easing.bezier(0.4, 0, 0.2, 1);
-const HERO_HINT_DELAY_MS = 1600;
+const HERO_HINT_DELAY_MS = 4200;
 const HOLD_UNLOCK_MS = 1600;
 const SWIPE_DOWN_COMMIT_DY = 40;
 const SWIPE_DOWN_COMMIT_VY = 400;
@@ -60,25 +63,6 @@ type VerseLine = {
   verseNum?: string;
   text: string;
 };
-
-let promptAdvancePromise: Promise<string> | null = null;
-
-function advanceHomePrompt(): Promise<string> {
-  if (promptAdvancePromise) return promptAdvancePromise;
-  promptAdvancePromise = (async () => {
-    const stored = await loadJSON<number>(
-      STORAGE_KEYS.homeFloatingPromptIndex,
-    );
-    const prev =
-      typeof stored === "number" && Number.isFinite(stored)
-        ? Math.max(0, Math.floor(stored))
-        : -1;
-    const next = (prev + 1) % HOME_FLOATING_PROMPTS.length;
-    await saveJSON(STORAGE_KEYS.homeFloatingPromptIndex, next);
-    return HOME_FLOATING_PROMPTS[next]!;
-  })().catch(() => HOME_FLOATING_PROMPTS[0]!);
-  return promptAdvancePromise;
-}
 
 function splitScriptureReference(ref: string): { book: string; passage: string } {
   const trimmed = ref.trim();
@@ -182,7 +166,7 @@ function ContinueButton({ onPress }: { onPress: () => void }) {
         marginTop: 32,
         minHeight: Math.max(56, minTouchTarget),
         borderRadius: 999,
-        backgroundColor: CARD_INK,
+        backgroundColor: CLOSER_ACCENT,
         overflow: "hidden",
         alignItems: "center",
         justifyContent: "center",
@@ -431,7 +415,8 @@ export type HomeFloatingPrayerHomeProps = {
   nextBreakLabel: string;
   nextBreakTone: "live" | "armed" | "muted";
   unlockedToday: boolean;
-  onCompleteCard: (card: FloatingScriptureCard) => void;
+  /** Returns true when navigation leaves home (e.g. streak screen). */
+  onCompleteCard: (card: FloatingScriptureCard) => boolean;
   bottomInset: number;
 };
 
@@ -451,6 +436,8 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   const [expandPhase, setExpandPhase] = useState<ExpandPhase>("hero");
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [closePressed, setClosePressed] = useState(false);
+  /** Live app-block gate — hide dismiss chrome until they finish. */
+  const [dismissLocked, setDismissLocked] = useState(false);
 
   // Separate native-driver values only — never mix with layout props.
   const openProgress = useRef(new Animated.Value(0)).current;
@@ -465,8 +452,8 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
 
   const expandPhaseRef = useRef<ExpandPhase>("hero");
   const expandedRef = useRef(false);
-  const [promptLine, setPromptLine] = useState<string>(
-    HOME_FLOATING_PROMPTS[0],
+  const [homeQuote, setHomeQuote] = useState<HomeQuote | null>(() =>
+    resolveHomeQuote(),
   );
 
   const activeImage = useFloatingCardImage(active);
@@ -498,12 +485,15 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   }, [card]);
 
   useEffect(() => {
-    let cancelled = false;
-    advanceHomePrompt().then((line) => {
-      if (!cancelled) setPromptLine(line);
-    });
+    const refresh = () => setHomeQuote(resolveHomeQuote());
+    refresh();
+    const unsub = subscribeHomeQuotePreview(refresh);
+    // Re-check on a minute tick so morning → evening → night flips
+    // when no preview override is active.
+    const id = setInterval(refresh, 60_000);
     return () => {
-      cancelled = true;
+      unsub();
+      clearInterval(id);
     };
   }, []);
 
@@ -552,18 +542,27 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     verseOpacity.setValue(0);
     Animated.timing(verseOpacity, {
       toValue: 1,
-      duration: reducedMotion ? 220 : 900,
-      delay: reducedMotion ? 40 : 280,
-      easing: LIQUID_OUT,
+      // Slow intentional fade — the sticker should arrive like a
+      // breath, not a pop. Reduced motion keeps a short fade.
+      duration: reducedMotion ? 280 : 3200,
+      delay: reducedMotion ? 40 : 700,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
   }, [reducedMotion, verseOpacity]);
 
   const openCard = useCallback(
-    (item: FloatingScriptureCard) => {
-      haptics.soft();
+    (
+      item: FloatingScriptureCard,
+      opts?: { silent?: boolean; dismissLocked?: boolean },
+    ) => {
+      if (!opts?.silent) haptics.soft();
       resetExpandState();
       setActive(item);
+      // Live app-block gate: no X / back dismiss — finish the card.
+      setDismissLocked(
+        opts?.dismissLocked === true || nextBreakTone === "live",
+      );
       setExpanded(true);
 
       if (reducedMotion) {
@@ -620,11 +619,29 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
       detailProgress,
       fadeInVerse,
       hintOpacity,
+      nextBreakTone,
       openProgress,
       reducedMotion,
       resetExpandState,
     ],
   );
+
+  // Cold-open / resume into a live app block → land on the verse
+  // hero immediately (verse fades in via openCard → fadeInVerse).
+  // Once per live window so closing the card doesn't force-reopen.
+  const autoOpenedForLiveRef = useRef(false);
+  useEffect(() => {
+    if (nextBreakTone !== "live" || unlockedToday) {
+      autoOpenedForLiveRef.current = false;
+      return;
+    }
+    if (autoOpenedForLiveRef.current || expanded) return;
+    autoOpenedForLiveRef.current = true;
+    const timer = setTimeout(() => {
+      openCard(card, { silent: true, dismissLocked: true });
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [card, expanded, nextBreakTone, openCard, unlockedToday]);
 
   useEffect(() => {
     if (!showSwipeHint || reducedMotion) return;
@@ -677,6 +694,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   }, [detailProgress, heroDragY, hintOpacity, reducedMotion]);
 
   const closeExpanded = useCallback(() => {
+    if (dismissLocked) return;
     haptics.soft();
     if (reducedMotion) {
       // Reduced motion: fade the shell out instead of snapping away.
@@ -688,6 +706,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
       }).start(({ finished }) => {
         if (!finished) return;
         resetExpandState();
+        setDismissLocked(false);
         setExpanded(false);
         setActive(card);
       });
@@ -713,12 +732,14 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     ]).start(({ finished }) => {
       if (!finished) return;
       resetExpandState();
+      setDismissLocked(false);
       setExpanded(false);
       setActive(card);
     });
   }, [
     card,
     detailProgress,
+    dismissLocked,
     hintOpacity,
     openProgress,
     reducedMotion,
@@ -728,8 +749,12 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   const finishCard = useCallback(() => {
     haptics.tap();
     const completed = active;
+    // Complete + navigate BEFORE collapsing the modal. Closing first
+    // flashes home ("unlocked" copy) under the streak transition.
+    const navigatedAway = onCompleteCard(completed);
+    if (navigatedAway) return;
+
     if (reducedMotion) {
-      // Reduced motion: fade out instead of snapping, then complete.
       Animated.timing(openProgress, {
         toValue: 0,
         duration: 200,
@@ -738,9 +763,9 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
       }).start(({ finished }) => {
         if (!finished) return;
         resetExpandState();
+        setDismissLocked(false);
         setExpanded(false);
         setActive(card);
-        onCompleteCard(completed);
       });
       return;
     }
@@ -759,9 +784,9 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     ]).start(({ finished }) => {
       if (!finished) return;
       resetExpandState();
+      setDismissLocked(false);
       setExpanded(false);
       setActive(card);
-      onCompleteCard(completed);
     });
   }, [
     active,
@@ -869,81 +894,52 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
           pointerEvents="none"
           style={{
             alignItems: "center",
-            maxWidth: 300,
-            paddingHorizontal: 20,
+            maxWidth: 360,
+            paddingHorizontal: 12,
             marginBottom: showCard ? 28 : 0,
           }}
         >
-          <Text
+          {homeQuote ? <HomeQuoteText quote={homeQuote} maxWidth={340} /> : null}
+          <View
             style={{
-              fontFamily: typography.body.fontFamily,
-              fontWeight: "600",
-              fontSize: 32,
-              lineHeight: 38,
-              letterSpacing: -0.4,
-              color: colors.ink,
-              textAlign: "center",
+              marginTop: homeQuote ? 14 : 16,
+              flexDirection: "row",
+              alignItems: "center",
+              alignSelf: "center",
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              borderRadius: 999,
+              backgroundColor: colors.surface,
+              shadowColor: "#000",
+              shadowOpacity: 0.08,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 2 },
             }}
           >
-            {unlockedToday ? "Apps unlocked" : promptLine}
-          </Text>
-          {unlockedToday ? (
+            <View
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: 999,
+                marginRight: 7,
+                backgroundColor: BREAK_TONE_DOT[nextBreakTone],
+              }}
+            />
             <Text
               style={{
                 fontFamily: typography.body.fontFamily,
-                fontWeight: "500",
-                fontSize: 15,
-                lineHeight: 22,
+                fontWeight: "600",
+                fontSize: 13,
+                lineHeight: 16,
+                letterSpacing: -0.08,
                 color: colors.inkMuted,
                 textAlign: "center",
-                marginTop: 10,
               }}
+              numberOfLines={1}
             >
-              Today&apos;s card is saved. Your apps are free for the rest of the
-              day.
+              {nextBreakLabel}
             </Text>
-          ) : (
-            <View
-              style={{
-                marginTop: 16,
-                flexDirection: "row",
-                alignItems: "center",
-                alignSelf: "center",
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                borderRadius: 999,
-                backgroundColor: colors.surface,
-                shadowColor: "#000",
-                shadowOpacity: 0.08,
-                shadowRadius: 10,
-                shadowOffset: { width: 0, height: 2 },
-              }}
-            >
-              <View
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: 999,
-                  marginRight: 7,
-                  backgroundColor: BREAK_TONE_DOT[nextBreakTone],
-                }}
-              />
-              <Text
-                style={{
-                  fontFamily: typography.body.fontFamily,
-                  fontWeight: "600",
-                  fontSize: 13,
-                  lineHeight: 16,
-                  letterSpacing: -0.08,
-                  color: colors.inkMuted,
-                  textAlign: "center",
-                }}
-                numberOfLines={1}
-              >
-                {nextBreakLabel}
-              </Text>
-            </View>
-          )}
+          </View>
         </View>
 
         {showCard ? (
@@ -960,7 +956,9 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
         animationType="none"
         presentationStyle="overFullScreen"
         transparent
-        onRequestClose={closeExpanded}
+        onRequestClose={() => {
+          if (!dismissLocked) closeExpanded();
+        }}
         statusBarTranslucent
       >
         <GestureHandlerRootView style={{ flex: 1 }}>
@@ -998,22 +996,22 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                   ]}
                 />
 
-                <Animated.View
+                <View
                   pointerEvents="none"
                   style={{
                     ...StyleSheet.absoluteFillObject,
                     justifyContent: "center",
                     alignItems: "center",
                     paddingHorizontal: 28,
-                    opacity: verseOpacity,
                   }}
                 >
                   <ScriptureStickerNote
                     quote={heroQuote}
                     reference={heroReference || undefined}
                     maxWidth={windowWidth * 0.82}
+                    textOpacity={verseOpacity}
                   />
-                </Animated.View>
+                </View>
 
                 <Animated.View
                   pointerEvents="none"
@@ -1034,14 +1032,14 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                     <SFSymbol
                       name="chevron.down"
                       size={18}
-                      color="rgba(20, 20, 20, 0.72)"
+                      color={PHOTO_OVERLAY_INK}
                       weight="semibold"
                     />
                     <Text
                       style={[
                         typography.smallLabel,
                         {
-                          color: "rgba(20, 20, 20, 0.72)",
+                          color: PHOTO_OVERLAY_INK,
                           textTransform: "uppercase",
                           marginTop: 8,
                         },
@@ -1183,44 +1181,45 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
             </Animated.View>
 
             {/* Outside the opacity/scale shell so nothing can hide it.
-                High-contrast disc — the previous dark pill disappeared
-                into the sky photo on the detail phase (screenshot
-                audit: users reported "no back button"). */}
-            <Pressable
-              onPress={closeExpanded}
-              onPressIn={() => setClosePressed(true)}
-              onPressOut={() => setClosePressed(false)}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Close"
-              style={{
-                position: "absolute",
-                top: Math.max(insets.top, 12) + 4,
-                left: 16,
-                zIndex: 9999,
-                elevation: 9999,
-                width: minTouchTarget,
-                height: minTouchTarget,
-                borderRadius: minTouchTarget / 2,
-                backgroundColor: "rgba(255,255,255,0.92)",
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: "rgba(0,0,0,0.12)",
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: closePressed ? 0.75 : 1,
-                shadowColor: "#000",
-                shadowOpacity: 0.18,
-                shadowRadius: 10,
-                shadowOffset: { width: 0, height: 4 },
-              }}
-            >
-              <SFSymbol
-                name="xmark"
-                size={16}
-                color="#0F0F0F"
-                weight="semibold"
-              />
-            </Pressable>
+                Hidden during a live app-block gate — they must finish
+                the card (Hold to Unlock) rather than dismiss. */}
+            {!dismissLocked ? (
+              <Pressable
+                onPress={closeExpanded}
+                onPressIn={() => setClosePressed(true)}
+                onPressOut={() => setClosePressed(false)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+                style={{
+                  position: "absolute",
+                  top: Math.max(insets.top, 12) + 4,
+                  left: 16,
+                  zIndex: 9999,
+                  elevation: 9999,
+                  width: minTouchTarget,
+                  height: minTouchTarget,
+                  borderRadius: minTouchTarget / 2,
+                  backgroundColor: "rgba(255,255,255,0.92)",
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: "rgba(0,0,0,0.12)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: closePressed ? 0.75 : 1,
+                  shadowColor: "#000",
+                  shadowOpacity: 0.18,
+                  shadowRadius: 10,
+                  shadowOffset: { width: 0, height: 4 },
+                }}
+              >
+                <SFSymbol
+                  name="xmark"
+                  size={16}
+                  color="#0F0F0F"
+                  weight="semibold"
+                />
+              </Pressable>
+            ) : null}
           </View>
         </GestureHandlerRootView>
       </Modal>

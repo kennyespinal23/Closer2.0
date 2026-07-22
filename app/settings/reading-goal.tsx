@@ -51,13 +51,13 @@ export default function ReadingGoalScreen() {
         <View className="px-4 py-4">
           <View className="flex-row items-baseline justify-between">
             <Text
-              className="text-ink-subtle text-[11px] tracking-[2px] uppercase"
+              className="text-ink-muted text-[11px] tracking-[1px] uppercase"
               style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Progress
             </Text>
             <Text
-              className="text-ink-subtle text-[11px]"
+              className="text-ink-muted text-[11px]"
               style={{ fontFamily: "System", fontWeight: "500" }}
             >
               {todayLabel} / {goalMinutes} min
@@ -107,7 +107,7 @@ export default function ReadingGoalScreen() {
       >
         <View className="px-4 py-4">
           <Text
-            className="text-ink-subtle text-[11px] tracking-[1.5px] uppercase mb-3"
+            className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-3"
             style={{ fontFamily: "System", fontWeight: "600" }}
           >
             Minutes

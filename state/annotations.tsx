@@ -51,12 +51,17 @@ export type HighlightColor = {
   name: string;
 };
 
+// Saturated, iOS-marker style highlights (system yellow/blue/green/
+// pink/purple family) rather than muted pastels. Swatches are the
+// full-strength hue for the picker; fills are the same hue at a
+// mid-alpha that stays legible behind ink on both light and dark
+// canvases while reading clearly "highlighted," not washed out.
 export const HIGHLIGHT_COLORS: ReadonlyArray<HighlightColor> = [
-  { id: "amber", swatch: "#F4C77B", fill: "rgba(244, 199, 123, 0.34)", name: "Amber" },
-  { id: "ocean", swatch: "#7BAEDC", fill: "rgba(123, 174, 220, 0.34)", name: "Ocean" },
-  { id: "sage",  swatch: "#93C572", fill: "rgba(147, 197, 114, 0.32)", name: "Sage"  },
-  { id: "rose",  swatch: "#E8A0BF", fill: "rgba(232, 160, 191, 0.32)", name: "Rose"  },
-  { id: "lilac", swatch: "#B4A7D6", fill: "rgba(180, 167, 214, 0.34)", name: "Lilac" },
+  { id: "amber", swatch: "#FFC400", fill: "rgba(255, 196, 0, 0.45)",  name: "Amber" },
+  { id: "ocean", swatch: "#0A84FF", fill: "rgba(10, 132, 255, 0.38)", name: "Ocean" },
+  { id: "sage",  swatch: "#34C759", fill: "rgba(52, 199, 89, 0.42)",  name: "Sage"  },
+  { id: "rose",  swatch: "#FF375F", fill: "rgba(255, 55, 95, 0.36)",  name: "Rose"  },
+  { id: "lilac", swatch: "#AF52DE", fill: "rgba(175, 82, 222, 0.40)", name: "Lilac" },
 ];
 
 export function findHighlightColor(

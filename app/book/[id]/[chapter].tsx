@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import {
   ActivityIndicator,
@@ -13,30 +14,33 @@ import {
   AppState,
   type AppStateStatus,
   FlatList,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
+  type StyleProp,
   Text,
   type TextLayoutEventData,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
   useWindowDimensions,
   View,
+  type ViewStyle,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { BlurView } from "expo-blur";
 import * as haptics from "@/lib/haptics";
 import { shareVerse, sharePassage } from "@/lib/share";
-import { AppleSheet, SheetContent } from "@/components/AppleSheet";
+import { AppleSheet } from "@/components/AppleSheet";
+import { SheetModalHeader } from "@/components/SheetModalHeader";
 import { NoteEditor } from "@/components/NoteEditor";
 import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
 import { SFSymbol } from "@/components/Symbol";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
+import { Host, Picker as ExpoUIPicker } from "@expo/ui/swift-ui";
 import { findBookById } from "@/constants/books";
 import {
   type Chapter,
@@ -63,8 +67,11 @@ import {
 import { hasLocalBundle } from "@/lib/localBibles";
 import { useProgress } from "@/state/progress";
 import { useReadingGoal } from "@/state/readingGoal";
-import { useColors, useResolvedScheme } from "@/state/theme";
-import { NEW_YORK, SF_PRO } from "@/lib/typography";
+import { useColors, useResolvedScheme, useTheme } from "@/state/theme";
+import { goBackOr } from "@/lib/navigation";
+import { useReducedMotion } from "@/lib/useReducedMotion";
+import { minTouchTarget, spacing } from "@/constants/spacing";
+import { NEW_YORK, SF_PRO, systemText, typography } from "@/lib/typography";
 
 /**
  * Color of the inline note marker drawn next to verse numbers that
@@ -448,6 +455,25 @@ export default function ChapterReaderScreen() {
     };
   }, [readerBookId, readerChapter]);
 
+  const translationChangedRef = useRef(false);
+  // Must run in useLayoutEffect BEFORE the chapter-load layout effect
+  // so we never paint a frame that thinks the old placement is still
+  // valid for a new translation (that race left a blank reader).
+  useLayoutEffect(() => {
+    if (!translationChangedRef.current) {
+      translationChangedRef.current = true;
+      return;
+    }
+    // Keep prior chapter text until the new translation measures —
+    // wiping `data` blanked the reader and left the toolbar feeling
+    // dead under TrueSheet's dismiss dim.
+    setPages(null);
+    setMeasureTarget(null);
+    placedPageForChapterRef.current = null;
+    placedPaginationKeyRef.current = null;
+    setReloadKey((k) => k + 1);
+  }, [translation.id]);
+
   // Keep in-reader chapter swaps on this screen instance — updating
   // params instead of replace avoids a navigation flash. External
   // entry (overview tap, deep link) still syncs from the route.
@@ -475,6 +501,8 @@ export default function ChapterReaderScreen() {
     pendingLandOnLastPageRef.current = false;
     placedPageForChapterRef.current = null;
     placedPaginationKeyRef.current = null;
+    pageIdxAtDragStartRef.current = 0;
+    setCurrentPageIdx(0);
     setData(null);
     setPages(null);
     setMeasureTarget(null);
@@ -696,30 +724,36 @@ export default function ChapterReaderScreen() {
   // Pages are a derived value (set after measurement). While we wait
   // for measurement, the visible reader shows a loading state.
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const PAGE_PAD_X = 24;
-  const PAGE_PAD_Y_TOP = 18;
-  const PAGE_PAD_Y_BOTTOM = 18;
+  const insets = useSafeAreaInsets();
+  // Reading margin. 16pt hugged the screen edge; 24pt gives the text
+  // column the comfortable gutter Apple Books / the iOS readable-content
+  // guide use so lines don't run into the bezel.
+  const PAGE_PAD_X = spacing[24];
+  const PAGE_PAD_Y_TOP = spacing[16];
+  const PAGE_PAD_Y_BOTTOM = spacing[8];
   // Width of the actual text column on each page (inside the clipping
   // View). Used both for the off-screen measurer and the visible pages.
   const pageContentWidth = screenWidth - PAGE_PAD_X * 2;
-  // Vertical room available inside a page for verse text. Rough
-  // budget (with safety margin so the toolbar never overlaps text):
-  //   top safe area / status   ~50
-  //   header (back, caption, progress bar)  ~80
-  //   bottom safe area / home indicator      ~30
-  //   icon toolbar pill + spacing            ~70
-  //   "Page X of Y" caption above pill       ~30
-  //   page-side padding bottom buffer        ~30
-  // Total cushion = ~290. Leave more breathing room than strictly
-  // necessary — better to leak a little whitespace than to bleed
-  // text into the toolbar.
+  // Vertical budget for a full page of verse text — derived from the
+  // device's REAL safe-area insets (not magic numbers) so the last
+  // line always keeps the same comfortable breathing gap above the
+  // floating toolbar on every screen size. Layout stack, top→bottom:
+  //   insets.top                 device safe-area top
+  //   READER_HEADER_HEIGHT       custom chevron + progress header
+  //   PAGE_PAD_Y_TOP             page top padding
+  //   ── verse text (budget) ──
+  //   READER_TEXT_TOOLBAR_GAP    breathing room ↓
+  //   toolbar zone               bottom inset + pill height
+  //   insets.bottom              device safe-area bottom
+  const pagerHeight =
+    screenHeight - insets.top - insets.bottom - READER_HEADER_HEIGHT;
+  const toolbarZone = READER_TOOLBAR_BOTTOM_INSET + READER_PILL_HEIGHT;
   const pageContentHeight = Math.max(
-    260,
-    screenHeight - 50 - 80 - 30 - 70 - 30 - 30,
+    280,
+    pagerHeight - PAGE_PAD_Y_TOP - toolbarZone - READER_TEXT_TOOLBAR_GAP,
   );
-  // Approximate height the chapter heading + ornament occupies on
-  // page 1. paginateLines() reserves this on the first page only.
-  const FIRST_PAGE_HEADING_HEIGHT = 130 * Math.sqrt(textSize.scale);
+  // Chapter heading + ornament on page 1 only (~ label + title + rule).
+  const FIRST_PAGE_HEADING_HEIGHT = 96 * Math.sqrt(textSize.scale);
 
   const [pages, setPages] = useState<ReaderPage[] | null>(null);
   const [currentPageIdx, setCurrentPageIdx] = useState(0);
@@ -1435,6 +1469,10 @@ export default function ChapterReaderScreen() {
     }
   };
 
+  // Only re-seat the pager when the chapter (or mount key) changes —
+  // NOT on every currentPageIdx update from a user swipe. Syncing
+  // scroll position after every settle was fighting native paging
+  // momentum and felt like ~15fps.
   useLayoutEffect(() => {
     if (!pagerReady || readerItems.length === 0) return;
     const safeIdx = Math.min(currentPageIdx, readerItems.length - 1);
@@ -1442,12 +1480,32 @@ export default function ChapterReaderScreen() {
       index: safeIdx,
       animated: false,
     });
-  }, [
-    pagerReady,
-    currentPageIdx,
-    pagerMountKey,
-    readerItems.length,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: chapter/mount only
+  }, [pagerReady, pagerMountKey, viewportBookId, viewportChapter, readerItems.length]);
+
+  // Chapter page counts for the Contents sheet (cached where known,
+  // estimated from verse density otherwise). Always return ≥1 so the
+  // trailing column never renders an empty "—".
+  const contentsPageCounts = useMemo(
+    () =>
+      resolveChapterPageCounts(
+        book,
+        chapter,
+        versePageCount,
+        data?.verses.length ?? 0,
+        paginationCtx,
+        translation.id,
+      ),
+    [
+      book,
+      chapter,
+      versePageCount,
+      data?.verses.length,
+      paginationCtx,
+      translation.id,
+      paginationRevision,
+    ],
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -1586,11 +1644,17 @@ export default function ChapterReaderScreen() {
               />
             )}
           </View>
-        ) : !data && !pages ? (
-          <View className="flex-1 items-center justify-center">
+        ) : !(data && pages) ? (
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <LoadingView />
           </View>
-        ) : data && pages ? (
+        ) : (
           <View style={{ flex: 1 }}>
           <FlatList
             ref={pagerRef}
@@ -1609,10 +1673,10 @@ export default function ChapterReaderScreen() {
               offset: screenWidth * index,
               index,
             })}
-            scrollEventThrottle={16}
-            onScroll={(e) => {
-              handleChapterEdgeScroll(e.nativeEvent.contentOffset.x);
-            }}
+            scrollEventThrottle={32}
+            decelerationRate="fast"
+            disableIntervalMomentum
+            removeClippedSubviews={false}
             onScrollToIndexFailed={(info) => {
               requestAnimationFrame(() => {
                 pagerRef.current?.scrollToIndex({
@@ -1633,9 +1697,9 @@ export default function ChapterReaderScreen() {
               const idx = Math.round(x / screenWidth);
               handlePageSettled(idx);
             }}
-            initialNumToRender={1}
-            maxToRenderPerBatch={2}
-            windowSize={5}
+            initialNumToRender={3}
+            maxToRenderPerBatch={4}
+            windowSize={7}
             renderItem={({ item }) => {
               if (item.kind === "prevBridge" || item.kind === "nextBridge") {
                 return <View style={{ width: screenWidth, flex: 1 }} />;
@@ -1721,54 +1785,9 @@ export default function ChapterReaderScreen() {
             }}
           />
           </View>
-        ) : null}
+        )}
 
-        {/* ─── Apple Books page caption ─────────────────────────
-            Single muted row: "N of M" · "X pages left in chapter".
-            SF Pro only — not New York (chrome, not reading prose). */}
-        {data && pages ? (
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              left: 20,
-              right: 20,
-              bottom: 90,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: SF_PRO,
-                fontWeight: "400",
-                fontSize: 12,
-                color: colors.inkSubtle,
-              }}
-            >
-              {currentPage} of {totalPages}
-            </Text>
-            <Text
-              style={{
-                fontFamily: SF_PRO,
-                fontWeight: "400",
-                fontSize: 12,
-                color: colors.inkSubtle,
-              }}
-            >
-              {pagesLeftLabel(pagesLeft, false)}
-            </Text>
-          </View>
-        ) : null}
-
-        {/* ─── Bottom toolbar OR selection bar ───────────────────
-            While the user is in multi-select mode (any verse
-            selected), we swap the normal Apple-Books-style icon
-            pill for a SelectionBar that shows the count, a color
-            swatch row, Note, Share, and Done. Once the user exits
-            selection (Done or by deselecting the last verse) the
-            toolbar reappears so the reading chrome is one tap away. */}
+        {/* ─── Bottom toolbar OR selection bar ─────────────────── */}
         {selectionMode ? (
           <SelectionBar
             count={selectedVerses.length}
@@ -1785,7 +1804,8 @@ export default function ChapterReaderScreen() {
             translation={translation}
             onChangeTranslation={setTranslation}
             initialSheet={
-              __DEV__ && (chromeParam === "version" || chromeParam === "textsize")
+              __DEV__ &&
+              (chromeParam === "version" || chromeParam === "textsize")
                 ? chromeParam
                 : undefined
             }
@@ -1813,11 +1833,12 @@ export default function ChapterReaderScreen() {
         bookName={book.name}
         totalChapters={book.chapters}
         currentChapter={chapter}
+        chapterPageCounts={contentsPageCounts}
         hasReadChapter={hasReadChapter}
         onSelect={(c) => {
           setContentsOpen(false);
           if (c !== chapter) {
-            router.replace(`/book/${book.id}/${c}`);
+            goto({ bookId: book.id, chapter: c });
           }
         }}
       />
@@ -1869,7 +1890,6 @@ export default function ChapterReaderScreen() {
           Same modal handles both "add new" and "edit existing" —
           differentiated by editingNote.noteId. On save we route to
           the right provider method. */}
-      {editingNote !== null ? (
       <NoteEditor
         visible={editingNote !== null}
         reference={editingReference}
@@ -1911,7 +1931,6 @@ export default function ChapterReaderScreen() {
         }}
         onCancel={() => setEditingNote(null)}
       />
-      ) : null}
       </SafeAreaView>
     </View>
   );
@@ -1941,6 +1960,15 @@ export default function ChapterReaderScreen() {
  * multiplied by `scale`. Verse numbers scale a bit less so they
  * don't overpower the line.
  */
+/**
+ * Poetry keeps single `\n` stanza breaks. OEB (and others) often insert
+ * blank-line runs around block quotes — at 30pt line-height that reads
+ * as a hole in the page. Collapse runs to one break.
+ */
+function normalizeVerseBody(text: string): string {
+  return text.replace(/\n{2,}/g, "\n");
+}
+
 function VerseFlow({
   verses,
   bookId,
@@ -2133,7 +2161,7 @@ function VerseFlow({
                 letterSpacing: -0.1,
               }}
             >
-              {v.text}
+              {normalizeVerseBody(v.text)}
             </Text>
           </>
         );
@@ -2416,13 +2444,15 @@ function AdjacentChapterMeasurer({
 function LoadingView() {
   const colors = useColors();
   return (
-    <View className="items-center justify-center py-12">
+    <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 48 }}>
       <ActivityIndicator size="small" color={colors.inkMuted} />
       <Text
-        className="text-ink-subtle text-[12px] tracking-[2px] uppercase mt-4"
-        style={{ fontFamily: "System", fontWeight: "500" }}
+        style={[
+          systemText.captionEmphasized,
+          { color: colors.inkMuted, marginTop: 16 },
+        ]}
       >
-        Drawing near
+        Loading
       </Text>
     </View>
   );
@@ -2661,10 +2691,23 @@ function ChapterHeading({
 }) {
   const colors = useColors();
   return (
-    <View style={{ alignItems: "center", marginBottom: 16 }}>
+    <View
+      style={{
+        width: "100%",
+        alignItems: "center",
+        marginBottom: spacing[12],
+      }}
+    >
       <Text
-        className="text-ink-subtle text-[11px] tracking-[3px] uppercase"
-        style={{ fontFamily: "System", fontWeight: "700" }}
+        style={[
+          typography.smallLabel,
+          {
+            color: colors.inkMuted,
+            textTransform: "uppercase",
+            textAlign: "center",
+            letterSpacing: 1,
+          },
+        ]}
       >
         {bookName}
       </Text>
@@ -2676,8 +2719,9 @@ function ChapterHeading({
           lineHeight: 34 * Math.sqrt(scale),
           letterSpacing: 0.5,
           color: colors.ink,
-          marginTop: 8,
+          marginTop: spacing[8],
           textAlign: "center",
+          width: "100%",
         }}
       >
         Chapter {chapter}
@@ -2834,7 +2878,7 @@ function EndMatterPage({
     >
       <View className="items-center pt-6 pb-8">
         <Text
-          className="text-[11px] tracking-[3px] uppercase"
+          className="text-[11px] tracking-[1px] uppercase"
           style={{
             fontFamily: "System",
             fontWeight: "700",
@@ -2845,13 +2889,10 @@ function EndMatterPage({
         </Text>
         <Text
           className="text-ink mt-3"
-          style={{
-            fontFamily: "System",
-            fontWeight: "800",
-            fontSize: 32,
-            lineHeight: 36,
-            letterSpacing: -0.6,
-          }}
+          style={[
+            systemText.largeTitle,
+            { fontWeight: "800" },
+          ]}
         >
           {book.name} {chapter}
         </Text>
@@ -2928,7 +2969,7 @@ function EndMatterPage({
           style={{
             fontFamily: "System",
             fontWeight: "500",
-            color: colors.inkSubtle,
+            color: colors.inkMuted,
             fontSize: 12,
             lineHeight: 16,
           }}
@@ -2967,13 +3008,13 @@ function EndMatterPage({
         accessibilityLabel="Change Bible version"
       >
         <Text
-          className="text-ink-subtle text-[11px] tracking-[2px] uppercase text-center"
+          className="text-ink-muted text-[11px] tracking-[1px] uppercase text-center"
           style={{ fontFamily: "System", fontWeight: "500" }}
         >
           {translationName}
         </Text>
         <Text
-          className="text-ink-subtle text-[11px] mt-1 text-center opacity-70"
+          className="text-ink-muted text-[11px] mt-1 text-center opacity-70"
           style={{ fontFamily: "System", fontWeight: "400" }}
         >
           {translationNote} · Tap to change version
@@ -3049,7 +3090,7 @@ function Header({
   progress,
 }: {
   bookId?: string;
-  /** Caption like "4 pages left in chapter" — empty while loading. */
+  /** Caption like "4 pages left in book" — empty while loading. */
   pagesLeftLabel: string;
   progress: number;
 }) {
@@ -3067,44 +3108,59 @@ function Header({
 
   const goBack = () => {
     haptics.soft();
-    // Chapter paging uses `replace`, so `router.back()` often no-ops
-    // even when `canGoBack()` is true. Always exit the reader to the
-    // book overview (or Library if we somehow have no book id).
-    if (bookId) {
-      router.replace(`/book/${bookId}`);
-      return;
-    }
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace("/(tabs)/library");
+    // Prefer a real pop so the transition matches the edge-swipe
+    // gesture (book detail slides back in from the left). `replace`
+    // would animate forward (slide from the right) — the "opposite
+    // direction" mismatch. Fall back to the book detail (or library)
+    // only when there's no stack history, e.g. a cold deep link.
+    goBackOr(router, bookId ? `/book/${bookId}` : "/(tabs)/library");
   };
 
   return (
     <View style={{ zIndex: 30, elevation: 30, backgroundColor: colors.bg }}>
+      {/* Absolute-center the pages-left caption on the full header
+          width so the back chevron can't pull it off the true
+          midpoint (and out of line with GENESIS / Chapter N below). */}
       <View
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 8,
+          minHeight: 44,
+          justifyContent: "center",
           paddingTop: 2,
           paddingBottom: 8,
-          minHeight: 44,
         }}
       >
+        {pagesLeftLabel ? (
+          <Text
+            pointerEvents="none"
+            style={[
+              systemText.footnote,
+              {
+                color: colors.inkSubtle,
+                fontWeight: "500",
+                textAlign: "center",
+                paddingHorizontal: 56,
+              },
+            ]}
+            numberOfLines={1}
+          >
+            {pagesLeftLabel}
+          </Text>
+        ) : null}
+
         <Pressable
           onPress={goBack}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           accessibilityRole="button"
           accessibilityLabel="Back"
-          style={({ pressed }) => ({
+          style={{
+            position: "absolute",
+            left: 8,
+            top: 2,
             width: 44,
             height: 44,
             alignItems: "center",
             justifyContent: "center",
-            opacity: pressed ? 0.45 : 1,
-          })}
+          }}
         >
           <SFSymbol
             name="chevron.left"
@@ -3113,40 +3169,20 @@ function Header({
             weight="semibold"
           />
         </Pressable>
-
-        <View style={{ flex: 1, alignItems: "center", paddingHorizontal: 8 }}>
-          {pagesLeftLabel ? (
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "500",
-                fontSize: 13,
-                color: colors.inkSubtle,
-              }}
-              numberOfLines={1}
-            >
-              {pagesLeftLabel}
-            </Text>
-          ) : null}
-        </View>
-
-        {/* Balance the back control so the caption stays centered */}
-        <View style={{ width: 44, height: 44 }} />
       </View>
 
       <View
         style={{
-          height: 2,
+          height: StyleSheet.hairlineWidth,
           backgroundColor: colors.border,
           marginHorizontal: 16,
-          borderRadius: 1,
           overflow: "hidden",
         }}
       >
         <Animated.View
           style={{
             height: "100%",
-            backgroundColor: colors.primary,
+            backgroundColor: colors.ink,
             width: widthAnim.interpolate({
               inputRange: [0, 1],
               outputRange: ["0%", "100%"],
@@ -3185,8 +3221,8 @@ function ChapterOrnament() {
       style={{
         flexDirection: "row",
         alignItems: "center",
-        marginTop: 16,
-        marginBottom: 4,
+        marginTop: spacing[12],
+        marginBottom: spacing[4],
       }}
     >
       <View
@@ -3224,19 +3260,102 @@ function Diamond() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Bottom toolbar — Kindle-style discrete high-contrast chips
+// Reader tools — bottom pill + native iOS pickers
 //
-// Centered hug-content row (not a stretched track):
-//   [ list capsule ]  [ VERSION capsule ]  [ Aa circle ]
-// Version → mid-detent AppleSheet list. Aa → Books-style size stepper.
+// Contents · Version · Aa. Version and text size use @expo/ui
+// SwiftUI Picker (wheel / segmented) — not custom lists.
 // ─────────────────────────────────────────────────────────────────
 
-const READER_CHIP_SIZE = 48;
-const READER_CHIP_GAP = 16;
+const READER_PILL_HEIGHT = 48;
+const READER_PILL_ICON = 48;
+const READER_PILL_GAP = 12;
+// ─── Reader vertical layout budget (single source of truth) ───────
+// Height of the custom Header row (chevron + progress rule).
+const READER_HEADER_HEIGHT = 56;
+// Gap from the safe-area bottom edge up to the floating toolbar pills.
+const READER_TOOLBAR_BOTTOM_INSET = spacing[16];
+// Breathing room between the last line of verse text and the top of
+// the floating toolbar. Apple HIG: give controls enough surrounding
+// space that content never crowds them. On-grid (spacing scale) so
+// the reader shares the same rhythm as the rest of the app.
+const READER_TEXT_TOOLBAR_GAP = spacing[24];
 
 /** Translations shown in the version sheet (NWT only when installed). */
 function pickableTranslations() {
   return TRANSLATIONS.filter((t) => !t.localOnly || hasLocalBundle(t.id));
+}
+
+/**
+ * A single floating-toolbar chip (Contents / Version / Aa / theme).
+ *
+ * Restores the subtle press "twinkle" the reader chrome had before
+ * the native-UI refactor: the whole chip springs down a touch on
+ * touch-down and bounces back on release — the same Animated.spring
+ * scale vocabulary the app's PrimaryPillButton uses (just a bit more
+ * pronounced, since these chips are small). Honors Reduced Motion.
+ *
+ * The `containerStyle` carries the chip's shape / fill / shadow; the
+ * scale transform rides on the wrapping Animated.View so the entire
+ * chip (not just its glyph) animates. Haptics stay on the caller's
+ * `onPress` so the guard logic (disabled / busy states) still gates
+ * them and they never double-fire.
+ */
+function ToolbarChip({
+  onPress,
+  disabled,
+  accessibilityLabel,
+  containerStyle,
+  children,
+}: {
+  onPress: () => void;
+  disabled?: boolean;
+  accessibilityLabel: string;
+  containerStyle: StyleProp<ViewStyle>;
+  children: ReactNode;
+}) {
+  const reducedMotion = useReducedMotion();
+  const scale = useRef(new Animated.Value(1)).current;
+  const animateTo = (target: number) => {
+    if (reducedMotion) {
+      scale.setValue(1);
+      return;
+    }
+    Animated.spring(scale, {
+      toValue: target,
+      useNativeDriver: true,
+      tension: 300,
+      friction: 15,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={[containerStyle, { transform: [{ scale }] }]}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => {
+          if (!disabled) animateTo(0.92);
+        }}
+        onPressOut={() => animateTo(1)}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        // Expand the touch area beyond the 48pt visual so edge taps
+        // (and the shrink from the press-scale above) never drop a
+        // press. Horizontal 8 exactly fills half the 12pt inter-chip
+        // gap → seamless coverage with no dead zone and no overlap;
+        // vertical 16 uses the empty space above/below the pills.
+        hitSlop={{ top: 16, bottom: 16, left: 8, right: 8 }}
+        style={({ pressed }) => ({
+          ...StyleSheet.absoluteFillObject,
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: pressed ? 0.7 : 1,
+        })}
+      >
+        {children}
+      </Pressable>
+    </Animated.View>
+  );
 }
 
 function ReaderToolbar({
@@ -3256,53 +3375,101 @@ function ReaderToolbar({
 }) {
   const colors = useColors();
   const scheme = useResolvedScheme();
+  const { setPref } = useTheme();
   const isLight = scheme === "light";
+  const toggleScheme = () => {
+    haptics.soft();
+    // Explicit override — tapping the pill commits the user to a
+    // concrete dark/light pref (leaves "system" behind), so their
+    // choice sticks regardless of the device appearance.
+    setPref(isLight ? "dark" : "light");
+  };
   const [textSizeOpen, setTextSizeOpen] = useState(initialSheet === "textsize");
   const [versionOpen, setVersionOpen] = useState(initialSheet === "version");
+  // TrueSheet's dim overlay can still eat taps for a beat after
+  // `visible` flips false. Hold the version pill until dismiss finishes,
+  // and only then apply a pending translation change.
+  const [versionSheetBusy, setVersionSheetBusy] = useState(false);
+  const pendingTranslationRef = useRef<TranslationId | null>(null);
+
+  const versions = pickableTranslations();
+  const versionLabels = versions.map((t) => t.fullName);
+  const versionIndex = Math.max(
+    0,
+    versions.findIndex((t) => t.id === translation.id),
+  );
+  const [draftVersionIndex, setDraftVersionIndex] = useState(versionIndex);
+
+  const textSizeIndex = Math.max(
+    0,
+    TEXT_SIZES.findIndex((s) => s.id === textSizeId),
+  );
 
   useEffect(() => {
     if (initialSheet === "version") setVersionOpen(true);
     if (initialSheet === "textsize") setTextSizeOpen(true);
   }, [initialSheet]);
 
-  // Kindle high-contrast chips: always ink-on-paper against the
-  // reader page (cream in light, panel in dark) — do not rely on
-  // Pressable backgroundColor, which can fail to composite.
-  const chipBg = isLight ? "#000000" : "#FFFFFF";
-  const chipFg = isLight ? "#FFFFFF" : "#000000";
-  const systemBlue = isLight ? "#007AFF" : "#0A84FF";
+  useEffect(() => {
+    if (versionOpen) setDraftVersionIndex(versionIndex);
+  }, [versionOpen, versionIndex]);
 
-  const textSizeIndex = Math.max(
-    0,
-    TEXT_SIZES.findIndex((s) => s.id === textSizeId),
-  );
-  const versions = pickableTranslations();
+  const pillBg = isLight ? "rgba(255,255,255,0.94)" : "rgba(44,44,46,0.94)";
+  const pillBorder = isLight
+    ? "rgba(0,0,0,0.08)"
+    : "rgba(255,255,255,0.12)";
+  const iconColor = colors.ink;
 
-  const chipShadow = Platform.select({
+  const pillShadow = Platform.select({
     ios: {
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: isLight ? 0.22 : 0.55,
-      shadowRadius: 10,
+      shadowOpacity: isLight ? 0.14 : 0.45,
+      shadowRadius: 12,
     },
     android: { elevation: 8 },
   });
 
-  const stepTextSize = (delta: -1 | 1) => {
-    const next = TEXT_SIZES[textSizeIndex + delta];
-    if (!next || next.id === textSizeId) return;
-    haptics.tick();
-    onChangeTextSize(next.id);
-  };
-
-  const circleChip = {
-    width: READER_CHIP_SIZE,
-    height: READER_CHIP_SIZE,
-    borderRadius: READER_CHIP_SIZE / 2,
-    backgroundColor: chipBg,
+  const circleStyle = {
+    width: READER_PILL_ICON,
+    height: READER_PILL_ICON,
+    borderRadius: READER_PILL_ICON / 2,
+    backgroundColor: pillBg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: pillBorder,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    ...chipShadow,
+    ...pillShadow,
+  };
+
+  const openVersionSheet = () => {
+    if (versionOpen || versionSheetBusy) return;
+    haptics.soft();
+    setVersionOpen(true);
+  };
+
+  const flushPendingTranslation = () => {
+    const pending = pendingTranslationRef.current;
+    pendingTranslationRef.current = null;
+    setVersionSheetBusy(false);
+    if (pending) onChangeTranslation(pending);
+  };
+
+  const commitVersion = () => {
+    const next = versions[draftVersionIndex];
+    pendingTranslationRef.current =
+      next && next.id !== translation.id ? next.id : null;
+    haptics.soft();
+    setVersionSheetBusy(true);
+    setVersionOpen(false);
+    // Fallback if TrueSheet skips onDidDismiss — don't leave the
+    // pill disabled or a pending translation stranded.
+    setTimeout(flushPendingTranslation, 450);
+  };
+
+  const handleVersionClose = () => {
+    setVersionOpen(false);
+    flushPendingTranslation();
   };
 
   return (
@@ -3313,9 +3480,9 @@ function ReaderToolbar({
           position: "absolute",
           left: 0,
           right: 0,
-          bottom: 18,
+          bottom: READER_TOOLBAR_BOTTOM_INSET,
           alignItems: "center",
-          paddingHorizontal: 24,
+          paddingHorizontal: spacing[24],
           zIndex: 40,
         }}
       >
@@ -3323,376 +3490,177 @@ function ReaderToolbar({
           style={{
             flexDirection: "row",
             alignItems: "center",
-            columnGap: READER_CHIP_GAP,
+            columnGap: READER_PILL_GAP,
           }}
         >
-          {/* Contents — Kindle left circle */}
-          <View style={circleChip}>
-            <Pressable
-              onPress={onContents}
-              accessibilityRole="button"
-              accessibilityLabel="Open chapter contents"
-              style={({ pressed }) => ({
-                ...StyleSheet.absoluteFillObject,
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: pressed ? 0.7 : 1,
-              })}
-            >
-              <SFSymbol
-                name="list.bullet"
-                size={20}
-                color={chipFg}
-                weight="medium"
-              />
-            </Pressable>
-          </View>
-
-          {/* Version — Kindle-style center capsule */}
-          <View
-            style={{
-              height: READER_CHIP_SIZE,
-              minWidth: 92,
-              paddingHorizontal: 20,
-              borderRadius: READER_CHIP_SIZE / 2,
-              backgroundColor: chipBg,
-              alignItems: "center",
-              justifyContent: "center",
-              ...chipShadow,
+          <ToolbarChip
+            containerStyle={circleStyle}
+            accessibilityLabel="Open chapter contents"
+            onPress={() => {
+              haptics.soft();
+              onContents();
             }}
           >
-            <Pressable
-              onPress={() => {
-                haptics.soft();
-                setVersionOpen(true);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={`Bible version ${translation.tag}. Change version`}
-              style={({ pressed }) => ({
-                ...StyleSheet.absoluteFillObject,
+            <SFSymbol
+              name="list.bullet"
+              size={18}
+              color={iconColor}
+              weight="medium"
+            />
+          </ToolbarChip>
+
+          <ToolbarChip
+            containerStyle={[
+              {
+                height: READER_PILL_HEIGHT,
+                minWidth: 88,
+                paddingHorizontal: 18,
+                borderRadius: READER_PILL_HEIGHT / 2,
+                backgroundColor: pillBg,
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: pillBorder,
                 alignItems: "center",
                 justifyContent: "center",
-                opacity: pressed ? 0.7 : 1,
-              })}
-            >
-              <Text
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 15,
-                  letterSpacing: 0.8,
-                  color: chipFg,
+                opacity: versionSheetBusy ? 0.55 : 1,
+              },
+              pillShadow,
+            ]}
+            accessibilityLabel={`Bible version ${translation.tag}`}
+            onPress={openVersionSheet}
+            disabled={versionOpen || versionSheetBusy}
+          >
+            <Text
+              style={[
+                typography.smallLabel,
+                {
+                  color: iconColor,
                   textTransform: "uppercase",
                   textAlign: "center",
-                }}
-                allowFontScaling={false}
-              >
-                {translation.tag}
-              </Text>
-            </Pressable>
-          </View>
-
-          {/* Aa — Kindle right circle */}
-          <View style={circleChip}>
-            <Pressable
-              onPress={() => {
-                haptics.soft();
-                setTextSizeOpen(true);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Text size"
-              style={({ pressed }) => ({
-                ...StyleSheet.absoluteFillObject,
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: pressed ? 0.7 : 1,
-              })}
+                },
+              ]}
+              allowFontScaling={false}
             >
-              <Text
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 17,
-                  color: chipFg,
-                  textAlign: "center",
-                }}
-                allowFontScaling={false}
-              >
-                Aa
-              </Text>
-            </Pressable>
-          </View>
+              {translation.tag}
+            </Text>
+          </ToolbarChip>
+
+          <ToolbarChip
+            containerStyle={circleStyle}
+            accessibilityLabel="Text size"
+            onPress={() => {
+              haptics.soft();
+              setTextSizeOpen(true);
+            }}
+          >
+            <Text
+              style={[
+                systemText.headline,
+                { color: iconColor, letterSpacing: -0.3 },
+              ]}
+              allowFontScaling={false}
+            >
+              Aa
+            </Text>
+          </ToolbarChip>
+
+          <ToolbarChip
+            containerStyle={circleStyle}
+            accessibilityLabel={
+              isLight ? "Switch to dark mode" : "Switch to light mode"
+            }
+            onPress={toggleScheme}
+          >
+            <SFSymbol
+              name={isLight ? "moon.fill" : "sun.max.fill"}
+              size={17}
+              color={iconColor}
+              weight="medium"
+            />
+          </ToolbarChip>
         </View>
       </View>
 
-      {versionOpen ? (
-        <AppleSheet
-          visible={versionOpen}
-          onClose={() => setVersionOpen(false)}
-          detents={[0.5]}
-          grabber
-          scrollable
-          backgroundColor={colors.surface}
+      {/* Keep sheets mounted — unmounting on close skips TrueSheet.dismiss(). */}
+      <AppleSheet
+        visible={versionOpen}
+        onClose={handleVersionClose}
+        detents={["auto"]}
+        grabber={false}
+        backgroundColor={colors.surface}
+      >
+        <SheetModalHeader
+          title="Bible Version"
+          cancelLabel="Cancel"
+          saveLabel="Save"
+          onCancel={() => {
+            pendingTranslationRef.current = null;
+            setVersionSheetBusy(true);
+            setVersionOpen(false);
+            setTimeout(() => setVersionSheetBusy(false), 450);
+          }}
+          onSave={commitVersion}
+        />
+        <View
+          style={{
+            paddingHorizontal: spacing[16],
+            paddingBottom: spacing[24],
+          }}
         >
-          <SheetContent style={{ paddingTop: 4, paddingBottom: 28, paddingHorizontal: 16 }}>
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "600",
-                fontSize: 13,
-                color: colors.inkSubtle,
-                textTransform: "uppercase",
-                letterSpacing: 0.8,
+          <Host style={{ width: "100%", height: 216 }} colorScheme={scheme}>
+            <ExpoUIPicker
+              options={versionLabels}
+              selectedIndex={draftVersionIndex}
+              variant="wheel"
+              onOptionSelected={({ nativeEvent: { index } }) => {
+                setDraftVersionIndex(index);
+              }}
+            />
+          </Host>
+        </View>
+      </AppleSheet>
+
+      <AppleSheet
+        visible={textSizeOpen}
+        onClose={() => setTextSizeOpen(false)}
+        detents={["auto"]}
+        grabber
+        backgroundColor={colors.surface}
+      >
+        <View
+          style={{
+            paddingHorizontal: spacing[16],
+            paddingTop: spacing[12],
+            paddingBottom: spacing[24],
+          }}
+        >
+          <Text
+            style={[
+              systemText.title3,
+              {
+                color: colors.ink,
                 textAlign: "center",
-                marginBottom: 12,
-              }}
-            >
-              Bible Version
-            </Text>
-            {/*
-              IMPORTANT: do NOT use NativeWind `className` colors
-              inside TrueSheet — the sheet portals outside the
-              theme `vars()` root, so `text-ink` resolves to
-              transparent. Always use palette hex via `style`.
-            */}
-            <View
-              style={{
-                borderRadius: 14,
-                overflow: "hidden",
-                backgroundColor: colors.surfaceTertiary,
-              }}
-            >
-              {versions.map((t, index) => {
-                const selected = t.id === translation.id;
-                return (
-                  <Pressable
-                    key={t.id}
-                    onPress={() => {
-                      if (t.id !== translation.id) {
-                        haptics.soft();
-                        onChangeTranslation(t.id);
-                      }
-                      setVersionOpen(false);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    accessibilityLabel={t.fullName}
-                  >
-                    <View
-                      style={{
-                        minHeight: 52,
-                        paddingHorizontal: 16,
-                        paddingVertical: 12,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        borderTopWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
-                        borderTopColor: colors.border,
-                      }}
-                    >
-                      <View style={{ flex: 1, paddingRight: 12 }}>
-                        <Text
-                          style={{
-                            fontFamily: "System",
-                            fontWeight: "600",
-                            fontSize: 17,
-                            color: colors.ink,
-                          }}
-                        >
-                          {t.fullName}
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: "System",
-                            fontWeight: "400",
-                            fontSize: 13,
-                            color: colors.inkMuted,
-                            marginTop: 2,
-                          }}
-                        >
-                          {t.tag}
-                        </Text>
-                      </View>
-                      {selected ? (
-                        <View
-                          style={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 11,
-                            backgroundColor: systemBlue,
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <SFSymbol
-                            name="checkmark"
-                            size={12}
-                            color="#FFFFFF"
-                            weight="bold"
-                          />
-                        </View>
-                      ) : (
-                        <View style={{ width: 22 }} />
-                      )}
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </SheetContent>
-        </AppleSheet>
-      ) : null}
-
-      {textSizeOpen ? (
-        <AppleSheet
-          visible={textSizeOpen}
-          onClose={() => setTextSizeOpen(false)}
-          detents={["auto"]}
-          grabber
-          backgroundColor={colors.surface}
-        >
-          <SheetContent style={{ paddingTop: 8, paddingBottom: 28, paddingHorizontal: 20 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 20,
-              }}
-            >
-              <Text
-                style={{
-                  flex: 1,
-                  fontFamily: SF_PRO,
-                  fontWeight: "600",
-                  fontSize: 17,
-                  color: colors.ink,
-                  textAlign: "center",
-                }}
-              >
-                Themes & Settings
-              </Text>
-              <Pressable
-                onPress={() => setTextSizeOpen(false)}
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-                hitSlop={8}
-                style={({ pressed }) => ({
-                  position: "absolute",
-                  right: 0,
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: isLight
-                    ? "rgba(120,120,128,0.16)"
-                    : "rgba(120,120,128,0.36)",
-                  opacity: pressed ? 0.6 : 1,
-                })}
-              >
-                <SFSymbol
-                  name="xmark"
-                  size={13}
-                  color={colors.inkMuted}
-                  weight="semibold"
-                />
-              </Pressable>
-            </View>
-
-            {/*
-              Apple Books Themes & Settings size control:
-              one material pill, two equal tap halves (small A | large A).
-              Discrete steps through TEXT_SIZES — no slider / drag.
-              Appearance toggle intentionally omitted (not built yet).
-            */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "stretch",
-                width: "100%",
-                height: 52,
-                borderRadius: 12,
-                overflow: "hidden",
-                backgroundColor: isLight
-                  ? "rgba(120,120,128,0.16)"
-                  : "rgba(120,120,128,0.36)",
-              }}
-            >
-              <View style={{ flex: 1 }}>
-                <Pressable
-                  onPress={() => stepTextSize(-1)}
-                  disabled={textSizeIndex <= 0}
-                  accessibilityRole="button"
-                  accessibilityLabel="Decrease text size"
-                  style={({ pressed }) => ({
-                    ...StyleSheet.absoluteFillObject,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity:
-                      textSizeIndex <= 0 ? 0.35 : pressed ? 0.55 : 1,
-                  })}
-                >
-                  <Text
-                    style={{
-                      fontFamily: NEW_YORK,
-                      fontWeight: "400",
-                      fontSize: 15,
-                      color: colors.ink,
-                    }}
-                    allowFontScaling={false}
-                  >
-                    A
-                  </Text>
-                </Pressable>
-              </View>
-
-              <View
-                style={{
-                  width: StyleSheet.hairlineWidth,
-                  marginVertical: 10,
-                  backgroundColor: isLight
-                    ? "rgba(60,60,67,0.29)"
-                    : "rgba(84,84,88,0.65)",
-                }}
-              />
-
-              <View style={{ flex: 1 }}>
-                <Pressable
-                  onPress={() => stepTextSize(1)}
-                  disabled={textSizeIndex >= TEXT_SIZES.length - 1}
-                  accessibilityRole="button"
-                  accessibilityLabel="Increase text size"
-                  style={({ pressed }) => ({
-                    ...StyleSheet.absoluteFillObject,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity:
-                      textSizeIndex >= TEXT_SIZES.length - 1
-                        ? 0.35
-                        : pressed
-                          ? 0.55
-                          : 1,
-                  })}
-                >
-                  <Text
-                    style={{
-                      fontFamily: NEW_YORK,
-                      fontWeight: "400",
-                      fontSize: 26,
-                      color: colors.ink,
-                    }}
-                    allowFontScaling={false}
-                  >
-                    A
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-
-            {/* Reserved: theme / appearance circular control later */}
-            <View style={{ height: 8 }} />
-          </SheetContent>
-        </AppleSheet>
-      ) : null}
+                marginBottom: spacing[16],
+              },
+            ]}
+          >
+            Text Size
+          </Text>
+          {/* Native UISegmentedControl — same control Library/Highlights use */}
+          <SegmentedControl
+            values={TEXT_SIZES.map((s) => s.name)}
+            selectedIndex={textSizeIndex}
+            onChange={(e) => {
+              const index = e.nativeEvent.selectedSegmentIndex;
+              const next = TEXT_SIZES[index];
+              if (next) {
+                haptics.tick();
+                onChangeTextSize(next.id);
+              }
+            }}
+            style={{ width: "100%", height: 36 }}
+          />
+        </View>
+      </AppleSheet>
     </>
   );
 }
@@ -3711,166 +3679,6 @@ function GoalIconWithDot({ reached }: { reached: boolean }) {
         strokeLinejoin="round"
       />
     </Svg>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Themes & settings popover — text size picker + translation row
-//
-// Visual intent: Apple-Books-quality glass card. The previous build
-// was a flat dark rectangle with thin gray chips and a tiny tag pill
-// on the right of a row labeled "Translation" — it looked closer to
-// a debug panel than a reader setting. This rebuild:
-//
-//   • Renders on a true `BlurView` material so the popover reads as
-//     glass over the page, not a stamped surface. A translucent dark
-//     fill sits on top of the blur to keep the foreground legible
-//     against any chapter bloom backdrop.
-//
-//   • Replaces the 4 standalone chips with a single segmented
-//     control. Each cell shows "Aa" sized to actually look like
-//     small / default / large / extra-large (10pt → 22pt span), with
-//     a tiny S / M / L / XL label underneath. Selected cell uses the
-//     app's iOS-blue accent (`colors.select`) so the selection reads
-//     instantly.
-//
-//   • Promotes "Translation" from a one-line row with a cramped tag
-//     to a real settings row showing the full translation name on
-//     top, the short tag underneath, and a chevron to indicate it
-//     navigates to a fuller picker. Tappable across the whole row.
-//
-//   • Soft haptic on every interaction so the whole thing feels
-//     alive.
-// ─────────────────────────────────────────────────────────────────
-
-function ThemesPopover({
-  textSizeId,
-  onChangeTextSize,
-}: {
-  textSizeId: TextSizeId;
-  onChangeTextSize: (id: TextSizeId) => void;
-}) {
-  const colors = useColors();
-  const scheme = useResolvedScheme();
-  const isLight = scheme === "light";
-  const glassShadowOpacity = isLight ? 0.18 : 0.45;
-  const textSizeIndex = Math.max(
-    0,
-    TEXT_SIZES.findIndex((s) => s.id === textSizeId),
-  );
-  const currentTextSize = TEXT_SIZES[textSizeIndex] ?? TEXT_SIZES[1];
-
-  return (
-    <View
-      style={{
-        width: 340,
-        borderRadius: 22,
-        backgroundColor: colors.surfaceSecondary,
-        borderWidth: 1,
-        borderColor: colors.border,
-        paddingHorizontal: 16,
-        paddingTop: 16,
-        paddingBottom: 18,
-        ...Platform.select({
-          ios: {
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 16 },
-            shadowOpacity: glassShadowOpacity,
-            shadowRadius: 30,
-          },
-          android: { elevation: 18 },
-        }),
-      }}
-    >
-        <Text
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            fontSize: 11,
-            color: colors.inkSubtle,
-            letterSpacing: 2.5,
-            textTransform: "uppercase",
-          }}
-        >
-          Text Size
-        </Text>
-
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            marginTop: 14,
-            marginBottom: 12,
-            paddingHorizontal: 2,
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              fontSize: 13,
-              lineHeight: 16,
-              color: colors.inkSubtle,
-            }}
-          >
-            Aa
-          </Text>
-          <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              fontSize: 21,
-              lineHeight: 24,
-              color: colors.inkSubtle,
-            }}
-          >
-            Aa
-          </Text>
-        </View>
-
-        <SegmentedControl
-          appearance={scheme}
-          values={["Small", "Medium", "Large", "XL"]}
-          selectedIndex={textSizeIndex}
-          onChange={(event) => {
-            const nextIndex = event.nativeEvent.selectedSegmentIndex;
-            const next = TEXT_SIZES[nextIndex];
-            if (next && next.id !== textSizeId) {
-              haptics.tick();
-              onChangeTextSize(next.id);
-            }
-          }}
-          style={{ height: 32 }}
-          fontStyle={{
-            fontFamily: "System",
-            fontWeight: "500",
-            fontSize: 11,
-            color: colors.inkMuted,
-          }}
-          activeFontStyle={{
-            fontFamily: "System",
-            fontWeight: "700",
-            fontSize: 11,
-            color: colors.ink,
-          }}
-        />
-
-        <Text
-          style={{
-            fontFamily: "System",
-            fontWeight: "500",
-            fontSize: 13,
-            color: colors.inkSubtle,
-            marginTop: 10,
-            textAlign: "center",
-          }}
-        >
-          {currentTextSize.id === "default"
-            ? "Recommended"
-            : `${Math.round(currentTextSize.scale * 100)}% size`}
-        </Text>
-    </View>
   );
 }
 
@@ -3925,14 +3733,10 @@ function GoalPopover({
           }}
         >
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              fontSize: 11,
-              color: colors.inkSubtle,
-              letterSpacing: 2.5,
-              textTransform: "uppercase",
-            }}
+            style={[
+              systemText.captionEmphasized,
+              { color: colors.inkMuted },
+            ]}
           >
             Today
           </Text>
@@ -3941,7 +3745,7 @@ function GoalPopover({
               fontFamily: "System",
               fontWeight: "500",
               fontSize: 11,
-              color: colors.inkSubtle,
+              color: colors.inkMuted,
             }}
           >
             {formatGoalMinutes(todayMinutes)} / {goalMinutes} min
@@ -4121,7 +3925,7 @@ function SelectionBar({
         position: "absolute",
         left: 0,
         right: 0,
-        bottom: 18,
+        bottom: READER_TOOLBAR_BOTTOM_INSET,
         alignItems: "center",
       }}
     >
@@ -4317,7 +4121,7 @@ function SelectionAction({
   width,
 }: {
   label: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   onPress: () => void;
   width: number;
 }) {
@@ -4390,7 +4194,11 @@ function ShareActionIcon() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Contents modal (Apple-Books chapter list)
+// Contents modal — chapter list
+//
+// Title = book name. Trailing number = page count for that chapter.
+// Single 16pt horizontal inset (spacing scale) — no nested padding
+// stacking. Never use NativeWind colors inside TrueSheet.
 // ─────────────────────────────────────────────────────────────────
 
 function ContentsModal({
@@ -4400,6 +4208,7 @@ function ContentsModal({
   bookName,
   totalChapters,
   currentChapter,
+  chapterPageCounts,
   hasReadChapter,
   onSelect,
 }: {
@@ -4409,109 +4218,108 @@ function ContentsModal({
   bookName: string;
   totalChapters: number;
   currentChapter: number;
+  /** Page count per chapter (1-indexed via array offset). */
+  chapterPageCounts: number[];
   hasReadChapter: (bookId: string, chapter: number) => boolean;
   onSelect: (chapter: number) => void;
 }) {
   const colors = useColors();
-  const book = findBookById(bookId);
+  const scheme = useResolvedScheme();
+  const isLight = scheme === "light";
+  const sheetBg = isLight ? "#F8F8F8" : colors.bg;
+  const selectedWell = isLight ? "rgba(0,0,0,0.06)" : colors.surface;
 
   return (
     <AppleSheet
       visible={visible}
       onClose={onClose}
-      // Two detents: half-screen lets the reader peek the
-      // chapter list without losing context, full lets them
-      // scan a long book (Psalms = 150 chapters) without
-      // micro-scrolling. Apple Books uses the same pattern.
       detents={[0.6, 1]}
-      backgroundColor={colors.bg}
+      backgroundColor={sheetBg}
       scrollable
     >
       <View>
-        {/* Header — book cover thumb + name + chapter counter.
-            Grabber handles dismissal; no X needed. */}
-        <View className="flex-row items-center px-4 pt-3 pb-3">
-          {book ? (
-            <View
-              style={{
-                width: 36,
-                height: 48,
-                borderRadius: 4,
-                overflow: "hidden",
-                marginRight: 16,
-              }}
-            >
-              <BookCover book={book} variant="thumb" />
-            </View>
-          ) : null}
-          <View className="flex-1">
-            <Text
-              className="text-ink text-[15px]"
-              style={{ fontFamily: "System", fontWeight: "700" }}
-              numberOfLines={1}
-            >
-              {bookName}
-            </Text>
-            <Text
-              className="text-ink-subtle text-[12px] mt-0.5"
-              style={{ fontFamily: "System", fontWeight: "500" }}
-            >
-              Chapter {currentChapter} of {totalChapters}
-            </Text>
-          </View>
-        </View>
+        <Text
+          style={[
+            systemText.headline,
+            {
+              color: colors.ink,
+              textAlign: "center",
+              fontWeight: "700",
+              paddingTop: spacing[12],
+              paddingBottom: spacing[12],
+              paddingHorizontal: spacing[16],
+            },
+          ]}
+          accessibilityRole="header"
+          numberOfLines={1}
+        >
+          {bookName}
+        </Text>
+        <View
+          style={{
+            height: StyleSheet.hairlineWidth,
+            backgroundColor: colors.border,
+          }}
+        />
 
         <ScrollView
-          // scrollable=true on AppleSheet pins this ScrollView
-          // to fill the remaining sheet space and forwards
-          // momentum into the sheet's drag-to-resize gesture.
-          contentContainerStyle={{ paddingBottom: 24 }}
+          contentContainerStyle={{
+            paddingBottom: spacing[40],
+          }}
           showsVerticalScrollIndicator={false}
         >
           {Array.from({ length: totalChapters }, (_, i) => i + 1).map((c) => {
             const read = hasReadChapter(bookId, c);
             const current = c === currentChapter;
+            const upcoming = c > currentChapter && !read;
+            const titleColor = upcoming ? colors.inkMuted : colors.ink;
+            const pageCount = Math.max(1, chapterPageCounts[c - 1] ?? 1);
             return (
               <Pressable
                 key={c}
-                onPress={() => onSelect(c)}
-                style={({ pressed }) => ({
-                  opacity: pressed ? 0.7 : 1,
-                  backgroundColor: current ? colors.surface : "transparent",
-                })}
+                onPress={() => {
+                  haptics.soft();
+                  onSelect(c);
+                }}
+                accessibilityRole="button"
+                accessibilityState={{ selected: current }}
+                accessibilityLabel={`${bookName} chapter ${c}, ${pageCount} pages`}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >
                 <View
-                  className="flex-row items-center px-5 py-4"
                   style={{
-                    borderBottomColor: colors.border,
-                    borderBottomWidth: c === totalChapters ? 0 : 0.5,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    minHeight: minTouchTarget,
+                    paddingVertical: spacing[8],
+                    paddingHorizontal: spacing[16],
+                    backgroundColor: current ? selectedWell : "transparent",
                   }}
                 >
                   <Text
-                    className="text-ink text-[15px] flex-1"
-                    style={{
-                      fontFamily: "System",
-                      fontWeight: current ? "700" : "500",
-                    }}
+                    style={[
+                      systemText.body,
+                      {
+                        flex: 1,
+                        fontWeight: current || read ? "700" : "600",
+                        color: titleColor,
+                      },
+                    ]}
+                    numberOfLines={1}
                   >
                     Chapter {c}
                   </Text>
-                  {read ? (
-                    <View
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: 3,
-                        backgroundColor: colors.primary,
-                        marginRight: 16,
-                      }}
-                    />
-                  ) : null}
                   <Text
-                    className="text-ink-subtle text-[13px]"
-                    style={{ fontFamily: "System", fontWeight: "500" }}
+                    style={[
+                      systemText.subheadline,
+                      {
+                        color: colors.inkMuted,
+                        fontVariant: ["tabular-nums"],
+                        marginLeft: spacing[12],
+                      },
+                    ]}
                   >
-                    {c}
+                    {pageCount}
                   </Text>
                 </View>
               </Pressable>
@@ -4572,7 +4380,7 @@ function GoalToast({
           Today&apos;s reading goal achieved
         </Text>
         <Text
-          className="text-ink-subtle text-[12px] ml-2"
+          className="text-ink-muted text-[12px] ml-2"
           style={{ fontFamily: "System", fontWeight: "500" }}
         >
           · {goalMinutes} min
@@ -4828,10 +4636,7 @@ function NotFound({ message }: { message: string }) {
   const router = useRouter();
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
-      <Header
-        pagesLeftLabel=""
-        progress={0}
-      />
+      <Header pagesLeftLabel="" progress={0} />
       <View className="flex-1 items-center justify-center px-6">
         <Text
           className="text-ink text-[18px] text-center"

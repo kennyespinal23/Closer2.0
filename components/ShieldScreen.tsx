@@ -13,7 +13,7 @@ import {
   shieldFooterTagline,
   shieldHeadline,
 } from "@/lib/shieldCopy";
-import { typography } from "@/lib/typography";
+import { systemText, typography } from "@/lib/typography";
 
 /**
  * ShieldScreen — the full-screen "app is blocked" treatment.
@@ -153,7 +153,6 @@ export function ShieldScreen({
               {
                 color: subtle,
                 textTransform: "uppercase",
-                letterSpacing: 2.5,
               },
             ]}
           >
@@ -241,15 +240,11 @@ export function ShieldScreen({
 
         <Text
           style={[
-            typography.smallLabel,
+            systemText.caption1,
             {
               color: subtle,
               textAlign: "center",
               marginTop: 14,
-              fontWeight: "500",
-              textTransform: "none",
-              letterSpacing: 0,
-              fontSize: 12,
             },
           ]}
         >

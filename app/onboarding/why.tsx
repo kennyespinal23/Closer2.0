@@ -54,7 +54,9 @@ export default function WhyScreen() {
   const handleContinue = () => {
     if (!selected) return;
     setAnswer("whyAnswer", selected);
-    router.push("/onboarding/name");
+    // Name is captured on the first post–Get Started screen, so
+    // we continue straight into the Christian-identity beats.
+    router.push("/onboarding/denomination");
   };
 
   return (

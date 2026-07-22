@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { FadeIn } from "@/components/FadeIn";
+import { OnboardingChrome } from "@/components/OnboardingChrome";
 import { CLOSER_ACCENT } from "@/constants/theme";
 import { useOnboarding } from "@/state/onboarding";
 import { useSubscription } from "@/state/subscription";
@@ -103,6 +104,10 @@ export default function PaywallScreen() {
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar style="dark" />
       <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
+        {/* Exit affordance — paywall previously had no back/close
+            (purchase/restore only). Back returns to the prior
+            onboarding step; swipe-back alone is not enough. */}
+        <OnboardingChrome mode="back-only" tone="auto" />
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
           showsVerticalScrollIndicator={false}
@@ -117,7 +122,7 @@ export default function PaywallScreen() {
                   fontSize: 28,
                   lineHeight: 36,
                   letterSpacing: -0.5,
-                  marginTop: 28,
+                  marginTop: 8,
                 }}
               >
                 {firstName ? `${firstName}, you're almost in.` : "You're almost in."}
@@ -307,7 +312,7 @@ function FootLink({
     <Pressable hitSlop={8} onPress={onPress}>
       <Text
         style={{
-          color: colors.inkSubtle,
+          color: colors.inkMuted,
           fontFamily: "System",
           fontWeight: "500",
           fontSize: 12,

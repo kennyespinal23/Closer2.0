@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
 import { FamilyActivityAppsEditor } from "@/components/FamilyActivityAppsEditor";
 import { SFSymbol } from "@/components/Symbol";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import {
   SettingsScaffold,
   SettingsSection,
+  SettingsLinkRow,
   SettingsToggleRow,
 } from "@/components/SettingsScaffold";
 import { ShieldOverlay } from "@/components/ShieldOverlay";
@@ -16,7 +16,6 @@ import {
   isShieldActiveCapable,
   isShieldSupported,
   SOCIAL_APPS,
-  type SocialApp,
   type SocialAppId,
 } from "@/lib/focus";
 import {
@@ -144,63 +143,57 @@ export default function FocusSettingsScreen() {
           title="Screen Time"
           footer={formatScreenTimeSelectionSummary(screenTimeSummary)}
         >
-          <Pressable
-            onPressIn={() => primeScreenTimeAuthorizationFromGesture()}
-            onPress={openNativePicker}
-            accessibilityRole="button"
-            accessibilityLabel="Choose apps to block with Screen Time"
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-          >
-            <View className="px-4 py-3.5 flex-row items-center">
+          <SettingsLinkRow
+            icon={
               <SFSymbol
                 name="hourglass"
                 size={14}
                 color={colors.ink}
                 weight="semibold"
               />
-              <View className="flex-1 ml-2.5">
-                <Text
-                  className="text-ink text-[15px]"
-                  style={{ fontFamily: "System", fontWeight: "600" }}
-                >
-                  {screenTimeSummary
-                    ? "Update blocked apps"
-                    : "Allow Screen Time & choose apps"}
-                </Text>
-                <Text
-                  className="text-ink-muted text-[12px] leading-[17px] mt-0.5"
-                  style={{ fontFamily: "System", fontWeight: "400" }}
-                >
-                  {shieldReady
-                    ? "Real OS blocking is ready."
-                    : "Required before apps can be physically blocked."}
-                </Text>
-              </View>
-              <SFSymbol
-                name="chevron.right"
-                size={12}
-                color={colors.inkMuted}
-                weight="semibold"
-              />
-            </View>
-          </Pressable>
+            }
+            label={
+              screenTimeSummary
+                ? "Update blocked apps"
+                : "Allow Screen Time & choose apps"
+            }
+            sublabel={
+              shieldReady
+                ? "Real OS blocking is ready."
+                : "Required before apps can be physically blocked."
+            }
+            onPress={() => {
+              primeScreenTimeAuthorizationFromGesture();
+              openNativePicker();
+            }}
+          />
         </SettingsSection>
       ) : (
         <SettingsSection
           title="Apps to quiet"
-          footer="Tap the toggle to include or exclude. Tap the message preview to see the quiet text the user will encounter during a session."
+          footer="Use the switch to include or exclude. Tap Preview shield to see the quiet overlay."
         >
           {SOCIAL_APPS.map((app, i) => {
             const checked = prefs.blockedAppIds.includes(app.id);
             return (
-              <AppRow
-                key={app.id}
-                app={app}
-                checked={checked}
-                onToggle={() => toggleAppBlocked(app.id)}
-                onPreview={() => openPreview(app.id, livePath)}
-                showDivider={i < SOCIAL_APPS.length - 1}
-              />
+              <View key={app.id}>
+                <SettingsToggleRow
+                  icon={<BrandGlyph appId={app.id} size="sm" />}
+                  label={app.name}
+                  sublabel={`“${app.quietMessage}”`}
+                  value={checked}
+                  onValueChange={(next) => {
+                    if (next !== checked) toggleAppBlocked(app.id);
+                  }}
+                  showDivider={false}
+                />
+                <SettingsLinkRow
+                  label="Preview shield"
+                  sublabel={`See the ${app.name} quiet screen`}
+                  onPress={() => openPreview(app.id, livePath)}
+                  showDivider={i < SOCIAL_APPS.length - 1}
+                />
+              </View>
             );
           })}
         </SettingsSection>
@@ -217,47 +210,31 @@ export default function FocusSettingsScreen() {
             : "Notifications are off — the live shield tells the user to open Closer themselves. Preview both paths below."
         }
       >
-        <Pressable
+        <SettingsLinkRow
+          icon={
+            <SFSymbol
+              name="bell.badge.fill"
+              size={14}
+              color={colors.ink}
+              weight="semibold"
+            />
+          }
+          label="Preview: notification path"
           onPress={() => openPreview("instagram", "notify")}
-          className="px-4 py-3.5 flex-row items-center"
-          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-          accessibilityRole="button"
-          accessibilityLabel="Preview shield with notification"
-        >
-          <SFSymbol
-            name="bell.badge.fill"
-            size={18}
-            color={colors.ink}
-            weight="semibold"
-          />
-          <Text
-            className="text-ink text-[14px] ml-2.5 flex-1"
-            style={{ fontFamily: "System", fontWeight: "600" }}
-          >
-            Preview: notification path
-          </Text>
-        </Pressable>
-        <View className="h-px bg-border mx-4" />
-        <Pressable
+          showDivider
+        />
+        <SettingsLinkRow
+          icon={
+            <SFSymbol
+              name="arrow.up.forward.app"
+              size={14}
+              color={colors.ink}
+              weight="semibold"
+            />
+          }
+          label="Preview: open Closer yourself"
           onPress={() => openPreview("instagram", "manual")}
-          className="px-4 py-3.5 flex-row items-center"
-          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-          accessibilityRole="button"
-          accessibilityLabel="Preview shield manual fallback"
-        >
-          <SFSymbol
-            name="arrow.up.forward.app"
-            size={18}
-            color={colors.ink}
-            weight="semibold"
-          />
-          <Text
-            className="text-ink text-[14px] ml-2.5 flex-1"
-            style={{ fontFamily: "System", fontWeight: "600" }}
-          >
-            Preview: open Closer yourself
-          </Text>
-        </Pressable>
+        />
       </SettingsSection>
 
       {/* Dev tools — gated behind __DEV__ so it strips from prod.
@@ -288,7 +265,7 @@ export default function FocusSettingsScreen() {
               Preview next shield
             </Text>
             <Text
-              className="text-ink-subtle text-[12px] tracking-[1px] uppercase"
+              className="text-ink-muted text-[12px] tracking-[1px] uppercase"
               style={{ fontFamily: "System", fontWeight: "700" }}
             >
               {previewAppId
@@ -305,7 +282,7 @@ export default function FocusSettingsScreen() {
           statement. Same rhythm as the notifications screen footer. */}
       <View className="px-6 mt-6">
         <Text
-          className="text-ink-subtle text-[12px] leading-[18px] text-center"
+          className="text-ink-muted text-[12px] leading-[18px] text-center"
           style={{ fontFamily: "System", fontWeight: "400" }}
         >
           A few minutes of stillness, before the noise.
@@ -337,131 +314,15 @@ export default function FocusSettingsScreen() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// AppRow — a single selectable app cell
-//
-// Built ad-hoc instead of leaning on SettingsChoiceRow because each
-// row needs a brand-colored chip (with the initial glyph) in place
-// of the standard accent-soft icon tile, and SettingsChoiceRow's
-// icon slot is wrapped in accent-soft styling we'd have to fight
-// against. Five lines of bespoke layout was cheaper.
-// ─────────────────────────────────────────────────────────────────
-
-function AppRow({
-  app,
-  checked,
-  onToggle,
-  onPreview,
-  showDivider,
-}: {
-  app: SocialApp;
-  checked: boolean;
-  onToggle: () => void;
-  onPreview: () => void;
-  showDivider: boolean;
-}) {
-  const colors = useColors();
-  return (
-    <View>
-      {/* Top line — toggle row. Tap anywhere on this top strip
-          flips inclusion; the preview affordance lives in its own
-          row beneath so the two intents (include/exclude vs.
-          read the copy) don't collide on the same hit target. */}
-      <Pressable
-        onPress={onToggle}
-        accessibilityRole="button"
-        accessibilityState={{ selected: checked }}
-        accessibilityLabel={`${checked ? "Remove" : "Add"} ${app.name}`}
-        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-      >
-        <View className="flex-row items-center px-4 pt-3.5 pb-2">
-          {/* Real brand glyph chip. Same component used in the
-              ShieldOverlay hero and the home FocusToggle stack — keeps
-              every "this is the app" visual coherent. */}
-          <View className="mr-3">
-            <BrandGlyph appId={app.id} size="sm" />
-          </View>
-          <Text
-            className="text-ink text-[15px] flex-1"
-            style={{ fontFamily: "System", fontWeight: "600" }}
-          >
-            {app.name}
-          </Text>
-          {checked ? <CheckIcon stroke={colors.select} /> : null}
-        </View>
-      </Pressable>
-
-      {/* Quiet-message preview row. The message itself reads as
-          quoted text (subtle / italic-ish via Medium weight); the
-          trailing "Preview" link fires the ShieldOverlay so the
-          user can see the full-screen treatment. Inset matches
-          the chip width above so the message hangs under the
-          app name visually. */}
-      <Pressable
-        onPress={onPreview}
-        accessibilityRole="button"
-        accessibilityLabel={`Preview ${app.name} shield overlay`}
-        style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
-      >
-        <View className="flex-row items-start px-4 pb-3.5 pl-[60px] pr-4">
-          <Text
-            className="text-ink-muted text-[13px] leading-[18px] flex-1 pr-3"
-            style={{ fontFamily: "System", fontWeight: "500" }}
-            numberOfLines={2}
-          >
-            &ldquo;{app.quietMessage}&rdquo;
-          </Text>
-          <Text
-            className="text-[12px] tracking-[1.5px] uppercase"
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: colors.select,
-            }}
-          >
-            Preview
-          </Text>
-        </View>
-      </Pressable>
-      {showDivider && <View className="h-[1px] bg-border ml-[60px]" />}
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
 // Icons
 // ─────────────────────────────────────────────────────────────────
 
-const ICON_BASE = {
-  strokeWidth: 1.7,
-  fill: "none" as const,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
 function ShieldIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path
-        d="M12 3l8 3v6c0 4-3 7-8 9-5-2-8-5-8-9V6l8-3z"
-        {...ICON_BASE}
-        stroke={stroke}
-      />
-    </Svg>
-  );
+  return <SFSymbol name="shield" size={14} color={stroke} weight="medium" />;
 }
 
 function BoltIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M13 3L5 14h6l-2 7 8-11h-6z" {...ICON_BASE} stroke={stroke} />
-    </Svg>
-  );
-}
-
-function CheckIcon({ stroke }: { stroke: string }) {
-  return (
-    <SFSymbol name="checkmark" size={16} color={stroke} weight="semibold" />
-  );
+  return <SFSymbol name="bolt" size={14} color={stroke} weight="medium" />;
 }
 
 // Re-export the type so any future caller importing from this file

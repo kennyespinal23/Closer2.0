@@ -1,153 +1,102 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Easing, Text, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button } from "@/components/Button";
-import { SermonBlurredBackdrop } from "@/components/SermonBlurredBackdrop";
+import { HANDWRITTEN } from "@/components/HomeQuoteText";
 import { StreakFireAnimation } from "@/components/StreakFireAnimation";
-import { milestoneCopy } from "@/lib/milestones";
+import { SFSymbol } from "@/components/Symbol";
+import { minTouchTarget } from "@/constants/spacing";
+import { CLOSER_ACCENT, CLOSER_ACCENT_PRESSED } from "@/constants/theme";
+import * as haptics from "@/lib/haptics";
+import { shareRaw } from "@/lib/share";
+import { systemText, typography } from "@/lib/typography";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-
-// Hero flame animation — see StreakFireAnimation for the
-// seamless loop that avoids the black flash at frame 0.
+import { useProgress } from "@/state/progress";
+import { useColors, useResolvedScheme } from "@/state/theme";
 
 /**
- * Streak update screen — the "fire" screen.
+ * Streak celebration — post-unlock beat when today's completion
+ * advances the streak. Flame, "N day streak!", week strip,
+ * "Stay Consistent" script line, share + Continue.
  *
- * Shown after the sermon prayer when the streak advances for the day.
- * whenever a sermon completion actually advanced the streak —
- * which is to say: the user just finished their first sermon of
- * the day. Re-completions on the same day skip this screen because
- * the count didn't change.
- *
- * Visually echoes the Duolingo / Snapchat fire-streak pattern:
- *   • Big amber flame in a warm halo
- *   • The day count, set huge
- *   • "X-DAY STREAK" eyebrow
- *   • One headline + one supporting line
- *   • A subtle "milestone" badge when this advance also crossed a
- *     threshold (3 / 7 / 14 / 21 / 30 / 50 / 75 / 100 / 150 / 200 /
- *     365) — same visual at every count, the badge is the only thing
- *     that signals "this one's bigger".
- *
- * Distinct from /sermon/complete in palette and rhythm: the
- * completion celebration is white-on-dark with the sermon's accent;
- * the streak screen lives in an amber + warm-orange world tied to
- * the fire icon.
- *
- * The history-dashboard view of the streak (week strip, month
- * calendar, achievements link) lives at `/rhythm` and is reached
- * from the top-right streak chip on the home page — kept
- * separate so this post-sermon beat stays a clean celebratory
- * moment, not a data screen.
+ * Chrome accents use `CLOSER_ACCENT` (#FF4326). The handwritten
+ * line keeps its own softer gold.
  */
 
-const STREAK_AMBER = "#FFB672";
-const STREAK_DEEP = "#FF8A3B";
+const WEEKDAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const;
+
+function toLocalISO(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
 export default function StreakScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const scheme = useResolvedScheme();
+  const reducedMotion = useReducedMotion();
+  const { engagedDates, streak } = useProgress();
   const { days: daysParam, milestone: milestoneParam } =
     useLocalSearchParams<{ days?: string; milestone?: string }>();
 
-  // Fall back to 1 so the screen is renderable for design QA even
-  // when deep-linked without params. Clamped so a typo can't break
-  // the formatter.
-  const days = useMemo(() => Math.max(1, Number(daysParam) || 1), [daysParam]);
-  // Milestone is the threshold value (e.g. 7) when this advance also
-  // crossed one. Empty/missing string ⇒ no milestone badge.
+  const days = useMemo(
+    () => Math.max(1, Number(daysParam) || streak.current || 1),
+    [daysParam, streak.current],
+  );
   const milestone = useMemo(
     () => (milestoneParam ? Number(milestoneParam) : 0),
     [milestoneParam],
   );
   const isMilestone = milestone > 0;
 
-  // Slow expanding halo on mount — same exhale-style motion the
-  // completion screen uses, slightly slower so this beat lands as
-  // its own thing rather than feeling tacked on.
-  const haloScale = useRef(new Animated.Value(0.7)).current;
-  const haloOpacity = useRef(new Animated.Value(0)).current;
-  const numberScale = useRef(new Animated.Value(0.92)).current;
-  // Live "count-up" of the streak number — the displayed value
-  // animates from (days - 1) up to `days` so the user SEES the
-  // +1 land. This is the Apple Watch / Strava trick where the
-  // metric jumps in the rendered UI exactly when the metric
-  // jumps in your real life — the satisfaction comes from
-  // watching the number change, not just seeing the new total.
-  // For day 1 we start from 0 since "subtracting one" would
-  // render -1 for half a second before snapping to 0 → 1.
-  const startCount = Math.max(0, days - 1);
-  const [displayedCount, setDisplayedCount] = useState(startCount);
+  const [continuePressed, setContinuePressed] = useState(false);
+  const [sharePressed, setSharePressed] = useState(false);
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(haloScale, {
-        toValue: 1,
-        duration: 2200,
-        delay: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(haloOpacity, {
-        toValue: 1,
-        duration: 1600,
-        delay: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(numberScale, {
-        toValue: 1,
-        delay: 600,
-        useNativeDriver: true,
-        tension: 30,
-        friction: 7,
-      }),
-    ]).start();
-  }, [haloScale, haloOpacity, numberScale]);
-
-  // Number count-up — drives the JS-side text. We give it a small
-  // delay so it lines up with the spring that scales the numeral
-  // up, then ticks from startCount → days in even steps. The
-  // animation length scales with the delta so a single +1 lands
-  // in ~700ms and a +30 (theoretical) still lands cleanly. The
-  // count uses setTimeout per tick rather than a single Animated
-  // listener because we're updating a Text node and Animated's
-  // native driver can't drive text content directly.
-  useEffect(() => {
-    const delta = days - startCount;
-    if (delta <= 0) {
-      setDisplayedCount(days);
-      return;
-    }
-    const totalDurationMs = Math.min(1100, 320 + delta * 110);
-    const stepMs = Math.max(40, Math.floor(totalDurationMs / delta));
-    const startDelayMs = 700; // line up with the spring landing
-    let cancelled = false;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    for (let i = 1; i <= delta; i += 1) {
-      const t = setTimeout(
-        () => {
-          if (!cancelled) setDisplayedCount(startCount + i);
-        },
-        startDelayMs + i * stepMs,
-      );
-      timers.push(t);
-    }
-    return () => {
-      cancelled = true;
-      timers.forEach((t) => clearTimeout(t));
-    };
-  }, [days, startCount]);
-
-  // Subtle flame breath — gentle scale + opacity oscillation so the
-  // flame reads as "lit" rather than "icon". Loops forever; same
-  // pattern as the LivingHeroIcon halo. Tuned to be calm enough not
-  // to distract while the user reads the headline / subcopy.
   const flameBreath = useRef(new Animated.Value(0)).current;
-  const reducedMotion = useReducedMotion();
+
+  /** Handwritten caption — softer gold, separate from CTA orange. */
+  const scriptColor = scheme === "dark" ? "#E8C07A" : "#8B6914";
+  const accent = CLOSER_ACCENT;
+  const accentPressed = CLOSER_ACCENT_PRESSED;
+
+  const weekDays = useMemo(() => {
+    const engaged = new Set(engagedDates);
+    const now = new Date();
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const sunday = new Date(todayStart);
+    sunday.setDate(todayStart.getDate() - todayStart.getDay());
+
+    return WEEKDAY_LABELS.map((label, i) => {
+      const date = new Date(sunday);
+      date.setDate(sunday.getDate() + i);
+      const iso = toLocalISO(date);
+      const isFuture = date.getTime() > todayStart.getTime();
+      return {
+        label,
+        iso,
+        engaged: engaged.has(iso),
+        isFuture,
+        isToday: date.getTime() === todayStart.getTime(),
+      };
+    });
+  }, [engagedDates]);
+
   useEffect(() => {
     if (reducedMotion) {
-      // Reduce Motion: park the flame at its mid-breath pose so
-      // the icon still reads as "lit" without ever pulsing.
       flameBreath.setValue(0.5);
       return;
     }
@@ -170,16 +119,14 @@ export default function StreakScreen() {
     loop.start();
     return () => loop.stop();
   }, [flameBreath, reducedMotion]);
+
   const flameScale = flameBreath.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.97, 1.05],
-  });
-  const flameOpacity = flameBreath.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.92, 1],
+    outputRange: [0.97, 1.04],
   });
 
   const handleContinue = () => {
+    haptics.soft();
     if (isMilestone) {
       router.replace({
         pathname: "/sermon/milestone-unlock",
@@ -190,203 +137,317 @@ export default function StreakScreen() {
     router.replace("/today");
   };
 
+  const handleShare = () => {
+    haptics.soft();
+    void shareRaw({
+      title: `${days}-day streak · Closer`,
+      message: [
+        `${days}-day streak on Closer!`,
+        "",
+        "Stay consistent.",
+        "",
+        "via Closer",
+      ].join("\n"),
+    });
+  };
+
   return (
-    <View style={{ flex: 1 }}>
-      <SermonBlurredBackdrop />
-      <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
-      <View className="flex-1 px-6 items-center justify-center">
-        {/* Halo + flame stack */}
-        <View className="items-center justify-center mb-2">
-          <Animated.View
-            pointerEvents="none"
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+        <View
+          style={{
+            paddingHorizontal: 20,
+            paddingTop: 4,
+            flexDirection: "row",
+            justifyContent: "flex-end",
+          }}
+        >
+          <Pressable
+            onPress={handleShare}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Share streak"
             style={{
-              position: "absolute",
-              width: 460,
-              height: 460,
+              width: minTouchTarget,
+              height: minTouchTarget,
               alignItems: "center",
               justifyContent: "center",
-              opacity: haloOpacity,
-              transform: [{ scale: haloScale }],
             }}
           >
-            <StreakHalo />
-          </Animated.View>
-
-          <Animated.View
-            style={{
-              transform: [{ scale: flameScale }],
-              opacity: flameOpacity,
-            }}
-          >
-            <FlameMark />
-          </Animated.View>
+            <SFSymbol
+              name="square.and.arrow.up"
+              size={20}
+              color={accent}
+              weight="semibold"
+            />
+          </Pressable>
         </View>
 
-        {/* Milestone badge — only present when this advance crossed
-            a threshold. Sits just above the number so the eye reads
-            it before settling on the count. */}
-        {isMilestone && (
-          <View
-            className="flex-row items-center px-3 py-1.5 rounded-full mt-5"
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: 28,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Animated.View
             style={{
-              backgroundColor: "rgba(255, 182, 114, 0.12)",
-              borderWidth: 1,
-              borderColor: "rgba(255, 182, 114, 0.35)",
+              alignItems: "center",
+              justifyContent: "center",
+              transform: [{ scale: flameScale }],
+              marginBottom: 8,
             }}
           >
-            <Svg width={10} height={10} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M12 2l2.5 7H22l-6 4.5L18 22l-6-4.5L6 22l2-8.5L2 9h7.5z"
-                fill={STREAK_AMBER}
-              />
-            </Svg>
-            <Text
-              className="text-[11px] tracking-[2.5px] uppercase ml-2"
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: STREAK_AMBER,
-              }}
-            >
-              {milestone}-day milestone
-            </Text>
-          </View>
-        )}
+            <StreakFireAnimation size={168} />
+          </Animated.View>
 
-        {/* The number itself — biggest type on the screen. The
-            spring-scale Animated.View lands the count with a small
-            bounce; the displayed value count-ups from (days - 1)
-            → days so the +1 lands VISIBLY (Apple-Watch-style metric
-            satisfaction).
-            Note: this is `displayedCount`, not `days`. The final
-            frame always shows `days` once the count-up settles. */}
-        <Animated.View style={{ transform: [{ scale: numberScale }] }}>
           <Text
-            className={
-              isMilestone
-                ? "text-[88px] leading-[88px] tracking-[-2px] mt-4 text-center"
-                : "text-[88px] leading-[88px] tracking-[-2px] mt-7 text-center"
-            }
+            style={[
+              systemText.title1,
+              {
+                color: colors.ink,
+                textAlign: "center",
+                marginTop: 12,
+              },
+            ]}
+          >
+            {days === 1 ? "1 day streak!" : `${days} day streak!`}
+          </Text>
+
+          <StreakWeekCard
+            days={weekDays}
+            accent={accent}
+            surface={colors.surface}
+            border={colors.border}
+          />
+
+          <Text
             style={{
-              fontFamily: "System",
-              fontWeight: "800",
-              color: STREAK_AMBER,
+              fontFamily: HANDWRITTEN,
+              fontWeight: "400",
+              fontSize: 22,
+              lineHeight: 30,
+              color: scriptColor,
+              textAlign: "center",
+              marginTop: 22,
             }}
           >
-            {displayedCount}
+            Stay Consistent 🤎🌹✨
           </Text>
-        </Animated.View>
+        </View>
 
-        <Text
-          className="text-ink-subtle text-[12px] tracking-[3px] uppercase text-center mt-2"
-          style={{ fontFamily: "System", fontWeight: "700" }}
+        <View
+          style={{
+            paddingHorizontal: 24,
+            paddingBottom: 8,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+          }}
         >
-          {days === 1 ? "DAY STREAK" : `${days}-DAY STREAK`}
-        </Text>
+          <Pressable
+            onPress={handleShare}
+            onPressIn={() => setSharePressed(true)}
+            onPressOut={() => setSharePressed(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Share streak"
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: colors.surface,
+              borderWidth: 1.5,
+              borderColor: accent,
+              opacity: sharePressed ? 0.85 : 1,
+            }}
+          >
+            <SFSymbol
+              name="square.and.arrow.up"
+              size={22}
+              color={accent}
+              weight="semibold"
+            />
+          </Pressable>
 
-        <Text
-          className="text-ink text-[26px] leading-[32px] tracking-[-0.3px] text-center mt-7 px-4"
-          style={{ fontFamily: "System", fontWeight: "700" }}
-        >
-          {streakHeadline(days, isMilestone)}
-        </Text>
-
-        <Text
-          className="text-ink-muted text-[15px] leading-[22px] text-center mt-3.5 px-4"
-          style={{ fontFamily: "System", fontWeight: "400" }}
-        >
-          {streakSubcopy(days, isMilestone)}
-        </Text>
-      </View>
-
-      <View className="px-6 pb-2">
-        <Button label="Continue" onPress={handleContinue} />
-      </View>
-    </SafeAreaView>
+          <Pressable
+            onPress={handleContinue}
+            onPressIn={() => setContinuePressed(true)}
+            onPressOut={() => setContinuePressed(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Continue"
+            style={{
+              flex: 1,
+              minHeight: 56,
+              borderRadius: 999,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: continuePressed ? accentPressed : accent,
+            }}
+          >
+            <Text style={[typography.button, { color: "#FFFFFF" }]}>
+              Continue
+            </Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Copy helpers
-// ─────────────────────────────────────────────────────────────────
+type WeekDay = {
+  label: string;
+  iso: string;
+  engaged: boolean;
+  isFuture: boolean;
+  isToday: boolean;
+};
 
-/**
- * Headline tuned to (1) the magnitude of the streak and (2) whether
- * this completion ALSO crossed a milestone. Milestone-day copy
- * leans into the moment; ordinary days stay warm + understated.
- */
-function streakHeadline(days: number, isMilestone: boolean): string {
-  if (isMilestone) {
-    if (days <= 3) return "A rhythm is forming.";
-    if (days <= 7) return "A full week of showing up.";
-    if (days <= 14) return "Two weeks. You're building something real.";
-    if (days <= 30) return "A month of nearness.";
-    if (days <= 75) return "A practice, not an experiment.";
-    if (days <= 200) return "You walk with Him.";
-    return "A year of seeking. May it be the first of many.";
-  }
-  if (days === 1) return "Day one. You're on the board.";
-  if (days === 2) return "Day two. Showing up again.";
-  return "Streak alive.";
-}
+function StreakWeekCard({
+  days,
+  accent,
+  surface,
+  border,
+}: {
+  days: ReadonlyArray<WeekDay>;
+  accent: string;
+  surface: string;
+  border: string;
+}) {
+  const engagedCount = days.filter((d) => d.engaged).length;
+  const fillRatio = engagedCount <= 1 ? 0 : (engagedCount - 1) / 6;
 
-function streakSubcopy(days: number, isMilestone: boolean): string {
-  if (isMilestone) return milestoneCopy(days);
-  if (days === 1)
-    return "The longest journeys begin with a single, faithful step.";
-  if (days < 7)
-    return `${days} days in a row. Small, consistent days are how rhythm is built.`;
-  if (days < 30) return `${days} days. Keep tending the fire.`;
-  return `${days} days. May today's quiet add to tomorrow's depth.`;
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Visuals
-// ─────────────────────────────────────────────────────────────────
-
-/**
- * The amber halo behind the flame. Same gradient family as the
- * sermon-complete halo but tinted to the streak palette so the two
- * screens feel related yet distinct.
- */
-function StreakHalo() {
   return (
-    <Svg width={460} height={460} viewBox="0 0 460 460">
-      <Defs>
-        <RadialGradient id="streakHalo" cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor={STREAK_AMBER} stopOpacity={0.34} />
-          <Stop offset="40%" stopColor={STREAK_DEEP} stopOpacity={0.12} />
-          <Stop offset="100%" stopColor="#000000" stopOpacity={0} />
-        </RadialGradient>
-      </Defs>
-      <Rect width={460} height={460} fill="url(#streakHalo)" />
-    </Svg>
+    <View
+      style={{
+        alignSelf: "stretch",
+        marginTop: 28,
+        borderRadius: 20,
+        backgroundColor: surface,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: border,
+        paddingHorizontal: 16,
+        paddingTop: 16,
+        paddingBottom: 18,
+      }}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginBottom: 12,
+        }}
+      >
+        {days.map((day) => (
+          <Text
+            key={`label-${day.iso}`}
+            style={{
+              width: 36,
+              textAlign: "center",
+              fontFamily: "System",
+              fontWeight: "700",
+              fontSize: 11,
+              letterSpacing: 0.4,
+              color: accent,
+              opacity: day.isFuture ? 0.45 : 1,
+            }}
+          >
+            {day.label}
+          </Text>
+        ))}
+      </View>
+
+      <View style={{ height: 36, justifyContent: "center" }}>
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: 18,
+            right: 18,
+            top: 17,
+            height: 2,
+            borderRadius: 1,
+            backgroundColor: border,
+            overflow: "hidden",
+          }}
+        >
+          <View
+            style={{
+              height: 2,
+              width: `${fillRatio * 100}%`,
+              backgroundColor: accent,
+            }}
+          />
+        </View>
+
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          {days.map((day) => (
+            <WeekDot
+              key={day.iso}
+              engaged={day.engaged}
+              accent={accent}
+              border={border}
+              surface={surface}
+            />
+          ))}
+        </View>
+      </View>
+    </View>
   );
 }
 
-/**
- * Large glowing flame — visual anchor of the screen.
- *
- * Lottie animation (FireStreakAnimation.json) renders at
- * 140×140, matching the static SVG slot the screen
- * shipped with so the surrounding halo / number layout
- * stays unchanged.
- *
- * `autoPlay` + `loop` start the flame the moment the
- * screen mounts; the wrapping `flameBreath` Animated.View
- * higher up in the tree continues to layer a slow ambient
- * scale/opacity pulse on top of the Lottie's own internal
- * motion, so the flame reads as alive AND "breathing in
- * the room" rather than just looping in place.
- *
- * The asset is intrinsically portrait (500×690). At 140×140
- * the Lottie engine preserves aspect ratio and centers
- * horizontally, so the flame fills ~100×140 within the
- * 140-square box. If a future iteration wants the flame
- * to read bigger, bump the width/height together — the
- * Lottie scales cleanly to any size.
- */
-function FlameMark() {
-  return <StreakFireAnimation size={140} />;
+function WeekDot({
+  engaged,
+  accent,
+  border,
+  surface,
+}: {
+  engaged: boolean;
+  accent: string;
+  border: string;
+  surface: string;
+}) {
+  return (
+    <View
+      style={{
+        width: 36,
+        height: 36,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <View
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 14,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: engaged ? accent : surface,
+          borderWidth: engaged ? 0 : 1.5,
+          borderColor: border,
+        }}
+      >
+        {engaged ? (
+          <Svg width={14} height={14} viewBox="0 0 14 14" fill="none">
+            <Path
+              d="M3 7.2L5.8 10L11 4"
+              stroke="#FFFFFF"
+              strokeWidth={2.2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        ) : null}
+      </View>
+    </View>
+  );
 }

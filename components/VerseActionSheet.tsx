@@ -86,9 +86,9 @@ export function VerseActionSheet({
     >
       <View>
         {/* Reference + preview */}
-        <View className="px-6 pt-3 pb-4">
+        <View className="px-6 pt-5 pb-4">
               <Text
-                className="text-primary text-[11px] tracking-[2.5px] uppercase"
+                className="text-primary text-[11px] tracking-[1px] uppercase"
                 style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 {reference ?? ""}
@@ -118,7 +118,7 @@ export function VerseActionSheet({
               {/* Color swatches */}
               <View className="px-6 pt-5 pb-2">
                 <Text
-                  className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+                  className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-3"
                   style={{ fontFamily: "System", fontWeight: "700" }}
                 >
                   Highlight
@@ -206,7 +206,7 @@ export function VerseActionSheet({
                   <View className="h-[1px] bg-border mx-6 mt-5" />
                   <View className="px-6 pt-5">
                     <Text
-                      className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+                      className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-3"
                       style={{ fontFamily: "System", fontWeight: "700" }}
                     >
                       Notes · {notes.length}

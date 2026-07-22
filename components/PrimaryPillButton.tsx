@@ -10,10 +10,9 @@ import type { PressableProps } from "react-native";
 import { SFSymbol } from "@/components/Symbol";
 import {
   COMPLETED_READ_GREEN,
-  PRIMARY_PILL_BG,
-  PRIMARY_PILL_INK,
   PRIMARY_PILL_SHADOW,
 } from "@/constants/heroChrome";
+import { CLOSER_ACCENT } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
 import { typography } from "@/lib/typography";
 import { useReducedMotion } from "@/lib/useReducedMotion";
@@ -36,8 +35,9 @@ type PrimaryPillButtonProps = {
 };
 
 /**
- * Classic white pill CTA — matches the home screen Read Now button.
- * Black label, full-width capsule, soft white glow on dark surfaces.
+ * Primary CTA pill — reddish-orange fill (`CLOSER_ACCENT`) with
+ * white label. Used for Get Started, Continue, Read Now, and any
+ * `Button` primary variant across onboarding and the home surface.
  */
 export function PrimaryPillButton({
   label,
@@ -54,8 +54,8 @@ export function PrimaryPillButton({
 }: PrimaryPillButtonProps) {
   const isDisabled = disabled || loading;
   const isCompleted = variant === "completed";
-  const pillBg = isCompleted ? COMPLETED_READ_GREEN : PRIMARY_PILL_BG;
-  const pillInk = isCompleted ? "#FFFFFF" : PRIMARY_PILL_INK;
+  const pillBg = isCompleted ? COMPLETED_READ_GREEN : CLOSER_ACCENT;
+  const pillInk = "#FFFFFF";
   const reducedMotion = useReducedMotion();
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -160,7 +160,7 @@ export function PrimaryPillButton({
               {sublabel ? (
                 <Text
                   style={{
-                    color: "rgba(0, 0, 0, 0.55)",
+                    color: "rgba(255, 255, 255, 0.75)",
                     fontFamily: "System",
                     fontWeight: "500",
                     fontSize: 12,

@@ -1,0 +1,4533 @@
+{
+  "quotes": [
+    {
+      "id": "q001",
+      "segments": [
+        {
+          "text": "Fix your eyes on Jesus, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "The author of your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "faith.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q002",
+      "segments": [
+        {
+          "text": "Wait on the LORD; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "Be of good ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "courage.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q003",
+      "segments": [
+        {
+          "text": "His grace is sufficient For every ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "need.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q004",
+      "segments": [
+        {
+          "text": "Give thanks in all things; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "This is God's will for ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q005",
+      "segments": [
+        {
+          "text": "Thank God for Another ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "Day",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q006",
+      "segments": [
+        {
+          "text": "God is good all the time, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "All the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "time…",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q007",
+      "segments": [
+        {
+          "text": "More of You, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "LORD. Less of me. Thy will be ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "done.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q008",
+      "segments": [
+        {
+          "text": "Rooted in love, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "Established in faith, Growing in ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "grace.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q009",
+      "segments": [
+        {
+          "text": "He heals the brokenhearted And binds up their ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "wounds.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q010",
+      "segments": [
+        {
+          "text": "Just one touch from Him Changes ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "everything.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q011",
+      "segments": [
+        {
+          "text": "I am with you ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "always.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Matthew 28:20"
+    },
+    {
+      "id": "q012",
+      "segments": [
+        {
+          "text": "The LORD is my shepherd; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "I shall not ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "want.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Psalm 23:1"
+    },
+    {
+      "id": "q013",
+      "segments": [
+        {
+          "text": "For I know the plans I have for you,\" declares the LORD, \"plans to prosper you and not to harm you, plans to give you hope and a ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "future.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Jeremiah 29:11"
+    },
+    {
+      "id": "q014",
+      "segments": [
+        {
+          "text": "Be still, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "and know that I am ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "God.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Psalm 46:10"
+    },
+    {
+      "id": "q015",
+      "segments": [
+        {
+          "text": "I can do all things through Christ who strengthens ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "me.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Philippians 4:13"
+    },
+    {
+      "id": "q016",
+      "segments": [
+        {
+          "text": "Cast all your anxiety on him because he cares for ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "1 Peter 5:7"
+    },
+    {
+      "id": "q017",
+      "segments": [
+        {
+          "text": "Therefore, if anyone is in Christ, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "the new creation has come: The old has gone, the new is ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "here!",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "2 Corinthians 5:17"
+    },
+    {
+      "id": "q018",
+      "segments": [
+        {
+          "text": "Commit to the LORD whatever you do, and he will establish your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "plans.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Proverbs 16:3"
+    },
+    {
+      "id": "q019",
+      "segments": [
+        {
+          "text": "Wait on the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "LORD.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q020",
+      "segments": [
+        {
+          "text": "He is the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "anchor.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q021",
+      "segments": [
+        {
+          "text": "Love never ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "fails.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q022",
+      "segments": [
+        {
+          "text": "Faith over ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "fear.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q023",
+      "segments": [
+        {
+          "text": "Joy is a ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "choice.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q024",
+      "segments": [
+        {
+          "text": "Rest in His ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "presence.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q025",
+      "segments": [
+        {
+          "text": "His mercies are ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "new.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q026",
+      "segments": [
+        {
+          "text": "Speak life ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "today.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q027",
+      "segments": [
+        {
+          "text": "Grace upon ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "grace.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q028",
+      "segments": [
+        {
+          "text": "Seek peace and pursue ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "it.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q029",
+      "segments": [
+        {
+          "text": "Give it to ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "God.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q030",
+      "segments": [
+        {
+          "text": "Humble yourselves before the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "LORD.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q031",
+      "segments": [
+        {
+          "text": "Walk in the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "Spirit.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q032",
+      "segments": [
+        {
+          "text": "Cling to what is ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "good.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q033",
+      "segments": [
+        {
+          "text": "Be strong and ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "courageous.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q034",
+      "segments": [
+        {
+          "text": "In this world, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "you will have trouble. But take heart! I have overcome the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "world.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "John 16:33"
+    },
+    {
+      "id": "q035",
+      "segments": [
+        {
+          "text": "A bruised reed he will not break, and a smoldering wick he will not snuff ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "out.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Isaiah 42:3"
+    },
+    {
+      "id": "q036",
+      "segments": [
+        {
+          "text": "For where two or three are gathered in my name, there am I with ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "them.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Matthew 18:20"
+    },
+    {
+      "id": "q037",
+      "segments": [
+        {
+          "text": "He alone is my rock and my ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "salvation.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Psalm 62:6"
+    },
+    {
+      "id": "q038",
+      "segments": [
+        {
+          "text": "Let your light shine before ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "others.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Matthew 5:16"
+    },
+    {
+      "id": "q039",
+      "segments": [
+        {
+          "text": "The LORD will fight for you; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "you need only to be ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "still.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Exodus 14:14"
+    },
+    {
+      "id": "q040",
+      "segments": [
+        {
+          "text": "He has made everything beautiful in its ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "time.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Ecclesiastes 3:11"
+    },
+    {
+      "id": "q041",
+      "segments": [
+        {
+          "text": "Grateful for another day. Thankful for His ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "grace.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q042",
+      "segments": [
+        {
+          "text": "Every good and perfect gift is from ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "above.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q043",
+      "segments": [
+        {
+          "text": "Turn your eyes upon ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "Jesus.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q044",
+      "segments": [
+        {
+          "text": "His faithfulness is your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "shield.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q045",
+      "segments": [
+        {
+          "text": "Jesus, the same yesterday, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "today, and ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "forever.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q046",
+      "segments": [
+        {
+          "text": "He orders your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "steps.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q047",
+      "segments": [
+        {
+          "text": "Enter His gates with ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "thanksgiving.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q048",
+      "segments": [
+        {
+          "text": "God's love is chasing you ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "down.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q049",
+      "segments": [
+        {
+          "text": "Wake with a song of praise. He is ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "faithful.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q050",
+      "segments": [
+        {
+          "text": "His mercies are new every ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "morning.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q051",
+      "segments": [
+        {
+          "text": "The joy of the LORD is your strength. Find it in ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "Him.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q052",
+      "segments": [
+        {
+          "text": "Draw near to God, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "and He will draw ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "near.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q053",
+      "segments": [
+        {
+          "text": "He carries your burdens so you don't have to. ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "Rest.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q054",
+      "segments": [
+        {
+          "text": "You are chosen, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "not ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "forsaken.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q055",
+      "segments": [
+        {
+          "text": "Let everything that has breath praise the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "LORD.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q056",
+      "segments": [
+        {
+          "text": "His banner over me is ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "love.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q057",
+      "segments": [
+        {
+          "text": "For God so loved the world, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "He gave His Son. ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "Believe.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q058",
+      "segments": [
+        {
+          "text": "The LORD is my rock and my ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "fortress.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q059",
+      "segments": [
+        {
+          "text": "Walk in the light, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "as He is in the light. Truth sets you ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "free.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q060",
+      "segments": [
+        {
+          "text": "Wait for the LORD; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "be strong and take ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "heart.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q061",
+      "segments": [
+        {
+          "text": "His word is a lamp to my feet, a light to my ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "path.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q062",
+      "segments": [
+        {
+          "text": "Do not fear, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "for I am with ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q063",
+      "segments": [
+        {
+          "text": "In His presence is fullness of joy. Seek Him ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "daily.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q064",
+      "segments": [
+        {
+          "text": "A gentle answer turns away ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "wrath.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q065",
+      "segments": [
+        {
+          "text": "Trust in the LORD with all your heart. Lean not on your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "own.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q066",
+      "segments": [
+        {
+          "text": "As for me and my house, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "we will serve the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "LORD.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q067",
+      "segments": [
+        {
+          "text": "Praise the LORD, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "for He is good; His love endures ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "forever.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q068",
+      "segments": [
+        {
+          "text": "Let all that you do be done in ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "love.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q069",
+      "segments": [
+        {
+          "text": "He gives strength to the weary. Find your rest in ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "Him.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q070",
+      "segments": [
+        {
+          "text": "Love covers a multitude of ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "sins.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q071",
+      "segments": [
+        {
+          "text": "I lift my eyes to the hills. Where does my help come ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "from?",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q072",
+      "segments": [
+        {
+          "text": "He satisfies the longing ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "soul.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q073",
+      "segments": [
+        {
+          "text": "Consider the lilies, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "how they grow. God cares for ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q074",
+      "segments": [
+        {
+          "text": "The fear of the LORD is the beginning of ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "wisdom.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q075",
+      "segments": [
+        {
+          "text": "He who dwells in the shelter of the Most High ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "abides.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q076",
+      "segments": [
+        {
+          "text": "God is our refuge and ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "strength.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q077",
+      "segments": [
+        {
+          "text": "The steadfast love of the LORD never ceases. His compassions fail ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "not.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q078",
+      "segments": [
+        {
+          "text": "Fear is \"what if\" Faith is \"even ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "if\"",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q079",
+      "segments": [
+        {
+          "text": "When I can't. God ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "can.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q080",
+      "segments": [
+        {
+          "text": "Trust the LORD with all your heart, and don't depend on your own understanding. Proverbs ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "3:5",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q081",
+      "segments": [
+        {
+          "text": "\"Whatever you do, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "work at it with all your heart, as working for the LORD...\" Colossians ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "3:23",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q082",
+      "segments": [
+        {
+          "text": "If God is making you wait, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "then be prepared to receive more than you asked ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "for.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q083",
+      "segments": [
+        {
+          "text": "Your life is too valuable, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "your calling is too great, and your God is too good to waste your life on meaningless ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "things.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q084",
+      "segments": [
+        {
+          "text": "When the world says, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "\"Give up,\" Hope whispers, \"Try it one more ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "time.\"",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q085",
+      "segments": [
+        {
+          "text": "God's plans are always bigger than your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "mistakes.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q086",
+      "segments": [
+        {
+          "text": "Don't tell God how big your storm is. Tell the storm how big your God ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "is.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q087",
+      "segments": [
+        {
+          "text": "He didn't save you to leave you the same way He found ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q088",
+      "segments": [
+        {
+          "text": "Faith is not the absence of fear. It is the presence of God in the middle of ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "it.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q089",
+      "segments": [
+        {
+          "text": "You were not created to just survive. You were created to thrive in His ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "grace.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q090",
+      "segments": [
+        {
+          "text": "Peace is not found in a calmer life. Peace is found in a closer walk with ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "God.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q091",
+      "segments": [
+        {
+          "text": "Your worth is not defined by what you do, but by Whose you ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "are.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q092",
+      "segments": [
+        {
+          "text": "Sometimes God breaks your heart to save your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "soul.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q093",
+      "segments": [
+        {
+          "text": "The One who called you is ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "faithful.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q094",
+      "segments": [
+        {
+          "text": "Let your faith be bigger than your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "fears.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q095",
+      "segments": [
+        {
+          "text": "Wait on the LORD. Be of good courage. He shall strengthen your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "heart.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q096",
+      "segments": [
+        {
+          "text": "He heals the brokenhearted and binds up their wounds. Psalm ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "147:3",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q097",
+      "segments": [
+        {
+          "text": "Grateful for every moment. Trusting in every ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "plan.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q098",
+      "segments": [
+        {
+          "text": "It's not about being perfect. It's about being ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "His.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q099",
+      "segments": [
+        {
+          "text": "God's love for you is not based on your performance. It is based on His ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "character.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q100",
+      "segments": [
+        {
+          "text": "He is the anchor for your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "soul.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q101",
+      "segments": [
+        {
+          "text": "Where God guides, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "He ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "provides.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q102",
+      "segments": [
+        {
+          "text": "Focus on the Healer, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "not the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "hurt.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q103",
+      "segments": [
+        {
+          "text": "You are a masterpiece in ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "progress.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q104",
+      "segments": [
+        {
+          "text": "Mercy: Not getting what you deserve. Grace: Getting what you don't ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "deserve.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q105",
+      "segments": [
+        {
+          "text": "Walk by faith, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "not by ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "sight.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q106",
+      "segments": [
+        {
+          "text": "Faith is taking the first step even when you don't see the whole ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "staircase.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Martin Luther King Jr."
+    },
+    {
+      "id": "q107",
+      "segments": [
+        {
+          "text": "The God who made the stars also knows your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "name.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q108",
+      "segments": [
+        {
+          "text": "Let your roots go down deep into him, and let your lives be built on ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "him.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q109",
+      "segments": [
+        {
+          "text": "Don't worry about tomorrow. God is already ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "there.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q110",
+      "segments": [
+        {
+          "text": "His presence is your greatest ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "comfort.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q111",
+      "segments": [
+        {
+          "text": "In the end, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "it's not the years in your life, but the life in your years that matters. Trust God with ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "both.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q112",
+      "segments": [
+        {
+          "text": "You are not a mistake. You are a divine ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "design.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q113",
+      "segments": [
+        {
+          "text": "He is not finished with you ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "yet.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q114",
+      "segments": [
+        {
+          "text": "When you can't trace His hand, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "you must trust His ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "heart.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q115",
+      "segments": [
+        {
+          "text": "A thankful heart is a magnet for ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "miracles.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q116",
+      "segments": [
+        {
+          "text": "Our greatest fear should not be of failure, but of succeeding at things in life that don't really matter. Seek God's ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "purpose.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q117",
+      "segments": [
+        {
+          "text": "He will cover you with his feathers, and under his wings you will find ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "refuge.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Psalm 91:4"
+    },
+    {
+      "id": "q118",
+      "segments": [
+        {
+          "text": "Worry is a misuse of ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "imagination.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q119",
+      "segments": [
+        {
+          "text": "Never be afraid to trust an unknown future to a known ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "God.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Corrie ten Boom"
+    },
+    {
+      "id": "q120",
+      "segments": [
+        {
+          "text": "God's delay is not God's ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "denial.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q121",
+      "segments": [
+        {
+          "text": "The LORD is my light and my salvation—whom shall I ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "fear?",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Psalm 27:1"
+    },
+    {
+      "id": "q122",
+      "segments": [
+        {
+          "text": "If God is for us, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "who can be against ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "us?",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Romans 8:31"
+    },
+    {
+      "id": "q123",
+      "segments": [
+        {
+          "text": "Your greatest battles are fought on your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "knees.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q124",
+      "segments": [
+        {
+          "text": "Bloom where you are planted by God's ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "grace.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q125",
+      "segments": [
+        {
+          "text": "Be a voice, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "not an ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "echo.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q126",
+      "segments": [
+        {
+          "text": "Do not conform to the pattern of this world, but be transformed by the renewing of your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "mind.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Romans 12:2"
+    },
+    {
+      "id": "q127",
+      "segments": [
+        {
+          "text": "For I know the plans I have for you, declares the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "LORD.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Jeremiah 29:11"
+    },
+    {
+      "id": "q128",
+      "segments": [
+        {
+          "text": "The joy of the LORD is my ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "strength.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q129",
+      "segments": [
+        {
+          "text": "You are a child of the One True ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "King.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q130",
+      "segments": [
+        {
+          "text": "He knows the way that you ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "take.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q131",
+      "segments": [
+        {
+          "text": "Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "up.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Galatians 6:9"
+    },
+    {
+      "id": "q132",
+      "segments": [
+        {
+          "text": "The testing of your faith develops ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "perseverance.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "James 1:3"
+    },
+    {
+      "id": "q133",
+      "segments": [
+        {
+          "text": "God has a purpose for your pain, a reason for your struggle, and a reward for your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "faithfulness.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q134",
+      "segments": [
+        {
+          "text": "The cross proves how much God loves ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q135",
+      "segments": [
+        {
+          "text": "My God knows what I ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "need.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q136",
+      "segments": [
+        {
+          "text": "God wants me to ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "win.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q137",
+      "segments": [
+        {
+          "text": "His grace is sufficient for ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q138",
+      "segments": [
+        {
+          "text": "The joy of the LORD is your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "strength.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q139",
+      "segments": [
+        {
+          "text": "Faith can move ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "mountains.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q140",
+      "segments": [
+        {
+          "text": "Wait on the LORD and be of good ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "courage.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q141",
+      "segments": [
+        {
+          "text": "With God all things are ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "possible.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q142",
+      "segments": [
+        {
+          "text": "Fear is not of ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "God.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q143",
+      "segments": [
+        {
+          "text": "Trust in the LORD with all your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "heart.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q144",
+      "segments": [
+        {
+          "text": "Pray without ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "ceasing.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q145",
+      "segments": [
+        {
+          "text": "You are fearfully and wonderfully ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "made.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q146",
+      "segments": [
+        {
+          "text": "The LORD will fight for you; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "you need only to be ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "still.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q147",
+      "segments": [
+        {
+          "text": "Let your light shine before ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "others.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q148",
+      "segments": [
+        {
+          "text": "Seek first his kingdom and his ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "righteousness.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q149",
+      "segments": [
+        {
+          "text": "Cast all your anxiety on him because he cares for ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q150",
+      "segments": [
+        {
+          "text": "In this world you will have trouble. But take heart! I have overcome the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "world.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ],
+      "reference": "Jesus"
+    },
+    {
+      "id": "q151",
+      "segments": [
+        {
+          "text": "The LORD is my shepherd; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "I shall not ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "want.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q152",
+      "segments": [
+        {
+          "text": "Great is your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "faithfulness.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q153",
+      "segments": [
+        {
+          "text": "Do not be anxious about anything, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "but in everything by prayer and supplication with thanksgiving let your requests be made known to ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "God.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q154",
+      "segments": [
+        {
+          "text": "I will give thanks to the LORD with my whole heart; I will recount all of your wonderful ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "deeds.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q155",
+      "segments": [
+        {
+          "text": "The LORD is good, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "a stronghold in the day of trouble; he knows those who take refuge in ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "him.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q156",
+      "segments": [
+        {
+          "text": "Set your minds on things that are above, not on things that are on ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "earth.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q157",
+      "segments": [
+        {
+          "text": "For nothing will be impossible with ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "God.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q158",
+      "segments": [
+        {
+          "text": "Taste and see that the LORD is good; blessed is the one who takes refuge in ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "him.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q159",
+      "segments": [
+        {
+          "text": "The grass withers, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "the flower fades, but the word of our God will stand ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "forever.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q160",
+      "segments": [
+        {
+          "text": "Lead me in your truth and teach me, for you are the God of my ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "salvation.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q161",
+      "segments": [
+        {
+          "text": "The LORD bless you and keep you; the LORD make his face shine upon ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q162",
+      "segments": [
+        {
+          "text": "But the LORD is faithful, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "and he will strengthen you and protect you from the evil ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "one.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q163",
+      "segments": [
+        {
+          "text": "We know that for those who love God all things work together for ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "good.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q164",
+      "segments": [
+        {
+          "text": "You are the light of the world. A city set on a hill cannot be ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "hidden.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q165",
+      "segments": [
+        {
+          "text": "The LORD is merciful and gracious, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "slow to anger and abounding in steadfast ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "love.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q166",
+      "segments": [
+        {
+          "text": "Cast your burden on the LORD, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "and he will sustain ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q167",
+      "segments": [
+        {
+          "text": "For the LORD sees not as man sees: man looks on the outward appearance, but the LORD looks on the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "heart.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q168",
+      "segments": [
+        {
+          "text": "Create in me a clean heart, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "O God, and renew a right spirit within ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "me.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q169",
+      "segments": [
+        {
+          "text": "Be kind to one another, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "tenderhearted, forgiving one another, as God in Christ forgave ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q170",
+      "segments": [
+        {
+          "text": "Jesus is the way, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "the truth, and the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "life.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q171",
+      "segments": [
+        {
+          "text": "Abide in Me, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "and I in you, says the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "LORD.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q172",
+      "segments": [
+        {
+          "text": "Jesus is the author and perfecter of our ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "faith.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q173",
+      "segments": [
+        {
+          "text": "The LORD is near to all who call on Him in ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "truth.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q174",
+      "segments": [
+        {
+          "text": "My grace is sufficient for you, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "for My power is made perfect in ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "weakness.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q175",
+      "segments": [
+        {
+          "text": "Jesus Christ gives us the victory through our ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "LORD.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q176",
+      "segments": [
+        {
+          "text": "The name of the LORD is a strong tower; the righteous run to it and are ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "safe.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q177",
+      "segments": [
+        {
+          "text": "Let the peace of Christ rule in your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "hearts.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q178",
+      "segments": [
+        {
+          "text": "Jesus said, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "\"I am the light of the world. Whoever follows me will never walk in ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "darkness.\"",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q179",
+      "segments": [
+        {
+          "text": "In this world you will have trouble. But take heart! Jesus has overcome the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "world.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q180",
+      "segments": [
+        {
+          "text": "The steadfast love of the LORD never ceases; His mercies never come to an ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "end.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q181",
+      "segments": [
+        {
+          "text": "Create in me a pure heart, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "O God, and renew a steadfast spirit within ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "me.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q182",
+      "segments": [
+        {
+          "text": "When I am afraid, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "I put my trust in the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "LORD.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q183",
+      "segments": [
+        {
+          "text": "The LORD satisfies the thirsty and fills the hungry with good ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "things.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q184",
+      "segments": [
+        {
+          "text": "Walk in the way of love, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "just as Christ loved us and gave Himself up for ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "us.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q185",
+      "segments": [
+        {
+          "text": "Surely God is my salvation; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "I will trust and not be ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "afraid.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q186",
+      "segments": [
+        {
+          "text": "Jesus answered, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "\"Everything is possible for one who ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "believes.\"",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q187",
+      "segments": [
+        {
+          "text": "The LORD directs the steps of the godly; He delights in every detail of their ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "lives.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q188",
+      "segments": [
+        {
+          "text": "Jesus said, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "\"Peace be with you; as the Father has sent me, even so I send ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.\"",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q189",
+      "segments": [
+        {
+          "text": "The LORD your God is with you wherever you ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "go.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q190",
+      "segments": [
+        {
+          "text": "Jesus is the bread of life; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "whoever comes to Him will never go ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "hungry.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q191",
+      "segments": [
+        {
+          "text": "The righteous cry out, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "and the LORD hears them; He delivers them from all their ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "troubles.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q192",
+      "segments": [
+        {
+          "text": "Direct my footsteps according to Your word; let no sin rule over me, ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "LORD.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q193",
+      "segments": [
+        {
+          "text": "The LORD upholds all who fall and lifts up all who are bowed ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "down.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q194",
+      "segments": [
+        {
+          "text": "Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God is with ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "you.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q195",
+      "segments": [
+        {
+          "text": "Jesus said, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "\"I am the resurrection and the life. The one who believes in me will live, even though they ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "die.\"",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q196",
+      "segments": [
+        {
+          "text": "The LORD is gracious and compassionate, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "slow to anger and rich in ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "love.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q197",
+      "segments": [
+        {
+          "text": "Jesus is the door; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "whoever enters through Him will be ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "saved.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q198",
+      "segments": [
+        {
+          "text": "The LORD is my strength and my shield; my heart trusts in Him, and He helps ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "me.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q199",
+      "segments": [
+        {
+          "text": "Jesus said, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "\"I am the good shepherd. The good shepherd lays down His life for the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "sheep.\"",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q200",
+      "segments": [
+        {
+          "text": "The LORD will keep you from all harm—He will watch over your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "life.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q201",
+      "segments": [
+        {
+          "text": "Rejoice in the LORD always. I will say it again: ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "Rejoice!",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q202",
+      "segments": [
+        {
+          "text": "Jesus is the true vine, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "and my Father is the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "gardener.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q203",
+      "segments": [
+        {
+          "text": "The LORD reigns, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "let the earth be glad; let the distant shores ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "rejoice.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q204",
+      "segments": [
+        {
+          "text": "Jesus said, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "\"I am the way and the truth and the life. No one comes to the Father except through ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "me.\"",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q205",
+      "segments": [
+        {
+          "text": "The LORD is righteous in all His ways and faithful in all He ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "does.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q206",
+      "segments": [
+        {
+          "text": "Cast your cares on the LORD and He will sustain you; He will never let the righteous be ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "shaken.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q207",
+      "segments": [
+        {
+          "text": "Jesus is the mediator of a new covenant, established on better ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "promises.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q208",
+      "segments": [
+        {
+          "text": "The LORD watches over all who love Him, but all the wicked He will ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "destroy.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q209",
+      "segments": [
+        {
+          "text": "Let us draw near to God with a sincere heart and with the full assurance that faith ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "brings.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q210",
+      "segments": [
+        {
+          "text": "Jesus humbled Himself by becoming obedient to death—even death on a ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "cross!",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q211",
+      "segments": [
+        {
+          "text": "The LORD gives strength to His people; the LORD blesses His people with ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "peace.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q212",
+      "segments": [
+        {
+          "text": "Search me, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "God, and know my heart; test me and know my anxious ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "thoughts.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q213",
+      "segments": [
+        {
+          "text": "Jesus is the image of the invisible God, the firstborn over all ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "creation.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q214",
+      "segments": [
+        {
+          "text": "The LORD detests dishonest scales, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "but accurate weights find favor with ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "Him.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q215",
+      "segments": [
+        {
+          "text": "Fix your eyes on Jesus, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "the pioneer and perfecter of ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "faith.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q216",
+      "segments": [
+        {
+          "text": "The LORD is my rock, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "my fortress, and my deliverer; my God is my rock, in whom I take ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "refuge.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q217",
+      "segments": [
+        {
+          "text": "Jesus said, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "\"Whoever drinks the water I give them will never ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "thirst.\"",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q218",
+      "segments": [
+        {
+          "text": "The LORD delights in those who fear Him, who put their hope in His unfailing ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "love.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q219",
+      "segments": [
+        {
+          "text": "In Him we have redemption through His blood, the forgiveness of sins, in accordance with the riches of God's ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "grace.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q220",
+      "segments": [
+        {
+          "text": "The LORD is far from the wicked, but He hears the prayer of the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "righteous.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q221",
+      "segments": [
+        {
+          "text": "Jesus Christ is the cornerstone, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "in whom the whole building is joined together and rises to become a holy ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "temple.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q222",
+      "segments": [
+        {
+          "text": "The LORD makes poor and makes rich; He brings low and He also ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "exalts.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q223",
+      "segments": [
+        {
+          "text": "Let your speech always be gracious, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "seasoned with salt, knowing how you ought to answer each one in the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "LORD.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q224",
+      "segments": [
+        {
+          "text": "Jesus said, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "\"Blessed are those who have not seen and yet have ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "believed.\"",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q225",
+      "segments": [
+        {
+          "text": "The LORD is slow to anger and great in power; the LORD will not leave the guilty ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "unpunished.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q226",
+      "segments": [
+        {
+          "text": "Jesus is the head of the body, the church; He is the beginning and the firstborn from among the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "dead.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q227",
+      "segments": [
+        {
+          "text": "The LORD guards the simple; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "when I was brought low, He saved ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "me.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q228",
+      "segments": [
+        {
+          "text": "Trust in the LORD with all your heart and lean not on your own ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "understanding.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q229",
+      "segments": [
+        {
+          "text": "Jesus was pierced for our transgressions, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "He was crushed for our iniquities; the punishment that brought us peace was on ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "Him.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q230",
+      "segments": [
+        {
+          "text": "The LORD will fulfill His purpose for me; Your love, O LORD, endures ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "forever.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q231",
+      "segments": [
+        {
+          "text": "Humble yourselves before the LORD, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "and He will lift you ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "up.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q232",
+      "segments": [
+        {
+          "text": "Jesus said, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "\"If you hold to my teaching, you are really my disciples. Then you will know the truth, and the truth will set you ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "free.\"",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q233",
+      "segments": [
+        {
+          "text": "The LORD is my shepherd; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "I lack ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "nothing.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q234",
+      "segments": [
+        {
+          "text": "Praise the LORD, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "my soul, and forget not all His benefits—who forgives all your sins and heals all your ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "diseases.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q235",
+      "segments": [
+        {
+          "text": "Jesus is able to save completely those who come to God through Him, because He always lives to intercede for ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "them.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q236",
+      "segments": [
+        {
+          "text": "The LORD wraps Himself in light as with a garment; He stretches out the heavens like a ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "tent.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q237",
+      "segments": [
+        {
+          "text": "Wait for the LORD; ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "be strong and take heart and wait for the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "LORD.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q238",
+      "segments": [
+        {
+          "text": "Jesus has been granted a name that is above every name, that at the name of Jesus every knee should ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "bow.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q239",
+      "segments": [
+        {
+          "text": "The LORD opens the eyes of the blind, the LORD lifts up those who are bowed ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "down.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q240",
+      "segments": [
+        {
+          "text": "Set your minds on things above, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "not on earthly things, for you died, and your life is now hidden with Christ in ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "God.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q241",
+      "segments": [
+        {
+          "text": "The LORD upholds the cause of the oppressed and gives food to the ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "hungry.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    },
+    {
+      "id": "q242",
+      "segments": [
+        {
+          "text": "Jesus is coming soon, ",
+          "font": "caveat",
+          "color": "#FF3B30"
+        },
+        {
+          "text": "and His reward is with Him, to give to each person according to what they have ",
+          "font": "sans-bold",
+          "color": "#000000"
+        },
+        {
+          "text": "done.",
+          "font": "sans-bold",
+          "color": "#000000",
+          "underline": true,
+          "underlineColor": "#FF3B30"
+        }
+      ]
+    }
+  ]
+}

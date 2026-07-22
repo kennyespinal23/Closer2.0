@@ -10,7 +10,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { goBackOr } from "@/lib/navigation";
 import { shareVerse } from "@/lib/share";
+import { SFSymbol } from "@/components/Symbol";
 import { NEW_YORK } from "@/lib/typography";
 import Svg, {
   Defs,
@@ -148,7 +150,7 @@ export default function CheckInDetailScreen() {
           onPress: () => {
             remove(checkIn.id);
             // Back out to whatever sent us here (usually Journey).
-            router.back();
+            goBackOr(router, "/(tabs)/today");
           },
         },
       ],
@@ -159,7 +161,7 @@ export default function CheckInDetailScreen() {
   if (!checkIn) {
     return (
       <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
-        <Header onBack={() => router.back()} />
+        <Header onBack={() => goBackOr(router, "/(tabs)/today")} />
         <View className="flex-1 items-center justify-center px-8">
           <Text
             className="text-ink text-[18px] text-center"
@@ -178,7 +180,7 @@ export default function CheckInDetailScreen() {
             <Button
               label="Back to Journey"
               variant="secondary"
-              onPress={() => router.back()}
+              onPress={() => goBackOr(router, "/(tabs)/today")}
             />
           </View>
         </View>
@@ -188,7 +190,7 @@ export default function CheckInDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
-      <Header onBack={() => router.back()} />
+      <Header onBack={() => goBackOr(router, "/(tabs)/today")} />
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: 48, paddingTop: 4 }}
@@ -197,7 +199,7 @@ export default function CheckInDetailScreen() {
         {/* ─── Timestamp eyebrow ─────────────────────────────── */}
         <View className="items-center px-6 mt-2">
           <Text
-            className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase"
+            className="text-ink-muted text-[11px] tracking-[1px] uppercase"
             style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {formatStamp(checkIn.createdAt)}
@@ -223,7 +225,7 @@ export default function CheckInDetailScreen() {
             }}
           >
             <Text
-              className="text-[11px] tracking-[2.5px] uppercase"
+              className="text-[11px] tracking-[1px] uppercase"
               style={{
                 fontFamily: "System",
                 fontWeight: "700",
@@ -278,7 +280,7 @@ export default function CheckInDetailScreen() {
                 style={{ backgroundColor: accent }}
               />
               <Text
-                className="text-[11px] tracking-[3px] uppercase"
+                className="text-[11px] tracking-[1px] uppercase"
                 style={{
                   fontFamily: "System",
                   fontWeight: "700",
@@ -294,7 +296,7 @@ export default function CheckInDetailScreen() {
         {/* ─── Reflection block ──────────────────────────────── */}
         <View className="mt-10 px-6">
           <Text
-            className="text-[11px] tracking-[2.5px] uppercase mb-3"
+            className="text-[11px] tracking-[1px] uppercase mb-3"
             style={{
               fontFamily: "System",
               fontWeight: "700",
@@ -329,7 +331,7 @@ export default function CheckInDetailScreen() {
                 }}
               >
                 <Text
-                  className="text-ink-subtle text-[11px]"
+                  className="text-ink-muted text-[11px]"
                   style={{ fontFamily: "System", fontWeight: "500" }}
                 >
                   {checkIn.journalUpdatedAt
@@ -418,7 +420,7 @@ export default function CheckInDetailScreen() {
               style={{
                 fontFamily: "System",
                 fontWeight: "600",
-                color: "#FF6B6B",
+                color: colors.destructive,
               }}
             >
               Delete check-in
@@ -457,15 +459,7 @@ function Header({ onBack }: { onBack: () => void }) {
         accessibilityLabel="Back"
         className="w-10 h-10 rounded-full items-center justify-center"
       >
-        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M15 6l-6 6 6 6"
-            stroke={colors.ink}
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        <SFSymbol name="chevron.left" size={16} color={colors.ink} weight="semibold" />
       </Pressable>
       <Text
         className="text-ink text-[17px] flex-1 text-center"

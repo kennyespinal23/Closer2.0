@@ -32,6 +32,9 @@
         "appleTeamId": "7ZKDS4X5B9",
         "ascAppId": "6779004238"
       }
+    },
+    "testflight": {
+      "extends": "production"
     }
   }
 }

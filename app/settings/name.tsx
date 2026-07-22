@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRouter } from "expo-router";
 import { useOnboarding } from "@/state/onboarding";
+import { systemText } from "@/lib/typography";
 import { useColors } from "@/state/theme";
 
 /**
@@ -45,12 +46,7 @@ export default function EditNameScreen() {
           style={({ pressed }) => ({ opacity: pressed && canSave ? 0.6 : 1 })}
         >
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "600",
-              fontSize: 17,
-              color: canSave ? "#007AFF" : colors.inkSubtle,
-            }}
+            style={[systemText.headline, { color: canSave ? "#007AFF" : colors.inkSubtle }]}
           >
             Save
           </Text>
@@ -90,7 +86,7 @@ export default function EditNameScreen() {
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
               placeholder="Your name"
-              placeholderTextColor={colors.inkSubtle}
+              placeholderTextColor={colors.inkMuted}
               autoCapitalize="words"
               autoCorrect={false}
               returnKeyType="done"

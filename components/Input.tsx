@@ -42,7 +42,7 @@ export function Input({
             setFocused(false);
             onBlur?.(e);
           }}
-          placeholderTextColor={colors.inkSubtle}
+          placeholderTextColor={colors.inkMuted}
           selectionColor={colors.primary}
           className="flex-1 font-sans text-ink text-[17px] py-0"
           style={{ fontFamily: "System", fontWeight: "400", lineHeight: 22 }}

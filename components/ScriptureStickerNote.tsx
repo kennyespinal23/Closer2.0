@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import {
+  Animated,
   Platform,
   type StyleProp,
-  StyleSheet,
   Text,
   View,
   type ViewStyle,
@@ -63,6 +63,8 @@ type ScriptureStickerNoteProps = {
   reference?: string;
   maxWidth: number;
   rotationDeg?: number;
+  /** Fades verse + reference only — paper stays fully opaque. */
+  textOpacity?: Animated.Value | number;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -75,6 +77,7 @@ export function ScriptureStickerNote({
   reference,
   maxWidth,
   rotationDeg = -1.15,
+  textOpacity = 1,
   style,
 }: ScriptureStickerNoteProps) {
   const [sheet, setSheet] = useState<{ w: number; h: number } | null>(null);
@@ -140,29 +143,31 @@ export function ScriptureStickerNote({
               backgroundColor: sheet ? "transparent" : PAPER,
             }}
           >
-            <Text
-              style={[
-                typography.photoQuote,
-                { color: PAPER_INK, textAlign: "center" },
-              ]}
-            >
-              {quote}
-            </Text>
-            {reference ? (
+            <Animated.View style={{ opacity: textOpacity }}>
               <Text
                 style={[
-                  typography.smallLabel,
-                  {
-                    color: PAPER_INK_MUTED,
-                    textTransform: "uppercase",
-                    marginTop: 18,
-                    textAlign: "center",
-                  },
+                  typography.photoQuote,
+                  { color: PAPER_INK, textAlign: "center" },
                 ]}
               >
-                {reference}
+                {quote}
               </Text>
-            ) : null}
+              {reference ? (
+                <Text
+                  style={[
+                    typography.smallLabel,
+                    {
+                      color: PAPER_INK_MUTED,
+                      textTransform: "uppercase",
+                      marginTop: 18,
+                      textAlign: "center",
+                    },
+                  ]}
+                >
+                  {reference}
+                </Text>
+              ) : null}
+            </Animated.View>
           </View>
         </View>
       </View>

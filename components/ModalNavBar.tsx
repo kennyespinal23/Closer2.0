@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SFSymbol } from "@/components/Symbol";
 import * as haptics from "@/lib/haptics";
+import { systemText } from "@/lib/typography";
 import { useColors } from "@/state/theme";
 
 const SIDE_WIDTH = 44;
@@ -89,14 +90,14 @@ export function ModalNavBar({
         >
           <Text
             numberOfLines={1}
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: colors.ink,
-              fontSize: 17,
-              letterSpacing: -0.2,
-              textAlign: "center",
-            }}
+            style={[
+              systemText.headline,
+              {
+                fontWeight: "700",
+                color: colors.ink,
+                textAlign: "center",
+              },
+            ]}
             accessibilityRole="header"
           >
             {title}

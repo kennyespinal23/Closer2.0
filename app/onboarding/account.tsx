@@ -109,7 +109,7 @@ export default function AccountScreen() {
 
           <FadeIn delayMs={2000}>
             <Text
-              className="text-ink-subtle text-[11px] leading-[16px] text-center mt-4 mb-2 px-4"
+              className="text-ink-muted text-[11px] leading-[16px] text-center mt-4 mb-2 px-4"
               style={{ fontFamily: "System", fontWeight: "400" }}
             >
               By continuing, you agree to our{" "}

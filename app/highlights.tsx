@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { goBackOr } from "@/lib/navigation";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { SFSymbol } from "@/components/Symbol";
 import { minTouchTarget, spacing } from "@/constants/spacing";
@@ -172,13 +173,13 @@ function HighlightCard({
       <View className="flex-1 px-5 py-4">
         <View className="flex-row items-baseline justify-between">
           <Text
-            className="text-primary text-[11px] tracking-[2.5px] uppercase"
+            className="text-primary text-[11px] tracking-[1px] uppercase"
             style={{ fontFamily: "System", fontWeight: "700" }}
           >
             {formatRef(highlight)}
           </Text>
           <Text
-            className="text-ink-subtle text-[11px]"
+            className="text-ink-muted text-[11px]"
             style={{ fontFamily: "System", fontWeight: "500" }}
           >
             {relativeTime(highlight.updatedAt)}
@@ -257,7 +258,7 @@ function Header({
       style={{ paddingHorizontal: SCREEN_H_PAD }}
     >
       <Pressable
-        onPress={() => router.back()}
+        onPress={() => goBackOr(router, "/(tabs)/profile")}
         hitSlop={8}
         accessibilityRole="button"
         accessibilityLabel="Back"

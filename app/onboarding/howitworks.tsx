@@ -106,8 +106,11 @@ export default function HowItWorksScreen() {
   };
 
   const handleBack = () => {
-    if (step === 0) return;
-    setStep((s) => Math.max(0, s - 1));
+    if (step > 0) {
+      setStep((s) => Math.max(0, s - 1));
+      return;
+    }
+    router.back();
   };
 
   return (
@@ -115,6 +118,7 @@ export default function HowItWorksScreen() {
       <OnboardingChrome
         mode="with-progress"
         progress={progressFor("howitworks")}
+        onBack={handleBack}
       />
 
       <ScrollView

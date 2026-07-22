@@ -5,6 +5,7 @@ import { StreakFireAnimation } from "@/components/StreakFireAnimation";
 import { SFSymbol } from "@/components/Symbol";
 import { useMilestoneUnlockStreak } from "@/lib/useMilestoneUnlockStreak";
 import { buildCurrentWeek, buildMonthGrid } from "@/lib/rhythm";
+import { systemText } from "@/lib/typography";
 import { useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
 import { TAB_ACCENT_RED } from "@/constants/theme";
@@ -70,15 +71,10 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
         >
           <View style={{ flex: 1, paddingRight: 12 }}>
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: colors.ink,
-                fontSize: 28,
-                lineHeight: 34,
-                letterSpacing: -0.5,
-                textAlign: "left",
-              }}
+              style={[
+                systemText.title1,
+                { color: colors.ink, textAlign: "left" },
+              ]}
               accessibilityRole="header"
             >
               {days} {days === 1 ? "Day Streak!" : "Day Streak!"}
@@ -123,7 +119,7 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
                   style={{
                     fontFamily: "System",
                     fontWeight: "500",
-                    color: colors.inkSubtle,
+                    color: colors.inkMuted,
                     fontSize: 11,
                     letterSpacing: 0.2,
                     marginBottom: 10,
@@ -203,7 +199,7 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
                 style={{
                   fontFamily: "System",
                   fontWeight: "600",
-                  color: colors.inkSubtle,
+                  color: colors.inkMuted,
                   fontSize: 11,
                   letterSpacing: 0.2,
                   paddingVertical: 6,

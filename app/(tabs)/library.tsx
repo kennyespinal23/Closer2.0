@@ -1,21 +1,24 @@
 import { useMemo, useState } from "react";
 import {
+  Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
-import Svg, { Path } from "react-native-svg";
+import { useBottomTabBarHeight } from "react-native-bottom-tabs";
+import { Host, TextField as ExpoTextField } from "@expo/ui/swift-ui";
 import { SFSymbol } from "@/components/Symbol";
 import { BookCover } from "@/components/BookCover";
 import { FadeIn } from "@/components/FadeIn";
-import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
+import { ThemedText } from "@/components/ThemedText";
 import { type Book, BOOKS, findBookById } from "@/constants/books";
 import { hasBookCover } from "@/constants/bookCovers";
 import { minTouchTarget, spacing } from "@/constants/spacing";
@@ -23,6 +26,12 @@ import * as haptics from "@/lib/haptics";
 import { SCREEN_H_PAD } from "@/lib/layout";
 import { useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
+
+/**
+ * Fallback when the native tab bar hasn't reported a height yet
+ * (provider starts at 0). Apple's visible UITabBar content height.
+ */
+const TAB_BAR_CONTENT_FALLBACK = 49;
 
 /**
  * Library — Imprint-inspired browse grid.
@@ -44,14 +53,32 @@ function labelForFilter(f: LibraryFilter): string {
 export default function LibraryScreen() {
   const router = useRouter();
   const { bg } = useColors();
-  const colors = useColors();
   const scheme = useResolvedScheme();
+  const insets = useSafeAreaInsets();
+  // Measured native UITabBar height from react-native-bottom-tabs
+  // (onTabBarMeasured). NOT @react-navigation/bottom-tabs — that
+  // context is a different React.createContext and throws/returns
+  // unrelated values under our native TabView shell.
+  const measuredTabBarHeight = useBottomTabBarHeight();
   const [filter, setFilter] = useState<LibraryFilter>("old");
   const [query, setQuery] = useState("");
   const { lastVisited, hasReadChapter } = useProgress();
 
   const isSearching = query.trim().length > 0;
   const filterIndex = filter === "old" ? 0 : 1;
+
+  // Native scenes ignoreSafeArea under the floating Liquid Glass
+  // bar, so scroll content must clear the measured bar height.
+  // Measured frame ≥70 already includes the home-indicator band
+  // (runtime on iPhone 17 Pro Max: bar=83); shorter reports are
+  // content-only and need insets.bottom added.
+  const tabClearance =
+    measuredTabBarHeight > 0
+      ? measuredTabBarHeight >= 70
+        ? measuredTabBarHeight
+        : measuredTabBarHeight + insets.bottom
+      : TAB_BAR_CONTENT_FALLBACK + insets.bottom;
+  const scrollBottomPad = tabClearance + spacing[24];
 
   const filteredBooks = useMemo(() => {
     if (isSearching) {
@@ -84,36 +111,23 @@ export default function LibraryScreen() {
     <SafeAreaView className="flex-1" style={{ backgroundColor: bg }} edges={["top"]}>
       <ScrollView
         contentContainerStyle={{
-          paddingBottom: TAB_BAR_TOTAL_HEIGHT + 24,
+          paddingBottom: scrollBottomPad,
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
         {/* ─── Page title ──────────────────────────────────────────
-            Just "Library" — matches the Home tab's title recipe so
-            every tab reads with the same Apple Fitness "Summary"
-            shape (32pt Bold, tight negative tracking, no
-            decoration). The previous "Explore All 66 Books" was
-            descriptive but lengthy; the tab bar already says
-            Library, and the user's reset pass on the home tab
-            established the single-word page label as the
-            convention. */}
+            Apple Large Title via ThemedText variant="largeTitle"
+            (34pt Bold). Matches Home / Profile tab anchors. */}
         <FadeIn delayMs={0} durationMs={700}>
           <View className="pt-2 pb-1" style={{ paddingHorizontal: SCREEN_H_PAD }}>
-            <Text
-              className="text-ink"
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                fontSize: 32,
-                lineHeight: 36,
-                letterSpacing: -0.8,
-              }}
+            <ThemedText
+              variant="largeTitle"
               accessibilityRole="header"
             >
               Bible
-            </Text>
+            </ThemedText>
           </View>
         </FadeIn>
 
@@ -146,7 +160,10 @@ export default function LibraryScreen() {
             Continue Reading → Search → Filters → Books. */}
 
         {/* ─── Search ─────────────────────────────────────────── */}
-        <SearchField value={query} onChangeText={setQuery} />
+        <SearchField
+          resetToken={filter}
+          onChangeText={setQuery}
+        />
 
         {/* ─── Testament segmented control ────────────────────── */}
         <View
@@ -160,6 +177,9 @@ export default function LibraryScreen() {
           }}
           pointerEvents={isSearching ? "none" : "auto"}
         >
+          {/* Native UISegmentedControl — leave label/pill colors to
+              the system so selected vs. unselected meet OS contrast
+              (don't override with theme grays that fight HIG). */}
           <SegmentedControl
             appearance={scheme}
             values={[...FILTER_SEGMENTS]}
@@ -171,18 +191,6 @@ export default function LibraryScreen() {
               if (query.length > 0) setQuery("");
             }}
             style={{ height: 36 }}
-            fontStyle={{
-              fontFamily: "System",
-              fontWeight: "500",
-              fontSize: 13,
-              color: colors.inkMuted,
-            }}
-            activeFontStyle={{
-              fontFamily: "System",
-              fontWeight: "700",
-              fontSize: 13,
-              color: colors.ink,
-            }}
           />
         </View>
 
@@ -221,37 +229,15 @@ function SectionHeader({
   count: number;
   isSearch: boolean;
 }) {
-  const colors = useColors();
   return (
     <View
       className="mt-7 mb-4 flex-row items-baseline justify-between"
       style={{ paddingHorizontal: SCREEN_H_PAD }}
     >
-      <Text
-        className="text-ink text-[22px] tracking-[-0.3px]"
-        style={{ fontFamily: "System", fontWeight: "800" }}
-      >
-        {title}
-      </Text>
-      {/* Count badge — tracking-1pt / 11pt / SemiBold so it reads as
-          a quiet supporting number instead of competing with the
-          section title beside it. Design review (June 2026) flagged
-          the previous treatment (12pt Bold + 1.5pt tracking) as
-          near-equal weight with "All" — the title now dominates and
-          the count fades behind it. Color held at inkSubtle for the
-          same hierarchy reason. */}
-      <Text
-        style={{
-          fontFamily: "System",
-          fontWeight: "600",
-          color: colors.inkSubtle,
-          fontSize: 11,
-          letterSpacing: 1,
-          textTransform: "uppercase",
-        }}
-      >
+      <ThemedText variant="title2">{title}</ThemedText>
+      <ThemedText variant="captionEmphasized" color="muted">
         {count} {isSearch ? (count === 1 ? "match" : "matches") : count === 1 ? "book" : "books"}
-      </Text>
+      </ThemedText>
     </View>
   );
 }
@@ -334,8 +320,14 @@ function BookGridTile({
     >
       <View style={{ position: "relative" }}>
         <BookCover book={book} variant="card" />
+        {/* ART badge — decorative only (labels illustrated covers).
+            Not interactive: no Pressable / onPress. Touch target
+            HIG does not apply; the parent tile owns the tap. */}
         {illustrated && (
           <View
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
             style={{
               position: "absolute",
               top: 10,
@@ -346,45 +338,30 @@ function BookGridTile({
               backgroundColor: "rgba(255,255,255,0.92)",
             }}
           >
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "800",
-                fontSize: 11,
-                color: "#0F0F10",
-                letterSpacing: 1,
-              }}
+            <ThemedText
+              variant="captionEmphasized"
+              style={{ color: "#0F0F10", fontWeight: "800" }}
             >
               ART
-            </Text>
+            </ThemedText>
           </View>
         )}
       </View>
-      <Text
-        style={{
-          fontFamily: "System",
-          fontWeight: "700",
-          fontSize: 15,
-          color: colors.ink,
-          letterSpacing: -0.2,
-          marginTop: 10,
-        }}
+      <ThemedText
+        variant="subheadline"
+        style={{ fontWeight: "700", marginTop: 10 }}
         numberOfLines={1}
       >
         {book.name}
-      </Text>
-      <Text
-        style={{
-          fontFamily: "System",
-          fontWeight: "500",
-          fontSize: 12,
-          color: colors.inkSubtle,
-          marginTop: 2,
-        }}
+      </ThemedText>
+      <ThemedText
+        variant="caption1"
+        color="muted"
+        style={{ marginTop: 2 }}
         numberOfLines={1}
       >
         {book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}
-      </Text>
+      </ThemedText>
     </Pressable>
   );
 }
@@ -394,64 +371,33 @@ function BookGridTile({
 // ─────────────────────────────────────────────────────────────────
 
 function SearchField({
-  value,
+  resetToken,
   onChangeText,
 }: {
-  value: string;
+  /** Remount native field when the testament segment changes. */
+  resetToken: string;
   onChangeText: (next: string) => void;
 }) {
-  const colors = useColors();
+  // @expo/ui TextField is the closest SwiftUI text-entry control
+  // available (no UISearchBar wrapper in @expo/ui yet). Wrapped
+  // in Host per the package contract.
   return (
-    // iOS-native search bar — the same recipe UISearchBar /
-    // UIKit's `searchController` paints on every list screen
-    // (Settings, Messages, Mail, Files). Visual contract:
-    //   - Filled capsule on the SECONDARY surface (not the page
-    //     bg) so the field reads as a chrome control sitting on
-    //     the canvas rather than another card.
-    //   - 10pt radius — Apple's stock UISearchBar curvature
-    //     (more rounded than a row, less than a pill).
-    //   - 16pt magnifyingglass leading + 8pt gutter + text.
-    //   - clearButtonMode="while-editing" → native iOS X-circle
-    //     clear button instead of a custom SVG one.
-    //   - No border. Apple's search bar leans on the fill +
-    //     placeholder contrast, not a hairline outline.
     <View
       style={{
         marginHorizontal: SCREEN_H_PAD,
         marginTop: 20,
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: colors.surfaceSecondary,
-        borderRadius: 10,
-        paddingHorizontal: 10,
-        paddingVertical: 9,
+        height: 44,
       }}
     >
-      <SearchIcon stroke={colors.inkSubtle} />
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder="Find a book"
-        placeholderTextColor={colors.inkSubtle}
-        style={{
-          flex: 1,
-          marginLeft: 8,
-          color: colors.ink,
-          fontFamily: "System",
-          fontWeight: "500",
-          fontSize: 16,
-          paddingVertical: 0,
-        }}
-        autoCorrect={false}
-        autoCapitalize="none"
-        returnKeyType="search"
-        // Use the native iOS clear button — UIKit paints a
-        // small grey-circle X inside the field while editing,
-        // which is the canonical search-clear affordance. Drops
-        // our custom <ClearIcon> press target so we don't ship
-        // two competing clear glyphs.
-        clearButtonMode="while-editing"
-      />
+      <Host style={{ flex: 1, width: "100%", height: 44 }}>
+        <ExpoTextField
+          key={resetToken}
+          defaultValue=""
+          placeholder="Find a book"
+          onChangeText={onChangeText}
+          autocorrection={false}
+        />
+      </Host>
     </View>
   );
 }
@@ -467,20 +413,18 @@ function EmptyState({ query }: { query: string }) {
       <View className="w-12 h-12 rounded-2xl bg-surface border border-border items-center justify-center mb-4">
         <SearchIcon size={18} stroke={colors.inkSubtle} />
       </View>
-      <Text
-        className="text-ink text-[16px]"
-        style={{ fontFamily: "System", fontWeight: "700" }}
-      >
+      <ThemedText variant="callout" style={{ fontWeight: "700" }}>
         No books match
-      </Text>
-      <Text
-        className="text-ink-muted text-[13px] mt-1.5 text-center"
-        style={{ fontFamily: "System", fontWeight: "400" }}
+      </ThemedText>
+      <ThemedText
+        variant="footnote"
+        color="muted"
+        style={{ marginTop: 6, textAlign: "center" }}
       >
         {query
           ? `Nothing in the canon contains "${query}".`
           : "Try a different search."}
-      </Text>
+      </ThemedText>
     </View>
   );
 }
@@ -529,47 +473,55 @@ function ContinueReadingHero({
       accessibilityRole="button"
       accessibilityLabel={`Continue reading ${book.name} ${chapter}`}
       className="rounded-3xl border border-border bg-surface p-4 flex-row items-center"
-      style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
+      style={({ pressed }) => [
+        continueReadingShadow,
+        {
+          backgroundColor: colors.surface,
+          opacity: pressed ? 0.92 : 1,
+        },
+      ]}
     >
       <View style={{ width: COVER_W, height: COVER_H }}>
         <BookCover book={book} variant="card" />
       </View>
       <View className="flex-1 ml-4 justify-center">
-        <Text
-          className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase"
-          style={{ fontFamily: "System", fontWeight: "700" }}
-        >
+        <ThemedText variant="captionEmphasized" color="muted">
           Continue Reading
-        </Text>
-        <Text
-          className="text-ink text-[18px] leading-[22px] tracking-[-0.3px] mt-1"
-          style={{ fontFamily: "System", fontWeight: "700" }}
+        </ThemedText>
+        <ThemedText
+          variant="headline"
           numberOfLines={1}
+          style={{ marginTop: 4 }}
         >
           {book.name} {chapter}
-        </Text>
-        <Text
-          className="text-ink-muted text-[13px] mt-1.5"
-          style={{ fontFamily: "System", fontWeight: "500" }}
+        </ThemedText>
+        <ThemedText
+          variant="footnote"
+          color="muted"
           numberOfLines={1}
+          style={{ marginTop: 6 }}
         >
           {hint}
-        </Text>
+        </ThemedText>
       </View>
       <View className="pl-2 items-center justify-center">
-        <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M9 6l6 6-6 6"
-            stroke={colors.ink}
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        <SFSymbol name="chevron.right" size={13} color={colors.ink} weight="semibold" />
       </View>
     </Pressable>
   );
 }
+
+/** Soft elevating shadow — readable against cream (StatusPill was too faint here). */
+const continueReadingShadow = Platform.select({
+  ios: {
+    shadowColor: "#000000",
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  android: { elevation: 4 },
+  default: {},
+});
 
 /**
  * Decide whether (and what) to surface in the Continue Reading

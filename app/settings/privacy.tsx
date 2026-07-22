@@ -1,6 +1,5 @@
 import { Alert, Linking, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import Svg, { Path } from "react-native-svg";
 import { SFSymbol } from "@/components/Symbol";
 import {
   SettingsInfoBanner,
@@ -260,7 +259,7 @@ export default function PrivacyScreen() {
 
       <View className="px-6 mt-8">
         <Text
-          className="text-ink-subtle text-[12px] leading-[18px] text-center"
+          className="text-ink-muted text-[12px] leading-[18px] text-center"
           style={{ fontFamily: "System", fontWeight: "400" }}
         >
           Built with care. Questions? Reach us through Help &amp; Support.
@@ -274,76 +273,38 @@ export default function PrivacyScreen() {
 // Icons
 // ─────────────────────────────────────────────────────────────────
 
-const ICON_PROPS_BASE = {
-  strokeWidth: 1.7,
-  fill: "none",
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
 function JournalIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M6 3h12v18H6zM9 7h6M9 11h6M9 15h4" {...props} />
-    </Svg>
-  );
+  return <SFSymbol name="book.closed" size={14} color={ink} weight="medium" />;
 }
 
 function NameIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 4-7 8-7s8 3 8 7" {...props} />
-    </Svg>
-  );
+  return <SFSymbol name="person.circle" size={14} color={ink} weight="medium" />;
 }
 
 function DeviceIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M7 3h10v18H7zM10 18h4" {...props} />
-    </Svg>
-  );
+  return <SFSymbol name="iphone" size={14} color={ink} weight="medium" />;
 }
 
 function DocIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M6 3h9l3 3v15H6zM15 3v3h3" {...props} />
-    </Svg>
-  );
+  return <SFSymbol name="doc" size={14} color={ink} weight="medium" />;
 }
 
 function RefreshIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M4 4v6h6M20 20v-6h-6" {...props} />
-      <Path d="M5 13a8 8 0 0014-4M19 11a8 8 0 00-14 4" {...props} />
-    </Svg>
-  );
+  return <SFSymbol name="arrow.clockwise" size={14} color={ink} weight="medium" />;
 }
 
 function DownloadIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M12 4v12M7 11l5 5 5-5M4 20h16" {...props} />
-    </Svg>
-  );
+  return <SFSymbol name="arrow.down.to.line" size={14} color={ink} weight="medium" />;
 }
 
-function TrashIcon({ destructive }: { destructive?: boolean }) {
-  const { ink } = useColors();
-  const color = destructive ? "#FF6B6B" : ink;
+function TrashIcon({ destructive: isDestructive }: { destructive?: boolean }) {
+  const { ink, destructive } = useColors();
+  const color = isDestructive ? destructive : ink;
   return <SFSymbol name="trash" size={14} color={color} weight="medium" />;
 }

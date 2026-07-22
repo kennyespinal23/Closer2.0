@@ -4,10 +4,18 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { useColorScheme as useRNColorScheme, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  StyleSheet,
+  useColorScheme as useRNColorScheme,
+  View,
+} from "react-native";
+import { captureRef } from "react-native-view-shot";
 import { colorScheme as nwColorScheme, vars } from "nativewind";
 import {
   DARK_COLORS,
@@ -132,6 +140,28 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     nwColorScheme.set(scheme);
   }, [scheme]);
 
+  // ─── Light ⇄ dark crossfade ──────────────────────────────────────
+  // Swapping the vars() payload flips every color in a single frame.
+  // A naive color-fill overlay flashes: the effect that raises it runs
+  // one frame *after* the new palette has already painted, so you see
+  // the new theme blink through before the veil covers it.
+  //
+  // Instead we snapshot the *outgoing* screen with view-shot, lay that
+  // image on top at full opacity, flip the palette underneath it (now
+  // fully hidden — no blink), then dissolve the snapshot away. The
+  // result is a true crossfade from the exact old pixels to the new
+  // ones. captureRef is async, so an in-progress swap is tracked to
+  // avoid stacking captures on rapid toggles; any failure falls back
+  // to an instant (still correct) swap.
+  const rootRef = useRef<View>(null);
+  const fade = useRef(new Animated.Value(0)).current;
+  const [snapshotUri, setSnapshotUri] = useState<string | null>(null);
+  const applyRef = useRef<(() => void) | null>(null);
+  const crossfadingRef = useRef(false);
+  // Latest state, readable from the stable setPref callback below.
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   // Persist the user pref. We persist the WHOLE state (object) for
   // forward compat — future fields like "amoled black" or
   // "high-contrast" can land without bumping the key.
@@ -146,9 +176,31 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
   const hydrated = usePersistence(STORAGE_KEYS.theme, state, applyLoaded);
 
-  const setPref = useCallback((next: ThemePref) => {
-    setState({ pref: next });
-  }, []);
+  const setPref = useCallback(
+    (next: ThemePref) => {
+      if (next === stateRef.current.pref) return;
+      const node = rootRef.current;
+      // No node, or a crossfade already running → just swap instantly.
+      if (!node || crossfadingRef.current) {
+        setState({ pref: next });
+        return;
+      }
+      crossfadingRef.current = true;
+      captureRef(node, { format: "png", quality: 1 })
+        .then((uri) => {
+          // Hold the swap until the snapshot is painted on top (see the
+          // <Animated.Image onLoad> below), so the palette never blinks.
+          applyRef.current = () => setState({ pref: next });
+          fade.setValue(1);
+          setSnapshotUri(uri);
+        })
+        .catch(() => {
+          crossfadingRef.current = false;
+          setState({ pref: next });
+        });
+    },
+    [fade],
+  );
 
   const reset = useCallback(() => {
     setState(DEFAULT);
@@ -174,12 +226,48 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           flex:1 + the active bg color keeps the canvas painted
           even before the first child paints (avoids a flash). */}
       <View
+        ref={rootRef}
+        collapsable={false}
         style={[
           { flex: 1, backgroundColor: palette.bg },
           themeVars,
         ]}
       >
         {children}
+        {/* Crossfade veil — a snapshot of the outgoing screen laid on
+            top during a theme flip, then dissolved to reveal the new
+            palette underneath. pointerEvents="none" so it never eats a
+            tap even mid-animation. */}
+        {snapshotUri ? (
+          <View
+            pointerEvents="none"
+            style={StyleSheet.absoluteFillObject}
+          >
+            <Animated.Image
+              source={{ uri: snapshotUri }}
+              fadeDuration={0}
+              resizeMode="cover"
+              onLoad={() => {
+                // Old frame is now painted on top — flip the palette
+                // beneath it, then dissolve the snapshot away.
+                applyRef.current?.();
+                applyRef.current = null;
+                Animated.timing(fade, {
+                  toValue: 0,
+                  duration: 300,
+                  easing: Easing.out(Easing.ease),
+                  useNativeDriver: true,
+                }).start(({ finished }) => {
+                  if (finished) {
+                    setSnapshotUri(null);
+                    crossfadingRef.current = false;
+                  }
+                });
+              }}
+              style={[StyleSheet.absoluteFillObject, { opacity: fade }]}
+            />
+          </View>
+        ) : null}
       </View>
     </ThemeContext.Provider>
   );

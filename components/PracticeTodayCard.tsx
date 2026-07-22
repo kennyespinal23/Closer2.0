@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import * as haptics from "@/lib/haptics";
+import { systemText, typography } from "@/lib/typography";
 import { AppleSheet, type AppleSheetRef } from "@/components/AppleSheet";
 import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { minTouchTarget, spacing } from "@/constants/spacing";
@@ -145,14 +146,10 @@ export function PracticeTodayCard({
           }}
         >
           <Text
-            style={{
-              color: accent,
-              fontFamily: "System",
-              fontWeight: "600",
-              fontSize: 12,
-              lineHeight: 14,
-              letterSpacing: 0.8,
-            }}
+            style={[
+              typography.smallLabel,
+              { color: accent, textTransform: "uppercase" },
+            ]}
           >
             PRACTICE TODAY
           </Text>
@@ -185,15 +182,15 @@ export function PracticeTodayCard({
         {paragraphs.map((p, i) => (
           <Text
             key={i}
-            style={{
-              color: colors.ink,
-              fontFamily: "System",
-              fontWeight: "500",
-              fontSize: 18,
-              lineHeight: 28,
-              letterSpacing: -0.1,
-              marginBottom: spacing[16],
-            }}
+            style={[
+              typography.body,
+              {
+                color: colors.ink,
+                fontWeight: "500",
+                fontSize: 18,
+                marginBottom: spacing[16],
+              },
+            ]}
           >
             {p}
           </Text>
@@ -208,16 +205,15 @@ export function PracticeTodayCard({
 
         {expanded ? (
           <Text
-            style={{
-              color: colors.inkMuted,
-              fontFamily: "System",
-              fontWeight: "500",
-              fontSize: 12,
-              lineHeight: 16,
-              letterSpacing: 0.4,
-              textAlign: "center",
-              marginTop: spacing[12],
-            }}
+            style={[
+              systemText.caption1,
+              {
+                color: colors.inkMuted,
+                fontWeight: "500",
+                textAlign: "center",
+                marginTop: spacing[12],
+              },
+            ]}
           >
             or swipe down to continue
           </Text>

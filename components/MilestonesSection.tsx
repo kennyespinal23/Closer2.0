@@ -18,6 +18,7 @@ import {
 } from "@/lib/milestones";
 import { getMilestoneBadge } from "@/lib/milestoneBadges";
 import * as haptics from "@/lib/haptics";
+import { systemText } from "@/lib/typography";
 import { useColors } from "@/state/theme";
 
 type MilestonesSectionProps = {
@@ -74,14 +75,7 @@ export function MilestonesSection({
         }}
       >
         <Text
-          style={{
-            fontFamily: "System",
-            fontWeight: "600",
-            color: colors.ink,
-            fontSize: 20,
-            lineHeight: 26,
-            letterSpacing: -0.2,
-          }}
+          style={[systemText.title3, { color: colors.ink }]}
           accessibilityRole="header"
         >
           Milestone Badges
@@ -151,7 +145,7 @@ export function MilestonesSection({
           style={{
             fontFamily: "System",
             fontWeight: "400",
-            color: colors.inkSubtle,
+            color: colors.inkMuted,
             fontSize: 13,
             lineHeight: 18,
           }}
@@ -224,16 +218,13 @@ function MilestoneCardChrome({
       </Text>
 
       <Text
-        style={{
-          fontFamily: "System",
-          fontWeight: "400",
-          fontSize: 11,
-          lineHeight: 16,
-          letterSpacing: 0.2,
-          marginTop: 8,
-          textAlign: "center",
-          textTransform: "uppercase",
-        }}
+        style={[
+          systemText.captionEmphasized,
+          {
+            marginTop: 8,
+            textAlign: "center",
+          },
+        ]}
       >
         <Text style={{ color: colors.inkMuted }}>Day {milestone.day} • </Text>
         <Text style={{ color: accentColor }}>{categoryLabel}</Text>

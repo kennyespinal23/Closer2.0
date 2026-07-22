@@ -44,6 +44,7 @@ import { findSocialApp, type SocialAppId } from "@/lib/focus";
 import { AppleSheet } from "@/components/AppleSheet";
 import { StatusPill } from "@/components/StatusPill";
 import { SFSymbol } from "@/components/Symbol";
+import { systemText } from "@/lib/typography";
 import { useColors } from "@/state/theme";
 
 export type FocusStatusSheetState = "live" | "armed" | "off";
@@ -235,16 +236,14 @@ export function FocusStatusSheet({
           {/* ── Title — Apple sheet-headline shape: 28pt Bold,
               tight tracking, centered. */}
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: colors.ink,
-              fontSize: 28,
-              lineHeight: 32,
-              letterSpacing: -0.6,
-              textAlign: "center",
-              marginBottom: 12,
-            }}
+            style={[
+              systemText.title1,
+              {
+                color: colors.ink,
+                textAlign: "center",
+                marginBottom: 12,
+              },
+            ]}
             accessibilityRole="header"
           >
             {copy.title}
@@ -277,7 +276,6 @@ export function FocusStatusSheet({
           {blockedApps.length > 0 ? (
             <View
               style={{
-                width: "100%",
                 borderRadius: 16,
                 backgroundColor: colors.surface,
                 borderWidth: StyleSheet.hairlineWidth,
@@ -370,7 +368,6 @@ export function FocusStatusSheet({
             accessibilityRole="button"
             accessibilityLabel={copy.cta}
             style={({ pressed }) => ({
-              width: "100%",
               paddingVertical: 16,
               borderRadius: 999,
               alignItems: "center",

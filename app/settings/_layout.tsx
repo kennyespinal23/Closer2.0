@@ -1,6 +1,8 @@
 import { View } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import { HeaderBackButton } from "@react-navigation/elements";
 import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
+import { goBackOr } from "@/lib/navigation";
 import { useColors } from "@/state/theme";
 
 /**
@@ -10,9 +12,16 @@ import { useColors } from "@/state/theme";
  * titles, and interactive pop gesture match system Settings. Leaf
  * screens still compose body chrome via SettingsScaffold, which now
  * only renders the scroll body and syncs `title` into the nav bar.
+ *
+ * Direct deep links (e.g. Profile → /settings/appearance) mount the
+ * leaf as the only screen in this stack, so React Navigation would
+ * hide the default back button. We always render one that pops the
+ * root stack via `goBackOr`.
  */
 export default function SettingsLayout() {
   const colors = useColors();
+  const router = useRouter();
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <View style={{ flex: 1 }}>
@@ -31,6 +40,12 @@ export default function SettingsLayout() {
             },
             contentStyle: { backgroundColor: colors.bg },
             animation: "slide_from_right",
+            headerLeft: () => (
+              <HeaderBackButton
+                tintColor={colors.ink}
+                onPress={() => goBackOr(router, "/profile")}
+              />
+            ),
           }}
         >
           <Stack.Screen name="notifications" options={{ title: "Notifications" }} />

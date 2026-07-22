@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Animated, Easing, Linking, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import Svg, { Path } from "react-native-svg";
+import { SFSymbol } from "@/components/Symbol";
 import {
   SettingsInfoBanner,
   SettingsLinkRow,
@@ -94,7 +94,7 @@ export default function HelpScreen() {
 
       <View className="px-6 mt-8">
         <Text
-          className="text-ink-subtle text-[12px] leading-[18px] text-center"
+          className="text-ink-muted text-[12px] leading-[18px] text-center"
           style={{ fontFamily: "System", fontWeight: "400" }}
         >
           You showed up today. That counts.
@@ -159,15 +159,7 @@ function FAQRow({
             {question}
           </Text>
           <Animated.View style={{ transform: [{ rotate }] }}>
-            <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M9 6l6 6-6 6"
-                stroke={colors.inkSubtle}
-                strokeWidth={1.8}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
+            <SFSymbol name="chevron.right" size={12} color={colors.inkSubtle} weight="medium" />
           </Animated.View>
         </View>
       </Pressable>
@@ -192,50 +184,22 @@ function FAQRow({
 // Icons
 // ─────────────────────────────────────────────────────────────────
 
-const ICON_PROPS_BASE = {
-  strokeWidth: 1.7,
-  fill: "none",
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
 function MailIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M3 6h18v12H3z" {...props} />
-      <Path d="M3 7l9 7 9-7" {...props} />
-    </Svg>
-  );
+  return <SFSymbol name="envelope" size={14} color={ink} weight="medium" />;
 }
 
 function FeedbackIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M21 12a8 8 0 11-3.2-6.4L21 4v8z" {...props} />
-    </Svg>
-  );
+  return <SFSymbol name="bubble.left" size={14} color={ink} weight="medium" />;
 }
 
 function BookIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M4 5a2 2 0 012-2h12v18H6a2 2 0 01-2-2zM8 7h6" {...props} />
-    </Svg>
-  );
+  return <SFSymbol name="book" size={14} color={ink} weight="medium" />;
 }
 
 function CommunityIcon() {
   const { ink } = useColors();
-  const props = { ...ICON_PROPS_BASE, stroke: ink };
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M8 12a3 3 0 100-6 3 3 0 000 6zM16 12a3 3 0 100-6 3 3 0 000 6zM3 20c0-3 2-5 5-5s5 2 5 5M14 20c0-3 1-5 4-5s4 2 4 5" {...props} />
-    </Svg>
-  );
+  return <SFSymbol name="person.2" size={14} color={ink} weight="medium" />;
 }

@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { goBackOr } from "@/lib/navigation";
 import { useEffect } from "react";
 import { MilestoneDetailView } from "@/components/MilestoneDetailView";
 import {
@@ -26,7 +27,7 @@ export default function MilestoneDetailScreen() {
 
   useEffect(() => {
     if (!unlocked) {
-      router.back();
+      goBackOr(router, "/(tabs)/today");
     }
   }, [unlocked, router]);
 
@@ -38,7 +39,7 @@ export default function MilestoneDetailScreen() {
     <MilestoneDetailView
       milestone={milestone}
       badgeIndex={getMilestoneIndex(milestone)}
-      onClose={() => router.back()}
+      onClose={() => goBackOr(router, "/(tabs)/today")}
     />
   );
 }

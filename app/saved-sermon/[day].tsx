@@ -2,10 +2,11 @@ import { useMemo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { goBackOr } from "@/lib/navigation";
 import { SFSymbol } from "@/components/Symbol";
 import { spacing } from "@/constants/spacing";
 import { findMomentByDay } from "@/lib/moments";
-import { typography } from "@/lib/typography";
+import { systemText, typography } from "@/lib/typography";
 import { useColors } from "@/state/theme";
 
 /**
@@ -35,7 +36,7 @@ export default function SavedDevotionalScreen() {
             This day isn’t in the catalog anymore.
           </Text>
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => goBackOr(router, "/(tabs)/profile")}
             style={{ marginTop: spacing[16], minHeight: 44, justifyContent: "center" }}
           >
             <Text style={[typography.button, { color: colors.ink }]}>Go back</Text>
@@ -57,7 +58,7 @@ export default function SavedDevotionalScreen() {
         }}
       >
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => goBackOr(router, "/(tabs)/profile")}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Back"
@@ -83,7 +84,7 @@ export default function SavedDevotionalScreen() {
           paddingBottom: spacing[48],
         }}
       >
-        <Text style={[typography.pageTitle, { color: colors.ink, fontSize: 28, lineHeight: 34 }]}>
+        <Text style={[systemText.title1, { color: colors.ink }]}>
           {moment.title}
         </Text>
         <Text
@@ -93,7 +94,6 @@ export default function SavedDevotionalScreen() {
               color: colors.inkMuted,
               textTransform: "uppercase",
               marginTop: spacing[12],
-              letterSpacing: 1.1,
             },
           ]}
         >
@@ -135,7 +135,6 @@ export default function SavedDevotionalScreen() {
             {
               color: colors.inkMuted,
               textTransform: "uppercase",
-              letterSpacing: 1.1,
               marginTop: spacing[8],
             },
           ]}

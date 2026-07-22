@@ -197,16 +197,13 @@ export function TimeBlockEditor({
     <AppleSheet
       visible={visible}
       onClose={onClose}
-      // 'auto' covers the collapsed state (header + wheel +
-      // repeat row). When the user expands the days chip strip
-      // we LayoutAnimation the inside, but the sheet itself
-      // doesn't need to resize because the picker dominates the
-      // height anyway. Keeping a single detent avoids a
-      // confusing magnetic-snap mid-edit.
+      // Content-sized sheet (header + time wheel + repeat row). Avoid
+      // wrapping in flex:1 — auto detents measure that as ~0 height
+      // and the sheet presents as an empty strip.
       detents={["auto"]}
       backgroundColor={colors.bg}
     >
-      <View style={{ width: "100%" }}>
+      <View style={{ paddingBottom: 28 }}>
         <SheetModalHeader
           title={existing ? "Edit time" : "Add a time"}
           onCancel={onClose}
@@ -323,7 +320,7 @@ export function TimeBlockEditor({
                     style={{
                       fontFamily: "System",
                       fontWeight: "400",
-                      color: colors.inkSubtle,
+                      color: colors.inkMuted,
                       fontSize: 13,
                       lineHeight: 17,
                       marginTop: 10,

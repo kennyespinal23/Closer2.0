@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Text, View, Platform } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { usePathname } from "expo-router";
 import { shouldPlayLaunchSplash, consumeLaunchSplash } from "@/lib/launchSplashSession";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -11,14 +10,10 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
  * Sits as an absolutely-positioned overlay on top of the app
  * shell during cold launch. The native iOS splash hands off to
  * this component on a true-black canvas with a white wordmark.
- *
- * Skipped when the rotating-moment screen opens first for the
- * current time window — that beat replaces the branded intro.
  */
 export function LaunchSplash() {
-  const pathname = usePathname();
   const reducedMotion = useReducedMotion();
-  const playSplash = shouldPlayLaunchSplash() && pathname !== "/rotating-moment";
+  const playSplash = shouldPlayLaunchSplash();
 
   const [mounted, setMounted] = useState(playSplash);
 

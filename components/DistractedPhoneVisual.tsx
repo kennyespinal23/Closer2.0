@@ -309,7 +309,7 @@ function NotificationBanner({
               fontFamily: "System",
               fontWeight: "400",
               fontSize: compact ? 10 : 11,
-              color: colors.inkSubtle,
+              color: colors.inkMuted,
               marginLeft: 4,
             }}
           >

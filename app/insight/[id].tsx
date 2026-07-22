@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { goBackOr } from "@/lib/navigation";
 import Svg, { Path } from "react-native-svg";
 import { SFSymbol } from "@/components/Symbol";
 import { FadeIn } from "@/components/FadeIn";
@@ -23,6 +24,7 @@ import {
   type Insight,
   type InsightBlock,
 } from "@/constants/insights";
+import { systemText } from "@/lib/typography";
 import { useSavedInsights } from "@/state/savedInsights";
 import { useColors } from "@/state/theme";
 
@@ -60,7 +62,7 @@ export default function InsightDetailScreen() {
   );
   const { isSaved, toggle } = useSavedInsights();
 
-  if (!insight) return <InsightNotFound onBack={() => router.back()} />;
+  if (!insight) return <InsightNotFound onBack={() => goBackOr(router, "/(tabs)/today")} />;
 
   // The book-cover artwork is the article's opening title page —
   // it should take the full screen width so the user feels like
@@ -110,7 +112,7 @@ export default function InsightDetailScreen() {
         {insight.coverIncludesTitle ? (
           <View className="flex-row items-center justify-between px-4 pt-2 pb-3">
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => goBackOr(router, "/(tabs)/today")}
               hitSlop={12}
               accessibilityRole="button"
               accessibilityLabel="Back"
@@ -139,7 +141,7 @@ export default function InsightDetailScreen() {
               zIndex: 10,
             }}
           >
-            <RoundChip onPress={() => router.back()} accessibilityLabel="Back">
+            <RoundChip onPress={() => goBackOr(router, "/(tabs)/today")} accessibilityLabel="Back">
               <BackChevronIcon />
             </RoundChip>
             <RoundChip
@@ -180,7 +182,7 @@ export default function InsightDetailScreen() {
           <FadeIn delayMs={100} durationMs={700}>
             <View className="px-6 mt-6">
               <Text
-                className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase"
+                className="text-ink-muted text-[11px] tracking-[1px] uppercase"
                 style={{ fontFamily: "System", fontWeight: "700" }}
               >
                 {category ? category.label : "Insight"} ·{" "}
@@ -261,7 +263,7 @@ export default function InsightDetailScreen() {
         {related.length > 0 && (
           <View className="mt-12 px-6">
             <Text
-              className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+              className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-3"
               style={{ fontFamily: "System", fontWeight: "700" }}
             >
               Read next
@@ -338,13 +340,8 @@ function BlockRenderer({
     case "lead":
       return (
         <Text
-          className="text-ink text-[22px] mt-7"
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            lineHeight: 30,
-            letterSpacing: -0.3,
-          }}
+          className="text-ink mt-7"
+          style={systemText.title2}
         >
           {block.text}
         </Text>
@@ -372,7 +369,7 @@ function BlockRenderer({
           </Text>
           {block.attribution && (
             <Text
-              className="text-ink-subtle text-[13px] mt-2"
+              className="text-ink-muted text-[13px] mt-2"
               style={{ fontFamily: "System", fontWeight: "600" }}
             >
               — {block.attribution}
@@ -399,7 +396,7 @@ function BlockRenderer({
           >
             <View className="flex-row items-center justify-between">
               <Text
-                className="text-[11px] tracking-[2.5px] uppercase"
+                className="text-[11px] tracking-[1px] uppercase"
                 style={{
                   fontFamily: "System",
                   fontWeight: "700",
@@ -531,7 +528,7 @@ function RelatedRow({
               {insight.title}
             </Text>
             <Text
-              className="text-ink-subtle text-[12px] mt-1"
+              className="text-ink-muted text-[12px] mt-1"
               style={{ fontFamily: "System", fontWeight: "500" }}
               numberOfLines={1}
             >
@@ -652,13 +649,7 @@ function ActionPill({
       >
         {icon}
         <Text
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            fontSize: 13,
-            color: tint ?? colors.ink,
-            marginLeft: 8,
-          }}
+          style={[systemText.footnote, { fontWeight: "700", color: tint ?? colors.ink, marginLeft: 8 }]}
         >
           {label}
         </Text>
@@ -787,15 +778,7 @@ function extractInitial(title: string): string {
 function BackChevronIcon() {
   const colors = useColors();
   return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M15 6l-6 6 6 6"
-        stroke={colors.ink}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol name="chevron.left" size={17} color={colors.ink} weight="semibold" />
   );
 }
 

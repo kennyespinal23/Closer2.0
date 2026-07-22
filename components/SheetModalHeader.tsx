@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from "react-native";
+import { systemText } from "@/lib/typography";
 import { useColors } from "@/state/theme";
 
 /** Balanced Cancel / title / Save row — equal side columns keep
@@ -33,7 +34,7 @@ export function SheetModalHeader({
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 16,
-        paddingTop: 4,
+        paddingTop: 20,
         paddingBottom: 16,
         minHeight: 44,
       }}
@@ -46,14 +47,7 @@ export function SheetModalHeader({
           accessibilityLabel={cancelLabel}
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
-          <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "400",
-              color: colors.inkMuted,
-              fontSize: 17,
-            }}
-          >
+          <Text style={[systemText.body, { color: colors.inkMuted }]}>
             {cancelLabel}
           </Text>
         </Pressable>
@@ -62,14 +56,14 @@ export function SheetModalHeader({
       <View style={{ flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 8 }}>
         <Text
           numberOfLines={1}
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            color: colors.ink,
-            fontSize: 17,
-            letterSpacing: -0.3,
-            textAlign: "center",
-          }}
+          style={[
+            systemText.headline,
+            {
+              fontWeight: "700",
+              color: colors.ink,
+              textAlign: "center",
+            },
+          ]}
           accessibilityRole="header"
         >
           {title}
@@ -89,12 +83,13 @@ export function SheetModalHeader({
             })}
           >
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "600",
-                color: saveDisabled ? colors.inkSubtle : "#007AFF",
-                fontSize: 17,
-              }}
+              style={[
+                systemText.body,
+                {
+                  fontWeight: "600",
+                  color: saveDisabled ? colors.inkSubtle : "#007AFF",
+                },
+              ]}
             >
               {saveLabel}
             </Text>

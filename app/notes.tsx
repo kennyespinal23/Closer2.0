@@ -1,6 +1,7 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { goBackOr } from "@/lib/navigation";
 import { SFSymbol } from "@/components/Symbol";
 import Svg, { Path } from "react-native-svg";
 import {
@@ -8,7 +9,7 @@ import {
   relativeTime,
   routeForVerse,
 } from "@/lib/annotationsFormat";
-import { typography } from "@/lib/typography";
+import { systemText, typography } from "@/lib/typography";
 import { SCREEN_H_PAD } from "@/lib/layout";
 import { type Note, useAnnotations } from "@/state/annotations";
 import { type ColorPalette } from "@/constants/theme";
@@ -96,24 +97,12 @@ function NoteCard({
             }}
           >
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                fontSize: 11,
-                letterSpacing: 2.5,
-                textTransform: "uppercase",
-                color: colors.primary,
-              }}
+              style={[systemText.captionEmphasized, { fontWeight: "700", color: colors.primary }]}
             >
               {formatRef(note)}
             </Text>
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "500",
-                fontSize: 11,
-                color: colors.inkSubtle,
-              }}
+              style={[systemText.caption2, { fontWeight: "500", color: colors.inkMuted }]}
             >
               {relativeTime(note.updatedAt)}
             </Text>
@@ -243,7 +232,7 @@ function Header({
       }}
     >
       <Pressable
-        onPress={() => router.back()}
+        onPress={() => goBackOr(router, "/(tabs)/profile")}
         hitSlop={8}
         accessibilityRole="button"
         accessibilityLabel="Back"
@@ -263,14 +252,7 @@ function Header({
         />
       </Pressable>
       <Text
-        style={{
-          flex: 1,
-          textAlign: "center",
-          fontFamily: "System",
-          fontWeight: "700",
-          fontSize: 17,
-          color: colors.ink,
-        }}
+        style={[systemText.headline, { flex: 1, textAlign: "center", fontWeight: "700", color: colors.ink }]}
       >
         {title}
       </Text>
@@ -287,12 +269,7 @@ function Header({
           }}
         >
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "600",
-              fontSize: 11,
-              color: colors.inkMuted,
-            }}
+            style={[systemText.caption2, { fontWeight: "600", color: colors.inkMuted }]}
           >
             {countLabel}
           </Text>

@@ -1,5 +1,4 @@
 import { Linking, Text, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
 import { SFSymbol } from "@/components/Symbol";
 import {
   SettingsLinkRow,
@@ -34,7 +33,7 @@ export default function CommunityScreen() {
       <View className="px-6 mt-2">
         <View className="rounded-2xl border border-border bg-surface px-5 py-6">
           <Text
-            className="text-ink-subtle text-[11px] tracking-[2.5px] uppercase mb-3"
+            className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-3"
             style={{ fontFamily: "System", fontWeight: "700" }}
           >
             Coming Soon
@@ -82,7 +81,7 @@ export default function CommunityScreen() {
 
       <View className="px-6 mt-8">
         <Text
-          className="text-ink-subtle text-[12px] leading-[18px] text-center"
+          className="text-ink-muted text-[12px] leading-[18px] text-center"
           style={{ fontFamily: "System", fontWeight: "400" }}
         >
           &ldquo;Where two or three gather in my name, there am I with them.&rdquo;{"\n"}
@@ -97,31 +96,12 @@ export default function CommunityScreen() {
 // Icons
 // ─────────────────────────────────────────────────────────────────
 
-const ICON_BASE = {
-  strokeWidth: 1.7,
-  fill: "none" as const,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
 function MailIcon() {
   const { ink } = useColors();
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24">
-      <Path d="M3 6h18v12H3z" {...ICON_BASE} stroke={ink} />
-      <Path d="M3 7l9 7 9-7" {...ICON_BASE} stroke={ink} />
-    </Svg>
-  );
+  return <SFSymbol name="envelope" size={14} color={ink} weight="medium" />;
 }
 
 function ShareIcon() {
   const { ink } = useColors();
-  return (
-    <SFSymbol
-      name="square.and.arrow.up"
-      size={14}
-      color={ink}
-      weight="medium"
-    />
-  );
+  return <SFSymbol name="square.and.arrow.up" size={14} color={ink} weight="medium" />;
 }

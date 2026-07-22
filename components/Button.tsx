@@ -19,8 +19,9 @@ type ButtonProps = {
 };
 
 /**
- * Universal button — primary uses the classic white home-screen pill;
- * secondary and ghost stay surface-native for settings-style actions.
+ * Universal button — primary uses the reddish-orange CTA pill
+ * (`PrimaryPillButton` / `CLOSER_ACCENT`); secondary and ghost stay
+ * surface-native for settings-style actions.
  */
 export function Button({
   label,

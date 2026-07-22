@@ -65,14 +65,19 @@ export const HERO_TEXT_SCRIM_GRADIENT = {
 /** iOS system green — "Read Again" / completed sermon CTA. */
 export const COMPLETED_READ_GREEN = "#34C759";
 
-/** Classic white primary pill — home Read Now, Continue, onboarding. */
-export const PRIMARY_PILL_BG = "#FFFFFF";
-export const PRIMARY_PILL_INK = "#000000";
+/**
+ * Primary pill fill/ink — kept in sync with `CLOSER_ACCENT` in
+ * theme.ts. PrimaryPillButton prefers importing CLOSER_ACCENT
+ * directly; these aliases remain for call sites that still
+ * reference the heroChrome tokens.
+ */
+export { CLOSER_ACCENT as PRIMARY_PILL_BG } from "@/constants/theme";
+export const PRIMARY_PILL_INK = "#FFFFFF";
 
 export const PRIMARY_PILL_SHADOW = {
-  shadowColor: "#FFFFFF",
-  shadowOpacity: 0.2,
-  shadowRadius: 18,
-  shadowOffset: { width: 0, height: 0 },
-  elevation: 6 as const,
+  shadowColor: "#000000",
+  shadowOpacity: 0.12,
+  shadowRadius: 12,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 4 as const,
 };

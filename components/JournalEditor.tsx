@@ -5,8 +5,10 @@ import {
   Pressable,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppleSheet } from "@/components/AppleSheet";
 import { SFSymbol } from "@/components/Symbol";
 import { useColors } from "@/state/theme";
@@ -57,6 +59,8 @@ export function JournalEditor({
   onCancel: () => void;
 }) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const [text, setText] = useState(initialText);
   const inputRef = useRef<TextInput>(null);
   const hasInitial = initialText.trim().length > 0;
@@ -87,9 +91,12 @@ export function JournalEditor({
       detents={[1]}
       backgroundColor={colors.bg}
     >
-      <View style={{ flex: 1 }}>
+      <View style={{ height: windowHeight - insets.top }}>
         {/* Header — Cancel / title / Save */}
-        <View className="flex-row items-center px-4 pt-3 pb-3 border-b border-border">
+        <View
+          className="flex-row items-center px-4 pb-3 border-b border-border"
+          style={{ paddingTop: 12 }}
+        >
           <Pressable
             onPress={onCancel}
             hitSlop={12}
@@ -145,7 +152,7 @@ export function JournalEditor({
             style={{ borderColor: hexAlpha(moodAccent, 0.28) }}
           >
             <Text
-              className="text-[11px] tracking-[2.5px] uppercase mb-2"
+              className="text-[11px] tracking-[1px] uppercase mb-2"
               style={{
                 fontFamily: "System",
                 fontWeight: "700",
@@ -172,7 +179,7 @@ export function JournalEditor({
               value={text}
               onChangeText={setText}
               placeholder="What's on your heart right now?"
-              placeholderTextColor={colors.inkSubtle}
+              placeholderTextColor={colors.inkMuted}
               textAlignVertical="top"
               style={{
                 flex: 1,
@@ -202,7 +209,7 @@ export function JournalEditor({
                   style={{
                     fontFamily: "System",
                     fontWeight: "600",
-                    color: "#FF6B6B",
+                    color: colors.destructive,
                   }}
                 >
                   Delete journal
@@ -221,7 +228,8 @@ export function JournalEditor({
 // ─────────────────────────────────────────────────────────────────
 
 function TrashIcon() {
-  return <SFSymbol name="trash" size={16} color="#FF6B6B" weight="medium" />;
+  const { destructive } = useColors();
+  return <SFSymbol name="trash" size={16} color={destructive} weight="medium" />;
 }
 
 function hexAlpha(hex: string, alpha: number): string {

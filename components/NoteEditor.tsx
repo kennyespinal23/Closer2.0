@@ -5,10 +5,13 @@ import {
   Pressable,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppleSheet } from "@/components/AppleSheet";
 import { SFSymbol } from "@/components/Symbol";
+import { systemText } from "@/lib/typography";
 import { useColors } from "@/state/theme";
 
 /**
@@ -37,6 +40,8 @@ export function NoteEditor({
   onCancel: () => void;
 }) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const [text, setText] = useState(initialNote);
   const inputRef = useRef<TextInput>(null);
   const hasInitial = initialNote.trim().length > 0;
@@ -59,7 +64,7 @@ export function NoteEditor({
       grabber={false}
       backgroundColor={colors.bg}
     >
-      <View style={{ flex: 1 }}>
+      <View style={{ height: windowHeight - insets.top }}>
         <View
           style={{
             flexDirection: "row",
@@ -130,6 +135,7 @@ export function NoteEditor({
         >
           <View
             style={{
+              flexDirection: "row",
               marginHorizontal: 20,
               marginTop: 20,
               marginBottom: 16,
@@ -141,31 +147,41 @@ export function NoteEditor({
               paddingVertical: 16,
             }}
           >
-            <Text
+            {/* Accent rail — a quiet cue that this block is the verse
+                you're annotating, not the note itself. */}
+            <View
               style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                fontSize: 11,
-                letterSpacing: 2.5,
-                textTransform: "uppercase",
-                color: colors.primary,
-                marginBottom: 8,
+                width: 3,
+                borderRadius: 2,
+                backgroundColor: colors.primary,
+                marginRight: 14,
               }}
-            >
-              {reference}
-            </Text>
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "400",
-                fontSize: 13,
-                lineHeight: 20,
-                color: colors.ink,
-              }}
-              numberOfLines={4}
-            >
-              &ldquo;{verseText}&rdquo;
-            </Text>
+            />
+            <View style={{ flex: 1 }}>
+              <Text
+                style={[
+                  systemText.headline,
+                  { color: colors.ink, marginBottom: verseText ? 6 : 0 },
+                ]}
+                numberOfLines={2}
+              >
+                {reference}
+              </Text>
+              {verseText ? (
+                <Text
+                  style={{
+                    fontFamily: "System",
+                    fontWeight: "400",
+                    fontSize: 15,
+                    lineHeight: 22,
+                    color: colors.inkMuted,
+                  }}
+                  numberOfLines={4}
+                >
+                  &ldquo;{verseText}&rdquo;
+                </Text>
+              ) : null}
+            </View>
           </View>
 
           <View style={{ flex: 1, marginHorizontal: 20, marginBottom: 12 }}>
@@ -175,7 +191,7 @@ export function NoteEditor({
               value={text}
               onChangeText={setText}
               placeholder="Write what this verse means to you…"
-              placeholderTextColor={colors.inkSubtle}
+              placeholderTextColor={colors.inkMuted}
               textAlignVertical="top"
               style={{
                 flex: 1,
@@ -213,7 +229,7 @@ export function NoteEditor({
                     <SFSymbol
                       name="trash"
                       size={16}
-                      color="#FF6B6B"
+                      color={colors.destructive}
                       weight="medium"
                     />
                     <Text
@@ -221,7 +237,7 @@ export function NoteEditor({
                         fontFamily: "System",
                         fontWeight: "600",
                         fontSize: 14,
-                        color: "#FF6B6B",
+                        color: colors.destructive,
                         marginLeft: 8,
                       }}
                     >

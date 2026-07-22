@@ -92,7 +92,7 @@ export function BlockedAppsEditor({
       backgroundColor={colors.bg}
       scrollable
     >
-      <View style={{ width: "100%" }}>
+      <View style={{ flex: 1 }}>
         <SheetModalHeader
           title="Blocked Apps"
           onCancel={onClose}

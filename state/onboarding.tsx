@@ -111,6 +111,13 @@ export type FaithStage =
 export type OnboardingAnswers = {
   name: string;
   /**
+   * Built-in profile avatar id from `constants/avatars.ts`
+   * (e.g. `"avatar-01"`). Optional — when unset the Profile
+   * screen falls back to an initials monogram from `name`.
+   * Picked on the Profile tab; not required during onboarding.
+   */
+  avatarId?: string;
+  /**
    * IDs of the apps the user admits opening first thing in the
    * morning. Captured on Screen 2 (multi-select grid). Drives the
    * personalized gut-punch on Screen 6 ("You're opening Instagram &
@@ -221,6 +228,14 @@ export type OnboardingAnswers = {
    * after dev reset" footgun.
    */
   completed?: boolean;
+  /**
+   * Epoch ms when the user finished onboarding (joined Closer).
+   * Stamped the first time `completed` flips to true. Shown on
+   * the Profile hero as "Joined July 2026". Optional for legacy
+   * installs that completed before this field existed — Profile
+   * backfills once on first open.
+   */
+  joinedAt?: number;
 };
 
 type OnboardingContextValue = {
@@ -267,7 +282,18 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     () => ({
       answers,
       setAnswer: (key, value) =>
-        setAnswers((prev) => ({ ...prev, [key]: value })),
+        setAnswers((prev) => {
+          const next = { ...prev, [key]: value };
+          // Stamp join date the first time onboarding completes.
+          if (
+            key === "completed" &&
+            value === true &&
+            typeof prev.joinedAt !== "number"
+          ) {
+            next.joinedAt = Date.now();
+          }
+          return next;
+        }),
       reset,
       hydrated,
     }),

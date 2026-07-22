@@ -5,7 +5,7 @@ import type { Milestone } from "@/lib/milestones";
 import { getMilestoneAccent } from "@/lib/milestones";
 import { getMilestoneBadge } from "@/lib/milestoneBadges";
 import * as haptics from "@/lib/haptics";
-import { NEW_YORK, typography } from "@/lib/typography";
+import { NEW_YORK, systemText, typography } from "@/lib/typography";
 import { useColors } from "@/state/theme";
 
 const LANDMARK_GOLD = "#E8B84A";
@@ -130,16 +130,14 @@ export function MilestoneDetailView({
           </Text>
 
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: colors.ink,
-              fontSize: 24,
-              lineHeight: 30,
-              letterSpacing: -0.3,
-              textAlign: "center",
-              marginTop: 12,
-            }}
+            style={[
+              systemText.title2,
+              {
+                color: colors.ink,
+                textAlign: "center",
+                marginTop: 12,
+              },
+            ]}
             accessibilityRole="header"
           >
             {milestone.title}

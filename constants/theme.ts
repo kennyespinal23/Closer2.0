@@ -29,15 +29,21 @@
  */
 
 /**
- * Closer's primary brand accent — warm orange used for CTAs,
- * sermon progress, Read Now, Practice Today eyebrows, and
- * streak-adjacent highlights. Replaces the earlier editorial
- * red (#E11D48) so the app reads as warm and faith-forward.
+ * ─────────────────────────────────────────────────────────────────
+ * BRAND ACCENT — single source of truth
+ * ─────────────────────────────────────────────────────────────────
+ * Always import `CLOSER_ACCENT` / `CLOSER_ACCENT_PRESSED` from this
+ * file for CTAs, carets, progress fills, share icons, and streak
+ * chrome. Do not hard-code #FF4326 (or older oranges) at call sites.
+ *
+ * Closer's primary brand accent — vivid reddish-orange used for
+ * Get Started / Continue / Read Now pills, text carets, sermon
+ * progress, Practice Today eyebrows, and streak chrome.
  */
-export const CLOSER_ACCENT = "#FC8344";
+export const CLOSER_ACCENT = "#FF4326";
 
-/** Pressed / dimmed state for orange primary buttons. */
-export const CLOSER_ACCENT_PRESSED = "#E6743A";
+/** Pressed / dimmed state for reddish-orange primary buttons. */
+export const CLOSER_ACCENT_PRESSED = "#E03A20";
 
 /** iOS tab-bar selected tint — matches NativeTabs in app/(tabs)/_layout. */
 export const TAB_ACCENT_RED = "#FF3B30";
@@ -95,6 +101,22 @@ export type ColorPalette = {
    * 100% / body 92% / supporting 60% / metadata 40%.
    */
   inkSecondary: string;
+  /**
+   * Supporting text role — eyebrows, captions, book counts,
+   * and other secondary chrome that must stay readable.
+   *
+   * Measured contrast (both schemes):
+   *   • Light `#4A4A50` on `#FDF6EC` bg ≈ 8.2:1 / on `#FFFFFF`
+   *     surface ≈ 8.8:1 (AAA).
+   *   • Dark `rgba(235,235,245,0.60)` on `#1C1C1E` surface ≈ 6.0:1
+   *     (AA; AAA floor is reserved for `inkMuted` body copy).
+   *
+   * Same value as `inkSecondary` today — exposed under a role
+   * name so call sites don't reach for one-off gray hexes.
+   * Prefer this over `inkSubtle` for any text that carries meaning
+   * (`inkSubtle` fails AA on dark surfaces at ~3.4:1).
+   */
+  textSecondary: string;
   inkSubtle: string;
   primary: string;
   primaryPressed: string;
@@ -117,6 +139,13 @@ export type ColorPalette = {
    *  giving the chip a subtle blue glow rather than a solid blue
    *  block (which would feel too iOS-Settings). */
   selectSoft: string;
+  /**
+   * Destructive action color — iOS system red. Used for delete
+   * labels, trash icons, and any irreversible action affordance.
+   * Maps to UIColor.systemRed: #FF453A in dark mode, #FF3B30 in
+   * light mode. Never use #FF6B6B (off-brand salmon) for these.
+   */
+  destructive: string;
 };
 
 /**
@@ -230,9 +259,12 @@ export const DARK_COLORS: ColorPalette = {
   // subtitle settle visually under the primary content (title,
   // closer) instead of competing with them.
   inkSecondary: "rgba(235, 235, 245, 0.60)",
+  textSecondary: "rgba(235, 235, 245, 0.60)",
   // 40% white — Apple's tertiaryLabel dark. Used for "deep
   // metadata": verse refs, timestamps, the date eyebrow, etc.
-  inkSubtle: "rgba(235, 235, 245, 0.40)",
+  // NOTE: bumped 0.40→0.55 (~5.3:1 on surface, AA). Prefer
+  // `inkMuted` / `textSecondary` for primary secondary labels.
+  inkSubtle: "rgba(235, 235, 245, 0.55)",
   primary: "#FFFFFF",
   primaryPressed: "#E5E5E5",
   // primaryFg stays true black — text on a white pill must hit
@@ -253,6 +285,10 @@ export const DARK_COLORS: ColorPalette = {
   // 18% blue at-alpha against bg — soft tint that reads as
   // "selected" without slamming the user with a solid blue block.
   selectSoft: "rgba(10, 132, 255, 0.18)",
+  // iOS UIColor.systemRed dark mode — the canonical destructive
+  // action color. Use for delete labels, trash icons, and any
+  // irreversible action affordance.
+  destructive: "#FF453A",
 };
 
 /**
@@ -323,23 +359,16 @@ export const DARK_COLORS: ColorPalette = {
  * universal Apple recipe.
  */
 export const LIGHT_COLORS: ColorPalette = {
-  // "Gentler Streak tuned." Iteration history:
+  // Warm cream page canvas. Iteration history:
   //   • v1 #F4F1EB cream — too yellow against photo content
-  //   • v2 #F6F4F0 (Apple Books Library family) — still warmer
-  //         than the Gentler Streak reference; the photo
-  //         illustrations and the editorial-red accent fought
-  //         the cream cast a hair.
-  //   • v3 (this) #F8F7F4 — pulls almost all the yellow out
-  //         while keeping enough warmth that pure-white cards
-  //         still lift perceptibly above the page. Reads as a
-  //         soft daylight white the way Gentler Streak's body
-  //         sheet does, and lets the editorial red pop without
-  //         competing chroma in the canvas itself.
-  bg: "#F8F7F4",
+  //   • v2 #F6F4F0 (Apple Books Library family)
+  //   • v3 #F8F7F4 — cooler daylight white
+  //   • v4 (this) #FDF6EC — warmer cream the product asks for
+  bg: "#FDF6EC",
   surface: "#FFFFFF",
   // Light-mode counterparts to the dark elevation steps.
   // Surface inversion holds: pure white cards (#FFFFFF) lift
-  // above the cream page (#F8F7F4), and an inset chip on top
+  // above the cream page (#FDF6EC), and an inset chip on top
   // of a white card uses a hair-warm gray (#F4F1EB) for the
   // next elevation step. Symmetric to dark mode's
   // bg → surfaceSecondary → surfaceTertiary progression.
@@ -349,7 +378,7 @@ export const LIGHT_COLORS: ColorPalette = {
   // light palette is built around white. Devotional card
   // collapses to the same pure-white surface used by
   // `surfaceSecondary`/`surface`, which still lifts cleanly
-  // off the warm-cream page bg (#F8F7F4 → #FFFFFF is a
+  // off the warm-cream page bg (#FDF6EC → #FFFFFF is a
   // visible elevation step). The dark-mode "deepest tier"
   // semantic doesn't carry; the editorial hierarchy in
   // light mode comes from typography weight, not surface
@@ -373,11 +402,14 @@ export const LIGHT_COLORS: ColorPalette = {
   // clear AAA. Sits one stop lighter than `inkMuted`,
   // delivering hierarchy AND accessibility.
   inkSecondary: "#4A4A50",
+  textSecondary: "#4A4A50",
   // V2: bumped from #8F8F96 (~3.5:1, below AA!) to #6B6B72
   // (~5.3:1, comfortably AA — appropriate for non-critical
   // metadata like timestamps, deep refs, micro-chevrons).
   // Apple's stock tertiaryLabel actually sits around here
   // on light; the previous #8F8F96 had drifted off-spec.
+  // Prefer `textSecondary` when a caption/eyebrow must clear
+  // AAA or sit closer to 7:1; this tier is AA-only intentionally.
   inkSubtle: "#6B6B72",
   primary: "#0F0F0F",
   primaryPressed: "#2A2A2A",
@@ -391,6 +423,8 @@ export const LIGHT_COLORS: ColorPalette = {
   // Apple's systemBlue in light mode.
   select: "#007AFF",
   selectSoft: "rgba(0, 122, 255, 0.12)",
+  // iOS UIColor.systemRed light mode.
+  destructive: "#FF3B30",
 };
 
 /**
@@ -481,6 +515,7 @@ export function paletteToCssVars(
     "--color-ink": palette.ink,
     "--color-ink-muted": palette.inkMuted,
     "--color-ink-secondary": palette.inkSecondary,
+    "--color-text-secondary": palette.textSecondary,
     "--color-ink-subtle": palette.inkSubtle,
     "--color-primary": palette.primary,
     "--color-primary-pressed": palette.primaryPressed,
@@ -491,5 +526,6 @@ export function paletteToCssVars(
     "--color-border-strong": palette.borderStrong,
     "--color-select": palette.select,
     "--color-select-soft": palette.selectSoft,
+    "--color-destructive": palette.destructive,
   };
 }

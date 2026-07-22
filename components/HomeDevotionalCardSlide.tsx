@@ -20,7 +20,7 @@ import {
   SOCIAL_APP_ICON_SOURCES,
   type SocialAppKind,
 } from "@/lib/socialAppIconAssets";
-import { typography } from "@/lib/typography";
+import { systemText, typography } from "@/lib/typography";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { getSermonBackdrop, HERO_BACKDROP_FALLBACK } from "@/services/unsplashService";
 import { useColors, useResolvedScheme } from "@/state/theme";
@@ -502,7 +502,8 @@ export const HomeDevotionalCardSlide = memo(function HomeDevotionalCardSlide({
     let cancelled = false;
     setUseFallback(false);
     const query =
-      card.illustrationPrompt?.trim() || "peaceful spiritual nature landscape";
+      card.illustrationPrompt?.trim() ||
+      "peaceful mountain sunrise mist landscape";
     getSermonBackdrop(query, card.sermonDay).then((url) => {
       if (!cancelled) {
         setImageUrl(url);
@@ -517,7 +518,8 @@ export const HomeDevotionalCardSlide = memo(function HomeDevotionalCardSlide({
   const handleImageError = useCallback(() => {
     setUseFallback(true);
     const query =
-      card.illustrationPrompt?.trim() || "peaceful spiritual nature landscape";
+      card.illustrationPrompt?.trim() ||
+      "peaceful mountain sunrise mist landscape";
     getSermonBackdrop(query, card.sermonDay).then((url) => {
       if (url) {
         setImageUrl(url);
@@ -673,14 +675,7 @@ export const HomeDevotionalCardSlide = memo(function HomeDevotionalCardSlide({
         >
           <View style={{ marginBottom: 18 }}>
             <Text
-              style={[
-                typography.pageTitle,
-                {
-                  color: colors.ink,
-                  fontSize: greetingText.toLowerCase().includes("night") ? 40 : 34,
-                  lineHeight: greetingText.toLowerCase().includes("night") ? 44 : 40,
-                },
-              ]}
+              style={[systemText.largeTitle, { color: colors.ink }]}
             >
               {greetingText}
             </Text>
@@ -710,7 +705,7 @@ export const HomeDevotionalCardSlide = memo(function HomeDevotionalCardSlide({
                   fontWeight: "500",
                   fontSize: 15,
                   lineHeight: 22,
-                  color: colors.inkSubtle,
+                  color: colors.inkMuted,
                 }}
               >
                 ·
@@ -1015,7 +1010,6 @@ export const HomeDevotionalCardSlide = memo(function HomeDevotionalCardSlide({
                         {
                           color: CARD_INK_SOFT,
                           textTransform: "uppercase",
-                          letterSpacing: 1.1,
                         },
                       ]}
                     >

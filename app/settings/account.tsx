@@ -137,7 +137,7 @@ export default function AccountScreen() {
       {!configured && __DEV__ ? (
         <View className="px-6 mt-6">
           <Text
-            className="text-ink-subtle text-[12px] leading-[18px] text-center"
+            className="text-ink-muted text-[12px] leading-[18px] text-center"
             style={{ fontFamily: "System", fontWeight: "400" }}
           >
             Dev: add Supabase env vars, then restart Metro. OAuth redirect:{" "}
@@ -148,7 +148,7 @@ export default function AccountScreen() {
 
       <View className="px-6 mt-8">
         <Text
-          className="text-ink-subtle text-[12px] leading-[18px] text-center"
+          className="text-ink-muted text-[12px] leading-[18px] text-center"
           style={{ fontFamily: "System", fontWeight: "400" }}
         >
           We&apos;ll never email you a newsletter. Sign-in is for sync, nothing else.

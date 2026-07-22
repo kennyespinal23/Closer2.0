@@ -1,5 +1,6 @@
 import { Image, Text, View } from "react-native";
 import type { Insight } from "@/constants/insights";
+import { systemText } from "@/lib/typography";
 
 /**
  * Width/height of a local image asset, looked up at module level.
@@ -164,15 +165,13 @@ export function ArticleHero({
       {/* Bottom-left eyebrow — magazine-cover seal energy. */}
       <View style={{ position: "absolute", bottom: 12, left: 14 }}>
         <Text
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            fontSize: 11,
-            letterSpacing: 2.5,
-            color: insight.palette.ink,
-            opacity: 0.5,
-            textTransform: "uppercase",
-          }}
+          style={[
+            systemText.captionEmphasized,
+            {
+              color: insight.palette.ink,
+              opacity: 0.5,
+            },
+          ]}
         >
           Closer · Faith Basics
         </Text>

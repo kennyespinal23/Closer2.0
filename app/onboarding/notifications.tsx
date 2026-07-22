@@ -226,7 +226,7 @@ function NotificationPreview({ firstName }: { firstName: string }) {
           </Text>
           <Text
             style={{
-              color: colors.inkSubtle,
+              color: colors.inkMuted,
               fontFamily: "System",
               fontWeight: "500",
               fontSize: 12,

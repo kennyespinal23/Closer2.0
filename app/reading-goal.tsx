@@ -3,11 +3,13 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
+import { goBackOr } from "@/lib/navigation";
 import { ActivityRing, RING_ACCENT } from "@/components/ActivityRing";
 import { FadeIn } from "@/components/FadeIn";
 import { formatMinutes, formatRemaining } from "@/lib/readingGoalFormat";
 import { useReadingGoal } from "@/state/readingGoal";
 import { useColors } from "@/state/theme";
+import { SFSymbol } from "@/components/Symbol";
 
 /**
  * Reading-goal detail screen — the drill-in destination from
@@ -79,7 +81,7 @@ export default function ReadingGoalDetailScreen() {
           feels of a piece with the rest of the drill-in surfaces. */}
       <View className="flex-row items-center px-4 pt-2 pb-3">
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => goBackOr(router, "/(tabs)/today")}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Back"
@@ -120,7 +122,7 @@ export default function ReadingGoalDetailScreen() {
                 className="absolute inset-0 items-center justify-center"
               >
                 <Text
-                  className="text-ink-subtle text-[11px] tracking-[3px] uppercase"
+                  className="text-ink-muted text-[11px] tracking-[1px] uppercase"
                   style={{ fontFamily: "System", fontWeight: "700" }}
                 >
                   Minutes
@@ -251,7 +253,7 @@ function SectionHeader({
   return (
     <View>
       <Text
-        className="text-primary text-[11px] tracking-[3px] uppercase"
+        className="text-primary text-[11px] tracking-[1px] uppercase"
         style={{ fontFamily: "System", fontWeight: "700" }}
       >
         {eyebrow}
@@ -353,7 +355,7 @@ function HourlyChart({
           return (
             <Text
               key={t.label}
-              className="text-ink-subtle text-[11px] absolute"
+              className="text-ink-muted text-[11px] absolute"
               style={{
                 fontFamily: "System",
                 fontWeight: "600",
@@ -452,7 +454,7 @@ function WeekRingStrip({ rows }: { rows: ReadonlyArray<WeekRow> }) {
           />
           <Text
             className={`text-[11px] tracking-[1px] mt-2 ${
-              row.isToday ? "text-primary" : "text-ink-subtle"
+              row.isToday ? "text-primary" : "text-ink-muted"
             }`}
             style={{ fontFamily: "System", fontWeight: "700" }}
           >
@@ -507,15 +509,7 @@ function toLocalISO(d: Date): string {
 function BackChevronIcon() {
   const colors = useColors();
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M15 6l-6 6 6 6"
-        stroke={colors.ink}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <SFSymbol name="chevron.left" size={17} color={colors.ink} weight="semibold" />
   );
 }
 

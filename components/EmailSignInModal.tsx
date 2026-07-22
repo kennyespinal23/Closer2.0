@@ -76,7 +76,7 @@ function SheetTextField({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         placeholder={placeholder}
-        placeholderTextColor={colors.inkSubtle}
+        placeholderTextColor={colors.inkMuted}
         editable={editable}
         keyboardType={keyboardType}
         textContentType={textContentType}
@@ -155,9 +155,9 @@ export function EmailSignInModal({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ width: "100%" }}
+        style={{ flex: 1 }}
       >
-        <View style={{ paddingTop: 4, paddingBottom: 12 }}>
+        <View style={{ paddingBottom: 12 }}>
           <SheetModalHeader
             title={title}
             onCancel={handleClose}

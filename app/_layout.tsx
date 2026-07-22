@@ -4,14 +4,10 @@ import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
-// June 2026 typography reset: the app now lives on the iOS
-// system fonts (SF Pro for interface + reading; New York Italic
-// for reflective-quote moments). Both are platform system fonts
-// — no bundling required, no useFonts wait, no FOUT. The
-// previous Plus Jakarta Sans loader (and the EB Garamond loader
-// before it) are gone with this change. See lib/typography.ts
-// for the canonical role vocabulary; that module is the single
-// source of truth for which weight + size each surface uses.
+import { useFonts, Kalam_400Regular } from "@expo-google-fonts/kalam";
+// Interface + reading live on iOS system fonts (SF Pro / New York).
+// Kalam is the only bundled face — handwritten segments on the
+// home quote. See lib/typography.ts + components/HomeQuoteText.tsx.
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { LaunchSplash } from "@/components/LaunchSplash";
 import { ScheduledBlockGuard } from "@/components/ScheduledBlockGuard";
@@ -61,10 +57,19 @@ ensureAndroidChannel().catch(() => {
 });
 
 export default function RootLayout() {
-  // No useFonts wait: SF Pro and New York are iOS system fonts,
-  // available to the JS runtime from the moment the app
-  // launches. The Expo splash hides as soon as the React tree
-  // mounts, with no font-loading gate in between.
+  const [fontsLoaded, fontError] = useFonts({
+    Kalam_400Regular,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   // ThemeProvider sits OUTSIDE every other provider so the CSS
   // variables it sets via `vars()` reach every Tailwind class in
@@ -224,14 +229,6 @@ function AppShell() {
             we override the default slide with a fade — the home
             tab paints up softly instead of sliding in from the
             side. */}
-        <Stack.Screen
-          name="rotating-moment"
-          options={{
-            animation: "fade",
-            gestureEnabled: false,
-            contentStyle: { backgroundColor: "#000000" },
-          }}
-        />
         <Stack.Screen
           name="(tabs)"
           options={{ animation: "fade" }}

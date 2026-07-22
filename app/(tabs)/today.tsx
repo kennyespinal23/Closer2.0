@@ -41,6 +41,7 @@ import {
   type FocusStatusSheetState,
 } from "@/components/FocusStatusSheet";
 import { resolveShieldPrimaryPath } from "@/lib/deviceActivityShield";
+import { isInsideAnyActiveBlockWindow } from "@/lib/scheduledAppBlocks";
 import * as haptics from "@/lib/haptics";
 import { SCREEN_H_PAD } from "@/lib/layout";
 import type { ShieldPrimaryPath } from "@/lib/shieldCopy";
@@ -392,7 +393,7 @@ export default function TodayScreen() {
    * then streak → milestone when the day advances.
    */
   const handleCompleteFloatingCard = useCallback(
-    (card: FloatingScriptureCard) => {
+    (card: FloatingScriptureCard): boolean => {
       const { newStreak, streakAdvanced, crossedMilestone } =
         recordCompletion("daily", {
           title: card.title || card.scriptureReference,
@@ -403,6 +404,8 @@ export default function TodayScreen() {
         /* shield stop is best-effort */
       });
       if (streakAdvanced) {
+        // Replace immediately while the verse modal is still up so
+        // home never paints underneath (that flash felt like extra screens).
         router.replace({
           pathname: "/sermon/streak",
           params: {
@@ -410,7 +413,9 @@ export default function TodayScreen() {
             milestone: crossedMilestone ? String(crossedMilestone) : "",
           },
         });
+        return true;
       }
+      return false;
     },
     [endFocusSession, recordCompletion, router],
   );
@@ -468,7 +473,14 @@ export default function TodayScreen() {
 
     let nextBreakLabel = "No app break scheduled yet";
     let nextBreakTone: "live" | "armed" | "muted" = "muted";
-    if (focusSession !== null) {
+    const inScheduledBlock = isInsideAnyActiveBlockWindow(studySessions, now);
+    // Live only while apps are still gated. After today's unlock,
+    // fall through to the next scheduled time so the pill still
+    // answers "when is my next break?"
+    if (
+      !hasCompletedSermonToday &&
+      (focusSession !== null || inScheduledBlock)
+    ) {
       nextBreakLabel = "App break is on now";
       nextBreakTone = "live";
     } else {
@@ -2173,7 +2185,7 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
             // utility surfaceSecondary so the editorial
             // anchor reads as the deepest meditative tier);
             // light mode: #FFFFFF (pure white, lifts off
-            // the warm-cream page bg #F8F7F4).
+            // the warm-cream page bg #FDF6EC).
             paddingHorizontal: SCREEN_H_PAD,
             paddingTop: 24,
             paddingBottom: 24,

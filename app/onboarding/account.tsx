@@ -1,27 +1,74 @@
-import { Alert, ScrollView, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { BrandMark } from "@/components/BrandMark";
+import { EmailSignInModal } from "@/components/EmailSignInModal";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
 import { SocialButton } from "@/components/SocialButton";
 import { progressFor } from "@/constants/onboarding";
-import { isGoogleSignInConfigured } from "@/lib/googleAuthConfig";
+import { spacing } from "@/constants/spacing";
+import { CLOSER_ACCENT } from "@/constants/theme";
+import { systemText, typography } from "@/lib/typography";
 import { useAuth } from "@/state/auth";
+import { useColors } from "@/state/theme";
+
+const SEGMENT_COUNT = 3;
+
+function SignupProgressSegments({ progress }: { progress: number }) {
+  const colors = useColors();
+  const filled = Math.max(
+    1,
+    Math.min(SEGMENT_COUNT, Math.round(progress * SEGMENT_COUNT)),
+  );
+
+  return (
+    <View
+      accessibilityRole="progressbar"
+      accessibilityValue={{
+        min: 0,
+        max: SEGMENT_COUNT,
+        now: filled,
+      }}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        width: "100%",
+        maxWidth: 220,
+        alignSelf: "center",
+      }}
+    >
+      {Array.from({ length: SEGMENT_COUNT }).map((_, i) => (
+        <View
+          key={i}
+          style={{
+            flex: 1,
+            height: 4,
+            borderRadius: 999,
+            backgroundColor:
+              i < filled ? CLOSER_ACCENT : colors.border,
+          }}
+        />
+      ))}
+    </View>
+  );
+}
 
 export default function AccountScreen() {
   const router = useRouter();
-  const { configured, signingIn, signInWithApple, signInWithGoogle } = useAuth();
+  const colors = useColors();
+  const {
+    configured,
+    signingIn,
+    sendEmailCode,
+    verifyEmailCode,
+  } = useAuth();
+  const [loginOpen, setLoginOpen] = useState(false);
 
-  const goToTime = () => router.push("/onboarding/time");
-
-  const handleSignInError = (err: unknown) => {
-    if (err instanceof Error && err.message === "Sign-in was cancelled.") {
-      return;
-    }
-    const message =
-      err instanceof Error ? err.message : "Something went wrong. Try again.";
-    Alert.alert("Couldn't sign in", message, [{ text: "OK" }]);
-  };
+  const progress = progressFor("account");
+  const goNext = () => router.push("/onboarding/quietapps");
 
   const notConfigured = () =>
     Alert.alert(
@@ -30,107 +77,168 @@ export default function AccountScreen() {
       [{ text: "OK" }],
     );
 
-  const handleApple = async () => {
+  // Account is optional in onboarding — social CTAs always advance.
+  // Sign-in can be completed later from Settings.
+  const handleApple = () => goNext();
+  const handleGoogle = () => goNext();
+
+  const handleLoginEmail = async (email: string) => {
     if (!configured) {
       notConfigured();
-      return;
+      throw new Error("Supabase isn't connected yet.");
     }
-    if (signingIn) return;
-    try {
-      await signInWithApple();
-      goToTime();
-    } catch (err) {
-      handleSignInError(err);
-    }
+    await sendEmailCode(email);
   };
 
-  const handleGoogle = async () => {
-    if (!configured) {
-      notConfigured();
-      return;
-    }
-    if (!isGoogleSignInConfigured()) {
-      Alert.alert(
-        "Google isn't ready yet",
-        "Finish Google Cloud setup, then paste your client IDs here so we can add them to the project.",
-        [{ text: "OK" }],
-      );
-      return;
-    }
-    if (signingIn) return;
-    try {
-      await signInWithGoogle();
-      goToTime();
-    } catch (err) {
-      handleSignInError(err);
-    }
+  const handleLoginCode = async (email: string, code: string) => {
+    await verifyEmailCode(email, code);
+    setLoginOpen(false);
+    goNext();
   };
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
       <OnboardingChrome
         mode="with-progress"
-        progress={progressFor("account")}
+        progress={progress}
       />
 
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: spacing[16] }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-1 px-6">
-          <View className="mt-16">
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: spacing[24],
+            justifyContent: "space-between",
+          }}
+        >
+          <View style={{ flex: 1, justifyContent: "center", paddingTop: 12 }}>
             <FadeIn delayMs={0}>
+              <View style={{ alignItems: "center", marginBottom: spacing[24] }}>
+                <BrandMark size={96} />
+              </View>
+            </FadeIn>
+
+            <FadeIn delayMs={200}>
               <Text
-                className="text-ink text-[32px] leading-[40px] tracking-[-0.8px]"
-                style={{ fontFamily: "System", fontWeight: "700" }}
+                accessibilityRole="header"
+                style={[
+                  systemText.title1,
+                  {
+                    color: colors.ink,
+                    textAlign: "center",
+                  },
+                ]}
               >
-                Start your journey{"\n"}with Closer.
+                Create your account
               </Text>
             </FadeIn>
 
-            <FadeIn delayMs={700}>
+            <FadeIn delayMs={400}>
               <Text
-                className="text-ink-muted text-[16px] leading-[24px] mt-4"
-                style={{ fontFamily: "System", fontWeight: "400" }}
+                style={[
+                  systemText.callout,
+                  {
+                    color: colors.inkMuted,
+                    textAlign: "center",
+                    marginTop: spacing[12],
+                    paddingHorizontal: spacing[8],
+                  },
+                ]}
               >
-                Create your account to personalize your experience.
+                Save your streak, highlights, and journey across devices.
               </Text>
+            </FadeIn>
+
+            <FadeIn delayMs={600}>
+              <View style={{ marginTop: spacing[32], marginBottom: spacing[8] }}>
+                <SignupProgressSegments progress={progress} />
+              </View>
             </FadeIn>
           </View>
 
-          <View className="flex-1 min-h-[60px]" />
+          <View style={{ paddingBottom: spacing[8] }}>
+            <FadeIn delayMs={800}>
+              <View style={{ gap: spacing[12] }}>
+                <SocialButton
+                  provider="google"
+                  variant="soft"
+                  onPress={handleGoogle}
+                />
+                <SocialButton
+                  provider="apple"
+                  variant="accent"
+                  onPress={handleApple}
+                />
+              </View>
+            </FadeIn>
 
-          <FadeIn delayMs={1400}>
-            <View className="gap-3">
-              <SocialButton provider="apple" onPress={handleApple} />
-              <SocialButton provider="google" onPress={handleGoogle} />
-            </View>
-          </FadeIn>
-
-          <FadeIn delayMs={2000}>
-            <Text
-              className="text-ink-muted text-[11px] leading-[16px] text-center mt-4 mb-2 px-4"
-              style={{ fontFamily: "System", fontWeight: "400" }}
-            >
-              By continuing, you agree to our{" "}
+            <FadeIn delayMs={1000}>
               <Text
-                className="text-ink-muted"
-                style={{ fontFamily: "System", fontWeight: "500" }}
+                style={[
+                  systemText.caption1,
+                  {
+                    color: colors.inkMuted,
+                    textAlign: "center",
+                    marginTop: spacing[16],
+                    paddingHorizontal: spacing[16],
+                  },
+                ]}
               >
-                Terms of Service
-              </Text>{" "}
-              and{" "}
-              <Text
-                className="text-ink-muted"
-                style={{ fontFamily: "System", fontWeight: "500" }}
-              >
-                Privacy Policy
+                By continuing, you agree to our Terms of Service and Privacy
+                Policy.
               </Text>
-              .
-            </Text>
-          </FadeIn>
+            </FadeIn>
+
+            <FadeIn delayMs={1200}>
+              <Pressable
+                onPress={() => setLoginOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Log in"
+                hitSlop={8}
+                style={{
+                  marginTop: spacing[24],
+                  minHeight: 44,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text
+                  style={[
+                    systemText.subheadline,
+                    { color: colors.inkMuted, textAlign: "center" },
+                  ]}
+                >
+                  Already have an account?{" "}
+                  <Text
+                    style={[
+                      typography.button,
+                      {
+                        color: colors.ink,
+                        fontSize: 15,
+                        lineHeight: 20,
+                      },
+                    ]}
+                  >
+                    Log in
+                  </Text>
+                </Text>
+              </Pressable>
+            </FadeIn>
+          </View>
         </View>
       </ScrollView>
+
+      <EmailSignInModal
+        visible={loginOpen}
+        busy={signingIn}
+        onClose={() => setLoginOpen(false)}
+        onSubmitEmail={handleLoginEmail}
+        onSubmitCode={handleLoginCode}
+      />
     </SafeAreaView>
   );
 }

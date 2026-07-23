@@ -1,75 +1,170 @@
-import { useEffect } from "react";
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { FadeIn } from "@/components/FadeIn";
-import { OnboardingChrome } from "@/components/OnboardingChrome";
+import { BrandMark } from "@/components/BrandMark";
+import { PrimaryPillButton } from "@/components/PrimaryPillButton";
+import { SFSymbol } from "@/components/Symbol";
 import { CLOSER_ACCENT } from "@/constants/theme";
+import {
+  configureCloserShieldUI,
+  isScreenTimeShieldReady,
+} from "@/lib/deviceActivityShield";
+import {
+  DEFAULT_BLOCKED_APP_IDS,
+  SOCIAL_APPS,
+  type SocialAppId,
+} from "@/lib/focus";
+import { SF_PRO } from "@/lib/typography";
+import { useFocus } from "@/state/focus";
 import { useOnboarding } from "@/state/onboarding";
+import { useStudySessions } from "@/state/studySessions";
 import { useSubscription } from "@/state/subscription";
 import { useColors } from "@/state/theme";
 
 const TERMS_URL = "https://closer.app/terms";
 const PRIVACY_URL = "https://closer.app/privacy";
 
-const VALUE_LINES = [
-  "One verse every morning. Before the noise.",
-  "Today\u2019s Word — a 2 minute thought to carry into your day.",
-  "Check in whenever you drift. We\u2019ll be here.",
+/** Yellow savings chip — matches the reference badge treatment. */
+const POPULAR_YELLOW = "#FFE14A";
+
+const FALLBACK_TIME = { hour: 7, minute: 0 } as const;
+const SYSTEM_STUDY_NAME = "Bible Study";
+const SYSTEM_SERMON_NAME = "Daily Sermon";
+const WEEKDAY_DAYS = [1, 2, 3, 4, 5] as const;
+const DAILY_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
+
+type PlanId = "monthly" | "annual";
+
+type TimelineStep = {
+  title: string;
+  body: string;
+  icon: "checkmark" | "lock.fill" | "bell.fill" | "heart.fill";
+  state: "done" | "current" | "upcoming";
+};
+
+const TIMELINE: ReadonlyArray<TimelineStep> = [
+  {
+    title: "Complete Sign-up",
+    body: "You successfully created your profile.",
+    icon: "checkmark",
+    state: "done",
+  },
+  {
+    title: "Today: Get Instant Access",
+    body: "Unlock our most requested features!",
+    icon: "lock.fill",
+    state: "current",
+  },
+  {
+    title: "Day 5: Get Trial Reminder",
+    body: "We'll send you an email/notification.",
+    icon: "bell.fill",
+    state: "upcoming",
+  },
+  {
+    title: "Day 7: Trial Ends",
+    body: "You'll be charged in 7 days, cancel anytime before in the App Store.",
+    icon: "heart.fill",
+    state: "upcoming",
+  },
 ];
 
-function isPurchaseCancelled(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "userCancelled" in err &&
-    (err as { userCancelled?: boolean }).userCancelled === true
+function morningAppsToBlockedList(
+  morningApps: string[] | undefined,
+): SocialAppId[] {
+  if (!morningApps || morningApps.length === 0) return [];
+  const valid = new Set(SOCIAL_APPS.map((a) => a.id));
+  return morningApps.filter((id): id is SocialAppId =>
+    valid.has(id as SocialAppId),
   );
 }
 
 export default function PaywallScreen() {
   const router = useRouter();
   const colors = useColors();
-  const { answers } = useOnboarding();
+  const { answers, setAnswer } = useOnboarding();
+  const { upsertSystemSession } = useStudySessions();
+  const { setEnabled } = useFocus();
   const {
     configured,
     isPro,
-    priceLabel,
-    purchasing,
-    purchaseMonthly,
+    monthlyPackage,
     restore,
   } = useSubscription();
 
-  const firstName = (answers.name || "").trim().split(" ")[0];
+  const [plan, setPlan] = useState<PlanId>("annual");
+  const seededRef = useRef(false);
+
+  const monthlyPrice =
+    monthlyPackage?.product.priceString?.replace(/\s+/g, "") ?? "$7.99";
 
   useEffect(() => {
-    if (isPro) {
-      router.replace("/onboarding/welcome");
-    }
-  }, [isPro, router]);
+    if (seededRef.current) return;
+    seededRef.current = true;
 
-  const goToWelcome = () => router.push("/onboarding/welcome");
+    const studyTime = answers.bibleStudyTime ?? FALLBACK_TIME;
+    const sermonTime = answers.dailyReminderTime ?? FALLBACK_TIME;
+    const blockedApps = morningAppsToBlockedList(answers.morningApps);
+    const studyBlocked =
+      blockedApps.length > 0 ? blockedApps : [...DEFAULT_BLOCKED_APP_IDS];
 
-  const handleStart = async () => {
-    if (!configured) {
-      Alert.alert(
-        "Subscriptions aren't ready",
-        "Finish RevenueCat setup, add your API key, and rebuild the app.",
-        [{ text: "OK" }],
-      );
-      return;
-    }
+    void upsertSystemSession({
+      name: SYSTEM_STUDY_NAME,
+      source: "system",
+      time: studyTime,
+      daysOfWeek: [...WEEKDAY_DAYS],
+      enabled: true,
+      useFocusMode: true,
+      blockedAppIds: studyBlocked,
+    }).catch(() => {});
 
-    try {
-      const active = await purchaseMonthly();
-      if (active) goToWelcome();
-    } catch (err) {
-      if (isPurchaseCancelled(err)) return;
-      const message =
-        err instanceof Error ? err.message : "Couldn't start your trial.";
-      Alert.alert("Couldn't subscribe", message, [{ text: "OK" }]);
+    void upsertSystemSession({
+      name: SYSTEM_SERMON_NAME,
+      source: "system",
+      time: sermonTime,
+      daysOfWeek: [...DAILY_DAYS],
+      enabled: true,
+      useFocusMode: false,
+      blockedAppIds: [],
+    }).catch(() => {});
+
+    if (answers.screenTimeConfigured || isScreenTimeShieldReady()) {
+      configureCloserShieldUI();
+      setEnabled(true);
     }
+  }, [
+    upsertSystemSession,
+    answers.bibleStudyTime,
+    answers.dailyReminderTime,
+    answers.morningApps,
+    answers.screenTimeConfigured,
+    setEnabled,
+  ]);
+
+  const finishOnboarding = () => {
+    setAnswer("completed", true);
+    router.replace("/today");
+  };
+
+  useEffect(() => {
+    if (!isPro) return;
+    setAnswer("completed", true);
+    router.replace("/today");
+  }, [isPro, setAnswer, router]);
+
+  const handleStart = () => {
+    // Placeholder — enter the app without requiring a live purchase.
+    finishOnboarding();
   };
 
   const handleRestore = async () => {
@@ -85,7 +180,7 @@ export default function PaywallScreen() {
     try {
       const active = await restore();
       if (active) {
-        goToWelcome();
+        finishOnboarding();
         return;
       }
       Alert.alert(
@@ -101,202 +196,248 @@ export default function PaywallScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar style="dark" />
-      <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
-        {/* Exit affordance — paywall previously had no back/close
-            (purchase/restore only). Back returns to the prior
-            onboarding step; swipe-back alone is not enough. */}
-        <OnboardingChrome mode="back-only" tone="auto" />
+      <SafeAreaView style={styles.flex} edges={["top", "bottom"]}>
+        <View style={styles.topBar}>
+          <Pressable
+            onPress={finishOnboarding}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            style={({ pressed }) => ({ opacity: pressed ? 0.55 : 1 })}
+          >
+            <View style={styles.closeHit}>
+              <SFSymbol
+                name="xmark"
+                size={15}
+                color={colors.ink}
+                weight="bold"
+              />
+            </View>
+          </Pressable>
+        </View>
+
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
+          contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
         >
-          <View className="flex-1 px-6">
-            <FadeIn delayMs={0}>
-              <Text
-                style={{
-                  color: colors.ink,
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 28,
-                  lineHeight: 36,
-                  letterSpacing: -0.5,
-                  marginTop: 8,
-                }}
-              >
-                {firstName ? `${firstName}, you're almost in.` : "You're almost in."}
-              </Text>
-            </FadeIn>
+          <View style={styles.hero}>
+            <View
+              style={[
+                styles.heroWell,
+                { backgroundColor: "rgba(255, 67, 38, 0.12)" },
+              ]}
+            >
+              <BrandMark size={72} />
+            </View>
+          </View>
 
-            <FadeIn delayMs={500}>
-              <View style={{ marginTop: 28 }}>
-                <Text
-                  style={{
-                    color: colors.ink,
-                    fontFamily: "System",
-                    fontWeight: "600",
-                    fontSize: 19,
-                    lineHeight: 28,
-                  }}
-                >
-                  Start free for 7 days.
-                </Text>
-                <Text
-                  style={{
-                    color: colors.inkSecondary,
-                    fontFamily: "System",
-                    fontWeight: "500",
-                    fontSize: 17,
-                    lineHeight: 24,
-                    marginTop: 6,
-                  }}
-                >
-                  Then{" "}
-                  <Text
-                    style={{
-                      color: colors.ink,
-                      fontFamily: "System",
-                      fontWeight: "700",
-                      fontSize: 17,
-                    }}
-                  >
-                    {priceLabel}.
-                  </Text>{" "}
-                  Cancel anytime.
-                </Text>
-              </View>
-            </FadeIn>
+          <Text
+            accessibilityRole="header"
+            style={[styles.headline, { color: colors.ink }]}
+          >
+            How your 7-day free{"\n"}trial works
+          </Text>
 
-            <FadeIn delayMs={1100}>
-              <View style={{ marginTop: 36, gap: 14 }}>
-                {VALUE_LINES.map((line) => (
-                  <ValueLine key={line} text={line} />
-                ))}
-              </View>
-            </FadeIn>
-
-            <FadeIn delayMs={1700}>
-              <View
-                style={{
-                  height: 1,
-                  backgroundColor: colors.border,
-                  marginTop: 36,
-                  marginHorizontal: 8,
-                }}
+          <View style={styles.timeline}>
+            {TIMELINE.map((step, index) => (
+              <TimelineRow
+                key={step.title}
+                step={step}
+                isLast={index === TIMELINE.length - 1}
               />
-              <Text
-                style={{
-                  color: colors.ink,
-                  fontFamily: "System",
-                  fontWeight: "500",
-                  fontSize: 15,
-                  lineHeight: 23,
-                  textAlign: "center",
-                  marginTop: 20,
-                }}
-              >
-                Less than a coffee a month.{"\n"}
-                <Text style={{ fontFamily: "System", fontWeight: "700" }}>
-                  More than you&apos;ll get from the scroll.
-                </Text>
-              </Text>
-            </FadeIn>
+            ))}
+          </View>
 
-            <View className="flex-1 min-h-[24px]" />
-
-            <FadeIn delayMs={2200}>
-              <View className="pt-6 pb-2">
-                <Pressable
-                  onPress={() => {
-                    handleStart().catch(() => {});
-                  }}
-                  disabled={purchasing}
-                  accessibilityRole="button"
-                  accessibilityLabel="Start my free 7 days"
-                  className="h-14 rounded-2xl items-center justify-center active:opacity-85"
-                  style={{
-                    backgroundColor: CLOSER_ACCENT,
-                    opacity: purchasing ? 0.75 : 1,
-                  }}
-                >
-                  {purchasing ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <Text
-                      style={{
-                        color: "#FFFFFF",
-                        fontFamily: "System",
-                        fontWeight: "700",
-                        fontSize: 16,
-                        letterSpacing: 0.1,
-                      }}
-                    >
-                      Start my free 7 days
-                    </Text>
-                  )}
-                </Pressable>
-
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    marginTop: 18,
-                    gap: 10,
-                  }}
-                >
-                  <FootLink label="Restore purchase" onPress={handleRestore} />
-                  <FootDot />
-                  <FootLink
-                    label="Terms"
-                    onPress={() => Linking.openURL(TERMS_URL)}
-                  />
-                  <FootDot />
-                  <FootLink
-                    label="Privacy"
-                    onPress={() => Linking.openURL(PRIVACY_URL)}
-                  />
-                </View>
-              </View>
-            </FadeIn>
+          <View style={styles.plans}>
+            <PlanCard
+              selected={plan === "monthly"}
+              onPress={() => setPlan("monthly")}
+              title="Monthly"
+              priceRight={`${monthlyPrice} / MO`}
+            />
+            <PlanCard
+              selected={plan === "annual"}
+              onPress={() => setPlan("annual")}
+              title="Yearly"
+              badge="SAVE 50%"
+              priceRight="$4.99 / MO"
+              priceMain="$59.99"
+              priceWas="$95.88"
+            />
           </View>
         </ScrollView>
+
+        <View style={styles.footer}>
+          <PrimaryPillButton
+            label="Try FREE and Subscribe"
+            onPress={handleStart}
+            accessibilityLabel="Try free and subscribe"
+          />
+
+          <View style={styles.footLinks}>
+            <FootLink label="Restore" onPress={handleRestore} />
+            <FootDot />
+            <FootLink label="Terms" onPress={() => Linking.openURL(TERMS_URL)} />
+            <FootDot />
+            <FootLink
+              label="Privacy"
+              onPress={() => Linking.openURL(PRIVACY_URL)}
+            />
+          </View>
+        </View>
       </SafeAreaView>
     </View>
   );
 }
 
-function ValueLine({ text }: { text: string }) {
+function TimelineRow({
+  step,
+  isLast,
+}: {
+  step: TimelineStep;
+  isLast: boolean;
+}) {
   const colors = useColors();
+  const filled = step.state === "done" || step.state === "current";
+  const isDone = step.state === "done";
+
   return (
-    <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-      <Text
-        style={{
-          color: CLOSER_ACCENT,
-          fontFamily: "System",
-          fontWeight: "700",
-          fontSize: 16,
-          marginRight: 12,
-          width: 18,
-          textAlign: "center",
-        }}
-      >
-        ✦
-      </Text>
-      <Text
-        style={{
-          color: colors.ink,
-          fontFamily: "System",
-          fontWeight: "500",
-          fontSize: 15,
-          lineHeight: 23,
-          flex: 1,
-        }}
-      >
-        {text}
-      </Text>
+    <View style={styles.timelineRow}>
+      <View style={styles.timelineRail}>
+        {filled ? (
+          <View style={[styles.timelineDot, { backgroundColor: CLOSER_ACCENT }]}>
+            <SFSymbol
+              name={step.icon}
+              size={13}
+              color="#FFFFFF"
+              weight="bold"
+            />
+          </View>
+        ) : (
+          <View style={styles.timelineIconOnly}>
+            <SFSymbol
+              name={step.icon}
+              size={18}
+              color={colors.ink}
+              weight="semibold"
+            />
+          </View>
+        )}
+        {!isLast ? (
+          <View
+            style={[styles.timelineLine, { backgroundColor: colors.border }]}
+          />
+        ) : null}
+      </View>
+
+      <View style={styles.timelineCopy}>
+        <Text
+          style={[
+            styles.timelineTitle,
+            isDone
+              ? {
+                  color: CLOSER_ACCENT,
+                  fontWeight: "600",
+                  textDecorationLine: "line-through",
+                }
+              : { color: colors.ink, fontWeight: "700" },
+          ]}
+        >
+          {step.title}
+        </Text>
+        <Text style={[styles.timelineBody, { color: colors.inkMuted }]}>
+          {step.body}
+        </Text>
+      </View>
     </View>
+  );
+}
+
+function PlanCard({
+  selected,
+  onPress,
+  title,
+  priceRight,
+  priceMain,
+  priceWas,
+  badge,
+}: {
+  selected: boolean;
+  onPress: () => void;
+  title: string;
+  priceRight: string;
+  priceMain?: string;
+  priceWas?: string;
+  badge?: string;
+}) {
+  const colors = useColors();
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
+    >
+      <View
+        style={[
+          styles.planCard,
+          {
+            backgroundColor: colors.surface,
+            borderColor: selected ? CLOSER_ACCENT : colors.border,
+            borderWidth: selected ? 2.5 : 1.5,
+          },
+        ]}
+      >
+        {badge ? (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badge}</Text>
+          </View>
+        ) : null}
+
+        <View style={styles.planLeft}>
+          <Text style={[styles.planTitle, { color: colors.ink }]}>{title}</Text>
+          {priceMain ? (
+            <View style={styles.planPriceRow}>
+              {priceWas ? (
+                <Text style={[styles.priceWas, { color: colors.inkMuted }]}>
+                  {priceWas}
+                </Text>
+              ) : null}
+              <Text style={[styles.priceMain, { color: colors.ink }]}>
+                {priceMain}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
+        <View style={styles.planRight}>
+          <Text style={[styles.planPriceRight, { color: colors.ink }]}>
+            {priceRight}
+          </Text>
+          <View
+            style={[
+              styles.radio,
+              {
+                borderColor: selected ? CLOSER_ACCENT : colors.borderStrong,
+                backgroundColor: selected ? CLOSER_ACCENT : "transparent",
+              },
+            ]}
+          >
+            {selected ? (
+              <SFSymbol
+                name="checkmark"
+                size={12}
+                color="#FFFFFF"
+                weight="bold"
+              />
+            ) : null}
+          </View>
+        </View>
+      </View>
+    </Pressable>
   );
 }
 
@@ -310,16 +451,7 @@ function FootLink({
   const colors = useColors();
   return (
     <Pressable hitSlop={8} onPress={onPress}>
-      <Text
-        style={{
-          color: colors.inkMuted,
-          fontFamily: "System",
-          fontWeight: "500",
-          fontSize: 12,
-        }}
-      >
-        {label}
-      </Text>
+      <Text style={[styles.footLink, { color: colors.inkMuted }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -327,13 +459,197 @@ function FootLink({
 function FootDot() {
   const colors = useColors();
   return (
-    <View
-      style={{
-        width: 2.5,
-        height: 2.5,
-        borderRadius: 1.25,
-        backgroundColor: colors.borderStrong,
-      }}
-    />
+    <View style={[styles.footDot, { backgroundColor: colors.borderStrong }]} />
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  flex: { flex: 1 },
+  topBar: {
+    paddingHorizontal: 16,
+    height: 44,
+    justifyContent: "center",
+  },
+  closeHit: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scroll: {
+    paddingHorizontal: 28,
+    paddingBottom: 20,
+  },
+  hero: {
+    alignItems: "center",
+    marginTop: 2,
+    marginBottom: 18,
+  },
+  heroWell: {
+    width: 120,
+    height: 120,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  // Reference: heavy centered headline (~26–28), tight leading.
+  headline: {
+    fontFamily: SF_PRO,
+    fontWeight: "800",
+    fontSize: 28,
+    lineHeight: 34,
+    letterSpacing: -0.7,
+    textAlign: "center",
+  },
+  timeline: {
+    marginTop: 32,
+    marginBottom: 32,
+  },
+  timelineRow: {
+    flexDirection: "row",
+    minHeight: 58,
+  },
+  timelineRail: {
+    width: 28,
+    alignItems: "center",
+  },
+  timelineDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  timelineIconOnly: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  timelineLine: {
+    width: 2,
+    flex: 1,
+    marginTop: 4,
+    marginBottom: 4,
+    borderRadius: 1,
+  },
+  timelineCopy: {
+    flex: 1,
+    paddingLeft: 14,
+    paddingBottom: 16,
+    paddingTop: 3,
+  },
+  // Active titles: bold 700 @ 16. Done: semibold + accent + strike.
+  timelineTitle: {
+    fontFamily: SF_PRO,
+    fontSize: 16,
+    lineHeight: 21,
+    letterSpacing: -0.3,
+  },
+  timelineBody: {
+    fontFamily: SF_PRO,
+    fontWeight: "400",
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 3,
+  },
+  plans: {
+    gap: 14,
+  },
+  planCard: {
+    borderRadius: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    minHeight: 68,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  badge: {
+    position: "absolute",
+    top: -11,
+    left: 16,
+    backgroundColor: POPULAR_YELLOW,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  badgeText: {
+    fontFamily: SF_PRO,
+    fontWeight: "800",
+    fontSize: 11,
+    letterSpacing: 0.4,
+    color: "#111111",
+  },
+  planLeft: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  planTitle: {
+    fontFamily: SF_PRO,
+    fontWeight: "700",
+    fontSize: 17,
+    lineHeight: 22,
+    letterSpacing: -0.3,
+  },
+  planPriceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 3,
+  },
+  priceWas: {
+    fontFamily: SF_PRO,
+    fontWeight: "400",
+    fontSize: 14,
+    textDecorationLine: "line-through",
+    marginRight: 6,
+  },
+  priceMain: {
+    fontFamily: SF_PRO,
+    fontWeight: "700",
+    fontSize: 15,
+    letterSpacing: -0.2,
+  },
+  planRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  planPriceRight: {
+    fontFamily: SF_PRO,
+    fontWeight: "700",
+    fontSize: 15,
+    letterSpacing: -0.2,
+  },
+  radio: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  footer: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 10,
+  },
+  footLinks: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 14,
+    gap: 10,
+  },
+  footLink: {
+    fontFamily: SF_PRO,
+    fontWeight: "500",
+    fontSize: 12,
+  },
+  footDot: {
+    width: 2.5,
+    height: 2.5,
+    borderRadius: 1.25,
+  },
+});

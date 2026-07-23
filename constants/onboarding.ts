@@ -16,17 +16,13 @@
  *   3. The Welcome (Screens 11–17)
  *      The Closer wordmark appears for the first time on the
  *      reframe screen. From here the flow narrows to setup:
- *      attribution → notifications → account → time → paywall →
- *      first scripture. Each screen advances the user from
+ *      attribution → notifications → account → quietapps →
+ *      paywall → home. Each screen advances the user from
  *      "interested" to "set up to actually use it tomorrow morning."
  *
- * The progress bar is hidden for Screens 1–10 (the chrome would
- * give the brand away) and revealed from Screen 11 onward; each
- * file controls that locally.
- *
- * Adding a new step here automatically rebalances the progress
- * bar wherever it IS shown. Each screen reads its own position
- * via `progressFor()`.
+ * Progress chrome shows on every step except atmospheric beats
+ * that own the full screen (social-proof). Each screen that
+ * shows the bar reads its own position via `progressFor()`.
  */
 export const ONBOARDING_STEPS = [
   // Attribution first — source capture right after Get Started.
@@ -56,15 +52,8 @@ export const ONBOARDING_STEPS = [
   "rating",
   "notifications",
   "account",
-  // Two consecutive time pickers — the first ("time") schedules
-  // the daily sermon arrival; the second ("studytime") schedules
-  // the deeper Bible-study commitment. Both seed system routines
-  // visible in the Practice/Blocks tab from day one.
-  "time",
-  "studytime",
   "quietapps",
   "paywall",
-  "welcome",
 ] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];

@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Animated, Easing, Text, View } from "react-native";
 import Svg, {
   Circle,
   Defs,
-  Line,
   LinearGradient,
   Path,
   Stop,
@@ -15,28 +14,37 @@ import { useColors } from "@/state/theme";
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-const CHART_WIDTH = 300;
-const CHART_HEIGHT = 168;
-const PAD = { left: 8, right: 12, top: 14, bottom: 30 };
-
-/** Normalized 0..1 — y is "time with God" (higher = more). */
-const WITHOUT_CLOSER = [
-  { x: 0, y: 0.78 },
-  { x: 1, y: 0.62 },
-  { x: 2, y: 0.46 },
-  { x: 3, y: 0.3 },
-] as const;
-
-const WITH_CLOSER = [
-  { x: 0, y: 0.28 },
-  { x: 1, y: 0.48 },
-  { x: 2, y: 0.66 },
-  { x: 3, y: 0.86 },
-] as const;
-
-const X_LABELS = ["Wk 1", "Wk 2", "Wk 3", "Wk 4"] as const;
+const CHART_WIDTH = 320;
+const CHART_HEIGHT = 220;
+const PAD = { left: 10, right: 18, top: 36, bottom: 28 };
 
 type Point = { x: number; y: number };
+
+/** Smooth rising S-curve — Closer protocol (higher = more alert / with God). */
+const CLOSER_CURVE: ReadonlyArray<Point> = [
+  { x: 0, y: 0.12 },
+  { x: 0.22, y: 0.18 },
+  { x: 0.42, y: 0.42 },
+  { x: 0.62, y: 0.72 },
+  { x: 0.82, y: 0.9 },
+  { x: 1, y: 0.94 },
+];
+
+/** Jagged low path — phone-first mornings. */
+const PHONE_CURVE: ReadonlyArray<Point> = [
+  { x: 0, y: 0.22 },
+  { x: 0.1, y: 0.34 },
+  { x: 0.18, y: 0.14 },
+  { x: 0.28, y: 0.3 },
+  { x: 0.36, y: 0.1 },
+  { x: 0.46, y: 0.28 },
+  { x: 0.54, y: 0.12 },
+  { x: 0.64, y: 0.26 },
+  { x: 0.72, y: 0.14 },
+  { x: 0.82, y: 0.22 },
+  { x: 0.9, y: 0.32 },
+  { x: 1, y: 0.48 },
+];
 
 function toPixels(
   points: ReadonlyArray<Point>,
@@ -45,15 +53,12 @@ function toPixels(
 ): Point[] {
   const innerW = width - PAD.left - PAD.right;
   const innerH = height - PAD.top - PAD.bottom;
-  const maxX = points[points.length - 1]?.x ?? 1;
-
   return points.map((p) => ({
-    x: PAD.left + (p.x / maxX) * innerW,
+    x: PAD.left + p.x * innerW,
     y: PAD.top + (1 - p.y) * innerH,
   }));
 }
 
-/** Smooth cubic path through the pixel points. */
 function buildSmoothPath(points: Point[]): string {
   if (points.length === 0) return "";
   if (points.length === 1) return `M ${points[0]!.x} ${points[0]!.y}`;
@@ -68,6 +73,14 @@ function buildSmoothPath(points: Point[]): string {
   return d;
 }
 
+/** Angular polyline for the erratic phone path. */
+function buildJaggedPath(points: Point[]): string {
+  if (points.length === 0) return "";
+  return points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
+    .join(" ");
+}
+
 function estimatePathLength(points: Point[]): number {
   let len = 0;
   for (let i = 1; i < points.length; i++) {
@@ -75,35 +88,41 @@ function estimatePathLength(points: Point[]): number {
     const dy = points[i]!.y - points[i - 1]!.y;
     len += Math.hypot(dx, dy);
   }
-  return len * 1.25;
+  return len * 1.2;
 }
 
 /**
- * Animated two-line chart — time with God trending down without
- * Closer (muted) and up with Closer (orange).
+ * Wayk-style comparison chart — smooth Closer rise vs jagged
+ * phone-first mornings, with a soft "drift zone" wash.
  */
 export function GodTimeComparisonChart() {
   const colors = useColors();
   const reducedMotion = useReducedMotion();
   const progress = useRef(new Animated.Value(reducedMotion ? 1 : 0)).current;
-  const [activeSeries, setActiveSeries] = useState<"both" | "without" | "with">(
-    "both",
-  );
 
-  const withoutPx = useMemo(
-    () => toPixels(WITHOUT_CLOSER, CHART_WIDTH, CHART_HEIGHT),
+  const closerPx = useMemo(
+    () => toPixels(CLOSER_CURVE, CHART_WIDTH, CHART_HEIGHT),
     [],
   );
-  const withPx = useMemo(
-    () => toPixels(WITH_CLOSER, CHART_WIDTH, CHART_HEIGHT),
+  const phonePx = useMemo(
+    () => toPixels(PHONE_CURVE, CHART_WIDTH, CHART_HEIGHT),
     [],
   );
 
-  const withoutPath = useMemo(() => buildSmoothPath(withoutPx), [withoutPx]);
-  const withPath = useMemo(() => buildSmoothPath(withPx), [withPx]);
+  const closerPath = useMemo(() => buildSmoothPath(closerPx), [closerPx]);
+  const phonePath = useMemo(() => buildJaggedPath(phonePx), [phonePx]);
+  const closerLen = useMemo(() => estimatePathLength(closerPx), [closerPx]);
+  const phoneLen = useMemo(() => estimatePathLength(phonePx), [phonePx]);
 
-  const withoutLen = useMemo(() => estimatePathLength(withoutPx), [withoutPx]);
-  const withLen = useMemo(() => estimatePathLength(withPx), [withPx]);
+  const closerEnd = closerPx[closerPx.length - 1]!;
+  const phoneEnd = phonePx[phonePx.length - 1]!;
+
+  // Badge sits along the rising curve (~45% through).
+  const closerBadge = closerPx[Math.floor(closerPx.length * 0.45)]!;
+  // Phone label over an early dip.
+  const phoneBadge = phonePx[3]!;
+
+  const zoneTopY = PAD.top + (1 - 0.38) * (CHART_HEIGHT - PAD.top - PAD.bottom);
 
   useEffect(() => {
     if (reducedMotion) {
@@ -113,217 +132,194 @@ export function GodTimeComparisonChart() {
     progress.setValue(0);
     Animated.timing(progress, {
       toValue: 1,
-      duration: 1600,
-      delay: 300,
+      duration: 1800,
+      delay: 200,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
   }, [progress, reducedMotion]);
 
-  const withoutOffset = progress.interpolate({
+  const closerOffset = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [withoutLen, 0],
+    outputRange: [closerLen, 0],
   });
-  const withOffset = progress.interpolate({
+  const phoneOffset = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [withLen, 0],
+    outputRange: [phoneLen, 0],
   });
 
-  const showWithout = activeSeries === "both" || activeSeries === "without";
-  const showWith = activeSeries === "both" || activeSeries === "with";
+  const inkLine = colors.ink;
 
   return (
-    <View style={{ width: "100%", maxWidth: CHART_WIDTH }}>
+    <View style={{ width: "100%", maxWidth: CHART_WIDTH, alignSelf: "center" }}>
       <View
         style={{
-          borderRadius: 20,
+          borderRadius: 22,
+          backgroundColor: colors.surface,
           borderWidth: 1,
           borderColor: colors.border,
-          backgroundColor: colors.surface,
-          paddingTop: 12,
-          paddingHorizontal: 8,
-          paddingBottom: 10,
+          paddingTop: 18,
+          paddingHorizontal: 14,
+          paddingBottom: 16,
+          shadowColor: "#1A1510",
+          shadowOpacity: 0.08,
+          shadowRadius: 16,
+          shadowOffset: { width: 0, height: 6 },
         }}
       >
         <Text
           style={{
             fontFamily: "System",
-            fontWeight: "600",
-            fontSize: 12,
-            color: colors.inkSecondary,
-            marginLeft: 8,
-            marginBottom: 4,
+            fontWeight: "700",
+            fontSize: 17,
+            letterSpacing: -0.3,
+            color: colors.ink,
+            marginBottom: 8,
+            marginLeft: 4,
           }}
         >
-          Time with God
+          Morning with God
         </Text>
 
-        <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
-          <Defs>
-            <LinearGradient id="closerFill" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={CLOSER_ACCENT} stopOpacity={0.22} />
-              <Stop offset="1" stopColor={CLOSER_ACCENT} stopOpacity={0} />
-            </LinearGradient>
-          </Defs>
+        <View style={{ position: "relative" }}>
+          <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
+            <Defs>
+              <LinearGradient id="driftZone" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={CLOSER_ACCENT} stopOpacity={0} />
+                <Stop offset="0.35" stopColor={CLOSER_ACCENT} stopOpacity={0.06} />
+                <Stop offset="1" stopColor={CLOSER_ACCENT} stopOpacity={0.16} />
+              </LinearGradient>
+            </Defs>
 
-          {/* Horizontal guides */}
-          {[0.25, 0.5, 0.75].map((y) => {
-            const py =
-              PAD.top + (1 - y) * (CHART_HEIGHT - PAD.top - PAD.bottom);
-            return (
-              <Line
-                key={y}
-                x1={PAD.left}
-                y1={py}
-                x2={CHART_WIDTH - PAD.right}
-                y2={py}
-                stroke={colors.border}
-                strokeWidth={1}
-                strokeDasharray="4 6"
-              />
-            );
-          })}
-
-          {/* Area under Closer line */}
-          {showWith ? (
+            {/* Soft drift-zone wash across the lower band */}
             <Path
-              d={`${withPath} L ${withPx[withPx.length - 1]!.x} ${
+              d={`M ${PAD.left} ${zoneTopY} L ${CHART_WIDTH - PAD.right} ${zoneTopY} L ${
+                CHART_WIDTH - PAD.right
+              } ${CHART_HEIGHT - PAD.bottom} L ${PAD.left} ${
                 CHART_HEIGHT - PAD.bottom
-              } L ${withPx[0]!.x} ${CHART_HEIGHT - PAD.bottom} Z`}
-              fill="url(#closerFill)"
-              opacity={0.9}
+              } Z`}
+              fill="url(#driftZone)"
             />
-          ) : null}
 
-          {showWithout ? (
+            <SvgText
+              x={CHART_WIDTH - PAD.right - 8}
+              y={CHART_HEIGHT - PAD.bottom - 18}
+              fill={CLOSER_ACCENT}
+              opacity={0.45}
+              fontSize={11}
+              fontWeight="700"
+              letterSpacing={1.2}
+              textAnchor="end"
+            >
+              DRIFT ZONE
+            </SvgText>
+
             <AnimatedPath
-              d={withoutPath}
-              stroke={colors.inkSubtle}
+              d={phonePath}
+              stroke={CLOSER_ACCENT}
               strokeWidth={2.5}
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeDasharray={`${withoutLen} ${withoutLen}`}
-              strokeDashoffset={withoutOffset}
+              strokeDasharray={`${phoneLen} ${phoneLen}`}
+              strokeDashoffset={phoneOffset}
             />
-          ) : null}
 
-          {showWith ? (
             <AnimatedPath
-              d={withPath}
-              stroke={CLOSER_ACCENT}
-              strokeWidth={3}
+              d={closerPath}
+              stroke={inkLine}
+              strokeWidth={4}
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeDasharray={`${withLen} ${withLen}`}
-              strokeDashoffset={withOffset}
+              strokeDasharray={`${closerLen} ${closerLen}`}
+              strokeDashoffset={closerOffset}
             />
-          ) : null}
 
-          {showWithout
-            ? withoutPx.map((p, i) => (
-                <Circle
-                  key={`w-${i}`}
-                  cx={p.x}
-                  cy={p.y}
-                  r={4}
-                  fill={colors.surface}
-                  stroke={colors.inkSubtle}
-                  strokeWidth={2}
-                />
-              ))
-            : null}
+            <Circle
+              cx={phoneEnd.x}
+              cy={phoneEnd.y}
+              r={6}
+              fill={colors.surface}
+              stroke={CLOSER_ACCENT}
+              strokeWidth={2.5}
+            />
+            <Circle cx={closerEnd.x} cy={closerEnd.y} r={6} fill={inkLine} />
+          </Svg>
 
-          {showWith
-            ? withPx.map((p, i) => (
-                <Circle
-                  key={`c-${i}`}
-                  cx={p.x}
-                  cy={p.y}
-                  r={4.5}
-                  fill={CLOSER_ACCENT}
-                  stroke={colors.surface}
-                  strokeWidth={2}
-                />
-              ))
-            : null}
+          {/* Closer Protocol pill — overlays the rising curve */}
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: Math.max(8, closerBadge.x - 58),
+              top: Math.max(4, closerBadge.y - 44),
+              backgroundColor: inkLine,
+              borderRadius: 999,
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+            }}
+          >
+            <Text style={{ color: "#FFFFFF", fontSize: 12 }}>✦</Text>
+            <Text
+              style={{
+                color: "#FFFFFF",
+                fontFamily: "System",
+                fontWeight: "700",
+                fontSize: 12,
+                letterSpacing: -0.1,
+              }}
+            >
+              Closer Protocol
+            </Text>
+          </View>
 
-          {X_LABELS.map((label, i) => {
-            const x = withoutPx[i]?.x ?? 0;
-            return (
-              <SvgText
-                key={label}
-                x={x}
-                y={CHART_HEIGHT - 8}
-                fill={colors.inkMuted}
-                fontSize={11}
-                fontWeight="500"
-                textAnchor="middle"
-              >
-                {label}
-              </SvgText>
-            );
-          })}
-        </Svg>
-      </View>
+          {/* Phone-first pill */}
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: Math.max(8, phoneBadge.x - 4),
+              top: Math.min(phoneBadge.y + 8, CHART_HEIGHT - 48),
+              backgroundColor: colors.surface,
+              borderRadius: 999,
+              borderWidth: 1,
+              borderColor: "rgba(255, 67, 38, 0.35)",
+              paddingHorizontal: 10,
+              paddingVertical: 5,
+            }}
+          >
+            <Text
+              style={{
+                color: CLOSER_ACCENT,
+                fontFamily: "System",
+                fontWeight: "600",
+                fontSize: 11,
+              }}
+            >
+              Phone first
+            </Text>
+          </View>
+        </View>
 
-      {/* Interactive legend — tap to isolate a series */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          gap: 20,
-          marginTop: 14,
-        }}
-      >
-        <LegendChip
-          label="Without Closer"
-          color={colors.inkSubtle}
-          active={showWithout}
-          onPress={() =>
-            setActiveSeries((s) => (s === "without" ? "both" : "without"))
-          }
-        />
-        <LegendChip
-          label="With Closer"
-          color={CLOSER_ACCENT}
-          active={showWith}
-          onPress={() => setActiveSeries((s) => (s === "with" ? "both" : "with"))}
-        />
+        <Text
+          style={{
+            marginTop: 10,
+            textAlign: "center",
+            fontFamily: "System",
+            fontWeight: "400",
+            fontSize: 13,
+            lineHeight: 18,
+            color: colors.inkSecondary,
+            paddingHorizontal: 8,
+          }}
+        >
+          Avoid the drift zone. Closer puts God first — before the noise.
+        </Text>
       </View>
     </View>
-  );
-}
-
-function LegendChip({
-  label,
-  color,
-  active,
-  onPress,
-}: {
-  label: string;
-  color: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  const colors = useColors();
-
-  return (
-    <Text
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      style={{
-        fontFamily: "System",
-        fontWeight: active ? "600" : "500",
-        fontSize: 13,
-        color: active ? colors.ink : colors.inkMuted,
-        opacity: active ? 1 : 0.55,
-      }}
-    >
-      <Text style={{ color }}>● </Text>
-      {label}
-    </Text>
   );
 }

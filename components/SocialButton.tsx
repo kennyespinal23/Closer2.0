@@ -2,6 +2,8 @@ import { Platform, Pressable, Text, View } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import Svg, { Path } from "react-native-svg";
 import { minTouchTarget, spacing } from "@/constants/spacing";
+import { CLOSER_ACCENT } from "@/constants/theme";
+import { typography } from "@/lib/typography";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
 type Provider = "apple" | "google" | "email";
@@ -9,6 +11,12 @@ type Provider = "apple" | "google" | "email";
 type SocialButtonProps = {
   provider: Provider;
   onPress?: () => void;
+  /**
+   * `"accent"` — filled Closer accent pill (used for the primary
+   * Apple CTA on the signup screen). `"soft"` — light fill + border
+   * (Google / secondary). `"system"` — native Apple button on iOS.
+   */
+  variant?: "system" | "soft" | "accent";
 };
 
 const labelByProvider: Record<Provider, string> = {
@@ -17,8 +25,27 @@ const labelByProvider: Record<Provider, string> = {
   email: "Continue with Email",
 };
 
-function ProviderGlyph({ provider }: { provider: Provider }) {
-  const colors = useColors();
+function AppleGlyph({ color }: { color: string }) {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M16.365 0c-.9.05-2 .62-2.64 1.35-.58.66-1.09 1.72-.9 2.73 1 .07 2.03-.52 2.66-1.25.59-.68 1.05-1.73.88-2.83zM19.94 17.2c-.5 1.14-.74 1.65-1.39 2.66-.9 1.4-2.17 3.14-3.75 3.15-1.4.01-1.76-.91-3.66-.9-1.9.01-2.3.92-3.7.91-1.58-.02-2.79-1.59-3.69-2.99C1.8 17.1.6 12.7 2.5 9.68c.95-1.52 2.45-2.48 4.15-2.5 1.3-.02 2.53.88 3.66.88 1.12 0 2.87-1.09 4.84-.93.82.03 3.13.33 4.61 2.5-.12.07-2.75 1.61-2.72 4.8.03 3.8 3.34 5.07 3.4 5.1-.03.09-.52 1.8-1.5 3.67z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
+
+function ProviderGlyph({
+  provider,
+  ink,
+}: {
+  provider: Provider;
+  ink: string;
+}) {
+  if (provider === "apple") {
+    return <AppleGlyph color={ink} />;
+  }
   if (provider === "google") {
     return (
       <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
@@ -41,18 +68,17 @@ function ProviderGlyph({ provider }: { provider: Provider }) {
       </Svg>
     );
   }
-  // email — simple envelope outline in ink
   return (
     <Svg width={20} height={16} viewBox="0 0 24 20" fill="none">
       <Path
         d="M3 4h18v12H3z"
-        stroke={colors.ink}
+        stroke={ink}
         strokeWidth={1.8}
         strokeLinejoin="round"
       />
       <Path
         d="M3 5l9 7 9-7"
-        stroke={colors.ink}
+        stroke={ink}
         strokeWidth={1.8}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -62,15 +88,23 @@ function ProviderGlyph({ provider }: { provider: Provider }) {
 }
 
 /**
- * Auth provider button. Apple uses the system
- * `ASAuthorizationAppleIDButton` (App Store requirement). Google /
- * email stay as Closer-styled rows — no equivalent native standard.
+ * Auth provider button. Apple defaults to the system
+ * `ASAuthorizationAppleIDButton` (App Store requirement) unless
+ * `variant` is `"soft"` or `"accent"` for branded onboarding CTAs.
  */
-export function SocialButton({ provider, onPress }: SocialButtonProps) {
+export function SocialButton({
+  provider,
+  onPress,
+  variant = "system",
+}: SocialButtonProps) {
   const colors = useColors();
   const scheme = useResolvedScheme();
+  const useNativeApple =
+    provider === "apple" &&
+    Platform.OS === "ios" &&
+    variant === "system";
 
-  if (provider === "apple" && Platform.OS === "ios") {
+  if (useNativeApple) {
     return (
       <AppleAuthentication.AppleAuthenticationButton
         buttonType={
@@ -81,7 +115,7 @@ export function SocialButton({ provider, onPress }: SocialButtonProps) {
             ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
             : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
         }
-        cornerRadius={spacing[16]}
+        cornerRadius={999}
         style={{
           width: "100%",
           height: Math.max(56, minTouchTarget),
@@ -91,37 +125,44 @@ export function SocialButton({ provider, onPress }: SocialButtonProps) {
     );
   }
 
+  const isAccent = variant === "accent";
+  const labelColor = isAccent ? "#FFFFFF" : colors.ink;
+  const height = Math.max(56, minTouchTarget);
+
+  // Visual chrome + hit target live on an inner View — NativeWind
+  // drops backgroundColor / layout when Pressable uses function-form style.
   return (
     <Pressable
       onPress={onPress}
+      disabled={!onPress}
       accessibilityRole="button"
       accessibilityLabel={labelByProvider[provider]}
-      style={{
-        minHeight: Math.max(56, minTouchTarget),
-        width: "100%",
-        borderRadius: spacing[16],
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: spacing[16],
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-      }}
+      accessibilityState={{ disabled: !onPress }}
+      style={({ pressed }) => ({
+        opacity: !onPress ? 0.55 : pressed ? 0.92 : 1,
+      })}
     >
-      <View style={{ marginRight: spacing[12] }}>
-        <ProviderGlyph provider={provider} />
-      </View>
-      <Text
+      <View
         style={{
-          color: colors.ink,
-          fontSize: 16,
-          fontFamily: "System",
-          fontWeight: "600",
+          minHeight: height,
+          width: "100%",
+          borderRadius: 999,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          paddingHorizontal: spacing[16],
+          backgroundColor: isAccent ? CLOSER_ACCENT : colors.surface,
+          borderWidth: isAccent ? 0 : 1,
+          borderColor: colors.border,
         }}
       >
-        {labelByProvider[provider]}
-      </Text>
+        <View style={{ marginRight: spacing[12] }}>
+          <ProviderGlyph provider={provider} ink={labelColor} />
+        </View>
+        <Text style={[typography.button, { color: labelColor }]}>
+          {labelByProvider[provider]}
+        </Text>
+      </View>
     </Pressable>
   );
 }

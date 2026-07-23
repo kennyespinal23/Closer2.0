@@ -4,70 +4,75 @@ import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { GodTimeComparisonChart } from "@/components/GodTimeComparisonChart";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
+import { progressFor } from "@/constants/onboarding";
 import { useOnboarding } from "@/state/onboarding";
+import { useColors } from "@/state/theme";
 
 /**
- * Here's the good news — time with God trends up with Closer.
+ * Proof beat — Closer mornings vs phone-first drift.
  */
 export default function ProofScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { answers } = useOnboarding();
   const firstName = (answers.name || "").trim().split(" ")[0];
 
   const eyebrow = firstName
-    ? `${firstName.toUpperCase()} — HERE'S THE GOOD NEWS`
-    : "HERE'S THE GOOD NEWS";
+    ? `${firstName.toUpperCase()} — HERE'S THE DIFFERENCE`
+    : "HERE'S THE DIFFERENCE";
 
   return (
-    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
-      <OnboardingChrome mode="back-only" />
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      edges={["top", "bottom"]}
+    >
+      <OnboardingChrome
+        mode="with-progress"
+        progress={progressFor("proof")}
+      />
 
-      <View className="flex-1 px-6">
+      <View style={{ flex: 1, paddingHorizontal: 24 }}>
         <Text
-          className="text-ink-muted mt-3"
           style={{
+            marginTop: 8,
             fontFamily: "System",
             fontWeight: "700",
             fontSize: 11,
             letterSpacing: 2.4,
             textTransform: "uppercase",
+            color: colors.inkMuted,
           }}
         >
           {eyebrow}
         </Text>
 
         <Text
-          className="text-ink mt-2"
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            fontSize: 26,
-            lineHeight: 32,
-            letterSpacing: -0.5,
-          }}
           accessibilityRole="header"
+          style={{
+            marginTop: 10,
+            fontFamily: "System",
+            fontWeight: "800",
+            fontSize: 28,
+            lineHeight: 34,
+            letterSpacing: -0.6,
+            color: colors.ink,
+          }}
         >
-          Put God first, and time with Him grows.
+          Start with God.{"\n"}Skip the drift.
         </Text>
 
-        <View className="flex-1 items-center justify-center">
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingVertical: 12,
+          }}
+        >
           <GodTimeComparisonChart />
         </View>
 
-        <Text
-          className="text-ink-muted text-center mb-4"
-          style={{
-            fontFamily: "System",
-            fontWeight: "400",
-            fontSize: 14,
-            lineHeight: 20,
-          }}
-        >
-          Without Closer, mornings drift. With Closer, the habit
-          compounds week after week.
-        </Text>
-
-        <View className="pb-2">
+        <View style={{ paddingBottom: 10 }}>
           <Button
             label="Continue"
             onPress={() => router.push("/onboarding/rating")}

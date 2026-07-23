@@ -13,6 +13,8 @@ import { useRouter } from "expo-router";
 import Svg, { Circle } from "react-native-svg";
 import { CLOSER_ACCENT, LIGHT_COLORS } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
+import { progressFor } from "@/constants/onboarding";
+import { OnboardingChrome } from "@/components/OnboardingChrome";
 import { useOnboarding } from "@/state/onboarding";
 import { useColors } from "@/state/theme";
 
@@ -120,6 +122,10 @@ export default function CreatingJourneyScreen() {
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar style="dark" />
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+        <OnboardingChrome
+          mode="with-progress"
+          progress={progressFor("creating-journey")}
+        />
         <View style={styles.top}>
           <View style={styles.ringWrap}>
             <Svg width={RING_SIZE} height={RING_SIZE}>

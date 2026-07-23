@@ -7,6 +7,7 @@ import * as StoreReview from "expo-store-review";
 import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
+import { progressFor } from "@/constants/onboarding";
 import { useOnboarding } from "@/state/onboarding";
 import { useColors } from "@/state/theme";
 
@@ -79,7 +80,10 @@ export default function RatingScreen() {
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
-      <OnboardingChrome mode="back-only" />
+      <OnboardingChrome
+        mode="with-progress"
+        progress={progressFor("rating")}
+      />
 
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}

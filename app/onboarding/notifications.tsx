@@ -1,47 +1,42 @@
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
-import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
 import { progressFor } from "@/constants/onboarding";
-import { useOnboarding } from "@/state/onboarding";
-import { useColors } from "@/state/theme";
+import { CLOSER_ACCENT, LIGHT_COLORS } from "@/constants/theme";
 import { requestNotificationPermission } from "@/lib/notifications";
+import { useOnboarding } from "@/state/onboarding";
 
 /**
- * Screen 13 — "Let us show up before Instagram does."
- *
- * The notification permission ask, decoupled from the time pick.
- * On the old flow, the same screen did both; the new spec splits
- * them so the permission ask is its own beat — the user sees a
- * stylized preview of the daily notification, agrees to receive
- * one, and only THEN picks what time it should arrive (Screen 14).
- *
- * Splitting it has two benefits:
- *
- *   1. Higher permission acceptance. A user who's already
- *      committed to "yes, send me this" is more receptive to the
- *      iOS permission dialog when it appears as a confirmation
- *      step, rather than a pre-condition to picking a time.
- *
- *   2. Clearer mental model. The notification IS the thing — the
- *      daily 5-minute trigger is what the app is. Giving it its
- *      own screen frames it as the product, not as a setting.
- *
- * We do NOT pick a time here. We pre-stage the user's intent
- * (`notificationsEnabled` true/false) and then advance to the
- * time picker, which will use that flag to decide whether to
- * actually schedule when the user confirms their time.
+ * Notifications ask — same iPhone-mock layout as How Closer works:
+ * large phone outline (cream fill + bottom fade), headline + body
+ * under it, primary CTA.
  */
+
+const PAGE_BG = LIGHT_COLORS.bg;
+const PHONE_BORDER = "#111111";
+const INK = "#0F0F0F";
+const INK_SECONDARY = "#8A8A8E";
+
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { height: winH } = useWindowDimensions();
   const { answers, setAnswer } = useOnboarding();
   const [submitting, setSubmitting] = useState(false);
 
   const firstName = (answers.name || "").trim().split(" ")[0] || "Friend";
+
+  const phoneH = Math.min(500, Math.max(420, Math.round(winH * 0.56)));
+  const phoneW = Math.round(phoneH * 0.72);
 
   const handleTurnOn = async () => {
     if (submitting) return;
@@ -50,8 +45,6 @@ export default function NotificationsScreen() {
       const status = await requestNotificationPermission();
       setAnswer("notificationsEnabled", status === "granted");
     } catch {
-      // Treat any error as "user declined" — we still want to
-      // advance to the time picker; settings has a recovery path.
       setAnswer("notificationsEnabled", false);
     } finally {
       setSubmitting(false);
@@ -65,190 +58,268 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={[styles.root, { backgroundColor: PAGE_BG }]}
+      edges={["top", "bottom"]}
+    >
       <OnboardingChrome
         mode="with-progress"
         progress={progressFor("notifications")}
       />
 
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View className="flex-1 px-6">
-          <FadeIn delayMs={0}>
-            <Text
-              className="text-ink text-[28px] leading-[36px] tracking-[-0.5px] mt-4"
-              style={{ fontFamily: "System", fontWeight: "700" }}
-            >
-              Let us show up{"\n"}before Instagram does.
-            </Text>
-          </FadeIn>
+      <View style={styles.upper}>
+        <NotificationPhone
+          width={phoneW}
+          height={phoneH}
+          firstName={firstName}
+        />
+      </View>
 
-          <FadeIn delayMs={600}>
-            <Text
-              className="text-ink-muted text-[15px] leading-[22px] mt-3"
-              style={{ fontFamily: "System", fontWeight: "400" }}
-            >
-              One notification. Every morning.{"\n"}That&apos;s all we&apos;ll ever send.
-            </Text>
-          </FadeIn>
+      <View style={styles.lower}>
+        <Text style={styles.title}>Enable notifications</Text>
+        <Text style={styles.body}>
+          One quiet reminder when today's reading is ready — before
+          the noise starts.
+        </Text>
+      </View>
 
-          {/* Stylized notification preview card. Looks like an iOS
-              notification: app icon chip on the left, app name +
-              timestamp at the top, body text below. Uses the
-              user's actual name. */}
-          <FadeIn delayMs={1200}>
-            <View className="mt-10">
-              <NotificationPreview firstName={firstName} />
-            </View>
-          </FadeIn>
+      <View style={styles.spacer} />
 
-          <FadeIn delayMs={1700}>
-            <Text
-              className="text-ink-muted text-[14px] leading-[20px] text-center mt-8"
-              style={{ fontFamily: "System", fontWeight: "500" }}
-            >
-              Before the noise starts.
-            </Text>
-          </FadeIn>
-
-          <View className="flex-1 min-h-[24px]" />
-
-          {/* Bottom block. Originally `pt-6 pb-2`, which on smaller
-              iPhones left "I'll do this later" sitting right on
-              top of the home indicator (the SafeAreaView's bottom
-              inset accounts for the indicator itself, but the link
-              had no breathing room above it). Bumped to `pb-8` so
-              there's a comfortable gutter on every screen size. */}
-          <FadeIn delayMs={2200}>
-            <View className="pt-6 pb-8">
-              <Button
-                label={submitting ? "Asking…" : "Turn on notifications"}
-                onPress={handleTurnOn}
-                disabled={submitting}
-              />
-
-              {/* `alignSelf: "center"` set inside Pressable's
-                  function-form style isn't reliably honoured (the
-                  link rendered flush-left on iOS), so we lift the
-                  centering onto a dedicated wrapper View, which
-                  always wins. */}
-              <View className="items-center mt-3">
-                {/* Padding via className — Pressable function-form
-                    style is dropped on iOS RN 0.81. hitSlop adds
-                    extra touch tolerance. */}
-                <Pressable
-                  hitSlop={12}
-                  onPress={handleSkip}
-                  disabled={submitting}
-                  className="py-2.5 px-4 active:opacity-50"
-                  style={submitting ? { opacity: 0.5 } : undefined}
-                >
-                  <Text
-                    className="text-select text-[14px]"
-                    style={{ fontFamily: "System", fontWeight: "500" }}
-                  >
-                    I&apos;ll do this later
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          </FadeIn>
-        </View>
-      </ScrollView>
+      <View style={styles.footer}>
+        <Button
+          label={submitting ? "Asking…" : "Enable Notifications"}
+          onPress={handleTurnOn}
+          disabled={submitting}
+        />
+        {/* Layout on inner View — Pressable function-form drops alignSelf. */}
+        <Pressable
+          onPress={handleSkip}
+          disabled={submitting}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="I'll do this later"
+          style={({ pressed }) => ({
+            opacity: submitting ? 0.4 : pressed ? 0.55 : 1,
+          })}
+        >
+          <View style={styles.skipWrap}>
+            <Text style={styles.skip}>I'll do this later</Text>
+          </View>
+        </Pressable>
+      </View>
     </SafeAreaView>
   );
 }
 
-/**
- * iOS-style notification preview card. Not interactive — purely
- * illustrative. The body text uses the user's first name so the
- * preview reads as "this is what YOUR daily notification looks
- * like" instead of a generic mock.
- */
-function NotificationPreview({ firstName }: { firstName: string }) {
-  const colors = useColors();
+function NotificationPhone({
+  width,
+  height,
+  firstName,
+}: {
+  width: number;
+  height: number;
+  firstName: string;
+}) {
+  const fadeH = Math.round(height * 0.16);
+
   return (
-    <View
-      style={{
-        backgroundColor: colors.surface,
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: colors.border,
-        paddingVertical: 14,
-        paddingHorizontal: 14,
-        flexDirection: "row",
-        alignItems: "flex-start",
-        // Soft shadow on iOS, ignored on Android. Adds just enough
-        // elevation to read as "notification card" rather than
-        // "settings row."
-        shadowColor: "#000",
-        shadowOpacity: 0.18,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 4 },
-      }}
-    >
-      {/* App icon chip — Closer brand glyph, ink-fill rounded
-          square. Same look as a real iOS notification icon slot. */}
+    <View style={{ width, height, alignItems: "center" }}>
       <View
         style={{
-          width: 38,
-          height: 38,
-          borderRadius: 9,
-          backgroundColor: colors.primary,
-          alignItems: "center",
-          justifyContent: "center",
-          marginRight: 12,
+          width,
+          height,
+          borderRadius: 36,
+          borderWidth: 2.5,
+          borderColor: PHONE_BORDER,
+          backgroundColor: PAGE_BG,
+          overflow: "hidden",
+          paddingTop: Math.round(height * 0.1),
+          paddingHorizontal: 16,
         }}
       >
-        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M12 21s-7-4.5-7-11a5 5 0 019-3 5 5 0 019 3c0 6.5-7 11-7 11z"
-            fill={colors.primaryFg}
-          />
-        </Svg>
+        <Text style={styles.date}>Monday, June 16</Text>
+        <Text style={styles.clock}>7:00</Text>
+
+        <View style={styles.notifCard}>
+          <View style={styles.notifRow}>
+            <View style={styles.appIcon}>
+              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M12 21s-7-4.5-7-11a5 5 0 019-3 5 5 0 019 3c0 6.5-7 11-7 11z"
+                  fill="#FFFFFF"
+                />
+              </Svg>
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={styles.notifMeta}>
+                <Text style={styles.notifApp}>CLOSER</Text>
+                <Text style={styles.notifNow}>now</Text>
+              </View>
+              <Text style={styles.notifTitle}>
+                Your word for today is ready.
+              </Text>
+              <Text style={styles.notifBody} numberOfLines={2}>
+                Hi {firstName} — five minutes with God before anything else.
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
 
-      <View style={{ flex: 1 }}>
-        <View
-          style={{ flexDirection: "row", alignItems: "center" }}
-        >
-          <Text
-            style={{
-              color: colors.ink,
-              fontFamily: "System",
-              fontWeight: "700",
-              fontSize: 14,
-            }}
-          >
-            Closer
-          </Text>
-          <Text
-            style={{
-              color: colors.inkMuted,
-              fontFamily: "System",
-              fontWeight: "500",
-              fontSize: 12,
-              marginLeft: 8,
-            }}
-          >
-            · now
-          </Text>
-        </View>
-        <Text
-          style={{
-            color: colors.ink,
-            fontFamily: "System",
-            fontWeight: "500",
-            fontSize: 14,
-            lineHeight: 20,
-            marginTop: 2,
-          }}
-        >
-          {firstName}, your word for today is ready.
-        </Text>
-      </View>
+      <Svg
+        pointerEvents="none"
+        width={width}
+        height={fadeH}
+        style={{ position: "absolute", left: 0, bottom: 0 }}
+      >
+        <Defs>
+          <LinearGradient id="notifPhoneFade" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0%" stopColor={PAGE_BG} stopOpacity="0" />
+            <Stop offset="40%" stopColor={PAGE_BG} stopOpacity="0.25" />
+            <Stop offset="75%" stopColor={PAGE_BG} stopOpacity="0.7" />
+            <Stop offset="100%" stopColor={PAGE_BG} stopOpacity="1" />
+          </LinearGradient>
+        </Defs>
+        <Rect
+          x="0"
+          y="0"
+          width={width}
+          height={fadeH}
+          fill="url(#notifPhoneFade)"
+        />
+      </Svg>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  upper: {
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingTop: 8,
+  },
+  lower: {
+    marginTop: 40,
+    paddingHorizontal: 36,
+    alignItems: "center",
+  },
+  title: {
+    fontFamily: "System",
+    fontWeight: "800",
+    fontSize: 34,
+    lineHeight: 40,
+    letterSpacing: -0.9,
+    color: INK,
+    textAlign: "center",
+  },
+  body: {
+    marginTop: 12,
+    fontFamily: "System",
+    fontWeight: "400",
+    fontSize: 16,
+    lineHeight: 23,
+    color: INK_SECONDARY,
+    textAlign: "center",
+    maxWidth: 300,
+  },
+  spacer: {
+    flex: 1,
+    minHeight: 8,
+  },
+  footer: {
+    paddingHorizontal: 24,
+    paddingBottom: 10,
+    alignItems: "stretch",
+  },
+  skipWrap: {
+    marginTop: 12,
+    width: "100%",
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+  },
+  skip: {
+    fontFamily: "System",
+    fontWeight: "500",
+    fontSize: 14,
+    color: INK_SECONDARY,
+    textAlign: "center",
+  },
+  date: {
+    fontFamily: "System",
+    fontWeight: "500",
+    fontSize: 14,
+    color: INK_SECONDARY,
+    textAlign: "center",
+  },
+  clock: {
+    fontFamily: "System",
+    fontWeight: "400",
+    fontSize: 56,
+    lineHeight: 62,
+    letterSpacing: -1.4,
+    color: "rgba(15, 15, 15, 0.45)",
+    textAlign: "center",
+    marginTop: 2,
+  },
+  notifCard: {
+    marginTop: 22,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.06)",
+    padding: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  notifRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  appIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: CLOSER_ACCENT,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notifMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  notifApp: {
+    fontFamily: "System",
+    fontWeight: "600",
+    fontSize: 11,
+    letterSpacing: 0.4,
+    color: INK_SECONDARY,
+  },
+  notifNow: {
+    fontFamily: "System",
+    fontWeight: "400",
+    fontSize: 11,
+    color: INK_SECONDARY,
+  },
+  notifTitle: {
+    marginTop: 2,
+    fontFamily: "System",
+    fontWeight: "700",
+    fontSize: 14,
+    letterSpacing: -0.2,
+    color: INK,
+  },
+  notifBody: {
+    marginTop: 2,
+    fontFamily: "System",
+    fontWeight: "400",
+    fontSize: 13,
+    lineHeight: 17,
+    color: INK_SECONDARY,
+  },
+});

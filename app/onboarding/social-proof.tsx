@@ -61,10 +61,10 @@ export default function SocialProofScreen() {
           </FadeIn>
           <View style={styles.midSpacerBottom} />
 
-          {/* Bottom — Continue */}
+          {/* Bottom — into How Closer works */}
           <FadeIn delayMs={700}>
             <Button
-              label="Continue"
+              label="Show me how it works"
               onPress={() => router.push("/onboarding/howitworks")}
             />
           </FadeIn>

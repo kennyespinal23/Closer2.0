@@ -3,7 +3,6 @@ import {
   Animated,
   Easing,
   Image,
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -11,9 +10,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import Svg, { Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { Button } from "@/components/Button";
+import { OnboardingChrome } from "@/components/OnboardingChrome";
 import { ScriptureStickerNote } from "@/components/ScriptureStickerNote";
+import { progressFor } from "@/constants/onboarding";
 import { CLOSER_ACCENT, LIGHT_COLORS } from "@/constants/theme";
 import { SOCIAL_APP_ICON_SOURCES } from "@/lib/socialAppIconAssets";
 
@@ -107,31 +108,11 @@ export default function HowItWorksScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: PAGE_BG }]} edges={["top", "bottom"]}>
-      <View style={styles.topBar}>
-        <Pressable
-          onPress={goBack}
-          hitSlop={14}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          style={({ pressed }) => ({
-            width: 44,
-            height: 44,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: pressed ? 0.55 : 1,
-          })}
-        >
-          <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M15 18l-6-6 6-6"
-              stroke={CLOSER_ACCENT}
-              strokeWidth={2.4}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
-        </Pressable>
-      </View>
+      <OnboardingChrome
+        mode="with-progress"
+        progress={progressFor("howitworks")}
+        onBack={goBack}
+      />
 
       {/* Phone — fixed height, not flex-crushed into the copy */}
       <View style={styles.upper}>
@@ -533,11 +514,6 @@ function UnlockInside() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  topBar: {
-    paddingHorizontal: 12,
-    height: 44,
-    justifyContent: "center",
-  },
   // Phone sized by itself — no flex squeeze into the copy below.
   upper: {
     alignItems: "center",

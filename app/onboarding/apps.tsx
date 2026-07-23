@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { BrandGlyph } from "@/components/BrandGlyph";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
+import { progressFor } from "@/constants/onboarding";
 import { useOnboarding } from "@/state/onboarding";
 
 /**
@@ -89,7 +90,10 @@ export default function AppsScreen() {
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
-      <OnboardingChrome mode="back-only" />
+      <OnboardingChrome
+        mode="with-progress"
+        progress={progressFor("apps")}
+      />
 
       <ScrollView
         // Bottom padding leaves room for the sticky Continue bar

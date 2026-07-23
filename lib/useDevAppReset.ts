@@ -58,7 +58,7 @@ export function useDevAppReset() {
 
   const restartApp = useCallback(() => {
     wipeAllState();
-    router.replace("/onboarding/name");
+    router.replace("/onboarding/attribution");
   }, [router, wipeAllState]);
 
   return { resetApp, restartApp };

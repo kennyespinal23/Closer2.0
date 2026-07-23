@@ -29,40 +29,31 @@
  * via `progressFor()`.
  */
 export const ONBOARDING_STEPS = [
-  // Name leads — captured right after Get Started.
+  // Attribution first — source capture right after Get Started.
+  "attribution",
+  // Name — captured before demographics + Faith Check In.
   "name",
-  // The Audit — pre-brand, full-bleed black canvas.
-  "stat",
-  "apps",
+  // Age + gender.
+  "about-you",
+  // Faith Check In — replaces the old iMessage chat beat.
+  "faith-check-in",
+  // Social proof — atmospheric testimonial beat.
+  "social-proof",
+  // How Closer works — 3-step block → read → unlock walkthrough.
+  "howitworks",
+  // Personalize intro — bridge into the personalization questions.
+  "personalize",
+  "denomination",
+  // Particular struggle / sin.
+  "struggle",
+  // Phone time before getting out of bed.
   "scrolltime",
   "waketime",
-  // The Pattern — spiritual diagnosis of what the user just
-  // admitted. Sits between the last audit input and the fake-
-  // loader, so the calculating screen frames "your numbers" as a
-  // diagnosis we already named, not just stats we pulled out of
-  // a hat.
-  "pattern",
-  "calculating",
-  // The Pivot — personalized punch, anchor, proof.
-  "punch",
-  "chat",
-  "attention",
-  "protected",
-  "loop",
-  "why",
+  // Building their personal Closer journey (progress + social proof).
+  "creating-journey",
+  "apps",
   "proof",
   "rating",
-  // The Welcome — Closer is named for the first time.
-  "reframe",
-  // How it works — interactive 3-step walkthrough of the
-  // block → read → unlock loop. Modeled after Opal / Forest /
-  // One Sec's mechanism explainers. Lives RIGHT AFTER the reframe
-  // (which named the brand) and BEFORE attribution (which begins
-  // the practical setup half) — so the user finishes the
-  // emotional half with the mechanism in their hands, not just
-  // the value prop.
-  "howitworks",
-  "attribution",
   "notifications",
   "account",
   // Two consecutive time pickers — the first ("time") schedules

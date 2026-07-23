@@ -108,6 +108,20 @@ export type FaithStage =
   | "newToFaith"
   | "exploring";
 
+/**
+ * How close the user has felt to God lately — captured on
+ * /onboarding/faith-check-in.
+ */
+export type FaithCloseness =
+  | "veryClose"
+  | "close"
+  | "neutral"
+  | "distant"
+  | "far";
+
+/** Sex — captured on /onboarding/about-you. */
+export type Gender = "female" | "male" | "other";
+
 export type OnboardingAnswers = {
   name: string;
   /**
@@ -117,6 +131,15 @@ export type OnboardingAnswers = {
    * Picked on the Profile tab; not required during onboarding.
    */
   avatarId?: string;
+  /** Year of birth from /onboarding/about-you. */
+  birthYear?: number;
+  /** Sex from /onboarding/about-you. */
+  gender?: Gender;
+  /**
+   * Faith Check In response — how close they've felt to God
+   * lately. Soft personalization signal for later copy.
+   */
+  faithCloseness?: FaithCloseness;
   /**
    * IDs of the apps the user admits opening first thing in the
    * morning. Captured on Screen 2 (multi-select grid). Drives the
@@ -150,6 +173,11 @@ export type OnboardingAnswers = {
    * recommendations.
    */
   denomination?: Denomination;
+  /**
+   * Particular struggle / sin the user wants help with.
+   * Captured on /onboarding/struggle after denomination.
+   */
+  particularSin?: string;
   /**
    * Where the user is on their walk. Captured on /onboarding/faithstage
    * right after denomination. See `FaithStage` for options.

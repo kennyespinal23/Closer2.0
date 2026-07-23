@@ -70,7 +70,7 @@ export default function ProofScreen() {
         <View className="pb-2">
           <Button
             label="Continue"
-            onPress={() => router.push("/onboarding/reframe")}
+            onPress={() => router.push("/onboarding/rating")}
           />
         </View>
       </View>

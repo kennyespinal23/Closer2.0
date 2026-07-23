@@ -84,7 +84,7 @@ export default function AppsScreen() {
   const handleContinue = () => {
     if (!canContinue) return;
     setAnswer("morningApps", selected);
-    router.push("/onboarding/scrolltime");
+    router.push("/onboarding/proof");
   };
 
   return (

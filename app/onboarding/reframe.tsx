@@ -44,7 +44,7 @@ export default function ReframeScreen() {
       quoteEmphasis="One verse. One thought. Five minutes — before anything else gets to you."
       attribution="The first word of your day."
       ctaLabel="I want that"
-      onContinue={() => router.push("/onboarding/howitworks")}
+      onContinue={() => router.push("/onboarding/notifications")}
     />
   );
 }

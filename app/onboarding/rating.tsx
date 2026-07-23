@@ -71,11 +71,11 @@ export default function RatingScreen() {
       // Always advance, with a small delay so the native modal
       // (if it appeared) has a moment to dismiss before we push
       // the next screen on top of it.
-      setTimeout(() => router.push("/onboarding/reframe"), 400);
+      setTimeout(() => router.push("/onboarding/notifications"), 400);
     }
   };
 
-  const handleSkip = () => router.push("/onboarding/reframe");
+  const handleSkip = () => router.push("/onboarding/notifications");
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "bottom"]}>

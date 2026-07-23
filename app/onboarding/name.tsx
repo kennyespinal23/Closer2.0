@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
+import { progressFor } from "@/constants/onboarding";
 import { CLOSER_ACCENT } from "@/constants/theme";
 import { useOnboarding } from "@/state/onboarding";
 import { useColors } from "@/state/theme";
@@ -25,8 +26,8 @@ const PLACEHOLDER_GRAY = "#C7C7CC";
  * First onboarding screen after Get Started —
  * "Before we go any further — what should we call you?"
  *
- * Continue uses the shared `Button` → `PrimaryPillButton`
- * (CLOSER_ACCENT reddish-orange).
+ * Headline sized to the home quote sans (34pt). Continue uses the
+ * shared accent pill. Progress bar sits in the chrome.
  */
 export default function NameScreen() {
   const router = useRouter();
@@ -63,7 +64,7 @@ export default function NameScreen() {
     if (!canContinue) return;
     Keyboard.dismiss();
     setAnswer("name", trimmed);
-    router.push("/onboarding/chat");
+    router.push("/onboarding/about-you");
   };
 
   const bottomPad =
@@ -76,23 +77,27 @@ export default function NameScreen() {
       style={{ flex: 1, backgroundColor: colors.bg }}
       edges={["top", "bottom"]}
     >
-      <OnboardingChrome mode="back-only" />
+      <OnboardingChrome
+        mode="with-progress"
+        progress={progressFor("name")}
+      />
 
       <View style={{ flex: 1, paddingHorizontal: 24 }}>
-        <View style={{ paddingTop: 72 }}>
+        <View style={{ paddingTop: 48 }}>
           <FadeIn delayMs={0}>
             <Text
               style={{
                 fontFamily: "System",
                 fontWeight: "700",
-                fontSize: 28,
-                lineHeight: 36,
-                letterSpacing: -0.6,
+                // Match home quote sans size (HomeQuoteText SANS_SIZE).
+                fontSize: 34,
+                lineHeight: 42,
+                letterSpacing: -0.8,
                 textAlign: "center",
                 color: colors.ink,
               }}
             >
-              Before we go any further —{"\n"}what should we call you?
+              Before we go any further{"\n"}what should we call you?
             </Text>
           </FadeIn>
 

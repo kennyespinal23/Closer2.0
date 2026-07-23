@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import {
-  Pressable,
+  Linking,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -18,6 +18,8 @@ import { armLaunchSplash } from "@/lib/launchSplashSession";
 import { useOnboarding } from "@/state/onboarding";
 
 const SIGN_IN_VIDEO = require("@/assets/videos/signinpage.mp4");
+const TERMS_URL = "https://closer.app/terms";
+const PRIVACY_URL = "https://closer.app/privacy";
 
 /** True only after a native rebuild that linked expo-video. */
 function hasNativeExpoVideo(): boolean {
@@ -70,7 +72,7 @@ function GetStartedVideoBackground() {
 function GetStartedLanding() {
   const router = useRouter();
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
-  const { answers, reset: resetOnboarding, setAnswer } = useOnboarding();
+  const { reset: resetOnboarding } = useOnboarding();
   const videoReady = useMemo(() => hasNativeExpoVideo(), []);
 
   const compactLanding = screenHeight < 740 || screenWidth < 390;
@@ -80,14 +82,7 @@ function GetStartedLanding() {
   const handleGetStarted = () => {
     haptics.thud();
     resetOnboarding();
-    router.push("/onboarding/name");
-  };
-
-  const handleSignIn = () => {
-    if (!answers.completed) {
-      setAnswer("completed", true);
-    }
-    router.replace("/today");
+    router.push("/onboarding/attribution");
   };
 
   return (
@@ -153,35 +148,48 @@ function GetStartedLanding() {
           </View>
 
           <FadeIn delayMs={900} durationMs={600}>
-            <Pressable
-              hitSlop={12}
-              onPress={handleSignIn}
-              accessibilityRole="button"
-              accessibilityLabel="Sign in to an existing account"
-              className="mt-4 self-center flex-row items-center py-1.5 active:opacity-60"
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.72)",
+                fontFamily: "System",
+                fontWeight: "400",
+                fontSize: 12,
+                lineHeight: 17,
+                textAlign: "center",
+                marginTop: 16,
+                paddingHorizontal: 12,
+              }}
             >
+              By continuing, you agree to Closer's{" "}
               <Text
+                onPress={() => Linking.openURL(TERMS_URL)}
                 style={{
-                  color: "rgba(255,255,255,0.88)",
-                  fontFamily: "System",
-                  fontWeight: "400",
-                  fontSize: 14,
-                }}
-              >
-                Already have an account?
-              </Text>
-              <Text
-                style={{
-                  color: "#FFFFFF",
+                  color: "rgba(255,255,255,0.92)",
                   fontFamily: "System",
                   fontWeight: "600",
-                  fontSize: 14,
-                  marginLeft: 6,
+                  textDecorationLine: "underline",
                 }}
+                accessibilityRole="link"
+                accessibilityLabel="Terms of Service"
               >
-                Sign in
+                Terms of Service
+              </Text>{" "}
+              and{" "}
+              <Text
+                onPress={() => Linking.openURL(PRIVACY_URL)}
+                style={{
+                  color: "rgba(255,255,255,0.92)",
+                  fontFamily: "System",
+                  fontWeight: "600",
+                  textDecorationLine: "underline",
+                }}
+                accessibilityRole="link"
+                accessibilityLabel="Privacy Policy"
+              >
+                Privacy Policy
               </Text>
-            </Pressable>
+              .
+            </Text>
           </FadeIn>
         </View>
       </SafeAreaView>

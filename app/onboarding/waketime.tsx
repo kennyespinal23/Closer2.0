@@ -6,24 +6,13 @@ import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
 import { OptionCard } from "@/components/OptionCard";
+import { progressFor } from "@/constants/onboarding";
 import { useOnboarding, type WakeBucket } from "@/state/onboarding";
 
 /**
- * Screen 4 — "What time do you usually wake up?"
- *
- * Last data point in The Audit. We use this to:
- *
- *   • Pre-select a reasonable default on the morning-time picker
- *     on Screen 14. A user who wakes at 7am gets "7:00am — Most
- *     people" pre-highlighted; a 6am riser gets "6:00am — Early
- *     riser."
- *
- *   • Flavor the gut-punch line on Screen 6 ("Every day. Before
- *     you've even had coffee.").
- *
- * The buckets mirror the Screen 14 picker's options so the
- * mapping is one-to-one — when we lift this answer onto the
- * picker later, there's no guesswork.
+ * Preferred daily-devotional delivery window.
+ * Stored as `wakeBucket` so the later /time picker can pre-select
+ * a matching default.
  */
 
 const OPTIONS: ReadonlyArray<{ bucket: WakeBucket; label: string }> = [
@@ -45,15 +34,15 @@ export default function WakeTimeScreen() {
   const handleContinue = () => {
     if (!selected) return;
     setAnswer("wakeBucket", selected);
-    // Pattern is the spiritual diagnosis that names what the user
-    // just admitted ("Phone first. Phone last."), before the
-    // calculating screen sets up the personalized punch.
-    router.push("/onboarding/pattern");
+    router.push("/onboarding/creating-journey");
   };
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
-      <OnboardingChrome mode="back-only" />
+      <OnboardingChrome
+        mode="with-progress"
+        progress={progressFor("waketime")}
+      />
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: 28 }}
@@ -62,14 +51,14 @@ export default function WakeTimeScreen() {
         <View className="px-6">
           <FadeIn delayMs={0}>
             <Text
-              className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-4"
+              className="text-ink text-[28px] leading-[36px] tracking-[-0.6px] mt-4"
               style={{ fontFamily: "System", fontWeight: "700" }}
             >
-              What time do you usually wake up?
+              What time do you want to{"\n"}receive your daily{"\n"}devotional?
             </Text>
           </FadeIn>
 
-          <FadeIn delayMs={700}>
+          <FadeIn delayMs={500}>
             <View className="mt-8 gap-3">
               {OPTIONS.map((opt) => (
                 <OptionCard
@@ -84,7 +73,6 @@ export default function WakeTimeScreen() {
         </View>
       </ScrollView>
 
-      {/* Sticky Continue bar — see apps.tsx for the rationale. */}
       <View className="px-6 pt-3 pb-2 bg-bg">
         <Button
           label="Continue"

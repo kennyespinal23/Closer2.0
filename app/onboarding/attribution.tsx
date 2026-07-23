@@ -13,14 +13,11 @@ import {
 } from "@/state/onboarding";
 
 /**
- * Screen 12 — "Last thing before we set you up — how did you
- * hear about Closer?"
+ * First onboarding screen after Get Started —
+ * "Where'd you hear about us?"
  *
- * Pure product analytics. The answer goes into the persisted
- * onboarding blob and never gets shown back to the user. The
- * "last thing before we set you up" framing is the bridge that
- * connects the post-reveal mood to the practical setup half
- * (notifications, account, time, paywall) coming next.
+ * Pure product analytics. Lives before name so we capture source
+ * early; the answer is never shown back to the user.
  */
 
 const OPTIONS: ReadonlyArray<{ source: AttributionSource; label: string }> = [
@@ -43,7 +40,7 @@ export default function AttributionScreen() {
   const handleContinue = () => {
     if (!selected) return;
     setAnswer("hearAboutUs", selected);
-    router.push("/onboarding/notifications");
+    router.push("/onboarding/name");
   };
 
   return (
@@ -60,23 +57,14 @@ export default function AttributionScreen() {
         <View className="px-6">
           <FadeIn delayMs={0}>
             <Text
-              className="text-ink-muted text-[13px] tracking-[2px] uppercase mt-4"
+              className="text-ink text-[34px] leading-[42px] tracking-[-0.8px] mt-6"
               style={{ fontFamily: "System", fontWeight: "700" }}
             >
-              Last thing before we set you up
+              Where&apos;d you hear about us?
             </Text>
           </FadeIn>
 
-          <FadeIn delayMs={400}>
-            <Text
-              className="text-ink text-[26px] leading-[34px] tracking-[-0.4px] mt-3"
-              style={{ fontFamily: "System", fontWeight: "700" }}
-            >
-              How did you hear about Closer?
-            </Text>
-          </FadeIn>
-
-          <FadeIn delayMs={900}>
+          <FadeIn delayMs={500}>
             <View className="mt-8 gap-3">
               {OPTIONS.map((opt) => (
                 <OptionCard
@@ -91,7 +79,6 @@ export default function AttributionScreen() {
         </View>
       </ScrollView>
 
-      {/* Sticky Continue bar — see apps.tsx for the rationale. */}
       <View className="px-6 pt-3 pb-2 bg-bg">
         <Button
           label="Continue"

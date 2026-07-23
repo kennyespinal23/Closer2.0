@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
 import { OptionCard } from "@/components/OptionCard";
+import { progressFor } from "@/constants/onboarding";
 import { useOnboarding, type Denomination } from "@/state/onboarding";
 
 /**
@@ -60,12 +61,15 @@ export default function DenominationScreen() {
   const handleContinue = () => {
     if (!selected) return;
     setAnswer("denomination", selected);
-    router.push("/onboarding/faithstage");
+    router.push("/onboarding/struggle");
   };
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
-      <OnboardingChrome mode="back-only" />
+      <OnboardingChrome
+        mode="with-progress"
+        progress={progressFor("denomination")}
+      />
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: 28 }}

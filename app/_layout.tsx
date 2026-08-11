@@ -4,10 +4,10 @@ import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
-import { useFonts, Kalam_400Regular } from "@expo-google-fonts/kalam";
+import { useFonts, ShantellSans_700Bold } from "@expo-google-fonts/shantell-sans";
 // Interface + reading live on iOS system fonts (SF Pro / New York).
-// Kalam is the only bundled face — handwritten segments on the
-// home quote. See lib/typography.ts + components/HomeQuoteText.tsx.
+// Shantell Sans Bold is the only bundled face — home quote body.
+// See lib/typography.ts + components/HomeQuoteText.tsx.
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { LaunchSplash } from "@/components/LaunchSplash";
 import { ScheduledBlockGuard } from "@/components/ScheduledBlockGuard";
@@ -58,7 +58,7 @@ ensureAndroidChannel().catch(() => {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Kalam_400Regular,
+    ShantellSans_700Bold,
   });
 
   useEffect(() => {
@@ -187,15 +187,12 @@ function AppShell() {
           this handles (cold / warm / foreground). */}
       <NotificationDeepLinkHandler />
       <ScheduledBlockGuard />
-      {/* LaunchSplash — the white-on-black cross + Closer
-          wordmark intro. Sits as an absolutely-positioned
-          overlay above the entire navigator and self-unmounts
-          once its fade-in / hold / fade-out choreography
-          completes. The native iOS splash background is set to
-          `#FFFFFF` in app.json so the OS splash hands off into
-          this overlay with no visible flash. See the
-          component's file header for the full timing spec and
-          Reduce Motion behavior. */}
+      {/* LaunchSplash — orange brand canvas + white Closer
+          wordmark. Sits as an absolutely-positioned overlay
+          above the entire navigator and self-unmounts once its
+          fade-in / hold / fade-out choreography completes. The
+          native splash uses `#FF4326` in app.json so the OS
+          handoff stays seamless. */}
       <LaunchSplash />
       {/* Default animation is slide_from_right (Apple-standard
           drill-down). Per-screen overrides below opt routes
@@ -273,7 +270,10 @@ function AppShell() {
         />
         <Stack.Screen
           name="completed-sermons"
-          options={{ animation: "slide_from_right" }}
+          options={{
+            animation: "slide_from_right",
+            headerShown: false,
+          }}
         />
         {/* Per-check-in detail page (app/check-ins/[id].tsx).
             Drill-down semantics matching notes / highlights —

@@ -9,7 +9,7 @@ import { FadeIn } from "@/components/FadeIn";
 import { formatMinutes, formatRemaining } from "@/lib/readingGoalFormat";
 import { useReadingGoal } from "@/state/readingGoal";
 import { useColors } from "@/state/theme";
-import { SFSymbol } from "@/components/Symbol";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 
 /**
  * Reading-goal detail screen — the drill-in destination from
@@ -80,15 +80,9 @@ export default function ReadingGoalDetailScreen() {
           (right). Matches the SettingsScaffold rhythm so the page
           feels of a piece with the rest of the drill-in surfaces. */}
       <View className="flex-row items-center px-4 pt-2 pb-3">
-        <Pressable
+        <BubbleBackButton
           onPress={() => goBackOr(router, "/(tabs)/today")}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          className="w-10 h-10 rounded-full items-center justify-center"
-        >
-          <BackChevronIcon />
-        </Pressable>
+        />
         <Text
           className="text-ink text-[17px] flex-1 text-center"
           style={{ fontFamily: "System", fontWeight: "700" }}
@@ -505,13 +499,6 @@ function toLocalISO(d: Date): string {
 // ─────────────────────────────────────────────────────────────────
 // Icons
 // ─────────────────────────────────────────────────────────────────
-
-function BackChevronIcon() {
-  const colors = useColors();
-  return (
-    <SFSymbol name="chevron.left" size={17} color={colors.ink} weight="semibold" />
-  );
-}
 
 function SlidersIcon() {
   const colors = useColors();

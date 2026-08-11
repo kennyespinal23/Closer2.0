@@ -1,8 +1,8 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 import { goBackOr } from "@/lib/navigation";
-import { SFSymbol } from "@/components/Symbol";
 import Svg, { Path } from "react-native-svg";
 import {
   formatRef,
@@ -231,26 +231,9 @@ function Header({
         paddingBottom: 12,
       }}
     >
-      <Pressable
+      <BubbleBackButton
         onPress={() => goBackOr(router, "/(tabs)/profile")}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityLabel="Back"
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: 22,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <SFSymbol
-          name="chevron.left"
-          size={18}
-          color={colors.ink}
-          weight="semibold"
-        />
-      </Pressable>
+      />
       <Text
         style={[systemText.headline, { flex: 1, textAlign: "center", fontWeight: "700", color: colors.ink }]}
       >

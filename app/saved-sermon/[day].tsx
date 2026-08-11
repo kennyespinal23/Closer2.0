@@ -1,24 +1,58 @@
 import { useMemo } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import Svg, { Path } from "react-native-svg";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 import { goBackOr } from "@/lib/navigation";
-import { SFSymbol } from "@/components/Symbol";
-import { spacing } from "@/constants/spacing";
 import { findMomentByDay } from "@/lib/moments";
-import { systemText, typography } from "@/lib/typography";
+import { NEW_YORK, systemText, typography } from "@/lib/typography";
+import { HIGHLIGHT_COLORS } from "@/state/annotations";
+import { useProgress } from "@/state/progress";
 import { useColors } from "@/state/theme";
 
+const PAPER_INK = "#1A1510";
+
 /**
- * Re-read a saved catalog day (verse / story / insight).
- * Replaces the old 5-panel Hook→Prayer saved-sermon reader.
+ * Expanded completed reading — opens from Saved pins.
+ * Colored date header matches the pin preview; body uses page
+ * title → reference → verse → story hierarchy.
  */
 export default function SavedDevotionalScreen() {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
   const router = useRouter();
-  const { day: dayParam } = useLocalSearchParams<{ day?: string }>();
+  const { sermonCompletions } = useProgress();
+  const { day: dayParam, accent: accentParam } = useLocalSearchParams<{
+    day?: string;
+    accent?: string;
+  }>();
   const day = Number(dayParam);
   const moment = Number.isFinite(day) ? findMomentByDay(day) : null;
+
+  const completion = useMemo(
+    () =>
+      sermonCompletions
+        .filter((c) => c.day === day)
+        .sort((a, b) => b.completedAt - a.completedAt)[0] ?? null,
+    [sermonCompletions, day],
+  );
+
+  const headerColor = useMemo(() => {
+    if (typeof accentParam === "string" && /^#[0-9A-Fa-f]{6,8}$/.test(accentParam)) {
+      return accentParam;
+    }
+    const i = Number.isFinite(day) ? Math.max(0, day - 1) : 0;
+    return HIGHLIGHT_COLORS[i % HIGHLIGHT_COLORS.length]!.swatch;
+  }, [accentParam, day]);
+
+  const dateLabel = useMemo(() => {
+    const ms = completion?.completedAt ?? Date.now();
+    return new Date(ms)
+      .toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      .toUpperCase();
+  }, [completion?.completedAt]);
 
   const paragraphs = useMemo(() => {
     if (!moment) return [];
@@ -31,69 +65,97 @@ export default function SavedDevotionalScreen() {
   if (!moment) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
-        <View style={{ padding: spacing[24] }}>
+        <View style={{ padding: 24 }}>
           <Text style={[typography.body, { color: colors.ink }]}>
             This day isn’t in the catalog anymore.
           </Text>
-          <Pressable
-            onPress={() => goBackOr(router, "/(tabs)/profile")}
-            style={{ marginTop: spacing[16], minHeight: 44, justifyContent: "center" }}
-          >
-            <Text style={[typography.button, { color: colors.ink }]}>Go back</Text>
-          </Pressable>
+          <View style={{ marginTop: 16 }}>
+            <BubbleBackButton
+              onPress={() => goBackOr(router, "/completed-sermons")}
+            />
+          </View>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top", "bottom"]}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <View
         style={{
-          paddingHorizontal: spacing[16],
-          paddingTop: spacing[8],
-          paddingBottom: spacing[12],
-          flexDirection: "row",
+          backgroundColor: headerColor,
+          paddingTop: insets.top + 8,
+          paddingBottom: 28,
+          paddingHorizontal: 16,
           alignItems: "center",
+          justifyContent: "center",
+          minHeight: insets.top + 88,
         }}
       >
-        <Pressable
-          onPress={() => goBackOr(router, "/(tabs)/profile")}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
+        <View
           style={{
-            width: 44,
-            height: 44,
-            alignItems: "center",
-            justifyContent: "center",
+            position: "absolute",
+            left: 16,
+            top: insets.top + 8,
+            zIndex: 2,
           }}
         >
-          <SFSymbol name="chevron.left" size={20} color={colors.ink} weight="semibold" />
-        </Pressable>
+          <BubbleBackButton
+            onPress={() => goBackOr(router, "/completed-sermons")}
+            color="#FFFFFF"
+            backgroundColor="rgba(26,21,16,0.55)"
+          />
+        </View>
+
         <Text
-          style={[typography.smallLabel, { color: colors.inkMuted, textTransform: "uppercase" }]}
+          style={[
+            systemText.title1,
+            {
+              color: PAPER_INK,
+              textAlign: "center",
+              letterSpacing: 0.8,
+              marginTop: 4,
+            },
+          ]}
+          allowFontScaling={false}
         >
-          Day {moment.day}
+          {dateLabel}
         </Text>
+
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: -1,
+            height: 12,
+          }}
+        >
+          <TornEdge width={windowWidth} fill={colors.bg} />
+        </View>
       </View>
 
       <ScrollView
+        style={{ flex: 1, backgroundColor: colors.bg }}
         contentContainerStyle={{
-          paddingHorizontal: spacing[24],
-          paddingBottom: spacing[48],
+          paddingHorizontal: 24,
+          paddingTop: 28,
+          paddingBottom: 56,
         }}
+        showsVerticalScrollIndicator={false}
       >
         <Text style={[systemText.title1, { color: colors.ink }]}>
           {moment.title}
         </Text>
+
         <Text
           style={[
             typography.smallLabel,
             {
               color: colors.inkMuted,
               textTransform: "uppercase",
-              marginTop: spacing[12],
+              marginTop: 12,
             },
           ]}
         >
@@ -101,10 +163,14 @@ export default function SavedDevotionalScreen() {
         </Text>
 
         <Text
-          style={[
-            typography.body,
-            { color: colors.ink, marginTop: spacing[24], fontStyle: "italic" },
-          ]}
+          style={{
+            fontFamily: NEW_YORK,
+            fontWeight: "400",
+            fontSize: 18,
+            lineHeight: 30,
+            color: colors.ink,
+            marginTop: 24,
+          }}
         >
           {moment.verse}
         </Text>
@@ -113,7 +179,7 @@ export default function SavedDevotionalScreen() {
           style={{
             height: 1,
             backgroundColor: colors.border,
-            marginVertical: spacing[24],
+            marginVertical: 24,
           }}
         />
 
@@ -122,29 +188,52 @@ export default function SavedDevotionalScreen() {
             key={i}
             style={[
               typography.body,
-              { color: colors.ink, marginBottom: spacing[16] },
+              { color: colors.ink, marginBottom: 16 },
             ]}
           >
             {p}
           </Text>
         ))}
 
-        <Text
-          style={[
-            typography.smallLabel,
-            {
-              color: colors.inkMuted,
-              textTransform: "uppercase",
-              marginTop: spacing[8],
-            },
-          ]}
-        >
-          Insight
-        </Text>
-        <Text style={[typography.body, { color: colors.ink, marginTop: spacing[8] }]}>
-          {moment.insight}
-        </Text>
+        {moment.insight.trim() ? (
+          <>
+            <Text
+              style={[
+                typography.smallLabel,
+                {
+                  color: colors.inkMuted,
+                  textTransform: "uppercase",
+                  marginTop: 8,
+                },
+              ]}
+            >
+              Insight
+            </Text>
+            <Text
+              style={[typography.body, { color: colors.ink, marginTop: 8 }]}
+            >
+              {moment.insight}
+            </Text>
+          </>
+        ) : null}
       </ScrollView>
-    </SafeAreaView>
+    </View>
+  );
+}
+
+function TornEdge({ width, fill }: { width: number; fill: string }) {
+  const h = 12;
+  const step = 8;
+  const parts: string[] = [`M 0 ${h}`];
+  for (let x = 0; x <= width; x += step) {
+    const y = Math.floor(x / step) % 2 === 0 ? 0 : h * 0.55;
+    parts.push(`L ${Math.min(x, width)} ${y}`);
+  }
+  parts.push(`L ${width} ${h}`, `L 0 ${h}`, "Z");
+
+  return (
+    <Svg width={width} height={h}>
+      <Path d={parts.join(" ")} fill={fill} />
+    </Svg>
   );
 }

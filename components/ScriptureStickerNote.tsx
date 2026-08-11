@@ -16,6 +16,18 @@ const PAPER_INK_MUTED = "rgba(20, 20, 20, 0.62)";
 const JAG = 6;
 const STEP = 14;
 const CONTENT_PAD = 32;
+const CONTENT_PAD_LIST = 18;
+
+/** Compact upright New York for list scrap quotes — reflective surface only. */
+const listQuote = {
+  fontFamily: typography.photoQuote.fontFamily,
+  fontStyle: "normal" as const,
+  fontWeight: typography.photoQuote.fontWeight,
+  fontSize: 17,
+  lineHeight: 24,
+  textAlign: "center" as const,
+  letterSpacing: 0,
+};
 
 /** Deckled rectangle — deterministic zigzag so edges feel torn, not clip-mask round. */
 function buildTornPaperPath(w: number, h: number): string {
@@ -63,24 +75,44 @@ type ScriptureStickerNoteProps = {
   reference?: string;
   maxWidth: number;
   rotationDeg?: number;
+  /** Hero (home sticker) vs compact list scrap. */
+  variant?: "hero" | "list";
+  /** Cap quote lines in list scrap so rows stay scannable. */
+  numberOfLines?: number;
   /** Fades verse + reference only — paper stays fully opaque. */
   textOpacity?: Animated.Value | number;
   style?: StyleProp<ViewStyle>;
 };
 
+const LIST_SHADOW = Platform.select({
+  ios: {
+    shadowColor: "#1A1510",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.14,
+    shadowRadius: 10,
+  },
+  android: { elevation: 4 },
+  default: {},
+});
+
 /**
  * Cream scripture "sticker" — verse sits on torn paper over the photo,
- * not directly on the background image.
+ * not directly on the background image. `variant="list"` is the compact
+ * scrap used above completed-devotional rows.
  */
 export function ScriptureStickerNote({
   quote,
   reference,
   maxWidth,
   rotationDeg = -1.15,
+  variant = "hero",
+  numberOfLines,
   textOpacity = 1,
   style,
 }: ScriptureStickerNoteProps) {
   const [sheet, setSheet] = useState<{ w: number; h: number } | null>(null);
+  const isList = variant === "list";
+  const pad = isList ? CONTENT_PAD_LIST : CONTENT_PAD;
 
   const onContentLayout = useCallback((w: number, h: number) => {
     const nextW = Math.ceil(w);
@@ -95,13 +127,14 @@ export function ScriptureStickerNote({
       style={[
         {
           maxWidth,
-          alignSelf: "center",
+          alignSelf: isList ? "stretch" : "center",
+          width: isList ? "100%" : undefined,
           transform: [{ rotate: `${rotationDeg}deg` }],
         },
         style,
       ]}
     >
-      <View style={STICKER_SHADOW}>
+      <View style={isList ? LIST_SHADOW : STICKER_SHADOW}>
         <View style={{ position: "relative" }}>
           {sheet ? (
             <Svg
@@ -116,17 +149,20 @@ export function ScriptureStickerNote({
             >
               <G transform={`translate(${JAG}, ${JAG})`}>
                 <Path d={buildTornPaperPath(sheet.w, sheet.h)} fill={PAPER} />
-                {Array.from({ length: Math.ceil(sheet.h / 22) }, (_, i) => (
-                  <Line
-                    key={i}
-                    x1={0}
-                    y1={i * 22 + 8}
-                    x2={sheet.w}
-                    y2={i * 22 + 11}
-                    stroke="rgba(30, 24, 18, 0.035)"
-                    strokeWidth={1}
-                  />
-                ))}
+                {Array.from(
+                  { length: Math.ceil(sheet.h / (isList ? 18 : 22)) },
+                  (_, i) => (
+                    <Line
+                      key={i}
+                      x1={0}
+                      y1={i * (isList ? 18 : 22) + 8}
+                      x2={sheet.w}
+                      y2={i * (isList ? 18 : 22) + 11}
+                      stroke="rgba(30, 24, 18, 0.035)"
+                      strokeWidth={1}
+                    />
+                  ),
+                )}
               </G>
             </Svg>
           ) : null}
@@ -137,8 +173,9 @@ export function ScriptureStickerNote({
               onContentLayout(width, height);
             }}
             style={{
-              padding: CONTENT_PAD,
+              padding: pad,
               maxWidth,
+              width: isList ? "100%" : undefined,
               zIndex: 1,
               backgroundColor: sheet ? "transparent" : PAPER,
             }}
@@ -146,9 +183,10 @@ export function ScriptureStickerNote({
             <Animated.View style={{ opacity: textOpacity }}>
               <Text
                 style={[
-                  typography.photoQuote,
+                  isList ? listQuote : typography.photoQuote,
                   { color: PAPER_INK, textAlign: "center" },
                 ]}
+                numberOfLines={numberOfLines}
               >
                 {quote}
               </Text>
@@ -159,7 +197,7 @@ export function ScriptureStickerNote({
                     {
                       color: PAPER_INK_MUTED,
                       textTransform: "uppercase",
-                      marginTop: 18,
+                      marginTop: isList ? 10 : 18,
                       textAlign: "center",
                     },
                   ]}

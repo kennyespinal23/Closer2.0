@@ -3,19 +3,16 @@ import type { HomeQuote, HomeQuoteSegment } from "@/lib/homeQuotes";
 import { SF_PRO } from "@/lib/typography";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
-/** Kalam face registered in `app/_layout.tsx` via expo-google-fonts.
- *  JSON still tags handwritten segments as `"caveat"`; we map that
- *  role to Kalam at render time. */
-export const HANDWRITTEN = "Kalam_400Regular";
+/** Shantell Sans Bold — registered in `app/_layout.tsx` via
+ *  expo-google-fonts. The whole home quote body uses this face. */
+export const HANDWRITTEN = "ShantellSans_700Bold";
 
-const HAND_SIZE = 42;
-const SANS_SIZE = 34;
+const QUOTE_SIZE = 42;
 /**
  * Shared line box for the whole run. Applied to the outer Text AND
- * every nested segment span so leading stays even. Must clear Kalam’s
- * ascenders at HAND_SIZE (≈1.3×) — anything tighter clips the first
- * line flat. Inline nested <Text> (not a custom wrapper) keeps wrap
- * gaps from blowing open the way block-stacked segments did.
+ * every nested segment span so leading stays even across wraps.
+ * Inline nested <Text> (not a custom wrapper) keeps wrap gaps from
+ * blowing open the way block-stacked segments did.
  */
 const LINE = 56;
 
@@ -75,14 +72,14 @@ function resolveQuoteColor(
   return hex;
 }
 
-/** Per-segment style — font / color / underline from THAT segment only. */
+/** Per-segment style — face is always Shantell Sans Bold; ink is
+ *  theme ink for every segment (no catalog accent colors on type).
+ *  Underlines still use their accent color when authored. */
 function segmentStyle(
   segment: HomeQuoteSegment,
   scheme: "light" | "dark",
   ink: string,
 ) {
-  const isHand = segment.font === "caveat";
-  const color = resolveQuoteColor(segment.color, scheme, ink);
   const underlineColor = segment.underline
     ? resolveQuoteColor(
         segment.underlineColor ?? segment.color,
@@ -92,12 +89,14 @@ function segmentStyle(
     : undefined;
 
   return {
-    fontFamily: isHand ? HANDWRITTEN : SF_PRO,
-    fontWeight: (isHand ? "400" : "700") as "400" | "700",
-    fontSize: isHand ? HAND_SIZE : SANS_SIZE,
+    fontFamily: HANDWRITTEN,
+    // Weight lives in the loaded Bold face — keep Regular here so
+    // iOS doesn't synthetically embolden again.
+    fontWeight: "400" as const,
+    fontSize: QUOTE_SIZE,
     lineHeight: LINE,
-    letterSpacing: isHand ? 0 : -0.4,
-    color,
+    letterSpacing: 0,
+    color: ink,
     textDecorationLine: (segment.underline ? "underline" : "none") as
       | "underline"
       | "none",
@@ -122,11 +121,11 @@ export function HomeQuoteText({ quote, maxWidth = 320 }: HomeQuoteTextProps) {
   const scheme = useResolvedScheme();
 
   const markStyle = {
-    fontFamily: SF_PRO,
-    fontWeight: "700" as const,
-    fontSize: SANS_SIZE,
+    fontFamily: HANDWRITTEN,
+    fontWeight: "400" as const,
+    fontSize: QUOTE_SIZE,
     lineHeight: LINE,
-    letterSpacing: -0.4,
+    letterSpacing: 0,
     color: colors.ink,
   };
 
@@ -136,8 +135,7 @@ export function HomeQuoteText({ quote, maxWidth = 320 }: HomeQuoteTextProps) {
         alignItems: "center",
         maxWidth,
         paddingHorizontal: 4,
-        // Extra paint room above/below the Text frame — lineHeight
-        // alone still clips Kalam on the first/last line on iOS.
+        // Extra paint room above/below the Text frame.
         paddingTop: 14,
         paddingBottom: 8,
         overflow: "visible",
@@ -148,9 +146,6 @@ export function HomeQuoteText({ quote, maxWidth = 320 }: HomeQuoteTextProps) {
         style={{
           textAlign: "center",
           lineHeight: LINE,
-          // First-line ascenders still clip inside the Text frame on
-          // iOS with Kalam; this expands the clip rect without changing
-          // the gap between wrapped lines.
           paddingTop: 6,
           paddingBottom: 4,
           overflow: "visible",

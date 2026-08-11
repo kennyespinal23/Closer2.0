@@ -12,6 +12,7 @@ import {
   type DevotionalDay,
   findDevotionalByDay,
   nextDevotional,
+  previousDevotional,
   devotionalPosition,
   devotionalDurationMin,
   localDateISO,
@@ -41,6 +42,7 @@ export const MOMENTS: ReadonlyArray<Moment> = DEVOTIONALS;
 
 export const findMomentByDay = findDevotionalByDay;
 export const nextMoment = nextDevotional;
+export const previousMoment = previousDevotional;
 export const momentPosition = devotionalPosition;
 export { localDateISO, toHomeCard };
 

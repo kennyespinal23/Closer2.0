@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { goBackOr } from "@/lib/navigation";
 import Svg, { Path } from "react-native-svg";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 import { SFSymbol } from "@/components/Symbol";
 import { FadeIn } from "@/components/FadeIn";
 import { findBookById } from "@/constants/books";
@@ -64,15 +65,9 @@ export default function StatsScreen() {
           this drill-down feels consistent with the other drawer
           destinations (Notifications, Translation, etc.). */}
       <View className="flex-row items-center px-4 pt-2 pb-3">
-        <Pressable
+        <BubbleBackButton
           onPress={() => goBackOr(router, "/(tabs)/profile")}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          className="w-10 h-10 rounded-full items-center justify-center"
-        >
-          <BackChevronIcon />
-        </Pressable>
+        />
         <Text
           className="text-ink text-[17px] flex-1 text-center"
           style={{ fontFamily: "System", fontWeight: "700" }}
@@ -590,9 +585,3 @@ function formatChapterRef(c: { bookId: string; chapter: number }): string {
   return book ? `${book.name} ${c.chapter}` : `${c.bookId} ${c.chapter}`;
 }
 
-function BackChevronIcon() {
-  const colors = useColors();
-  return (
-    <SFSymbol name="chevron.left" size={17} color={colors.ink} weight="semibold" />
-  );
-}

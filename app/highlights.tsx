@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { goBackOr } from "@/lib/navigation";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
-import { SFSymbol } from "@/components/Symbol";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 import { minTouchTarget, spacing } from "@/constants/spacing";
 import {
   formatRef,
@@ -257,26 +257,9 @@ function Header({
       className="flex-row items-center pt-2 pb-3"
       style={{ paddingHorizontal: SCREEN_H_PAD }}
     >
-      <Pressable
+      <BubbleBackButton
         onPress={() => goBackOr(router, "/(tabs)/profile")}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityLabel="Back"
-        style={{
-          width: minTouchTarget,
-          height: minTouchTarget,
-          borderRadius: minTouchTarget / 2,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <SFSymbol
-          name="chevron.left"
-          size={18}
-          color={colors.ink}
-          weight="semibold"
-        />
-      </Pressable>
+      />
       <Text
         className="text-ink text-[17px] flex-1 text-center"
         style={{ fontFamily: "System", fontWeight: "700" }}

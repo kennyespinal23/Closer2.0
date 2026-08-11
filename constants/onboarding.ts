@@ -47,7 +47,6 @@ export const ONBOARDING_STEPS = [
   "waketime",
   // Building their personal Closer journey (progress + social proof).
   "creating-journey",
-  "apps",
   "proof",
   "rating",
   "notifications",

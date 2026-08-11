@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, forwardRef } from "react";
 import {
   Animated,
   Easing,
@@ -10,10 +10,12 @@ import {
   Text,
   useWindowDimensions,
   View,
+  type View as RNView,
 } from "react-native";
 import { Image } from "expo-image";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
 import { SFSymbol } from "@/components/Symbol";
 import { ScriptureStickerNote } from "@/components/ScriptureStickerNote";
 import { HomeQuoteText } from "@/components/HomeQuoteText";
@@ -40,17 +42,28 @@ import {
 import { useColors } from "@/state/theme";
 
 const CARD_RADIUS = 22;
-const IMAGE_RADIUS = 8;
-const IMAGE_ASPECT = 16 / 9;
-const MINI_CARD_WIDTH_RATIO = 0.72;
+/** Full-bleed unread delivery room — matches brand orange accent. */
+const ENVELOPE_ROOM = CLOSER_ACCENT;
+const ENVELOPE_LAVENDER = "#CDB8E8";
+const ENVELOPE_LAVENDER_DEEP = "#B79AD6";
+const ENVELOPE_LAVENDER_LIP = "#E2D4F4";
+const LETTER_CREAM = "#F7F1E6";
 const LIQUID_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const LIQUID_IN = Easing.bezier(0.4, 0, 0.2, 1);
 const HERO_HINT_DELAY_MS = 4200;
 const HOLD_UNLOCK_MS = 1600;
 const SWIPE_DOWN_COMMIT_DY = 40;
 const SWIPE_DOWN_COMMIT_VY = 400;
-const OPEN_MS = 820;
-const CLOSE_MS = 380;
+const CLOSE_MS = 320;
+const ENVELOPE_OPEN_MS = 640;
+/** Pause on the opened letter + title before handing off to reading. */
+const ENVELOPE_HOLD_MS = 3000;
+/** Photo fade after envelope → verse hero. */
+const REVEAL_PHOTO_MS = 480;
+/** Scrap rise into the hero. */
+const REVEAL_STICKER_MS = 720;
+
+type CardBounds = { x: number; y: number; width: number; height: number };
 
 /** Floating cream card / quote-screen cream shell. */
 const CARD_BG = "#F4F0E6";
@@ -262,109 +275,380 @@ function HoldToUnlockButton({
   );
 }
 
-function FloatingMiniCard({
-  card,
-  onPress,
-  hidden,
-}: {
-  card: FloatingScriptureCard;
-  onPress: () => void;
-  hidden?: boolean;
-}) {
-  const { width: windowWidth } = useWindowDimensions();
+/**
+ * Big lavender envelope on the orange delivery room.
+ * Tap: flap opens → cream letter rises → hold on the title →
+ * then `onOpened` hands off to the existing reading modal.
+ */
+const DevotionalEnvelope = forwardRef<
+  RNView,
+  {
+    card: FloatingScriptureCard;
+    /** Called after the open choreography + hold finish. */
+    onOpened: () => void;
+    hidden?: boolean;
+    width: number;
+  }
+>(function DevotionalEnvelope({ card, onOpened, hidden, width }, ref) {
+  const reducedMotion = useReducedMotion();
+  const breathe = useRef(new Animated.Value(0)).current;
+  const flap = useRef(new Animated.Value(0)).current;
+  const letter = useRef(new Animated.Value(0)).current;
+  const openingRef = useRef(false);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { book, passage } = useMemo(
     () => splitScriptureReference(card.scriptureReference),
     [card.scriptureReference],
   );
-  const cardWidth = windowWidth * MINI_CARD_WIDTH_RATIO;
-  const { source, setUseFallback } = useFloatingCardImage(card);
+
+  const envW = width;
+  const envH = Math.round(width * 0.66);
+  const letterW = Math.round(envW * 0.72);
+  const letterH = Math.round(envH * 0.78);
+  const flapH = Math.round(envH * 0.58);
+
+  // viewBox geometry for a classic mail envelope
+  const W = 280;
+  const H = 176;
+  const flapTipY = H * 0.58;
+
+  useEffect(() => {
+    return () => {
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (hidden) return;
+    // Reset when returning to the unread envelope state.
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+    openingRef.current = false;
+    flap.setValue(0);
+    letter.setValue(0);
+  }, [flap, hidden, letter, card.id]);
+
+  useEffect(() => {
+    if (reducedMotion || hidden || openingRef.current) {
+      breathe.setValue(0);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breathe, {
+          toValue: 1,
+          duration: 2200,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(breathe, {
+          toValue: 0,
+          duration: 2200,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [breathe, hidden, reducedMotion]);
+
+  const lift = breathe.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -8],
+  });
+
+  const flapRotate = flap.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "-168deg"],
+  });
+  const letterRise = letter.interpolate({
+    inputRange: [0, 1],
+    outputRange: [envH * 0.28, -envH * 0.42],
+  });
+  const letterScale = letter.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.92, 1],
+  });
+
+  const finishOpen = () => {
+    holdTimerRef.current = setTimeout(() => {
+      holdTimerRef.current = null;
+      onOpened();
+    }, ENVELOPE_HOLD_MS);
+  };
+
+  const runOpen = () => {
+    if (openingRef.current || hidden) return;
+    openingRef.current = true;
+    haptics.soft();
+    breathe.stopAnimation();
+    breathe.setValue(0);
+
+    if (reducedMotion) {
+      flap.setValue(1);
+      letter.setValue(1);
+      finishOpen();
+      return;
+    }
+
+    Animated.parallel([
+      Animated.timing(flap, {
+        toValue: 1,
+        duration: ENVELOPE_OPEN_MS,
+        easing: LIQUID_OUT,
+        useNativeDriver: true,
+      }),
+      Animated.timing(letter, {
+        toValue: 1,
+        duration: ENVELOPE_OPEN_MS,
+        delay: 90,
+        easing: LIQUID_OUT,
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished) finishOpen();
+    });
+  };
 
   return (
     <Pressable
-      onPress={onPress}
-      hitSlop={8}
+      onPress={runOpen}
+      hitSlop={12}
       accessibilityRole="button"
-      accessibilityLabel={`${book}${passage ? ` ${passage}` : ""} scripture card`}
+      accessibilityLabel={`Open today's reading, ${book}${passage ? ` ${passage}` : ""}`}
       style={{
-        width: cardWidth,
         minWidth: minTouchTarget,
         minHeight: minTouchTarget,
         opacity: hidden ? 0 : 1,
       }}
     >
-      <View
-        collapsable={false}
+      <Animated.View
         style={{
-          borderRadius: CARD_RADIUS,
-          backgroundColor: CARD_BG,
-          paddingHorizontal: 12,
-          paddingTop: 12,
-          paddingBottom: 12,
-          overflow: "hidden",
-          ...Platform.select({
-            ios: {
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.1,
-              shadowRadius: 16,
-            },
-            android: { elevation: 6 },
-          }),
+          width: envW,
+          transform: [{ translateY: lift }],
         }}
       >
-        <Text
-          style={{
-            fontFamily: typography.body.fontFamily,
-            fontWeight: "800",
-            fontSize: 15,
-            lineHeight: 18,
-            color: CARD_INK,
-            letterSpacing: -0.2,
-          }}
-          numberOfLines={1}
-        >
-          {book}
-        </Text>
-        {passage ? (
-          <Text
-            style={{
-              fontFamily: typography.body.fontFamily,
-              fontWeight: "700",
-              fontSize: 13,
-              lineHeight: 16,
-              color: CARD_INK_SOFT,
-              marginTop: 1,
-            }}
-            numberOfLines={1}
-          >
-            {passage}
-          </Text>
-        ) : null}
-
         <View
+          ref={ref}
+          collapsable={false}
           style={{
-            marginTop: 10,
-            width: "100%",
-            aspectRatio: IMAGE_ASPECT,
-            borderRadius: IMAGE_RADIUS,
-            overflow: "hidden",
-            backgroundColor: "#D8D2C6",
+            width: envW,
+            height: envH + 48,
+            alignItems: "center",
+            justifyContent: "flex-end",
+            overflow: "visible",
           }}
         >
-          <Image
-            source={source}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-            contentPosition="center"
-            transition={400}
-            onError={() => setUseFallback(true)}
-            accessibilityIgnoresInvertColors
-          />
+          {/* Back of envelope */}
+          <View
+            style={{
+              position: "absolute",
+              left: 0,
+              bottom: 0,
+              width: envW,
+              height: envH,
+              zIndex: 1,
+              ...Platform.select({
+                ios: {
+                  shadowColor: "#5A1840",
+                  shadowOffset: { width: 0, height: 16 },
+                  shadowOpacity: 0.28,
+                  shadowRadius: 24,
+                },
+                android: { elevation: 12 },
+              }),
+            }}
+          >
+            <Svg width={envW} height={envH} viewBox={`0 0 ${W} ${H}`}>
+              <Defs>
+                <LinearGradient id="envBodyLav" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0" stopColor={ENVELOPE_LAVENDER_LIP} />
+                  <Stop offset="1" stopColor={ENVELOPE_LAVENDER} />
+                </LinearGradient>
+              </Defs>
+              <Path
+                d={`M 10 18
+                    Q 10 8 20 8
+                    L ${W - 20} 8
+                    Q ${W - 10} 8 ${W - 10} 18
+                    L ${W - 10} ${H - 14}
+                    Q ${W - 10} ${H - 4} ${W - 20} ${H - 4}
+                    L 20 ${H - 4}
+                    Q 10 ${H - 4} 10 ${H - 14}
+                    Z`}
+                fill="url(#envBodyLav)"
+              />
+            </Svg>
+          </View>
+
+          {/* Cream letter — rises from the pocket as the flap opens */}
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              bottom: envH * 0.18,
+              width: letterW,
+              height: letterH,
+              borderRadius: 18,
+              backgroundColor: LETTER_CREAM,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 18,
+              zIndex: 2,
+              transform: [
+                { translateY: letterRise },
+                { scale: letterScale },
+                { rotate: "-4deg" },
+              ],
+              ...Platform.select({
+                ios: {
+                  shadowColor: "#3A1840",
+                  shadowOffset: { width: 0, height: 10 },
+                  shadowOpacity: 0.18,
+                  shadowRadius: 16,
+                },
+                android: { elevation: 8 },
+              }),
+            }}
+          >
+            <Text
+              style={[
+                typography.smallLabel,
+                {
+                  color: CLOSER_ACCENT,
+                  textTransform: "uppercase",
+                },
+              ]}
+              allowFontScaling={false}
+            >
+              Today
+            </Text>
+            <Text
+              style={{
+                marginTop: 10,
+                fontFamily: "System",
+                fontWeight: "800",
+                fontSize: 26,
+                lineHeight: 30,
+                letterSpacing: -0.5,
+                color: CARD_INK,
+                textAlign: "center",
+              }}
+              numberOfLines={2}
+            >
+              {book}
+            </Text>
+            {passage ? (
+              <Text
+                style={{
+                  marginTop: 4,
+                  fontFamily: "System",
+                  fontWeight: "600",
+                  fontSize: 17,
+                  lineHeight: 22,
+                  color: CARD_INK_SOFT,
+                  textAlign: "center",
+                }}
+                numberOfLines={1}
+              >
+                {passage}
+              </Text>
+            ) : null}
+          </Animated.View>
+
+          {/* Front pockets — frame the letter */}
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: 0,
+              bottom: 0,
+              width: envW,
+              height: envH,
+              zIndex: 3,
+            }}
+          >
+            <Svg width={envW} height={envH} viewBox={`0 0 ${W} ${H}`}>
+              <Defs>
+                <LinearGradient id="envPocketLLav" x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0" stopColor={ENVELOPE_LAVENDER_DEEP} />
+                  <Stop offset="1" stopColor={ENVELOPE_LAVENDER} />
+                </LinearGradient>
+                <LinearGradient id="envPocketRLav" x1="1" y1="0" x2="0" y2="0">
+                  <Stop offset="0" stopColor={ENVELOPE_LAVENDER_DEEP} />
+                  <Stop offset="1" stopColor={ENVELOPE_LAVENDER} />
+                </LinearGradient>
+              </Defs>
+              <Path
+                d={`M 10 18 L ${W / 2} ${flapTipY} L 10 ${H - 14} Z`}
+                fill="url(#envPocketLLav)"
+                opacity={0.95}
+              />
+              <Path
+                d={`M ${W - 10} 18 L ${W / 2} ${flapTipY} L ${W - 10} ${H - 14} Z`}
+                fill="url(#envPocketRLav)"
+                opacity={0.95}
+              />
+              <Path
+                d={`M 10 ${H - 14}
+                    Q 10 ${H - 4} 20 ${H - 4}
+                    L ${W - 20} ${H - 4}
+                    Q ${W - 10} ${H - 4} ${W - 10} ${H - 14}
+                    L ${W / 2} ${flapTipY}
+                    Z`}
+                fill={ENVELOPE_LAVENDER_LIP}
+              />
+            </Svg>
+          </View>
+
+          {/* Top flap — rotates open around its top edge */}
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: 0,
+              bottom: envH - flapH,
+              width: envW,
+              height: flapH,
+              zIndex: 5,
+              transform: [
+                { perspective: 900 },
+                { translateY: -flapH / 2 },
+                { rotateX: flapRotate },
+                { translateY: flapH / 2 },
+              ],
+              backfaceVisibility: "hidden",
+            }}
+          >
+            <Svg width={envW} height={flapH} viewBox={`0 0 ${W} ${flapTipY + 4}`}>
+              <Path
+                d={`M 10 18
+                    L ${W / 2} ${flapTipY}
+                    L ${W - 10} 18
+                    Q ${W - 10} 8 ${W - 20} 8
+                    L 20 8
+                    Q 10 8 10 18
+                    Z`}
+                fill={ENVELOPE_LAVENDER_LIP}
+                stroke="rgba(90,40,120,0.12)"
+                strokeWidth={1}
+              />
+              <Path
+                d={`M 18 20 L ${W / 2} ${flapTipY - 2} L ${W - 18} 20`}
+                fill="none"
+                stroke="rgba(255,255,255,0.5)"
+                strokeWidth={1.5}
+              />
+            </Svg>
+          </Animated.View>
         </View>
-      </View>
+      </Animated.View>
     </Pressable>
   );
-}
+});
 
 function DetailSectionBlock({
   eyebrow,
@@ -426,10 +710,11 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   nextBreakTone,
   unlockedToday,
   onCompleteCard,
+  bottomInset,
 }: HomeFloatingPrayerHomeProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
   const [active, setActive] = useState<FloatingScriptureCard>(card);
   const [expanded, setExpanded] = useState(false);
@@ -438,14 +723,19 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   const [closePressed, setClosePressed] = useState(false);
   /** Live app-block gate — hide dismiss chrome until they finish. */
   const [dismissLocked, setDismissLocked] = useState(false);
+  const [cardBounds, setCardBounds] = useState<CardBounds | null>(null);
+  const miniCardRef = useRef<RNView>(null);
 
-  // Separate native-driver values only — never mix with layout props.
+  // Layout morph uses JS driver; content fades stay on the native driver.
+  const morphProgress = useRef(new Animated.Value(0)).current;
   const openProgress = useRef(new Animated.Value(0)).current;
   const detailProgress = useRef(new Animated.Value(0)).current;
   const hintOpacity = useRef(new Animated.Value(0)).current;
   const hintPulse = useRef(new Animated.Value(0)).current;
   const heroDragY = useRef(new Animated.Value(0)).current;
   const verseOpacity = useRef(new Animated.Value(0)).current;
+  /** Scrap entrance — rise + fade after the envelope handoff. */
+  const heroEnter = useRef(new Animated.Value(0)).current;
 
   // Live block = apps are currently gated; otherwise the CTA is Continue.
   const hasOngoingAppBlock = nextBreakTone === "live";
@@ -458,17 +748,9 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
 
   const activeImage = useFloatingCardImage(active);
 
-  // The card is the daily "unlock gate", so it only appears once per
-  // day around the person's scheduled app block:
-  //   • "live"  — a block is firing right now → show the card (the
-  //               gate to unlock apps).
-  //   • "muted" — nothing scheduled at all → still show it so a
-  //               brand-new user can read / unlock manually.
-  //   • "armed" — a block is scheduled for later → hide the card and
-  //               leave just the prompt + status pill until it fires.
-  // Once today's card is saved (unlockedToday) it stays hidden for
-  // the rest of the day.
-  const showCard = !unlockedToday && nextBreakTone !== "armed";
+  // Envelope while today's reading is still open; after finish, Home
+  // returns to the reflective quote + next-break pill.
+  const showCard = !unlockedToday;
 
   useEffect(() => {
     expandPhaseRef.current = expandPhase;
@@ -488,8 +770,6 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     const refresh = () => setHomeQuote(resolveHomeQuote());
     refresh();
     const unsub = subscribeHomeQuotePreview(refresh);
-    // Re-check on a minute tick so morning → evening → night flips
-    // when no preview override is active.
     const id = setInterval(refresh, 60_000);
     return () => {
       unsub();
@@ -514,115 +794,149 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   }, [activeHeader]);
 
   const resetExpandState = useCallback(() => {
+    morphProgress.stopAnimation();
     openProgress.stopAnimation();
     detailProgress.stopAnimation();
     hintOpacity.stopAnimation();
     hintPulse.stopAnimation();
     heroDragY.stopAnimation();
     verseOpacity.stopAnimation();
+    heroEnter.stopAnimation();
+    morphProgress.setValue(0);
     openProgress.setValue(0);
     detailProgress.setValue(0);
     hintOpacity.setValue(0);
     hintPulse.setValue(0);
     heroDragY.setValue(0);
     verseOpacity.setValue(0);
+    heroEnter.setValue(0);
     setExpandPhase("hero");
     setShowSwipeHint(false);
   }, [
     detailProgress,
     heroDragY,
+    heroEnter,
     hintOpacity,
     hintPulse,
+    morphProgress,
     openProgress,
     verseOpacity,
   ]);
 
-  const fadeInVerse = useCallback(() => {
-    verseOpacity.stopAnimation();
-    verseOpacity.setValue(0);
-    Animated.timing(verseOpacity, {
+  const measureMiniCard = useCallback((): Promise<CardBounds | null> => {
+    return new Promise((resolve) => {
+      miniCardRef.current?.measureInWindow((x, y, width, height) => {
+        if (width > 0 && height > 0) {
+          resolve({ x, y, width, height });
+          return;
+        }
+        resolve(null);
+      });
+    });
+  }, []);
+
+  const envelopeWidth = Math.min(windowWidth * 0.98, 420);
+  const envelopeHeight = Math.round(envelopeWidth * 0.66);
+
+  const fallbackCardBounds = useCallback((): CardBounds => {
+    const width = envelopeWidth;
+    const height = envelopeHeight;
+    return {
+      x: windowWidth - width + 36,
+      y: Math.max(windowHeight - height - bottomInset + 8, insets.top + 160),
+      width,
+      height,
+    };
+  }, [
+    bottomInset,
+    envelopeHeight,
+    envelopeWidth,
+    insets.top,
+    windowHeight,
+    windowWidth,
+  ]);
+
+  const showHeroHint = useCallback(() => {
+    if (expandPhaseRef.current !== "hero") return;
+    setShowSwipeHint(true);
+    Animated.timing(hintOpacity, {
       toValue: 1,
-      // Slow intentional fade — the sticker should arrive like a
-      // breath, not a pop. Reduced motion keeps a short fade.
-      duration: reducedMotion ? 280 : 3200,
-      delay: reducedMotion ? 40 : 700,
-      easing: Easing.out(Easing.cubic),
+      duration: reducedMotion ? 200 : 380,
+      easing: LIQUID_OUT,
       useNativeDriver: true,
     }).start();
-  }, [reducedMotion, verseOpacity]);
+  }, [hintOpacity, reducedMotion]);
 
   const openCard = useCallback(
-    (
+    async (
       item: FloatingScriptureCard,
       opts?: { silent?: boolean; dismissLocked?: boolean },
     ) => {
       if (!opts?.silent) haptics.soft();
+      // Bounds kept for layout fallbacks; entrance is a full-screen reveal
+      // (not a morph from the bottom-right envelope).
+      const bounds = (await measureMiniCard()) ?? fallbackCardBounds();
+      setCardBounds(bounds);
       resetExpandState();
       setActive(item);
       // Live app-block gate: no X / back dismiss — finish the card.
       setDismissLocked(
         opts?.dismissLocked === true || nextBreakTone === "live",
       );
+      // Full-screen shell immediately — avoids the cream card morph
+      // growing out of the lavender envelope.
+      morphProgress.setValue(1);
       setExpanded(true);
 
       if (reducedMotion) {
-        // Reduced motion: swap the scale/slide expand for a plain
-        // opacity cross-fade (HIG: replace motion with a fade rather
-        // than snapping). Land on the hero quote like the full-motion
-        // path so the experience is identical minus the zoom.
-        detailProgress.setValue(0);
-        openProgress.setValue(0);
+        openProgress.setValue(1);
+        heroEnter.setValue(1);
+        verseOpacity.setValue(1);
         requestAnimationFrame(() => {
-          fadeInVerse();
-          Animated.timing(openProgress, {
-            toValue: 1,
-            duration: 260,
-            easing: LIQUID_OUT,
-            useNativeDriver: true,
-          }).start(({ finished }) => {
-            if (!finished || expandPhaseRef.current !== "hero") return;
-            setShowSwipeHint(true);
-            Animated.timing(hintOpacity, {
-              toValue: 1,
-              duration: 200,
-              easing: LIQUID_OUT,
-              useNativeDriver: true,
-            }).start();
-          });
+          showHeroHint();
         });
         return;
       }
 
       requestAnimationFrame(() => {
-        fadeInVerse();
-        Animated.timing(openProgress, {
-          toValue: 1,
-          duration: OPEN_MS,
-          easing: LIQUID_OUT,
-          useNativeDriver: true,
-        }).start(({ finished }) => {
+        Animated.parallel([
+          Animated.timing(openProgress, {
+            toValue: 1,
+            duration: REVEAL_PHOTO_MS,
+            easing: LIQUID_OUT,
+            useNativeDriver: true,
+          }),
+          Animated.timing(heroEnter, {
+            toValue: 1,
+            duration: REVEAL_STICKER_MS,
+            delay: 100,
+            easing: LIQUID_OUT,
+            useNativeDriver: true,
+          }),
+          Animated.timing(verseOpacity, {
+            toValue: 1,
+            duration: REVEAL_STICKER_MS,
+            delay: 160,
+            easing: LIQUID_OUT,
+            useNativeDriver: true,
+          }),
+        ]).start(({ finished }) => {
           if (!finished) return;
-          setTimeout(() => {
-            if (expandPhaseRef.current !== "hero") return;
-            setShowSwipeHint(true);
-            Animated.timing(hintOpacity, {
-              toValue: 1,
-              duration: 380,
-              easing: LIQUID_OUT,
-              useNativeDriver: true,
-            }).start();
-          }, HERO_HINT_DELAY_MS);
+          setTimeout(showHeroHint, Math.round(HERO_HINT_DELAY_MS * 0.55));
         });
       });
     },
     [
-      detailProgress,
-      fadeInVerse,
-      hintOpacity,
+      fallbackCardBounds,
+      heroEnter,
+      measureMiniCard,
+      morphProgress,
       nextBreakTone,
       openProgress,
       reducedMotion,
       resetExpandState,
+      showHeroHint,
+      verseOpacity,
     ],
   );
 
@@ -693,58 +1007,77 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     ]).start();
   }, [detailProgress, heroDragY, hintOpacity, reducedMotion]);
 
-  const closeExpanded = useCallback(() => {
-    if (dismissLocked) return;
-    haptics.soft();
-    if (reducedMotion) {
-      // Reduced motion: fade the shell out instead of snapping away.
-      Animated.timing(openProgress, {
-        toValue: 0,
-        duration: 200,
-        easing: LIQUID_IN,
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (!finished) return;
+  const dismissExpanded = useCallback(
+    (nextActive: FloatingScriptureCard = card) => {
+      const finish = () => {
         resetExpandState();
         setDismissLocked(false);
         setExpanded(false);
-        setActive(card);
+        setActive(nextActive);
+      };
+
+      if (reducedMotion) {
+        Animated.timing(openProgress, {
+          toValue: 0,
+          duration: 200,
+          easing: LIQUID_IN,
+          useNativeDriver: true,
+        }).start(({ finished }) => {
+          if (finished) finish();
+        });
+        return;
+      }
+
+      Animated.parallel([
+        Animated.timing(hintOpacity, {
+          toValue: 0,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(detailProgress, {
+          toValue: 0,
+          duration: 140,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heroEnter, {
+          toValue: 0,
+          duration: Math.round(CLOSE_MS * 0.65),
+          easing: LIQUID_IN,
+          useNativeDriver: true,
+        }),
+        Animated.timing(verseOpacity, {
+          toValue: 0,
+          duration: Math.round(CLOSE_MS * 0.55),
+          easing: LIQUID_IN,
+          useNativeDriver: true,
+        }),
+        Animated.timing(openProgress, {
+          toValue: 0,
+          duration: CLOSE_MS,
+          easing: LIQUID_IN,
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => {
+        if (finished) finish();
       });
-      return;
-    }
-    Animated.parallel([
-      Animated.timing(hintOpacity, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(detailProgress, {
-        toValue: 0,
-        duration: 140,
-        useNativeDriver: true,
-      }),
-      Animated.timing(openProgress, {
-        toValue: 0,
-        duration: CLOSE_MS,
-        easing: LIQUID_IN,
-        useNativeDriver: true,
-      }),
-    ]).start(({ finished }) => {
-      if (!finished) return;
-      resetExpandState();
-      setDismissLocked(false);
-      setExpanded(false);
-      setActive(card);
-    });
-  }, [
-    card,
-    detailProgress,
-    dismissLocked,
-    hintOpacity,
-    openProgress,
-    reducedMotion,
-    resetExpandState,
-  ]);
+    },
+    [
+      card,
+      detailProgress,
+      heroEnter,
+      hintOpacity,
+      openProgress,
+      reducedMotion,
+      resetExpandState,
+      verseOpacity,
+    ],
+  );
+
+  const closeExpanded = useCallback(() => {
+    if (dismissLocked) return;
+    haptics.soft();
+    dismissExpanded(card);
+  }, [card, dismissExpanded, dismissLocked]);
 
   const finishCard = useCallback(() => {
     haptics.tap();
@@ -753,50 +1086,8 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     // flashes home ("unlocked" copy) under the streak transition.
     const navigatedAway = onCompleteCard(completed);
     if (navigatedAway) return;
-
-    if (reducedMotion) {
-      Animated.timing(openProgress, {
-        toValue: 0,
-        duration: 200,
-        easing: LIQUID_IN,
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (!finished) return;
-        resetExpandState();
-        setDismissLocked(false);
-        setExpanded(false);
-        setActive(card);
-      });
-      return;
-    }
-    Animated.parallel([
-      Animated.timing(detailProgress, {
-        toValue: 0,
-        duration: 140,
-        useNativeDriver: true,
-      }),
-      Animated.timing(openProgress, {
-        toValue: 0,
-        duration: CLOSE_MS,
-        easing: LIQUID_IN,
-        useNativeDriver: true,
-      }),
-    ]).start(({ finished }) => {
-      if (!finished) return;
-      resetExpandState();
-      setDismissLocked(false);
-      setExpanded(false);
-      setActive(card);
-    });
-  }, [
-    active,
-    card,
-    detailProgress,
-    onCompleteCard,
-    openProgress,
-    reducedMotion,
-    resetExpandState,
-  ]);
+    dismissExpanded(card);
+  }, [active, card, dismissExpanded, onCompleteCard]);
 
   const snapHeroBack = useCallback(() => {
     Animated.spring(heroDragY, {
@@ -853,13 +1144,30 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     [expandPhase, onHeroPanEnd, onHeroPanUpdate, showSwipeHint, transitionToDetail],
   );
 
-  const shellOpacity = openProgress.interpolate({
-    inputRange: [0, 0.35, 1],
-    outputRange: [0, 0.85, 1],
-  });
-  const shellScale = openProgress.interpolate({
+  const origin = cardBounds ?? fallbackCardBounds();
+  const morphLeft = morphProgress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.96, 1],
+    outputRange: [origin.x, 0],
+  });
+  const morphTop = morphProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [origin.y, 0],
+  });
+  const morphWidth = morphProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [origin.width, windowWidth],
+  });
+  const morphHeight = morphProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [origin.height, windowHeight],
+  });
+  const morphRadius = morphProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [CARD_RADIUS, 0],
+  });
+  const shellOpacity = openProgress.interpolate({
+    inputRange: [0, 0.2, 1],
+    outputRange: [0, 1, 1],
   });
   const heroOpacity = detailProgress.interpolate({
     inputRange: [0, 0.55],
@@ -875,80 +1183,142 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     inputRange: [0, 1],
     outputRange: [0, 8],
   });
+  const stickerOpacity = heroEnter.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+  const stickerRise = heroEnter.interpolate({
+    inputRange: [0, 1],
+    outputRange: [36, 0],
+  });
+  const stickerScale = heroEnter.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.96, 1],
+  });
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      {/* Single centered column: prompt copy sits ABOVE the card so the
-          two never overlap. (They were previously two separate
-          absolute-fill layers both centered, which stacked the card on
-          top of the text.) */}
+    <View style={{ flex: 1, backgroundColor: showCard ? ENVELOPE_ROOM : colors.bg }}>
       <View
         pointerEvents="box-none"
         style={{
           ...StyleSheet.absoluteFillObject,
           alignItems: "center",
           justifyContent: "center",
+          paddingBottom: 24,
+          backgroundColor: showCard ? ENVELOPE_ROOM : "transparent",
         }}
       >
-        <View
-          pointerEvents="none"
-          style={{
-            alignItems: "center",
-            maxWidth: 360,
-            paddingHorizontal: 12,
-            marginBottom: showCard ? 28 : 0,
-          }}
-        >
-          {homeQuote ? <HomeQuoteText quote={homeQuote} maxWidth={340} /> : null}
-          <View
-            style={{
-              marginTop: homeQuote ? 14 : 16,
-              flexDirection: "row",
-              alignItems: "center",
-              alignSelf: "center",
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 999,
-              backgroundColor: colors.surface,
-              shadowColor: "#000",
-              shadowOpacity: 0.08,
-              shadowRadius: 10,
-              shadowOffset: { width: 0, height: 2 },
-            }}
-          >
+        {showCard ? (
+          <>
+            <View
+              pointerEvents="none"
+              style={{
+                position: "absolute",
+                top: insets.top + 28,
+                left: 28,
+                right: 28,
+              }}
+            >
+              <Text
+                style={[
+                  typography.smallLabel,
+                  {
+                    color: "rgba(255,255,255,0.85)",
+                    textTransform: "uppercase",
+                  },
+                ]}
+                allowFontScaling={false}
+              >
+                Today&apos;s reading
+              </Text>
+              <Text
+                style={{
+                  marginTop: 6,
+                  fontFamily: "System",
+                  fontWeight: "700",
+                  fontSize: 28,
+                  lineHeight: 34,
+                  letterSpacing: -0.8,
+                  color: "#FFFFFF",
+                }}
+                numberOfLines={1}
+              >
+                Tap to open
+              </Text>
+            </View>
             <View
               style={{
-                width: 7,
-                height: 7,
-                borderRadius: 999,
-                marginRight: 7,
-                backgroundColor: BREAK_TONE_DOT[nextBreakTone],
+                position: "absolute",
+                right: -36,
+                bottom: Math.max(bottomInset - 28, 24),
+                transform: [{ rotate: "-10deg" }],
               }}
-            />
-            <Text
-              style={{
-                fontFamily: typography.body.fontFamily,
-                fontWeight: "600",
-                fontSize: 13,
-                lineHeight: 16,
-                letterSpacing: -0.08,
-                color: colors.inkMuted,
-                textAlign: "center",
-              }}
-              numberOfLines={1}
             >
-              {nextBreakLabel}
-            </Text>
+              <DevotionalEnvelope
+                ref={miniCardRef}
+                card={card}
+                width={Math.min(windowWidth * 0.98, 420)}
+                onOpened={() => {
+                  void openCard(card);
+                }}
+                hidden={expanded}
+              />
+            </View>
+          </>
+        ) : (
+          <View
+            pointerEvents="none"
+            style={{
+              alignItems: "center",
+              maxWidth: 360,
+              paddingHorizontal: 12,
+            }}
+          >
+            {homeQuote ? (
+              <HomeQuoteText quote={homeQuote} maxWidth={340} />
+            ) : null}
+            <View
+              style={{
+                marginTop: homeQuote ? 14 : 16,
+                flexDirection: "row",
+                alignItems: "center",
+                alignSelf: "center",
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                borderRadius: 999,
+                backgroundColor: colors.surface,
+                shadowColor: "#000",
+                shadowOpacity: 0.08,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 2 },
+              }}
+            >
+              <View
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 999,
+                  marginRight: 7,
+                  backgroundColor: BREAK_TONE_DOT[nextBreakTone],
+                }}
+              />
+              <Text
+                style={{
+                  fontFamily: typography.body.fontFamily,
+                  fontWeight: "600",
+                  fontSize: 13,
+                  lineHeight: 16,
+                  letterSpacing: -0.08,
+                  color: colors.inkMuted,
+                  textAlign: "center",
+                }}
+                numberOfLines={1}
+              >
+                {nextBreakLabel}
+              </Text>
+            </View>
           </View>
-        </View>
-
-        {showCard ? (
-          <FloatingMiniCard
-            card={card}
-            onPress={() => openCard(card)}
-            hidden={expanded}
-          />
-        ) : null}
+        )}
       </View>
 
       <Modal
@@ -962,47 +1332,75 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
         statusBarTranslucent
       >
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <View style={{ flex: 1, backgroundColor: "#000" }}>
+          <View style={{ flex: 1 }} pointerEvents="box-none">
+            <Animated.View
+              pointerEvents="none"
+              style={{
+                ...StyleSheet.absoluteFillObject,
+                backgroundColor: "#000",
+                opacity: morphProgress.interpolate({
+                  inputRange: [0, 0.35, 1],
+                  outputRange: [0, 0.55, 1],
+                }),
+              }}
+            />
+
             <Animated.View
               style={{
-                flex: 1,
-                opacity: shellOpacity,
-                // Under reduced motion we drop the scale zoom and lean on
-                // the opacity cross-fade alone (heroDragY stays — it's a
-                // direct-manipulation gesture, not decorative motion).
-                transform: reducedMotion
-                  ? [{ translateY: heroDragY }]
-                  : [{ scale: shellScale }, { translateY: heroDragY }],
+                position: "absolute",
+                left: morphLeft,
+                top: morphTop,
+                width: morphWidth,
+                height: morphHeight,
+                borderRadius: morphRadius,
+                backgroundColor: "#000",
+                overflow: "hidden",
               }}
             >
+              <Animated.View
+                style={{
+                  ...StyleSheet.absoluteFillObject,
+                  opacity: shellOpacity,
+                  transform: [{ translateY: heroDragY }],
+                }}
+              >
               {/* Hero quote screen */}
               <Animated.View
                 pointerEvents={expandPhase === "hero" ? "auto" : "none"}
                 style={[StyleSheet.absoluteFillObject, { opacity: heroOpacity }]}
               >
-                <Image
-                  source={activeImage.source}
-                  style={StyleSheet.absoluteFillObject}
-                  contentFit="cover"
-                  contentPosition="center"
-                  onError={() => activeImage.setUseFallback(true)}
-                  accessibilityIgnoresInvertColors
-                />
-                <View
-                  pointerEvents="none"
-                  style={[
-                    StyleSheet.absoluteFillObject,
-                    { backgroundColor: "rgba(0, 0, 0, 0.1)" },
-                  ]}
-                />
+                <Animated.View
+                  style={[StyleSheet.absoluteFillObject, { opacity: openProgress }]}
+                >
+                  <Image
+                    source={activeImage.source}
+                    style={StyleSheet.absoluteFillObject}
+                    contentFit="cover"
+                    contentPosition="center"
+                    onError={() => activeImage.setUseFallback(true)}
+                    accessibilityIgnoresInvertColors
+                  />
+                  <View
+                    pointerEvents="none"
+                    style={[
+                      StyleSheet.absoluteFillObject,
+                      { backgroundColor: "rgba(0, 0, 0, 0.1)" },
+                    ]}
+                  />
+                </Animated.View>
 
-                <View
+                <Animated.View
                   pointerEvents="none"
                   style={{
                     ...StyleSheet.absoluteFillObject,
                     justifyContent: "center",
                     alignItems: "center",
                     paddingHorizontal: 28,
+                    opacity: stickerOpacity,
+                    transform: [
+                      { translateY: stickerRise },
+                      { scale: stickerScale },
+                    ],
                   }}
                 >
                   <ScriptureStickerNote
@@ -1011,7 +1409,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                     maxWidth={windowWidth * 0.82}
                     textOpacity={verseOpacity}
                   />
-                </View>
+                </Animated.View>
 
                 <Animated.View
                   pointerEvents="none"
@@ -1178,9 +1576,10 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                   </View>
                 </ScrollView>
               </Animated.View>
+              </Animated.View>
             </Animated.View>
 
-            {/* Outside the opacity/scale shell so nothing can hide it.
+            {/* Outside the morph shell so nothing can hide it.
                 Hidden during a live app-block gate — they must finish
                 the card (Hold to Unlock) rather than dismiss. */}
             {!dismissLocked ? (

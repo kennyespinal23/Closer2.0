@@ -10,8 +10,9 @@
     "newArchEnabled": true,
     "runtimeVersion": "exposdk:54.0.0",
     "splash": {
+      "image": "./assets/splash-closer.png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#FF4326"
     },
     "ios": {
       "icon": "./assets/icon.png",

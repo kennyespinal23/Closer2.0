@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Text, View, Platform } from "react-native";
-import Svg, { Path } from "react-native-svg";
+import { CLOSER_ACCENT } from "@/constants/theme";
 import { shouldPlayLaunchSplash, consumeLaunchSplash } from "@/lib/launchSplashSession";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -8,8 +8,8 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
  * LaunchSplash — the first frame after the OS splash.
  *
  * Sits as an absolutely-positioned overlay on top of the app
- * shell during cold launch. The native iOS splash hands off to
- * this component on a true-black canvas with a white wordmark.
+ * shell during cold launch. The native splash hands off to this
+ * component on the orange brand canvas with a white wordmark.
  */
 export function LaunchSplash() {
   const reducedMotion = useReducedMotion();
@@ -96,7 +96,7 @@ export function LaunchSplash() {
       // pointerEvents="none" on the OUTER overlay so taps can
       // bleed through to the home screen the moment the fade-out
       // starts — the user shouldn't feel a "tap-eating" pause at
-      // the end of the splash. The white surface is purely visual.
+      // the end of the splash. The surface is purely visual.
       pointerEvents="none"
       accessible={false}
       style={{
@@ -105,7 +105,7 @@ export function LaunchSplash() {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: "#000000",
+        backgroundColor: CLOSER_ACCENT,
         alignItems: "center",
         justifyContent: "center",
         opacity: overlayOpacity,
@@ -118,28 +118,11 @@ export function LaunchSplash() {
         elevation: 9999,
       }}
     >
-      <Animated.View
-        style={{
-          opacity: logoOpacity,
-          flexDirection: "row",
-          alignItems: "center",
-          // 20pt gap between cross and wordmark, per spec.
-          // Using `gap` (RN 0.71+) instead of marginRight on the
-          // cross because flex `gap` aligns the spacing to the
-          // visual baseline of the row even when children have
-          // different baselines.
-          gap: 20,
-        }}
-      >
-        <CrossIcon />
+      <Animated.View style={{ opacity: logoOpacity }}>
         <Text
           // SF Pro Display — Apple's stock display font.
-          // `Platform.select` falls back to a sensible system
-          // string on Android, but the brief is iOS-only so the
-          // primary path is the Apple system fontFamily.
-          // Weight bold + size 52 sits at the top of the brief's
-          // 52–56pt range so the wordmark reads as authoritative
-          // without crowding the cross.
+          // Weight bold + size 52 so the wordmark reads as the
+          // sole hero on the orange canvas.
           style={{
             fontFamily: Platform.select({
               ios: "SF Pro Display",
@@ -150,10 +133,6 @@ export function LaunchSplash() {
             lineHeight: 56,
             color: "#FFFFFF",
             letterSpacing: -1,
-            // Keep the text vertically aligned with the cross by
-            // including the descender padding RN inserts by
-            // default — `includeFontPadding: false` on Android,
-            // ignored on iOS.
             ...Platform.select({
               android: { includeFontPadding: false },
               default: {},
@@ -165,56 +144,5 @@ export function LaunchSplash() {
         </Text>
       </Animated.View>
     </Animated.View>
-  );
-}
-
-/**
- * The cross glyph. Two stroked paths (vertical + horizontal)
- * rendered in white with rounded line caps, sized at 64pt
- * tall to match the brief.
- *
- * Why SVG (not an SF Symbol or PNG asset):
- *   • A custom mark — Apple's `cross` SF Symbol is decorative
- *     and not a literal Christian cross.
- *   • SVG strokes scale cleanly at any density and let us
- *     control the line-cap geometry (`round`) and thickness
- *     (~7pt) per the brief without ever rasterizing.
- *   • Zero asset pipeline — no PNG to ship, no @2x/@3x
- *     variants, no asset registry.
- *
- * Proportions follow Apple's mark-design rule of thumb for
- * cross-shaped iconography: the horizontal bar sits in the
- * upper third (Latin cross silhouette), with the vertical
- * stem extending below to give the mark a weighted base.
- */
-function CrossIcon() {
-  // 64pt visual height, ~7pt stroke. Width is narrower than
-  // the height because a Latin cross is taller than wide; the
-  // viewBox is sized so the artwork bleeds to the edges with
-  // a half-stroke of padding to avoid clipping on round caps.
-  const HEIGHT = 64;
-  const WIDTH = 44;
-  return (
-    <Svg width={WIDTH} height={HEIGHT} viewBox="0 0 44 64" fill="none">
-      {/* Vertical stem — runs the full 64pt height of the mark,
-          centered horizontally in the 44pt viewport. */}
-      <Path
-        d="M22 4 L22 60"
-        stroke="#FFFFFF"
-        strokeWidth={7}
-        strokeLinecap="round"
-      />
-      {/* Crossbar — sits in the upper third of the stem (Latin
-          cross proportions: bar at roughly 22/64 from the top
-          instead of dead-center). Width of the bar is the full
-          viewport width minus half-stroke each side so the
-          rounded caps land flush against the bounding box. */}
-      <Path
-        d="M4 22 L40 22"
-        stroke="#FFFFFF"
-        strokeWidth={7}
-        strokeLinecap="round"
-      />
-    </Svg>
   );
 }

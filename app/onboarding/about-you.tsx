@@ -1,17 +1,11 @@
 import { useMemo, useRef, useState } from "react";
-import {
-  Animated,
-  Pressable,
-  Text,
-  View,
-  type PressableProps,
-} from "react-native";
+import { Animated, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Host, Picker as ExpoUIPicker } from "@expo/ui/swift-ui";
+import { Button } from "@/components/Button";
 import { FadeIn } from "@/components/FadeIn";
 import { OnboardingChrome } from "@/components/OnboardingChrome";
-import { SFSymbol } from "@/components/Symbol";
 import { progressFor } from "@/constants/onboarding";
 import { CLOSER_ACCENT } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
@@ -23,7 +17,7 @@ import { useColors, useResolvedScheme } from "@/state/theme";
  * Sex + year of birth — between name and Faith Check In.
  *
  * Year uses the native SwiftUI wheel (`@expo/ui` Picker).
- * Sex pills + arrow CTA use a soft spring press (same feel as
+ * Sex pills + Continue CTA use a soft spring press (same feel as
  * PrimaryPillButton).
  */
 
@@ -37,9 +31,6 @@ const CURRENT_YEAR = new Date().getFullYear();
 const MIN_YEAR = CURRENT_YEAR - 100;
 const MAX_YEAR = CURRENT_YEAR - 13;
 const DEFAULT_YEAR = 1995;
-
-/** Arrow CTA height — long stadium ~4–5× wider than tall on phone. */
-const ARROW_BTN_HEIGHT = 56;
 
 function buildYears(): number[] {
   const years: number[] = [];
@@ -127,64 +118,6 @@ function SexPill({
         </Pressable>
       </Animated.View>
     </View>
-  );
-}
-
-function ArrowContinueButton({
-  disabled,
-  onPress,
-}: {
-  disabled: boolean;
-  onPress: () => void;
-}) {
-  const { scale, onPressIn, onPressOut } = usePressScale();
-
-  const handlePressIn: PressableProps["onPressIn"] = () => {
-    if (disabled) return;
-    haptics.soft();
-    onPressIn();
-  };
-
-  return (
-    <Animated.View
-      style={{
-        transform: [{ scale }],
-        opacity: disabled ? 0.4 : 1,
-      }}
-    >
-      <Pressable
-        onPress={onPress}
-        disabled={disabled}
-        onPressIn={handlePressIn}
-        onPressOut={onPressOut}
-        accessibilityRole="button"
-        accessibilityLabel="Continue"
-      >
-        <View
-          style={{
-            width: "100%",
-            height: ARROW_BTN_HEIGHT,
-            borderRadius: 999,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: CLOSER_ACCENT,
-            // Soft floating shadow — matches the reference arrow CTA.
-            shadowColor: "#000000",
-            shadowOpacity: 0.12,
-            shadowRadius: 14,
-            shadowOffset: { width: 0, height: 6 },
-            elevation: 5,
-          }}
-        >
-          <SFSymbol
-            name="arrow.right"
-            size={20}
-            color="#FFFFFF"
-            weight="semibold"
-          />
-        </View>
-      </Pressable>
-    </Animated.View>
   );
 }
 
@@ -349,9 +282,10 @@ export default function AboutYouScreen() {
         <View style={{ flex: 1 }} />
 
         <View style={{ paddingBottom: 8 }}>
-          <ArrowContinueButton
-            disabled={!canContinue}
+          <Button
+            label="Continue"
             onPress={handleContinue}
+            disabled={!canContinue}
           />
         </View>
       </View>

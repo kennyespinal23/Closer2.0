@@ -106,7 +106,7 @@ export type ColorPalette = {
    * and other secondary chrome that must stay readable.
    *
    * Measured contrast (both schemes):
-   *   • Light `#4A4A50` on `#FDF6EC` bg ≈ 8.2:1 / on `#FFFFFF`
+   *   • Light `#4A4A50` on `#F9F0EB` bg ≈ 8.2:1 / on `#FFFFFF`
    *     surface ≈ 8.8:1 (AAA).
    *   • Dark `rgba(235,235,245,0.60)` on `#1C1C1E` surface ≈ 6.0:1
    *     (AA; AAA floor is reserved for `inkMuted` body copy).
@@ -363,12 +363,13 @@ export const LIGHT_COLORS: ColorPalette = {
   //   • v1 #F4F1EB cream — too yellow against photo content
   //   • v2 #F6F4F0 (Apple Books Library family)
   //   • v3 #F8F7F4 — cooler daylight white
-  //   • v4 (this) #FDF6EC — warmer cream the product asks for
-  bg: "#FDF6EC",
+  //   • v4 #FDF6EC — warmer cream
+  //   • v5 (this) #F9F0EB — soft blush cream
+  bg: "#F9F0EB",
   surface: "#FFFFFF",
   // Light-mode counterparts to the dark elevation steps.
   // Surface inversion holds: pure white cards (#FFFFFF) lift
-  // above the cream page (#FDF6EC), and an inset chip on top
+  // above the cream page (#F9F0EB), and an inset chip on top
   // of a white card uses a hair-warm gray (#F4F1EB) for the
   // next elevation step. Symmetric to dark mode's
   // bg → surfaceSecondary → surfaceTertiary progression.
@@ -378,7 +379,7 @@ export const LIGHT_COLORS: ColorPalette = {
   // light palette is built around white. Devotional card
   // collapses to the same pure-white surface used by
   // `surfaceSecondary`/`surface`, which still lifts cleanly
-  // off the warm-cream page bg (#FDF6EC → #FFFFFF is a
+  // off the warm-cream page bg (#F9F0EB → #FFFFFF is a
   // visible elevation step). The dark-mode "deepest tier"
   // semantic doesn't carry; the editorial hierarchy in
   // light mode comes from typography weight, not surface

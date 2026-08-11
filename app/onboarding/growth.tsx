@@ -83,7 +83,7 @@ export default function GrowthScreen() {
     // reveal. The "you, who want to grow in peace and patience,
     // spend 2:27 a day on socials" reading is the seed of why
     // we asked these questions first.
-    router.push("/onboarding/apps");
+    router.push("/onboarding/proof");
   };
 
   return (

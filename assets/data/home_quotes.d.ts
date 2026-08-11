@@ -1,8 +1,9 @@
 /**
  * Type declaration for `home_quotes.json`.
  *
- * Segmented home prompts — handwritten (Kalam; JSON tag `"caveat"`)
- * + bold sans, with optional per-segment underline accents.
+ * Segmented home prompts — entire quote body in Shantell Sans Bold.
+ * JSON may still tag segments `"caveat"` / `"sans-bold"` for color and
+ * underline accents only; the face is unified at render time.
  */
 
 export type HomeQuoteFont = "caveat" | "sans-bold";

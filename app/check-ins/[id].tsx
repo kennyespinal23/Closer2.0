@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { goBackOr } from "@/lib/navigation";
 import { shareVerse } from "@/lib/share";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 import { SFSymbol } from "@/components/Symbol";
 import { NEW_YORK } from "@/lib/typography";
 import Svg, {
@@ -452,15 +453,7 @@ function Header({ onBack }: { onBack: () => void }) {
   const colors = useColors();
   return (
     <View className="flex-row items-center px-4 pt-2 pb-3">
-      <Pressable
-        onPress={onBack}
-        hitSlop={12}
-        accessibilityRole="button"
-        accessibilityLabel="Back"
-        className="w-10 h-10 rounded-full items-center justify-center"
-      >
-        <SFSymbol name="chevron.left" size={16} color={colors.ink} weight="semibold" />
-      </Pressable>
+      <BubbleBackButton onPress={onBack} />
       <Text
         className="text-ink text-[17px] flex-1 text-center"
         style={{ fontFamily: "System", fontWeight: "700" }}

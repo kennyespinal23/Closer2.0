@@ -43,7 +43,7 @@ export default function StatScreen() {
       quoteEmphasis="2 hours, 27 minutes a day on social media."
       attribution="DataReportal · Global Digital Report 2024"
       ctaLabel="Continue"
-      onContinue={() => router.push("/onboarding/apps")}
+      onContinue={() => router.push("/onboarding/proof")}
     />
   );
 }

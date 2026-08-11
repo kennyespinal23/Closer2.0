@@ -13,9 +13,9 @@
   },
   "dependencies": {
     "@expo-google-fonts/eb-garamond": "^0.4.2",
-    "@expo-google-fonts/kalam": "^0.4.1",
     "@expo-google-fonts/playfair-display": "^0.4.2",
     "@expo-google-fonts/plus-jakarta-sans": "^0.2.3",
+    "@expo-google-fonts/shantell-sans": "^0.4.1",
     "@expo/config-plugins": "^56.0.8",
     "@expo/ui": "0.2.0-beta.9",
     "@lodev09/react-native-true-sheet": "^3.10.1",

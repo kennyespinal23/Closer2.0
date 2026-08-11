@@ -100,7 +100,7 @@ export default function CreatingJourneyScreen() {
     }).start();
 
     const advance = setTimeout(() => {
-      router.replace("/onboarding/apps");
+      router.replace("/onboarding/proof");
     }, DURATION_MS + 450);
 
     return () => {

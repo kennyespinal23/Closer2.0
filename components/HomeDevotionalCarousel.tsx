@@ -36,6 +36,10 @@ import { typography } from "@/lib/typography";
 import { getSermonBackdrop, HERO_BACKDROP_FALLBACK } from "@/services/unsplashService";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
+/** Brand accent — inlined so the continue-reading pill never depends
+ *  on a theme import that can fail mid-HMR and blank the control. */
+const CONTINUE_PILL_BG = "#FF4326";
+
 /** Native iOS UITabBar visible height (above home indicator). */
 const TAB_BAR_VISIBLE_HEIGHT = 49;
 /** Worst-case tab bar footprint (bar + home indicator) on modern iPhones. */
@@ -84,6 +88,15 @@ export type HomeDevotionalCarouselProps = {
   onCompletedPress?: () => void;
   streakCount?: number;
   onStreakPress?: () => void;
+  /**
+   * Resume the user's last Bible chapter. When set, an orange
+   * continue-reading pill sits under the top chrome chips.
+   */
+  continueReading?: {
+    label: string;
+    accessibilityLabel: string;
+    onPress: () => void;
+  };
   /** Card-layout — today's single scripture card + chrome. */
   cardContent?: {
     card: FloatingScriptureCard;
@@ -335,6 +348,7 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
   onCompletedPress,
   streakCount = 0,
   onStreakPress,
+  continueReading,
   cardContent,
 }: HomeDevotionalCarouselProps) {
   const insets = useSafeAreaInsets();
@@ -367,13 +381,15 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
   if (!card) return null;
 
   const useCardLayout = HOME_CARD_PROTOTYPE && cardContent != null;
+  /** Unread delivery room — orange canvas; hide chrome so the envelope is alone. */
+  const envelopeMode = Boolean(cardContent && !cardContent.unlockedToday);
   const topClearance = insets.top + 8 + HERO_GLASS_DISC.height + 20;
   const useFrostedChrome = useCardLayout && scheme === "light";
   const bookDiscStyle = useFrostedChrome ? FROSTED_CHROME_PILL : HERO_GLASS_DISC;
   const chromeInk = useFrostedChrome ? FROSTED_CHROME_INK : "#FFFFFF";
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: envelopeMode ? CONTINUE_PILL_BG : colors.bg }}>
       {useCardLayout ? (
         <HomeFloatingPrayerHome
           card={cardContent.card}
@@ -393,8 +409,9 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
         />
       )}
 
-      {/* Top chrome — completed + streak. Shown on both the photo
-          hero and the floating-card Home so streaks stay reachable. */}
+      {/* Top chrome — collection + streak. Hidden while the unread
+          envelope delivery room is active so nothing competes. */}
+      {!envelopeMode ? (
       <View
         pointerEvents="box-none"
         style={{
@@ -402,7 +419,8 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
           top: insets.top + 8,
           left: PAGE_MARGIN_H,
           right: PAGE_MARGIN_H,
-          zIndex: 10,
+          zIndex: 100,
+          elevation: 100,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
@@ -510,6 +528,78 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
           </Pressable>
         ) : null}
       </View>
+      ) : null}
+
+      {continueReading && !envelopeMode ? (
+        <View
+          pointerEvents="box-none"
+          style={{
+            position: "absolute",
+            top: insets.top + 8 + 44 + 10,
+            left: 0,
+            right: 0,
+            alignItems: "center",
+            zIndex: 200,
+            elevation: 200,
+          }}
+        >
+          <Pressable
+            onPress={() => {
+              haptics.soft();
+              continueReading.onPress();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={continueReading.accessibilityLabel}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.88 : 1,
+            })}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                borderRadius: 22,
+                backgroundColor: CONTINUE_PILL_BG,
+                minHeight: 44,
+                paddingLeft: 14,
+                paddingRight: 12,
+                shadowColor: "#000",
+                shadowOpacity: 0.22,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 3 },
+              }}
+            >
+              <SFSymbol
+                name="book.fill"
+                size={13}
+                color="#FFFFFF"
+                weight="semibold"
+              />
+              <Text
+                style={[
+                  typography.smallLabel,
+                  {
+                    color: "#FFFFFF",
+                    marginLeft: 8,
+                    marginRight: 6,
+                    maxWidth: 220,
+                  },
+                ]}
+                numberOfLines={1}
+                allowFontScaling={false}
+              >
+                {continueReading.label}
+              </Text>
+              <SFSymbol
+                name="chevron.right"
+                size={12}
+                color="#FFFFFF"
+                weight="semibold"
+              />
+            </View>
+          </Pressable>
+        </View>
+      ) : null}
     </View>
   );
 });

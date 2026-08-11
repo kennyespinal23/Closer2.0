@@ -55,6 +55,17 @@ export function nextDevotional(currentDay: number | null): DevotionalDay {
   return DEVOTIONALS[(i + 1) % DEVOTIONALS.length]!;
 }
 
+/** Step back one catalog day (wrapping). Dev/QA cycle companion to next. */
+export function previousDevotional(currentDay: number | null): DevotionalDay {
+  if (DEVOTIONALS.length === 0) {
+    throw new Error("[devotionals] catalog is empty — cannot step back");
+  }
+  if (currentDay == null) return DEVOTIONALS[DEVOTIONALS.length - 1]!;
+  const i = DEVOTIONALS.findIndex((d) => d.day === currentDay);
+  if (i < 0) return DEVOTIONALS[DEVOTIONALS.length - 1]!;
+  return DEVOTIONALS[(i - 1 + DEVOTIONALS.length) % DEVOTIONALS.length]!;
+}
+
 export function devotionalPosition(
   day: number | null,
 ): { position: number; total: number } {

@@ -20,6 +20,7 @@ import {
 } from "@/lib/homeQuotes";
 import * as haptics from "@/lib/haptics";
 import { useDevTools } from "@/state/devTools";
+import { useMoments } from "@/state/moments";
 import { useColors } from "@/state/theme";
 
 /**
@@ -54,6 +55,13 @@ import { useColors } from "@/state/theme";
 export default function DeveloperToolsScreen() {
   const { enabled, setEnabled, unlockAllMilestones, setUnlockAllMilestones } =
     useDevTools();
+  const {
+    todaysMoment,
+    catalogPosition,
+    advanceToNextMoment,
+    advanceToPreviousMoment,
+    shuffleMoment,
+  } = useMoments();
   const colors = useColors();
   const router = useRouter();
   const quoteCount = allHomeQuotes().length;
@@ -115,6 +123,68 @@ export default function DeveloperToolsScreen() {
           onValueChange={(next) => {
             haptics.soft();
             setUnlockAllMilestones(next);
+          }}
+        />
+      </SettingsSection>
+
+      <SettingsSection
+        title="Daily devotionals"
+        footer="Jump through the 365-day catalog any time. Shuffle picks a random day (not the current one). Home updates immediately."
+      >
+        <SettingsLinkRow
+          icon={
+            <SFSymbol
+              name="backward.fill"
+              size={18}
+              color={colors.ink}
+              weight="semibold"
+            />
+          }
+          label="Previous reading"
+          sublabel={todaysMoment.title}
+          value={`${catalogPosition.position} / ${catalogPosition.total}`}
+          onPress={() => {
+            haptics.soft();
+            advanceToPreviousMoment();
+            router.navigate("/today");
+          }}
+          showDivider
+        />
+        <SettingsLinkRow
+          icon={
+            <SFSymbol
+              name="forward.fill"
+              size={18}
+              color={colors.ink}
+              weight="semibold"
+            />
+          }
+          label="Next reading"
+          sublabel={todaysMoment.title}
+          value={`${catalogPosition.position} / ${catalogPosition.total}`}
+          onPress={() => {
+            haptics.soft();
+            advanceToNextMoment();
+            router.navigate("/today");
+          }}
+          showDivider
+        />
+        <SettingsLinkRow
+          icon={
+            <SFSymbol
+              name="shuffle"
+              size={18}
+              color={colors.ink}
+              weight="semibold"
+            />
+          }
+          label="Shuffle reading"
+          sublabel="Jump to a random catalog day"
+          value={`${catalogPosition.position} / ${catalogPosition.total}`}
+          onPress={() => {
+            haptics.tick();
+            shuffleMoment();
+            router.navigate("/today");
           }}
         />
       </SettingsSection>

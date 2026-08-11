@@ -9,52 +9,9 @@ import { OnboardingChrome } from "@/components/OnboardingChrome";
 import { SocialButton } from "@/components/SocialButton";
 import { progressFor } from "@/constants/onboarding";
 import { spacing } from "@/constants/spacing";
-import { CLOSER_ACCENT } from "@/constants/theme";
 import { systemText, typography } from "@/lib/typography";
 import { useAuth } from "@/state/auth";
 import { useColors } from "@/state/theme";
-
-const SEGMENT_COUNT = 3;
-
-function SignupProgressSegments({ progress }: { progress: number }) {
-  const colors = useColors();
-  const filled = Math.max(
-    1,
-    Math.min(SEGMENT_COUNT, Math.round(progress * SEGMENT_COUNT)),
-  );
-
-  return (
-    <View
-      accessibilityRole="progressbar"
-      accessibilityValue={{
-        min: 0,
-        max: SEGMENT_COUNT,
-        now: filled,
-      }}
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        width: "100%",
-        maxWidth: 220,
-        alignSelf: "center",
-      }}
-    >
-      {Array.from({ length: SEGMENT_COUNT }).map((_, i) => (
-        <View
-          key={i}
-          style={{
-            flex: 1,
-            height: 4,
-            borderRadius: 999,
-            backgroundColor:
-              i < filled ? CLOSER_ACCENT : colors.border,
-          }}
-        />
-      ))}
-    </View>
-  );
-}
 
 export default function AccountScreen() {
   const router = useRouter();
@@ -151,12 +108,6 @@ export default function AccountScreen() {
               >
                 Save your streak, highlights, and journey across devices.
               </Text>
-            </FadeIn>
-
-            <FadeIn delayMs={600}>
-              <View style={{ marginTop: spacing[32], marginBottom: spacing[8] }}>
-                <SignupProgressSegments progress={progress} />
-              </View>
             </FadeIn>
           </View>
 

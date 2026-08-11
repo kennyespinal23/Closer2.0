@@ -17,6 +17,7 @@ import { BrandGlyph } from "@/components/BrandGlyph";
 import { FamilyActivityAppsEditor } from "@/components/FamilyActivityAppsEditor";
 import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 import { SFSymbol } from "@/components/Symbol";
 import { TimeBlockEditor } from "@/components/TimeBlockEditor";
 import { TAB_ACCENT_RED } from "@/constants/theme";
@@ -212,20 +213,7 @@ export function AppBlocksScreen({
             paddingBottom: 4,
           }}
         >
-          <Pressable
-            onPress={() => router.back()}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Back"
-            style={{
-              width: 44,
-              height: 44,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <SFSymbol name="chevron.left" size={18} color={colors.ink} weight="semibold" />
-          </Pressable>
+          <BubbleBackButton onPress={() => router.back()} />
         </View>
       ) : null}
 

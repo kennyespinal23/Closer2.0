@@ -84,7 +84,13 @@ export default function ProfileTabScreen() {
   const { allNotes, allHighlights, counts: annotationCounts } =
     useAnnotations();
   const { saved: savedSermonDays, count: savedCount } = useSavedSermons();
-  const { todaysMoment, catalogPosition, advanceToNextMoment } = useMoments();
+  const {
+    todaysMoment,
+    catalogPosition,
+    advanceToNextMoment,
+    advanceToPreviousMoment,
+    shuffleMoment,
+  } = useMoments();
   const {
     enabled: devToolsEnabled,
     unlockAllMilestones,
@@ -192,6 +198,18 @@ export default function ProfileTabScreen() {
   const handleAdvanceSermon = () => {
     haptics.soft();
     advanceToNextMoment();
+    router.navigate("/today");
+  };
+
+  const handlePreviousSermon = () => {
+    haptics.soft();
+    advanceToPreviousMoment();
+    router.navigate("/today");
+  };
+
+  const handleShuffleSermon = () => {
+    haptics.tick();
+    shuffleMoment();
     router.navigate("/today");
   };
 
@@ -666,6 +684,21 @@ export default function ProfileTabScreen() {
             <SettingsLinkRow
               icon={
                 <SFSymbol
+                  name="backward.fill"
+                  size={14}
+                  color={colors.ink}
+                  weight="semibold"
+                />
+              }
+              label="Previous reading"
+              sublabel={todaysMoment.title}
+              value={`${catalogPosition.position} / ${catalogPosition.total}`}
+              onPress={handlePreviousSermon}
+              showDivider
+            />
+            <SettingsLinkRow
+              icon={
+                <SFSymbol
                   name="forward.fill"
                   size={14}
                   color={colors.ink}
@@ -676,6 +709,21 @@ export default function ProfileTabScreen() {
               sublabel={todaysMoment.title}
               value={`${catalogPosition.position} / ${catalogPosition.total}`}
               onPress={handleAdvanceSermon}
+              showDivider
+            />
+            <SettingsLinkRow
+              icon={
+                <SFSymbol
+                  name="shuffle"
+                  size={14}
+                  color={colors.ink}
+                  weight="semibold"
+                />
+              }
+              label="Shuffle reading"
+              sublabel="Jump to a random catalog day"
+              value={`${catalogPosition.position} / ${catalogPosition.total}`}
+              onPress={handleShuffleSermon}
               showDivider
             />
             <SettingsLinkRow

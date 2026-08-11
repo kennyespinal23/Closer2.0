@@ -69,9 +69,11 @@ import { useProgress } from "@/state/progress";
 import { useReadingGoal } from "@/state/readingGoal";
 import { useColors, useResolvedScheme, useTheme } from "@/state/theme";
 import { goBackOr } from "@/lib/navigation";
+import { isRedLetterVerse, redLetterColor } from "@/lib/redLetter";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { minTouchTarget, spacing } from "@/constants/spacing";
 import { NEW_YORK, SF_PRO, systemText, typography } from "@/lib/typography";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 
 /**
  * Color of the inline note marker drawn next to verse numbers that
@@ -693,6 +695,12 @@ export default function ChapterReaderScreen() {
     if (!editingNote || !editingPrimaryKey || !editingNote.noteId) return "";
     const list = annotations.getNotes(editingPrimaryKey);
     return list.find((n) => n.id === editingNote.noteId)?.text ?? "";
+  }, [editingNote, editingPrimaryKey, annotations]);
+
+  const editingNoteInitialColor = useMemo(() => {
+    if (!editingNote || !editingPrimaryKey || !editingNote.noteId) return null;
+    const list = annotations.getNotes(editingPrimaryKey);
+    return list.find((n) => n.id === editingNote.noteId)?.color ?? null;
   }, [editingNote, editingPrimaryKey, annotations]);
 
   // Verse share handler — uses the OS share sheet (no extra deps).
@@ -1895,7 +1903,8 @@ export default function ChapterReaderScreen() {
         reference={editingReference}
         verseText={editingVerseData?.text ?? ""}
         initialNote={editingNoteInitialText}
-        onSave={(text) => {
+        initialColor={editingNoteInitialColor}
+        onSave={(text, color) => {
           if (!editingNote) {
             setEditingNote(null);
             return;
@@ -1906,6 +1915,7 @@ export default function ChapterReaderScreen() {
               editingPrimaryKey,
               editingNote.noteId,
               text,
+              { color },
             );
           } else {
             // Composing a new note. For multi-verse selections we
@@ -1917,6 +1927,7 @@ export default function ChapterReaderScreen() {
               const v = data?.verses.find((x) => x.number === verseNum);
               annotations.addNote(key, text, {
                 verseText: v?.text,
+                color,
               });
             }
           }
@@ -2017,6 +2028,8 @@ function VerseFlow({
 }) {
   const annotations = useAnnotations();
   const colors = useColors();
+  const scheme = useResolvedScheme();
+  const jesusInk = redLetterColor(scheme);
 
   const baseFontSize = 18 * scale;
   const baseLineHeight = 30 * scale;
@@ -2035,6 +2048,7 @@ function VerseFlow({
           highlight: findHighlightColor(annotations.getHighlight(key)),
           noteCount,
           hasNote: noteCount > 0,
+          isJesus: isRedLetterVerse(bookId, chapter, v.number),
         };
       }),
     [verses, bookId, chapter, annotations],
@@ -2159,6 +2173,9 @@ function VerseFlow({
                 fontSize: baseFontSize,
                 lineHeight: baseLineHeight,
                 letterSpacing: -0.1,
+                // Red-letter: words of Jesus print in crimson,
+                // matching traditional printed Bibles.
+                color: v.isJesus ? jesusInk : colors.ink,
               }}
             >
               {normalizeVerseBody(v.text)}
@@ -3147,28 +3164,15 @@ function Header({
           </Text>
         ) : null}
 
-        <Pressable
-          onPress={goBack}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
+        <View
           style={{
             position: "absolute",
             left: 8,
             top: 2,
-            width: 44,
-            height: 44,
-            alignItems: "center",
-            justifyContent: "center",
           }}
         >
-          <SFSymbol
-            name="chevron.left"
-            size={20}
-            color={colors.ink}
-            weight="semibold"
-          />
-        </Pressable>
+          <BubbleBackButton onPress={goBack} />
+        </View>
       </View>
 
       <View

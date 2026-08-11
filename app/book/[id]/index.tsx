@@ -13,6 +13,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BookCover } from "@/components/BookCover";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 import { SFSymbol, type SFSymbolName } from "@/components/Symbol";
 import { CATEGORY_COVER_PALETTE } from "@/constants/bookCovers";
 import { getBookBlurb, getBookTheme } from "@/constants/bookBlurbs";
@@ -649,20 +650,10 @@ function NotFoundHeader() {
         minHeight: minTouchTarget,
       }}
     >
-      <Pressable
+      <BubbleBackButton
         onPress={() => goBackOr(router, "/(tabs)/library")}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityLabel="Back"
-        style={{
-          width: minTouchTarget,
-          height: minTouchTarget,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <SFSymbol name="chevron.left" size={20} color={ink} weight="semibold" />
-      </Pressable>
+        color={ink}
+      />
     </View>
   );
 }

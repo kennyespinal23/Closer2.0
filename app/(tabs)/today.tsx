@@ -78,17 +78,18 @@ import { useProgress } from "@/state/progress";
 import { type StudySession, useStudySessions } from "@/state/studySessions";
 import { useReadingGoal } from "@/state/readingGoal";
 import { useColors } from "@/state/theme";
+import { computeContinueReading } from "@/lib/continueReading";
 
 // Home — the Imprint pass.
 //
 // One greeting line, one streak strip, then the reading-goal pill
 // (the daily metric anchor) directly under it, then today's sermon
 // hero, then a slim "Last check-in" recap pointing to the user's
-// most recent mood log. Chapter-resume Continue-Reading lives on
-// the Library tab now — Home is sermon + feeling + activity, in
-// that order. Stats (sermons heard, highlights, etc.) sit in
-// Profile → Your Practice; the activity ring's full detail screen
-// is at /reading-goal.
+// most recent mood log. When the user has a recent Bible chapter,
+// an orange Continue-Reading pill sits under the top chrome.
+// Stats (sermons heard, highlights, etc.) sit in Profile → Your
+// Practice; the activity ring's full detail screen is at
+// /reading-goal.
 
 export default function TodayScreen() {
   const router = useRouter();
@@ -102,6 +103,8 @@ export default function TodayScreen() {
     hasCompletedSermonForDay,
     sermonCompletions,
     recordCompletion,
+    lastVisited,
+    hasReadChapter,
   } = progress;
   const milestoneUnlockStreak = useMilestoneUnlockStreak();
   // (engagedDates destructure removed alongside the home "Your
@@ -471,17 +474,17 @@ export default function TodayScreen() {
       focusSession !== null ||
       (hasEnabledSession && blockedIds.length > 0);
 
-    let nextBreakLabel = "No app break scheduled yet";
+    let nextBreakLabel = "No Devotional scheduled yet";
     let nextBreakTone: "live" | "armed" | "muted" = "muted";
     const inScheduledBlock = isInsideAnyActiveBlockWindow(studySessions, now);
     // Live only while apps are still gated. After today's unlock,
     // fall through to the next scheduled time so the pill still
-    // answers "when is my next break?"
+    // answers "when is my next Devotional?"
     if (
       !hasCompletedSermonToday &&
       (focusSession !== null || inScheduledBlock)
     ) {
-      nextBreakLabel = "App break is on now";
+      nextBreakLabel = "Devotional is on now";
       nextBreakTone = "live";
     } else {
       let best: Date | null = null;
@@ -499,17 +502,17 @@ export default function TodayScreen() {
         });
         const sameDay = best.toDateString() === now.toDateString();
         if (sameDay) {
-          nextBreakLabel = `Next app break · Today ${time}`;
+          nextBreakLabel = `Next Devotional · Today ${time}`;
         } else {
           const tomorrow = new Date(now);
           tomorrow.setDate(now.getDate() + 1);
           if (best.toDateString() === tomorrow.toDateString()) {
-            nextBreakLabel = `Next app break · Tomorrow ${time}`;
+            nextBreakLabel = `Next Devotional · Tomorrow ${time}`;
           } else {
             const dayName = best.toLocaleDateString("en-US", {
               weekday: "long",
             });
-            nextBreakLabel = `Next app break · ${dayName} ${time}`;
+            nextBreakLabel = `Next Devotional · ${dayName} ${time}`;
           }
         }
       }
@@ -526,7 +529,9 @@ export default function TodayScreen() {
       blockedAppIds: blockedIds,
       nextBreakLabel,
       nextBreakTone,
-      unlockedToday: hasCompletedSermonToday,
+      // Moment-specific — so Dev "Shuffle / Next reading" can surface
+      // a fresh envelope even if a different sermon was finished earlier today.
+      unlockedToday: hasCompletedSermonForDay(todaysMoment.day),
       onCompleteCard: handleCompleteFloatingCard,
     };
   }, [
@@ -536,7 +541,7 @@ export default function TodayScreen() {
     focusSession,
     focusPrefs.blockedAppIds,
     studySessions,
-    hasCompletedSermonToday,
+    hasCompletedSermonForDay,
     handleCompleteFloatingCard,
   ]);
 
@@ -562,6 +567,19 @@ export default function TodayScreen() {
   const handleOpenRhythm = useCallback(() => {
     router.push("/rhythm");
   }, [router]);
+
+  const continueReading = useMemo(
+    () => computeContinueReading(lastVisited, hasReadChapter),
+    [lastVisited, hasReadChapter],
+  );
+
+  const handleContinueReading = useCallback(() => {
+    if (!continueReading) return;
+    haptics.soft();
+    router.push(
+      `/book/${continueReading.book.id}/${continueReading.chapter}`,
+    );
+  }, [continueReading, router]);
 
   const handleOpenLastCheckIn = useCallback(() => {
     if (!lastCheckIn) return;
@@ -766,6 +784,15 @@ export default function TodayScreen() {
         streakCount={streak.current}
         onStreakPress={handleOpenRhythm}
         cardContent={homeCardContent}
+        continueReading={
+          continueReading
+            ? {
+                label: `Continue · ${continueReading.book.name} ${continueReading.chapter}`,
+                accessibilityLabel: `Continue reading ${continueReading.book.name} chapter ${continueReading.chapter}. ${continueReading.hint}`,
+                onPress: handleContinueReading,
+              }
+            : undefined
+        }
       />
 
 

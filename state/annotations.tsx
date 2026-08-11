@@ -116,6 +116,8 @@ export type NoteEntry = {
   text: string;
   createdAt: number;
   updatedAt: number;
+  /** Sticky-note paper tint (hex). Optional — legacy notes omit it. */
+  color?: string;
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -157,6 +159,8 @@ export type Note = VerseRef & {
   verseText: string;
   createdAt: number;
   updatedAt: number;
+  /** Sticky-note paper tint when set. */
+  color?: string;
 };
 
 export type Highlight = VerseRef & {
@@ -173,6 +177,8 @@ export type Highlight = VerseRef & {
  */
 export type AnnotateOptions = {
   verseText?: string;
+  /** Sticky-note tint — same ids as verse highlights. */
+  color?: string;
 };
 
 type AnnotationsContextValue = AnnotationsState & {
@@ -198,9 +204,14 @@ type AnnotationsContextValue = AnnotationsState & {
 
   /**
    * Replace the text of an existing note on this verse. Empty text
-   * deletes the note.
+   * deletes the note. Optional `color` updates the sticky paper tint.
    */
-  updateNote: (key: string, noteId: string, text: string) => void;
+  updateNote: (
+    key: string,
+    noteId: string,
+    text: string,
+    opts?: { color?: string },
+  ) => void;
 
   /** Remove a single note from this verse. */
   deleteNote: (key: string, noteId: string) => void;
@@ -352,6 +363,7 @@ export function AnnotationsProvider({ children }: { children: ReactNode }) {
         text: trimmed,
         createdAt: now,
         updatedAt: now,
+        ...(opts?.color ? { color: opts.color } : {}),
       };
 
       setState((s) => {
@@ -366,7 +378,7 @@ export function AnnotationsProvider({ children }: { children: ReactNode }) {
   );
 
   const updateNote = useCallback(
-    (key: string, noteId: string, text: string) => {
+    (key: string, noteId: string, text: string, opts?: { color?: string }) => {
       setState((s) => {
         const list = s.notes[key];
         if (!list) return s;
@@ -390,7 +402,14 @@ export function AnnotationsProvider({ children }: { children: ReactNode }) {
         }
 
         const nextList = list.map((n) =>
-          n.id === noteId ? { ...n, text: trimmed, updatedAt: Date.now() } : n,
+          n.id === noteId
+            ? {
+                ...n,
+                text: trimmed,
+                updatedAt: Date.now(),
+                ...(opts?.color !== undefined ? { color: opts.color } : {}),
+              }
+            : n,
         );
         const nextNotes = { ...s.notes, [key]: nextList };
         return touch({ ...s, notes: nextNotes }, key, true);
@@ -450,6 +469,7 @@ export function AnnotationsProvider({ children }: { children: ReactNode }) {
           verseText: snippet,
           createdAt: n.createdAt,
           updatedAt: n.updatedAt,
+          color: n.color,
         });
       }
     }

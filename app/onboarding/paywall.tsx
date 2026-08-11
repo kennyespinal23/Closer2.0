@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -36,6 +37,9 @@ const PRIVACY_URL = "https://closer.app/privacy";
 
 /** Yellow savings chip — matches the reference badge treatment. */
 const POPULAR_YELLOW = "#FFE14A";
+
+/** Short phones (SE / 16e class) need denser paywall chrome. */
+const COMPACT_HEIGHT = 740;
 
 const FALLBACK_TIME = { hour: 7, minute: 0 } as const;
 const SYSTEM_STUDY_NAME = "Bible Study";
@@ -92,6 +96,8 @@ function morningAppsToBlockedList(
 export default function PaywallScreen() {
   const router = useRouter();
   const colors = useColors();
+  const { height: windowHeight } = useWindowDimensions();
+  const compact = windowHeight < COMPACT_HEIGHT;
   const { answers, setAnswer } = useOnboarding();
   const { upsertSystemSession } = useStudySessions();
   const { setEnabled } = useFocus();
@@ -107,6 +113,8 @@ export default function PaywallScreen() {
 
   const monthlyPrice =
     monthlyPackage?.product.priceString?.replace(/\s+/g, "") ?? "$7.99";
+  const brandSize = compact ? 56 : 72;
+  const heroWell = compact ? 88 : 120;
 
   useEffect(() => {
     if (seededRef.current) return;
@@ -219,43 +227,65 @@ export default function PaywallScreen() {
         </View>
 
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          style={styles.scrollFlex}
+          contentContainerStyle={[
+            styles.scroll,
+            compact && styles.scrollCompact,
+          ]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          bounces
         >
-          <View style={styles.hero}>
+          <View
+            style={[
+              styles.hero,
+              compact && { marginTop: 0, marginBottom: 12 },
+            ]}
+          >
             <View
               style={[
                 styles.heroWell,
-                { backgroundColor: "rgba(255, 67, 38, 0.12)" },
+                {
+                  width: heroWell,
+                  height: heroWell,
+                  borderRadius: compact ? 24 : 32,
+                  backgroundColor: "rgba(255, 67, 38, 0.12)",
+                },
               ]}
             >
-              <BrandMark size={72} />
+              <BrandMark size={brandSize} />
             </View>
           </View>
 
           <Text
             accessibilityRole="header"
-            style={[styles.headline, { color: colors.ink }]}
+            style={[
+              styles.headline,
+              compact && styles.headlineCompact,
+              { color: colors.ink },
+            ]}
           >
             How your 7-day free{"\n"}trial works
           </Text>
 
-          <View style={styles.timeline}>
+          <View style={[styles.timeline, compact && styles.timelineCompact]}>
             {TIMELINE.map((step, index) => (
               <TimelineRow
                 key={step.title}
                 step={step}
                 isLast={index === TIMELINE.length - 1}
+                compact={compact}
               />
             ))}
           </View>
 
-          <View style={styles.plans}>
+          <View style={[styles.plans, compact && { gap: 12 }]}>
             <PlanCard
               selected={plan === "monthly"}
               onPress={() => setPlan("monthly")}
               title="Monthly"
               priceRight={`${monthlyPrice} / MO`}
+              compact={compact}
             />
             <PlanCard
               selected={plan === "annual"}
@@ -265,11 +295,18 @@ export default function PaywallScreen() {
               priceRight="$4.99 / MO"
               priceMain="$59.99"
               priceWas="$95.88"
+              compact={compact}
             />
           </View>
         </ScrollView>
 
-        <View style={styles.footer}>
+        <View
+          style={[
+            styles.footer,
+            compact && styles.footerCompact,
+            { borderTopColor: colors.border },
+          ]}
+        >
           <PrimaryPillButton
             label="Try FREE and Subscribe"
             onPress={handleStart}
@@ -295,16 +332,18 @@ export default function PaywallScreen() {
 function TimelineRow({
   step,
   isLast,
+  compact,
 }: {
   step: TimelineStep;
   isLast: boolean;
+  compact?: boolean;
 }) {
   const colors = useColors();
   const filled = step.state === "done" || step.state === "current";
   const isDone = step.state === "done";
 
   return (
-    <View style={styles.timelineRow}>
+    <View style={[styles.timelineRow, compact && { minHeight: 48 }]}>
       <View style={styles.timelineRail}>
         {filled ? (
           <View style={[styles.timelineDot, { backgroundColor: CLOSER_ACCENT }]}>
@@ -332,7 +371,12 @@ function TimelineRow({
         ) : null}
       </View>
 
-      <View style={styles.timelineCopy}>
+      <View
+        style={[
+          styles.timelineCopy,
+          compact && { paddingBottom: 10, paddingTop: 1 },
+        ]}
+      >
         <Text
           style={[
             styles.timelineTitle,
@@ -363,6 +407,7 @@ function PlanCard({
   priceMain,
   priceWas,
   badge,
+  compact,
 }: {
   selected: boolean;
   onPress: () => void;
@@ -371,6 +416,7 @@ function PlanCard({
   priceMain?: string;
   priceWas?: string;
   badge?: string;
+  compact?: boolean;
 }) {
   const colors = useColors();
 
@@ -384,6 +430,7 @@ function PlanCard({
       <View
         style={[
           styles.planCard,
+          compact && styles.planCardCompact,
           {
             backgroundColor: colors.surface,
             borderColor: selected ? CLOSER_ACCENT : colors.border,
@@ -477,8 +524,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  scrollFlex: {
+    flex: 1,
+  },
   scroll: {
     paddingHorizontal: 28,
+    paddingBottom: 28,
+    flexGrow: 1,
+  },
+  scrollCompact: {
+    paddingHorizontal: 24,
     paddingBottom: 20,
   },
   hero: {
@@ -487,9 +542,6 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   heroWell: {
-    width: 120,
-    height: 120,
-    borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -502,9 +554,17 @@ const styles = StyleSheet.create({
     letterSpacing: -0.7,
     textAlign: "center",
   },
+  headlineCompact: {
+    fontSize: 24,
+    lineHeight: 30,
+  },
   timeline: {
     marginTop: 32,
     marginBottom: 32,
+  },
+  timelineCompact: {
+    marginTop: 18,
+    marginBottom: 18,
   },
   timelineRow: {
     flexDirection: "row",
@@ -556,6 +616,7 @@ const styles = StyleSheet.create({
   },
   plans: {
     gap: 14,
+    paddingTop: 4,
   },
   planCard: {
     borderRadius: 18,
@@ -566,6 +627,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  planCardCompact: {
+    paddingVertical: 14,
+    minHeight: 60,
+  },
   badge: {
     position: "absolute",
     top: -11,
@@ -574,6 +639,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
+    zIndex: 1,
   },
   badgeText: {
     fontFamily: SF_PRO,
@@ -632,8 +698,14 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 24,
-    paddingTop: 8,
+    paddingTop: 10,
     paddingBottom: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(0,0,0,0.06)",
+  },
+  footerCompact: {
+    paddingTop: 8,
+    paddingBottom: 6,
   },
   footLinks: {
     flexDirection: "row",

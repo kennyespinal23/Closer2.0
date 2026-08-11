@@ -14,6 +14,7 @@ import {
   localDateISO,
   momentPosition,
   nextMoment,
+  previousMoment,
 } from "@/lib/moments";
 import { removeKey, STORAGE_KEYS, usePersistence } from "@/lib/storage";
 
@@ -86,6 +87,16 @@ type MomentsContextValue = {
    * (wrapping at the end). Dev/QA — Profile "Next Reading".
    */
   advanceToNextMoment: () => void;
+  /**
+   * Step back one catalog day (wrapping). Dev/QA cycle control
+   * on Home + Profile.
+   */
+  advanceToPreviousMoment: () => void;
+  /**
+   * Jump to a random catalog day (avoids the current day when
+   * possible). Dev/QA — Settings → Developer Tools.
+   */
+  shuffleMoment: () => void;
   /** True once persisted assignment has loaded. */
   hydrated: boolean;
   /** Wipe everything — dev reset + Settings "Delete my data". */
@@ -191,6 +202,33 @@ export function MomentsProvider({ children }: { children: ReactNode }) {
     });
   }, [state.assignment?.day, todaysMoment.day]);
 
+  const advanceToPreviousMoment = useCallback(() => {
+    const current = state.assignment?.day ?? todaysMoment.day;
+    const prev = previousMoment(current);
+    setState({
+      assignment: { dateISO: localDateISO(), day: prev.day },
+    });
+  }, [state.assignment?.day, todaysMoment.day]);
+
+  const shuffleMoment = useCallback(() => {
+    if (MOMENTS.length === 0) return;
+    const current = state.assignment?.day ?? todaysMoment.day;
+    if (MOMENTS.length === 1) {
+      setState({
+        assignment: { dateISO: localDateISO(), day: MOMENTS[0]!.day },
+      });
+      return;
+    }
+    let next = MOMENTS[Math.floor(Math.random() * MOMENTS.length)]!;
+    // Avoid a no-op shuffle landing on the same day.
+    if (next.day === current) {
+      next = nextMoment(current);
+    }
+    setState({
+      assignment: { dateISO: localDateISO(), day: next.day },
+    });
+  }, [state.assignment?.day, todaysMoment.day]);
+
   const reset = useCallback(() => {
     setState(EMPTY);
     removeKey(STORAGE_KEYS.moments);
@@ -201,10 +239,20 @@ export function MomentsProvider({ children }: { children: ReactNode }) {
       todaysMoment,
       catalogPosition,
       advanceToNextMoment,
+      advanceToPreviousMoment,
+      shuffleMoment,
       hydrated,
       reset,
     }),
-    [todaysMoment, catalogPosition, advanceToNextMoment, hydrated, reset],
+    [
+      todaysMoment,
+      catalogPosition,
+      advanceToNextMoment,
+      advanceToPreviousMoment,
+      shuffleMoment,
+      hydrated,
+      reset,
+    ],
   );
 
   return (

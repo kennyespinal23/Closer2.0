@@ -1,10 +1,9 @@
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { SFSymbol } from "@/components/Symbol";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 import type { Milestone } from "@/lib/milestones";
 import { getMilestoneAccent } from "@/lib/milestones";
 import { getMilestoneBadge } from "@/lib/milestoneBadges";
-import * as haptics from "@/lib/haptics";
 import { NEW_YORK, systemText, typography } from "@/lib/typography";
 import { useColors } from "@/state/theme";
 
@@ -40,29 +39,7 @@ export function MilestoneDetailView({
         }}
       >
         {showBack ? (
-          <Pressable
-            onPress={() => {
-              haptics.soft();
-              onClose();
-            }}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Back"
-            style={({ pressed }) => ({
-              width: 44,
-              height: 44,
-              alignItems: "flex-start",
-              justifyContent: "center",
-              opacity: pressed ? 0.7 : 1,
-            })}
-          >
-            <SFSymbol
-              name="chevron.left"
-              size={18}
-              color={colors.ink}
-              weight="semibold"
-            />
-          </Pressable>
+          <BubbleBackButton onPress={onClose} />
         ) : (
           <View style={{ height: 44 }} />
         )}

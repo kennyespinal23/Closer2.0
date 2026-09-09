@@ -389,7 +389,7 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
   const chromeInk = useFrostedChrome ? FROSTED_CHROME_INK : "#FFFFFF";
 
   return (
-    <View style={{ flex: 1, backgroundColor: envelopeMode ? CONTINUE_PILL_BG : colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       {useCardLayout ? (
         <HomeFloatingPrayerHome
           card={cardContent.card}

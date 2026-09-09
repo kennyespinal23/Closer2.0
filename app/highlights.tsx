@@ -58,7 +58,7 @@ export default function HighlightsScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
       <Header
         title="Highlights"
         countLabel={

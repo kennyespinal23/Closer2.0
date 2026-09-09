@@ -9,7 +9,9 @@ import { useFonts, ShantellSans_700Bold } from "@expo-google-fonts/shantell-sans
 // Shantell Sans Bold is the only bundled face — home quote body.
 // See lib/typography.ts + components/HomeQuoteText.tsx.
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { View } from "react-native";
 import { LaunchSplash } from "@/components/LaunchSplash";
+import { SkyGradient, useSkyTop } from "@/components/HomeSkyGradient";
 import { ScheduledBlockGuard } from "@/components/ScheduledBlockGuard";
 import { UpdatesGate } from "@/components/UpdatesGate";
 import {
@@ -40,7 +42,7 @@ import {
   StudySessionsProvider,
   useStudySessions,
 } from "@/state/studySessions";
-import { ThemeProvider, useTheme, useColors } from "@/state/theme";
+import { ThemeProvider, useTheme } from "@/state/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   /* splash screen may already be hidden; safe to ignore */
@@ -170,15 +172,13 @@ export default function RootLayout() {
  * theme without a re-render of the entire RootLayout.
  */
 function AppShell() {
-  const colors = useColors();
-  const { scheme } = useTheme();
+  const skyTop = useSkyTop();
 
   return (
-    <>
-      {/* Status bar style flips with the resolved scheme so the
-          time/battery glyphs stay legible against the active
-          background (light glyphs on dark, dark glyphs on light). */}
-      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+    <View style={{ flex: 1, backgroundColor: skyTop }}>
+      <SkyGradient />
+      {/* White glyphs — sky is saturated in both day and night. */}
+      <StatusBar style="light" />
       {/* Notification deep-link wiring. Lives INSIDE the
           HydrationGate so the navigator is mounted and the
           app shell is hydrated before we try to route on a
@@ -207,12 +207,13 @@ function AppShell() {
           the first onboarding screen for ~200ms.
 
           Slide gives a clean horizontal hand-off where the new
-          screen covers the old one as it moves into place. The
-          opaque contentStyle below ensures no see-through. */}
+          screen covers the old one as it moves into place.
+          Content is transparent so the day/night sky behind the
+          stack shows through chrome pages. */}
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: colors.bg },
+          contentStyle: { backgroundColor: "transparent" },
           animation: "slide_from_right",
         }}
       >
@@ -359,7 +360,7 @@ function AppShell() {
           }}
         />
       </Stack>
-    </>
+    </View>
   );
 }
 

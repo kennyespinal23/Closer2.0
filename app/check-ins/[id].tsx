@@ -161,7 +161,7 @@ export default function CheckInDetailScreen() {
   // ─── Missing / not-found ─────────────────────────────────────
   if (!checkIn) {
     return (
-      <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+      <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
         <Header onBack={() => goBackOr(router, "/(tabs)/today")} />
         <View className="flex-1 items-center justify-center px-8">
           <Text
@@ -190,7 +190,7 @@ export default function CheckInDetailScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
       <Header onBack={() => goBackOr(router, "/(tabs)/today")} />
 
       <ScrollView

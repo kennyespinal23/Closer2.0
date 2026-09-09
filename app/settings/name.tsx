@@ -56,7 +56,7 @@ export default function EditNameScreen() {
   }, [navigation, canSave, colors.inkSubtle, handleSave]);
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["bottom"]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["bottom"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"

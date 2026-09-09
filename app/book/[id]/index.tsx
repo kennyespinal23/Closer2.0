@@ -41,7 +41,7 @@ export default function BookOverviewScreen() {
 
   if (!book) {
     return (
-      <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+      <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
         <NotFoundHeader />
         <View className="flex-1 items-center justify-center px-6">
           <Text
@@ -139,7 +139,7 @@ function BookDetail({ book }: { book: Book }) {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <AmbientWash color={palette?.top ?? colors.accentSoft} scheme={scheme} />
 
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>

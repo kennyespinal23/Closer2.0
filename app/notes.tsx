@@ -30,7 +30,7 @@ export default function NotesScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.bg }}
+      style={{ flex: 1, backgroundColor: "transparent" }}
       edges={["top", "bottom"]}
     >
       <Header

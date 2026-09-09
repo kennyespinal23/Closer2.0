@@ -4,7 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ModalNavBar } from "@/components/ModalNavBar";
 import { StreakDashboard } from "@/components/StreakDashboard";
-import { useColors } from "@/state/theme";
 
 /**
  * Rhythm modal — the streak/reading-history dashboard.
@@ -19,7 +18,6 @@ import { useColors } from "@/state/theme";
  */
 export default function RhythmModalScreen() {
   const router = useRouter();
-  const colors = useColors();
 
   const close = useCallback(() => {
     if (router.canGoBack()) {
@@ -30,7 +28,7 @@ export default function RhythmModalScreen() {
   }, [router]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <ModalNavBar title="Streaks" onClose={close} />
 
       <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>

@@ -152,7 +152,7 @@ export default function StreakScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <View
           style={{

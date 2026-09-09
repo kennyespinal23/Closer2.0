@@ -110,7 +110,7 @@ export default function MoodSelectScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
       {/* Mood-tinted ambient atmosphere — the WHOLE screen takes
           on the chosen mood's color as soon as the user picks one.
           When no mood is selected, the canvas is bare black. When

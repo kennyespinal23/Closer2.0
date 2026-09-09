@@ -49,6 +49,7 @@ import {
   useTheme,
   type ThemePref,
 } from "@/state/theme";
+import { SKY_CHROME_INK } from "@/components/HomeSkyGradient";
 
 /** Profile hero avatar diameter — large enough to read as identity. */
 const AVATAR_SIZE = 140;
@@ -251,7 +252,7 @@ export default function ProfileTabScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.bg, overflow: "hidden" }}
+      style={{ flex: 1, backgroundColor: "transparent", overflow: "hidden" }}
       edges={["top"]}
     >
       <ScrollView
@@ -280,7 +281,7 @@ export default function ProfileTabScreen() {
           }}
         >
           <Text
-            style={[systemText.largeTitle, { color: colors.ink }]}
+            style={[systemText.largeTitle, { color: SKY_CHROME_INK }]}
             accessibilityRole="header"
           >
             My Profile

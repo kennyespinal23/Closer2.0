@@ -166,7 +166,7 @@ export default function StudyLandingScreen() {
   // ─── Empty state — session not found ────────────────────────────
   if (!session) {
     return (
-      <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+      <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
         <Header onDismiss={handleDismiss} />
         <View className="flex-1 items-center justify-center px-8">
           <View
@@ -198,7 +198,7 @@ export default function StudyLandingScreen() {
 
   // ─── Resolved session — the real landing ────────────────────────
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
       <Header onDismiss={handleDismiss} />
 
       <ScrollView

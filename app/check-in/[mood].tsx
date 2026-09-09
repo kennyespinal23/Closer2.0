@@ -137,7 +137,7 @@ export default function VerseDeliveryScreen() {
   if (!mood || !verseRef.current) {
     // Fall back silently — no error UI, the user can just re-pick.
     return (
-      <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+      <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
         <View className="flex-1 items-center justify-center px-6">
           <Text
             className="text-ink-muted text-[14px] text-center"
@@ -202,7 +202,7 @@ export default function VerseDeliveryScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,

@@ -5,12 +5,12 @@ import type {
 } from "@react-navigation/native";
 import { withLayoutContext } from "expo-router";
 import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
+import { useSkyTop } from "@/components/HomeSkyGradient";
 import {
   createNativeBottomTabsNavigator,
   type NativeBottomTabsNavigationEventMap,
   type NativeBottomTabsScreenOptions,
 } from "@/components/NativeBottomTabsNavigator";
-import { useColors } from "@/state/theme";
 
 import { TAB_ACCENT_RED } from "@/constants/theme";
 // #AAAAAA per explicit direction. Resolves to ~7.2:1 contrast
@@ -98,13 +98,12 @@ const NativeTabs = withLayoutContext<
  * control everywhere the user navigates.
  */
 export default function TabsLayout() {
-  const colors = useColors();
+  // Day/night zenith fill so tab swaps never flash black under the sky.
+  const skyTop = useSkyTop();
 
   // Layered structure (back → front):
-  //   1. Outer View with backgroundColor=colors.bg — the dark
-  //      canvas painted on first to prevent any white flash during
-  //      scene transitions. (TabView paints its own background but
-  //      this is the belt-and-suspenders pass.)
+  //   1. Outer View with sky-top fill — prevents a black flash
+  //      during scene transitions under the transparent stack.
   //   2. NativeTabs — the actual native iOS UITabBarController.
   //      Each tab screen renders directly under it; the native
   //      bar handles its own safe-area inset automatically.
@@ -115,7 +114,7 @@ export default function TabsLayout() {
   // than at the root) so react-native-screens' native view
   // controllers don't occlude the sibling on iOS.
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: skyTop }}>
       <View style={{ flex: 1 }}>
         <NativeTabs
           tabBarActiveTintColor={TAB_ACCENT_RED}

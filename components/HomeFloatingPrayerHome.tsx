@@ -42,8 +42,6 @@ import {
 import { useColors } from "@/state/theme";
 
 const CARD_RADIUS = 22;
-/** Full-bleed unread delivery room — matches brand orange accent. */
-const ENVELOPE_ROOM = CLOSER_ACCENT;
 const ENVELOPE_LAVENDER = "#CDB8E8";
 const ENVELOPE_LAVENDER_DEEP = "#B79AD6";
 const ENVELOPE_LAVENDER_LIP = "#E2D4F4";
@@ -1197,7 +1195,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: showCard ? ENVELOPE_ROOM : colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <View
         pointerEvents="box-none"
         style={{
@@ -1205,7 +1203,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
           alignItems: "center",
           justifyContent: "center",
           paddingBottom: 24,
-          backgroundColor: showCard ? ENVELOPE_ROOM : "transparent",
+          backgroundColor: "transparent",
         }}
       >
         {showCard ? (

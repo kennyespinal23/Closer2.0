@@ -93,7 +93,7 @@ export default function InsightDetailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
@@ -664,7 +664,7 @@ function ActionPill({
 
 function InsightNotFound({ onBack }: { onBack: () => void }) {
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
       <View className="flex-row items-center px-4 pt-2 pb-3">
         <Pressable
           onPress={onBack}

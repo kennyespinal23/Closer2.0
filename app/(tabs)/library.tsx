@@ -27,6 +27,7 @@ import { computeContinueReading } from "@/lib/continueReading";
 import { SCREEN_H_PAD } from "@/lib/layout";
 import { useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
+import { SKY_CHROME_INK } from "@/components/HomeSkyGradient";
 
 /**
  * Fallback when the native tab bar hasn't reported a height yet
@@ -53,7 +54,6 @@ function labelForFilter(f: LibraryFilter): string {
 
 export default function LibraryScreen() {
   const router = useRouter();
-  const { bg } = useColors();
   const scheme = useResolvedScheme();
   const insets = useSafeAreaInsets();
   // Measured native UITabBar height from react-native-bottom-tabs
@@ -109,7 +109,7 @@ export default function LibraryScreen() {
     // Opaque root so the previous tab's snapshot never shows through
     // during native tab swaps. Scroll content still carries its own
     // surface fills; cards and search sit on solid dark chrome.
-    <SafeAreaView className="flex-1" style={{ backgroundColor: bg }} edges={["top"]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top"]}>
       <ScrollView
         contentContainerStyle={{
           paddingBottom: scrollBottomPad,
@@ -126,6 +126,7 @@ export default function LibraryScreen() {
             <ThemedText
               variant="largeTitle"
               accessibilityRole="header"
+              style={{ color: SKY_CHROME_INK }}
             >
               Bible
             </ThemedText>

@@ -1,7 +1,6 @@
 import { View } from "react-native";
 import { Stack } from "expo-router";
 import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
-import { useColors } from "@/state/theme";
 
 /**
  * Nested stack for the `/book/[id]` route.
@@ -27,14 +26,13 @@ import { useColors } from "@/state/theme";
  * controllers occlude root-level React siblings on iOS.
  */
 export default function BookLayout() {
-  const { bg } = useColors();
   return (
-    <View style={{ flex: 1, backgroundColor: bg }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <View style={{ flex: 1 }}>
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: bg },
+            contentStyle: { backgroundColor: "transparent" },
             animation: "slide_from_right",
           }}
         />

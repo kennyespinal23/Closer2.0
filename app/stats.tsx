@@ -59,7 +59,7 @@ export default function StatsScreen() {
   }, [progress.completionsByType]);
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
       {/* ─── Top bar ───────────────────────────────────────────
           Back chevron + centered title. Mirrors SettingsScaffold so
           this drill-down feels consistent with the other drawer

@@ -64,7 +64,7 @@ export default function SavedDevotionalScreen() {
 
   if (!moment) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "transparent" }}>
         <View style={{ padding: 24 }}>
           <Text style={[typography.body, { color: colors.ink }]}>
             This day isn’t in the catalog anymore.
@@ -80,7 +80,7 @@ export default function SavedDevotionalScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <View
         style={{
           backgroundColor: headerColor,

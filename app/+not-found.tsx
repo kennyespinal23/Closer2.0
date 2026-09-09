@@ -5,7 +5,7 @@ export default function NotFoundScreen() {
   return (
     <>
       <Stack.Screen options={{ title: "Not found" }} />
-      <View className="flex-1 items-center justify-center bg-bg px-6">
+      <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: "transparent" }}>
         <Text
           className="text-ink text-[22px]"
           style={{ fontFamily: "System", fontWeight: "700" }}

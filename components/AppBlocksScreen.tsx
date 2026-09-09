@@ -50,6 +50,7 @@ import {
   type StudySessionDraft,
 } from "@/state/studySessions";
 import { useColors } from "@/state/theme";
+import { SKY_CHROME_INK, SKY_CHROME_INK_MUTED } from "@/components/HomeSkyGradient";
 
 import { SCREEN_H_PAD } from "@/lib/layout";
 
@@ -200,7 +201,7 @@ export function AppBlocksScreen({
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.bg, overflow: "hidden" }}
+      style={{ flex: 1, backgroundColor: "transparent", overflow: "hidden" }}
       edges={["top"]}
     >
       {showBack ? (
@@ -225,7 +226,7 @@ export function AppBlocksScreen({
         {/* Apple Large Title — systemText.largeTitle (34pt) */}
         <View style={{ paddingHorizontal: SCREEN_H_PAD, paddingTop: showBack ? 0 : 8 }}>
           <Text
-            style={[systemText.largeTitle, { color: colors.ink }]}
+            style={[systemText.largeTitle, { color: SKY_CHROME_INK }]}
             accessibilityRole="header"
           >
             App Blocks
@@ -236,7 +237,7 @@ export function AppBlocksScreen({
               fontWeight: "400",
               fontSize: 15,
               lineHeight: 20,
-              color: colors.inkMuted,
+              color: SKY_CHROME_INK_MUTED,
               marginTop: 6,
             }}
           >

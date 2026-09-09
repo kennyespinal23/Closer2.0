@@ -16,6 +16,8 @@ import {
   View,
 } from "react-native";
 import { Image } from "expo-image";
+import { StatusBar } from "expo-status-bar";
+import { useIsFocused } from "@react-navigation/native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, {
   Circle,
@@ -93,6 +95,7 @@ import { computeContinueReading } from "@/lib/continueReading";
 
 export default function TodayScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
   const { answers } = useOnboarding();
   const { log: checkInLog } = useCheckIns();
   const { todaysMoment } = useMoments();
@@ -777,7 +780,8 @@ export default function TodayScreen() {
     ) : null;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      {isFocused ? <StatusBar style="light" /> : null}
       <HomeDevotionalCarousel
         cards={carouselCards}
         onCompletedPress={handleOpenCompleted}

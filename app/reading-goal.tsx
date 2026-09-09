@@ -74,7 +74,7 @@ export default function ReadingGoalDetailScreen() {
   const weekHonored = weekRows.filter((r) => r.minutes >= goalMinutes).length;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
       {/* ─── Header ──────────────────────────────────────────────
           Back chevron (left), centered title, balancing spacer
           (right). Matches the SettingsScaffold rhythm so the page

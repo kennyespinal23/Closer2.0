@@ -36,7 +36,7 @@ export function SettingsScaffold({
   }, [navigation, title]);
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["bottom"]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["bottom"]}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}

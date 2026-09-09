@@ -35,6 +35,7 @@ import {
 } from "@/state/annotations";
 import { type SermonCompletion, useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
+import { SKY_CHROME_INK, SkyGradient, useSkyTop } from "@/components/HomeSkyGradient";
 
 const PAPER = "#FFFCFA";
 const PAPER_INK = "#1A1510";
@@ -73,11 +74,11 @@ export default function CompletedSermonsScreen() {
   const selectedIndex = TABS.indexOf(tab);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <NavBar
           onBack={() => goBackOr(router, "/(tabs)/today")}
-          ink={colors.ink}
+          ink={SKY_CHROME_INK}
         />
 
         <View style={{ paddingHorizontal: H_PAD, paddingBottom: 12 }}>
@@ -590,6 +591,7 @@ function BookStackSheet({
   onOpenNote: (n: Note) => void;
 }) {
   const colors = useColors();
+  const skyTop = useSkyTop();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
@@ -658,12 +660,13 @@ function BookStackSheet({
       <Animated.View
         style={{
           flex: 1,
-          backgroundColor: colors.bg,
+          backgroundColor: skyTop,
           transform: [{ translateX }],
           paddingTop: insets.top + 8,
           paddingBottom: Math.max(insets.bottom, 16),
         }}
       >
+        <SkyGradient />
         <View
           style={{
             paddingHorizontal: H_PAD,

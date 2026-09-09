@@ -11,8 +11,8 @@
     "runtimeVersion": "exposdk:54.0.0",
     "splash": {
       "image": "./assets/splash-closer.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FF4326"
+      "resizeMode": "cover",
+      "backgroundColor": "#F93104"
     },
     "ios": {
       "icon": "./assets/icon.png",
@@ -29,7 +29,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#FC381C"
       },
       "package": "com.espinalcapital.closer"
     },

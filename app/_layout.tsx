@@ -187,12 +187,11 @@ function AppShell() {
           this handles (cold / warm / foreground). */}
       <NotificationDeepLinkHandler />
       <ScheduledBlockGuard />
-      {/* LaunchSplash — orange brand canvas + white Closer
-          wordmark. Sits as an absolutely-positioned overlay
-          above the entire navigator and self-unmounts once its
-          fade-in / hold / fade-out choreography completes. The
-          native splash uses `#FF4326` in app.json so the OS
-          handoff stays seamless. */}
+      {/* LaunchSplash — orange brand canvas + Closer+ wordmark.
+          Sits as an absolutely-positioned overlay above the
+          entire navigator and self-unmounts after a short hold.
+          Native splash in app.json uses the same art + `#F93104`
+          so the OS handoff stays seamless. */}
       <LaunchSplash />
       {/* Default animation is slide_from_right (Apple-standard
           drill-down). Per-screen overrides below opt routes

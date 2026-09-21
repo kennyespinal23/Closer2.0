@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { BibleIntroScreen } from "@/components/BibleIntroScreen";
+import { loadJSON, saveJSON, STORAGE_KEYS } from "@/lib/storage";
+import { useEffect, useMemo, useState } from "react";
 import {
   Platform,
   Pressable,
@@ -53,6 +55,21 @@ function labelForFilter(f: LibraryFilter): string {
 }
 
 export default function LibraryScreen() {
+  const [introduced, setIntroduced] = useState<boolean | null>(null);
+  useEffect(() => {
+    let active = true;
+    loadJSON<boolean>(STORAGE_KEYS.bibleIntro).then(value => { if (active) setIntroduced(value === true); });
+    return () => { active = false; };
+  }, []);
+  if (introduced === null) return <View style={{ flex: 1, backgroundColor: "#000000" }} />;
+  if (!introduced) return <BibleIntroScreen onComplete={() => {
+    setIntroduced(true);
+    void saveJSON(STORAGE_KEYS.bibleIntro, true);
+  }} />;
+  return <BibleLibrary />;
+}
+
+function BibleLibrary() {
   const router = useRouter();
   const scheme = useResolvedScheme();
   const insets = useSafeAreaInsets();

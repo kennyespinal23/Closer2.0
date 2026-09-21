@@ -1,4 +1,5 @@
 import { View } from "react-native";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import { Stack } from "expo-router";
 import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
 
@@ -26,6 +27,7 @@ import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
  * controllers occlude root-level React siblings on iOS.
  */
 export default function BookLayout() {
+  const reducedMotion = useReducedMotion();
   return (
     <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <View style={{ flex: 1 }}>
@@ -35,7 +37,13 @@ export default function BookLayout() {
             contentStyle: { backgroundColor: "transparent" },
             animation: "slide_from_right",
           }}
-        />
+        >
+          <Stack.Screen name="[id]/[chapter]" options={{
+            animation: reducedMotion ? "fade" : "fade_from_bottom",
+            animationDuration: reducedMotion ? 150 : 320,
+            gestureEnabled: true,
+          }} />
+        </Stack>
       </View>
       <FocusMiniPlayer aboveTabBar={false} />
     </View>

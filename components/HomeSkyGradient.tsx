@@ -10,12 +10,10 @@ const DAY_STOPS = [
   { offset: "1", color: "#B4DCFF" },
 ] as const;
 
-/** Night sky — same vertical read as day, shifted into navy. */
+/** Dark mode uses a true black canvas. */
 const NIGHT_STOPS = [
-  { offset: "0", color: "#071433" },
-  { offset: "0.32", color: "#0C2560" },
-  { offset: "0.68", color: "#163A82" },
-  { offset: "1", color: "#1E4A9C" },
+  { offset: "0", color: "#000000" },
+  { offset: "1", color: "#000000" },
 ] as const;
 
 export const SKY_TOP_DAY = DAY_STOPS[0].color;

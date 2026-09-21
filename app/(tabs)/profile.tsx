@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, type Href } from "expo-router";
 import { Image } from "expo-image";
 import { SFSymbol } from "@/components/Symbol";
+import { BibleIntroScreen } from "@/components/BibleIntroScreen";
 import { AvatarPickerSheet } from "@/components/AvatarPickerSheet";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
 import {
@@ -103,6 +104,7 @@ export default function ProfileTabScreen() {
   const colors = useColors();
   const { pref: themePref } = useTheme();
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const [bibleIntroPreviewOpen, setBibleIntroPreviewOpen] = useState(false);
   const quoteCount = allHomeQuotes().length;
   const [quotePreview, setQuotePreview] = useState(() => ({
     active: isHomeQuotePreviewActive(),
@@ -683,6 +685,13 @@ export default function ProfileTabScreen() {
             footer="Internal QA only. Reset and Restart wipe every provider on disk — progress, notes, focus sessions, reminders — then route to a fresh entry."
           >
             <SettingsLinkRow
+              icon={<SFSymbol name="book" size={16} color={colors.ink} />}
+              label="Preview Bible intro"
+              sublabel="Replay the Bible welcome screen"
+              onPress={() => { haptics.soft(); setBibleIntroPreviewOpen(true); }}
+              showDivider
+            />
+            <SettingsLinkRow
               icon={
                 <SFSymbol
                   name="backward.fill"
@@ -865,6 +874,10 @@ export default function ProfileTabScreen() {
           />
         </SettingsSection>
       </ScrollView>
+
+      {showDevShortcuts && bibleIntroPreviewOpen ? (
+        <BibleIntroScreen onComplete={() => setBibleIntroPreviewOpen(false)} />
+      ) : null}
 
       <AvatarPickerSheet
         visible={avatarPickerOpen}

@@ -58,6 +58,7 @@ export async function removeKey(key: string): Promise<void> {
  * suffix and write a one-off migration that reads the old key).
  */
 export const STORAGE_KEYS = {
+  bibleIntro: "closer.bibleIntro.v1",
   onboarding: "closer.onboarding.v1",
   preferences: "closer.preferences.v1",
   progress: "closer.progress.v1",

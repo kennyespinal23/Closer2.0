@@ -545,6 +545,7 @@ export default function ChapterReaderScreen() {
   // toolbar while selection is active — same actions as the single-
   // verse sheet (highlight color picker, add note, share), but they
   // fan out across every verse in the selection.
+  const pendingMoment = useRef<BibleMoment | null>(null);
   const [openMoment, setOpenMoment] = useState<BibleMoment | null>(null);
   const [meaningOpen, setMeaningOpen] = useState(false);
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
@@ -1879,7 +1880,7 @@ export default function ChapterReaderScreen() {
         onAI={() => { haptics.soft(); setMeaningOpen(true); }}
         onMoment={activeVerse !== null && findBibleMoment(book.id, chapter, activeVerse) ? () => {
           const moment = findBibleMoment(book.id, chapter, activeVerse!);
-          if (moment) { haptics.soft(); setOpenMoment(moment); }
+          if (moment) { haptics.soft(); pendingMoment.current = moment; setActiveVerse(null); }
         } : undefined}
         reference={
           activeVerseData ? `${book.name} ${chapter}:${activeVerseData.number}` : null
@@ -1918,7 +1919,14 @@ export default function ChapterReaderScreen() {
           setActiveVerse(null);
           setTimeout(handleShare, 240);
         }}
-        onClose={() => setActiveVerse(null)}
+        onClose={() => {
+          setActiveVerse(null);
+          if (pendingMoment.current) {
+            const moment = pendingMoment.current;
+            pendingMoment.current = null;
+            setOpenMoment(moment);
+          }
+        }}
       />
 
       {/* ─── Note editor ──────────────────────────────────────

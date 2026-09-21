@@ -57,7 +57,7 @@ export function BibleMomentCard({ moment, onClose }: { moment: BibleMoment | nul
   return <Modal transparent visible={!!moment} animationType="none" onRequestClose={close} statusBarTranslucent>
     <View style={{ flex: 1 }}>
       <Pressable accessibilityLabel="Dismiss Bible Moment" accessibilityRole="button" onPress={close} style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.25)" }} />
-      {moment && <Animated.View accessibilityViewIsModal style={{ marginTop: insets.top + 12, marginHorizontal: 16, maxHeight: height - insets.top - insets.bottom - 48, borderRadius: 30, backgroundColor: "transparent", borderWidth: 1, borderColor: "#FFFFFF30", overflow: "hidden", opacity: reduced ? 1 : entrance, transform: [{ translateY: reduced ? 0 : entrance.interpolate({ inputRange: [0, 1], outputRange: [-45, 0] }) }] }}>
+      {moment && <Animated.View accessibilityViewIsModal style={{ marginTop: insets.top + 12, marginHorizontal: 16, maxHeight: height - insets.top - insets.bottom - 48, borderRadius: 30, backgroundColor: "transparent", borderWidth: 1, borderColor: "#FFFFFF30", overflow: "hidden", transform: [{ translateY: reduced ? 0 : entrance.interpolate({ inputRange: [0, 1], outputRange: [-height, 0] }) }] }}>
         <CardGlass tint={moment.tint} />
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 24, paddingTop: 16 }}>
           <Text style={{ color: "#FFE3A8", fontSize: 12, fontWeight: "700", letterSpacing: 1.5 }}>{fresh ? "MOMENT DISCOVERED" : "BIBLE MOMENT"}</Text>

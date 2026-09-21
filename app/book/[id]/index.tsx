@@ -1,7 +1,8 @@
+import { Host, ContextMenu, Button as NativeButton, Image as NativeImage } from "@expo/ui/swift-ui";
+import { accessibilityLabel, frame } from "@expo/ui/swift-ui/modifiers";
 import { BookReadingProgress } from "@/components/BookReadingProgress";
 import { useEffect, useState } from "react";
 import {
-  Alert,
   Platform,
   useWindowDimensions,
   Pressable,
@@ -152,16 +153,6 @@ function BookDetail({ book }: { book: Book }) {
   const share = async () => {
     try { await Share.share({ message: `${book.name} — ${author}` }); } catch { /* Share sheet dismissed. */ }
   };
-  const more = () => {
-    haptics.soft();
-    Alert.alert(book.name, undefined, [
-      { text: "Listen to book", onPress: () => router.push(`/book/${book.id}/audio`) },
-      { text: "Choose a chapter", onPress: () => scrollTo(aboutY + chaptersY) },
-      { text: liked ? "Remove from favorites" : "Add to favorites", onPress: () => setLiked(value => !value) },
-      { text: "Share book", onPress: share },
-      { text: "Cancel", style: "cancel" },
-    ]);
-  };
   // Text grows naturally at accessibility sizes; the illustration never dictates
   // a fixed text box. The lower edge stays readable regardless of artwork color.
   const artSpace = Math.max(200, Math.min(height * 0.52, width * 1.2) - 88);
@@ -231,7 +222,21 @@ function BookDetail({ book }: { book: Book }) {
       <View style={{ position: "absolute", top: 0, left: 0, right: 0, paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 8, flexDirection: "row", justifyContent: "space-between" }} pointerEvents="box-none">
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: "#000000" }, headerShade]} />
         <CircleButton icon="chevron.left" label="Back" tint="white" bg="rgba(10,15,24,0.48)" border="rgba(255,255,255,0.12)" onPress={() => goBackOr(router, "/(tabs)/library")} />
-        <CircleButton icon="ellipsis" label="Book options" tint="white" bg="rgba(10,15,24,0.48)" border="rgba(255,255,255,0.12)" onPress={more} />
+        <Host colorScheme="dark" style={{ width: 48, height: 48 }}>
+          <ContextMenu activationMethod="singlePress">
+            <ContextMenu.Trigger>
+              <NativeButton variant="bordered" modifiers={[accessibilityLabel("Book options")]}>
+                <NativeImage systemName="ellipsis" size={22} color="white" modifiers={[frame({ width: 24, height: 28 })]} />
+              </NativeButton>
+            </ContextMenu.Trigger>
+            <ContextMenu.Items>
+              <NativeButton systemImage="headphones" onPress={() => router.push(`/book/${book.id}/audio`)}>Listen to book</NativeButton>
+              <NativeButton systemImage="list.bullet" onPress={() => scrollTo(aboutY + chaptersY)}>Choose a chapter</NativeButton>
+              <NativeButton systemImage={liked ? "heart.fill" : "heart"} onPress={() => setLiked(value => !value)}>{liked ? "Remove from favorites" : "Add to favorites"}</NativeButton>
+              <NativeButton systemImage="square.and.arrow.up" onPress={() => { void share(); }}>Share book</NativeButton>
+            </ContextMenu.Items>
+          </ContextMenu>
+        </Host>
       </View>
     </View>
   );

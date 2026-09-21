@@ -36,6 +36,7 @@ import { shareVerse, sharePassage } from "@/lib/share";
 import { AppleSheet } from "@/components/AppleSheet";
 import { SheetModalHeader } from "@/components/SheetModalHeader";
 import { NoteEditor } from "@/components/NoteEditor";
+import { NativeReaderControls } from "@/components/NativeReaderControls";
 import { ReaderTutorial } from "@/components/ReaderTutorial";
 import { BibleMomentCard, MomentVerseText } from "@/components/BibleMoment";
 import { findBibleMoment, type BibleMoment } from "@/constants/bibleMoments";
@@ -3430,6 +3431,7 @@ function ReaderToolbar({
     // choice sticks regardless of the device appearance.
     setPref(isLight ? "dark" : "light");
   };
+  const [draftTextSize, setDraftTextSize] = useState(textSizeId);
   const [textSizeOpen, setTextSizeOpen] = useState(initialSheet === "textsize");
   const [versionOpen, setVersionOpen] = useState(initialSheet === "version");
   // TrueSheet's dim overlay can still eat taps for a beat after
@@ -3532,7 +3534,14 @@ function ReaderToolbar({
           zIndex: 40,
         }}
       >
-        <View
+        {Platform.OS === "ios" ? <NativeReaderControls
+          translation={translation.tag}
+          disabled={versionOpen || versionSheetBusy}
+          onContents={() => { haptics.soft(); onContents(); }}
+          onVersion={openVersionSheet}
+          onTextSize={() => { haptics.soft(); setDraftTextSize(textSizeId); setTextSizeOpen(true); }}
+          onAppearance={toggleScheme}
+        /> : (        <View
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -3595,6 +3604,7 @@ function ReaderToolbar({
             accessibilityLabel="Text size"
             onPress={() => {
               haptics.soft();
+              setDraftTextSize(textSizeId);
               setTextSizeOpen(true);
             }}
           >
@@ -3623,7 +3633,7 @@ function ReaderToolbar({
               weight="medium"
             />
           </ToolbarChip>
-        </View>
+        </View>)}
       </View>
 
       {/* Keep sheets mounted — unmounting on close skips TrueSheet.dismiss(). */}
@@ -3667,7 +3677,7 @@ function ReaderToolbar({
 
       <AppleSheet
         visible={textSizeOpen}
-        onClose={() => setTextSizeOpen(false)}
+        onClose={() => { setTextSizeOpen(false); if (draftTextSize !== textSizeId) onChangeTextSize(draftTextSize); }}
         detents={["auto"]}
         grabber
         backgroundColor={colors.surface}
@@ -3679,31 +3689,31 @@ function ReaderToolbar({
             paddingBottom: spacing[24],
           }}
         >
-          <Text
-            style={[
-              systemText.title3,
-              {
-                color: colors.ink,
-                textAlign: "center",
-                marginBottom: spacing[16],
-              },
-            ]}
-          >
-            Text Size
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <Text accessibilityRole="header" style={{ color: colors.ink, fontSize: 22, fontWeight: "600" }}>Text size</Text>
+            <Pressable accessibilityRole="button" accessibilityLabel="Apply text size" onPress={() => setTextSizeOpen(false)} style={{ minHeight: 44, minWidth: 60, alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ color: colors.ink, fontSize: 17, fontWeight: "600" }}>Done</Text>
+            </Pressable>
+          </View>
+          <View style={{ minHeight: 116, justifyContent: "center", paddingHorizontal: 8, paddingBottom: 20 }}>
+            <Text style={{ fontFamily: NEW_YORK, color: colors.ink, fontSize: 18 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1), lineHeight: 30 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1) }}>In the beginning, God created the heavens and the earth.</Text>
+          </View>
           {/* Native UISegmentedControl — same control Library/Highlights use */}
           <SegmentedControl
             values={TEXT_SIZES.map((s) => s.name)}
-            selectedIndex={textSizeIndex}
+            appearance={scheme}
+            selectedIndex={Math.max(0, TEXT_SIZES.findIndex(s => s.id === draftTextSize))}
             onChange={(e) => {
               const index = e.nativeEvent.selectedSegmentIndex;
               const next = TEXT_SIZES[index];
               if (next) {
                 haptics.tick();
-                onChangeTextSize(next.id);
+                setDraftTextSize(next.id);
               }
             }}
-            style={{ width: "100%", height: 36 }}
+            fontStyle={{ fontSize: 14, color: colors.inkMuted }}
+            activeFontStyle={{ fontSize: 14, fontWeight: "600", color: colors.ink }}
+            style={{ width: "100%", height: 44 }}
           />
         </View>
       </AppleSheet>

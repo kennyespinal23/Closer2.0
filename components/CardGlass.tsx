@@ -4,7 +4,7 @@ import { BlurView } from "expo-blur";
 import { GlassView, isLiquidGlassAvailable, isGlassEffectAPIAvailable } from "expo-glass-effect";
 
 /** Native Liquid Glass with frosted/opaque fallbacks for older OS and accessibility. */
-export function CardGlass({ tint = "#20242C" }: { tint?: string }) {
+export function CardGlass({ tint = "#20242C", topAttached = false }: { tint?: string; topAttached?: boolean }) {
   const [opaque, setOpaque] = useState(Platform.OS !== "ios");
   useEffect(() => {
     if (Platform.OS !== "ios") return;
@@ -15,7 +15,7 @@ export function CardGlass({ tint = "#20242C" }: { tint?: string }) {
   }, []);
   const nativeGlass = Platform.OS === "ios" && !opaque && isGlassEffectAPIAvailable() && isLiquidGlassAvailable();
   return <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-    {opaque ? <View style={[StyleSheet.absoluteFill, { backgroundColor: "#242426" }]} /> : nativeGlass ? <GlassView colorScheme="dark" glassEffectStyle="regular" tintColor={`${tint}66`} style={[StyleSheet.absoluteFill, { borderRadius: 30 }]} /> : <>
+    {opaque ? <View style={[StyleSheet.absoluteFill, { backgroundColor: "#242426" }]} /> : nativeGlass ? <GlassView colorScheme="dark" glassEffectStyle="regular" tintColor={`${tint}66`} style={[StyleSheet.absoluteFill, { borderRadius: 30, borderTopLeftRadius: topAttached ? 0 : 30, borderTopRightRadius: topAttached ? 0 : 30 }]} /> : <>
       <BlurView tint="dark" intensity={55} style={StyleSheet.absoluteFill} />
       <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(12,14,18,0.25)" }]} />
       <View style={[StyleSheet.absoluteFill, { backgroundColor: tint, opacity: 0.08 }]} />

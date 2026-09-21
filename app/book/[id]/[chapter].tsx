@@ -36,6 +36,7 @@ import { shareVerse, sharePassage } from "@/lib/share";
 import { AppleSheet } from "@/components/AppleSheet";
 import { SheetModalHeader } from "@/components/SheetModalHeader";
 import { NoteEditor } from "@/components/NoteEditor";
+import { VerseMeaningCard } from "@/components/VerseMeaningCard";
 import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
 import { SFSymbol } from "@/components/Symbol";
@@ -541,6 +542,7 @@ export default function ChapterReaderScreen() {
   // toolbar while selection is active — same actions as the single-
   // verse sheet (highlight color picker, add note, share), but they
   // fan out across every verse in the selection.
+  const [meaningOpen, setMeaningOpen] = useState(false);
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
   const selectionMode = selectedVerses.length > 0;
 
@@ -1801,6 +1803,7 @@ export default function ChapterReaderScreen() {
             count={selectedVerses.length}
             onColor={applyHighlightToSelected}
             onNote={startMultiVerseNote}
+            onAI={() => { haptics.soft(); setMeaningOpen(true); }}
             onShare={shareSelected}
             onDone={exitSelection}
           />
@@ -1833,6 +1836,13 @@ export default function ChapterReaderScreen() {
         ) : null}
       </View>
 
+      <VerseMeaningCard
+        visible={meaningOpen}
+        onClose={() => setMeaningOpen(false)}
+        reference={activeVerseData ? `${book.name} ${chapter}:${activeVerseData.number}` : formatVerseRange(book.name, chapter, selectedVerses)}
+        passage={activeVerseData?.text ?? (data?.verses ?? []).filter((verse) => selectedVerses.includes(verse.number)).map((verse) => verse.text).join(" ")}
+      />
+
       {/* ─── Contents drawer modal ─────────────────────────────── */}
       <ContentsModal
         visible={contentsOpen}
@@ -1854,6 +1864,7 @@ export default function ChapterReaderScreen() {
       {/* ─── Verse action sheet ──────────────────────────────── */}
       <VerseActionSheet
         visible={activeVerse !== null}
+        onAI={() => { haptics.soft(); setMeaningOpen(true); }}
         reference={
           activeVerseData ? `${book.name} ${chapter}:${activeVerseData.number}` : null
         }
@@ -3889,7 +3900,7 @@ function formatVerseRange(
 // least one verse selected. Replaces the normal toolbar's role
 // while active — same shape (rounded card), same gravity, but
 // the contents are the multi-verse actions: a color swatch row,
-// a "Note" button, a "Share" button, and a "Done" pill that
+// Note, AI, and Share actions, and a "Done" pill that
 // dismisses selection.
 // ─────────────────────────────────────────────────────────────────
 
@@ -3897,12 +3908,14 @@ function SelectionBar({
   count,
   onColor,
   onNote,
+  onAI,
   onShare,
   onDone,
 }: {
   count: number;
   onColor: (id: HighlightColorId | null) => void;
   onNote: () => void;
+  onAI: () => void;
   onShare: () => void;
   onDone: () => void;
 }) {
@@ -3910,8 +3923,8 @@ function SelectionBar({
   // Geometry locked to absolute pixel sizes so the bar renders
   // identically on every screen width and React Native version.
   // No flex-`gap`, no `flex: 1` siblings — every pip and button is
-  // sized by hand, and the action row's two buttons get an explicit
-  // half-width split. This is the layout that finally stopped the
+  // sized by hand, and the action row's three buttons get an explicit
+  // equal-width split. This is the layout that finally stopped the
   // "icons overlap / swatches disappear" regressions on iOS.
   const CARD_WIDTH = 340;
   const ROW_INSET = 16;
@@ -3920,7 +3933,7 @@ function SelectionBar({
   const SWATCH_INNER = CARD_WIDTH - ROW_INSET * 2;
   const SWATCH_GAP = (SWATCH_INNER - SWATCH * SWATCH_COUNT) / (SWATCH_COUNT - 1);
   const ACTION_HEIGHT = 64;
-  const ACTION_HALF = CARD_WIDTH / 2;
+  const ACTION_WIDTH = CARD_WIDTH / 3;
 
   return (
     <View
@@ -4018,10 +4031,7 @@ function SelectionBar({
           }}
         />
 
-        {/* Action row — Note + Share. Hand-sized to exactly half the
-            card width each, with the divider absolutely positioned
-            down the middle. This avoids the flex sizing quirks that
-            collapsed icon+label onto each other previously. */}
+        {/* Equal-width actions keep icons and labels from overlapping. */}
         <View
           style={{
             flexDirection: "row",
@@ -4033,25 +4043,32 @@ function SelectionBar({
             label="Note"
             icon={<NoteActionIcon />}
             onPress={onNote}
-            width={ACTION_HALF}
+            width={ACTION_WIDTH}
+          />
+          <SelectionAction
+            label="AI"
+            icon={<SFSymbol name="sparkles" size={18} color={colors.ink} />}
+            onPress={onAI}
+            width={ACTION_WIDTH}
           />
           <SelectionAction
             label="Share"
             icon={<ShareActionIcon />}
             onPress={onShare}
-            width={ACTION_HALF}
+            width={ACTION_WIDTH}
           />
-          <View
+          {[1, 2].map((divider) => <View
+            key={divider}
             pointerEvents="none"
             style={{
               position: "absolute",
-              left: ACTION_HALF - 0.5,
+              left: ACTION_WIDTH * divider - 0.5,
               top: 12,
               bottom: 12,
               width: 1,
               backgroundColor: colors.border,
             }}
-          />
+          />)}
         </View>
       </View>
     </View>

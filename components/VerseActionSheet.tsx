@@ -51,6 +51,7 @@ export function VerseActionSheet({
   onAddNote,
   onEditNote,
   onShare,
+  onAI,
   onClose,
 }: {
   visible: boolean;
@@ -68,6 +69,7 @@ export function VerseActionSheet({
   /** Open the editor on an existing note by id. */
   onEditNote: (noteId: string) => void;
   onShare: () => void;
+  onAI?: () => void;
   onClose: () => void;
 }) {
   const colors = useColors();
@@ -258,6 +260,10 @@ export function VerseActionSheet({
                 label={hasNotes ? "Add another note" : "Add note"}
                 onPress={onAddNote}
               />
+              {onAI && <>
+                <View style={{ width: 10 }} />
+                <ActionButton icon={<SFSymbol name="sparkles" size={16} color={colors.ink} />} label="AI" onPress={onAI} />
+              </>}
               <View style={{ width: 10 }} />
               <ActionButton
                 icon={<ShareIcon />}

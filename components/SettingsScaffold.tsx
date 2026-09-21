@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "expo-router";
+import { useHeaderHeight } from "@react-navigation/elements";
 import * as haptics from "@/lib/haptics";
 import { systemText } from "@/lib/typography";
 import { SFSymbol } from "@/components/Symbol";
@@ -30,6 +31,7 @@ export function SettingsScaffold({
   children: ReactNode;
 }) {
   const navigation = useNavigation();
+  const headerHeight = useHeaderHeight();
 
   useLayoutEffect(() => {
     navigation.setOptions({ title });
@@ -38,7 +40,11 @@ export function SettingsScaffold({
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["bottom"]}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 32 }}
+        style={{ flex: 1 }}
+        // The transparent native header overlays the scene. Reserve its
+        // full height so the first section is reachable at scroll offset zero.
+        contentInsetAdjustmentBehavior="never"
+        contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
       >
         {children}

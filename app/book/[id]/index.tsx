@@ -1,3 +1,4 @@
+import { BookReadingProgress } from "@/components/BookReadingProgress";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -124,7 +125,10 @@ function BookDetail({ book }: { book: Book }) {
   const siblings = siblingBooks(book.id);
   const cover = getBookCover(book.id);
   const resumeChapter = lastVisited?.bookId === book.id ? lastVisited.chapter : null;
-  const readCount = chaptersRead.filter(c => c.bookId === book.id).length;
+  const readCount = new Set(chaptersRead.filter(c => c.bookId === book.id && c.chapter >= 1 && c.chapter <= book.chapters).map(c => c.chapter)).size;
+  const started = resumeChapter !== null || readCount > 0;
+  const nextUnread = Array.from({ length: book.chapters }, (_, i) => i + 1).find(chapter => !hasReadChapter(book.id, chapter));
+  const continueChapter = resumeChapter !== null && !hasReadChapter(book.id, resumeChapter) ? resumeChapter : nextUnread ?? 1;
   const openChapter = (chapter: number) => router.push(`/book/${book.id}/${chapter}`);
   const scrollTo = (y: number) => {
     haptics.soft();
@@ -151,6 +155,7 @@ function BookDetail({ book }: { book: Book }) {
   const more = () => {
     haptics.soft();
     Alert.alert(book.name, undefined, [
+      { text: "Listen to book", onPress: () => router.push(`/book/${book.id}/audio`) },
       { text: "Choose a chapter", onPress: () => scrollTo(aboutY + chaptersY) },
       { text: liked ? "Remove from favorites" : "Add to favorites", onPress: () => setLiked(value => !value) },
       { text: "Share book", onPress: share },
@@ -159,7 +164,7 @@ function BookDetail({ book }: { book: Book }) {
   };
   // Text grows naturally at accessibility sizes; the illustration never dictates
   // a fixed text box. The lower edge stays readable regardless of artwork color.
-  const artSpace = Math.max(260, Math.min(height * 0.52, width * 1.2));
+  const artSpace = Math.max(200, Math.min(height * 0.52, width * 1.2) - 88);
   const font = (size: number) => size * fontScale;
   return (
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
@@ -186,13 +191,17 @@ function BookDetail({ book }: { book: Book }) {
             <Text accessibilityRole="header" allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(36), lineHeight: font(44), fontWeight: "700", letterSpacing: -0.8, color: "white", textAlign: "center", marginTop: 6 }}>{book.name}</Text>
             <Text allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(15), lineHeight: font(22), color: "#D3D7DE", textAlign: "center", marginTop: 6 }}>{theme || blurb}</Text>
             <Text allowFontScaling={false} style={{ fontSize: font(12), lineHeight: font(18), color: "#B3BBC7", marginTop: 10 }}>{book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}</Text>
-            <Animated.View style={[{ marginTop: 18 }, readButtonStyle]}>
+            {started && <BookReadingProgress read={readCount} total={book.chapters}
+              onContinue={() => { haptics.soft(); openChapter(continueChapter); }}
+              continueLabel={`${readCount === book.chapters ? "Read again" : "Continue reading"}, ${book.name}, chapter ${continueChapter}`}
+            />}
+            {!started && <Animated.View style={[{ marginTop: 18 }, readButtonStyle]}>
             <Pressable onPress={() => { haptics.soft(); openChapter(resumeChapter ?? 1); }} onPressIn={() => { animateReadPress(true); prefetchChapter(book.id, resumeChapter ?? 1); }} onPressOut={() => animateReadPress(false)} accessibilityRole="button" accessibilityLabel={resumeChapter ? `Continue ${book.name}, chapter ${resumeChapter}` : `Read ${book.name}, chapter 1`}
               style={{ backgroundColor: "#FFFFFF", borderRadius: 999, minHeight: 48, paddingHorizontal: 26, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
               <Text allowFontScaling={false} style={{ color: "#101722", fontSize: font(15), lineHeight: font(22), fontWeight: "700" }}>{resumeChapter ? "Continue Reading" : "Read Now"}</Text>
               <Animated.View style={readArrowStyle}><SFSymbol name="arrow.right" size={18} color="#101722" weight="semibold" /></Animated.View>
             </Pressable>
-            </Animated.View>
+            </Animated.View>}
             <Pressable onPress={() => scrollTo(aboutY)} accessibilityRole="button" accessibilityLabel="About this book and chapters" style={{ minHeight: 44, marginTop: 10, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12 }}>
               <Text allowFontScaling={false} style={{ fontSize: font(12), lineHeight: font(18), color: "#CDD3DC" }}>About this book</Text><SFSymbol name="chevron.down" size={12} color="#CDD3DC" />
             </Pressable>

@@ -36,6 +36,9 @@ import { shareVerse, sharePassage } from "@/lib/share";
 import { AppleSheet } from "@/components/AppleSheet";
 import { SheetModalHeader } from "@/components/SheetModalHeader";
 import { NoteEditor } from "@/components/NoteEditor";
+import { ReaderTutorial } from "@/components/ReaderTutorial";
+import { BibleMomentCard, MomentVerseText } from "@/components/BibleMoment";
+import { findBibleMoment, type BibleMoment } from "@/constants/bibleMoments";
 import { VerseMeaningCard } from "@/components/VerseMeaningCard";
 import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
@@ -542,6 +545,7 @@ export default function ChapterReaderScreen() {
   // toolbar while selection is active — same actions as the single-
   // verse sheet (highlight color picker, add note, share), but they
   // fan out across every verse in the selection.
+  const [openMoment, setOpenMoment] = useState<BibleMoment | null>(null);
   const [meaningOpen, setMeaningOpen] = useState(false);
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
   const selectionMode = selectedVerses.length > 0;
@@ -1776,6 +1780,12 @@ export default function ChapterReaderScreen() {
                     }
                   }}
                   onVerseLongPress={(n) => {
+                    const moment = findBibleMoment(viewportBookId, viewportChapter, n);
+                    if (moment) {
+                      haptics.soft();
+                      setOpenMoment(moment);
+                      return;
+                    }
                     // Long-press is a deliberate "I want more
                     // than a tap can give me" gesture, so it
                     // deserves a heavier confirmation than the
@@ -1836,6 +1846,8 @@ export default function ChapterReaderScreen() {
         ) : null}
       </View>
 
+      <ReaderTutorial />
+      <BibleMomentCard moment={openMoment} onClose={() => setOpenMoment(null)} />
       <VerseMeaningCard
         visible={meaningOpen}
         onClose={() => setMeaningOpen(false)}
@@ -1865,6 +1877,10 @@ export default function ChapterReaderScreen() {
       <VerseActionSheet
         visible={activeVerse !== null}
         onAI={() => { haptics.soft(); setMeaningOpen(true); }}
+        onMoment={activeVerse !== null && findBibleMoment(book.id, chapter, activeVerse) ? () => {
+          const moment = findBibleMoment(book.id, chapter, activeVerse!);
+          if (moment) { haptics.soft(); setOpenMoment(moment); }
+        } : undefined}
         reference={
           activeVerseData ? `${book.name} ${chapter}:${activeVerseData.number}` : null
         }
@@ -2133,6 +2149,7 @@ function VerseFlow({
       }}
     >
       {decorated.map((v, i) => {
+        const moment = findBibleMoment(bookId, chapter, v.number);
         const isFocus = focusVerse === v.number;
         const isSelected = selectedSet?.has(v.number) ?? false;
 
@@ -2146,7 +2163,7 @@ function VerseFlow({
                 fontFamily: "System",
                 fontWeight: "700",
                 fontSize: verseNumSize,
-                color: isSelected ? colors.ink : colors.inkSubtle,
+                color: moment ? (scheme === "dark" ? "#E8B654" : "#79521B") : isSelected ? colors.ink : colors.inkSubtle,
               }}
             >
               {"  "}{v.number}
@@ -2186,7 +2203,7 @@ function VerseFlow({
                 letterSpacing: -0.1,
                 // Red-letter: words of Jesus print in crimson,
                 // matching traditional printed Bibles.
-                color: v.isJesus ? jesusInk : colors.ink,
+                color: v.isJesus ? jesusInk : moment && !isSelected ? (scheme === "dark" ? "#FFE5AB" : "#79521B") : colors.ink,
               }}
             >
               {normalizeVerseBody(v.text)}
@@ -2224,7 +2241,13 @@ function VerseFlow({
         return (
           <Fragment key={v.number}>
             {i > 0 ? <Text>{"\n"}</Text> : null}
-            {isFocus ? (
+            {moment && onVerseLongPress ? (
+              <MomentVerseText
+                onPress={() => onVersePress(v.number)}
+                onUnlock={() => onVerseLongPress(v.number)}
+                style={{ fontFamily: NEW_YORK, fontWeight: "400", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1, color: colors.ink, backgroundColor: baseBg }}
+              >{inner}</MomentVerseText>
+            ) : isFocus ? (
               <Animated.Text
                 onPress={() => onVersePress(v.number)}
                 onLongPress={

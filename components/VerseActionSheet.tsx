@@ -52,6 +52,7 @@ export function VerseActionSheet({
   onEditNote,
   onShare,
   onAI,
+  onMoment,
   onClose,
 }: {
   visible: boolean;
@@ -70,6 +71,7 @@ export function VerseActionSheet({
   onEditNote: (noteId: string) => void;
   onShare: () => void;
   onAI?: () => void;
+  onMoment?: () => void;
   onClose: () => void;
 }) {
   const colors = useColors();
@@ -87,6 +89,10 @@ export function VerseActionSheet({
       backgroundColor={colors.surface}
     >
       <View>
+        {onMoment && <Pressable onPress={onMoment} accessibilityRole="button" accessibilityLabel="Discover Bible Moment" style={{ marginHorizontal: 24, marginTop: 24, padding: 16, borderRadius: 16, backgroundColor: colors.border }}>
+          <Text style={{ color: colors.ink, fontSize: 16, fontWeight: "600" }}>✧ Discover a Bible Moment</Text>
+          <Text style={{ color: colors.inkMuted, fontSize: 13, marginTop: 6 }}>You can also hold the glowing verse to reveal it.</Text>
+        </Pressable>}
         {/* Reference + preview */}
         <View className="px-6 pt-5 pb-4">
               <Text

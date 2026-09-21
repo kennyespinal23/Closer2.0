@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, type Href } from "expo-router";
 import { Image } from "expo-image";
 import { SFSymbol } from "@/components/Symbol";
+import { ReaderTutorial } from "@/components/ReaderTutorial";
 import { BibleIntroScreen } from "@/components/BibleIntroScreen";
 import { AvatarPickerSheet } from "@/components/AvatarPickerSheet";
 import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
@@ -104,6 +105,7 @@ export default function ProfileTabScreen() {
   const colors = useColors();
   const { pref: themePref } = useTheme();
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const [readerTutorialOpen, setReaderTutorialOpen] = useState(false);
   const [bibleIntroPreviewOpen, setBibleIntroPreviewOpen] = useState(false);
   const quoteCount = allHomeQuotes().length;
   const [quotePreview, setQuotePreview] = useState(() => ({
@@ -692,6 +694,13 @@ export default function ProfileTabScreen() {
               showDivider
             />
             <SettingsLinkRow
+              icon={<SFSymbol name="book" size={16} color={colors.ink} />}
+              label="Bible reading tutorial"
+              sublabel="Replay the reader feature guide"
+              showDivider
+              onPress={() => { haptics.soft(); setReaderTutorialOpen(true); }}
+            />
+            <SettingsLinkRow
               icon={
                 <SFSymbol
                   name="backward.fill"
@@ -875,6 +884,7 @@ export default function ProfileTabScreen() {
         </SettingsSection>
       </ScrollView>
 
+      {readerTutorialOpen && <ReaderTutorial preview onClose={() => setReaderTutorialOpen(false)} />}
       {showDevShortcuts && bibleIntroPreviewOpen ? (
         <BibleIntroScreen onComplete={() => setBibleIntroPreviewOpen(false)} />
       ) : null}

@@ -105,6 +105,17 @@ function BookDetail({ book }: { book: Book }) {
   const heroTitleBottom = useSharedValue(0);
   const [headerTitleVisible, setHeaderTitleVisible] = useState(false);
   const headerBottom = insets.top + 64;
+  const heroActionBottom = useSharedValue(0);
+  const [dockVisible, setDockVisible] = useState(false);
+  const [dockHeight, setDockHeight] = useState(104);
+  const dockOpacity = useSharedValue(0);
+  useAnimatedReaction(() => heroActionBottom.value > 0 && currentY.value >= heroContentY.value + heroActionBottom.value - headerBottom, (visible, previous) => {
+    if (visible === previous) return;
+    runOnJS(setDockVisible)(visible);
+    dockOpacity.value = reducedMotion ? (visible ? 1 : 0) : withTiming(visible ? 1 : 0, { duration: visible ? 160 : 100 });
+  }, [reducedMotion, headerBottom]);
+  const dockStyle = useAnimatedStyle(() => ({ opacity: dockOpacity.value }));
+
   const titleReveal = useDerivedValue(() => {
     if (heroTitleBottom.value === 0) return 0;
     const threshold = heroContentY.value + heroTitleBottom.value - headerBottom;
@@ -187,7 +198,7 @@ function BookDetail({ book }: { book: Book }) {
       <BookReaderPreparation bookId={book.id} chapter={started ? continueChapter : 1} />
       <StatusBar style="light" />
       <Animated.ScrollView ref={scrollRef} onScroll={scrollHandler} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="never"
-        contentContainerStyle={{ paddingBottom: insets.bottom + focusSpacing + 24 }}>
+        contentContainerStyle={{ paddingBottom: insets.bottom + focusSpacing + dockHeight + 24 }}>
         <View style={{ minHeight: height - focusSpacing, justifyContent: "flex-end", paddingTop: insets.top + 64 + artSpace, paddingBottom: Math.max(insets.bottom, 20) + 16 }}>
           <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
             {cover ? <Image source={cover} contentFit="cover" contentPosition="top center" style={[StyleSheet.absoluteFill, { bottom: undefined, height: "84%" }]} /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: CATEGORY_COVER_PALETTE[book.category].top }]} />}
@@ -208,6 +219,7 @@ function BookDetail({ book }: { book: Book }) {
             <Text onLayout={event => { heroTitleBottom.value = event.nativeEvent.layout.y + event.nativeEvent.layout.height; }} accessibilityRole="header" allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(36), lineHeight: font(44), fontWeight: "700", letterSpacing: -0.8, color: "white", textAlign: "center", marginTop: 6 }}>{book.name}</Text>
             <Text allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(15), lineHeight: font(22), color: "#D3D7DE", textAlign: "center", marginTop: 6 }}>{theme || blurb}</Text>
             <Text allowFontScaling={false} style={{ fontSize: font(12), lineHeight: font(18), color: "#B3BBC7", marginTop: 10 }}>{book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}</Text>
+            <View onLayout={event => { heroActionBottom.value = event.nativeEvent.layout.y + event.nativeEvent.layout.height; }} style={{ width: "100%", alignItems: "center" }}>
             {started && <BookReadingProgress read={readCount} total={book.chapters}
               onContinue={() => { haptics.soft(); openChapter(continueChapter); }}
               continueLabel={`${readCount === book.chapters ? "Read again" : "Continue reading"}, ${book.name}, chapter ${continueChapter}`}
@@ -219,6 +231,7 @@ function BookDetail({ book }: { book: Book }) {
               <Animated.View style={readArrowStyle}><SFSymbol name="arrow.right" size={18} color="#101722" weight="semibold" /></Animated.View>
             </Pressable>
             </Animated.View>}
+            </View>
             {express && <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name} Express version`} onPress={() => { haptics.soft(); router.push(`/book/${book.id}/express`); }} style={{ minHeight: 48, marginTop: 12, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24, borderWidth: 1, borderColor: "#FFFFFF40", backgroundColor: "#FFFFFF10", flexDirection: "row", alignItems: "center", gap: 10 }}>
               <SFSymbol name="bolt" color="white" size={17} />
               <Text style={{ color: "white", fontSize: 15, fontWeight: "600" }}>Read Express</Text>
@@ -250,6 +263,25 @@ function BookDetail({ book }: { book: Book }) {
           </View>}
         </View>
       </Animated.ScrollView>
+      <Animated.View
+        pointerEvents={dockVisible ? "auto" : "none"}
+        accessibilityElementsHidden={!dockVisible}
+        importantForAccessibility={dockVisible ? "auto" : "no-hide-descendants"}
+        onLayout={event => setDockHeight(event.nativeEvent.layout.height)}
+        style={[{ position: "absolute", bottom: focusSpacing, left: 0, right: 0, backgroundColor: "#080808", borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#FFFFFF24", paddingHorizontal: 24, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 12) }, dockStyle]}
+      >
+        <Animated.View style={[{ width: "100%", maxWidth: 492, alignSelf: "center" }, !started && readButtonStyle]}>
+          {started ? <BookReadingProgress compact read={readCount} total={book.chapters}
+            onContinue={() => { haptics.soft(); openChapter(continueChapter); }}
+            continueLabel={`${readCount === book.chapters ? "Read again" : "Continue reading"}, ${book.name}, chapter ${continueChapter}`}
+          /> : <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name}, chapter 1`}
+            onPress={() => { haptics.soft(); openChapter(1); }}
+            onPressIn={() => { animateReadPress(true); prefetchChapter(book.id, 1, translation.id); }} onPressOut={() => animateReadPress(false)}
+            style={{ minHeight: 50, paddingVertical: 14, paddingHorizontal: 24, borderRadius: 28, borderCurve: "continuous", backgroundColor: "white", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <Text style={{ color: "#101722", fontSize: 17, fontWeight: "600" }}>Read Now</Text><SFSymbol name="arrow.right" size={20} color="#101722" />
+          </Pressable>}
+        </Animated.View>
+      </Animated.View>
       <View style={{ position: "absolute", top: 0, left: 0, right: 0, paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 8, flexDirection: "row", justifyContent: "space-between" }} pointerEvents="box-none">
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: "#000000" }, headerShade]} />
         <CircleButton icon="chevron.left" label="Back" tint="white" bg="rgba(10,15,24,0.48)" border="rgba(255,255,255,0.12)" onPress={() => goBackOr(router, "/(tabs)/library")} />

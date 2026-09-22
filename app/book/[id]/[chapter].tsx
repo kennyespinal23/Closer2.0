@@ -1472,6 +1472,13 @@ export default function ChapterReaderScreen() {
   }, [data, pages, viewportPrev, viewportNext]);
 
   const pagerReady = !!data && !!pages;
+  const [prepareNeighbors, setPrepareNeighbors] = useState(false);
+  useEffect(() => {
+    setPrepareNeighbors(false);
+    if (!pagerReady || measureTarget || !readerFocused) return;
+    const timer = setTimeout(() => setPrepareNeighbors(true), 0);
+    return () => clearTimeout(timer);
+  }, [pagerReady, measureTarget, readerFocused, viewportBookId, viewportChapter, textSize.id]);
 
   const handleChapterEdgeScroll = (x: number) => {
     if (advanceLockRef.current || !pages) return;
@@ -1543,15 +1550,15 @@ export default function ChapterReaderScreen() {
         {/* ─── Off-screen measurement view ─────────────────────────
             Renders the full chapter once at the page width so we can
             grab onTextLayout's `lines` array and compute page breaks.
-            Positioned far off-screen + opacity:0 so it's never seen
+            Kept in the native viewport with opacity:0 so it's never seen
             by the user but still participates in layout. */}
-        {data && !measureTarget && (
+        {data && !measureTarget && !pages && (
           <View
             pointerEvents="none"
             style={{
               position: "absolute",
               left: 0,
-              top: -100000,
+              top: 0,
               opacity: 0,
               width: pageContentWidth,
             }}
@@ -1573,6 +1580,7 @@ export default function ChapterReaderScreen() {
 
         {measureTarget ? (
           <PendingChapterMeasurer
+            key={`${translation.id}:${measureTarget.bookId}:${measureTarget.chapter}:${textSize.id}:${pageContentWidth}:${pageContentHeight}`}
             target={measureTarget}
             cacheKey={readerPaginationKey(
               measureTarget.bookId,
@@ -1592,7 +1600,7 @@ export default function ChapterReaderScreen() {
 
         {/* Pre-measure adjacent chapters so retreat/advance can swap
             from cache without a visible reload flash. */}
-        {prev &&
+        {prepareNeighbors && !measureTarget && prev &&
           getCachedChapter(prev.bookId, prev.chapter, translation.id) && (
             <AdjacentChapterMeasurer
               bookId={prev.bookId}
@@ -1616,7 +1624,7 @@ export default function ChapterReaderScreen() {
               onMeasured={bumpPaginationRevision}
             />
           )}
-        {next &&
+        {prepareNeighbors && !measureTarget && next &&
           getCachedChapter(next.bookId, next.chapter, translation.id) && (
             <AdjacentChapterMeasurer
               bookId={next.bookId}
@@ -1684,6 +1692,7 @@ export default function ChapterReaderScreen() {
               `${viewportBookId}-${viewportChapter}-${textSize.id}`
             }
             data={readerItems}
+            extraData={paginationRevision}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
@@ -1718,12 +1727,25 @@ export default function ChapterReaderScreen() {
               const idx = Math.round(x / screenWidth);
               handlePageSettled(idx);
             }}
-            initialNumToRender={3}
-            maxToRenderPerBatch={4}
-            windowSize={7}
+            initialNumToRender={2}
+            maxToRenderPerBatch={2}
+            windowSize={3}
             renderItem={({ item }) => {
               if (item.kind === "prevBridge" || item.kind === "nextBridge") {
-                return <View style={{ width: screenWidth, flex: 1 }} />;
+                const target = item.kind === "prevBridge" ? viewportPrev : viewportNext;
+                if (!target) return <View style={{ width: screenWidth, flex: 1 }} />;
+                const targetData = getCachedChapter(target.bookId, target.chapter, translation.id);
+                const targetPages = readerPaginationCache.get(readerPaginationKey(target.bookId, target.chapter, translation.id, textSize.id, pageContentWidth, pageContentHeight));
+                const targetPage = item.kind === "prevBridge" ? targetPages?.[targetPages.length - 1] : targetPages?.[0];
+                if (!targetData || !targetPage) return <View style={{ width: screenWidth, flex: 1 }}><LoadingView /></View>;
+                return <ReaderPageView
+                  width={screenWidth} paddingX={PAGE_PAD_X} paddingTop={PAGE_PAD_Y_TOP} paddingBottom={PAGE_PAD_Y_BOTTOM}
+                  isFirst={targetPage.isFirst} bookName={findBookById(target.bookId)?.name ?? viewportBook.name}
+                  chapter={target.chapter} scale={textSize.scale} verses={targetData.verses}
+                  startVerseIdx={targetPage.startVerseIdx} endVerseIdx={targetPage.endVerseIdx} bookId={target.bookId}
+                  onVersePress={() => {}} onVerseLongPress={() => {}}
+                  focusVerse={null} focusTint={focusTint} focusGlow={focusGlow}
+                />;
               }
               if (item.kind === "endMatter") {
                 return (
@@ -2413,10 +2435,12 @@ function PendingChapterMeasurer({
     <View
       pointerEvents="none"
       collapsable={false}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       style={{
         position: "absolute",
         left: 0,
-        top: -100000,
+        top: 0,
         opacity: 0,
         width: pageContentWidth,
       }}
@@ -2481,10 +2505,13 @@ function AdjacentChapterMeasurer({
   return (
     <View
       pointerEvents="none"
+      collapsable={false}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       style={{
         position: "absolute",
         left: 0,
-        top: -200000,
+        top: 0,
         opacity: 0,
         width: pageContentWidth,
       }}
@@ -2855,21 +2882,6 @@ function EndMatterPage({
   const colors = useColors();
   const router = useRouter();
   const [advancing, setAdvancing] = useState(false);
-  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Clear the pending advance if the user swipes away or the page
-  // unmounts — otherwise navigation could fire after the reader has
-  // already moved on for some other reason (translation switch,
-  // route replace, etc.).
-  useEffect(() => {
-    return () => {
-      if (advanceTimerRef.current) {
-        clearTimeout(advanceTimerRef.current);
-        advanceTimerRef.current = null;
-      }
-    };
-  }, []);
-
   const nextBook = next ? findBookById(next.bookId) : null;
   const prevBook = prev ? findBookById(prev.bookId) : null;
 
@@ -2906,20 +2918,9 @@ function EndMatterPage({
       haptics.tap();
     }
 
-    // Longer pause on a fresh read so the "Marked as Read ✓"
-    // state has time to register before the next chapter swaps in.
-    const delay = alreadyRead ? 220 : 620;
-    advanceTimerRef.current = setTimeout(() => {
-      advanceTimerRef.current = null;
-      if (next) {
-        onGoto(next);
-      } else {
-        // End of the canonical sequence (e.g. Revelation 22). Drop
-        // the user back at the book overview where they can pick a
-        // sibling book from the "More from {category}" rail.
-        router.replace(`/book/${book.id}` as const);
-      }
-    }, delay);
+    // Navigation is immediate; completion is already recorded above.
+    if (next) onGoto(next);
+    else router.replace(`/book/${book.id}` as const);
   };
 
   // The button shows a transient "Marked as Read ✓" only on the

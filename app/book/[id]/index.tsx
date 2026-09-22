@@ -18,7 +18,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import Animated, { cancelAnimation, Easing, interpolate, Extrapolation, runOnUI, scrollTo as scrollOnUI, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import Animated, { cancelAnimation, Easing, interpolate, Extrapolation, runOnUI, runOnJS, useAnimatedReaction, scrollTo as scrollOnUI, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
 import { useReducedMotion } from "@/lib/useReducedMotion";
@@ -99,8 +99,24 @@ function BookDetail({ book }: { book: Book }) {
   useDerivedValue(() => {
     if (autoScrolling.value) scrollOnUI(scrollRef, 0, targetY.value, false);
   });
+  // Track the actual hero title, including wrapped names and larger text.
+  // These measurements do not participate in the reader's pagination or routing.
+  const heroContentY = useSharedValue(0);
+  const heroTitleBottom = useSharedValue(0);
+  const [headerTitleVisible, setHeaderTitleVisible] = useState(false);
+  const headerBottom = insets.top + 64;
+  const titleReveal = useDerivedValue(() => {
+    if (heroTitleBottom.value === 0) return 0;
+    const threshold = heroContentY.value + heroTitleBottom.value - headerBottom;
+    if (reducedMotion) return currentY.value >= threshold ? 1 : 0;
+    return interpolate(currentY.value, [threshold - 36, threshold], [0, 1], Extrapolation.CLAMP);
+  });
+  useAnimatedReaction(() => titleReveal.value >= 0.5, (visible, previous) => {
+    if (visible !== previous) runOnJS(setHeaderTitleVisible)(visible);
+  });
+  const headerTitleStyle = useAnimatedStyle(() => ({ opacity: titleReveal.value }));
   const headerShade = useAnimatedStyle(() => ({
-    opacity: interpolate(currentY.value, [height * 0.3, height * 0.6], [0, 1], Extrapolation.CLAMP),
+    opacity: Math.max(titleReveal.value, interpolate(currentY.value, [height * 0.3, height * 0.6], [0, 1], Extrapolation.CLAMP)),
   }));
   useEffect(() => () => { cancelAnimation(targetY); }, [targetY]);
   useEffect(() => {
@@ -187,9 +203,9 @@ function BookDetail({ book }: { book: Book }) {
               <Rect width="100%" height="100%" fill="url(#bookHeroShade)" />
             </Svg>
           </View>
-          <View style={{ paddingHorizontal: 32, width: "100%", maxWidth: 540, alignSelf: "center", alignItems: "center" }}>
+          <View onLayout={event => { heroContentY.value = event.nativeEvent.layout.y; }} style={{ paddingHorizontal: 32, width: "100%", maxWidth: 540, alignSelf: "center", alignItems: "center" }}>
             <Text allowFontScaling={false} style={{ fontSize: font(10), lineHeight: font(16), letterSpacing: 2.4, fontWeight: "600", color: "#D3D7DE", textAlign: "center" }}>{book.testament === "old" ? "OLD TESTAMENT" : "NEW TESTAMENT"}</Text>
-            <Text accessibilityRole="header" allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(36), lineHeight: font(44), fontWeight: "700", letterSpacing: -0.8, color: "white", textAlign: "center", marginTop: 6 }}>{book.name}</Text>
+            <Text onLayout={event => { heroTitleBottom.value = event.nativeEvent.layout.y + event.nativeEvent.layout.height; }} accessibilityRole="header" allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(36), lineHeight: font(44), fontWeight: "700", letterSpacing: -0.8, color: "white", textAlign: "center", marginTop: 6 }}>{book.name}</Text>
             <Text allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(15), lineHeight: font(22), color: "#D3D7DE", textAlign: "center", marginTop: 6 }}>{theme || blurb}</Text>
             <Text allowFontScaling={false} style={{ fontSize: font(12), lineHeight: font(18), color: "#B3BBC7", marginTop: 10 }}>{book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}</Text>
             {started && <BookReadingProgress read={readCount} total={book.chapters}
@@ -237,6 +253,9 @@ function BookDetail({ book }: { book: Book }) {
       <View style={{ position: "absolute", top: 0, left: 0, right: 0, paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 8, flexDirection: "row", justifyContent: "space-between" }} pointerEvents="box-none">
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: "#000000" }, headerShade]} />
         <CircleButton icon="chevron.left" label="Back" tint="white" bg="rgba(10,15,24,0.48)" border="rgba(255,255,255,0.12)" onPress={() => goBackOr(router, "/(tabs)/library")} />
+        <Animated.View pointerEvents="none" accessibilityElementsHidden={!headerTitleVisible} importantForAccessibility={headerTitleVisible ? "auto" : "no-hide-descendants"} style={[{ position: "absolute", left: 76, right: 76, top: insets.top + 8, height: 48, justifyContent: "center" }, headerTitleStyle]}>
+          <Text accessibilityRole="header" numberOfLines={1} ellipsizeMode="tail" maxFontSizeMultiplier={1.4} style={[systemText.headline, { color: "white", textAlign: "center" }]}>{book.name}</Text>
+        </Animated.View>
         <Host colorScheme="dark" style={{ width: 48, height: 48 }}>
           <ContextMenu activationMethod="singlePress">
             <ContextMenu.Trigger>

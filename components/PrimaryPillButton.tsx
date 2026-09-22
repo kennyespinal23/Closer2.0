@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -52,6 +52,7 @@ export function PrimaryPillButton({
   accessibilityLabel,
   variant = "primary",
 }: PrimaryPillButtonProps) {
+  const [pressed, setPressed] = useState(false);
   const isDisabled = disabled || loading;
   const isCompleted = variant === "completed";
   const pillBg = isCompleted ? COMPLETED_READ_GREEN : CLOSER_ACCENT;
@@ -80,11 +81,13 @@ export function PrimaryPillButton({
 
   const handlePressIn: PressableProps["onPressIn"] = (event) => {
     if (isDisabled) return;
+    setPressed(true);
     onPressIn?.(event);
     animateTo(0.98);
   };
 
   const handlePressOut = () => {
+    setPressed(false);
     animateTo(1);
   };
 
@@ -109,11 +112,11 @@ export function PrimaryPillButton({
         accessibilityHint={
           isCompleted ? "You've already completed today's devotional" : undefined
         }
-        accessibilityState={{ disabled: isDisabled }}
-        style={({ pressed }) => ({
+        accessibilityState={{ disabled: isDisabled, busy: loading }}
+        style={{
           opacity: isDisabled ? 0.45 : pressed ? 0.92 : 1,
           alignSelf: "stretch",
-        })}
+        }}
       >
         <View
           style={{
@@ -131,13 +134,15 @@ export function PrimaryPillButton({
           {loading ? (
             <ActivityIndicator color={pillInk} />
           ) : (
-            <View style={{ alignItems: "center" }}>
+            <View style={{ alignItems: "center", flexShrink: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text
                   style={[
                     typography.button,
                     {
                       color: pillInk,
+                      flexShrink: 1,
+                      textAlign: "center",
                       marginRight: showArrow || isCompleted ? 8 : 0,
                     },
                   ]}

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,6 +27,7 @@ export function ModalNavBar({
   closeAccessibilityLabel = "Close",
   leading,
 }: ModalNavBarProps) {
+  const [pressed, setPressed] = useState(false);
   const colors = useColors();
   const insets = useSafeAreaInsets();
 
@@ -53,6 +55,8 @@ export function ModalNavBar({
         >
           {leading ?? (
             <Pressable
+              onPressIn={() => setPressed(true)}
+              onPressOut={() => setPressed(false)}
               onPress={() => {
                 haptics.soft();
                 onClose();
@@ -60,15 +64,15 @@ export function ModalNavBar({
               hitSlop={12}
               accessibilityRole="button"
               accessibilityLabel={closeAccessibilityLabel}
-              style={({ pressed }) => ({
-                width: 36,
-                height: 36,
-                borderRadius: 18,
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
                 backgroundColor: colors.surfaceSecondary,
                 alignItems: "center",
                 justifyContent: "center",
                 opacity: pressed ? 0.7 : 1,
-              })}
+              }}
             >
               <SFSymbol
                 name="xmark"

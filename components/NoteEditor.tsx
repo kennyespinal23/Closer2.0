@@ -532,6 +532,7 @@ function TrayAction({
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled: !!disabled }}
       style={{ flex: flex ? 1.4 : 1, opacity: disabled ? 0.45 : 1 }}
     >
       {({ pressed }) => (

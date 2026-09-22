@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import Svg, { Path } from "react-native-svg";
@@ -97,6 +98,7 @@ export function SocialButton({
   onPress,
   variant = "system",
 }: SocialButtonProps) {
+  const [pressed, setPressed] = useState(false);
   const colors = useColors();
   const scheme = useResolvedScheme();
   const useNativeApple =
@@ -133,14 +135,16 @@ export function SocialButton({
   // drops backgroundColor / layout when Pressable uses function-form style.
   return (
     <Pressable
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole="button"
       accessibilityLabel={labelByProvider[provider]}
       accessibilityState={{ disabled: !onPress }}
-      style={({ pressed }) => ({
+      style={{
         opacity: !onPress ? 0.55 : pressed ? 0.92 : 1,
-      })}
+      }}
     >
       <View
         style={{

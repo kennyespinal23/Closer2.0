@@ -1,10 +1,8 @@
-import { useEffect, useRef } from "react";
-import { TrueSheet } from "@lodev09/react-native-true-sheet";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { AppleSheet } from "@/components/AppleSheet";
+import { ScrollView, Text, View } from "react-native";
+import { ReaderSheet } from "@/components/ReaderSheet";
+import { ReaderNativeButton } from "@/components/ReaderNativeButton";
 import { SFSymbol } from "@/components/Symbol";
-import { useColors, useResolvedScheme } from "@/state/theme";
-import { useReducedMotion } from "@/lib/useReducedMotion";
+import { useColors } from "@/state/theme";
 
 /** Preview surface; no verse text is sent to a service. */
 export function VerseMeaningCard({ visible, onClose, reference, passage }: {
@@ -14,34 +12,17 @@ export function VerseMeaningCard({ visible, onClose, reference, passage }: {
   passage: string;
 }) {
   const colors = useColors();
-  const dark = useResolvedScheme() === "dark";
-  const reducedMotion = useReducedMotion();
-  const sheet = useRef<TrueSheet>(null);
-  const presented = useRef(false);
-  useEffect(() => {
-    if (visible) {
-      presented.current = true;
-      void sheet.current?.present(0, !reducedMotion);
-    } else if (presented.current) {
-      presented.current = false;
-      void sheet.current?.dismiss(!reducedMotion);
-    }
-  }, [visible, reducedMotion]);
   return (
-    <AppleSheet
-      ref={sheet}
+    <ReaderSheet
+      visible={visible}
       onClose={onClose}
       detents={[0.65, 1]}
-      backgroundColor={dark ? "#242424E8" : "#F5F1E9ED"}
-      backgroundBlur={dark ? "dark" : "light"}
       scrollable
     >
       <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 24, paddingTop: 24, paddingBottom: 12 }}>
         <SFSymbol name="sparkles" size={20} color={colors.ink} />
         <Text accessibilityRole="header" style={{ flex: 1, marginLeft: 10, color: colors.ink, fontSize: 18, fontWeight: "600" }}>Verse meaning</Text>
-        <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Close verse meaning" style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.border, alignItems: "center", justifyContent: "center" }}>
-          <SFSymbol name="xmark" size={16} color={colors.ink} />
-        </Pressable>
+        <ReaderNativeButton label="Close verse meaning" symbol="xmark" onPress={onClose} />
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 28, paddingBottom: 44 }}>
         <Text style={{ color: colors.ink, fontSize: 26, fontWeight: "700", marginTop: 16, marginBottom: 14 }}>{reference}</Text>
@@ -55,6 +36,6 @@ export function VerseMeaningCard({ visible, onClose, reference, passage }: {
           <Text style={{ color: colors.inkMuted, fontSize: 15, lineHeight: 22 }}>This is a preview. AI explanations aren’t available yet.</Text>
         </View>
       </ScrollView>
-    </AppleSheet>
+    </ReaderSheet>
   );
 }

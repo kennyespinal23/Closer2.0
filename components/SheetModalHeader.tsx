@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { ReaderNativeButton } from "@/components/ReaderNativeButton";
 import { Pressable, Text, View } from "react-native";
 import { systemText } from "@/lib/typography";
 import { useColors } from "@/state/theme";
@@ -7,6 +9,7 @@ import { useColors } from "@/state/theme";
 const SIDE_WIDTH = 72;
 
 export type SheetModalHeaderProps = {
+  nativeControls?: boolean;
   title: string;
   onCancel: () => void;
   onSave?: () => void;
@@ -18,6 +21,7 @@ export type SheetModalHeaderProps = {
 };
 
 export function SheetModalHeader({
+  nativeControls = false,
   title,
   onCancel,
   onSave,
@@ -27,6 +31,7 @@ export function SheetModalHeader({
   showSave = true,
 }: SheetModalHeaderProps) {
   const colors = useColors();
+  const [pressedAction, setPressedAction] = useState<"cancel" | "save" | null>(null);
 
   return (
     <View
@@ -39,18 +44,20 @@ export function SheetModalHeader({
         minHeight: 44,
       }}
     >
-      <View style={{ width: SIDE_WIDTH, alignItems: "flex-start" }}>
-        <Pressable
+      <View style={{ width: nativeControls ? 88 : SIDE_WIDTH, alignItems: "flex-start" }}>
+        {nativeControls ? <ReaderNativeButton label={cancelLabel} onPress={onCancel} /> : <Pressable
           onPress={onCancel}
           hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel={cancelLabel}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          onPressIn={() => setPressedAction("cancel")}
+          onPressOut={() => setPressedAction(null)}
+          style={{ minWidth: 44, minHeight: 44, justifyContent: "center", opacity: pressedAction === "cancel" ? 0.6 : 1 }}
         >
           <Text style={[systemText.body, { color: colors.inkMuted }]}>
             {cancelLabel}
           </Text>
-        </Pressable>
+        </Pressable>}
       </View>
 
       <View style={{ flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 8 }}>
@@ -70,17 +77,18 @@ export function SheetModalHeader({
         </Text>
       </View>
 
-      <View style={{ width: SIDE_WIDTH, alignItems: "flex-end" }}>
-        {showSave && onSave ? (
+      <View style={{ width: nativeControls ? 88 : SIDE_WIDTH, alignItems: "flex-end" }}>
+        {showSave && onSave ? (nativeControls ? <ReaderNativeButton label={saveLabel} onPress={onSave} disabled={saveDisabled} /> : (
           <Pressable
             onPress={onSave}
             disabled={saveDisabled}
             hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel={saveLabel}
-            style={({ pressed }) => ({
-              opacity: pressed || saveDisabled ? 0.4 : 1,
-            })}
+            onPressIn={() => setPressedAction("save")}
+            onPressOut={() => setPressedAction(null)}
+            accessibilityState={{ disabled: saveDisabled }}
+            style={{ minWidth: 44, minHeight: 44, justifyContent: "center", opacity: pressedAction === "save" || saveDisabled ? 0.4 : 1 }}
           >
             <Text
               style={[
@@ -94,7 +102,7 @@ export function SheetModalHeader({
               {saveLabel}
             </Text>
           </Pressable>
-        ) : (
+        )) : (
           <HeaderSpacer />
         )}
       </View>

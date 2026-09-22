@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { ReaderSheet } from "@/components/ReaderSheet";
+import { ReaderNativeButton } from "@/components/ReaderNativeButton";
 import {
   Pressable,
   ScrollView,
@@ -5,7 +8,6 @@ import {
   View,
 } from "react-native";
 import * as haptics from "@/lib/haptics";
-import { AppleSheet } from "@/components/AppleSheet";
 import { SFSymbol } from "@/components/Symbol";
 import {
   HIGHLIGHT_COLORS,
@@ -75,10 +77,11 @@ export function VerseActionSheet({
   onClose: () => void;
 }) {
   const colors = useColors();
+  const [pressed, setPressed] = useState<string | null>(null);
   const hasNotes = notes.length > 0;
 
   return (
-    <AppleSheet
+    <ReaderSheet
       visible={visible}
       onClose={onClose}
       // 'auto' is the default opening size — sized to the current
@@ -86,15 +89,15 @@ export function VerseActionSheet({
       // optional second detent (full height) lets a verse with
       // many notes drag up for a long-list reading position.
       detents={["auto", 1]}
-      backgroundColor={colors.surface}
     >
       <View>
         {onMoment && <Pressable onPress={onMoment} accessibilityRole="button" accessibilityLabel="Discover Bible Moment" style={{ marginHorizontal: 24, marginTop: 24, padding: 16, borderRadius: 16, backgroundColor: colors.border }}>
-          <Text style={{ color: colors.ink, fontSize: 16, fontWeight: "600" }}>✧ Discover a Bible Moment</Text>
-          <Text style={{ color: colors.inkMuted, fontSize: 13, marginTop: 6 }}>You can also hold the glowing verse to reveal it.</Text>
+          <Text style={{ color: colors.ink, fontSize: 16, fontWeight: "600", flexShrink: 1 }}>✧ Discover a Bible Moment</Text>
+          <Text style={{ color: colors.inkMuted, fontSize: 13, marginTop: 6 }}>Tap the glowing verse to reveal it.</Text>
         </Pressable>}
         {/* Reference + preview */}
         <View className="px-6 pt-5 pb-4">
+          <View style={{ alignItems: "flex-end" }}><ReaderNativeButton label="Close verse actions" symbol="xmark" onPress={onClose} /></View>
               <Text
                 className="text-primary text-[11px] tracking-[1px] uppercase"
                 style={{ fontFamily: "System", fontWeight: "700" }}
@@ -131,7 +134,7 @@ export function VerseActionSheet({
                 >
                   Highlight
                 </Text>
-                <View className="flex-row items-center">
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
                   {HIGHLIGHT_COLORS.map((c) => {
                     const selected = currentHighlight === c.id;
                     return (
@@ -148,11 +151,11 @@ export function VerseActionSheet({
                         }}
                         accessibilityRole="button"
                         accessibilityLabel={`${c.name} highlight`}
+                        accessibilityState={{ selected }}
+                        onPressIn={() => setPressed(c.id)}
+                        onPressOut={() => setPressed(null)}
                         hitSlop={6}
-                        style={({ pressed }) => ({
-                          opacity: pressed ? 0.6 : 1,
-                          marginRight: 14,
-                        })}
+                        style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center", opacity: pressed === c.id ? 0.6 : 1 }}
                       >
                         <View
                           style={{
@@ -185,9 +188,9 @@ export function VerseActionSheet({
                     accessibilityRole="button"
                     accessibilityLabel="Clear highlight"
                     hitSlop={6}
-                    style={({ pressed }) => ({
-                      opacity: pressed ? 0.6 : 1,
-                    })}
+                    onPressIn={() => setPressed("clear")} onPressOut={() => setPressed(null)}
+                    accessibilityState={{ selected: currentHighlight === null }}
+                    style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center", opacity: pressed === "clear" ? 0.6 : 1 }}
                   >
                     <View
                       style={{
@@ -224,9 +227,9 @@ export function VerseActionSheet({
                         <View key={n.id}>
                           <Pressable
                             onPress={() => onEditNote(n.id)}
-                            style={({ pressed }) => ({
-                              opacity: pressed ? 0.85 : 1,
-                            })}
+                            accessibilityRole="button" accessibilityLabel={`Edit note: ${n.text}`}
+                            onPressIn={() => setPressed(n.id)} onPressOut={() => setPressed(null)}
+                            style={{ minHeight: 44, opacity: pressed === n.id ? 0.85 : 1 }}
                             className="px-4 py-3.5 flex-row items-start"
                           >
                             <View className="w-2 h-2 rounded-full bg-primary mt-2 mr-3" />
@@ -263,12 +266,12 @@ export function VerseActionSheet({
             <View className="px-6 pt-5 pb-4 flex-row">
               <ActionButton
                 icon={<PlusIcon />}
-                label={hasNotes ? "Add another note" : "Add note"}
+                label="Note"
                 onPress={onAddNote}
               />
               {onAI && <>
                 <View style={{ width: 10 }} />
-                <ActionButton icon={<SFSymbol name="sparkles" size={16} color={colors.ink} />} label="AI" onPress={onAI} />
+                <ActionButton icon={<SFSymbol name="sparkles" size={16} color={colors.ink} />} label="Meaning" onPress={onAI} />
               </>}
               <View style={{ width: 10 }} />
               <ActionButton
@@ -278,7 +281,7 @@ export function VerseActionSheet({
               />
             </View>
       </View>
-    </AppleSheet>
+    </ReaderSheet>
   );
 }
 
@@ -295,19 +298,19 @@ function ActionButton({
   label: string;
   onPress: () => void;
 }) {
+  const [pressed, setPressed] = useState(false);
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => ({
-        flex: 1,
-        opacity: pressed ? 0.8 : 1,
-      })}
+      accessibilityRole="button" accessibilityLabel={label}
+      onPressIn={() => setPressed(true)} onPressOut={() => setPressed(false)}
+      style={{ flex: 1, minHeight: 48, opacity: pressed ? 0.8 : 1 }}
       className="flex-row items-center justify-center bg-accent-soft border border-border rounded-2xl px-4 py-3.5"
     >
       {icon}
       <Text
         className="text-ink text-[14px] ml-2"
-        style={{ fontFamily: "System", fontWeight: "600" }}
+        style={{ fontFamily: "System", fontWeight: "600", flexShrink: 1 }}
       >
         {label}
       </Text>

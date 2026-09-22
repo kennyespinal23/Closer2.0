@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Pressable, type StyleProp, type ViewStyle } from "react-native";
 import { SFSymbol } from "@/components/Symbol";
 import * as haptics from "@/lib/haptics";
@@ -26,6 +27,7 @@ export function BubbleBackButton({
   accessibilityLabel = "Back",
   style,
 }: BubbleBackButtonProps) {
+  const [pressed, setPressed] = useState(false);
   const colors = useColors();
   const scheme = useResolvedScheme();
   const ink = color ?? colors.ink;
@@ -37,6 +39,8 @@ export function BubbleBackButton({
 
   return (
     <Pressable
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
       onPress={() => {
         haptics.soft();
         onPress();
@@ -44,7 +48,7 @@ export function BubbleBackButton({
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      style={({ pressed }) => [
+      style={[
         {
           width: SIZE,
           height: SIZE,

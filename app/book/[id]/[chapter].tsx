@@ -1,3 +1,5 @@
+import { ReaderSheet } from "@/components/ReaderSheet";
+import { ReaderNativeButton } from "@/components/ReaderNativeButton";
 import { ReaderListeningPanel } from "@/components/audio/ReaderListeningPanel";
 import { MomentShimmerText } from "@/components/MomentShimmerText";
 import { StatusBar } from "expo-status-bar";
@@ -3475,15 +3477,8 @@ function ReaderToolbar({
 }) {
   const colors = useColors();
   const scheme = useResolvedScheme();
-  const { setPref } = useTheme();
+  const { pref, setPref } = useTheme();
   const isLight = scheme === "light";
-  const toggleScheme = () => {
-    haptics.soft();
-    // Explicit override — tapping the pill commits the user to a
-    // concrete dark/light pref (leaves "system" behind), so their
-    // choice sticks regardless of the device appearance.
-    setPref(isLight ? "dark" : "light");
-  };
   const [draftTextSize, setDraftTextSize] = useState(textSizeId);
   const [textSizeOpen, setTextSizeOpen] = useState(initialSheet === "textsize");
   const [versionOpen, setVersionOpen] = useState(initialSheet === "version");
@@ -3594,7 +3589,6 @@ function ReaderToolbar({
           onContents={() => { haptics.soft(); onContents(); }}
           onVersion={openVersionSheet}
           onTextSize={() => { haptics.soft(); setDraftTextSize(textSizeId); setTextSizeOpen(true); }}
-          onAppearance={toggleScheme}
         /> : (        <View
           style={{
             flexDirection: "row",
@@ -3655,7 +3649,7 @@ function ReaderToolbar({
 
           <ToolbarChip
             containerStyle={circleStyle}
-            accessibilityLabel="Text size"
+            accessibilityLabel="Reading appearance"
             onPress={() => {
               haptics.soft();
               setDraftTextSize(textSizeId);
@@ -3674,32 +3668,19 @@ function ReaderToolbar({
           </ToolbarChip>
 
           <ToolbarChip containerStyle={circleStyle} accessibilityLabel="Listen to this chapter" onPress={onAudio}><SFSymbol name="headphones" size={20} color={iconColor} /></ToolbarChip>
-          <ToolbarChip
-            containerStyle={circleStyle}
-            accessibilityLabel={
-              isLight ? "Switch to dark mode" : "Switch to light mode"
-            }
-            onPress={toggleScheme}
-          >
-            <SFSymbol
-              name={isLight ? "moon.fill" : "sun.max.fill"}
-              size={17}
-              color={iconColor}
-              weight="medium"
-            />
-          </ToolbarChip>
+
         </View>)}
       </View>
 
       {/* Keep sheets mounted — unmounting on close skips TrueSheet.dismiss(). */}
-      <AppleSheet
+      <ReaderSheet
         visible={versionOpen}
         onClose={handleVersionClose}
         detents={["auto"]}
         grabber={false}
-        backgroundColor={colors.surface}
       >
         <SheetModalHeader
+          nativeControls
           title="Bible Version"
           cancelLabel="Cancel"
           saveLabel="Save"
@@ -3728,14 +3709,13 @@ function ReaderToolbar({
             />
           </Host>
         </View>
-      </AppleSheet>
+      </ReaderSheet>
 
-      <AppleSheet
+      <ReaderSheet
         visible={textSizeOpen}
         onClose={() => { setTextSizeOpen(false); if (draftTextSize !== textSizeId) onChangeTextSize(draftTextSize); }}
         detents={["auto"]}
         grabber
-        backgroundColor={colors.surface}
       >
         <View
           style={{
@@ -3745,14 +3725,13 @@ function ReaderToolbar({
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <Text accessibilityRole="header" style={{ color: colors.ink, fontSize: 22, fontWeight: "600" }}>Text size</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Apply text size" onPress={() => setTextSizeOpen(false)} style={{ minHeight: 44, minWidth: 60, alignItems: "center", justifyContent: "center" }}>
-              <Text style={{ color: colors.ink, fontSize: 17, fontWeight: "600" }}>Done</Text>
-            </Pressable>
+            <Text accessibilityRole="header" style={{ color: colors.ink, fontSize: 22, fontWeight: "600" }}>Reading appearance</Text>
+            <ReaderNativeButton label="Done" onPress={() => setTextSizeOpen(false)} />
           </View>
           <View style={{ minHeight: 116, justifyContent: "center", paddingHorizontal: 8, paddingBottom: 20 }}>
             <Text style={{ fontFamily: NEW_YORK, color: colors.ink, fontSize: 18 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1), lineHeight: 30 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1) }}>In the beginning, God created the heavens and the earth.</Text>
           </View>
+          <Text style={{ color: colors.inkMuted, fontSize: 13, marginBottom: 8 }}>Text size</Text>
           {/* Native UISegmentedControl — same control Library/Highlights use */}
           <SegmentedControl
             values={TEXT_SIZES.map((s) => s.name)}
@@ -3770,8 +3749,19 @@ function ReaderToolbar({
             activeFontStyle={{ fontSize: 14, fontWeight: "600", color: colors.ink }}
             style={{ width: "100%", height: 44 }}
           />
+          <Text style={{ color: colors.inkMuted, fontSize: 13, marginTop: 24, marginBottom: 8 }}>Appearance</Text>
+          <SegmentedControl
+            values={["System", "Light", "Dark"]}
+            appearance={scheme}
+            selectedIndex={["system", "light", "dark"].indexOf(pref)}
+            onChange={event => {
+              const next = (["system", "light", "dark"] as const)[event.nativeEvent.selectedSegmentIndex];
+              if (next) { haptics.tick(); setPref(next); }
+            }}
+            style={{ height: 44 }}
+          />
         </View>
-      </AppleSheet>
+      </ReaderSheet>
     </>
   );
 }
@@ -4022,9 +4012,10 @@ function SelectionBar({
   // sized by hand, and the action row's three buttons get an explicit
   // equal-width split. This is the layout that finally stopped the
   // "icons overlap / swatches disappear" regressions on iOS.
-  const CARD_WIDTH = 340;
-  const ROW_INSET = 16;
-  const SWATCH = 30;
+  const { width: screenWidth } = useWindowDimensions();
+  const CARD_WIDTH = Math.min(340, screenWidth - 32);
+  const ROW_INSET = 12;
+  const SWATCH = 44;
   const SWATCH_COUNT = HIGHLIGHT_COLORS.length + 1; // +1 for the no-fill chip
   const SWATCH_INNER = CARD_WIDTH - ROW_INSET * 2;
   const SWATCH_GAP = (SWATCH_INNER - SWATCH * SWATCH_COUNT) / (SWATCH_COUNT - 1);
@@ -4068,26 +4059,7 @@ function SelectionBar({
           >
             {count} verse{count === 1 ? "" : "s"} selected
           </Text>
-          <Pressable
-            onPress={onDone}
-            accessibilityRole="button"
-            accessibilityLabel="Exit selection"
-            style={({ pressed }) => ({
-              opacity: pressed ? 0.6 : 1,
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: 999,
-              borderColor: colors.border,
-              borderWidth: 1,
-            })}
-          >
-            <Text
-              className="text-ink-muted text-[11px] tracking-[1.5px]"
-              style={{ fontFamily: "System", fontWeight: "700" }}
-            >
-              DONE
-            </Text>
-          </Pressable>
+          <ReaderNativeButton label="Done" onPress={onDone} />
         </View>
 
         {/* Highlight color row — pips are spaced edge-to-edge across
@@ -4105,12 +4077,14 @@ function SelectionBar({
         >
           <ColorSwatch
             size={SWATCH}
+            label="Clear highlight"
             onPress={() => onColor(null)}
             dim
           />
           {HIGHLIGHT_COLORS.map((c) => (
             <ColorSwatch
               key={c.id}
+              label={`${c.name} highlight`}
               size={SWATCH}
               marginLeft={SWATCH_GAP}
               onPress={() => onColor(c.id)}
@@ -4142,7 +4116,7 @@ function SelectionBar({
             width={ACTION_WIDTH}
           />
           <SelectionAction
-            label="AI"
+            label="Meaning"
             icon={<SFSymbol name="sparkles" size={18} color={colors.ink} />}
             onPress={onAI}
             width={ACTION_WIDTH}
@@ -4172,6 +4146,7 @@ function SelectionBar({
 }
 
 function ColorSwatch({
+  label,
   fill,
   ring,
   dim,
@@ -4179,6 +4154,7 @@ function ColorSwatch({
   size,
   marginLeft,
 }: {
+  label: string;
   fill?: string;
   ring?: string;
   dim?: boolean;
@@ -4195,15 +4171,15 @@ function ColorSwatch({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityLabel={label}
       accessibilityRole="button"
-      style={{ marginLeft: marginLeft ?? 0 }}
-      hitSlop={6}
+      style={{ width: size, height: size, alignItems: "center", justifyContent: "center", marginLeft: marginLeft ?? 0 }}
     >
       <View
         style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
+          width: 30,
+          height: 30,
+          borderRadius: 15,
           borderWidth: 1.5,
           borderColor: ring ?? colors.borderStrong,
           backgroundColor: fill ?? "transparent",
@@ -4243,12 +4219,13 @@ function SelectionAction({
   width: number;
 }) {
   const colors = useColors();
+  const [pressed, setPressed] = useState(false);
   // Same shape-isolation trick as ColorSwatch: put the laid-out
   // contents inside a plain <View> so the explicit width/height
   // and flexDirection always apply, regardless of how Pressable's
   // style function interacts with the host renderer.
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
+    <Pressable onPress={onPress} onPressIn={() => setPressed(true)} onPressOut={() => setPressed(false)} style={{ opacity: pressed ? 0.65 : 1 }} accessibilityRole="button" accessibilityLabel={label}>
       <View
         style={{
           width,
@@ -4266,6 +4243,8 @@ function SelectionAction({
             fontSize: 13,
             color: colors.ink,
             marginLeft: 8,
+            flexShrink: 1,
+            textAlign: "center",
           }}
         >
           {label}

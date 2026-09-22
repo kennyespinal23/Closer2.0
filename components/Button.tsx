@@ -1,5 +1,6 @@
+import { useState } from "react";
 import type { PressableProps } from "react-native";
-import { Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import * as haptics from "@/lib/haptics";
 import { typography } from "@/lib/typography";
@@ -34,6 +35,7 @@ export function Button({
   heavy = false,
 }: ButtonProps) {
   const colors = useColors();
+  const [pressed, setPressed] = useState(false);
 
   if (variant === "primary") {
     return (
@@ -55,12 +57,14 @@ export function Button({
       onPress={onPress}
       disabled={isDisabled}
       onPressIn={() => {
+        setPressed(true);
         if (!isDisabled && variant !== "ghost") haptics.soft();
       }}
+      onPressOut={() => setPressed(false)}
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled: isDisabled }}
-      style={({ pressed }) => ({
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      style={{
         width: fullWidth ? "100%" : undefined,
         minHeight: 52,
         borderRadius: 999,
@@ -74,9 +78,9 @@ export function Button({
         borderWidth: variant === "secondary" ? 1 : 0,
         borderColor: colors.border,
         opacity: isDisabled ? 0.6 : pressed ? 0.88 : 1,
-      })}
+      }}
     >
-      {leadingIcon ? <View style={{ marginRight: 10 }}>{leadingIcon}</View> : null}
+      {loading ? <ActivityIndicator color={colors.ink} style={{ marginRight: 10 }} /> : leadingIcon ? <View style={{ marginRight: 10 }}>{leadingIcon}</View> : null}
       <Text
         style={[
           typography.button,

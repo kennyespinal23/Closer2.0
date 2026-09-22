@@ -1,4 +1,4 @@
-import { Host, ContextMenu, Button as NativeButton } from "@expo/ui/swift-ui";
+import { Host, ContextMenu, Section as NativeSection, Button as NativeButton } from "@expo/ui/swift-ui";
 import { accessibilityLabel } from "@expo/ui/swift-ui/modifiers";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { getCoverBloom } from "@/constants/bookCovers";
@@ -66,6 +66,16 @@ const COLLECTIONS: { id: string; label: string; categories: BookCategory[] }[] =
   { id: "revelation", label: "Revelation", categories: ["Apocalyptic"] },
 ];
 
+const COLLECTION_DESCRIPTIONS: Record<string, string> = {
+  law: "Beginnings, covenant, and the foundations of faith.",
+  history: "The people and events that shaped the biblical story.",
+  wisdom: "Poetry, prayer, and wisdom for everyday life.",
+  prophets: "Calls to justice, faithfulness, and hope.",
+  gospels: "The life, teachings, death, and resurrection of Jesus.",
+  letters: "Encouragement and guidance for a life of faith.",
+  revelation: "A vision of hope and God’s final renewal.",
+};
+
 export default function LibraryScreen() {
   const [introduced, setIntroduced] = useState<boolean | null>(null);
   useEffect(() => {
@@ -90,6 +100,21 @@ function BibleLibrary() {
   // context is a different React.createContext and throws/returns
   // unrelated values under our native TabView shell.
   const measuredTabBarHeight = useBottomTabBarHeight();
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const viewChanged = useRef(false);
+  useEffect(() => {
+    let active = true;
+    void loadJSON<string>(STORAGE_KEYS.bibleLibraryView).then(saved => {
+      if (active && !viewChanged.current && (saved === "grid" || saved === "list")) setViewMode(saved);
+    });
+    return () => { active = false; };
+  }, []);
+  const changeView = (next: "grid" | "list") => {
+    viewChanged.current = true;
+    setViewMode(next);
+    haptics.tick();
+    void saveJSON(STORAGE_KEYS.bibleLibraryView, next);
+  };
   const [collectionId, setCollectionId] = useState("all");
   const [filter, setFilter] = useState<LibraryFilter>("old");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -224,14 +249,21 @@ function BibleLibrary() {
         <SectionHeader
           title={collectionId === "all" ? "The books" : collection.label}
           count={filteredBooks.length}
+          viewMode={viewMode}
+          onChangeView={changeView}
           collectionId={collectionId}
           collections={availableCollections}
           onSelect={id => { haptics.tick(); setCollectionId(id); }}
         />
 
+        {COLLECTION_DESCRIPTIONS[collectionId] && <ThemedText variant="subheadline" color="secondary"
+          style={{ paddingHorizontal: SCREEN_H_PAD, marginBottom: 16 }}>{COLLECTION_DESCRIPTIONS[collectionId]}</ThemedText>}
+
         {/* ─── Grid ───────────────────────────────────────────── */}
         {filteredBooks.length === 0 ? (
           <EmptyState query="" />
+        ) : viewMode === "list" ? (
+          <BookList books={filteredBooks} onPick={book => router.push(`/book/${book.id}`)} />
         ) : (
           <BookGrid
             books={filteredBooks}
@@ -256,15 +288,18 @@ function BibleLibrary() {
 function SectionHeader({
   title,
   count,
-  collectionId, collections, onSelect,
+  collectionId, collections, onSelect, viewMode, onChangeView,
 }: {
   title: string;
   count: number;
+  viewMode: "grid" | "list";
+  onChangeView: (mode: "grid" | "list") => void;
   collectionId: string;
   collections: typeof COLLECTIONS;
   onSelect: (id: string) => void;
 }) {
   const scheme = useResolvedScheme();
+  const colors = useColors();
   return (
     <View
       className="mt-4 mb-4 flex-row items-center justify-between"
@@ -274,14 +309,20 @@ function SectionHeader({
         <ThemedText variant="title2" accessibilityRole="header">{title}</ThemedText>
         <ThemedText variant="footnote" color="secondary" style={{ marginTop: 4 }}>{count} {count === 1 ? "book" : "books"}</ThemedText>
       </View>
-      <Host colorScheme={scheme} style={{ width: 150, height: 44 }}>
+      <Host colorScheme={scheme} style={{ width: 112, height: 44 }}>
         <ContextMenu activationMethod="singlePress">
           <ContextMenu.Trigger>
-            <NativeButton variant="bordered" systemImage="line.3.horizontal.decrease" modifiers={[accessibilityLabel("Browse Bible collections")]}>Collections</NativeButton>
+            <NativeButton variant="bordered" systemImage="line.3.horizontal.decrease" modifiers={[accessibilityLabel("Library view options")]}>View</NativeButton>
           </ContextMenu.Trigger>
           <ContextMenu.Items>
-            {collections.map(item => <NativeButton key={item.id} systemImage={item.id === collectionId ? "checkmark" : undefined}
-              onPress={() => onSelect(item.id)}>{item.label}</NativeButton>)}
+            <NativeSection title="Layout">
+              <NativeButton systemImage={viewMode === "grid" ? "checkmark" : "square.grid.2x2"} onPress={() => onChangeView("grid")}>Grid</NativeButton>
+              <NativeButton systemImage={viewMode === "list" ? "checkmark" : "list.bullet"} onPress={() => onChangeView("list")}>List</NativeButton>
+            </NativeSection>
+            <NativeSection title="Collection">
+              {collections.map(item => <NativeButton key={item.id} systemImage={item.id === collectionId ? "checkmark" : undefined}
+                onPress={() => onSelect(item.id)}>{item.label}</NativeButton>)}
+            </NativeSection>
           </ContextMenu.Items>
         </ContextMenu>
       </Host>
@@ -299,6 +340,35 @@ function SectionHeader({
  * compute the column width from the screen so the grid stays
  * symmetric on every device without hardcoding.
  */
+function BookList({ books, onPick }: { books: ReadonlyArray<Book>; onPick: (book: Book) => void }) {
+  const colors = useColors();
+  return <View style={{ marginHorizontal: SCREEN_H_PAD, borderRadius: 20, borderCurve: "continuous", overflow: "hidden", backgroundColor: colors.surface }}>
+    {books.map((book, index) => <Pressable key={book.id} accessibilityRole="button" accessibilityLabel={`Open ${book.name}`}
+      onPress={() => onPick(book)} style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14,
+        borderBottomWidth: index < books.length - 1 ? 1 : 0, borderBottomColor: colors.border }}>
+      <View style={{ width: 42 }}><BookCover book={book} variant="thumb" /></View>
+      <View style={{ flex: 1, gap: 5 }}>
+        <ThemedText variant="headline">{book.name}</ThemedText>
+        <BookStatus book={book} />
+      </View>
+      <SFSymbol name="chevron.right" size={14} color={colors.textSecondary} />
+    </Pressable>)}
+  </View>;
+}
+
+function BookStatus({ book }: { book: Book }) {
+  const { chaptersRead } = useProgress();
+  const dark = useResolvedScheme() === "dark";
+  const completed = new Set(chaptersRead.filter(item => item.bookId === book.id && item.chapter >= 1 && item.chapter <= book.chapters).map(item => item.chapter)).size;
+  const finished = completed === book.chapters;
+  return <View style={{ flexDirection: "row", gap: 5, alignItems: "center" }}>
+    {finished && <SFSymbol name="checkmark.circle.fill" size={14} color={dark ? "#30D158" : "#248A3D"} />}
+    <ThemedText variant="caption1" color="secondary" style={{ flexShrink: 1 }}>
+      {finished ? "Completed" : completed > 0 ? `${completed} of ${book.chapters} chapters read` : `${book.chapters} ${book.chapters === 1 ? "chapter" : "chapters"}`}
+    </ThemedText>
+  </View>;
+}
+
 function BookGrid({
   books,
   onPick,
@@ -354,9 +424,6 @@ function BookGridTile({
   book: Book;
   onPress: () => void;
 }) {
-  const colors = useColors();
-  const { chaptersRead } = useProgress();
-  const completed = new Set(chaptersRead.filter(item => item.bookId === book.id && item.chapter >= 1 && item.chapter <= book.chapters).map(item => item.chapter)).size;
 
   return (
     <Pressable
@@ -375,14 +442,7 @@ function BookGridTile({
       >
         {book.name}
       </ThemedText>
-      <ThemedText
-        variant="caption1"
-        color="secondary"
-        style={{ marginTop: 2 }}
-        numberOfLines={1}
-      >
-        {completed === book.chapters ? "✓ Completed" : completed > 0 ? `${completed} of ${book.chapters} chapters read` : `${book.chapters} ${book.chapters === 1 ? "chapter" : "chapters"}`}
-      </ThemedText>
+      <View style={{ marginTop: 4 }}><BookStatus book={book} /></View>
     </Pressable>
   );
 }

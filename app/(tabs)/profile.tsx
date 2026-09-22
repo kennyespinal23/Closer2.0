@@ -1,3 +1,4 @@
+import { JourneySummary } from "@/components/JourneySummary";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -473,27 +474,7 @@ export default function ProfileTabScreen() {
           </View>
         </View>
 
-        {/* Streaks — high on Profile so the dashboard is one scroll-
-            free tap away (Home also has the 🔥 chip). */}
-        <SettingsSection title="Streaks">
-          <SettingsLinkRow
-            icon={<FlameIcon stroke={colors.ink} />}
-            label="Your streak"
-            value={
-              streak.current > 0
-                ? `${streak.current} day${streak.current === 1 ? "" : "s"}`
-                : "Start"
-            }
-            sublabel="Calendar, milestones, and Bible Moments"
-            onPress={() => navigateTo("/rhythm")}
-          />
-          <SettingsLinkRow
-            icon={<SFSymbol name="book.closed" color={colors.ink} size={22} />}
-            label="Bible Moments"
-            sublabel="Discover and collect 78 moments"
-            onPress={() => navigateTo("/rhythm?section=moments" as Href)}
-          />
-        </SettingsSection>
+        <JourneySummary onSelect={section => navigateTo(`/rhythm${section ? `?section=${section}` : ""}` as Href)} />
 
         {/* ─── Saved sermons (personal-artifact preview) ────────
             Moved here from the Library tab in June 2026 per
@@ -814,7 +795,7 @@ export default function ProfileTabScreen() {
                 />
               }
               label="Unlock all milestone badges"
-              sublabel="Browse every badge on Streaks"
+              sublabel="Browse every badge in Your Journey"
               value={unlockAllMilestones}
               onValueChange={(next) => {
                 haptics.soft();

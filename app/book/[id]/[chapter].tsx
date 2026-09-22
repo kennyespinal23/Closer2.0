@@ -1,3 +1,4 @@
+import { MomentShimmerText } from "@/components/MomentShimmerText";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { findExpressBook } from "@/constants/expressBooks";
@@ -1730,7 +1731,7 @@ export default function ChapterReaderScreen() {
             initialNumToRender={2}
             maxToRenderPerBatch={2}
             windowSize={3}
-            renderItem={({ item }) => {
+            renderItem={({ item, index }) => {
               if (item.kind === "prevBridge" || item.kind === "nextBridge") {
                 const target = item.kind === "prevBridge" ? viewportPrev : viewportNext;
                 if (!target) return <View style={{ width: screenWidth, flex: 1 }} />;
@@ -1821,6 +1822,7 @@ export default function ChapterReaderScreen() {
                     haptics.soft();
                     toggleVerseSelection(n);
                   }}
+                  momentMotionActive={index === currentPageIdx && !selectionMode && !openMoment && activeVerse === null}
                   selectedSet={selectedVersesSet}
                   focusVerse={focusVerse}
                   focusTint={focusTint}
@@ -2056,6 +2058,7 @@ function VerseFlow({
   onAnchors,
   onMeasureLines,
   selectedSet,
+  momentMotionActive = false,
 }: {
   verses: { number: number; text: string }[];
   bookId: string;
@@ -2088,6 +2091,7 @@ function VerseFlow({
    * highlight ring so the user can see what they've selected.
    */
   selectedSet?: ReadonlySet<number>;
+  momentMotionActive?: boolean;
 }) {
   const annotations = useAnnotations();
   const colors = useColors();
@@ -2228,20 +2232,25 @@ function VerseFlow({
             >
               {"  "}
             </Text>
-            <Text
+            {moment && onVerseLongPress ? <MomentShimmerText
+              text={normalizeVerseBody(v.text)}
+              momentId={moment.id}
+              active={momentMotionActive && !isSelected && !v.highlight}
+              dark={scheme === "dark"}
+              color={isSelected ? colors.ink : MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"]}
+              style={{ fontFamily: NEW_YORK, fontWeight: "400", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1 }}
+            /> : <Text
               style={{
                 fontFamily: NEW_YORK,
                 fontWeight: "400",
                 fontSize: baseFontSize,
                 lineHeight: baseLineHeight,
                 letterSpacing: -0.1,
-                // Red-letter: words of Jesus print in crimson,
-                // matching traditional printed Bibles.
                 color: moment && !isSelected ? MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"] : colors.ink,
               }}
             >
               {normalizeVerseBody(v.text)}
-            </Text>
+            </Text>}
           </>
         );
 
@@ -2721,6 +2730,7 @@ function ReaderPageView({
   onVersePress,
   onVerseLongPress,
   selectedSet,
+  momentMotionActive = false,
   focusVerse,
   focusTint,
   focusGlow,
@@ -2746,6 +2756,7 @@ function ReaderPageView({
   onVersePress: (verse: number) => void;
   onVerseLongPress?: (verse: number) => void;
   selectedSet?: ReadonlySet<number>;
+  momentMotionActive?: boolean;
   focusVerse: number | null;
   focusTint: string;
   focusGlow: Animated.Value;
@@ -2788,6 +2799,7 @@ function ReaderPageView({
         onVersePress={onVersePress}
         onVerseLongPress={onVerseLongPress}
         selectedSet={selectedSet}
+        momentMotionActive={momentMotionActive}
         focusVerse={focusVerse}
         focusTint={focusTint}
         focusGlow={focusGlow}

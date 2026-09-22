@@ -7,17 +7,6 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { ModalNavBar } from "@/components/ModalNavBar";
 import { StreakDashboard } from "@/components/StreakDashboard";
 
-/**
- * Rhythm modal — the streak/reading-history dashboard.
- *
- * Presented as a modal (slide_from_bottom, configured in
- * app/_layout.tsx). Chrome here is intentionally light: an X
- * close affordance on the leading edge + a centered "Streaks"
- * title. The dashboard body is the same `<StreakDashboard focusMoments={section === "moments"} />`
- * component the post-sermon /sermon/streak screen renders, so
- * the two surfaces never visually drift apart — change the
- * dashboard once, both screens update.
- */
 export default function RhythmModalScreen() {
   const colors = useColors();
   const scheme = useResolvedScheme();
@@ -35,10 +24,10 @@ export default function RhythmModalScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
-      <ModalNavBar title="Streaks & Moments" onClose={close} />
+      <ModalNavBar title="Your Journey" onClose={close} />
 
       <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
-        <StreakDashboard focusMoments={section === "moments"} />
+        <StreakDashboard journey focusMoments={section === "moments"} focusBadges={section === "badges"} />
       </SafeAreaView>
     </View>
   );

@@ -1,5 +1,7 @@
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
+import { JourneySummary } from "@/components/JourneySummary";
 import { BibleMomentsCollection } from "@/components/BibleMomentsCollection";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { MilestonesSection } from "@/components/MilestonesSection";
 import { StreakFireAnimation } from "@/components/StreakFireAnimation";
@@ -20,11 +22,14 @@ export type StreakDashboardProps = {
    */
   daysOverride?: number;
   focusMoments?: boolean;
+  journey?: boolean;
+  focusBadges?: boolean;
 };
 
-export function StreakDashboard({ daysOverride, focusMoments = false }: StreakDashboardProps) {
+export function StreakDashboard({ daysOverride, focusMoments = false, journey = false, focusBadges = false }: StreakDashboardProps) {
   const scrollRef = useRef<ScrollView>(null);
   const jumped = useRef(false);
+  const [section, setSection] = useState(focusMoments ? 1 : focusBadges ? 2 : 0);
   const colors = useColors();
   const scheme = useResolvedScheme();
   const { engagedDates, streak } = useProgress();
@@ -50,12 +55,15 @@ export function StreakDashboard({ daysOverride, focusMoments = false }: StreakDa
   );
 
   return (
+    <View style={{ flex: 1 }}>
+      {journey && <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 }}><SegmentedControl appearance={scheme} values={["Overview", "Moments", "Badges"]} selectedIndex={section} onChange={event => { setSection(event.nativeEvent.selectedSegmentIndex); scrollRef.current?.scrollTo({ y: 0, animated: false }); }} style={{ height: 36 }} /></View>}
     <ScrollView
       ref={scrollRef}
       contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
+      {(!journey || section === 0) && <>
       {/* Hero card — streak headline left, flame lottie right */}
       <View
         style={{
@@ -82,7 +90,7 @@ export function StreakDashboard({ daysOverride, focusMoments = false }: StreakDa
               ]}
               accessibilityRole="header"
             >
-              {days} {days === 1 ? "Day Streak!" : "Day Streak!"}
+              {days > 0 ? `${days} Day Streak!` : "A fresh beginning"}
             </Text>
             <Text
               style={{
@@ -112,7 +120,7 @@ export function StreakDashboard({ daysOverride, focusMoments = false }: StreakDa
           accessibilityLabel={weekAccessibilityLabel(week.cells)}
         >
           {week.cells.map((cell) => {
-            const date = new Date(cell.dateISO);
+            const date = new Date(`${cell.dateISO}T12:00:00`);
             const weekdayShort = WEEKDAY_SHORT_LABELS[date.getDay()];
             const dayNum = date.getDate();
             return (
@@ -164,14 +172,6 @@ export function StreakDashboard({ daysOverride, focusMoments = false }: StreakDa
             marginBottom: 12,
           }}
         >
-          <View style={{ width: 28, alignItems: "center" }}>
-            <SFSymbol
-              name="chevron.left"
-              size={14}
-              color={iOSBlue(scheme)}
-              weight="semibold"
-            />
-          </View>
           <Text
             style={{
               fontFamily: "System",
@@ -183,14 +183,7 @@ export function StreakDashboard({ daysOverride, focusMoments = false }: StreakDa
           >
             {monthGrid.monthLabel}
           </Text>
-          <View style={{ width: 28, alignItems: "center" }}>
-            <SFSymbol
-              name="chevron.right"
-              size={14}
-              color={iOSBlue(scheme)}
-              weight="semibold"
-            />
-          </View>
+
         </View>
 
         {/* Weekday header */}
@@ -246,15 +239,18 @@ export function StreakDashboard({ daysOverride, focusMoments = false }: StreakDa
         ))}
       </View>
 
-      <View onLayout={({ nativeEvent }) => {
-        if (focusMoments && !jumped.current) {
+      {journey && <JourneySummary onSelect={value => { setSection(value === "moments" ? 1 : 2); scrollRef.current?.scrollTo({ y: 0, animated: false }); }} compact />}
+      </>}
+      {(!journey || section === 1) && <View onLayout={({ nativeEvent }) => {
+        if (!journey && focusMoments && !jumped.current) {
           jumped.current = true;
           const y = nativeEvent.layout.y;
           requestAnimationFrame(() => scrollRef.current?.scrollTo({ y, animated: false }));
         }
-      }}><BibleMomentsCollection /></View>
-      <MilestonesSection longestStreak={milestoneUnlockStreak} />
+      }}><BibleMomentsCollection /></View>}
+      {(!journey || section === 2) && <MilestonesSection longestStreak={milestoneUnlockStreak} />}
     </ScrollView>
+    </View>
   );
 }
 
@@ -263,6 +259,7 @@ export function StreakDashboard({ daysOverride, focusMoments = false }: StreakDa
 // ─────────────────────────────────────────────────────────────────
 
 function weekSubtitle(days: number): string {
+  if (days === 0) return "Make a little room for God today.";
   if (days <= 1) return "Great start! Keep going";
   if (days <= 3) return "A rhythm is forming";
   if (days <= 7) return "A week of showing up";

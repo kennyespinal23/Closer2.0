@@ -1,3 +1,4 @@
+import { findExpressBook } from "@/constants/expressBooks";
 import {
   Fragment,
   useCallback,
@@ -39,7 +40,7 @@ import { NoteEditor } from "@/components/NoteEditor";
 import { NativeReaderControls } from "@/components/NativeReaderControls";
 import { ReaderTutorial } from "@/components/ReaderTutorial";
 import { BibleMomentCard, MomentVerseText } from "@/components/BibleMoment";
-import { findBibleMoment, type BibleMoment } from "@/constants/bibleMoments";
+import { findBibleMoment, MOMENT_CATEGORIES, type BibleMoment } from "@/constants/bibleMoments";
 import { VerseMeaningCard } from "@/components/VerseMeaningCard";
 import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
@@ -74,7 +75,6 @@ import { useProgress } from "@/state/progress";
 import { useReadingGoal } from "@/state/readingGoal";
 import { useColors, useResolvedScheme, useTheme } from "@/state/theme";
 import { goBackOr } from "@/lib/navigation";
-import { isRedLetterVerse, redLetterColor } from "@/lib/redLetter";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { minTouchTarget, spacing } from "@/constants/spacing";
 import { NEW_YORK, SF_PRO, systemText, typography } from "@/lib/typography";
@@ -1372,6 +1372,7 @@ export default function ChapterReaderScreen() {
 
   // ─── Contents drawer (Apple-Books chapter list) ─────────────────
   const [contentsOpen, setContentsOpen] = useState(false);
+  const pendingExpress = useRef(false);
 
   // ─── Focus-verse spotlight (check-in deep link) ─────────────────
   // With pagination we no longer scroll-to-Y; we jump to the PAGE
@@ -1414,10 +1415,10 @@ export default function ChapterReaderScreen() {
   useEffect(() => {
     if (focusVerse == null) return;
     if (!data || !pages) return;
-    const verseLine = verseToLineRef.current.get(focusVerse);
-    if (verseLine == null) return;
+    const verseIndex = data.verses.findIndex(verse => verse.number === focusVerse);
+    if (verseIndex < 0) return;
     const versePageIdx = pages.findIndex(
-      (p) => verseLine >= p.startLine && verseLine <= p.endLine,
+      (p) => verseIndex >= p.startVerseIdx && verseIndex <= p.endVerseIdx,
     );
     if (versePageIdx < 0) return;
     const listIdx = versePageIdx + (viewportPrev ? 1 : 0);
@@ -1778,16 +1779,12 @@ export default function ChapterReaderScreen() {
                       // immediately after this fires so the
                       // haptic + visual lift land together.
                       haptics.soft();
-                      setActiveVerse(n);
+                      const moment = findBibleMoment(viewportBookId, viewportChapter, n);
+                      if (moment) setOpenMoment(moment);
+                      else setActiveVerse(n);
                     }
                   }}
                   onVerseLongPress={(n) => {
-                    const moment = findBibleMoment(viewportBookId, viewportChapter, n);
-                    if (moment) {
-                      haptics.soft();
-                      setOpenMoment(moment);
-                      return;
-                    }
                     // Long-press is a deliberate "I want more
                     // than a tap can give me" gesture, so it
                     // deserves a heavier confirmation than the
@@ -1860,7 +1857,11 @@ export default function ChapterReaderScreen() {
       {/* ─── Contents drawer modal ─────────────────────────────── */}
       <ContentsModal
         visible={contentsOpen}
-        onClose={() => setContentsOpen(false)}
+        onClose={() => {
+          setContentsOpen(false);
+          if (pendingExpress.current) { pendingExpress.current = false; router.push(`/book/${book.id}/express`); }
+        }}
+        onExpress={findExpressBook(book.id) ? () => { pendingExpress.current = true; setContentsOpen(false); } : undefined}
         bookId={book.id}
         bookName={book.name}
         totalChapters={book.chapters}
@@ -2065,7 +2066,6 @@ function VerseFlow({
   const annotations = useAnnotations();
   const colors = useColors();
   const scheme = useResolvedScheme();
-  const jesusInk = redLetterColor(scheme);
 
   const baseFontSize = 18 * scale;
   const baseLineHeight = 30 * scale;
@@ -2084,7 +2084,6 @@ function VerseFlow({
           highlight: findHighlightColor(annotations.getHighlight(key)),
           noteCount,
           hasNote: noteCount > 0,
-          isJesus: isRedLetterVerse(bookId, chapter, v.number),
         };
       }),
     [verses, bookId, chapter, annotations],
@@ -2172,7 +2171,7 @@ function VerseFlow({
                 fontFamily: "System",
                 fontWeight: "700",
                 fontSize: verseNumSize,
-                color: moment ? (scheme === "dark" ? "#E8B654" : "#79521B") : isSelected ? colors.ink : colors.inkSubtle,
+                color: moment ? MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"] : isSelected ? colors.ink : colors.inkSubtle,
               }}
             >
               {"  "}{v.number}
@@ -2212,7 +2211,7 @@ function VerseFlow({
                 letterSpacing: -0.1,
                 // Red-letter: words of Jesus print in crimson,
                 // matching traditional printed Bibles.
-                color: v.isJesus ? jesusInk : moment && !isSelected ? (scheme === "dark" ? "#FFE5AB" : "#79521B") : colors.ink,
+                color: moment && !isSelected ? MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"] : colors.ink,
               }}
             >
               {normalizeVerseBody(v.text)}
@@ -2252,8 +2251,9 @@ function VerseFlow({
             {i > 0 ? <Text>{"\n"}</Text> : null}
             {moment && onVerseLongPress ? (
               <MomentVerseText
-                onPress={() => onVersePress(v.number)}
-                onUnlock={() => onVerseLongPress(v.number)}
+                onPress={() => onVerseLongPress(v.number)}
+                onUnlock={() => onVersePress(v.number)}
+                glowColor={MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"]}
                 style={{ fontFamily: NEW_YORK, fontWeight: "400", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1, color: colors.ink, backgroundColor: baseBg }}
               >{inner}</MomentVerseText>
             ) : isFocus ? (
@@ -4273,6 +4273,7 @@ function ContentsModal({
   chapterPageCounts,
   hasReadChapter,
   onSelect,
+  onExpress,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -4284,6 +4285,7 @@ function ContentsModal({
   chapterPageCounts: number[];
   hasReadChapter: (bookId: string, chapter: number) => boolean;
   onSelect: (chapter: number) => void;
+  onExpress?: () => void;
 }) {
   const colors = useColors();
   const scheme = useResolvedScheme();
@@ -4330,6 +4332,11 @@ function ContentsModal({
           }}
           showsVerticalScrollIndicator={false}
         >
+          {onExpress && <Pressable accessibilityRole="button" onPress={onExpress} style={{ minHeight: 64, padding: 16, flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <SFSymbol name="bolt" size={20} color={colors.ink} />
+            <View style={{ flex: 1 }}><Text style={{ color: colors.ink, fontSize: 17, fontWeight: "600" }}>Read Express</Text><Text style={{ color: colors.inkMuted, fontSize: 13, marginTop: 4 }}>The heart of this book, in a few minutes</Text></View>
+            <SFSymbol name="chevron.right" size={14} color={colors.inkMuted} />
+          </Pressable>}
           {Array.from({ length: totalChapters }, (_, i) => i + 1).map((c) => {
             const read = hasReadChapter(bookId, c);
             const current = c === currentChapter;

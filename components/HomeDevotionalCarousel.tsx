@@ -110,7 +110,7 @@ export type HomeDevotionalCarouselProps = {
     nextBreakLabel: string;
     nextBreakTone: "live" | "armed" | "muted";
     unlockedToday: boolean;
-    onCompleteCard: (card: FloatingScriptureCard) => boolean;
+    onCompleteCard: (card: FloatingScriptureCard) => (() => void) | undefined;
   };
 };
 

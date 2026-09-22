@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { BibleMomentsCollection } from "@/components/BibleMomentsCollection";
+import { useMemo, useRef } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { MilestonesSection } from "@/components/MilestonesSection";
 import { StreakFireAnimation } from "@/components/StreakFireAnimation";
@@ -18,9 +19,12 @@ export type StreakDashboardProps = {
    * real current streak from the progress store.
    */
   daysOverride?: number;
+  focusMoments?: boolean;
 };
 
-export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
+export function StreakDashboard({ daysOverride, focusMoments = false }: StreakDashboardProps) {
+  const scrollRef = useRef<ScrollView>(null);
+  const jumped = useRef(false);
   const colors = useColors();
   const scheme = useResolvedScheme();
   const { engagedDates, streak } = useProgress();
@@ -47,6 +51,7 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
 
   return (
     <ScrollView
+      ref={scrollRef}
       contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
@@ -241,6 +246,13 @@ export function StreakDashboard({ daysOverride }: StreakDashboardProps) {
         ))}
       </View>
 
+      <View onLayout={({ nativeEvent }) => {
+        if (focusMoments && !jumped.current) {
+          jumped.current = true;
+          const y = nativeEvent.layout.y;
+          requestAnimationFrame(() => scrollRef.current?.scrollTo({ y, animated: false }));
+        }
+      }}><BibleMomentsCollection /></View>
       <MilestonesSection longestStreak={milestoneUnlockStreak} />
     </ScrollView>
   );

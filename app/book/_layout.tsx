@@ -38,9 +38,10 @@ export default function BookLayout() {
             animation: "slide_from_right",
           }}
         >
+          <Stack.Screen name="[id]/express" options={{ animation: reducedMotion ? "fade" : "slide_from_right" }} />
           <Stack.Screen name="[id]/[chapter]" options={{
-            animation: reducedMotion ? "fade" : "fade_from_bottom",
-            animationDuration: reducedMotion ? 150 : 320,
+            animation: reducedMotion ? "fade" : "slide_from_right",
+            ...(reducedMotion ? { animationDuration: 150 } : {}),
             gestureEnabled: true,
           }} />
         </Stack>

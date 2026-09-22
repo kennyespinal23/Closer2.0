@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
   Animated,
+  Platform,
   Easing,
   StyleSheet,
   useColorScheme as useRNColorScheme,
@@ -180,8 +181,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     (next: ThemePref) => {
       if (next === stateRef.current.pref) return;
       const node = rootRef.current;
-      // No node, or a crossfade already running → just swap instantly.
-      if (!node || crossfadingRef.current) {
+      // UIKit hierarchy snapshots can abort the process when the tree
+      // contains SwiftUI hosting controllers (native reader controls).
+      // Apply iOS appearance directly; a Promise catch cannot catch that crash.
+      if (Platform.OS === "ios" || !node || crossfadingRef.current) {
         setState({ pref: next });
         return;
       }

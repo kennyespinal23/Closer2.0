@@ -1,3 +1,4 @@
+import * as haptics from "@/lib/haptics";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Modal, Pressable, ScrollView, Text, View, Animated, Easing, type TextStyle, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
@@ -5,29 +6,24 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { CardGlass } from "@/components/CardGlass";
 import { SFSymbol } from "@/components/Symbol";
-import { saveJSON } from "@/lib/storage";
+import { unlockBibleMoment } from "@/state/bibleMoments";
+import { Image } from "expo-image";
+import { getBookCover } from "@/constants/bookCovers";
+import { MOMENT_CATEGORIES } from "@/constants/bibleMoments";
 import { findBookById } from "@/constants/books";
 import type { BibleMoment } from "@/constants/bibleMoments";
 
-export function MomentVerseText({ children, style, onPress, onUnlock }: {
-  children: ReactNode; style: TextStyle; onPress: () => void; onUnlock: () => void;
+export function MomentVerseText({ children, style, onPress, onUnlock, glowColor }: {
+  children: ReactNode; style: TextStyle; onPress: () => void; onUnlock: () => void; glowColor: string;
 }) {
   const reduced = useReducedMotion();
-  const glow = useRef(new Animated.Value(0)).current;
-  const unlocked = useRef(false);
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reset = () => { if (holdTimer.current) clearTimeout(holdTimer.current); glow.stopAnimation(); Animated.timing(glow, { toValue: 0, duration: reduced ? 0 : 180, useNativeDriver: false }).start(); };
-  useEffect(() => () => { glow.stopAnimation(); if (holdTimer.current) clearTimeout(holdTimer.current); }, [glow]);
-  return <Animated.Text
-    accessibilityHint="Hold to discover a Bible Moment. Tap for verse actions."
-    accessibilityActions={[{ name: "activate", label: "Verse actions" }, { name: "longpress", label: "Discover Bible Moment" }]}
-    onAccessibilityAction={(event) => event.nativeEvent.actionName === "longpress" ? onUnlock() : onPress()}
-    onPressIn={() => { unlocked.current = false; holdTimer.current = setTimeout(() => { unlocked.current = true; onUnlock(); }, 700); Animated.timing(glow, { toValue: 1, duration: reduced ? 0 : 700, useNativeDriver: false }).start(); }}
-    onPressOut={reset}
-    onLongPress={() => { /* Keep a completed hold from also triggering a tap. */ }}
-    onPress={() => { if (!unlocked.current) onPress(); }}
-    style={[style, { textShadowColor: "#E8B654", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: reduced ? 0 : glow.interpolate({ inputRange: [0, 1], outputRange: [3, 12] }) }]}
-  >{children}</Animated.Text>;
+  return <Text accessibilityRole="button"
+    accessibilityHint="Tap to discover a Bible Moment. Hold for highlighting and notes."
+    accessibilityActions={[{ name: "activate", label: "Discover Bible Moment" }, { name: "longpress", label: "Verse actions" }]}
+    onAccessibilityAction={(event) => event.nativeEvent.actionName === "longpress" ? onPress() : onUnlock()}
+    onPress={onUnlock} onLongPress={onPress}
+    style={[style, { textShadowColor: glowColor, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: reduced ? 0 : 4 }]}
+  >{children}</Text>;
 }
 
 export function BibleMomentCard({ moment, onClose }: { moment: BibleMoment | null; onClose: () => void }) {
@@ -37,6 +33,14 @@ export function BibleMomentCard({ moment, onClose }: { moment: BibleMoment | nul
   const entrance = useRef(new Animated.Value(0)).current;
   const drag = useRef(new Animated.Value(0)).current;
   const closing = useRef(false);
+  const [saved, setSaved] = useState("Saving moment…");
+  const [saveFailed, setSaveFailed] = useState(false);
+  const save = () => {
+    if (!moment) return;
+    setSaveFailed(false);
+    setSaved("Saving moment…");
+    void unlockBibleMoment(moment.id).then(result => { setSaved(result === "new" ? "New moment collected" : "In your collection"); if (result === "new") haptics.success(); }).catch(() => { setSaved("Couldn’t save. Tap to retry."); setSaveFailed(true); });
+  };
   const [canScroll, setCanScroll] = useState(false);
   const scrollMetrics = useRef({ content: 0, viewport: 0, offset: 0 });
   useEffect(() => {
@@ -44,8 +48,7 @@ export function BibleMomentCard({ moment, onClose }: { moment: BibleMoment | nul
     closing.current = false;
     entrance.setValue(0);
     drag.setValue(0);
-    // Each moment has its own key so simultaneous discoveries cannot overwrite each other.
-    void saveJSON(`closer.bible-moment.${moment.id}.v1`, true);
+    save();
     return () => { entrance.stopAnimation(); };
   }, [moment, entrance, drag]);
   const close = () => {
@@ -91,8 +94,13 @@ export function BibleMomentCard({ moment, onClose }: { moment: BibleMoment | nul
           onScroll={({ nativeEvent }) => { scrollMetrics.current.offset = nativeEvent.contentOffset.y; }}
           scrollEventThrottle={16}
           contentContainerStyle={{ paddingHorizontal: 26, paddingTop: 8, paddingBottom: 18 }}>
-          <Text accessibilityRole="header" style={{ color: "#FFFFFFA6", fontSize: 24, lineHeight: 32, fontWeight: "700", marginBottom: 10 }}>{moment.id === "creation" ? "In the beginning" : moment.title}</Text>
-          <Text style={{ color: "white", fontSize: 24, lineHeight: 34, fontWeight: "700" }}>{moment.importance}</Text>
+          <Image source={getBookCover(moment.bookId)} contentFit="cover" style={{ width: "100%", height: 144, borderRadius: 18, marginBottom: 16 }} />
+          <Text style={{ color: MOMENT_CATEGORIES[moment.category].dark, fontSize: 13, fontWeight: "600", marginBottom: 8 }}>{MOMENT_CATEGORIES[moment.category].name}</Text>
+          <Text accessibilityRole="header" style={{ color: "#FFFFFFA6", fontSize: 24, lineHeight: 32, fontWeight: "700", marginBottom: 10 }}>{moment.title}</Text>
+          <Text style={{ color: "white", fontSize: 22, lineHeight: 30, fontWeight: "700" }}>{moment.importance}</Text>
+          <Text style={{ color: "#FFFFFFB8", fontSize: 15, lineHeight: 22, marginTop: 18 }}>{moment.happened}</Text>
+          <Text style={{ color: "#FFFFFF99", fontSize: 13, marginTop: 8 }}>{moment.reference} · WEB</Text>
+          <Pressable disabled={!saveFailed} onPress={save} accessibilityRole={saveFailed ? "button" : "text"} style={{ minHeight: 44, justifyContent: "center", marginTop: 8 }}><Text accessibilityLiveRegion="polite" style={{ color: MOMENT_CATEGORIES[moment.category].dark, fontSize: 14, fontWeight: "600" }}>{saved}</Text></Pressable>
         </ScrollView>
         <GestureDetector gesture={makePan(true)}><View accessibilityLabel="Swipe up to dismiss Bible Moment" style={{ height: 36, alignItems: "center", justifyContent: "center" }}>
           <View style={{ width: 38, height: 5, borderRadius: 3, backgroundColor: "#FFFFFF60" }} />

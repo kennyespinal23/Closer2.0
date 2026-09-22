@@ -1,23 +1,27 @@
-export type BibleMoment = {
-  id: string; bookId: string; chapter: number; verse: number;
-  title: string; reference: string; happened: string; importance: string; tint: string;
+import data from "./bibleMomentsData.json";
+
+export const MOMENT_CATEGORIES = {
+  "turning-points": { name: "Turning Points", tint: "#79521B", light: "#79521B", dark: "#F3CA79" },
+  prophecy: { name: "Prophecy", tint: "#583585", light: "#6B3594", dark: "#D7ADF5" },
+  lessons: { name: "Special Lessons", tint: "#155F58", light: "#14665B", dark: "#83D8BC" },
+  changed: { name: "Changed by Jesus", tint: "#853E51", light: "#A03553", dark: "#FFA5B8" },
+  promises: { name: "Promises of God", tint: "#383F85", light: "#42449A", dark: "#B7BFFF" },
+} as const;
+export type MomentCategory = keyof typeof MOMENT_CATEGORIES;
+export type MomentAnchor = { bookId: string; chapter: number; verse: number; endVerse: number };
+export type BibleMoment = MomentAnchor & {
+  id: string; title: string; event: string; reference: string;
+  happened: string; importance: string; tint: string;
+  category: MomentCategory; tags: MomentCategory[]; additionalAnchors?: MomentAnchor[];
 };
+export const BIBLE_MOMENTS: BibleMoment[] = data.map(row => ({
+  ...row, category: row.category as MomentCategory, tags: row.tags as MomentCategory[],
+  tint: MOMENT_CATEGORIES[row.category as MomentCategory].tint,
+}));
 
-// Curated discoveries, separate from daily devotionals and AI explanations.
-export const BIBLE_MOMENTS: BibleMoment[] = [
-  {
-    id: "creation", bookId: "genesis", chapter: 1, verse: 1,
-    title: "The Beginning", reference: "Genesis 1:1–5", tint: "#62421F",
-    happened: "God creates the heavens and the earth. Light breaks into the darkness, beginning the story of a world brought into being by His word.",
-    importance: "The Bible opens with God as the source of life. Creation introduces a world with purpose and goodness—and our place within it as people made to care for what He has made.",
-  },
-  {
-    id: "resurrection", bookId: "matthew", chapter: 28, verse: 6,
-    title: "The Resurrection", reference: "Matthew 28:1–10", tint: "#493E68",
-    happened: "The women arrive at Jesus’ tomb and hear that He has risen. The angel invites them to see the empty tomb and carry the news to His disciples.",
-    importance: "Jesus’ resurrection stands at the heart of Christian faith. It proclaims His victory over death and offers hope that suffering and death do not have the final word.",
-  },
-];
-
+// A verse can lead to several cards; never silently discard a matching event.
+export const findBibleMoments = (bookId: string, chapter: number, verse: number) =>
+  BIBLE_MOMENTS.filter(moment => [moment, ...(moment.additionalAnchors ?? [])].some(anchor =>
+    anchor.bookId === bookId && anchor.chapter === chapter && verse >= anchor.verse && verse <= anchor.endVerse));
 export const findBibleMoment = (bookId: string, chapter: number, verse: number) =>
-  BIBLE_MOMENTS.find((moment) => moment.bookId === bookId && moment.chapter === chapter && moment.verse === verse);
+  findBibleMoments(bookId, chapter, verse)[0];

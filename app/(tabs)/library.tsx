@@ -22,7 +22,6 @@ import { BookCover } from "@/components/BookCover";
 import { FadeIn } from "@/components/FadeIn";
 import { ThemedText } from "@/components/ThemedText";
 import { type Book, BOOKS } from "@/constants/books";
-import { hasBookCover } from "@/constants/bookCovers";
 import { minTouchTarget, spacing } from "@/constants/spacing";
 import * as haptics from "@/lib/haptics";
 import { computeContinueReading } from "@/lib/continueReading";
@@ -317,8 +316,7 @@ function BookGrid({
 
 /**
  * Single grid cell — cover artwork on top, name + chapter count
- * underneath. Books with hand-painted covers get a small "ART"
- * badge in the top-right (Imprint surfaces "NEW" the same way).
+ * underneath. Artwork stays unobstructed.
  */
 function BookGridTile({
   book,
@@ -328,7 +326,6 @@ function BookGridTile({
   onPress: () => void;
 }) {
   const colors = useColors();
-  const illustrated = hasBookCover(book.id);
 
   return (
     <Pressable
@@ -339,32 +336,7 @@ function BookGridTile({
     >
       <View style={{ position: "relative" }}>
         <BookCover book={book} variant="card" />
-        {/* ART badge — decorative only (labels illustrated covers).
-            Not interactive: no Pressable / onPress. Touch target
-            HIG does not apply; the parent tile owns the tap. */}
-        {illustrated && (
-          <View
-            pointerEvents="none"
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            style={{
-              position: "absolute",
-              top: 10,
-              right: 10,
-              paddingHorizontal: 8,
-              paddingVertical: 3,
-              borderRadius: 999,
-              backgroundColor: "rgba(255,255,255,0.92)",
-            }}
-          >
-            <ThemedText
-              variant="captionEmphasized"
-              style={{ color: "#0F0F10", fontWeight: "800" }}
-            >
-              ART
-            </ThemedText>
-          </View>
-        )}
+
       </View>
       <ThemedText
         variant="subheadline"
@@ -397,6 +369,8 @@ function SearchField({
   resetToken: string;
   onChangeText: (next: string) => void;
 }) {
+  const scheme = useResolvedScheme();
+  const colors = useColors();
   // @expo/ui TextField is the closest SwiftUI text-entry control
   // available (no UISearchBar wrapper in @expo/ui yet). Wrapped
   // in Host per the package contract.
@@ -405,10 +379,20 @@ function SearchField({
       style={{
         marginHorizontal: SCREEN_H_PAD,
         marginTop: 20,
-        height: 44,
+        height: 52,
+        borderRadius: 14,
+        borderCurve: "continuous",
+        backgroundColor: scheme === "dark" ? "#1C1C1E" : "#F0F0F2",
+        borderWidth: 1,
+        borderColor: scheme === "dark" ? "#38383A" : "#D8D8DC",
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 14,
+        gap: 10,
       }}
     >
-      <Host style={{ flex: 1, width: "100%", height: 44 }}>
+      <SFSymbol name="magnifyingglass" size={19} color={colors.inkMuted} />
+      <Host colorScheme={scheme} style={{ flex: 1, height: 44 }}>
         <ExpoTextField
           key={resetToken}
           defaultValue=""

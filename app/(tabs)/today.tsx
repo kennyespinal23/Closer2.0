@@ -96,6 +96,8 @@ import { computeContinueReading } from "@/lib/continueReading";
 export default function TodayScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
+  const [leavingDevotional, setLeavingDevotional] = useState(false);
+  useEffect(() => { if (!isFocused) setLeavingDevotional(false); }, [isFocused]);
   const { answers } = useOnboarding();
   const { log: checkInLog } = useCheckIns();
   const { todaysMoment } = useMoments();
@@ -399,8 +401,9 @@ export default function TodayScreen() {
    * then streak → milestone when the day advances.
    */
   const handleCompleteFloatingCard = useCallback(
-    (card: FloatingScriptureCard): boolean => {
-      const { newStreak, streakAdvanced, crossedMilestone } =
+    (card: FloatingScriptureCard): (() => void) | undefined => {
+      setLeavingDevotional(true);
+      const { newStreak, crossedMilestone } =
         recordCompletion("daily", {
           title: card.title || card.scriptureReference,
           pastor: "",
@@ -409,19 +412,16 @@ export default function TodayScreen() {
       void endFocusSession().catch(() => {
         /* shield stop is best-effort */
       });
-      if (streakAdvanced) {
-        // Replace immediately while the verse modal is still up so
-        // home never paints underneath (that flash felt like extra screens).
-        router.replace({
+      // Every completed devotional reaches the recap, including another
+      // reading on the same day. recordCompletion alone owns streak credit.
+      // The modal invokes this only after its native dismissal completes.
+        return () => router.replace({
           pathname: "/sermon/streak",
           params: {
             days: String(newStreak),
             milestone: crossedMilestone ? String(crossedMilestone) : "",
           },
         });
-        return true;
-      }
-      return false;
     },
     [endFocusSession, recordCompletion, router],
   );
@@ -799,6 +799,8 @@ export default function TodayScreen() {
         }
       />
 
+
+      {leavingDevotional && <View pointerEvents="auto" style={{ ...StyleSheet.absoluteFillObject, backgroundColor: colors.bg, zIndex: 100 }} />}
 
       {/* ShieldOverlay — mounted at the SafeArea root so it covers
           the full screen + tab bar when visible. The Modal handles

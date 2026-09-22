@@ -698,7 +698,7 @@ export type HomeFloatingPrayerHomeProps = {
   nextBreakTone: "live" | "armed" | "muted";
   unlockedToday: boolean;
   /** Returns true when navigation leaves home (e.g. streak screen). */
-  onCompleteCard: (card: FloatingScriptureCard) => boolean;
+  onCompleteCard: (card: FloatingScriptureCard) => (() => void) | undefined;
   bottomInset: number;
 };
 
@@ -716,6 +716,17 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   const reducedMotion = useReducedMotion();
   const [active, setActive] = useState<FloatingScriptureCard>(card);
   const [expanded, setExpanded] = useState(false);
+  const pendingCompletion = useRef<(() => void) | undefined>(undefined);
+  const completingRef = useRef(false);
+  const finishDismissal = useCallback(() => {
+    const navigate = pendingCompletion.current;
+    pendingCompletion.current = undefined;
+    completingRef.current = false;
+    navigate?.();
+  }, []);
+  useEffect(() => {
+    if (!expanded && Platform.OS !== "ios") finishDismissal();
+  }, [expanded, finishDismissal]);
   const [expandPhase, setExpandPhase] = useState<ExpandPhase>("hero");
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [closePressed, setClosePressed] = useState(false);
@@ -1078,12 +1089,15 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   }, [card, dismissExpanded, dismissLocked]);
 
   const finishCard = useCallback(() => {
+    if (completingRef.current) return;
+    completingRef.current = true;
     haptics.tap();
-    const completed = active;
-    // Complete + navigate BEFORE collapsing the modal. Closing first
-    // flashes home ("unlocked" copy) under the streak transition.
-    const navigatedAway = onCompleteCard(completed);
-    if (navigatedAway) return;
+    pendingCompletion.current = onCompleteCard(active);
+    if (pendingCompletion.current) {
+      // Completion leaves the reading flow; do not collapse back to its Home tile.
+      setExpanded(false);
+      return;
+    }
     dismissExpanded(card);
   }, [active, card, dismissExpanded, onCompleteCard]);
 
@@ -1321,6 +1335,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
 
       <Modal
         visible={expanded}
+        onDismiss={finishDismissal}
         animationType="none"
         presentationStyle="overFullScreen"
         transparent

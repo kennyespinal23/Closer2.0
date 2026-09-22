@@ -1,3 +1,5 @@
+import { usePreferences } from "@/state/preferences";
+import { findExpressBook, expressReadingMinutes } from "@/constants/expressBooks";
 import { Host, ContextMenu, Button as NativeButton, Image as NativeImage } from "@expo/ui/swift-ui";
 import { accessibilityLabel, frame } from "@expo/ui/swift-ui/modifiers";
 import { BookReadingProgress } from "@/components/BookReadingProgress";
@@ -120,6 +122,8 @@ function BookDetail({ book }: { book: Book }) {
     });
   };
   const { lastVisited, hasReadChapter, chaptersRead } = useProgress();
+  const { translation } = usePreferences();
+  const express = findExpressBook(book.id);
   const blurb = getBookBlurb(book.id);
   const theme = getBookTheme(book.id);
   const author = getBookAuthor(book.id);
@@ -130,6 +134,10 @@ function BookDetail({ book }: { book: Book }) {
   const started = resumeChapter !== null || readCount > 0;
   const nextUnread = Array.from({ length: book.chapters }, (_, i) => i + 1).find(chapter => !hasReadChapter(book.id, chapter));
   const continueChapter = resumeChapter !== null && !hasReadChapter(book.id, resumeChapter) ? resumeChapter : nextUnread ?? 1;
+  // Load the selected translation while the cover is visible, before the tap.
+  useEffect(() => {
+    prefetchChapter(book.id, started ? continueChapter : 1, translation.id);
+  }, [book.id, started, continueChapter, translation.id]);
   const openChapter = (chapter: number) => router.push(`/book/${book.id}/${chapter}`);
   const scrollTo = (y: number) => {
     haptics.soft();
@@ -187,12 +195,17 @@ function BookDetail({ book }: { book: Book }) {
               continueLabel={`${readCount === book.chapters ? "Read again" : "Continue reading"}, ${book.name}, chapter ${continueChapter}`}
             />}
             {!started && <Animated.View style={[{ marginTop: 18 }, readButtonStyle]}>
-            <Pressable onPress={() => { haptics.soft(); openChapter(resumeChapter ?? 1); }} onPressIn={() => { animateReadPress(true); prefetchChapter(book.id, resumeChapter ?? 1); }} onPressOut={() => animateReadPress(false)} accessibilityRole="button" accessibilityLabel={resumeChapter ? `Continue ${book.name}, chapter ${resumeChapter}` : `Read ${book.name}, chapter 1`}
+            <Pressable onPress={() => { haptics.soft(); openChapter(resumeChapter ?? 1); }} onPressIn={() => { animateReadPress(true); prefetchChapter(book.id, resumeChapter ?? 1, translation.id); }} onPressOut={() => animateReadPress(false)} accessibilityRole="button" accessibilityLabel={resumeChapter ? `Continue ${book.name}, chapter ${resumeChapter}` : `Read ${book.name}, chapter 1`}
               style={{ backgroundColor: "#FFFFFF", borderRadius: 999, minHeight: 48, paddingHorizontal: 26, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
               <Text allowFontScaling={false} style={{ color: "#101722", fontSize: font(15), lineHeight: font(22), fontWeight: "700" }}>{resumeChapter ? "Continue Reading" : "Read Now"}</Text>
               <Animated.View style={readArrowStyle}><SFSymbol name="arrow.right" size={18} color="#101722" weight="semibold" /></Animated.View>
             </Pressable>
             </Animated.View>}
+            {express && <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name} Express version`} onPress={() => { haptics.soft(); router.push(`/book/${book.id}/express`); }} style={{ minHeight: 48, marginTop: 12, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24, borderWidth: 1, borderColor: "#FFFFFF40", backgroundColor: "#FFFFFF10", flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <SFSymbol name="bolt" color="white" size={17} />
+              <Text style={{ color: "white", fontSize: 15, fontWeight: "600" }}>Read Express</Text>
+              <Text style={{ color: "#CDD3DC", fontSize: 13 }}>{expressReadingMinutes(express)} min</Text>
+            </Pressable>}
             <Pressable onPress={() => scrollTo(aboutY)} accessibilityRole="button" accessibilityLabel="About this book and chapters" style={{ minHeight: 44, marginTop: 10, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12 }}>
               <Text allowFontScaling={false} style={{ fontSize: font(12), lineHeight: font(18), color: "#CDD3DC" }}>About this book</Text><SFSymbol name="chevron.down" size={12} color="#CDD3DC" />
             </Pressable>
@@ -230,6 +243,7 @@ function BookDetail({ book }: { book: Book }) {
               </NativeButton>
             </ContextMenu.Trigger>
             <ContextMenu.Items>
+              {express && <NativeButton systemImage="bolt" onPress={() => router.push(`/book/${book.id}/express`)}>Read Express</NativeButton>}
               <NativeButton systemImage="headphones" onPress={() => router.push(`/book/${book.id}/audio`)}>Listen to book</NativeButton>
               <NativeButton systemImage="list.bullet" onPress={() => scrollTo(aboutY + chaptersY)}>Choose a chapter</NativeButton>
               <NativeButton systemImage={liked ? "heart.fill" : "heart"} onPress={() => setLiked(value => !value)}>{liked ? "Remove from favorites" : "Add to favorites"}</NativeButton>

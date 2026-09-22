@@ -1,0 +1,2924 @@
+[
+  {
+    "bookId": "genesis",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "genesis-1",
+        "title": "In the Beginning",
+        "body": "God speaks, and everything starts from nothing. Light splits from dark. Sky separates from sea. Land rises, and it fills with plants, animals, and finally, people — made to look like God Himself, in a way nothing else made does. He looks at all of it and calls it good. Then He hands people the world and says: take care of it. This is the start of everything, including the story Closer is trying to tell.",
+        "passages": [
+          {
+            "bookId": "genesis",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 3,
+            "reference": "Genesis 1:1-2:3"
+          }
+        ]
+      },
+      {
+        "id": "genesis-2",
+        "title": "The Choice",
+        "body": "In a garden with everything they could ever need, God gives Adam and Eve exactly one rule: don't eat from one tree. It's the only \"no\" in a world made entirely of \"yes.\" A serpent convinces them God is holding out on them, and they eat anyway. Instantly, everything changes — they notice they're naked, they hide from God, and when He asks what happened, they blame each other instead of owning it. Shame enters the world in this moment, and it never fully leaves.",
+        "passages": [
+          {
+            "bookId": "genesis",
+            "startChapter": 2,
+            "startVerse": 15,
+            "endChapter": 3,
+            "endVerse": 24,
+            "reference": "Genesis 2:15-3:24"
+          }
+        ]
+      },
+      {
+        "id": "genesis-3",
+        "title": "The Flood",
+        "body": "Generations pass, and the world grows so violent and corrupt that God grieves ever making it. He decides to start over — but saves one family, Noah's, by having them build an enormous boat before a single cloud appears. Rain falls for 40 days, and everything outside that boat is gone. When the water finally recedes and Noah's family steps onto dry ground again, God makes them a promise: never again. A rainbow becomes the sign of that promise, still visible in the sky today.",
+        "passages": [
+          {
+            "bookId": "genesis",
+            "startChapter": 6,
+            "startVerse": 5,
+            "endChapter": 9,
+            "endVerse": 17,
+            "reference": "Genesis 6:5-9:17"
+          }
+        ]
+      },
+      {
+        "id": "genesis-4",
+        "title": "Abraham's Promise",
+        "body": "God speaks to a man named Abraham, who is old, childless, and has done nothing yet to earn a legacy — and tells him he'll become the father of a nation as countless as the stars. It sounds impossible. Abraham believes Him anyway, and leaves everything familiar behind to follow a promise he can't yet see fulfilled. This is where God's people actually begin — not with someone impressive, but with someone willing to trust.",
+        "passages": [
+          {
+            "bookId": "genesis",
+            "startChapter": 12,
+            "startVerse": 1,
+            "endChapter": 17,
+            "endVerse": 27,
+            "reference": "Genesis 12:1-17:27"
+          }
+        ]
+      },
+      {
+        "id": "genesis-5",
+        "title": "Jacob's Wrestling",
+        "body": "Generations later, Abraham's grandson Jacob is a schemer — someone who's spent his whole life taking what he wants by manipulation instead of trust. The night before facing a brother he wronged years earlier, a mysterious figure wrestles with him until dawn. Jacob refuses to let go without a blessing, even as his hip is wrenched out of place. He walks away limping, renamed, and changed — proof that God doesn't wait for people to get it together before He shows up for them.",
+        "passages": [
+          {
+            "bookId": "genesis",
+            "startChapter": 32,
+            "startVerse": 1,
+            "endChapter": 33,
+            "endVerse": 20,
+            "reference": "Genesis 32:1-33:20"
+          }
+        ]
+      },
+      {
+        "id": "genesis-6",
+        "title": "Joseph's Rescue",
+        "body": "Jacob's son Joseph is his father's clear favorite, which his older brothers resent so deeply they sell him into slavery and tell their father he's dead. Joseph spends years enslaved and then wrongly imprisoned in Egypt, seemingly forgotten. But through a series of turns no one could have planned, he rises to become the second most powerful man in Egypt — in time to save the entire region, including the very brothers who betrayed him, from a devastating famine. What was meant to destroy him becomes the reason his family survives.",
+        "passages": [
+          {
+            "bookId": "genesis",
+            "startChapter": 37,
+            "startVerse": 1,
+            "endChapter": 50,
+            "endVerse": 26,
+            "reference": "Genesis 37:1-50:26"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "exodus",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "exodus-1",
+        "title": "Slaves in Egypt",
+        "body": "Centuries after Joseph's family settled in Egypt, their descendants have multiplied into a massive population — and Egypt's new king, threatened by their numbers, enslaves them and works them brutally. When that's not enough to control them, he orders every newborn Hebrew boy killed. In the middle of that terror, a mother hides her baby son in a basket on the Nile, and he's found and raised by the very household that ordered his death. That baby is Moses.",
+        "passages": [
+          {
+            "bookId": "exodus",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 10,
+            "reference": "Exodus 1:1-2:10"
+          }
+        ]
+      },
+      {
+        "id": "exodus-2",
+        "title": "The Burning Bush",
+        "body": "Moses grows up, flees Egypt after killing a man, and spends decades as a quiet shepherd in the wilderness — about as far from his old life as possible. God interrupts that quiet life through a bush that burns without being consumed, and gives Moses one assignment: go back to Egypt and demand Israel's freedom. Moses argues, lists every reason he's the wrong person for this, and God sends him anyway, promising to be with him the whole way.",
+        "passages": [
+          {
+            "bookId": "exodus",
+            "startChapter": 3,
+            "startVerse": 1,
+            "endChapter": 4,
+            "endVerse": 17,
+            "reference": "Exodus 3:1-4:17"
+          }
+        ]
+      },
+      {
+        "id": "exodus-3",
+        "title": "The Plagues",
+        "body": "Moses confronts Egypt's king and demands Israel's release. The king refuses, so God sends a series of devastating plagues — water turning to blood, darkness covering the land, disease and destruction — each one targeting something Egypt worshipped as a god. Nine times the king's heart hardens and he refuses. It's only after the tenth and most devastating plague that he finally relents and tells Israel to go.",
+        "passages": [
+          {
+            "bookId": "exodus",
+            "startChapter": 7,
+            "startVerse": 14,
+            "endChapter": 12,
+            "endVerse": 32,
+            "reference": "Exodus 7:14-12:32"
+          }
+        ]
+      },
+      {
+        "id": "exodus-4",
+        "title": "The Red Sea",
+        "body": "Almost immediately, the king changes his mind and sends his army after the fleeing Israelites, trapping them against the edge of the Red Sea with nowhere left to run. Just as the army closes in, God splits the sea in half, and Israel walks across on dry ground with walls of water on either side. When Egypt's army follows, the sea collapses back over them. It becomes the defining rescue story Israel tells for the rest of their history.",
+        "passages": [
+          {
+            "bookId": "exodus",
+            "startChapter": 14,
+            "startVerse": 1,
+            "endChapter": 14,
+            "endVerse": 31,
+            "reference": "Exodus 14"
+          }
+        ]
+      },
+      {
+        "id": "exodus-5",
+        "title": "The Ten Commandments",
+        "body": "Free for the first time in their lives, but with no idea how to actually function as a nation, Israel arrives at Mount Sinai. God gives Moses ten commandments — not as a cage, but as a framework for how a formerly enslaved, directionless people can actually love God and treat each other well. It's the foundation for everything that follows in Israel's story.",
+        "passages": [
+          {
+            "bookId": "exodus",
+            "startChapter": 19,
+            "startVerse": 1,
+            "endChapter": 20,
+            "endVerse": 21,
+            "reference": "Exodus 19:1-20:21"
+          }
+        ]
+      },
+      {
+        "id": "exodus-6",
+        "title": "The Golden Calf",
+        "body": "While Moses is still up on the mountain receiving more instructions, the people below grow impatient waiting for him to return. They pool their gold, melt it down, and build a statue to worship instead — a shocking betrayal for a people who had just watched God part an entire sea for them. Moses comes down the mountain furious and heartbroken at what he finds. And still, after everything, God gives Israel another chance.",
+        "passages": [
+          {
+            "bookId": "exodus",
+            "startChapter": 32,
+            "startVerse": 1,
+            "endChapter": 34,
+            "endVerse": 35,
+            "reference": "Exodus 32:1-34:35"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "leviticus",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "leviticus-1",
+        "title": "A Way to Approach God",
+        "body": "Most of Leviticus lays out a detailed system for sacrifice and worship — specific animals, specific steps, specific reasons. It can feel strange and distant to read today, but underneath all the detail is one simple idea: sin creates real distance between people and a holy God, and something has to cover that distance before anyone can come close. This system exists because God wanted His people near Him, not because He wanted to keep them at arm's length.",
+        "passages": [
+          {
+            "bookId": "leviticus",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 7,
+            "endVerse": 38,
+            "reference": "Leviticus 1-7"
+          }
+        ]
+      },
+      {
+        "id": "leviticus-2",
+        "title": "The Day Everything Went Wrong",
+        "body": "Aaron's two sons, newly ordained as priests, offer \"unauthorized fire\" to God — doing the sacred work their own way instead of the way God instructed — and both are struck down instantly. It's one of the harder scenes in the whole Bible to sit with. But it draws a hard line under something true: coming near a holy God was never meant to be casual, and it mattered enough that God took it seriously.",
+        "passages": [
+          {
+            "bookId": "leviticus",
+            "startChapter": 10,
+            "startVerse": 1,
+            "endChapter": 10,
+            "endVerse": 7,
+            "reference": "Leviticus 10:1-7"
+          }
+        ]
+      },
+      {
+        "id": "leviticus-3",
+        "title": "The Day of Atonement",
+        "body": "Once a year, on the holiest day in Israel's calendar, the high priest alone enters the innermost, most sacred room of the tabernacle to make atonement for the sins of the entire nation, all at once. It's the one day designed to cover everything, for everyone. Centuries later, this is the exact picture Jesus fulfills — except He does it once, completely, and no one has to repeat it ever again.",
+        "passages": [
+          {
+            "bookId": "leviticus",
+            "startChapter": 16,
+            "startVerse": 1,
+            "endChapter": 16,
+            "endVerse": 34,
+            "reference": "Leviticus 16"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "numbers",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "numbers-1",
+        "title": "Counted and Called",
+        "body": "As Israel prepares to leave Sinai and head toward the promised land, God has them counted, tribe by tribe, and organized into camps around the tabernacle at the center. For the first time since Egypt, they look less like a fleeing crowd of former slaves and more like an actual nation, structured and ready to move forward together.",
+        "passages": [
+          {
+            "bookId": "numbers",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 34,
+            "reference": "Numbers 1-2"
+          }
+        ]
+      },
+      {
+        "id": "numbers-2",
+        "title": "The Twelve Spies",
+        "body": "Twelve men are sent to scout the promised land before Israel enters it. They come back with the same facts but two completely different reports — ten are terrified, convinced the land can't possibly be taken, while two, Joshua and Caleb, believe God is bigger than the obstacles. The people side with fear, and the consequence is severe: an entire generation wanders the wilderness for 40 years instead of entering the land right away.",
+        "passages": [
+          {
+            "bookId": "numbers",
+            "startChapter": 13,
+            "startVerse": 1,
+            "endChapter": 14,
+            "endVerse": 45,
+            "reference": "Numbers 13-14"
+          }
+        ]
+      },
+      {
+        "id": "numbers-3",
+        "title": "Water from the Rock",
+        "body": "Even Moses, after decades of leading a people who complain constantly, finally loses his patience. God tells him to speak to a rock so water will come out for the thirsty crowd, but Moses angrily strikes it instead, taking credit that belonged to God. It's a small moment on the surface, but the consequence is enormous — Moses himself will not be allowed to enter the promised land he's spent his whole life leading people toward.",
+        "passages": [
+          {
+            "bookId": "numbers",
+            "startChapter": 20,
+            "startVerse": 1,
+            "endChapter": 20,
+            "endVerse": 13,
+            "reference": "Numbers 20:1-13"
+          }
+        ]
+      },
+      {
+        "id": "numbers-4",
+        "title": "Balaam's Donkey",
+        "body": "A foreign prophet named Balaam is hired to curse Israel for money. On his way to do it, his donkey suddenly refuses to move, seeing an angel blocking the path that Balaam himself can't see. God even makes the donkey speak to get Balaam's attention. In the end, every time Balaam opens his mouth to curse Israel, blessing comes out instead — proof that no one can undo what God has already decided to bless.",
+        "passages": [
+          {
+            "bookId": "numbers",
+            "startChapter": 22,
+            "startVerse": 1,
+            "endChapter": 24,
+            "endVerse": 25,
+            "reference": "Numbers 22-24"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "deuteronomy",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "deuteronomy-1",
+        "title": "Remember Where You Came From",
+        "body": "Standing at the edge of the promised land, decades after Egypt, Moses gathers a new generation — most of whom weren't even alive for the original rescue — and retells their whole story from the beginning, so they don't lose sight of who brought them this far and why it matters.",
+        "passages": [
+          {
+            "bookId": "deuteronomy",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 4,
+            "endVerse": 49,
+            "reference": "Deuteronomy 1-4"
+          }
+        ]
+      },
+      {
+        "id": "deuteronomy-2",
+        "title": "Choose Life",
+        "body": "Moses lays out two clear paths ahead of Israel: obedience that leads to life and blessing, or rebellion that leads to consequence and loss. He doesn't force the decision on them. He simply makes the stakes as clear as possible and urges them, directly, to choose life.",
+        "passages": [
+          {
+            "bookId": "deuteronomy",
+            "startChapter": 30,
+            "startVerse": 11,
+            "endChapter": 30,
+            "endVerse": 20,
+            "reference": "Deuteronomy 30:11-20"
+          }
+        ]
+      },
+      {
+        "id": "deuteronomy-3",
+        "title": "Moses Says Goodbye",
+        "body": "At the very end of his life, Moses climbs a mountain, and God lets him see the promised land spread out before him from a distance — the land he spent 40 years leading people toward but will never set foot in himself. He dies there, and the story hands leadership to Joshua, ready to carry what Moses started into its next chapter.",
+        "passages": [
+          {
+            "bookId": "deuteronomy",
+            "startChapter": 34,
+            "startVerse": 1,
+            "endChapter": 34,
+            "endVerse": 12,
+            "reference": "Deuteronomy 34"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "joshua",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "joshua-1",
+        "title": "Be Strong and Courageous",
+        "body": "As Moses's chosen successor, Joshua is handed the enormous task of actually leading Israel into the land God promised. God tells him repeatedly to be strong and courageous — not because Joshua feels ready for what's ahead, but because God promises to be with him no matter what he faces.",
+        "passages": [
+          {
+            "bookId": "joshua",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 1,
+            "endVerse": 9,
+            "reference": "Joshua 1:1-9"
+          }
+        ]
+      },
+      {
+        "id": "joshua-2",
+        "title": "The Walls of Jericho",
+        "body": "Facing the fortified city of Jericho, Israel does something that looks nothing like a battle plan — they march silently around the walls once a day for six days, then seven times on the seventh day, blowing trumpets and shouting. The walls collapse completely. The victory was never about military strategy. It was about trust.",
+        "passages": [
+          {
+            "bookId": "joshua",
+            "startChapter": 6,
+            "startVerse": 1,
+            "endChapter": 6,
+            "endVerse": 27,
+            "reference": "Joshua 6"
+          }
+        ]
+      },
+      {
+        "id": "joshua-3",
+        "title": "Dividing the Land",
+        "body": "After years of conquest across the region, the promised land is finally divided among Israel's twelve tribes, each receiving their own territory. What began generations earlier as a promise spoken to one childless man, Abraham, is now literal ground under the feet of an entire nation.",
+        "passages": [
+          {
+            "bookId": "joshua",
+            "startChapter": 13,
+            "startVerse": 1,
+            "endChapter": 21,
+            "endVerse": 45,
+            "reference": "Joshua 13-21"
+          }
+        ]
+      },
+      {
+        "id": "joshua-4",
+        "title": "Choose This Day",
+        "body": "Near the end of his life, Joshua gathers all of Israel one final time and challenges them plainly to choose who they will actually serve. As for himself and his household, he declares, they will serve the Lord — closing out the book with a decision every generation after him has to make for themselves too.",
+        "passages": [
+          {
+            "bookId": "joshua",
+            "startChapter": 24,
+            "startVerse": 14,
+            "endChapter": 24,
+            "endVerse": 28,
+            "reference": "Joshua 24:14-28"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "judges",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "judges-1",
+        "title": "A Repeating Cycle",
+        "body": "Without a king or consistent leadership, Israel falls into an exhausting pattern that repeats throughout the entire book: they drift away from God, get overrun by an enemy as a consequence, cry out for rescue, and God raises up a judge to deliver them — until the cycle starts all over again.",
+        "passages": [
+          {
+            "bookId": "judges",
+            "startChapter": 2,
+            "startVerse": 6,
+            "endChapter": 2,
+            "endVerse": 23,
+            "reference": "Judges 2:6-23"
+          }
+        ]
+      },
+      {
+        "id": "judges-2",
+        "title": "Gideon's Small Army",
+        "body": "Called to fight off an overwhelming enemy force, Gideon is told by God to shrink his already-small army from thousands down to just 300 men before the battle even starts — specifically so that when victory comes, no one can claim they won it by their own strength.",
+        "passages": [
+          {
+            "bookId": "judges",
+            "startChapter": 7,
+            "startVerse": 1,
+            "endChapter": 7,
+            "endVerse": 25,
+            "reference": "Judges 7"
+          }
+        ]
+      },
+      {
+        "id": "judges-3",
+        "title": "Samson's Strength and Weakness",
+        "body": "Samson is given supernatural strength but keeps trading it away carelessly, again and again, for relationships and choices that eventually cost him everything, including his sight. His story is less about power itself and more about how easily even extraordinary gifts get wasted without any real discipline behind them.",
+        "passages": [
+          {
+            "bookId": "judges",
+            "startChapter": 13,
+            "startVerse": 1,
+            "endChapter": 16,
+            "endVerse": 31,
+            "reference": "Judges 13-16"
+          }
+        ]
+      },
+      {
+        "id": "judges-4",
+        "title": "Everyone Did What Was Right in Their Own Eyes",
+        "body": "The book closes on a genuinely bleak note — no king, no unifying leader, and everyone simply doing whatever felt right to them individually. It's a deliberately uncomfortable ending, setting up exactly what Israel will ask for next: a king to rule over them.",
+        "passages": [
+          {
+            "bookId": "judges",
+            "startChapter": 21,
+            "startVerse": 25,
+            "endChapter": 21,
+            "endVerse": 25,
+            "reference": "Judges 21:25"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "1-samuel",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "1-samuel-1",
+        "title": "Samuel's Calling",
+        "body": "As a young boy serving in the temple, Samuel hears his name called out in the middle of the night and mistakes it for the priest calling him — three times — before he realizes it's actually God speaking. Once he learns to recognize that voice, Samuel grows into Israel's last judge and one of its most important prophets.",
+        "passages": [
+          {
+            "bookId": "1-samuel",
+            "startChapter": 3,
+            "startVerse": 1,
+            "endChapter": 3,
+            "endVerse": 21,
+            "reference": "1 Samuel 3"
+          }
+        ]
+      },
+      {
+        "id": "1-samuel-2",
+        "title": "Israel Demands a King",
+        "body": "Tired of the judges cycle and wanting to be like the nations around them, Israel demands a king. God warns them, through Samuel, exactly what a king will eventually cost them in freedom and resources. They ask anyway, and Saul, tall and impressive-looking, becomes Israel's first king.",
+        "passages": [
+          {
+            "bookId": "1-samuel",
+            "startChapter": 8,
+            "startVerse": 1,
+            "endChapter": 10,
+            "endVerse": 27,
+            "reference": "1 Samuel 8-10"
+          }
+        ]
+      },
+      {
+        "id": "1-samuel-3",
+        "title": "David and Goliath",
+        "body": "A massive Philistine warrior named Goliath terrifies Israel's entire army for 40 straight days, and no soldier, however experienced, is willing to face him. A shepherd boy named David, too young to even officially be a soldier, walks out with a sling and five smooth stones and takes the giant down — not through skill or strength, but through a faith no one else in the camp had.",
+        "passages": [
+          {
+            "bookId": "1-samuel",
+            "startChapter": 17,
+            "startVerse": 1,
+            "endChapter": 17,
+            "endVerse": 58,
+            "reference": "1 Samuel 17"
+          }
+        ]
+      },
+      {
+        "id": "1-samuel-4",
+        "title": "Saul's Jealousy",
+        "body": "As David's popularity and success grow, King Saul's fear and jealousy spiral out of control. He spends years actively hunting the very man God has already chosen and anointed to be Israel's next king, unable to accept that his own reign is coming to an end.",
+        "passages": [
+          {
+            "bookId": "1-samuel",
+            "startChapter": 18,
+            "startVerse": 1,
+            "endChapter": 23,
+            "endVerse": 29,
+            "reference": "1 Samuel 18-23"
+          }
+        ]
+      },
+      {
+        "id": "1-samuel-5",
+        "title": "David Spares Saul",
+        "body": "More than once, David finds himself with a clear, easy opportunity to kill Saul and end the chase permanently — and both times, he refuses, unwilling to seize by force a throne God had already promised him. He chooses to wait on God's timing instead of taking matters into his own hands.",
+        "passages": [
+          {
+            "bookId": "1-samuel",
+            "startChapter": 24,
+            "startVerse": 1,
+            "endChapter": 26,
+            "endVerse": 25,
+            "reference": "1 Samuel 24-26"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "2-samuel",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "2-samuel-1",
+        "title": "David Becomes King",
+        "body": "Following Saul's death in battle, David is finally crowned king over all of Israel — the fulfillment of a promise made to a shepherd boy years earlier, now fully realized after years of running and waiting.",
+        "passages": [
+          {
+            "bookId": "2-samuel",
+            "startChapter": 5,
+            "startVerse": 1,
+            "endChapter": 5,
+            "endVerse": 12,
+            "reference": "2 Samuel 5:1-12"
+          }
+        ]
+      },
+      {
+        "id": "2-samuel-2",
+        "title": "God's Covenant with David",
+        "body": "God makes David an extraordinary promise: someone from his family line will rule forever. No king before or after David — not even David himself — lives forever, which means this promise is always pointing toward someone still to come.",
+        "passages": [
+          {
+            "bookId": "2-samuel",
+            "startChapter": 7,
+            "startVerse": 1,
+            "endChapter": 7,
+            "endVerse": 29,
+            "reference": "2 Samuel 7"
+          }
+        ]
+      },
+      {
+        "id": "2-samuel-3",
+        "title": "David and Bathsheba",
+        "body": "At the height of his power and success, David commits adultery with a woman named Bathsheba and then arranges for her husband to be killed in battle to hide it. Israel's greatest king becomes, in this single moment, the clearest picture in the whole book of how far even the best person can fall.",
+        "passages": [
+          {
+            "bookId": "2-samuel",
+            "startChapter": 11,
+            "startVerse": 1,
+            "endChapter": 12,
+            "endVerse": 31,
+            "reference": "2 Samuel 11-12"
+          }
+        ]
+      },
+      {
+        "id": "2-samuel-4",
+        "title": "Absalom's Rebellion",
+        "body": "David's own son Absalom turns against him, building support to seize the throne by force and driving David into exile from his own capital. The painful consequences of David's earlier failures ripple through his family for the rest of his life, long after the original sin itself.",
+        "passages": [
+          {
+            "bookId": "2-samuel",
+            "startChapter": 15,
+            "startVerse": 1,
+            "endChapter": 18,
+            "endVerse": 33,
+            "reference": "2 Samuel 15-18"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "1-kings",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "1-kings-1",
+        "title": "Solomon's Wisdom",
+        "body": "When God offers Solomon anything he wants, David's son asks for wisdom to lead well instead of wealth or power. God is so pleased with the request that He gives Solomon both anyway — Solomon becomes the wisest and wealthiest king Israel ever has.",
+        "passages": [
+          {
+            "bookId": "1-kings",
+            "startChapter": 3,
+            "startVerse": 1,
+            "endChapter": 3,
+            "endVerse": 15,
+            "reference": "1 Kings 3:1-15"
+          }
+        ]
+      },
+      {
+        "id": "1-kings-2",
+        "title": "Building the Temple",
+        "body": "Solomon builds a permanent, magnificent temple in Jerusalem to replace the portable tabernacle that had traveled with Israel since the wilderness — a fixed place for God's presence to dwell among His people at last.",
+        "passages": [
+          {
+            "bookId": "1-kings",
+            "startChapter": 6,
+            "startVerse": 1,
+            "endChapter": 8,
+            "endVerse": 66,
+            "reference": "1 Kings 6-8"
+          }
+        ]
+      },
+      {
+        "id": "1-kings-3",
+        "title": "The Kingdom Splits",
+        "body": "After Solomon's death, years of pride, excess, and mismanaged leadership finally catch up with the nation, and it splits into two separate kingdoms — Israel in the north, Judah in the south. What generations worked to build fractures in one bad political decision.",
+        "passages": [
+          {
+            "bookId": "1-kings",
+            "startChapter": 12,
+            "startVerse": 1,
+            "endChapter": 12,
+            "endVerse": 24,
+            "reference": "1 Kings 12:1-24"
+          }
+        ]
+      },
+      {
+        "id": "1-kings-4",
+        "title": "Elijah on Mount Carmel",
+        "body": "The prophet Elijah publicly challenges 450 prophets of a false god to prove whose god is real, in front of a watching crowd. Fire falls from the sky onto Elijah's altar, undeniably, and settles the question for everyone present.",
+        "passages": [
+          {
+            "bookId": "1-kings",
+            "startChapter": 18,
+            "startVerse": 16,
+            "endChapter": 18,
+            "endVerse": 40,
+            "reference": "1 Kings 18:16-40"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "2-kings",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "2-kings-1",
+        "title": "Elijah Passes the Torch",
+        "body": "Elijah is taken up into heaven in a whirlwind, and his successor Elisha picks up his mantle — both literally and figuratively — asking for a double portion of Elijah's spirit to continue the work he started.",
+        "passages": [
+          {
+            "bookId": "2-kings",
+            "startChapter": 2,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 18,
+            "reference": "2 Kings 2:1-18"
+          }
+        ]
+      },
+      {
+        "id": "2-kings-2",
+        "title": "Elisha's Miracles",
+        "body": "Elisha performs a series of miracles for ordinary people throughout his ministry — multiplying a widow's oil so it never runs dry, raising a boy from death, healing a foreign military commander of leprosy. God's power shows up in personal, individual moments, not only in national events.",
+        "passages": [
+          {
+            "bookId": "2-kings",
+            "startChapter": 4,
+            "startVerse": 1,
+            "endChapter": 5,
+            "endVerse": 27,
+            "reference": "2 Kings 4-5"
+          }
+        ]
+      },
+      {
+        "id": "2-kings-3",
+        "title": "The Fall of Israel",
+        "body": "After generations of ignoring warning after warning, the northern kingdom of Israel is finally conquered and scattered by the Assyrian empire — the long-building consequence of turning away from God finally catching up completely.",
+        "passages": [
+          {
+            "bookId": "2-kings",
+            "startChapter": 17,
+            "startVerse": 1,
+            "endChapter": 17,
+            "endVerse": 41,
+            "reference": "2 Kings 17"
+          }
+        ]
+      },
+      {
+        "id": "2-kings-4",
+        "title": "The Fall of Judah",
+        "body": "Eventually, the southern kingdom of Judah falls too — Jerusalem is destroyed, the temple burned, and the people carried off into exile in Babylon. It's the lowest point in Israel's entire history — but, as the rest of Scripture makes clear, it's not the end of the story.",
+        "passages": [
+          {
+            "bookId": "2-kings",
+            "startChapter": 25,
+            "startVerse": 1,
+            "endChapter": 25,
+            "endVerse": 30,
+            "reference": "2 Kings 25"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "1-chronicles",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "1-chronicles-1",
+        "title": "Remembering Who They Are",
+        "body": "The book opens with long pages of genealogy — not filler, but a deliberate reminder to a people returning home from exile of exactly who they are, where they came from, and that they still belong to God's story.",
+        "passages": [
+          {
+            "bookId": "1-chronicles",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 9,
+            "endVerse": 44,
+            "reference": "1 Chronicles 1-9"
+          }
+        ]
+      },
+      {
+        "id": "1-chronicles-2",
+        "title": "David's Heart for Worship",
+        "body": "Chronicles retells David's reign with a heavy focus on worship — his deep desire to build God a permanent temple, and the careful planning he puts into it, even knowing he won't live to see it finished himself.",
+        "passages": [
+          {
+            "bookId": "1-chronicles",
+            "startChapter": 15,
+            "startVerse": 1,
+            "endChapter": 17,
+            "endVerse": 27,
+            "reference": "1 Chronicles 15-17"
+          }
+        ]
+      },
+      {
+        "id": "1-chronicles-3",
+        "title": "Preparing for the Temple",
+        "body": "Before he dies, David gathers vast materials, organizes priests, musicians, and workers, and hands his son Solomon everything he needs to complete what David could only start — a final act of preparing the way for someone else to finish.",
+        "passages": [
+          {
+            "bookId": "1-chronicles",
+            "startChapter": 22,
+            "startVerse": 1,
+            "endChapter": 29,
+            "endVerse": 30,
+            "reference": "1 Chronicles 22-29"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "2-chronicles",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "2-chronicles-1",
+        "title": "The Temple Built and Dedicated",
+        "body": "Solomon completes construction on the temple, and when it's dedicated, God's presence fills it so powerfully that the priests can't even stand up to continue their service. It's one of the clear high points of worship in Israel's entire history.",
+        "passages": [
+          {
+            "bookId": "2-chronicles",
+            "startChapter": 5,
+            "startVerse": 1,
+            "endChapter": 7,
+            "endVerse": 22,
+            "reference": "2 Chronicles 5-7"
+          }
+        ]
+      },
+      {
+        "id": "2-chronicles-2",
+        "title": "Kings Who Turned Back to God",
+        "body": "Unlike Kings, which mostly tracks a story of national decline, Chronicles takes care to highlight the kings who led genuine spiritual revivals — real moments where the nation turned back to God, even if only for a season, and experienced real renewal because of it.",
+        "passages": [
+          {
+            "bookId": "2-chronicles",
+            "startChapter": 29,
+            "startVerse": 1,
+            "endChapter": 35,
+            "endVerse": 27,
+            "reference": "2 Chronicles 29-35"
+          }
+        ]
+      },
+      {
+        "id": "2-chronicles-3",
+        "title": "Exile, and a Door Left Open",
+        "body": "The book ends where Kings does, with Jerusalem's destruction — but closes on a note of real hope: a foreign king's decree permitting the exiles to return home and begin rebuilding, leaving the story open rather than finished.",
+        "passages": [
+          {
+            "bookId": "2-chronicles",
+            "startChapter": 36,
+            "startVerse": 1,
+            "endChapter": 36,
+            "endVerse": 23,
+            "reference": "2 Chronicles 36"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "ezra",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "ezra-1",
+        "title": "Coming Home",
+        "body": "After 70 long years in exile, a group of Israelites is finally given permission by a foreign king to return to Jerusalem and begin rebuilding what was destroyed — the first real step toward restoration after generations of loss.",
+        "passages": [
+          {
+            "bookId": "ezra",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 70,
+            "reference": "Ezra 1-2"
+          }
+        ]
+      },
+      {
+        "id": "ezra-2",
+        "title": "Rebuilding the Temple",
+        "body": "Despite fierce opposition and repeated delays from surrounding enemies, the returning exiles manage to rebuild the temple. When its foundation is finally laid, some in the crowd weep with pure joy, while older ones who remembered the original temple weep with grief over what was lost — both reactions equally real, side by side.",
+        "passages": [
+          {
+            "bookId": "ezra",
+            "startChapter": 3,
+            "startVerse": 1,
+            "endChapter": 6,
+            "endVerse": 22,
+            "reference": "Ezra 3-6"
+          }
+        ]
+      },
+      {
+        "id": "ezra-3",
+        "title": "Ezra's Reform",
+        "body": "The priest Ezra arrives later to lead the people back into genuine faithfulness, directly confronting compromises they'd quietly allowed to creep in and calling the community to recommit fully to God's ways rather than settle for a partial return.",
+        "passages": [
+          {
+            "bookId": "ezra",
+            "startChapter": 7,
+            "startVerse": 1,
+            "endChapter": 10,
+            "endVerse": 44,
+            "reference": "Ezra 7-10"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "nehemiah",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "nehemiah-1",
+        "title": "A Broken Wall, A Broken Heart",
+        "body": "Nehemiah, serving comfortably as cupbearer to a foreign king far from home, hears that Jerusalem's walls still lie in ruins decades after the return from exile, and it breaks him. He weeps, prays, and eventually asks the king for permission to go help rebuild it himself.",
+        "passages": [
+          {
+            "bookId": "nehemiah",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 20,
+            "reference": "Nehemiah 1-2"
+          }
+        ]
+      },
+      {
+        "id": "nehemiah-2",
+        "title": "Rebuilding Under Opposition",
+        "body": "Facing constant mockery, threats, and sabotage attempts from surrounding enemies, Nehemiah organizes the people to rebuild Jerusalem's entire wall in just 52 days — famously having workers labor with a tool in one hand and a weapon in the other, ready for either.",
+        "passages": [
+          {
+            "bookId": "nehemiah",
+            "startChapter": 3,
+            "startVerse": 1,
+            "endChapter": 6,
+            "endVerse": 19,
+            "reference": "Nehemiah 3-6"
+          }
+        ]
+      },
+      {
+        "id": "nehemiah-3",
+        "title": "The Law Read Aloud",
+        "body": "Once the wall is finally finished, the people gather together to hear God's law read aloud publicly, many of them for the first time in years. They weep at first, overwhelmed — and then celebrate, because rediscovering God's word together was something genuinely worth celebrating.",
+        "passages": [
+          {
+            "bookId": "nehemiah",
+            "startChapter": 8,
+            "startVerse": 1,
+            "endChapter": 8,
+            "endVerse": 18,
+            "reference": "Nehemiah 8"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "esther",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "esther-1",
+        "title": "An Unlikely Queen",
+        "body": "Esther, a Jewish orphan raised in exile by her cousin Mordecai, is chosen to become queen of the vast Persian empire — all without ever revealing her Jewish heritage, in a kingdom that's about to turn dangerously hostile toward her people.",
+        "passages": [
+          {
+            "bookId": "esther",
+            "startChapter": 2,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 23,
+            "reference": "Esther 2"
+          }
+        ]
+      },
+      {
+        "id": "esther-2",
+        "title": "A Plot to Destroy",
+        "body": "A powerful and prideful official named Haman, offended by Mordecai's refusal to bow to him, engineers a plot to have every single Jew in the empire executed on a set date. The threat is real, sweeping, and closing in fast.",
+        "passages": [
+          {
+            "bookId": "esther",
+            "startChapter": 3,
+            "startVerse": 1,
+            "endChapter": 3,
+            "endVerse": 15,
+            "reference": "Esther 3"
+          }
+        ]
+      },
+      {
+        "id": "esther-3",
+        "title": "For Such a Time as This",
+        "body": "Mordecai urges Esther to risk her own life by approaching the king uninvited on behalf of her people, reminding her pointedly that perhaps she was placed in her exact position, at her exact moment, for precisely this reason.",
+        "passages": [
+          {
+            "bookId": "esther",
+            "startChapter": 4,
+            "startVerse": 1,
+            "endChapter": 4,
+            "endVerse": 17,
+            "reference": "Esther 4"
+          }
+        ]
+      },
+      {
+        "id": "esther-4",
+        "title": "The Tables Turn",
+        "body": "Esther risks everything, exposes Haman's plot directly to the king, and the very gallows Haman built for Mordecai end up being used for Haman himself. God's name never appears once in this entire book — but His hand is visible in every turn of it.",
+        "passages": [
+          {
+            "bookId": "esther",
+            "startChapter": 5,
+            "startVerse": 1,
+            "endChapter": 9,
+            "endVerse": 32,
+            "reference": "Esther 5-9"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "job",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "job-1",
+        "title": "Everything Taken",
+        "body": "Job is described as a genuinely good, faithful man who loses everything in a single devastating day — his wealth, all ten of his children, and soon after, his health — through no fault or wrongdoing of his own. He grieves deeply, but refuses to curse God for it.",
+        "passages": [
+          {
+            "bookId": "job",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 13,
+            "reference": "Job 1-2"
+          }
+        ]
+      },
+      {
+        "id": "job-2",
+        "title": "Bad Advice from Good Friends",
+        "body": "Job's three friends come to comfort him, sit with him in silence for a week, and then spend most of the rest of the book insisting, with growing certainty, that his suffering must be punishment for some hidden sin. Job knows that isn't true, and the mounting tension between them fills most of the book.",
+        "passages": [
+          {
+            "bookId": "job",
+            "startChapter": 3,
+            "startVerse": 1,
+            "endChapter": 27,
+            "endVerse": 23,
+            "reference": "Job 3-27"
+          }
+        ]
+      },
+      {
+        "id": "job-3",
+        "title": "Job Demands an Answer",
+        "body": "Exhausted, confused, and increasingly desperate, Job doesn't lose his faith, but he does demand that God explain directly why all of this happened to him. He wants real answers, not more theories from his friends.",
+        "passages": [
+          {
+            "bookId": "job",
+            "startChapter": 29,
+            "startVerse": 1,
+            "endChapter": 31,
+            "endVerse": 40,
+            "reference": "Job 29-31"
+          }
+        ]
+      },
+      {
+        "id": "job-4",
+        "title": "God Answers from the Storm",
+        "body": "After 37 chapters of silence, God finally speaks — not with a tidy explanation for Job's suffering, but with an overwhelming series of questions about the scale, wonder, and mystery of all creation. Job never gets the \"why.\" He gets God's actual presence instead, and somehow, that turns out to be enough.",
+        "passages": [
+          {
+            "bookId": "job",
+            "startChapter": 38,
+            "startVerse": 1,
+            "endChapter": 42,
+            "endVerse": 17,
+            "reference": "Job 38-42"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "isaiah",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "isaiah-1",
+        "title": "Isaiah's Calling",
+        "body": "Isaiah sees a staggering vision of God's throne room, filled with worship and overwhelming holiness, and feels crushed by his own unworthiness in that presence. A seraphim cleanses his lips with a coal, and Isaiah is called and sent as God's messenger — even knowing the message he'll carry won't be an easy one to deliver.",
+        "passages": [
+          {
+            "bookId": "isaiah",
+            "startChapter": 6,
+            "startVerse": 1,
+            "endChapter": 6,
+            "endVerse": 13,
+            "reference": "Isaiah 6"
+          }
+        ]
+      },
+      {
+        "id": "isaiah-2",
+        "title": "Warnings for a Wandering Nation",
+        "body": "Much of the book is devoted to Isaiah warning Israel and Judah, again and again, that their persistent unfaithfulness will carry real consequences — that judgment is coming unless something genuinely changes in how they live.",
+        "passages": [
+          {
+            "bookId": "isaiah",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 5,
+            "endVerse": 30,
+            "reference": "Isaiah 1-5"
+          }
+        ]
+      },
+      {
+        "id": "isaiah-3",
+        "title": "The Suffering Servant",
+        "body": "In the middle of all that warning, Isaiah shifts and describes a suffering servant who will be beaten, rejected, and killed carrying the weight of other people's sin — written roughly 700 years before Jesus, and matching the details of His death with striking precision.",
+        "passages": [
+          {
+            "bookId": "isaiah",
+            "startChapter": 52,
+            "startVerse": 13,
+            "endChapter": 53,
+            "endVerse": 12,
+            "reference": "Isaiah 52:13-53:12"
+          }
+        ]
+      },
+      {
+        "id": "isaiah-4",
+        "title": "A Future of Hope",
+        "body": "The book closes by looking far past the coming judgment toward a distant future where God restores absolutely everything — a new heaven, a new earth, and a peace that finally, permanently, doesn't run out.",
+        "passages": [
+          {
+            "bookId": "isaiah",
+            "startChapter": 65,
+            "startVerse": 17,
+            "endChapter": 66,
+            "endVerse": 24,
+            "reference": "Isaiah 65:17-66:24"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "jeremiah",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "jeremiah-1",
+        "title": "Too Young to Speak",
+        "body": "God calls Jeremiah to be a prophet while he's still young, and Jeremiah immediately protests that he doesn't know how to speak and isn't ready for something this big. God tells him not to worry about that — He'll put the words directly in Jeremiah's mouth Himself.",
+        "passages": [
+          {
+            "bookId": "jeremiah",
+            "startChapter": 1,
+            "startVerse": 4,
+            "endChapter": 1,
+            "endVerse": 19,
+            "reference": "Jeremiah 1:4-19"
+          }
+        ]
+      },
+      {
+        "id": "jeremiah-2",
+        "title": "The Weeping Prophet",
+        "body": "For decades, Jeremiah faithfully warns Jerusalem that judgment is coming if the nation doesn't turn back to God — and watches, heartbroken, as almost no one listens, and he's mocked, imprisoned, and rejected for the message he keeps delivering anyway.",
+        "passages": [
+          {
+            "bookId": "jeremiah",
+            "startChapter": 20,
+            "startVerse": 1,
+            "endChapter": 20,
+            "endVerse": 18,
+            "reference": "Jeremiah 20:1-18"
+          }
+        ]
+      },
+      {
+        "id": "jeremiah-3",
+        "title": "Jerusalem Falls",
+        "body": "Everything Jeremiah spent years warning about finally happens — Jerusalem is destroyed and its people carried into exile. He grieves deeply over a city and a people he genuinely loved, even though he'd seen the collapse coming for years.",
+        "passages": [
+          {
+            "bookId": "jeremiah",
+            "startChapter": 39,
+            "startVerse": 1,
+            "endChapter": 39,
+            "endVerse": 18,
+            "reference": "Jeremiah 39"
+          }
+        ]
+      },
+      {
+        "id": "jeremiah-4",
+        "title": "A New Covenant Promised",
+        "body": "In the middle of all the ruin, Jeremiah delivers one of the most hopeful promises found anywhere in the Old Testament: a day is coming when God will write His law directly on people's hearts, not just on stone — a completely different kind of relationship with Him.",
+        "passages": [
+          {
+            "bookId": "jeremiah",
+            "startChapter": 31,
+            "startVerse": 31,
+            "endChapter": 31,
+            "endVerse": 34,
+            "reference": "Jeremiah 31:31-34"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "lamentations",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "lamentations-1",
+        "title": "Grief with No Filter",
+        "body": "Written in the immediate aftermath of Jerusalem's destruction, Jeremiah pours out raw, unfiltered grief over everything that was lost — no explanation offered, no silver lining forced, just honest, unresolved sorrow sitting exactly where it is.",
+        "passages": [
+          {
+            "bookId": "lamentations",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 22,
+            "reference": "Lamentations 1-2"
+          }
+        ]
+      },
+      {
+        "id": "lamentations-2",
+        "title": "His Mercies Are New Every Morning",
+        "body": "Right in the middle of the darkest chapter of the book, one line breaks through everything else: God's mercy doesn't run out, it's new every single morning. Hope here doesn't show up by pretending the pain isn't real — it shows up right in the middle of it.",
+        "passages": [
+          {
+            "bookId": "lamentations",
+            "startChapter": 3,
+            "startVerse": 19,
+            "endChapter": 3,
+            "endVerse": 33,
+            "reference": "Lamentations 3:19-33"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "ezekiel",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "ezekiel-1",
+        "title": "Strange Visions",
+        "body": "Ezekiel, already living in exile in Babylon, sees vivid and genuinely strange visions of God's glory moving and appearing to him there — a clear signal that God's presence was never confined to the temple building back in Jerusalem, even now, even in exile.",
+        "passages": [
+          {
+            "bookId": "ezekiel",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 3,
+            "endVerse": 27,
+            "reference": "Ezekiel 1-3"
+          }
+        ]
+      },
+      {
+        "id": "ezekiel-2",
+        "title": "Acting Out the Message",
+        "body": "God repeatedly has Ezekiel physically act out symbolic, sometimes bizarre performances — lying on his side for over a year straight, cooking food in unusual ways — specifically so Israel's coming judgment becomes impossible for anyone to ignore or misunderstand.",
+        "passages": [
+          {
+            "bookId": "ezekiel",
+            "startChapter": 4,
+            "startVerse": 1,
+            "endChapter": 5,
+            "endVerse": 17,
+            "reference": "Ezekiel 4-5"
+          }
+        ]
+      },
+      {
+        "id": "ezekiel-3",
+        "title": "The Valley of Dry Bones",
+        "body": "Ezekiel is shown a vast valley completely full of dry, scattered bones, and God asks him if they can possibly live again. As Ezekiel speaks God's word over them exactly as instructed, the bones rattle together, flesh forms over them, and they rise up as a living army — a vivid picture of Israel's seemingly hopeless exile turning into real, restored life.",
+        "passages": [
+          {
+            "bookId": "ezekiel",
+            "startChapter": 37,
+            "startVerse": 1,
+            "endChapter": 37,
+            "endVerse": 14,
+            "reference": "Ezekiel 37:1-14"
+          }
+        ]
+      },
+      {
+        "id": "ezekiel-4",
+        "title": "A New Heart Promised",
+        "body": "God promises His people something bigger than simply returning from exile — He promises to eventually give them an entirely new heart and a new spirit, a complete inside-out change rather than just a change of location.",
+        "passages": [
+          {
+            "bookId": "ezekiel",
+            "startChapter": 36,
+            "startVerse": 24,
+            "endChapter": 36,
+            "endVerse": 28,
+            "reference": "Ezekiel 36:24-28"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "daniel",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "daniel-1",
+        "title": "Daniel's Quiet Resistance",
+        "body": "Taken captive to Babylon as a young man, Daniel quietly but firmly refuses to compromise his faith, even in something as small as the food he's offered — setting the tone for a lifetime of steady conviction in a culture pressuring him constantly to blend in.",
+        "passages": [
+          {
+            "bookId": "daniel",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 1,
+            "endVerse": 21,
+            "reference": "Daniel 1"
+          }
+        ]
+      },
+      {
+        "id": "daniel-2",
+        "title": "The Fiery Furnace",
+        "body": "Three of Daniel's close friends refuse to bow down to a massive golden statue and are thrown into a furnace heated so hot it kills the soldiers who throw them in. They walk out completely untouched — and the king watching sees a fourth figure standing in the flames alongside them.",
+        "passages": [
+          {
+            "bookId": "daniel",
+            "startChapter": 3,
+            "startVerse": 1,
+            "endChapter": 3,
+            "endVerse": 30,
+            "reference": "Daniel 3"
+          }
+        ]
+      },
+      {
+        "id": "daniel-3",
+        "title": "The Writing on the Wall",
+        "body": "At a lavish royal banquet, a disembodied hand suddenly appears and writes a cryptic message of judgment directly on the palace wall. Daniel is the only one in the entire kingdom able to interpret it — and that very same night, the kingdom falls exactly as predicted.",
+        "passages": [
+          {
+            "bookId": "daniel",
+            "startChapter": 5,
+            "startVerse": 1,
+            "endChapter": 5,
+            "endVerse": 31,
+            "reference": "Daniel 5"
+          }
+        ]
+      },
+      {
+        "id": "daniel-4",
+        "title": "The Lion's Den",
+        "body": "Daniel is thrown into a den of hungry lions for the \"crime\" of continuing to pray openly to God despite a law forbidding it. He survives the night completely unharmed, and the king who reluctantly ordered his punishment becomes one of his strongest advocates afterward.",
+        "passages": [
+          {
+            "bookId": "daniel",
+            "startChapter": 6,
+            "startVerse": 1,
+            "endChapter": 6,
+            "endVerse": 28,
+            "reference": "Daniel 6"
+          }
+        ]
+      },
+      {
+        "id": "daniel-5",
+        "title": "Visions of What's Coming",
+        "body": "Later in life, Daniel receives a series of complex visions about future kingdoms rising and falling, and about a coming figure described as \"one like a son of man\" — pointing far beyond his own lifetime toward something still ahead.",
+        "passages": [
+          {
+            "bookId": "daniel",
+            "startChapter": 7,
+            "startVerse": 1,
+            "endChapter": 12,
+            "endVerse": 13,
+            "reference": "Daniel 7-12"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "hosea",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "hosea-1",
+        "title": "A Painful Assignment",
+        "body": "God gives Hosea an unusually difficult, personal assignment — marry a woman who will be unfaithful to him — turning Hosea's actual marriage into a living, painful picture of how repeatedly Israel has been unfaithful to God, even while God has never stopped loving them.",
+        "passages": [
+          {
+            "bookId": "hosea",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 1,
+            "endVerse": 11,
+            "reference": "Hosea 1"
+          }
+        ]
+      },
+      {
+        "id": "hosea-2",
+        "title": "Betrayal and Heartbreak",
+        "body": "Hosea's wife eventually leaves him for other relationships, mirroring with uncomfortable accuracy exactly what Israel has done spiritually, over and over. It's a genuinely hard book to read because it's meant to be — this is what unfaithfulness actually feels like from the side of the one who loves faithfully.",
+        "passages": [
+          {
+            "bookId": "hosea",
+            "startChapter": 2,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 23,
+            "reference": "Hosea 2"
+          }
+        ]
+      },
+      {
+        "id": "hosea-3",
+        "title": "Love That Buys Back",
+        "body": "In one of the most striking acts in the whole book, Hosea goes and buys his wife back out of the life she'd fallen into, and brings her home again — a real, lived-out picture of exactly how far God's love is willing to go to bring His people back to Him.",
+        "passages": [
+          {
+            "bookId": "hosea",
+            "startChapter": 3,
+            "startVerse": 1,
+            "endChapter": 3,
+            "endVerse": 5,
+            "reference": "Hosea 3"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "joel",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "joel-1",
+        "title": "A Plague of Locusts",
+        "body": "A devastating locust plague strips the land completely bare, and Joel uses the disaster as a vivid wake-up call — a preview of the kind of judgment that's coming if the nation doesn't take its spiritual state seriously.",
+        "passages": [
+          {
+            "bookId": "joel",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 1,
+            "endVerse": 20,
+            "reference": "Joel 1"
+          }
+        ]
+      },
+      {
+        "id": "joel-2",
+        "title": "Return to Me",
+        "body": "God calls the people through Joel to return to Him genuinely — not through empty ritual or outward performance, but with actually changed hearts, torn open honestly rather than clothes torn dramatically in a show of mourning.",
+        "passages": [
+          {
+            "bookId": "joel",
+            "startChapter": 2,
+            "startVerse": 12,
+            "endChapter": 2,
+            "endVerse": 17,
+            "reference": "Joel 2:12-17"
+          }
+        ]
+      },
+      {
+        "id": "joel-3",
+        "title": "The Spirit Poured Out",
+        "body": "Joel delivers a striking promise of a future day when God will pour out His Spirit on everyone — not just prophets and priests, but sons, daughters, young and old, servants included. Centuries later, this exact promise comes true dramatically at Pentecost.",
+        "passages": [
+          {
+            "bookId": "joel",
+            "startChapter": 2,
+            "startVerse": 28,
+            "endChapter": 2,
+            "endVerse": 32,
+            "reference": "Joel 2:28-32"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "amos",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "amos-1",
+        "title": "A Shepherd Sent to Speak",
+        "body": "Amos is an ordinary shepherd, not a trained or professional prophet, sent by God to confront Israel's comfortable and wealthy class directly for exploiting the poor while going through empty religious motions that meant nothing without real justice behind them.",
+        "passages": [
+          {
+            "bookId": "amos",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 1,
+            "endVerse": 1,
+            "reference": "Amos 1:1"
+          },
+          {
+            "bookId": "amos",
+            "startChapter": 5,
+            "startVerse": 10,
+            "endChapter": 5,
+            "endVerse": 24,
+            "reference": "Amos 5:10-24"
+          },
+          {
+            "bookId": "amos",
+            "startChapter": 7,
+            "startVerse": 14,
+            "endChapter": 7,
+            "endVerse": 15,
+            "reference": "Amos 7:14-15"
+          }
+        ]
+      },
+      {
+        "id": "amos-2",
+        "title": "The Plumb Line",
+        "body": "God shows Amos a vision of a plumb line — a simple tool used to check whether a wall is built straight — and says He's measuring Israel against it the exact same way. By that standard, they don't measure up at all.",
+        "passages": [
+          {
+            "bookId": "amos",
+            "startChapter": 7,
+            "startVerse": 7,
+            "endChapter": 7,
+            "endVerse": 9,
+            "reference": "Amos 7:7-9"
+          }
+        ]
+      },
+      {
+        "id": "amos-3",
+        "title": "A Promise of Restoration",
+        "body": "Even after chapter after chapter of hard warnings, the book doesn't end there — it closes with a genuine promise that God will one day restore and rebuild what's been broken, refusing to let judgment be the final word.",
+        "passages": [
+          {
+            "bookId": "amos",
+            "startChapter": 9,
+            "startVerse": 11,
+            "endChapter": 9,
+            "endVerse": 15,
+            "reference": "Amos 9:11-15"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "micah",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "micah-1",
+        "title": "Judgment for Injustice",
+        "body": "Micah directly confronts corrupt leaders who exploit the poor and twist justice for their own personal gain, making it clear throughout the book that God cares deeply about how people actually treat each other, not just about religious appearances.",
+        "passages": [
+          {
+            "bookId": "micah",
+            "startChapter": 2,
+            "startVerse": 1,
+            "endChapter": 3,
+            "endVerse": 12,
+            "reference": "Micah 2-3"
+          }
+        ]
+      },
+      {
+        "id": "micah-2",
+        "title": "A Ruler from Bethlehem",
+        "body": "In the middle of all that confrontation, Micah names the exact town — small, easy to overlook, nothing special on the surface — where a future ruler will be born, centuries before Jesus is actually born there.",
+        "passages": [
+          {
+            "bookId": "micah",
+            "startChapter": 5,
+            "startVerse": 2,
+            "endChapter": 5,
+            "endVerse": 5,
+            "reference": "Micah 5:2-5"
+          }
+        ]
+      },
+      {
+        "id": "micah-3",
+        "title": "What God Actually Wants",
+        "body": "Micah sums up, in one of the most quoted lines in the Old Testament, what God genuinely asks of people: act justly, love mercy, and walk humbly with Him. Not more sacrifices piled on top of each other. An actual changed life.",
+        "passages": [
+          {
+            "bookId": "micah",
+            "startChapter": 6,
+            "startVerse": 6,
+            "endChapter": 6,
+            "endVerse": 8,
+            "reference": "Micah 6:6-8"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "zephaniah",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "zephaniah-1",
+        "title": "A Coming Day of Judgment",
+        "body": "Zephaniah warns urgently of a coming \"day of the Lord\" — a sweeping day of reckoning meant to jolt a nation that's grown dangerously comfortable ignoring God and drifting into idolatry without much resistance.",
+        "passages": [
+          {
+            "bookId": "zephaniah",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 1,
+            "endVerse": 18,
+            "reference": "Zephaniah 1"
+          }
+        ]
+      },
+      {
+        "id": "zephaniah-2",
+        "title": "A Remnant Remains",
+        "body": "Even in the middle of that heavy judgment, God promises through Zephaniah to preserve a humble remnant of people who genuinely still seek Him — judgment isn't total erasure, it has real survivors on the other side.",
+        "passages": [
+          {
+            "bookId": "zephaniah",
+            "startChapter": 3,
+            "startVerse": 9,
+            "endChapter": 3,
+            "endVerse": 13,
+            "reference": "Zephaniah 3:9-13"
+          }
+        ]
+      },
+      {
+        "id": "zephaniah-3",
+        "title": "God Rejoices Over You",
+        "body": "The book closes with a surprisingly tender, intimate image: God Himself singing joyfully over His people, not just tolerating or forgiving them from a distance, but actually delighting in them up close.",
+        "passages": [
+          {
+            "bookId": "zephaniah",
+            "startChapter": 3,
+            "startVerse": 14,
+            "endChapter": 3,
+            "endVerse": 20,
+            "reference": "Zephaniah 3:14-20"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "zechariah",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "zechariah-1",
+        "title": "Strange Night Visions",
+        "body": "Zechariah receives a series of vivid, symbolic night visions meant to encourage a discouraged community that's only recently returned from exile — a reassurance that God hasn't forgotten them or given up on the work still ahead.",
+        "passages": [
+          {
+            "bookId": "zechariah",
+            "startChapter": 1,
+            "startVerse": 7,
+            "endChapter": 6,
+            "endVerse": 15,
+            "reference": "Zechariah 1:7-6:15"
+          }
+        ]
+      },
+      {
+        "id": "zechariah-2",
+        "title": "Rebuilding with God's Help",
+        "body": "Zechariah specifically encourages the people currently rebuilding the temple, reminding them clearly that the work in front of them won't succeed through human strength or sheer effort, but through God's Spirit working through them.",
+        "passages": [
+          {
+            "bookId": "zechariah",
+            "startChapter": 4,
+            "startVerse": 1,
+            "endChapter": 4,
+            "endVerse": 14,
+            "reference": "Zechariah 4"
+          }
+        ]
+      },
+      {
+        "id": "zechariah-3",
+        "title": "A King on a Donkey",
+        "body": "Zechariah writes that a future king will arrive riding humbly on a donkey rather than a warhorse — the complete opposite of how conquering kings typically entered a city. Centuries later, Jesus rides into Jerusalem this exact way, deliberately.",
+        "passages": [
+          {
+            "bookId": "zechariah",
+            "startChapter": 9,
+            "startVerse": 9,
+            "endChapter": 9,
+            "endVerse": 10,
+            "reference": "Zechariah 9:9-10"
+          }
+        ]
+      },
+      {
+        "id": "zechariah-4",
+        "title": "A Future Hope",
+        "body": "The book closes looking forward to a day when God Himself will reign as king over the entire earth, and everything currently broken finally gets made completely right.",
+        "passages": [
+          {
+            "bookId": "zechariah",
+            "startChapter": 14,
+            "startVerse": 1,
+            "endChapter": 14,
+            "endVerse": 21,
+            "reference": "Zechariah 14"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "matthew",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "matthew-1",
+        "title": "Jesus Is Born",
+        "body": "Jesus is born to Mary in the small town of Bethlehem, exactly where an ancient prophecy said He would be, centuries earlier — God entering human history quietly, as a vulnerable baby, not as the conquering figure many expected.",
+        "passages": [
+          {
+            "bookId": "matthew",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 23,
+            "reference": "Matthew 1-2"
+          }
+        ]
+      },
+      {
+        "id": "matthew-2",
+        "title": "Jesus Is Baptized",
+        "body": "When Jesus is baptized by John in the Jordan River, a voice from heaven declares Him God's beloved Son, and the Holy Spirit visibly descends on Him — the clear, public beginning of His entire ministry on earth.",
+        "passages": [
+          {
+            "bookId": "matthew",
+            "startChapter": 3,
+            "startVerse": 13,
+            "endChapter": 3,
+            "endVerse": 17,
+            "reference": "Matthew 3:13-17"
+          }
+        ]
+      },
+      {
+        "id": "matthew-3",
+        "title": "The Sermon on the Mount",
+        "body": "Jesus teaches a massive crowd gathered on a hillside, and instead of praising the powerful or successful, He says the people who feel broken, poor in spirit, and mourning are the ones who are truly blessed — completely flipping the expectations everyone had walked in with.",
+        "passages": [
+          {
+            "bookId": "matthew",
+            "startChapter": 5,
+            "startVerse": 1,
+            "endChapter": 7,
+            "endVerse": 29,
+            "reference": "Matthew 5-7"
+          }
+        ]
+      },
+      {
+        "id": "matthew-4",
+        "title": "Miracles and Teaching",
+        "body": "Throughout His ministry, Jesus heals the sick, feeds thousands of people from almost nothing, calms storms, and teaches through memorable stories that stick with people long after — consistently revealing His power and His compassion together, never one without the other.",
+        "passages": [
+          {
+            "bookId": "matthew",
+            "startChapter": 8,
+            "startVerse": 1,
+            "endChapter": 13,
+            "endVerse": 58,
+            "reference": "Matthew 8-13"
+          }
+        ]
+      },
+      {
+        "id": "matthew-5",
+        "title": "The Last Supper",
+        "body": "On the night before His death, Jesus shares one final meal with His twelve disciples, telling them the bread and the wine now represent His own body and blood, given for them — turning an ordinary meal into something they'll remember Him by forever.",
+        "passages": [
+          {
+            "bookId": "matthew",
+            "startChapter": 26,
+            "startVerse": 17,
+            "endChapter": 26,
+            "endVerse": 30,
+            "reference": "Matthew 26:17-30"
+          }
+        ]
+      },
+      {
+        "id": "matthew-6",
+        "title": "The Crucifixion",
+        "body": "Jesus is arrested, tried unjustly, and crucified. Right before He dies, He declares \"It is finished\" — the full payment for sin, completed once and for all, with nothing left owing.",
+        "passages": [
+          {
+            "bookId": "matthew",
+            "startChapter": 27,
+            "startVerse": 27,
+            "endChapter": 27,
+            "endVerse": 56,
+            "reference": "Matthew 27:27-56"
+          },
+          {
+            "bookId": "john",
+            "startChapter": 19,
+            "startVerse": 30,
+            "endChapter": 19,
+            "endVerse": 30,
+            "reference": "John 19:30"
+          }
+        ]
+      },
+      {
+        "id": "matthew-7",
+        "title": "He's Alive",
+        "body": "Three days later, Jesus rises from the dead exactly as He'd promised, and appears to His stunned disciples — before commissioning them to go tell the entire world what they've personally witnessed.",
+        "passages": [
+          {
+            "bookId": "matthew",
+            "startChapter": 28,
+            "startVerse": 1,
+            "endChapter": 28,
+            "endVerse": 20,
+            "reference": "Matthew 28"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "mark",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "mark-1",
+        "title": "Jesus Begins His Work",
+        "body": "Mark moves quickly from the very first page — Jesus is baptized, tested in the wilderness, and almost immediately starts calling His first disciples and healing people, with none of the slower buildup found in the other Gospels.",
+        "passages": [
+          {
+            "bookId": "mark",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 1,
+            "endVerse": 45,
+            "reference": "Mark 1"
+          }
+        ]
+      },
+      {
+        "id": "mark-2",
+        "title": "Power Over Everything",
+        "body": "In rapid succession, Jesus calms a violent storm with a word, heals people considered hopeless cases, and casts out spiritual darkness tormenting individuals — consistently demonstrating real authority over nature, sickness, and evil itself.",
+        "passages": [
+          {
+            "bookId": "mark",
+            "startChapter": 4,
+            "startVerse": 35,
+            "endChapter": 5,
+            "endVerse": 43,
+            "reference": "Mark 4:35-5:43"
+          }
+        ]
+      },
+      {
+        "id": "mark-3",
+        "title": "Who Do You Say I Am?",
+        "body": "Jesus turns directly to His disciples partway through the book and asks who they actually believe He is. Peter answers plainly: You are the Messiah. It's the hinge point of the entire Gospel, where the story visibly turns toward the road to the cross.",
+        "passages": [
+          {
+            "bookId": "mark",
+            "startChapter": 8,
+            "startVerse": 27,
+            "endChapter": 8,
+            "endVerse": 38,
+            "reference": "Mark 8:27-38"
+          }
+        ]
+      },
+      {
+        "id": "mark-4",
+        "title": "The Cross",
+        "body": "Jesus is betrayed, arrested, unjustly tried, and crucified — abandoned in His final hours by nearly everyone who had followed Him so closely up to that point.",
+        "passages": [
+          {
+            "bookId": "mark",
+            "startChapter": 14,
+            "startVerse": 43,
+            "endChapter": 15,
+            "endVerse": 47,
+            "reference": "Mark 14:43-15:47"
+          }
+        ]
+      },
+      {
+        "id": "mark-5",
+        "title": "The Empty Tomb",
+        "body": "Women arrive at Jesus's tomb early in the morning expecting to find a body to anoint, and find it completely empty instead. Mark's original account ends almost abruptly right here — letting the sheer fact of the empty tomb speak entirely for itself.",
+        "passages": [
+          {
+            "bookId": "mark",
+            "startChapter": 16,
+            "startVerse": 1,
+            "endChapter": 16,
+            "endVerse": 8,
+            "reference": "Mark 16:1-8"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "luke",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "luke-1",
+        "title": "A Baby Is Promised",
+        "body": "An angel appears to a young woman named Mary and tells her she will give birth to a son named Jesus — the exact moment every Old Testament promise about a coming rescuer finally begins to become real.",
+        "passages": [
+          {
+            "bookId": "luke",
+            "startChapter": 1,
+            "startVerse": 26,
+            "endChapter": 1,
+            "endVerse": 38,
+            "reference": "Luke 1:26-38"
+          }
+        ]
+      },
+      {
+        "id": "luke-2",
+        "title": "Jesus Is Born",
+        "body": "Jesus is born in a humble place meant for animals, not a palace, and the first people told the news are shepherds working through the night — exactly the kind of overlooked people no one expected such important news to reach first.",
+        "passages": [
+          {
+            "bookId": "luke",
+            "startChapter": 2,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 20,
+            "reference": "Luke 2:1-20"
+          }
+        ]
+      },
+      {
+        "id": "luke-3",
+        "title": "The Lost Sheep, the Lost Son",
+        "body": "Jesus tells a series of stories about a shepherd who abandons 99 safe sheep to search for one that's missing, and a father who runs to meet a son who wasted his entire inheritance. Luke's Gospel leans hard, throughout, into mercy for exactly the people everyone else had already written off.",
+        "passages": [
+          {
+            "bookId": "luke",
+            "startChapter": 15,
+            "startVerse": 1,
+            "endChapter": 15,
+            "endVerse": 32,
+            "reference": "Luke 15"
+          }
+        ]
+      },
+      {
+        "id": "luke-4",
+        "title": "Jesus and the Outsiders",
+        "body": "Jesus deliberately spends His time with tax collectors, known sinners, and people the religious establishment actively avoided — consistently choosing to sit with the people no one else expected Him to choose, over and over again.",
+        "passages": [
+          {
+            "bookId": "luke",
+            "startChapter": 19,
+            "startVerse": 1,
+            "endChapter": 19,
+            "endVerse": 10,
+            "reference": "Luke 19:1-10"
+          }
+        ]
+      },
+      {
+        "id": "luke-5",
+        "title": "The Last Supper and Gethsemane",
+        "body": "Jesus shares a final meal with His disciples, then goes to pray in agonized isolation the night before His death, wrestling honestly with what's coming before choosing, deliberately, to go through with it anyway.",
+        "passages": [
+          {
+            "bookId": "luke",
+            "startChapter": 22,
+            "startVerse": 7,
+            "endChapter": 22,
+            "endVerse": 46,
+            "reference": "Luke 22:7-46"
+          }
+        ]
+      },
+      {
+        "id": "luke-6",
+        "title": "The Crucifixion",
+        "body": "Jesus dies on the cross, and even in His final hours, offers forgiveness and paradise to a criminal being executed right beside Him — mercy extended all the way to the very end.",
+        "passages": [
+          {
+            "bookId": "luke",
+            "startChapter": 23,
+            "startVerse": 32,
+            "endChapter": 23,
+            "endVerse": 49,
+            "reference": "Luke 23:32-49"
+          }
+        ]
+      },
+      {
+        "id": "luke-7",
+        "title": "The Road to Emmaus and the Ascension",
+        "body": "The risen Jesus walks alongside two grieving followers on a road without them recognizing Him at first, then reveals who He truly is. Later, He ascends into heaven in front of His disciples, promising the Holy Spirit will come to be with them once He's gone.",
+        "passages": [
+          {
+            "bookId": "luke",
+            "startChapter": 24,
+            "startVerse": 1,
+            "endChapter": 24,
+            "endVerse": 53,
+            "reference": "Luke 24"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "john",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "john-1",
+        "title": "The Word Became Flesh",
+        "body": "John opens very differently from the other three Gospels — Jesus isn't just born into the world, He's presented as the eternal Word of God who existed before anything else and chose to become human, moving directly into the middle of ordinary human life.",
+        "passages": [
+          {
+            "bookId": "john",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 1,
+            "endVerse": 18,
+            "reference": "John 1:1-18"
+          }
+        ]
+      },
+      {
+        "id": "john-2",
+        "title": "Signs and Wonders",
+        "body": "John records a specific set of miraculous \"signs\" — turning water into wine, healing a man born blind, raising Lazarus from the dead after four days — each one deliberately chosen to point beyond the miracle itself toward exactly who Jesus really is.",
+        "passages": [
+          {
+            "bookId": "john",
+            "startChapter": 2,
+            "startVerse": 1,
+            "endChapter": 11,
+            "endVerse": 57,
+            "reference": "John 2:1-11:57"
+          }
+        ]
+      },
+      {
+        "id": "john-3",
+        "title": "I Am",
+        "body": "Jesus makes a series of bold, unmistakable claims about His own identity — the bread of life, the light of the world, the good shepherd, the resurrection and the life — statements that leave absolutely no room for Him to simply be a good moral teacher and nothing more.",
+        "passages": [
+          {
+            "bookId": "john",
+            "startChapter": 6,
+            "startVerse": 35,
+            "endChapter": 6,
+            "endVerse": 35,
+            "reference": "John 6:35"
+          },
+          {
+            "bookId": "john",
+            "startChapter": 8,
+            "startVerse": 12,
+            "endChapter": 8,
+            "endVerse": 12,
+            "reference": "John 8:12"
+          },
+          {
+            "bookId": "john",
+            "startChapter": 10,
+            "startVerse": 11,
+            "endChapter": 10,
+            "endVerse": 11,
+            "reference": "John 10:11"
+          },
+          {
+            "bookId": "john",
+            "startChapter": 11,
+            "startVerse": 25,
+            "endChapter": 11,
+            "endVerse": 25,
+            "reference": "John 11:25"
+          }
+        ]
+      },
+      {
+        "id": "john-4",
+        "title": "The Last Supper",
+        "body": "Jesus kneels to wash His disciples' dirty feet, shares one final meal with them, and promises that even though He's leaving, the Holy Spirit will come to remain with them permanently after He's gone.",
+        "passages": [
+          {
+            "bookId": "john",
+            "startChapter": 13,
+            "startVerse": 1,
+            "endChapter": 16,
+            "endVerse": 33,
+            "reference": "John 13-16"
+          }
+        ]
+      },
+      {
+        "id": "john-5",
+        "title": "The Crucifixion",
+        "body": "Jesus dies on the cross, declaring \"It is finished\" as His final words — the entire sacrificial system the Old Testament had pointed toward for centuries, now fully and permanently complete.",
+        "passages": [
+          {
+            "bookId": "john",
+            "startChapter": 19,
+            "startVerse": 16,
+            "endChapter": 19,
+            "endVerse": 37,
+            "reference": "John 19:16-37"
+          }
+        ]
+      },
+      {
+        "id": "john-6",
+        "title": "Doubt and Belief",
+        "body": "The risen Jesus appears personally to His disciples, and when doubting Thomas insists he won't believe without touching the wounds himself, Jesus lets him — then tells him that those who believe without seeing are blessed just as much.",
+        "passages": [
+          {
+            "bookId": "john",
+            "startChapter": 20,
+            "startVerse": 19,
+            "endChapter": 20,
+            "endVerse": 31,
+            "reference": "John 20:19-31"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "acts",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "acts-1",
+        "title": "The Holy Spirit Comes",
+        "body": "After Jesus ascends into heaven, the Holy Spirit dramatically fills a room of waiting believers at Pentecost — the church is born in that moment, and for the first time ever, God's presence isn't reserved for a select few, it's poured out on everyone who believes.",
+        "passages": [
+          {
+            "bookId": "acts",
+            "startChapter": 2,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 41,
+            "reference": "Acts 2:1-41"
+          }
+        ]
+      },
+      {
+        "id": "acts-2",
+        "title": "The Church Grows",
+        "body": "The earliest believers share everything they have, genuinely care for one another, and the church grows rapidly — even as it faces immediate, real pushback and persecution from religious authorities almost from the very beginning.",
+        "passages": [
+          {
+            "bookId": "acts",
+            "startChapter": 2,
+            "startVerse": 42,
+            "endChapter": 4,
+            "endVerse": 37,
+            "reference": "Acts 2:42-4:37"
+          }
+        ]
+      },
+      {
+        "id": "acts-3",
+        "title": "Stephen's Death, Saul's Rage",
+        "body": "A believer named Stephen is stoned to death for openly proclaiming his faith, and a young Pharisee named Saul stands by watching in full approval, going on afterward to actively hunt down and imprison Christians wherever he can find them.",
+        "passages": [
+          {
+            "bookId": "acts",
+            "startChapter": 7,
+            "startVerse": 54,
+            "endChapter": 8,
+            "endVerse": 3,
+            "reference": "Acts 7:54-8:3"
+          }
+        ]
+      },
+      {
+        "id": "acts-4",
+        "title": "Saul Becomes Paul",
+        "body": "On the road to Damascus, Jesus Himself stops Saul in a blinding, overwhelming encounter that completely reorients his entire life. The church's most feared enemy becomes, from that point forward, one of its most passionate and effective voices.",
+        "passages": [
+          {
+            "bookId": "acts",
+            "startChapter": 9,
+            "startVerse": 1,
+            "endChapter": 9,
+            "endVerse": 31,
+            "reference": "Acts 9:1-31"
+          }
+        ]
+      },
+      {
+        "id": "acts-5",
+        "title": "The Gospel Spreads",
+        "body": "Paul travels extensively across the ancient world on a series of demanding missionary journeys, planting new churches everywhere he goes and facing near-constant opposition, imprisonment, and hardship without ever slowing down.",
+        "passages": [
+          {
+            "bookId": "acts",
+            "startChapter": 13,
+            "startVerse": 1,
+            "endChapter": 20,
+            "endVerse": 38,
+            "reference": "Acts 13-20"
+          }
+        ]
+      },
+      {
+        "id": "acts-6",
+        "title": "To Rome",
+        "body": "The book closes with Paul under house arrest in Rome, still teaching and preaching boldly even while chained — the message that started in a small upper room now reaching directly into the heart of the entire empire.",
+        "passages": [
+          {
+            "bookId": "acts",
+            "startChapter": 28,
+            "startVerse": 16,
+            "endChapter": 28,
+            "endVerse": 31,
+            "reference": "Acts 28:16-31"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "romans",
+    "kind": "beats",
+    "scenes": [
+      {
+        "id": "romans-1",
+        "title": "Everyone needs rescuing",
+        "body": "Paul methodically lays out that absolutely no one, whether Jew or Gentile, measures up to God's standard on their own effort, closing off every excuse before offering the solution.",
+        "passages": [
+          {
+            "bookId": "romans",
+            "startChapter": 1,
+            "startVerse": 18,
+            "endChapter": 3,
+            "endVerse": 20,
+            "reference": "Romans 1:18-3:20"
+          }
+        ]
+      },
+      {
+        "id": "romans-2",
+        "title": "Made right by faith, not effort",
+        "body": "Being made right with God has never come through earning it or following rules perfectly. It comes entirely through trusting what Jesus already did.",
+        "passages": [
+          {
+            "bookId": "romans",
+            "startChapter": 3,
+            "startVerse": 21,
+            "endChapter": 5,
+            "endVerse": 21,
+            "reference": "Romans 3:21-5:21"
+          }
+        ]
+      },
+      {
+        "id": "romans-3",
+        "title": "A new way to live",
+        "body": "Once someone is made right with God, Paul argues, life stops being about following rules out of fear and starts being about genuinely being guided by God's own Spirit living in them.",
+        "passages": [
+          {
+            "bookId": "romans",
+            "startChapter": 6,
+            "startVerse": 1,
+            "endChapter": 8,
+            "endVerse": 39,
+            "reference": "Romans 6-8"
+          }
+        ]
+      },
+      {
+        "id": "romans-4",
+        "title": "Nothing can separate you",
+        "body": "Paul closes the letter's main argument with one of the boldest promises in all of Scripture: nothing in all creation is powerful enough to separate a believer from God's love.",
+        "passages": [
+          {
+            "bookId": "romans",
+            "startChapter": 8,
+            "startVerse": 31,
+            "endChapter": 8,
+            "endVerse": 39,
+            "reference": "Romans 8:31-39"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "1-corinthians",
+    "kind": "beats",
+    "scenes": [
+      {
+        "id": "1-corinthians-1",
+        "title": "A divided, messy church",
+        "body": "Paul addresses a church torn apart by division, personal pride, and serious moral compromise, confronting all of it directly and without softening any of it.",
+        "passages": [
+          {
+            "bookId": "1-corinthians",
+            "startChapter": 1,
+            "startVerse": 10,
+            "endChapter": 6,
+            "endVerse": 20,
+            "reference": "1 Corinthians 1:10-6:20"
+          }
+        ]
+      },
+      {
+        "id": "1-corinthians-2",
+        "title": "Love above everything",
+        "body": "Right in the middle of correcting them, Paul writes the famous passage on love — patient, kind, never focused on being right — as the standard everything else in the church should be measured against.",
+        "passages": [
+          {
+            "bookId": "1-corinthians",
+            "startChapter": 13,
+            "startVerse": 1,
+            "endChapter": 13,
+            "endVerse": 13,
+            "reference": "1 Corinthians 13"
+          }
+        ]
+      },
+      {
+        "id": "1-corinthians-3",
+        "title": "Resurrection changes everything",
+        "body": "Paul ends by grounding the whole letter in one core fact: if Jesus genuinely rose from the dead, that fact changes everything about how they're supposed to live right now.",
+        "passages": [
+          {
+            "bookId": "1-corinthians",
+            "startChapter": 15,
+            "startVerse": 1,
+            "endChapter": 15,
+            "endVerse": 58,
+            "reference": "1 Corinthians 15"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "2-corinthians",
+    "kind": "beats",
+    "scenes": [
+      {
+        "id": "2-corinthians-1",
+        "title": "Strength in weakness",
+        "body": "Paul defends his ministry against critics by openly admitting his own weakness, suffering, and hardship rather than hiding any of it behind confidence.",
+        "passages": [
+          {
+            "bookId": "2-corinthians",
+            "startChapter": 11,
+            "startVerse": 16,
+            "endChapter": 12,
+            "endVerse": 10,
+            "reference": "2 Corinthians 11:16-12:10"
+          }
+        ]
+      },
+      {
+        "id": "2-corinthians-2",
+        "title": "Treasure in jars of clay",
+        "body": "He describes believers as fragile, ordinary containers carrying something priceless inside them — making clear the power at work is entirely God's, never their own.",
+        "passages": [
+          {
+            "bookId": "2-corinthians",
+            "startChapter": 4,
+            "startVerse": 7,
+            "endChapter": 4,
+            "endVerse": 18,
+            "reference": "2 Corinthians 4:7-18"
+          }
+        ]
+      },
+      {
+        "id": "2-corinthians-3",
+        "title": "Give generously, gladly",
+        "body": "Paul calls the church toward real generosity, not out of guilt or obligation, but because God genuinely loves someone who gives cheerfully and freely.",
+        "passages": [
+          {
+            "bookId": "2-corinthians",
+            "startChapter": 8,
+            "startVerse": 1,
+            "endChapter": 9,
+            "endVerse": 15,
+            "reference": "2 Corinthians 8-9"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "galatians",
+    "kind": "beats",
+    "scenes": [
+      {
+        "id": "galatians-1",
+        "title": "Freedom, not rules",
+        "body": "Paul directly confronts a church that's quietly drifting back toward trying to earn God's favor through strict rule-keeping instead of resting in what they'd already received.",
+        "passages": [
+          {
+            "bookId": "galatians",
+            "startChapter": 1,
+            "startVerse": 6,
+            "endChapter": 2,
+            "endVerse": 21,
+            "reference": "Galatians 1:6-2:21"
+          }
+        ]
+      },
+      {
+        "id": "galatians-2",
+        "title": "Justified by faith alone",
+        "body": "Being made right with God was never, from the very beginning, about perfectly keeping the law. It has always been about genuine faith.",
+        "passages": [
+          {
+            "bookId": "galatians",
+            "startChapter": 3,
+            "startVerse": 1,
+            "endChapter": 3,
+            "endVerse": 29,
+            "reference": "Galatians 3"
+          }
+        ]
+      },
+      {
+        "id": "galatians-3",
+        "title": "Fruit of a free life",
+        "body": "Real spiritual freedom, Paul insists, doesn't lead to chaos or selfishness — it naturally produces love, joy, peace, and patience in a person's actual life.",
+        "passages": [
+          {
+            "bookId": "galatians",
+            "startChapter": 5,
+            "startVerse": 13,
+            "endChapter": 5,
+            "endVerse": 26,
+            "reference": "Galatians 5:13-26"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "ephesians",
+    "kind": "beats",
+    "scenes": [
+      {
+        "id": "ephesians-1",
+        "title": "Chosen before the world began",
+        "body": "Paul opens by reminding believers they were chosen and deeply loved by God before anything else in their story ever happened.",
+        "passages": [
+          {
+            "bookId": "ephesians",
+            "startChapter": 1,
+            "startVerse": 3,
+            "endChapter": 1,
+            "endVerse": 14,
+            "reference": "Ephesians 1:3-14"
+          }
+        ]
+      },
+      {
+        "id": "ephesians-2",
+        "title": "Saved by grace, not works",
+        "body": "None of it, Paul makes clear, could ever have been earned through effort. It's entirely a gift, freely given.",
+        "passages": [
+          {
+            "bookId": "ephesians",
+            "startChapter": 2,
+            "startVerse": 1,
+            "endChapter": 2,
+            "endVerse": 10,
+            "reference": "Ephesians 2:1-10"
+          }
+        ]
+      },
+      {
+        "id": "ephesians-3",
+        "title": "One new family",
+        "body": "Jewish and Gentile believers, once sharply divided by centuries of history, are made into one single new family through Christ.",
+        "passages": [
+          {
+            "bookId": "ephesians",
+            "startChapter": 2,
+            "startVerse": 11,
+            "endChapter": 2,
+            "endVerse": 22,
+            "reference": "Ephesians 2:11-22"
+          }
+        ]
+      },
+      {
+        "id": "ephesians-4",
+        "title": "Dressed for the fight",
+        "body": "Paul closes with a vivid image of spiritual armor — truth, righteousness, faith — equipping believers for real spiritual battles they'll actually face.",
+        "passages": [
+          {
+            "bookId": "ephesians",
+            "startChapter": 6,
+            "startVerse": 10,
+            "endChapter": 6,
+            "endVerse": 20,
+            "reference": "Ephesians 6:10-20"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "colossians",
+    "kind": "beats",
+    "scenes": [
+      {
+        "id": "colossians-1",
+        "title": "Christ is supreme",
+        "body": "Paul builds a strong case that Jesus isn't simply important among many things — He's supreme over literally everything that exists, visible and invisible.",
+        "passages": [
+          {
+            "bookId": "colossians",
+            "startChapter": 1,
+            "startVerse": 15,
+            "endChapter": 1,
+            "endVerse": 20,
+            "reference": "Colossians 1:15-20"
+          }
+        ]
+      },
+      {
+        "id": "colossians-2",
+        "title": "You're already made complete",
+        "body": "In Christ, Paul insists, nothing else needs to be added on to make someone whole. The completeness is already there.",
+        "passages": [
+          {
+            "bookId": "colossians",
+            "startChapter": 2,
+            "startVerse": 6,
+            "endChapter": 2,
+            "endVerse": 15,
+            "reference": "Colossians 2:6-15"
+          }
+        ]
+      },
+      {
+        "id": "colossians-3",
+        "title": "A new way of living",
+        "body": "Paul gives specific, practical instruction for what a genuinely changed life actually looks like in daily relationships and choices.",
+        "passages": [
+          {
+            "bookId": "colossians",
+            "startChapter": 3,
+            "startVerse": 1,
+            "endChapter": 4,
+            "endVerse": 6,
+            "reference": "Colossians 3:1-4:6"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "1-timothy",
+    "kind": "beats",
+    "scenes": [
+      {
+        "id": "1-timothy-1",
+        "title": "Guard the message",
+        "body": "Paul instructs his young protégé Timothy to actively protect the true gospel message from being twisted or watered down by false teaching.",
+        "passages": [
+          {
+            "bookId": "1-timothy",
+            "startChapter": 1,
+            "startVerse": 3,
+            "endChapter": 1,
+            "endVerse": 20,
+            "reference": "1 Timothy 1:3-20"
+          }
+        ]
+      },
+      {
+        "id": "1-timothy-2",
+        "title": "Godly leadership matters",
+        "body": "Paul lays out clear, specific guidance for what real, trustworthy leadership inside the church should actually look like in practice.",
+        "passages": [
+          {
+            "bookId": "1-timothy",
+            "startChapter": 3,
+            "startVerse": 1,
+            "endChapter": 3,
+            "endVerse": 13,
+            "reference": "1 Timothy 3:1-13"
+          }
+        ]
+      },
+      {
+        "id": "1-timothy-3",
+        "title": "Fight the good fight",
+        "body": "Paul encourages Timothy directly to stay faithful and keep going, even when the work in front of him feels genuinely difficult.",
+        "passages": [
+          {
+            "bookId": "1-timothy",
+            "startChapter": 6,
+            "startVerse": 11,
+            "endChapter": 6,
+            "endVerse": 16,
+            "reference": "1 Timothy 6:11-16"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "2-timothy",
+    "kind": "beats",
+    "scenes": [
+      {
+        "id": "2-timothy-1",
+        "title": "Paul's final words",
+        "body": "Written near the very end of his life, likely from prison, Paul urges Timothy to stay strong and never be ashamed of the gospel, whatever it costs him.",
+        "passages": [
+          {
+            "bookId": "2-timothy",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 1,
+            "endVerse": 18,
+            "reference": "2 Timothy 1"
+          }
+        ]
+      },
+      {
+        "id": "2-timothy-2",
+        "title": "All Scripture is useful",
+        "body": "Paul reminds Timothy that God's word is exactly what actually equips him for the difficult work still ahead of him.",
+        "passages": [
+          {
+            "bookId": "2-timothy",
+            "startChapter": 3,
+            "startVerse": 14,
+            "endChapter": 3,
+            "endVerse": 17,
+            "reference": "2 Timothy 3:14-17"
+          }
+        ]
+      },
+      {
+        "id": "2-timothy-3",
+        "title": "I have fought the good fight",
+        "body": "Paul closes looking back over his entire life with real peace, ready for what's coming next, having given everything to the mission.",
+        "passages": [
+          {
+            "bookId": "2-timothy",
+            "startChapter": 4,
+            "startVerse": 6,
+            "endChapter": 4,
+            "endVerse": 8,
+            "reference": "2 Timothy 4:6-8"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "hebrews",
+    "kind": "beats",
+    "scenes": [
+      {
+        "id": "hebrews-1",
+        "title": "Jesus is better than everything before Him",
+        "body": "The letter builds a sustained case that Jesus is better than angels, better than Moses, and better than the entire old system of priests and repeated sacrifices.",
+        "passages": [
+          {
+            "bookId": "hebrews",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 7,
+            "endVerse": 28,
+            "reference": "Hebrews 1-7"
+          }
+        ]
+      },
+      {
+        "id": "hebrews-2",
+        "title": "A new and better way to God",
+        "body": "Jesus opens a permanent, complete way into God's presence — no more repeated sacrifices ever needed again after this.",
+        "passages": [
+          {
+            "bookId": "hebrews",
+            "startChapter": 8,
+            "startVerse": 1,
+            "endChapter": 10,
+            "endVerse": 39,
+            "reference": "Hebrews 8-10"
+          }
+        ]
+      },
+      {
+        "id": "hebrews-3",
+        "title": "Heroes of faith",
+        "body": "The writer walks through a long roll call of people throughout history who trusted God faithfully even when they couldn't yet see how things would turn out.",
+        "passages": [
+          {
+            "bookId": "hebrews",
+            "startChapter": 11,
+            "startVerse": 1,
+            "endChapter": 11,
+            "endVerse": 40,
+            "reference": "Hebrews 11"
+          }
+        ]
+      },
+      {
+        "id": "hebrews-4",
+        "title": "Don't give up",
+        "body": "The letter closes urging believers not to give up, encouraged forward by the example of everyone who ran the same race of faith before them.",
+        "passages": [
+          {
+            "bookId": "hebrews",
+            "startChapter": 12,
+            "startVerse": 1,
+            "endChapter": 13,
+            "endVerse": 25,
+            "reference": "Hebrews 12:1-13:25"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "1-peter",
+    "kind": "beats",
+    "scenes": [
+      {
+        "id": "1-peter-1",
+        "title": "Hope in hard times",
+        "body": "Peter writes directly to believers facing genuine suffering, reminding them clearly that their hope was never meant to depend on their circumstances.",
+        "passages": [
+          {
+            "bookId": "1-peter",
+            "startChapter": 1,
+            "startVerse": 1,
+            "endChapter": 1,
+            "endVerse": 12,
+            "reference": "1 Peter 1:1-12"
+          }
+        ]
+      },
+      {
+        "id": "1-peter-2",
+        "title": "Living differently",
+        "body": "Believers are called to live in a way that stands out noticeably from those around them, even when doing so costs them something real.",
+        "passages": [
+          {
+            "bookId": "1-peter",
+            "startChapter": 1,
+            "startVerse": 13,
+            "endChapter": 2,
+            "endVerse": 25,
+            "reference": "1 Peter 1:13-2:25"
+          }
+        ]
+      },
+      {
+        "id": "1-peter-3",
+        "title": "Suffering isn't the end of the story",
+        "body": "Peter consistently connects present suffering to a promised future glory, insisting that makes whatever is being endured now genuinely worth it.",
+        "passages": [
+          {
+            "bookId": "1-peter",
+            "startChapter": 4,
+            "startVerse": 12,
+            "endChapter": 5,
+            "endVerse": 11,
+            "reference": "1 Peter 4:12-5:11"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "bookId": "revelation",
+    "kind": "scenes",
+    "scenes": [
+      {
+        "id": "revelation-1",
+        "title": "A Vision of Jesus",
+        "body": "John, exiled alone on the island of Patmos, sees an overwhelming vision of the risen Jesus in full glory — eyes like fire, voice like rushing water — nothing like the humble, approachable figure most readers picture from the Gospels.",
+        "passages": [
+          {
+            "bookId": "revelation",
+            "startChapter": 1,
+            "startVerse": 9,
+            "endChapter": 1,
+            "endVerse": 20,
+            "reference": "Revelation 1:9-20"
+          }
+        ]
+      },
+      {
+        "id": "revelation-2",
+        "title": "Letters to Seven Churches",
+        "body": "Jesus sends direct, personal messages to seven real churches of the time — some praised for their faithfulness, some sharply warned, some corrected outright — showing He's still fully present and paying close attention to how His people are actually living.",
+        "passages": [
+          {
+            "bookId": "revelation",
+            "startChapter": 2,
+            "startVerse": 1,
+            "endChapter": 3,
+            "endVerse": 22,
+            "reference": "Revelation 2-3"
+          }
+        ]
+      },
+      {
+        "id": "revelation-3",
+        "title": "The Throne Room",
+        "body": "John is given a glimpse into heaven's actual throne room, where every living creature worships continuously and without end — a brief but striking window into the reality operating behind everything happening on earth.",
+        "passages": [
+          {
+            "bookId": "revelation",
+            "startChapter": 4,
+            "startVerse": 1,
+            "endChapter": 5,
+            "endVerse": 14,
+            "reference": "Revelation 4-5"
+          }
+        ]
+      },
+      {
+        "id": "revelation-4",
+        "title": "Judgment and Struggle",
+        "body": "The vision moves through intense, deeply symbolic imagery of judgment against evil in the world — genuinely difficult to read, but ultimately building toward God finally, completely setting everything right.",
+        "passages": [
+          {
+            "bookId": "revelation",
+            "startChapter": 6,
+            "startVerse": 1,
+            "endChapter": 20,
+            "endVerse": 15,
+            "reference": "Revelation 6-20"
+          }
+        ]
+      },
+      {
+        "id": "revelation-5",
+        "title": "Every Tear Wiped Away",
+        "body": "The Bible's final scene: a new heaven, a new earth descending, and God Himself personally wiping away every tear from every eye. It's the promise every single prior book in Scripture had, in some way, been pointing toward.",
+        "passages": [
+          {
+            "bookId": "revelation",
+            "startChapter": 21,
+            "startVerse": 1,
+            "endChapter": 22,
+            "endVerse": 5,
+            "reference": "Revelation 21:1-22:5"
+          }
+        ]
+      }
+    ]
+  }
+]

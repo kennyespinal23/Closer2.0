@@ -483,8 +483,14 @@ export default function ProfileTabScreen() {
                 ? `${streak.current} day${streak.current === 1 ? "" : "s"}`
                 : "Start"
             }
-            sublabel="Calendar, milestones, and reading history"
+            sublabel="Calendar, milestones, and Bible Moments"
             onPress={() => navigateTo("/rhythm")}
+          />
+          <SettingsLinkRow
+            icon={<SFSymbol name="book.closed" color={colors.ink} size={22} />}
+            label="Bible Moments"
+            sublabel="Discover and collect 78 moments"
+            onPress={() => navigateTo("/rhythm?section=moments" as Href)}
           />
         </SettingsSection>
 

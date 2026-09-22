@@ -35,6 +35,7 @@ module.exports = {
         ink: {
           DEFAULT: "var(--color-ink)",
           muted: "var(--color-ink-muted)",
+          secondary: "var(--color-ink-secondary)",
           subtle: "var(--color-ink-subtle)",
         },
         primary: {

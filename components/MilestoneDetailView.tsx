@@ -1,3 +1,4 @@
+import { useAmbientMotionEnabled } from "@/lib/useAmbientMotionEnabled";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
@@ -21,6 +22,7 @@ export function MilestoneDetailView({ milestone, badgeIndex, onClose, newlyUnloc
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const reduced = useReducedMotion();
+  const ambientEnabled = useAmbientMotionEnabled();
   const accent = getMilestoneAccent(milestone);
   const color = accent.isLandmark ? "#E8B84A" : accent.color;
   const size = Math.min(width * 0.62, height * 0.31, 280);
@@ -33,13 +35,18 @@ export function MilestoneDetailView({ milestone, badgeIndex, onClose, newlyUnloc
     entrance.value = reduced ? 1 : 0.94;
     if (!reduced) {
       entrance.value = withSpring(1, { damping: newlyUnlocked ? 12 : 20, stiffness: 160 });
+    }
+    return () => cancelAnimation(entrance);
+  }, [reduced, newlyUnlocked, milestone.day]);
+  useEffect(() => {
+    if (ambientEnabled) {
       float.value = withRepeat(withSequence(
         withTiming(1, { duration: 3200, easing: Easing.inOut(Easing.sin) }),
         withTiming(0, { duration: 3200, easing: Easing.inOut(Easing.sin) }),
       ), -1);
     }
-    return () => { cancelAnimation(float); cancelAnimation(entrance); };
-  }, [reduced, newlyUnlocked, milestone.day]);
+    return () => cancelAnimation(float);
+  }, [ambientEnabled, milestone.day]);
   const badgeStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -3 * float.value }, { scale: entrance.value }, { rotate: `${reduced ? 0 : (float.value - 0.5) * 2}deg` }] }));
   const glowStyle = useAnimatedStyle(() => ({ opacity: 0.7 + float.value * 0.15 }));
 

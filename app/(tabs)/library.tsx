@@ -138,7 +138,7 @@ function BibleLibrary() {
             Apple Large Title via ThemedText variant="largeTitle"
             (34pt Bold). Matches Home / Profile tab anchors. */}
         <FadeIn delayMs={0} durationMs={700}>
-          <View className="pt-2 pb-1" style={{ paddingHorizontal: SCREEN_H_PAD }}>
+          <View className="pt-1 pb-4" style={{ paddingHorizontal: SCREEN_H_PAD }}>
             <ThemedText
               variant="largeTitle"
               accessibilityRole="header"
@@ -252,8 +252,8 @@ function SectionHeader({
       className="mt-7 mb-4 flex-row items-baseline justify-between"
       style={{ paddingHorizontal: SCREEN_H_PAD }}
     >
-      <ThemedText variant="title2">{title}</ThemedText>
-      <ThemedText variant="captionEmphasized" color="muted">
+      <ThemedText variant="title2" accessibilityRole="header" style={{ flex: 1, marginRight: 12 }}>{title}</ThemedText>
+      <ThemedText variant="footnote" color="secondary">
         {count} {isSearch ? (count === 1 ? "match" : "matches") : count === 1 ? "book" : "books"}
       </ThemedText>
     </View>
@@ -488,7 +488,7 @@ function ContinueReadingHero({
         <BookCover book={book} variant="card" />
       </View>
       <View className="flex-1 ml-4 justify-center">
-        <ThemedText variant="captionEmphasized" color="muted">
+        <ThemedText variant="footnote" color="secondary">
           Continue Reading
         </ThemedText>
         <ThemedText

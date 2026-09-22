@@ -1,3 +1,4 @@
+import { useAmbientMotionEnabled } from "@/lib/useAmbientMotionEnabled";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, forwardRef } from "react";
 import {
   Animated,
@@ -289,6 +290,7 @@ const DevotionalEnvelope = forwardRef<
   }
 >(function DevotionalEnvelope({ card, onOpened, hidden, width }, ref) {
   const reducedMotion = useReducedMotion();
+  const ambientEnabled = useAmbientMotionEnabled();
   const breathe = useRef(new Animated.Value(0)).current;
   const flap = useRef(new Animated.Value(0)).current;
   const letter = useRef(new Animated.Value(0)).current;
@@ -329,7 +331,7 @@ const DevotionalEnvelope = forwardRef<
   }, [flap, hidden, letter, card.id]);
 
   useEffect(() => {
-    if (reducedMotion || hidden || openingRef.current) {
+    if (!ambientEnabled || hidden || openingRef.current) {
       breathe.setValue(0);
       return;
     }
@@ -351,7 +353,7 @@ const DevotionalEnvelope = forwardRef<
     );
     loop.start();
     return () => loop.stop();
-  }, [breathe, hidden, reducedMotion]);
+  }, [breathe, hidden, ambientEnabled]);
 
   const lift = breathe.interpolate({
     inputRange: [0, 1],
@@ -714,6 +716,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
+  const ambientEnabled = useAmbientMotionEnabled();
   const [active, setActive] = useState<FloatingScriptureCard>(card);
   const [expanded, setExpanded] = useState(false);
   const pendingCompletion = useRef<(() => void) | undefined>(undefined);
@@ -967,7 +970,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   }, [card, expanded, nextBreakTone, openCard, unlockedToday]);
 
   useEffect(() => {
-    if (!showSwipeHint || reducedMotion) return;
+    if (!showSwipeHint || !ambientEnabled) return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(hintPulse, {
@@ -986,7 +989,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     );
     loop.start();
     return () => loop.stop();
-  }, [hintPulse, reducedMotion, showSwipeHint]);
+  }, [hintPulse, ambientEnabled, showSwipeHint]);
 
   const transitionToDetail = useCallback(() => {
     if (expandPhaseRef.current !== "hero") return;

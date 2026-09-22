@@ -14,7 +14,7 @@ import { createNavigatorFactory } from "@react-navigation/native";
 import { View, type ColorValue } from "react-native";
 import TabView from "react-native-bottom-tabs";
 import type { AppleIcon } from "react-native-bottom-tabs";
-import { useSkyTop } from "@/components/HomeSkyGradient";
+import { SkyGradient, useSkyTop } from "@/components/HomeSkyGradient";
 
 /**
  * NativeBottomTabsNavigator
@@ -228,6 +228,7 @@ function NativeBottomTabsNavigator({
               overflow: "hidden",
             }}
           >
+            <SkyGradient />
             {descriptors[route.key]?.render() ?? null}
           </View>
         )}

@@ -2461,6 +2461,36 @@ function PendingChapterMeasurer({
   );
 }
 
+/** Prepare real page breaks on the overview without mounting reader behavior. */
+export function BookReaderPreparation({ bookId, chapter }: { bookId: string; chapter: number }) {
+  const focused = useIsFocused();
+  const { translation, textSize } = usePreferences();
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const [prepared, setPrepared] = useState<{ key: string; data: Chapter } | null>(null);
+  const [, setRevision] = useState(0);
+  const contentWidth = width - spacing[24] * 2;
+  const contentHeight = Math.max(280, height - insets.top - insets.bottom - READER_HEADER_HEIGHT
+    - spacing[16] - READER_TOOLBAR_BOTTOM_INSET - READER_PILL_HEIGHT - READER_TEXT_TOOLBAR_GAP);
+  const key = readerPaginationKey(bookId, chapter, translation.id, textSize.id, contentWidth, contentHeight);
+  useEffect(() => {
+    if (!focused || readerPaginationCache.has(key)) return;
+    let cancelled = false;
+    const cached = getCachedChapter(bookId, chapter, translation.id);
+    if (cached) setPrepared({ key, data: cached });
+    else void fetchChapter(bookId, chapter, translation.id).then(data => {
+      if (!cancelled) setPrepared({ key, data });
+    }).catch(() => { /* The reader owns retry and translation-install UI. */ });
+    return () => { cancelled = true; };
+  }, [focused, key, bookId, chapter, translation.id]);
+  const measured = useCallback(() => setRevision(value => value + 1), []);
+  if (!focused || prepared?.key !== key || readerPaginationCache.has(key)) return null;
+  return <AdjacentChapterMeasurer key={key} bookId={bookId} chapter={chapter}
+    verses={prepared.data.verses} cacheKey={key} pageContentWidth={contentWidth}
+    pageContentHeight={contentHeight} firstPageHeadingHeight={96 * Math.sqrt(textSize.scale)}
+    scale={textSize.scale} onMeasured={measured} />;
+}
+
 function AdjacentChapterMeasurer({
   bookId,
   chapter,

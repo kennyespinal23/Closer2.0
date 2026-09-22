@@ -295,17 +295,18 @@ export default function ProfileTabScreen() {
             accessibilityRole="button"
             accessibilityLabel="Open settings"
             hitSlop={10}
-            style={({ pressed }) => ({
-              width: 36,
-              height: 36,
-              borderRadius: 18,
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: colors.accentSoft,
-              opacity: pressed ? 0.7 : 1,
-            })}
+              backgroundColor: "rgba(255,255,255,0.18)",
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.24)",
+            }}
           >
-            <GearIcon stroke={colors.ink} />
+            <GearIcon stroke={SKY_CHROME_INK} />
           </Pressable>
         </View>
 
@@ -522,7 +523,7 @@ export default function ProfileTabScreen() {
           title="Saved sermons"
           count={savedCount}
           ink={colors.ink}
-          inkSubtle={colors.inkSubtle}
+          inkSubtle={colors.textSecondary}
         />
         {recentSavedSermons.length === 0 ? (
           <ProfileEmptyCard
@@ -530,7 +531,7 @@ export default function ProfileTabScreen() {
             body="Tap Save on the closing screen of any sermon to keep it here for re-reading."
           />
         ) : (
-          <View className="px-6 mt-2 gap-2">
+          <View className="px-5 mt-2 gap-2">
             {recentSavedSermons.map(({ moment, type }) => (
               <ProfileSavedSermonRow
                 key={moment.day}
@@ -558,7 +559,7 @@ export default function ProfileTabScreen() {
           count={annotationCounts.highlights}
           onSeeAll={() => navigateTo("/highlights")}
           ink={colors.ink}
-          inkSubtle={colors.inkSubtle}
+          inkSubtle={colors.textSecondary}
         />
         {recentHighlights.length === 0 ? (
           <ProfileEmptyCard
@@ -566,7 +567,7 @@ export default function ProfileTabScreen() {
             body="Long-press any verse to mark it — your highlights collect here."
           />
         ) : (
-          <View className="px-6 mt-2 gap-2">
+          <View className="px-5 mt-2 gap-2">
             {recentHighlights.map((highlight) => (
               <ProfileHighlightRow
                 key={highlight.key}
@@ -599,7 +600,7 @@ export default function ProfileTabScreen() {
           count={annotationCounts.notes}
           onSeeAll={() => navigateTo("/notes")}
           ink={colors.ink}
-          inkSubtle={colors.inkSubtle}
+          inkSubtle={colors.textSecondary}
         />
         {recentNotes.length === 0 ? (
           <ProfileEmptyCard
@@ -607,7 +608,7 @@ export default function ProfileTabScreen() {
             body="Write your first reflection from any verse — long-press to open the menu."
           />
         ) : (
-          <View className="px-6 mt-2 gap-2">
+          <View className="px-5 mt-2 gap-2">
             {recentNotes.map((note) => (
               <ProfileNoteRow
                 key={note.noteId}
@@ -960,7 +961,7 @@ function SectionHeader({
   const blue = scheme === "light" ? "#007AFF" : "#0A84FF";
   return (
     <View
-      className="px-6 flex-row items-end justify-between"
+      className="px-5 flex-row items-end justify-between"
       style={{ marginTop: 32 }}
     >
       <View className="flex-row items-baseline">
@@ -1283,7 +1284,7 @@ function ProfileEmptyCard({
 }) {
   const colors = useColors();
   return (
-    <View className="px-6 mt-2">
+    <View className="px-5 mt-2">
       <View
         style={{
           borderRadius: 16,
@@ -1296,23 +1297,19 @@ function ProfileEmptyCard({
       >
         <Text
           style={{
-            fontFamily: "System",
-            fontWeight: "600",
+            ...systemText.headline,
             color: colors.ink,
-            fontSize: 14,
-            lineHeight: 18,
+
           }}
         >
           {title}
         </Text>
         <Text
           style={{
-            fontFamily: "System",
-            fontWeight: "400",
-            color: colors.inkMuted,
-            fontSize: 13,
-            lineHeight: 17,
-            marginTop: 4,
+            ...systemText.subheadline,
+            color: colors.textSecondary,
+
+            marginTop: 6,
           }}
         >
           {body}
@@ -1417,7 +1414,7 @@ type IconProps = { stroke: string };
  * the tap target is comfortable without dominating the header.
  */
 function GearIcon({ stroke }: IconProps) {
-  return <SFSymbol name="gearshape" size={16} color={stroke} weight="medium" />;
+  return <SFSymbol name="gearshape" size={20} color={stroke} weight="medium" />;
 }
 
 function UserIcon({ stroke }: IconProps) {

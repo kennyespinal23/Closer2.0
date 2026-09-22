@@ -5,7 +5,7 @@ import type {
 } from "@react-navigation/native";
 import { withLayoutContext } from "expo-router";
 import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
-import { useSkyTop } from "@/components/HomeSkyGradient";
+import { SkyGradient, useSkyTop } from "@/components/HomeSkyGradient";
 import {
   createNativeBottomTabsNavigator,
   type NativeBottomTabsNavigationEventMap,
@@ -115,6 +115,7 @@ export default function TabsLayout() {
   // controllers don't occlude the sibling on iOS.
   return (
     <View style={{ flex: 1, backgroundColor: skyTop }}>
+      <SkyGradient />
       <View style={{ flex: 1 }}>
         <NativeTabs
           tabBarActiveTintColor={TAB_ACCENT_RED}

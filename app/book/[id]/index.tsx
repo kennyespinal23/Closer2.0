@@ -1,3 +1,4 @@
+import { BookReaderPreparation } from "./[chapter]";
 import { usePreferences } from "@/state/preferences";
 import { findExpressBook, expressReadingMinutes } from "@/constants/expressBooks";
 import { Host, ContextMenu, Button as NativeButton, Image as NativeImage } from "@expo/ui/swift-ui";
@@ -167,6 +168,7 @@ function BookDetail({ book }: { book: Book }) {
   const font = (size: number) => size * fontScale;
   return (
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
+      <BookReaderPreparation bookId={book.id} chapter={started ? continueChapter : 1} />
       <StatusBar style="light" />
       <Animated.ScrollView ref={scrollRef} onScroll={scrollHandler} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{ paddingBottom: insets.bottom + focusSpacing + 24 }}>

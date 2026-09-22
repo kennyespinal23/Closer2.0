@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -59,6 +59,11 @@ export function PrimaryPillButton({
   const reducedMotion = useReducedMotion();
   const scale = useRef(new Animated.Value(1)).current;
 
+  useEffect(() => {
+    if (isDisabled || reducedMotion) { scale.stopAnimation(); scale.setValue(1); }
+    return () => scale.stopAnimation();
+  }, [isDisabled, reducedMotion, scale]);
+
   const animateTo = (target: number) => {
     if (reducedMotion) {
       scale.setValue(1);
@@ -67,24 +72,19 @@ export function PrimaryPillButton({
     Animated.spring(scale, {
       toValue: target,
       useNativeDriver: true,
-      tension: 280,
-      friction: 18,
+      stiffness: 420,
+      damping: 32,
+      mass: 0.7,
     }).start();
   };
 
   const handlePressIn: PressableProps["onPressIn"] = (event) => {
     if (isDisabled) return;
     onPressIn?.(event);
-    if (heavy) {
-      haptics.thud();
-    } else {
-      haptics.soft();
-    }
-    animateTo(0.965);
+    animateTo(0.98);
   };
 
   const handlePressOut = () => {
-    if (isDisabled) return;
     animateTo(1);
   };
 
@@ -97,7 +97,10 @@ export function PrimaryPillButton({
       }}
     >
       <Pressable
-        onPress={onPress}
+        onPress={(event) => {
+          if (heavy) haptics.thud(); else haptics.soft();
+          onPress?.(event);
+        }}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         disabled={isDisabled}

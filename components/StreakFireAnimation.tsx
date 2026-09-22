@@ -1,3 +1,4 @@
+import { useAmbientMotionEnabled } from "@/lib/useAmbientMotionEnabled";
 import { useEffect, useRef } from "react";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import LottieView from "lottie-react-native";
@@ -19,18 +20,19 @@ export function StreakFireAnimation({
   size?: number;
 }) {
   const reducedMotion = useReducedMotion();
+  const ambientEnabled = useAmbientMotionEnabled();
   const ref = useRef<LottieView>(null);
 
   const playLoop = () => {
-    if (reducedMotion) return;
+    if (!ambientEnabled) return;
     ref.current?.play(LOOP_START_FRAME, LOOP_END_FRAME);
   };
 
   useEffect(() => {
-    if (reducedMotion) ref.current?.pause();
+    if (!ambientEnabled) ref.current?.pause();
     else playLoop();
     return () => ref.current?.pause();
-  }, [reducedMotion]);
+  }, [ambientEnabled]);
 
   return (
     <LottieView

@@ -153,7 +153,7 @@ export function SettingsInfoBanner({
     }
   };
   return (
-    <View className="px-6 mt-2">
+    <View className="px-5 mt-2">
       <View
         style={{
           borderRadius: 16,
@@ -257,8 +257,8 @@ export function SettingsSection({
     <View className="px-5 mt-7">
       {title && (
         <Text
-          className="text-ink-muted text-[11px] tracking-[1px] uppercase mb-2.5 ml-1"
-          style={{ fontFamily: "System", fontWeight: "700" }}
+          className="text-ink-secondary uppercase mb-2.5 ml-1"
+          style={[systemText.footnote, { fontWeight: "600", letterSpacing: 0.8 }]}
         >
           {title}
         </Text>
@@ -268,8 +268,8 @@ export function SettingsSection({
       </View>
       {footer && (
         <Text
-          className="text-ink-muted text-[12px] leading-[18px] mt-2.5 px-1"
-          style={{ fontFamily: "System", fontWeight: "400" }}
+          className="text-ink-secondary mt-2.5 px-1"
+          style={systemText.subheadline}
         >
           {footer}
         </Text>
@@ -320,10 +320,8 @@ export function SettingsLinkRow({
           )}
           <View className="flex-1 pr-2">
             <Text
-              className="text-[15px]"
               style={{
-                fontFamily: "System",
-                fontWeight: "600",
+                ...systemText.headline,
                 color: labelColor,
               }}
             >
@@ -331,8 +329,8 @@ export function SettingsLinkRow({
             </Text>
             {sublabel && (
               <Text
-                className="text-ink-muted text-[12px] mt-0.5"
-                style={{ fontFamily: "System", fontWeight: "400" }}
+                className="text-ink-secondary mt-1"
+                style={systemText.subheadline}
               >
                 {sublabel}
               </Text>
@@ -417,15 +415,15 @@ export function SettingsToggleRow({
         )}
         <View className="flex-1 pr-3">
           <Text
-            className="text-ink text-[15px]"
-            style={{ fontFamily: "System", fontWeight: "600" }}
+            className="text-ink"
+            style={systemText.headline}
           >
             {label}
           </Text>
           {sublabel && (
             <Text
-              className="text-ink-muted text-[12px] mt-0.5 leading-[17px]"
-              style={{ fontFamily: "System", fontWeight: "400" }}
+              className="text-ink-secondary mt-1"
+              style={systemText.subheadline}
             >
               {sublabel}
             </Text>
@@ -502,15 +500,15 @@ export function SettingsStaticRow({
         )}
         <View className="flex-1 pr-2">
           <Text
-            className="text-ink text-[15px]"
-            style={{ fontFamily: "System", fontWeight: "600" }}
+            className="text-ink"
+            style={systemText.headline}
           >
             {label}
           </Text>
           {sublabel && (
             <Text
-              className="text-ink-muted text-[12px] mt-0.5"
-              style={{ fontFamily: "System", fontWeight: "400" }}
+              className="text-ink-secondary mt-1"
+              style={systemText.subheadline}
             >
               {sublabel}
             </Text>
@@ -583,8 +581,8 @@ export function SettingsChoiceRow({
             </Text>
             {sublabel && (
               <Text
-                className="text-ink-muted text-[12px] mt-0.5"
-                style={{ fontFamily: "System", fontWeight: "400" }}
+                className="text-ink-secondary mt-1"
+                style={systemText.subheadline}
               >
                 {sublabel}
               </Text>

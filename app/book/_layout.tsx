@@ -1,3 +1,4 @@
+import { useColors } from "@/state/theme";
 import { View } from "react-native";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { Stack } from "expo-router";
@@ -27,15 +28,16 @@ import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
  * controllers occlude root-level React siblings on iOS.
  */
 export default function BookLayout() {
+  const colors = useColors();
   const reducedMotion = useReducedMotion();
   return (
-    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <View style={{ flex: 1 }}>
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: "transparent" },
-            animation: "slide_from_right",
+            contentStyle: { backgroundColor: colors.bg },
+            animation: reducedMotion ? "fade" : "slide_from_right",
           }}
         >
           <Stack.Screen name="[id]/express" options={{ animation: reducedMotion ? "fade" : "slide_from_right" }} />

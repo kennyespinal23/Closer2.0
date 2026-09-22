@@ -17,6 +17,7 @@ type Props = { milestone: Milestone; badgeIndex: number; onClose: () => void; sh
 /** Shared immersive presentation for earned badges and fresh unlocks. */
 export function MilestoneDetailView({ milestone, badgeIndex, onClose, newlyUnlocked = false }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const [continuePressed, setContinuePressed] = useState(false);
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const reduced = useReducedMotion();
@@ -87,7 +88,7 @@ export function MilestoneDetailView({ milestone, badgeIndex, onClose, newlyUnloc
         </View>}
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
-        <Pressable accessibilityRole="button" onPress={onClose} style={styles.continue}>
+        <Pressable accessibilityRole="button" onPress={onClose} onPressIn={() => setContinuePressed(true)} onPressOut={() => setContinuePressed(false)} style={[styles.continue, { opacity: continuePressed ? 0.86 : 1 }]}>
           <Text style={styles.continueText}>Continue</Text>
         </Pressable>
       </View>
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
   description: { ...systemText.body, fontSize: 19, fontWeight: "400", letterSpacing: 0, color: "#B9C1CA", textAlign: "center", lineHeight: 27, marginTop: 12 },
   earned: { flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center", marginTop: 28 },
   earnedText: { ...systemText.footnote, fontSize: 15, lineHeight: 21, letterSpacing: 0, color: "#94A1B1" },
-  reflection: { width: "100%", marginTop: 40, paddingTop: 24, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#FFFFFF20", gap: 12 },
+  reflection: { width: "100%", marginTop: 16, paddingTop: 24, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#FFFFFF20", gap: 12 },
   reference: { ...systemText.footnote, color: "#B9C1CA", textAlign: "center" },
   verse: { ...systemText.body, color: "#D7DDE4", lineHeight: 26, textAlign: "center" },
   message: { ...systemText.callout, color: "#94A1B1", lineHeight: 25, marginTop: 8 },

@@ -4,13 +4,15 @@ import {
   Easing,
   Pressable,
   StyleSheet,
+  ScrollView,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { HANDWRITTEN } from "@/components/HomeQuoteText";
+import { StatusBar } from "expo-status-bar";
+import { getMilestoneByDay } from "@/lib/milestones";
 import { StreakFireAnimation } from "@/components/StreakFireAnimation";
 import { SFSymbol } from "@/components/Symbol";
 import { minTouchTarget } from "@/constants/spacing";
@@ -57,7 +59,9 @@ export default function StreakScreen() {
     () => (milestoneParam ? Number(milestoneParam) : 0),
     [milestoneParam],
   );
-  const isMilestone = milestone > 0;
+  const earnedMilestone = getMilestoneByDay(milestone);
+  const isMilestone = !!earnedMilestone;
+  const leaving = useRef(false);
 
   const [continuePressed, setContinuePressed] = useState(false);
   const [sharePressed, setSharePressed] = useState(false);
@@ -126,6 +130,8 @@ export default function StreakScreen() {
   });
 
   const handleContinue = () => {
+    if (leaving.current) return;
+    leaving.current = true;
     haptics.soft();
     if (isMilestone) {
       router.replace({
@@ -153,39 +159,13 @@ export default function StreakScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
-        <View
-          style={{
-            paddingHorizontal: 20,
-            paddingTop: 4,
-            flexDirection: "row",
-            justifyContent: "flex-end",
-          }}
-        >
-          <Pressable
-            onPress={handleShare}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Share streak"
-            style={{
-              width: minTouchTarget,
-              height: minTouchTarget,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <SFSymbol
-              name="square.and.arrow.up"
-              size={20}
-              color={accent}
-              weight="semibold"
-            />
-          </Pressable>
-        </View>
-
-        <View
-          style={{
-            flex: 1,
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingVertical: 24,
             paddingHorizontal: 28,
             alignItems: "center",
             justifyContent: "center",
@@ -224,22 +204,25 @@ export default function StreakScreen() {
 
           <Text
             style={{
-              fontFamily: HANDWRITTEN,
+              fontFamily: "System",
               fontWeight: "400",
-              fontSize: 22,
-              lineHeight: 30,
+              fontSize: 19,
+              lineHeight: 26,
               color: scriptColor,
               textAlign: "center",
               marginTop: 22,
             }}
           >
-            Stay Consistent 🤎🌹✨
+            One day at a time.
           </Text>
-        </View>
+          <Text style={{ ...systemText.callout, color: colors.inkMuted, textAlign: "center", lineHeight: 24, marginTop: 12, maxWidth: 320 }}>
+            {earnedMilestone ? `You earned “${earnedMilestone.title}.” Your new badge is ready.` : "Today’s reading is complete. Come back tomorrow to keep your rhythm."}
+          </Text>
+        </ScrollView>
 
         <View
           style={{
-            paddingHorizontal: 24,
+            paddingHorizontal: 28,
             paddingBottom: 8,
             flexDirection: "row",
             alignItems: "center",
@@ -277,7 +260,7 @@ export default function StreakScreen() {
             onPressIn={() => setContinuePressed(true)}
             onPressOut={() => setContinuePressed(false)}
             accessibilityRole="button"
-            accessibilityLabel="Continue"
+            accessibilityLabel={isMilestone ? "View achievement" : "Back to Home"}
             style={{
               flex: 1,
               minHeight: 56,
@@ -288,7 +271,7 @@ export default function StreakScreen() {
             }}
           >
             <Text style={[typography.button, { color: "#FFFFFF" }]}>
-              Continue
+              {isMilestone ? "View achievement" : "Back to Home"}
             </Text>
           </Pressable>
         </View>
@@ -325,6 +308,7 @@ function StreakWeekCard({
         alignSelf: "stretch",
         marginTop: 28,
         borderRadius: 20,
+        borderCurve: "continuous",
         backgroundColor: surface,
         borderWidth: StyleSheet.hairlineWidth,
         borderColor: border,

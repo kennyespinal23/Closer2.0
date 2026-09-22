@@ -1,3 +1,5 @@
+import { StatusBar } from "expo-status-bar";
+import { useIsFocused } from "@react-navigation/native";
 import { findExpressBook } from "@/constants/expressBooks";
 import {
   Fragment,
@@ -10,7 +12,6 @@ import {
   type ReactNode,
 } from "react";
 import {
-  ActivityIndicator,
   Animated,
   AppState,
   type AppStateStatus,
@@ -364,6 +365,8 @@ function linesToReaderPages(
  *     so the pager doesn't flash between chapters
  */
 export default function ChapterReaderScreen() {
+  const readerFocused = useIsFocused();
+  const readerScheme = useResolvedScheme();
   const {
     id,
     chapter: chapterParam,
@@ -1526,6 +1529,7 @@ export default function ChapterReaderScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      {readerFocused && <StatusBar style={readerScheme === "dark" ? "light" : "dark"} />}
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <Header
           bookId={book.id}
@@ -2504,16 +2508,14 @@ function AdjacentChapterMeasurer({
 function LoadingView() {
   const colors = useColors();
   return (
-    <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 48 }}>
-      <ActivityIndicator size="small" color={colors.inkMuted} />
-      <Text
-        style={[
-          systemText.captionEmphasized,
-          { color: colors.inkMuted, marginTop: 16 },
-        ]}
-      >
-        Loading
-      </Text>
+    <View accessible accessibilityRole="progressbar" accessibilityLabel="Preparing chapter" accessibilityState={{ busy: true }} style={{ paddingHorizontal: 28, paddingTop: 32 }}>
+      <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={{ gap: 18 }}>
+        <View style={{ height: 28, width: "52%", borderRadius: 6, backgroundColor: colors.surface, marginBottom: 16 }} />
+        {[96, 100, 88, 98, 64, 94, 100, 76].map((width, index) => (
+          <View key={index} style={{ height: 12, width: `${width}%`, borderRadius: 4, backgroundColor: colors.surface }} />
+        ))}
+      </View>
+      <Text style={[systemText.footnote, { color: colors.inkMuted, marginTop: 28 }]}>Preparing your chapter…</Text>
     </View>
   );
 }

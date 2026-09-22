@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import LottieView from "lottie-react-native";
 
 const FIRE_STREAK_ANIMATION = require("../assets/lottie/FireStreakAnimation.json");
@@ -17,20 +18,25 @@ export function StreakFireAnimation({
 }: {
   size?: number;
 }) {
+  const reducedMotion = useReducedMotion();
   const ref = useRef<LottieView>(null);
 
   const playLoop = () => {
+    if (reducedMotion) return;
     ref.current?.play(LOOP_START_FRAME, LOOP_END_FRAME);
   };
 
   useEffect(() => {
-    playLoop();
-  }, []);
+    if (reducedMotion) ref.current?.pause();
+    else playLoop();
+    return () => ref.current?.pause();
+  }, [reducedMotion]);
 
   return (
     <LottieView
       ref={ref}
       source={FIRE_STREAK_ANIMATION}
+      progress={reducedMotion ? 0.5 : undefined}
       loop={false}
       autoPlay={false}
       onAnimationFinish={playLoop}

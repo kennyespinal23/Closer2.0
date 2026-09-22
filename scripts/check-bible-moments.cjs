@@ -68,5 +68,20 @@ const makeStore = () => loadTS('state/bibleMoments.ts', {
   await restarted.hydrateBibleMoments();
   assert.equal(restarted.useBibleMomentCollection().ids.length, 4);
   assert.equal(await restarted.unlockBibleMoment('first-promise'), 'existing');
+  // Only the final successful write may award a category, including concurrent opens.
+  disk.clear();
+  const prophecy = data.filter(moment => moment.tags.includes('prophecy'));
+  const final = prophecy[prophecy.length - 1];
+  for (const moment of prophecy.slice(0, -1)) disk.set(`closer.bible-moment.${moment.id}.v1`, 'true');
+  const almostComplete = makeStore();
+  await almostComplete.hydrateBibleMoments();
+  failWrite = true;
+  await assert.rejects(almostComplete.unlockBibleMomentWithRewards(final.id));
+  failWrite = false;
+  const rewards = await Promise.all([almostComplete.unlockBibleMomentWithRewards(final.id), almostComplete.unlockBibleMomentWithRewards(final.id)]);
+  assert.equal(rewards.filter(result => result.categories.includes('prophecy')).length, 1);
+  const afterCompletion = makeStore();
+  await afterCompletion.hydrateBibleMoments();
+  assert.deepEqual(await afterCompletion.unlockBibleMomentWithRewards(final.id), { status: 'existing', categories: [] });
   console.log(`Verified 78 cards, ${anchors.size} verse triggers, category totals, legacy unlocks, concurrent discovery, write failure, and relaunch persistence.`);
 })().catch(error => { console.error(error); process.exitCode = 1; });

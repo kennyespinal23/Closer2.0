@@ -1,3 +1,4 @@
+import { ReaderListeningPanel } from "@/components/audio/ReaderListeningPanel";
 import { MomentShimmerText } from "@/components/MomentShimmerText";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
@@ -18,6 +19,7 @@ import {
   type AppStateStatus,
   FlatList,
   Platform,
+  PixelRatio,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -166,7 +168,7 @@ function readerPaginationKey(
   pageContentWidth: number,
   pageContentHeight: number,
 ): string {
-  return `${translationId}:${bookId}:${chapter}:${textSizeId}:${Math.round(pageContentWidth)}x${Math.round(pageContentHeight)}`;
+  return `${translationId}:${bookId}:${chapter}:${textSizeId}:${PixelRatio.getFontScale()}:${Math.round(pageContentWidth)}x${Math.round(pageContentHeight)}`;
 }
 
 type ReaderPaginationContext = {
@@ -743,7 +745,7 @@ export default function ChapterReaderScreen() {
   //
   // Pages are a derived value (set after measurement). While we wait
   // for measurement, the visible reader shows a loading state.
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   // Reading margin. 16pt hugged the screen edge; 24pt gives the text
   // column the comfortable gutter Apple Books / the iOS readable-content
@@ -773,7 +775,7 @@ export default function ChapterReaderScreen() {
     pagerHeight - PAGE_PAD_Y_TOP - toolbarZone - READER_TEXT_TOOLBAR_GAP,
   );
   // Chapter heading + ornament on page 1 only (~ label + title + rule).
-  const FIRST_PAGE_HEADING_HEIGHT = 96 * Math.sqrt(textSize.scale);
+  const FIRST_PAGE_HEADING_HEIGHT = 96 * Math.sqrt(textSize.scale) * fontScale;
 
   const [pages, setPages] = useState<ReaderPage[] | null>(null);
   const [currentPageIdx, setCurrentPageIdx] = useState(0);
@@ -1216,6 +1218,7 @@ export default function ChapterReaderScreen() {
     pageContentWidth,
     pageContentHeight,
     reloadKey,
+    fontScale,
     tryCommitTargetChapter,
     queueMeasureTarget,
   ]);
@@ -1375,6 +1378,7 @@ export default function ChapterReaderScreen() {
   }, [goalToastVisible, goalToastAnim]);
 
   // ─── Contents drawer (Apple-Books chapter list) ─────────────────
+  const [listeningOpen, setListeningOpen] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
   const pendingExpress = useRef(false);
 
@@ -1581,7 +1585,7 @@ export default function ChapterReaderScreen() {
 
         {measureTarget ? (
           <PendingChapterMeasurer
-            key={`${translation.id}:${measureTarget.bookId}:${measureTarget.chapter}:${textSize.id}:${pageContentWidth}:${pageContentHeight}`}
+            key={`${translation.id}:${measureTarget.bookId}:${measureTarget.chapter}:${textSize.id}:${fontScale}:${pageContentWidth}:${pageContentHeight}`}
             target={measureTarget}
             cacheKey={readerPaginationKey(
               measureTarget.bookId,
@@ -1846,6 +1850,7 @@ export default function ChapterReaderScreen() {
           />
         ) : (
           <ReaderToolbar
+            onAudio={() => { haptics.soft(); setListeningOpen(true); }}
             onContents={() => setContentsOpen(true)}
             textSizeId={textSize.id}
             onChangeTextSize={setTextSize}
@@ -1873,6 +1878,7 @@ export default function ChapterReaderScreen() {
         ) : null}
       </View>
 
+      <ReaderListeningPanel visible={listeningOpen} onClose={() => setListeningOpen(false)} bookId={book.id} bookName={book.name} chapter={chapter} />
       <ReaderTutorial />
       <BibleMomentCard moment={openMoment} onClose={() => setOpenMoment(null)} />
       <VerseMeaningCard
@@ -2474,7 +2480,7 @@ function PendingChapterMeasurer({
 export function BookReaderPreparation({ bookId, chapter }: { bookId: string; chapter: number }) {
   const focused = useIsFocused();
   const { translation, textSize } = usePreferences();
-  const { width, height } = useWindowDimensions();
+  const { width, height, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [prepared, setPrepared] = useState<{ key: string; data: Chapter } | null>(null);
   const [, setRevision] = useState(0);
@@ -2496,7 +2502,7 @@ export function BookReaderPreparation({ bookId, chapter }: { bookId: string; cha
   if (!focused || prepared?.key !== key || readerPaginationCache.has(key)) return null;
   return <AdjacentChapterMeasurer key={key} bookId={bookId} chapter={chapter}
     verses={prepared.data.verses} cacheKey={key} pageContentWidth={contentWidth}
-    pageContentHeight={contentHeight} firstPageHeadingHeight={96 * Math.sqrt(textSize.scale)}
+    pageContentHeight={contentHeight} firstPageHeadingHeight={96 * Math.sqrt(textSize.scale) * fontScale}
     scale={textSize.scale} onMeasured={measured} />;
 }
 
@@ -3451,6 +3457,7 @@ function ToolbarChip({
 }
 
 function ReaderToolbar({
+  onAudio,
   onContents,
   textSizeId,
   onChangeTextSize,
@@ -3458,6 +3465,7 @@ function ReaderToolbar({
   onChangeTranslation,
   initialSheet,
 }: {
+  onAudio: () => void;
   onContents: () => void;
   textSizeId: TextSizeId;
   onChangeTextSize: (id: TextSizeId) => void;
@@ -3580,6 +3588,7 @@ function ReaderToolbar({
         }}
       >
         {Platform.OS === "ios" ? <NativeReaderControls
+          onAudio={onAudio}
           translation={translation.tag}
           disabled={versionOpen || versionSheetBusy}
           onContents={() => { haptics.soft(); onContents(); }}
@@ -3664,6 +3673,7 @@ function ReaderToolbar({
             </Text>
           </ToolbarChip>
 
+          <ToolbarChip containerStyle={circleStyle} accessibilityLabel="Listen to this chapter" onPress={onAudio}><SFSymbol name="headphones" size={20} color={iconColor} /></ToolbarChip>
           <ToolbarChip
             containerStyle={circleStyle}
             accessibilityLabel={

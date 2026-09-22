@@ -19,10 +19,12 @@ export default function BibleAudioScreen() {
 
 function AudioPreview({ book }: { book: Book }) {
   const router = useRouter();
+  const { chapter: chapterParam } = useLocalSearchParams<{ chapter?: string }>();
+  const requestedChapter = Number(chapterParam);
   const { lastVisited } = useProgress();
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
-  const [chapter, setChapter] = useState(lastVisited?.bookId === book.id ? Math.min(book.chapters, Math.max(1, lastVisited.chapter)) : 1);
+  const [chapter, setChapter] = useState(Number.isInteger(requestedChapter) && requestedChapter >= 1 && requestedChapter <= book.chapters ? requestedChapter : lastVisited?.bookId === book.id ? Math.min(book.chapters, Math.max(1, lastVisited.chapter)) : 1);
   const [rate, setRate] = useState(1);
   const [chaptersOpen, setChaptersOpen] = useState(false);
   return <>

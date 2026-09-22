@@ -1,3 +1,5 @@
+import { MomentCategoryBadges } from "@/components/MomentCategoryBadges";
+import type { MomentCategory } from "@/constants/bibleMoments";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { JourneySummary } from "@/components/JourneySummary";
 import { BibleMomentsCollection } from "@/components/BibleMomentsCollection";
@@ -27,6 +29,7 @@ export type StreakDashboardProps = {
 };
 
 export function StreakDashboard({ daysOverride, focusMoments = false, journey = false, focusBadges = false }: StreakDashboardProps) {
+  const [momentCategory, setMomentCategory] = useState<MomentCategory | "all">("all");
   const scrollRef = useRef<ScrollView>(null);
   const jumped = useRef(false);
   const [section, setSection] = useState(focusMoments ? 1 : focusBadges ? 2 : 0);
@@ -57,7 +60,7 @@ export function StreakDashboard({ daysOverride, focusMoments = false, journey = 
   return (
     <View style={{ flex: 1 }}>
       {journey && <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 }}><SegmentedControl appearance={scheme} values={["Overview", "Moments", "Badges"]} selectedIndex={section} onChange={event => { setSection(event.nativeEvent.selectedSegmentIndex); scrollRef.current?.scrollTo({ y: 0, animated: false }); }} style={{ height: 36 }} /></View>}
-    <ScrollView
+    {journey && section === 1 ? <BibleMomentsCollection standalone initialCategory={momentCategory} /> : <ScrollView
       ref={scrollRef}
       contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
       showsVerticalScrollIndicator={false}
@@ -248,8 +251,9 @@ export function StreakDashboard({ daysOverride, focusMoments = false, journey = 
           requestAnimationFrame(() => scrollRef.current?.scrollTo({ y, animated: false }));
         }
       }}><BibleMomentsCollection /></View>}
+      {journey && section === 2 && <MomentCategoryBadges onOpen={category => { setMomentCategory(category); setSection(1); }} />}
       {(!journey || section === 2) && <MilestonesSection longestStreak={milestoneUnlockStreak} />}
-    </ScrollView>
+    </ScrollView>}
     </View>
   );
 }

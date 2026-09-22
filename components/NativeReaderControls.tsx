@@ -3,8 +3,8 @@ import { accessibilityLabel, background, clipShape, frame, glassEffect } from "@
 import { isGlassEffectAPIAvailable, isLiquidGlassAvailable } from "expo-glass-effect";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
-export function NativeReaderControls({ translation, disabled, onContents, onVersion, onTextSize, onAppearance }: {
-  translation: string; disabled: boolean; onContents: () => void; onVersion: () => void; onTextSize: () => void; onAppearance: () => void;
+export function NativeReaderControls({ translation, disabled, onContents, onVersion, onTextSize, onAppearance, onAudio }: {
+  translation: string; disabled: boolean; onContents: () => void; onVersion: () => void; onTextSize: () => void; onAppearance: () => void; onAudio: () => void;
 }) {
   const scheme = useResolvedScheme();
   const colors = useColors();
@@ -14,17 +14,20 @@ export function NativeReaderControls({ translation, disabled, onContents, onVers
     : [background(scheme === "dark" ? "#2C2C2E" : "#FFFFFF"), clipShape("roundedRectangle", 24)];
   // Match the reader's reserved 48pt toolbar height. Plain native buttons
   // provide press feedback without four independently resizing glass capsules.
-  return <Host colorScheme={scheme} style={{ width: 268, height: 48 }}>
+  return <Host colorScheme={scheme} style={{ width: 280, height: 48 }}>
     <HStack spacing={12}>
       <HStack spacing={0} modifiers={surface}>
         <Button variant="plain" onPress={onContents} modifiers={[accessibilityLabel("Open chapter contents")]}>
-          <Image systemName="list.bullet" size={20} color={colors.ink} modifiers={[frame({ width: 64, height: 48 })]} />
+          <Image systemName="list.bullet" size={20} color={colors.ink} modifiers={[frame({ width: 52, height: 48 })]} />
         </Button>
         <Button variant="plain" disabled={disabled} onPress={onVersion} modifiers={[accessibilityLabel(`Bible version ${translation}`)]}>
-          <Text size={16} weight="semibold" color={colors.ink} lineLimit={1} modifiers={[frame({ width: 80, height: 48 })]}>{translation}</Text>
+          <Text size={16} weight="semibold" color={colors.ink} lineLimit={1} modifiers={[frame({ width: 68, height: 48 })]}>{translation}</Text>
         </Button>
         <Button variant="plain" onPress={onTextSize} modifiers={[accessibilityLabel("Text size")]}>
-          <Text size={20} weight="medium" color={colors.ink} lineLimit={1} modifiers={[frame({ width: 64, height: 48 })]}>Aa</Text>
+          <Text size={20} weight="medium" color={colors.ink} lineLimit={1} modifiers={[frame({ width: 52, height: 48 })]}>Aa</Text>
+        </Button>
+        <Button variant="plain" onPress={onAudio} modifiers={[accessibilityLabel("Listen to this chapter")]}>
+          <Image systemName="headphones" size={20} color={colors.ink} modifiers={[frame({ width: 48, height: 48 })]} />
         </Button>
       </HStack>
       <Button variant="plain" onPress={onAppearance} modifiers={[...surface, accessibilityLabel(scheme === "dark" ? "Switch to light mode" : "Switch to dark mode")]}>

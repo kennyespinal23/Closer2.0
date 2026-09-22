@@ -23,7 +23,6 @@ import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
-import { BookCover } from "@/components/BookCover";
 import { BubbleBackButton } from "@/components/BubbleBackButton";
 import { SFSymbol, type SFSymbolName } from "@/components/Symbol";
 import { CATEGORY_COVER_PALETTE, getBookCover } from "@/constants/bookCovers";
@@ -36,7 +35,7 @@ import * as haptics from "@/lib/haptics";
 import { goBackOr } from "@/lib/navigation";
 import { systemText } from "@/lib/typography";
 import { useProgress } from "@/state/progress";
-import { useColors } from "@/state/theme";
+import { useColors, useResolvedScheme } from "@/state/theme";
 
 /** Immersive artwork-led book overview, with details and chapters below. */
 export default function BookOverviewScreen() {
@@ -160,6 +159,12 @@ function BookDetail({ book }: { book: Book }) {
   const resumeChapter = lastVisited?.bookId === book.id ? lastVisited.chapter : null;
   const readCount = new Set(chaptersRead.filter(c => c.bookId === book.id && c.chapter >= 1 && c.chapter <= book.chapters).map(c => c.chapter)).size;
   const started = resumeChapter !== null || readCount > 0;
+  // Same four-minute chapter estimate used by the reading progress strip.
+  const totalMinutes = book.chapters * 4;
+  const totalReadingTime = totalMinutes >= 60
+    ? `${Math.floor(totalMinutes / 60)} hr${totalMinutes % 60 ? ` ${totalMinutes % 60} min` : ""}`
+    : `${totalMinutes} min`;
+
   const nextUnread = Array.from({ length: book.chapters }, (_, i) => i + 1).find(chapter => !hasReadChapter(book.id, chapter));
   const continueChapter = resumeChapter !== null && !hasReadChapter(book.id, resumeChapter) ? resumeChapter : nextUnread ?? 1;
   // Load the selected translation while the cover is visible, before the tap.
@@ -193,13 +198,14 @@ function BookDetail({ book }: { book: Book }) {
   // a fixed text box. The lower edge stays readable regardless of artwork color.
   const artSpace = Math.max(200, Math.min(height * 0.52, width * 1.2) - 88);
   const font = (size: number) => size * fontScale;
+  const chapterColumns = Math.max(2, Math.min(5, Math.floor((width - 40) / (68 * Math.max(1, fontScale)))));
   return (
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
       <BookReaderPreparation bookId={book.id} chapter={started ? continueChapter : 1} />
       <StatusBar style="light" />
       <Animated.ScrollView ref={scrollRef} onScroll={scrollHandler} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="never"
-        contentContainerStyle={{ paddingBottom: insets.bottom + focusSpacing + dockHeight + 24 }}>
-        <View style={{ minHeight: height - focusSpacing, justifyContent: "flex-end", paddingTop: insets.top + 64 + artSpace, paddingBottom: Math.max(insets.bottom, 20) + 16 }}>
+        contentContainerStyle={{ backgroundColor: colors.bg, paddingBottom: focusSpacing + dockHeight + 24 }}>
+        <View style={{ backgroundColor: "#000000", minHeight: height - focusSpacing, justifyContent: "flex-end", paddingTop: insets.top + 64 + artSpace, paddingBottom: Math.max(insets.bottom, 20) + 16 }}>
           <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
             {cover ? <Image source={cover} contentFit="cover" contentPosition="top center" style={[StyleSheet.absoluteFill, { bottom: undefined, height: "84%" }]} /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: CATEGORY_COVER_PALETTE[book.category].top }]} />}
             <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
@@ -217,14 +223,14 @@ function BookDetail({ book }: { book: Book }) {
           <View onLayout={event => { heroContentY.value = event.nativeEvent.layout.y; }} style={{ paddingHorizontal: 32, width: "100%", maxWidth: 540, alignSelf: "center", alignItems: "center" }}>
             <Text allowFontScaling={false} style={{ fontSize: font(10), lineHeight: font(16), letterSpacing: 2.4, fontWeight: "600", color: "#D3D7DE", textAlign: "center" }}>{book.testament === "old" ? "OLD TESTAMENT" : "NEW TESTAMENT"}</Text>
             <Text onLayout={event => { heroTitleBottom.value = event.nativeEvent.layout.y + event.nativeEvent.layout.height; }} accessibilityRole="header" allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(36), lineHeight: font(44), fontWeight: "700", letterSpacing: -0.8, color: "white", textAlign: "center", marginTop: 6 }}>{book.name}</Text>
-            <Text allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(15), lineHeight: font(22), color: "#D3D7DE", textAlign: "center", marginTop: 6 }}>{theme || blurb}</Text>
-            <Text allowFontScaling={false} style={{ fontSize: font(12), lineHeight: font(18), color: "#B3BBC7", marginTop: 10 }}>{book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}</Text>
+            <Text allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(15), lineHeight: font(22), color: "#D3D7DE", textAlign: "center", marginTop: 8 }}>{theme || blurb}</Text>
+            <Text allowFontScaling={false} style={{ fontSize: font(12), lineHeight: font(18), color: "#B3BBC7", textAlign: "center", marginTop: 12 }}>{book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}{!started ? ` · About ${totalReadingTime}` : ""}</Text>
             <View onLayout={event => { heroActionBottom.value = event.nativeEvent.layout.y + event.nativeEvent.layout.height; }} style={{ width: "100%", alignItems: "center" }}>
             {started && <BookReadingProgress read={readCount} total={book.chapters}
               onContinue={() => { haptics.soft(); openChapter(continueChapter); }}
               continueLabel={`${readCount === book.chapters ? "Read again" : "Continue reading"}, ${book.name}, chapter ${continueChapter}`}
             />}
-            {!started && <Animated.View style={[{ marginTop: 18 }, readButtonStyle]}>
+            {!started && <Animated.View style={[{ marginTop: 16 }, readButtonStyle]}>
             <Pressable onPress={() => { haptics.soft(); openChapter(resumeChapter ?? 1); }} onPressIn={() => { animateReadPress(true); prefetchChapter(book.id, resumeChapter ?? 1, translation.id); }} onPressOut={() => animateReadPress(false)} accessibilityRole="button" accessibilityLabel={resumeChapter ? `Continue ${book.name}, chapter ${resumeChapter}` : `Read ${book.name}, chapter 1`}
               style={{ backgroundColor: "#FFFFFF", borderRadius: 999, minHeight: 48, paddingHorizontal: 26, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
               <Text allowFontScaling={false} style={{ color: "#101722", fontSize: font(15), lineHeight: font(22), fontWeight: "700" }}>{resumeChapter ? "Continue Reading" : "Read Now"}</Text>
@@ -232,12 +238,12 @@ function BookDetail({ book }: { book: Book }) {
             </Pressable>
             </Animated.View>}
             </View>
-            {express && <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name} Express version`} onPress={() => { haptics.soft(); router.push(`/book/${book.id}/express`); }} style={{ minHeight: 48, marginTop: 12, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24, borderWidth: 1, borderColor: "#FFFFFF40", backgroundColor: "#FFFFFF10", flexDirection: "row", alignItems: "center", gap: 10 }}>
+            {express && <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name} Express version`} onPress={() => { haptics.soft(); router.push(`/book/${book.id}/express`); }} style={{ minHeight: 48, marginTop: 8, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24, borderWidth: 1, borderColor: "#FFFFFF40", backgroundColor: "#FFFFFF10", flexDirection: "row", alignItems: "center", gap: 10 }}>
               <SFSymbol name="bolt" color="white" size={17} />
               <Text style={{ color: "white", fontSize: 15, fontWeight: "600" }}>Read Express</Text>
               <Text style={{ color: "#CDD3DC", fontSize: 13 }}>{expressReadingMinutes(express)} min</Text>
             </Pressable>}
-            <Pressable onPress={() => scrollTo(aboutY)} accessibilityRole="button" accessibilityLabel="About this book and chapters" style={{ minHeight: 44, marginTop: 10, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12 }}>
+            <Pressable onPress={() => scrollTo(aboutY)} accessibilityRole="button" accessibilityLabel="About this book and chapters" style={{ minHeight: 44, marginTop: 8, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12 }}>
               <Text allowFontScaling={false} style={{ fontSize: font(12), lineHeight: font(18), color: "#CDD3DC" }}>About this book</Text><SFSymbol name="chevron.down" size={12} color="#CDD3DC" />
             </Pressable>
           </View>
@@ -245,19 +251,19 @@ function BookDetail({ book }: { book: Book }) {
         <View onLayout={e => setAboutY(e.nativeEvent.layout.y)} style={{ backgroundColor: colors.bg, paddingVertical: 28 }}>
           <View style={{ paddingHorizontal: 24 }}>
             <Text accessibilityRole="header" style={[systemText.title2, { color: colors.ink }]}>About {book.name}</Text>
-            <Text style={[systemText.footnote, { color: colors.inkMuted, marginTop: 8, marginBottom: 16 }]}>{author} · {book.category} · Approximately {book.chapters * 4} minutes</Text>
+            <Text style={[systemText.footnote, { color: colors.inkMuted, marginTop: 8, marginBottom: 16 }]}>{author} · {book.category}</Text>
             {blurb ? <AboutBlurb text={blurb} color={colors.inkMuted} /> : null}
           </View>
           <View onLayout={e => setChaptersY(e.nativeEvent.layout.y)} style={{ paddingHorizontal: 24, marginTop: 28 }}>
             <Text accessibilityRole="header" style={[systemText.title3, { color: colors.ink }]}>Chapters</Text>
-            <Text style={[systemText.footnote, { color: colors.inkMuted, marginTop: 4, marginBottom: 12 }]}>{readCount > 0 ? `${readCount} of ${book.chapters} read` : `${book.chapters} total`}</Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", marginHorizontal: -3 }}>
-              {Array.from({ length: book.chapters }, (_, i) => i + 1).map(chapter => <ChapterTile key={chapter} number={chapter} read={hasReadChapter(book.id, chapter)} isResume={chapter === resumeChapter} onPress={() => openChapter(chapter)} />)}
+            <Text style={[systemText.footnote, { color: colors.inkMuted, marginTop: 4, marginBottom: 12 }]}>{readCount === book.chapters ? "All chapters completed" : started ? `${readCount} of ${book.chapters} read · Continue at chapter ${continueChapter}` : `${book.chapters} chapters · Choose where to begin`}</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", marginHorizontal: -4 }}>
+              {Array.from({ length: book.chapters }, (_, i) => i + 1).map(chapter => <ChapterTile key={chapter} number={chapter} read={hasReadChapter(book.id, chapter)} columns={chapterColumns} isResume={started && readCount < book.chapters && chapter === continueChapter} onPress={() => openChapter(chapter)} />)}
             </View>
           </View>
           {siblings.length > 0 && <View style={{ marginTop: 28 }}>
-            <Text accessibilityRole="header" style={[systemText.title3, { color: colors.ink, paddingHorizontal: 24, marginBottom: 16 }]}>More {book.category}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, gap: 12 }}>
+            <Text accessibilityRole="header" style={[systemText.title3, { color: colors.ink, paddingHorizontal: 24, marginBottom: 16 }]}>More in {book.category}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 16, gap: 16 }}>
               {siblings.map(sibling => <SiblingCard key={sibling.id} book={sibling} onPress={() => router.replace(`/book/${sibling.id}`)} />)}
             </ScrollView>
           </View>}
@@ -390,80 +396,72 @@ function AboutBlurb({ text, color }: { text: string; color: string }) {
   );
 }
 
-function ChapterTile({
-  number,
-  read,
-  isResume,
-  onPress,
-}: {
+function ChapterTile({ number, read, isResume, columns, onPress }: {
   number: number;
   read: boolean;
   isResume: boolean;
+  columns: number;
   onPress: () => void;
 }) {
-  const { primary, ink, border, surface, accentSoft } = useColors();
-  const showReadGlow = read && !isResume;
+  const colors = useColors();
+  const dark = useResolvedScheme() === "dark";
+  const [pressed, setPressed] = useState(false);
+  const green = dark ? "#30D158" : "#248A3D";
   return (
-    <View style={{ width: "20%", padding: 3 }}>
+    <View style={{ width: `${100 / columns}%`, padding: 4 }}>
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Chapter ${number}${read ? ", completed" : isResume ? ", continue reading here" : ", unread"}`}
+        accessibilityState={{ selected: isResume }}
         onPress={onPress}
-        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        onPressIn={() => setPressed(true)}
+        onPressOut={() => setPressed(false)}
+        style={{
+          flex: 1, minHeight: 76, paddingVertical: 16, paddingHorizontal: 4,
+          borderRadius: 16, borderCurve: "continuous",
+          alignItems: "center", justifyContent: "center", gap: 4,
+          opacity: pressed ? 0.7 : 1,
+          backgroundColor: isResume ? colors.ink : colors.surfaceSecondary,
+          borderWidth: 1,
+          borderColor: isResume ? colors.ink : "transparent",
+        }}
       >
-        <View
-          style={{
-            aspectRatio: 1,
-            borderRadius: spacing[12],
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: isResume || showReadGlow ? accentSoft : surface,
-            borderWidth: 1,
-            borderColor: isResume || showReadGlow ? primary : border,
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              fontSize: 14,
-              color: isResume || showReadGlow ? primary : ink,
-            }}
-          >
-            {number}
-          </Text>
-          {showReadGlow ? (
-            <View style={{ position: "absolute", top: 5, right: 5 }}>
-              <SFSymbol name="checkmark.circle.fill" size={14} color={primary} />
-            </View>
-          ) : null}
-        </View>
+        <Text style={{ fontFamily: "System", fontWeight: isResume ? "700" : "500", fontSize: 18, fontVariant: ["tabular-nums"], color: isResume ? colors.bg : colors.ink }}>{number}</Text>
+        {isResume && <Text style={{ fontFamily: "System", fontSize: 11, fontWeight: "600", color: colors.bg }}>Continue</Text>}
+        {read && <View style={{ position: "absolute", top: 6, right: 6 }}><SFSymbol name="checkmark.circle.fill" size={13} color={green} /></View>}
       </Pressable>
     </View>
   );
 }
 
 function SiblingCard({ book, onPress }: { book: Book; onPress: () => void }) {
-  const { ink } = useColors();
+  const colors = useColors();
+  const dark = useResolvedScheme() === "dark";
+  const [pressed, setPressed] = useState(false);
+  const { chaptersRead, lastVisited } = useProgress();
+  const { fontScale } = useWindowDimensions();
+  const read = new Set(chaptersRead.filter(entry => entry.bookId === book.id && entry.chapter >= 1 && entry.chapter <= book.chapters).map(entry => entry.chapter)).size;
+  const started = read > 0 || lastVisited?.bookId === book.id;
+  const complete = read === book.chapters;
+  const percent = Math.round(read / book.chapters * 100);
+  const progressColor = complete ? (dark ? "#30D158" : "#248A3D") : colors.inkMuted;
+  const status = complete ? "Completed" : read > 0 ? `${percent}% read` : started ? "Started" : "";
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1, width: 110 })}
-    >
-      <View style={{ width: 110 }}>
-        <BookCover book={book} variant="card" />
+    <Pressable accessibilityRole="button" accessibilityLabel={`${book.name}, ${book.chapters} chapters${status ? `, ${status}` : ""}`} onPress={onPress}
+      onPressIn={() => setPressed(true)} onPressOut={() => setPressed(false)}
+      style={{ width: 120, opacity: pressed ? 0.75 : 1 }}>
+      <Image source={getBookCover(book.id)} contentFit="cover" transition={0}
+        style={{ width: 120, height: 160, borderRadius: 16, backgroundColor: colors.surfaceSecondary }} />
+      <Text numberOfLines={2} style={{ marginTop: 8, minHeight: 40 * fontScale, fontFamily: "System", fontSize: 14, lineHeight: 20, fontWeight: "600", color: colors.ink }}>{book.name}</Text>
+      <View style={{ minHeight: 28 * fontScale, marginTop: 4, gap: 6 }}>
+        {started && <>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            {complete && <SFSymbol name="checkmark.circle.fill" size={12} color={progressColor} />}
+            <Text style={{ fontFamily: "System", fontSize: 12, lineHeight: 16, color: progressColor }}>{status}</Text>
+          </View>
+          {!complete && <View style={{ height: 3, borderRadius: 2, backgroundColor: colors.border, overflow: "hidden" }}><View style={{ height: 3, width: `${percent}%`, backgroundColor: progressColor, borderRadius: 2 }} /></View>}
+        </>}
       </View>
-      <Text
-        style={{
-          marginTop: spacing[8],
-          fontFamily: "System",
-          fontWeight: "700",
-          fontSize: 13,
-          color: ink,
-          textAlign: "center",
-        }}
-        numberOfLines={2}
-      >
-        {book.name}
-      </Text>
     </Pressable>
   );
 }

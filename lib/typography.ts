@@ -3,21 +3,8 @@ import { Platform, type TextStyle } from "react-native";
 /**
  * Closer typography system.
  *
- * Two faces. One job each.
- *
- *   • SF Pro       → the entire interface and reading surface.
- *                    Nav, tab bar, buttons, cards, the home
- *                    screen, devotional titles, body copy,
- *                    section headers, settings, streaks, App
- *                    Blocks, protection screens. Everything.
- *
- *   • New York     → reserved for spiritual pause moments.
- *                    Scripture callouts. Opening and closing
- *                    reflective quotes. Short blockquotes that
- *                    are meant to feel like a breath. Nothing
- *                    else. The serif is the punctuation of the
- *                    app's voice — it should feel SPECIAL when
- *                    it appears, not familiar.
+ * SF Pro is the interface face: navigation, cards, controls and metadata.
+ * New York is the scripture face: Bible reading and reflective quotations.
  *
  * Both faces are iOS system fonts (SF Pro since iOS 9, New York
  * since iOS 13), so we don't ship font files for them. Setting

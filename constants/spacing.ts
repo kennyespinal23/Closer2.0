@@ -2,7 +2,7 @@
  * Shared spacing / sizing scale for Closer UI chrome.
  *
  * The primary scale is the common 4pt layout convention
- * (4 / 8 / 12 / 16 / 24 / 32 / 40 / 48) — an internal product
+ * (4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 48) — an internal product
  * standard for new work, not a literal Apple HIG rule.
  *
  * Apple *does* require a separate touch-target floor:
@@ -28,6 +28,7 @@ export const spacing = {
   8: 8,
   12: 12,
   16: 16,
+  20: 20,
   24: 24,
   32: 32,
   40: 40,
@@ -46,7 +47,7 @@ export const space = {
   sm: spacing[8],
   /** Sheet / list related gap. */
   md: spacing[12],
-  /** Standard horizontal page inset. */
+  /** Standard content inset. */
   lg: spacing[16],
   /** Primary CTA / section separation. */
   xl: spacing[24],
@@ -76,7 +77,7 @@ export const minTouchTarget = 44;
  * | 6      | spacing[4] or [8]   |
  * | 10     | spacing[8] or [12]  |
  * | 14     | spacing[12] or [16] |
- * | 20     | spacing[16] or [24] |
+ * | 20     | spacing[20]         |
  * | 28     | spacing[24] or [32] |
  */
 export const spacingLegacy = {

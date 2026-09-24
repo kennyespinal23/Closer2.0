@@ -1,4 +1,5 @@
 import { useAmbientMotionEnabled } from "@/lib/useAmbientMotionEnabled";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
@@ -28,6 +29,38 @@ export function MilestoneDetailView({ milestone, badgeIndex, onClose, newlyUnloc
   const size = Math.min(width * 0.62, height * 0.31, 280);
   const float = useSharedValue(0);
   const entrance = useSharedValue(1);
+  const tiltX = useSharedValue(0);
+  const tiltY = useSharedValue(0);
+  const touch = useSharedValue(0);
+  const badgeGesture = Gesture.Pan()
+    .enabled(!reduced)
+    .minDistance(0)
+    .onBegin(event => {
+      cancelAnimation(tiltX);
+      cancelAnimation(tiltY);
+      touch.value = withTiming(1, { duration: 120 });
+      tiltY.value = Math.max(-8, Math.min(8, (event.x / size - 0.5) * 16));
+      tiltX.value = Math.max(-8, Math.min(8, (0.5 - event.y / size) * 16));
+    })
+    .onUpdate(event => {
+      tiltY.value = Math.max(-8, Math.min(8, (event.x / size - 0.5) * 16));
+      tiltX.value = Math.max(-8, Math.min(8, (0.5 - event.y / size) * 16));
+    })
+    .onFinalize(() => {
+      tiltX.value = withSpring(0, { damping: 20, stiffness: 180 });
+      tiltY.value = withSpring(0, { damping: 20, stiffness: 180 });
+      touch.value = withTiming(0, { duration: 180 });
+    });
+  useEffect(() => {
+    if (reduced) {
+      cancelAnimation(tiltX);
+      cancelAnimation(tiltY);
+      cancelAnimation(touch);
+      tiltX.value = 0;
+      tiltY.value = 0;
+      touch.value = 0;
+    }
+  }, [reduced, tiltX, tiltY, touch]);
   useEffect(() => {
     cancelAnimation(float);
     cancelAnimation(entrance);
@@ -39,16 +72,23 @@ export function MilestoneDetailView({ milestone, badgeIndex, onClose, newlyUnloc
     return () => cancelAnimation(entrance);
   }, [reduced, newlyUnlocked, milestone.day]);
   useEffect(() => {
-    if (ambientEnabled) {
+    float.value = 0;
+    if (ambientEnabled && !reduced) {
       float.value = withRepeat(withSequence(
         withTiming(1, { duration: 3200, easing: Easing.inOut(Easing.sin) }),
         withTiming(0, { duration: 3200, easing: Easing.inOut(Easing.sin) }),
       ), -1);
     }
     return () => cancelAnimation(float);
-  }, [ambientEnabled, milestone.day]);
-  const badgeStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -3 * float.value }, { scale: entrance.value }, { rotate: `${reduced ? 0 : (float.value - 0.5) * 2}deg` }] }));
-  const glowStyle = useAnimatedStyle(() => ({ opacity: 0.7 + float.value * 0.15 }));
+  }, [ambientEnabled, reduced, milestone.day]);
+  const badgeStyle = useAnimatedStyle(() => ({ transform: [
+    { perspective: 650 },
+    { translateY: -3 * float.value - touch.value * 5 },
+    { scale: entrance.value + touch.value * 0.035 },
+    { rotateX: `${reduced ? 0 : tiltX.value}deg` },
+    { rotateY: `${reduced ? 0 : Math.max(-8, Math.min(8, tiltY.value + float.value * 3 * (1 - touch.value)))}deg` },
+  ] }));
+  const glowStyle = useAnimatedStyle(() => ({ opacity: 0.7 + float.value * 0.10 + touch.value * 0.1 }));
 
   return (
     <View style={styles.root}>
@@ -77,9 +117,15 @@ export function MilestoneDetailView({ milestone, badgeIndex, onClose, newlyUnloc
               {[[55,85,5],[110,30,4],[286,45,6],[330,115,4],[40,180,3],[320,235,3]].map(([x,y,s], i) => <Path key={i} d={`M ${x} ${y-s} Q ${x} ${y} ${x+s} ${y} Q ${x} ${y} ${x} ${y+s} Q ${x} ${y} ${x-s} ${y} Q ${x} ${y} ${x} ${y-s}`} fill="#FFFFFF" opacity={0.75} />)}
             </Svg>
           </Animated.View>
-          <Animated.View style={[{ zIndex: 1 }, badgeStyle]}>
+          {/* Keep the foreground stacking layer flat. A rotated sibling can
+              intersect the halo's plane and tint half of the badge on iOS. */}
+          <View style={{ zIndex: 1 }}>
+          <GestureDetector gesture={badgeGesture}>
+          <Animated.View shouldRasterizeIOS renderToHardwareTextureAndroid style={badgeStyle}>
             <Image source={getMilestoneBadge(badgeIndex)} style={{ width: size, height: size }} contentFit="contain" accessibilityLabel={`${milestone.title} badge`} />
           </Animated.View>
+          </GestureDetector>
+          </View>
         </View>
         <Text accessibilityRole="header" style={styles.title}>{milestone.title}</Text>
         <Text style={styles.description}>{milestone.day === 1 ? "You made time for God today.\nA small beginning. A beautiful step.\nKeep going — this is just the start." : `You kept showing up.\n${milestone.day} days of making room for God.\nEvery small step matters.`}</Text>

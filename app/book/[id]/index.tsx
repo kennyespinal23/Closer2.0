@@ -1,3 +1,4 @@
+import { GenesisLivingCover } from "@/components/GenesisLivingCover";
 import { BookReaderPreparation } from "./[chapter]";
 import { usePreferences } from "@/state/preferences";
 import { findExpressBook, expressReadingMinutes } from "@/constants/expressBooks";
@@ -207,7 +208,7 @@ function BookDetail({ book }: { book: Book }) {
         contentContainerStyle={{ backgroundColor: colors.bg, paddingBottom: focusSpacing + dockHeight + 24 }}>
         <View style={{ backgroundColor: "#000000", minHeight: height - focusSpacing, justifyContent: "flex-end", paddingTop: insets.top + 64 + artSpace, paddingBottom: Math.max(insets.bottom, 20) + 16 }}>
           <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
-            {cover ? <Image source={cover} contentFit="cover" contentPosition="top center" style={[StyleSheet.absoluteFill, { bottom: undefined, height: "84%" }]} /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: CATEGORY_COVER_PALETTE[book.category].top }]} />}
+            {book.id === "genesis" ? <GenesisLivingCover /> : cover ? <Image source={cover} contentFit="cover" contentPosition="top center" style={[StyleSheet.absoluteFill, { bottom: undefined, height: "84%" }]} /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: CATEGORY_COVER_PALETTE[book.category].top }]} />}
             <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
               <Defs><LinearGradient id="bookHeroShade" x1="0" y1="0" x2="0" y2="1">
                 <Stop offset="0" stopColor="#000000" stopOpacity={0.24} />

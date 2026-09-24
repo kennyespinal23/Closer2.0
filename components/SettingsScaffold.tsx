@@ -1,3 +1,4 @@
+import { contentText } from "@/lib/contentStyles";
 import { useLayoutEffect, type ReactNode } from "react";
 import {
   Linking,
@@ -312,7 +313,7 @@ export function SettingsLinkRow({
   return (
     <View>
       <Pressable onPress={onPress} style={{ minHeight: 44 }}>
-        <View className="flex-row items-center px-4 py-3.5">
+        <View className="flex-row items-center px-4 py-4">
           {icon && (
             <View className="w-8 h-8 rounded-xl bg-accent-soft items-center justify-center mr-3">
               {icon}
@@ -338,8 +339,8 @@ export function SettingsLinkRow({
           </View>
           {value && (
             <Text
-              className="text-ink-muted text-[13px] mr-1.5"
-              style={{ fontFamily: "System", fontWeight: "500" }}
+              className="text-ink-muted mr-2"
+              style={[contentText.metadata, { flexShrink: 1, maxWidth: "35%", textAlign: "right" }]}
             >
               {value}
             </Text>
@@ -407,7 +408,7 @@ export function SettingsToggleRow({
   const trackOn = scheme === "dark" ? "#30D158" : "#34C759";
   return (
     <View style={disabled ? { opacity: 0.55 } : undefined}>
-      <View className="flex-row items-center px-4 py-3.5">
+      <View className="flex-row items-center px-4 py-4">
         {icon && (
           <View className="w-8 h-8 rounded-xl bg-accent-soft items-center justify-center mr-3">
             {icon}
@@ -492,7 +493,7 @@ export function SettingsStaticRow({
   const colors = useColors();
   return (
     <View>
-      <View className="flex-row items-center px-4 py-3.5">
+      <View className="flex-row items-center px-4 py-4">
         {icon && (
           <View className="w-8 h-8 rounded-xl bg-accent-soft items-center justify-center mr-3">
             {icon}
@@ -566,7 +567,7 @@ export function SettingsChoiceRow({
   return (
     <View>
       <Pressable onPress={handlePress}>
-        <View className="flex-row items-center px-4 py-3.5">
+        <View className="flex-row items-center px-4 py-4">
           {icon && (
             <View className="w-8 h-8 rounded-xl bg-accent-soft items-center justify-center mr-3">
               {icon}

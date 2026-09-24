@@ -1,3 +1,4 @@
+import { contentText, contentLayout } from "@/lib/contentStyles";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -49,7 +50,7 @@ const TAB_BAR_CONTENT_GAP = 24;
 /** Extra lift so the editorial block floats above the tab bar edge. */
 const BOTTOM_CONTENT_LIFT = 40;
 /** Horizontal page margin — Apple HIG / Espinal layout standard. */
-const PAGE_MARGIN_H = 16;
+const PAGE_MARGIN_H = contentLayout.gutter;
 /** Editorial gap between teaser body and the primary CTA. */
 const CTA_TOP_MARGIN = 56;
 
@@ -153,10 +154,7 @@ function EmojiMeta({ emoji, label }: { emoji: string; label: string }) {
       </Text>
       <Text
         style={{
-          fontFamily: "System",
-          fontWeight: "500",
-          fontSize: 13,
-          lineHeight: 18,
+          ...contentText.metadata,
           color: PHOTO_OVERLAY_INK_MUTED,
           marginLeft: 5,
         }}

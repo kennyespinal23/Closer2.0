@@ -1,3 +1,4 @@
+import { contentText, contentLayout } from "@/lib/contentStyles";
 import { JourneySummary } from "@/components/JourneySummary";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -943,9 +944,9 @@ function SectionHeader({
   return (
     <View
       className="px-5 flex-row items-end justify-between"
-      style={{ marginTop: 32 }}
+      style={{ marginTop: contentLayout.sectionGap, gap: contentLayout.itemGap, flexWrap: "wrap" }}
     >
-      <View className="flex-row items-baseline">
+      <View className="flex-row items-baseline" style={{ flexShrink: 1, flexWrap: "wrap" }}>
         <Text
           style={[systemText.title2, { color: ink }]}
           accessibilityRole="header"
@@ -974,6 +975,7 @@ function SectionHeader({
           accessibilityLabel={`See all ${title.toLowerCase()}`}
           style={({ pressed }) => ({
             flexDirection: "row",
+            minHeight: 44,
             alignItems: "center",
             opacity: pressed ? 0.6 : 1,
           })}
@@ -1026,18 +1028,14 @@ function ProfileNoteRow({
     >
       <View
         style={{
-          borderRadius: 16,
-          borderWidth: 1,
-          borderColor: colors.border,
+          ...contentLayout.card,
           backgroundColor: colors.surface,
-          paddingHorizontal: SCREEN_H_PAD,
-          paddingVertical: 16,
         }}
       >
-        <View className="flex-row items-baseline justify-between">
+        <View className="flex-row items-baseline justify-between" style={{ flexWrap: "wrap", gap: contentLayout.textGap }}>
           <Text
             style={[
-              systemText.captionEmphasized,
+              contentText.title,
               { color: colors.ink },
             ]}
           >
@@ -1045,10 +1043,8 @@ function ProfileNoteRow({
           </Text>
           <Text
             style={{
-              fontFamily: "System",
-              fontWeight: "500",
+              ...contentText.metadata,
               color: colors.inkMuted,
-              fontSize: 12,
             }}
           >
             {relativeTime(note.updatedAt || note.createdAt)}
@@ -1056,11 +1052,8 @@ function ProfileNoteRow({
         </View>
         <Text
           style={{
-            fontFamily: "System",
-            fontWeight: "500",
+            ...contentText.description,
             color: colors.ink,
-            fontSize: 15,
-            lineHeight: 22,
             marginTop: 4,
           }}
           numberOfLines={2}
@@ -1103,12 +1096,8 @@ function ProfileHighlightRow({
     >
       <View
         style={{
-          borderRadius: 16,
-          borderWidth: 1,
-          borderColor: colors.border,
+          ...contentLayout.card,
           backgroundColor: colors.surface,
-          paddingHorizontal: SCREEN_H_PAD,
-          paddingVertical: 16,
           flexDirection: "row",
         }}
       >
@@ -1122,10 +1111,10 @@ function ProfileHighlightRow({
           }}
         />
         <View style={{ flex: 1 }}>
-          <View className="flex-row items-baseline justify-between">
+          <View className="flex-row items-baseline justify-between" style={{ flexWrap: "wrap", gap: contentLayout.textGap }}>
             <Text
               style={[
-                systemText.captionEmphasized,
+                contentText.title,
                 { color: colors.ink },
               ]}
             >
@@ -1133,10 +1122,8 @@ function ProfileHighlightRow({
             </Text>
             <Text
               style={{
-                fontFamily: "System",
-                fontWeight: "500",
-                color: colors.inkMuted,
-                fontSize: 12,
+                ...contentText.metadata,
+              color: colors.inkMuted,
               }}
             >
               {relativeTime(highlight.updatedAt)}
@@ -1144,11 +1131,8 @@ function ProfileHighlightRow({
           </View>
           <Text
             style={{
-              fontFamily: "System",
-              fontWeight: "400",
+              ...contentText.description,
               color: colors.inkMuted,
-              fontSize: 13,
-              lineHeight: 19,
               marginTop: 4,
               fontStyle: "italic",
             }}
@@ -1202,12 +1186,8 @@ function ProfileSavedSermonRow({
     >
       <View
         style={{
-          borderRadius: 16,
-          borderWidth: 1,
-          borderColor: colors.border,
+          ...contentLayout.card,
           backgroundColor: colors.surface,
-          paddingHorizontal: SCREEN_H_PAD,
-          paddingVertical: 16,
           flexDirection: "row",
           overflow: "hidden",
         }}
@@ -1233,11 +1213,10 @@ function ProfileSavedSermonRow({
           </Text>
           <Text
             style={[
-              systemText.subheadline,
+              contentText.title,
               {
-                fontWeight: "700",
                 color: colors.ink,
-                marginTop: 6,
+                marginTop: contentLayout.textGap,
               },
             ]}
             numberOfLines={2}
@@ -1268,12 +1247,8 @@ function ProfileEmptyCard({
     <View className="px-5 mt-2">
       <View
         style={{
-          borderRadius: 16,
-          borderWidth: 1,
-          borderColor: colors.border,
+          ...contentLayout.card,
           backgroundColor: colors.surface,
-          paddingHorizontal: SCREEN_H_PAD,
-          paddingVertical: 16,
         }}
       >
         <Text
@@ -1290,7 +1265,7 @@ function ProfileEmptyCard({
             ...systemText.subheadline,
             color: colors.textSecondary,
 
-            marginTop: 6,
+            marginTop: contentLayout.textGap,
           }}
         >
           {body}

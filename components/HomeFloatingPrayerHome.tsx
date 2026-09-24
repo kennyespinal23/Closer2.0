@@ -1,3 +1,4 @@
+import { contentText, contentLayout } from "@/lib/contentStyles";
 import { useAmbientMotionEnabled } from "@/lib/useAmbientMotionEnabled";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, forwardRef } from "react";
 import {
@@ -137,9 +138,7 @@ function VerseLineText({ line }: { line: VerseLine }) {
       {line.verseNum ? (
         <Text
           style={{
-            fontFamily: typography.body.fontFamily,
-            fontWeight: "500",
-            fontSize: 13,
+            ...contentText.metadata,
             lineHeight: 28,
             color: CARD_INK_SOFT,
             marginRight: 6,
@@ -528,12 +527,10 @@ const DevotionalEnvelope = forwardRef<
             </Text>
             <Text
               style={{
-                marginTop: 10,
-                fontFamily: "System",
-                fontWeight: "800",
+                marginTop: contentLayout.itemGap,
+                ...typography.devotionalTitle,
                 fontSize: 26,
-                lineHeight: 30,
-                letterSpacing: -0.5,
+                lineHeight: 32,
                 color: CARD_INK,
                 textAlign: "center",
               }}
@@ -545,10 +542,7 @@ const DevotionalEnvelope = forwardRef<
               <Text
                 style={{
                   marginTop: 4,
-                  fontFamily: "System",
-                  fontWeight: "600",
-                  fontSize: 17,
-                  lineHeight: 22,
+                  ...contentText.title,
                   color: CARD_INK_SOFT,
                   textAlign: "center",
                 }}
@@ -1248,12 +1242,8 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
               </Text>
               <Text
                 style={{
-                  marginTop: 6,
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 28,
-                  lineHeight: 34,
-                  letterSpacing: -0.8,
+                  marginTop: contentLayout.textGap,
+                  ...contentText.section,
                   color: "#FFFFFF",
                 }}
                 numberOfLines={1}
@@ -1319,10 +1309,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
               />
               <Text
                 style={{
-                  fontFamily: typography.body.fontFamily,
-                  fontWeight: "600",
-                  fontSize: 13,
-                  lineHeight: 16,
+                  ...contentText.metadata,
                   letterSpacing: -0.08,
                   color: colors.inkMuted,
                   textAlign: "center",
@@ -1411,7 +1398,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                     ...StyleSheet.absoluteFillObject,
                     justifyContent: "center",
                     alignItems: "center",
-                    paddingHorizontal: 28,
+                    paddingHorizontal: contentLayout.gutter,
                     opacity: stickerOpacity,
                     transform: [
                       { translateY: stickerRise },
@@ -1433,7 +1420,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                     ...StyleSheet.absoluteFillObject,
                     justifyContent: "flex-end",
                     alignItems: "center",
-                    paddingBottom: insets.bottom + 28,
+                    paddingBottom: insets.bottom + contentLayout.sectionGap,
                     opacity: hintOpacity,
                   }}
                 >
@@ -1491,7 +1478,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                 <ScrollView
                   style={{ flex: 1 }}
                   contentContainerStyle={{
-                    paddingBottom: insets.bottom + 28,
+                    paddingBottom: insets.bottom + contentLayout.sectionGap,
                   }}
                   contentInsetAdjustmentBehavior="never"
                   automaticallyAdjustContentInsets={false}
@@ -1564,7 +1551,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                     </View>
                   </View>
 
-                  <View style={{ paddingHorizontal: 28 }}>
+                  <View style={{ paddingHorizontal: contentLayout.gutter }}>
                     {activeLines.map((line, index) => (
                       <View
                         key={`${index}-${line.text.slice(0, 12)}`}

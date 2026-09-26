@@ -1,5 +1,8 @@
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
+import { ProfileCollectionShelf } from "@/components/ProfileCollectionShelf";
+import { ReaderNativeButton } from "@/components/ReaderNativeButton";
 import { contentText, contentLayout } from "@/lib/contentStyles";
-import { JourneySummary } from "@/components/JourneySummary";
+import { ProfileProgress } from "@/components/ProfileProgress";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -56,35 +59,14 @@ import {
 import { SKY_CHROME_INK } from "@/components/HomeSkyGradient";
 
 /** Profile hero avatar diameter — large enough to read as identity. */
-const AVATAR_SIZE = 140;
+const AVATAR_SIZE = 112;
 
-/**
- * Profile tab — the third tab in the consolidated Home / Library /
- * Profile shell.
- *
- * Previously profile was a left-side drawer launched from the home
- * avatar. The user collapsed the Practice + Insights + Check-in
- * cells out of the tab bar, asked for a 3-tab shell, and asked
- * for Notes and Highlights to live ON the profile page directly
- * (Imprint-style) instead of being one tap away as nav rows.
- *
- * Page shape (top → bottom):
- *
- *   1. Identity strip (avatar + name + tagline)
- *   2. Stat cards (Today / Sermons)
- *   3. Notes preview (newest 3, "See all" → /notes)
- *   4. Highlights preview (newest 3, "See all" → /highlights)
- *   5. Account section
- *   6. Preferences section
- *   7. Soft promo card
- *   8. About section
- *
- * The avatar at the top of the home page now navigates to this tab
- * (instead of opening the legacy drawer); both surfaces converge
- * into the same single profile view.
- */
+/** Personal identity, progress, and collected artwork. */
 export default function ProfileTabScreen() {
   const router = useRouter();
+  const [savedTab, setSavedTab] = useState(0);
+  const [savedExpanded, setSavedExpanded] = useState(false);
+  const scheme = useResolvedScheme();
   const { answers, setAnswer } = useOnboarding();
   const { allNotes, allHighlights, counts: annotationCounts } =
     useAnnotations();
@@ -161,7 +143,6 @@ export default function ProfileTabScreen() {
   // no longer resolves — protecting against ghost rows.
   const recentSavedSermons = useMemo(() => {
     return savedSermonDays
-      .slice(0, 3)
       .map((day) => {
         const moment = findMomentByDay(day);
         if (!moment) return null;
@@ -258,7 +239,7 @@ export default function ProfileTabScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "transparent", overflow: "hidden" }}
+      style={{ flex: 1, backgroundColor: colors.bg, overflow: "hidden" }}
       edges={["top"]}
     >
       <ScrollView
@@ -266,243 +247,36 @@ export default function ProfileTabScreen() {
         contentContainerStyle={{ paddingBottom: TAB_BAR_TOTAL_HEIGHT + 24 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* ─── Top chrome ───────────────────────────────────────
-            "Me" title on the left + a quiet settings gear on the
-            right. The gear is a stand-in for the reference's
-            Settings chevron — taps land the user on the
-            preferences index inside this screen (we just scroll
-            them to the Preferences section since everything
-            settings-shaped already lives below). The compact
-            chrome row keeps the page's anchor minimal so the hero
-            card immediately below feels like the page's content,
-            not a stat appendage to a heavy header. */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: SCREEN_H_PAD,
-            paddingTop: 4,
-            paddingBottom: 16,
-          }}
-        >
-          <Text
-            style={[systemText.largeTitle, { color: SKY_CHROME_INK }]}
-            accessibilityRole="header"
-          >
-            My Profile
-          </Text>
-          <Pressable
-            onPress={() => navigateTo("/settings/appearance")}
-            accessibilityRole="button"
-            accessibilityLabel="Open settings"
-            hitSlop={10}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgba(255,255,255,0.18)",
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.24)",
-            }}
-          >
-            <GearIcon stroke={SKY_CHROME_INK} />
-          </Pressable>
-        </View>
-
-        {/* ─── Hero card ────────────────────────────────────────
-            Identity surface — avatar + name + the journey-stat
-            strip. Trimmed down from the prior revision per design
-            review: the "Drawing nearer, one day at a time" /
-            "Honored today · drawing nearer" subtitle was removed
-            (flagged as decorative AI-generated copy that Apple
-            generally avoids), and the avatar + padding are dialled
-            back a notch so the card's footprint matches the
-            information it carries.
-            
-            The stat strip beneath reads as a spiritual-journey
-            snapshot — Days with God / Reflections / Highlights —
-            rather than the previous Day streak / Longest /
-            Sermons engagement triplet, so the card ties directly
-            into the Notes + Highlights sections it sits above. */}
-        <View style={{ paddingHorizontal: SCREEN_H_PAD }}>
-          <View
-            style={{
-              borderRadius: 26,
-              borderWidth: StyleSheet.hairlineWidth,
-              borderColor: colors.border,
-              backgroundColor: colors.surface,
-              paddingTop: 28,
-              paddingHorizontal: SCREEN_H_PAD,
-              paddingBottom: 20,
-              alignItems: "center",
-            }}
-          >
-            <Pressable
-              onPress={() => {
-                haptics.tick();
-                setAvatarPickerOpen(true);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Change profile avatar"
-              hitSlop={8}
-              style={({ pressed }) => ({
-                width: AVATAR_SIZE,
-                height: AVATAR_SIZE,
-                marginBottom: 16,
-                opacity: pressed ? 0.88 : 1,
-              })}
-            >
-              <View
-                style={{
-                  width: AVATAR_SIZE,
-                  height: AVATAR_SIZE,
-                  borderRadius: AVATAR_SIZE / 2,
-                  backgroundColor: colors.accentSoft,
-                  borderWidth: 2,
-                  borderColor: colors.border,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                }}
-              >
-                {selectedAvatar ? (
-                  <Image
-                    source={selectedAvatar.source}
-                    style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <Text
-                    style={{
-                      fontFamily: "System",
-                      fontWeight: "700",
-                      color: colors.primary,
-                      fontSize: 56,
-                      letterSpacing: -0.5,
-                    }}
-                  >
-                    {firstName.charAt(0).toUpperCase()}
-                  </Text>
-                )}
-              </View>
-              <View
-                pointerEvents="none"
-                style={{
-                  position: "absolute",
-                  right: 2,
-                  bottom: 2,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: colors.surface,
-                  borderWidth: StyleSheet.hairlineWidth,
-                  borderColor: colors.border,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <SFSymbol
-                  name="pencil"
-                  size={15}
-                  color={colors.ink}
-                  weight="semibold"
-                />
-              </View>
+        <View style={{ paddingHorizontal: contentLayout.gutter, paddingTop: 8, paddingBottom: 24, gap: 24 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text accessibilityRole="header" style={[contentText.title, { color: colors.inkMuted }]}>Profile</Text>
+            <ReaderNativeButton label="Settings" symbol="gearshape" onPress={() => navigateTo("/settings")} />
+          </View>
+          <View style={{ alignItems: "center", gap: 16 }}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Change profile avatar" onPress={() => setAvatarPickerOpen(true)} style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_SIZE / 2, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              {selectedAvatar ? <Image source={selectedAvatar.source} contentFit="cover" style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }} /> : <Text style={[systemText.title1, { color: colors.ink }]}>{firstName.charAt(0).toUpperCase()}</Text>}
             </Pressable>
-            <Text
-              style={[
-                systemText.title1,
-                {
-                  color: colors.ink,
-                  fontSize: 26,
-                  lineHeight: 30,
-                },
-              ]}
-              numberOfLines={1}
-            >
-              {firstName}
-            </Text>
-            {joinedLabel ? (
-              <Text
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "500",
-                  color: colors.inkMuted,
-                  fontSize: 14,
-                  lineHeight: 18,
-                  marginTop: 6,
-                }}
-              >
-                {joinedLabel}
-              </Text>
-            ) : null}
-
-            {/* Stat strip — 3 columns separated by hairline rules.
-                Reframed as spiritual-journey artifacts (see the
-                top-of-component data block for the full rationale):
-                cadence, written reflections, marked scriptures.
-                Same shape as before so the visual rhythm of the
-                card is preserved — only the meaning changed. */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "stretch",
-                marginTop: 20,
-                paddingTop: 16,
-                borderTopWidth: StyleSheet.hairlineWidth,
-                borderTopColor: colors.border,
-                alignSelf: "stretch",
-              }}
-            >
-              <HeroStat
-                value={String(savedCount)}
-                label={savedCount === 1 ? "Saved" : "Saved"}
-              />
-              <HeroStatDivider />
-              <HeroStat
-                value={String(highlightsCount)}
-                label={highlightsCount === 1 ? "Highlight" : "Highlights"}
-              />
-              <HeroStatDivider />
-              <HeroStat
-                value={String(notesCount)}
-                label={notesCount === 1 ? "Reflection" : "Reflections"}
-              />
+            <View style={{ alignItems: "center", gap: 4 }}>
+              <Text style={[systemText.largeTitle, { color: colors.ink, textAlign: "center" }]}>{firstName}</Text>
+              {joinedLabel && <Text style={[contentText.metadata, { color: colors.inkMuted }]}>{joinedLabel}</Text>}
             </View>
           </View>
         </View>
 
-        <JourneySummary onSelect={section => navigateTo(`/rhythm${section ? `?section=${section}` : ""}` as Href)} />
+        <ProfileProgress />
 
-        {/* ─── Saved sermons (personal-artifact preview) ────────
-            Moved here from the Library tab in June 2026 per
-            design review: a sermon stops being "browsable
-            content" the moment a user intentionally taps Save,
-            so it belongs alongside Notes and Highlights as a
-            personal artifact rather than competing for attention
-            in the discovery surface.
-            
-            Newest 3 inline; each row routes to the dedicated
-            saved-sermon reader at /saved-sermon/[day]. No
-            "See all" link yet — when users start accumulating
-            more than a handful of saves we'll ship a dedicated
-            /saved-sermons index screen, mirroring the /notes
-            and /highlights pattern.
-            
-            Sits first in the artifact triad (Saved → Highlights
-            → Notes) because saved sermons are the largest unit
-            — whole pieces — and that ordering matches the hero
-            stat strip above for visual symmetry. */}
-        {/* No `onSeeAll` — Saved Sermons doesn't have a dedicated
-            index screen yet (Notes/Highlights do). When we ship
-            /saved-sermons we'll wire this; until then the count
-            badge alone hints at scope and individual rows remain
-            tappable. */}
+        <ProfileCollectionShelf />
+        <View style={{ marginHorizontal: contentLayout.gutter, marginTop: 32, gap: 16 }}>
+          <Pressable accessibilityRole="button" accessibilityState={{ expanded: savedExpanded }} onPress={() => setSavedExpanded(!savedExpanded)} style={{ minHeight: 52, flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <SFSymbol name="bookmark" size={22} color={colors.ink} />
+            <Text style={[contentText.title, { color: colors.ink, flex: 1 }]}>Saved for you</Text>
+            <SFSymbol name={savedExpanded ? "chevron.up" : "chevron.down"} size={14} color={colors.inkMuted} />
+          </Pressable>
+          {savedExpanded && <SegmentedControl appearance={scheme} values={["Devotionals", "Highlights", "Notes"]} selectedIndex={savedTab} onChange={event => setSavedTab(event.nativeEvent.selectedSegmentIndex)} style={{ height: 44 }} />}
+        </View>
+        {savedExpanded && savedTab === 0 && <>
         <SectionHeader
-          title="Saved sermons"
+          title="Devotionals"
           count={savedCount}
           ink={colors.ink}
           inkSubtle={colors.textSecondary}
@@ -526,16 +300,8 @@ export default function ProfileTabScreen() {
           </View>
         )}
 
-        {/* ─── Highlights (Imprint-style preview) ───────────────
-            Newest 3 inline, "See all" link to the dedicated
-            screen. Highlights here render with the user's chosen
-            highlight color as the lead accent (left bar) so the
-            preview carries the personal annotation aesthetic
-            instead of being indistinguishable from the notes
-            section beneath. Sits second in the artifact triad
-            (after Saved sermons, before Notes) because verses
-            are the second-largest unit — single passages
-            claimed as meaningful. */}
+        </>}
+        {savedExpanded && savedTab === 1 && <>
         <SectionHeader
           title="Highlights"
           count={annotationCounts.highlights}
@@ -560,23 +326,8 @@ export default function ProfileTabScreen() {
           </View>
         )}
 
-        {/* ─── Notes (Imprint-style preview) ────────────────────
-            Imprint surfaces your "Reflections" on the profile
-            page as a stack of recent cards — not as a single
-            nav row. The previous drawer's NavRow("Notes", "12")
-            communicated "12 notes exist somewhere" but didn't
-            actually show you any. This preview lists the newest
-            3 notes inline; tap a card to open the verse the
-            note is anchored to, or tap "See all" to drill into
-            the full /notes screen.
-            
-            Sits third in the artifact triad — the smallest unit
-            (a verse-anchored personal sentence) but the deepest
-            (your own writing). Empty state matters here — an
-            empty list reads as "nothing yet" which would feel
-            hollow next to populated stat cards above. We render
-            an inviting empty state ("No notes yet — start
-            with…") so the section still feels alive on day one. */}
+        </>}
+        {savedExpanded && savedTab === 2 && <>
         <SectionHeader
           title="Notes"
           count={annotationCounts.notes}
@@ -601,74 +352,7 @@ export default function ProfileTabScreen() {
           </View>
         )}
 
-        {/* Account / Preferences / About — routed through the
-            SHARED SettingsSection + SettingsLinkRow primitives
-            (instead of profile-local duplicates) so the cells
-            inherit the same iOS-Settings polish the settings
-            detail pages got: filled-circle back chip, divider
-            inset adapting to the icon column, and the iOS-blue
-            checkmark variant if any picker rows are added later.
-            Removing the duplicates also keeps a single source of
-            truth for row typography — earlier profile rows were
-            drifting (14pt vs 14.5pt, py-3 vs py-3.5) which made
-            this surface feel slightly different from the rest of
-            the settings stack. */}
-        <SettingsSection title="Account">
-          <SettingsLinkRow
-            icon={<UserIcon stroke={colors.ink} />}
-            label="Your name"
-            value={firstName}
-            onPress={() => navigateTo("/settings/name")}
-            showDivider
-          />
-          <SettingsLinkRow
-            icon={<MailIcon stroke={colors.ink} />}
-            label="Email"
-            value="Not signed in"
-            onPress={() => navigateTo("/settings/account")}
-          />
-        </SettingsSection>
-
-        {/* Preferences trimmed to the rows that don't already
-            have a primary home elsewhere in the app:
-              • Reading goal → deferred to v2
-              • Bible version → set inline on the bible reader
-                screen (per-passage translation picker)
-              • Focus mode + App blocks → live on the home page
-                (the App Blocks list / per-block toggles), so
-                duplicating them under Preferences gave the same
-                feature two entry points and made the surface
-                drift over time.
-            What remains: notification cadence + light/dark
-            appearance — the two preferences that genuinely
-            belong in a global settings list. */}
-        <SettingsSection title="Preferences">
-          <SettingsLinkRow
-            icon={<BellIcon stroke={colors.ink} />}
-            label="Notifications"
-            value="Manage"
-            onPress={() => navigateTo("/settings/notifications")}
-            showDivider
-          />
-          <SettingsLinkRow
-            icon={<MoonIcon stroke={colors.ink} />}
-            label="Appearance"
-            value={appearanceValue}
-            onPress={() => navigateTo("/settings/appearance")}
-          />
-        </SettingsSection>
-
-        {/* Encouragement card — now uses the shared
-            SettingsInfoBanner primitive (neutral tone) so the
-            framing card matches the rest of the settings surface
-            stylistically, instead of being a one-off inline
-            <View> + <Text> with bespoke padding. Lives in the
-            mid-page rhythm between Preferences and About as
-            quiet glue. */}
-        <SettingsInfoBanner
-          title="You're building something quiet."
-          body="Every sermon completed is a small turn of the heart toward Him."
-        />
+        </>}
 
         {showDevShortcuts ? (
           <SettingsSection
@@ -836,41 +520,6 @@ export default function ProfileTabScreen() {
           </SettingsSection>
         ) : null}
 
-        <SettingsSection title="About">
-          <SettingsLinkRow
-            icon={<HeartIcon stroke={colors.ink} />}
-            label="Help & support"
-            onPress={() => navigateTo("/settings/help")}
-            showDivider
-          />
-          <SettingsLinkRow
-            icon={<DocIcon stroke={colors.ink} />}
-            label="Privacy"
-            onPress={() => navigateTo("/settings/privacy")}
-            showDivider
-          />
-          {/* Developer Tools — same gate as before: visible to
-              everyone today, hidden behind a Settings toggle once
-              we ship to non-internal users. See the legacy
-              drawer for the historical reasoning. */}
-          <SettingsLinkRow
-            icon={<CodeIcon stroke={colors.ink} />}
-            label="Developer Tools"
-            onPress={() => navigateTo("/settings/developer")}
-            showDivider
-          />
-          {/* Version — informational only. SettingsStaticRow
-              renders the same icon + label + value shape WITHOUT
-              the trailing chevron, so the row honestly reads as
-              "here's a fact" rather than promising a navigation
-              destination. Apple's Settings does the same for
-              Version, Build Number, Serial Number, etc. */}
-          <SettingsStaticRow
-            icon={<InfoIcon stroke={colors.ink} />}
-            label="Version"
-            value="0.1.0"
-          />
-        </SettingsSection>
       </ScrollView>
 
       {readerTutorialOpen && <ReaderTutorial preview onClose={() => setReaderTutorialOpen(false)} />}
@@ -1247,8 +896,8 @@ function ProfileEmptyCard({
     <View className="px-5 mt-2">
       <View
         style={{
-          ...contentLayout.card,
-          backgroundColor: colors.surface,
+          paddingVertical: 12,
+          gap: contentLayout.textGap,
         }}
       >
         <Text

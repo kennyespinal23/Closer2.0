@@ -3,7 +3,7 @@ import { Host, Button, Image, Text } from "@expo/ui/swift-ui";
 import { accessibilityLabel, frame } from "@expo/ui/swift-ui/modifiers";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
-export function ReaderNativeButton({ label, symbol, onPress, disabled = false }: { label: string; symbol?: "xmark" | "play.fill"; onPress: () => void; disabled?: boolean }) {
+export function ReaderNativeButton({ label, symbol, onPress, disabled = false }: { label: string; symbol?: "xmark" | "play.fill" | "gearshape"; onPress: () => void; disabled?: boolean }) {
   const colors = useColors();
   const scheme = useResolvedScheme();
   const width = symbol ? 48 : 88;

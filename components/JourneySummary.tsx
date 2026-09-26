@@ -12,13 +12,20 @@ import { SFSymbol } from "@/components/Symbol";
 import { systemText } from "@/lib/typography";
 
 /** Personal progress uses earned data, independently of developer badge previews. */
-export function JourneySummary({ onSelect, compact = false }: {
+export function JourneySummary({ onSelect, compact = false, profile = false }: {
   onSelect: (section?: "moments" | "badges") => void;
   compact?: boolean;
+  profile?: boolean;
 }) {
   const colors = useColors();
   const router = useRouter();
-  const { streak } = useProgress();
+  const { streak, engagedDates, chaptersRead } = useProgress();
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - 6 + index);
+    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    return { label: date.toLocaleDateString(undefined, { weekday: "narrow" }), full: date.toLocaleDateString(), read: engagedDates.includes(iso) || chaptersRead.some(chapter => chapter.dateISO === iso) };
+  });
   const { ids, hydrated, error } = useBibleMomentCollection();
   const earned = MILESTONES.filter(m => isMilestoneUnlocked(m, streak.longest));
   const latest = earned[earned.length - 1];
@@ -39,6 +46,17 @@ export function JourneySummary({ onSelect, compact = false }: {
           <Text style={[systemText.title1, { color: colors.ink }]}>{item.value}</Text><Text style={label}>{item.title}</Text>
         </Pressable>)}
       </View>
+      {profile && <Pressable accessibilityRole="button" accessibilityLabel="Recent reading days. Open your reading history" onPress={() => onSelect()} style={{ gap: 12 }}>
+        <Text style={label}>Your last seven days</Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          {days.map((day, index) => <View key={index} accessible accessibilityLabel={`${day.full}: ${day.read ? "Read" : "No reading recorded"}`} style={{ alignItems: "center", gap: 8 }}>
+            <View style={{ width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: day.read ? colors.ink : colors.bg }}>
+              {day.read && <SFSymbol name="checkmark" size={12} color={colors.bg} />}
+            </View>
+            <Text style={label}>{day.label}</Text>
+          </View>)}
+        </View>
+      </Pressable>}
       <View style={{ height: 1, backgroundColor: colors.ink, opacity: 0.08 }} />
       <Pressable accessibilityRole="button" onPress={() => latest ? router.push(`/milestone/${latest.day}`) : onSelect("badges")} style={{ flexDirection: "row", alignItems: "center", gap: contentLayout.itemGap }}>
         <Image source={getMilestoneBadge(latest ? MILESTONES.indexOf(latest) + 1 : 1)} contentFit="contain" transition={0} style={{ width: 72, height: 72, opacity: latest ? 1 : 0.45 }} />
@@ -47,8 +65,8 @@ export function JourneySummary({ onSelect, compact = false }: {
       </Pressable>
       <Text style={label}>{next ? `Next milestone at ${next.day} days · Best streak ${streak.longest}` : "Every milestone earned. Keep growing."}</Text>
     </View>
-    <Pressable accessibilityRole="button" onPress={() => onSelect("moments")} style={{ minHeight: 64, ...contentLayout.card, backgroundColor: colors.surfaceSecondary, flexDirection: "row", alignItems: "center", gap: 12 }}>
+    {!profile && <Pressable accessibilityRole="button" onPress={() => onSelect("moments")} style={{ minHeight: 64, ...contentLayout.card, backgroundColor: colors.surfaceSecondary, flexDirection: "row", alignItems: "center", gap: 12 }}>
       <SFSymbol name="sparkles" size={24} color={colors.ink} /><View style={{ flex: 1, gap: contentLayout.textGap }}><Text style={[systemText.headline, { color: colors.ink }]}>Your Bible Moments</Text><Text style={label}>{error ? "Open collection to retry" : !hydrated ? "Loading your collection…" : ids.length ? `${ids.length} of ${BIBLE_MOMENTS.length} discovered` : "Discover glowing verses as you read."}</Text></View><SFSymbol name="chevron.right" size={14} color={colors.inkMuted} />
-    </Pressable>
+    </Pressable>}
   </View>;
 }

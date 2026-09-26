@@ -1,9 +1,8 @@
 import { contentText, contentLayout } from "@/lib/contentStyles";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { FlatList, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import { useRouter, type Href } from "expo-router";
-import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { Host, ContextMenu, Button as NativeButton } from "@expo/ui/swift-ui";
 import { accessibilityLabel } from "@expo/ui/swift-ui/modifiers";
 import { BIBLE_MOMENTS, MOMENT_CATEGORIES, type BibleMoment, type MomentCategory } from "@/constants/bibleMoments";
@@ -17,7 +16,7 @@ import * as haptics from "@/lib/haptics";
 type CategoryFilter = MomentCategory | "all";
 
 /** Journey owns a virtualized gallery; the post-reading dashboard keeps a compact rail. */
-export function BibleMomentsCollection({ standalone = false, initialCategory = "all" }: { standalone?: boolean; initialCategory?: CategoryFilter }) {
+export function BibleMomentsCollection({ standalone = false, initialCategory = "all", journeyHeader }: { standalone?: boolean; initialCategory?: CategoryFilter; journeyHeader?: ReactNode }) {
   const colors = useColors();
   const scheme = useResolvedScheme();
   const router = useRouter();
@@ -36,24 +35,24 @@ export function BibleMomentsCollection({ standalone = false, initialCategory = "
   const cardWidth = standalone ? (width - 40 - (columns - 1) * 12) / columns : 224;
   const resetScroll = () => list.current?.scrollToOffset({ offset: 0, animated: false });
   const header = <View style={{ gap: 16, paddingBottom: 16 }}>
-    <View style={{ gap: contentLayout.textGap }}>
+    {journeyHeader}
+    {!journeyHeader && <View style={{ gap: contentLayout.textGap }}>
       <Text accessibilityRole="header" style={{ color: colors.ink, ...contentText.section }}>Bible Moments</Text>
       <Text style={{ color: colors.inkMuted, ...contentText.description }}>Stories to discover. Meaning to carry with you.</Text>
-    </View>
+    </View>}
     <View style={{ gap: 8 }}>
       <Text style={{ color: colors.inkMuted, ...contentText.metadata, fontVariant: ["tabular-nums"] }}>{ready ? `${ids.length} of ${BIBLE_MOMENTS.length} collected` : error ? "Collection unavailable" : "Loading your collection…"}</Text>
       {ready && <View accessibilityRole="progressbar" accessibilityLabel="Bible Moments collected" accessibilityValue={{ min: 0, max: BIBLE_MOMENTS.length, now: ids.length }} style={{ height: 4, borderRadius: 2, backgroundColor: colors.surfaceSecondary, overflow: "hidden" }}><View style={{ height: 4, width: `${ids.length / BIBLE_MOMENTS.length * 100}%`, backgroundColor: colors.inkMuted }} /></View>}
     </View>
-    <SegmentedControl appearance={scheme} values={["All", "Collected", "Discover"]} selectedIndex={view} onChange={event => { haptics.tick(); setView(event.nativeEvent.selectedSegmentIndex); resetScroll(); }} style={{ height: 36 }} />
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-      <View style={{ flex: 1, gap: contentLayout.textGap }}>
-        <Text style={{ color: colors.ink, ...contentText.title }}>{filter === "all" ? "All categories" : MOMENT_CATEGORIES[filter].name}</Text>
-        <Text style={{ color: colors.inkMuted, ...contentText.metadata }}>{ready ? `${moments.length} ${moments.length === 1 ? "moment" : "moments"}` : " "}</Text>
-      </View>
-      <Host colorScheme={scheme} style={{ width: 120, height: 44 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+      <Text style={{ flex: 1, color: colors.inkMuted, ...contentText.metadata }}>{filter === "all" ? ["All Moments", "Collected", "To discover"][view] : MOMENT_CATEGORIES[filter].name}</Text>
+      <Host colorScheme={scheme} style={{ width: 108, height: 44 }}>
         <ContextMenu activationMethod="singlePress">
-          <ContextMenu.Trigger><NativeButton variant="bordered" systemImage="line.3.horizontal.decrease" modifiers={[accessibilityLabel("Filter Moment categories")]}>Filter</NativeButton></ContextMenu.Trigger>
-          <ContextMenu.Items>{(["all", ...Object.keys(MOMENT_CATEGORIES)] as CategoryFilter[]).map(category => <NativeButton key={category} systemImage={filter === category ? "checkmark" : undefined} onPress={() => { haptics.tick(); setFilter(category); resetScroll(); }}>{category === "all" ? "All categories" : MOMENT_CATEGORIES[category].name}</NativeButton>)}</ContextMenu.Items>
+          <ContextMenu.Trigger><NativeButton variant="bordered" systemImage="line.3.horizontal.decrease" modifiers={[accessibilityLabel("Filter Moments")]}>Filter</NativeButton></ContextMenu.Trigger>
+          <ContextMenu.Items>
+            {["All Moments", "Collected", "To discover"].map((label, index) => <NativeButton key={label} systemImage={view === index ? "checkmark" : undefined} onPress={() => { haptics.tick(); setView(index); resetScroll(); }}>{label}</NativeButton>)}
+            {(["all", ...Object.keys(MOMENT_CATEGORIES)] as CategoryFilter[]).map(category => <NativeButton key={category} systemImage={filter === category ? "checkmark" : undefined} onPress={() => { haptics.tick(); setFilter(category); resetScroll(); }}>{category === "all" ? "All categories" : MOMENT_CATEGORIES[category].name}</NativeButton>)}
+          </ContextMenu.Items>
         </ContextMenu>
       </Host>
     </View>
@@ -138,11 +137,9 @@ function MomentCollectionCard({ moment, earned, width, onPress }: { moment: Bibl
       <View style={{ position: "absolute", top: 12, right: 12, width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: "#000000A6" }}><SFSymbol name={earned ? "checkmark" : "lock.fill"} size={14} color={earned ? category.dark : "white"} /></View>
     </View>
     <View style={{ padding: 16, gap: 8, flex: 1 }}>
-      <Text style={{ color: category[scheme], ...contentText.metadata }}>{category.name}</Text>
       <Text style={{ color: colors.ink, ...contentText.title }}>{moment.title}</Text>
       <Text style={{ color: colors.inkMuted, ...contentText.metadata }}>{moment.reference}</Text>
-      <View style={{ flex: 1, minHeight: 4 }} />
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: contentLayout.textGap }}><Text style={{ flex: 1, color: colors.ink, ...contentText.metadata }}>{earned ? "Open moment" : "Read passage"}</Text><SFSymbol name={earned ? "chevron.right" : "arrow.right"} size={12} color={colors.inkMuted} /></View>
+
     </View>
   </Pressable>;
 }

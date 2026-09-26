@@ -5,7 +5,7 @@ import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { ModalNavBar } from "@/components/ModalNavBar";
-import { StreakDashboard } from "@/components/StreakDashboard";
+import { JourneyCollection } from "@/components/JourneyCollection";
 
 export default function RhythmModalScreen() {
   const colors = useColors();
@@ -27,7 +27,7 @@ export default function RhythmModalScreen() {
       <ModalNavBar title="Your Journey" onClose={close} />
 
       <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
-        <StreakDashboard journey focusMoments={section === "moments"} focusBadges={section === "badges"} />
+        <JourneyCollection focusMoments={section === "moments"} />
       </SafeAreaView>
     </View>
   );

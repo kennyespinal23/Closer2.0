@@ -303,3 +303,9 @@ export function useColors(): ColorPalette {
 export function useResolvedScheme(): ResolvedScheme {
   return useTheme().scheme;
 }
+
+/** Scoped palettes for reading surfaces; never changes the app-wide preference. */
+export function ThemeSurface({ children, colors, scheme }: { children: ReactNode; colors: ColorPalette; scheme: ResolvedScheme }) {
+  const parent = useTheme();
+  return <ThemeContext.Provider value={{ ...parent, colors, scheme }}><View style={[{ flex: 1 }, vars(paletteToCssVars(colors))]}>{children}</View></ThemeContext.Provider>;
+}

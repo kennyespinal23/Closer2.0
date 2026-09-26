@@ -13,5 +13,5 @@ export function ReaderSheet(props: AppleSheetProps) {
     const subscription = AccessibilityInfo.addEventListener("reduceTransparencyChanged", setOpaque);
     return () => { active = false; subscription.remove(); };
   }, []);
-  return <AppleSheet {...props} backgroundColor={Platform.OS === "ios" && !opaque ? null : colors.surface} />;
+  return <AppleSheet {...props} backgroundColor={props.backgroundColor !== undefined ? props.backgroundColor : Platform.OS === "ios" && !opaque ? null : colors.surface} />;
 }

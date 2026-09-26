@@ -1,3 +1,10 @@
+import { ReaderVerseTools } from "@/components/ReaderVerseTools";
+import { ReaderStickyNote } from "@/components/ReaderStickyNote";
+import { useReaderChrome } from "@/lib/useReaderChrome";
+import { useBibleMomentCollection } from "@/state/bibleMoments";
+import { ReaderHighlightBrush } from "@/components/ReaderHighlightBrush";
+import { ReaderPaperTheme, useReaderTone } from "@/components/ReaderPaperTheme";
+import { ReaderMomentExperience, ReaderMomentPocket, ReaderRibbon } from "@/components/ReaderMomentExperience";
 import { ReaderSheet } from "@/components/ReaderSheet";
 import { ReaderNativeButton } from "@/components/ReaderNativeButton";
 import { ReaderListeningPanel } from "@/components/audio/ReaderListeningPanel";
@@ -42,13 +49,12 @@ import * as haptics from "@/lib/haptics";
 import { shareVerse, sharePassage } from "@/lib/share";
 import { AppleSheet } from "@/components/AppleSheet";
 import { SheetModalHeader } from "@/components/SheetModalHeader";
-import { NoteEditor } from "@/components/NoteEditor";
 import { NativeReaderControls } from "@/components/NativeReaderControls";
 import { ReaderTutorial } from "@/components/ReaderTutorial";
-import { BibleMomentCard, MomentVerseText } from "@/components/BibleMoment";
+import { MomentThoughtBubble } from "@/components/MomentThoughtBubble";
+import { MomentVerseText } from "@/components/BibleMoment";
 import { findBibleMoment, MOMENT_CATEGORIES, type BibleMoment } from "@/constants/bibleMoments";
 import { VerseMeaningCard } from "@/components/VerseMeaningCard";
-import { VerseActionSheet } from "@/components/VerseActionSheet";
 import { BookCover } from "@/components/BookCover";
 import { SFSymbol } from "@/components/Symbol";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
@@ -370,6 +376,10 @@ function linesToReaderPages(
  *     so the pager doesn't flash between chapters
  */
 export default function ChapterReaderScreen() {
+  return <ReaderPaperTheme><ChapterReaderContent /></ReaderPaperTheme>;
+}
+
+function ChapterReaderContent() {
   const readerFocused = useIsFocused();
   const readerScheme = useResolvedScheme();
   const {
@@ -555,7 +565,13 @@ export default function ChapterReaderScreen() {
   // verse sheet (highlight color picker, add note, share), but they
   // fan out across every verse in the selection.
   const pendingMoment = useRef<BibleMoment | null>(null);
-  const [openMoment, setOpenMoment] = useState<BibleMoment | null>(null);
+  const [discoveredMoment, setDiscoveredMoment] = useState<BibleMoment | null>(null);
+  const momentTouchY = useRef(180);
+  const [momentArrival, setMomentArrival] = useState(0);
+  const [momentShowcase, setMomentShowcase] = useState(false);
+  const [collectOrigin, setCollectOrigin] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [collectMoment, setCollectMoment] = useState<BibleMoment | null>(null);
+  const pocketRef = useRef<View>(null);
   const [meaningOpen, setMeaningOpen] = useState(false);
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
   const selectionMode = selectedVerses.length > 0;
@@ -771,7 +787,7 @@ export default function ChapterReaderScreen() {
   //   insets.bottom              device safe-area bottom
   const pagerHeight =
     screenHeight - insets.top - insets.bottom - READER_HEADER_HEIGHT;
-  const toolbarZone = READER_TOOLBAR_BOTTOM_INSET + READER_PILL_HEIGHT;
+  const toolbarZone = 32;
   const pageContentHeight = Math.max(
     280,
     pagerHeight - PAGE_PAD_Y_TOP - toolbarZone - READER_TEXT_TOOLBAR_GAP,
@@ -1541,17 +1557,37 @@ export default function ChapterReaderScreen() {
     ],
   );
 
+  const [chromeSheetOpen, setChromeSheetOpen] = useState(false);
+  const chrome = useReaderChrome(!!(activeVerse !== null || selectionMode || editingNote || discoveredMoment || collectMoment || momentShowcase || meaningOpen || listeningOpen || contentsOpen || chromeSheetOpen), readerFocused);
+
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View onTouchStart={event => { momentTouchY.current = event.nativeEvent.pageY; chrome.onTouch(); }} style={{ flex: 1, backgroundColor: colors.bg }}>
+      <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 7, borderRightWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSecondary, opacity: 0.45 }} />
       {readerFocused && <StatusBar style={readerScheme === "dark" ? "light" : "dark"} />}
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
-        <Header
-          bookId={book.id}
-          pagesLeftLabel={
-            data && pages ? pagesLeftLabel(headerPagesLeft, true) : ""
-          }
-          progress={headerProgress}
-        />
+          <ReaderToolbar
+            chromeVisible={chrome.visible}
+            chromeStyle={chrome.topStyle}
+            onSheetBusy={setChromeSheetOpen}
+            bookTitle={`${book.name} ${chapter}`}
+            onBack={() => goBackOr(router, `/book/${book.id}`)}
+            onMoments={() => setMomentShowcase(true)}
+            pocketRef={pocketRef}
+            momentArrival={momentArrival}
+            collecting={!!collectMoment}
+            onAudio={() => { haptics.soft(); setListeningOpen(true); }}
+            onContents={() => setContentsOpen(true)}
+            textSizeId={textSize.id}
+            onChangeTextSize={setTextSize}
+            translation={translation}
+            onChangeTranslation={setTranslation}
+            initialSheet={
+              __DEV__ &&
+              (chromeParam === "version" || chromeParam === "textsize")
+                ? chromeParam
+                : undefined
+            }
+          />
 
         <View style={{ flex: 1 }}>
         {/* ─── Off-screen measurement view ─────────────────────────
@@ -1795,6 +1831,7 @@ export default function ChapterReaderScreen() {
                   endVerseIdx={item.page.endVerseIdx}
                   bookId={viewportBookId}
                   onVersePress={(n) => {
+                    if (chrome.revealOnly.current) return;
                     // While the user is in multi-select mode, a tap
                     // toggles membership instead of opening the
                     // single-verse action sheet. This keeps the two
@@ -1813,7 +1850,7 @@ export default function ChapterReaderScreen() {
                       // haptic + visual lift land together.
                       haptics.soft();
                       const moment = findBibleMoment(viewportBookId, viewportChapter, n);
-                      if (moment) setOpenMoment(moment);
+                      if (moment) setDiscoveredMoment(moment);
                       else setActiveVerse(n);
                     }
                   }}
@@ -1828,7 +1865,7 @@ export default function ChapterReaderScreen() {
                     haptics.soft();
                     toggleVerseSelection(n);
                   }}
-                  momentMotionActive={index === currentPageIdx && !selectionMode && !openMoment && activeVerse === null}
+                  momentMotionActive={index === currentPageIdx && !selectionMode && !discoveredMoment && !collectMoment && !momentShowcase && activeVerse === null}
                   selectedSet={selectedVersesSet}
                   focusVerse={focusVerse}
                   focusTint={focusTint}
@@ -1840,32 +1877,11 @@ export default function ChapterReaderScreen() {
           </View>
         )}
 
-        {/* ─── Bottom toolbar OR selection bar ─────────────────── */}
-        {selectionMode ? (
-          <SelectionBar
-            count={selectedVerses.length}
-            onColor={applyHighlightToSelected}
-            onNote={startMultiVerseNote}
-            onAI={() => { haptics.soft(); setMeaningOpen(true); }}
-            onShare={shareSelected}
-            onDone={exitSelection}
-          />
-        ) : (
-          <ReaderToolbar
-            onAudio={() => { haptics.soft(); setListeningOpen(true); }}
-            onContents={() => setContentsOpen(true)}
-            textSizeId={textSize.id}
-            onChangeTextSize={setTextSize}
-            translation={translation}
-            onChangeTranslation={setTranslation}
-            initialSheet={
-              __DEV__ &&
-              (chromeParam === "version" || chromeParam === "textsize")
-                ? chromeParam
-                : undefined
-            }
-          />
-        )}
+        {!selectionMode && <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 24, right: 24, bottom: 8, gap: 8, backgroundColor: colors.bg }, chrome.bottomStyle]}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}><Text style={{ ...systemText.caption1, color: colors.inkMuted }}>Chapter {chapter} of {book.chapters}</Text><Text style={{ ...systemText.caption1, color: colors.inkMuted }}>{Math.round(headerProgress * 100)}%</Text></View>
+          <View style={{ height: 3, borderRadius: 2, backgroundColor: colors.border }}><View style={{ height: 3, borderRadius: 2, width: `${Math.max(0, Math.min(100, headerProgress * 100))}%`, backgroundColor: colors.inkMuted }} /></View>
+        </Animated.View>}
+        {/* Verse selection keeps its contextual actions near the selected text. */}
 
         {/* ─── Reading-goal celebration toast ────────────────────
             Slides in from the bottom edge the FIRST time today's
@@ -1882,7 +1898,8 @@ export default function ChapterReaderScreen() {
 
       <ReaderListeningPanel visible={listeningOpen} onClose={() => setListeningOpen(false)} bookId={book.id} bookName={book.name} chapter={chapter} />
       <ReaderTutorial />
-      <BibleMomentCard moment={openMoment} onClose={() => setOpenMoment(null)} />
+      {discoveredMoment && <MomentThoughtBubble moment={discoveredMoment} anchorY={momentTouchY.current} onClose={() => setDiscoveredMoment(null)} onCollect={origin => { setCollectOrigin(origin); const moment = discoveredMoment; setDiscoveredMoment(null); setCollectMoment(moment); }} />}
+      <ReaderMomentExperience origin={collectOrigin} onCollected={() => setMomentArrival(value => value + 1)} moment={collectMoment} onFinish={() => setCollectMoment(null)} pocketRef={pocketRef} showcase={momentShowcase} onCloseShowcase={() => setMomentShowcase(false)} bookId={book.id} />
       <VerseMeaningCard
         visible={meaningOpen}
         onClose={() => setMeaningOpen(false)}
@@ -1912,66 +1929,31 @@ export default function ChapterReaderScreen() {
         }}
       />
 
-      {/* ─── Verse action sheet ──────────────────────────────── */}
-      <VerseActionSheet
-        visible={activeVerse !== null}
+      {(selectionMode || activeVerse !== null) && !meaningOpen && !editingNote && <ReaderVerseTools
+        anchorY={momentTouchY.current}
+        multi={selectionMode}
+        reference={selectionMode ? formatVerseRange(book.name, chapter, selectedVerses) : `${book.name} ${chapter}:${activeVerse}`}
+        currentHighlight={selectionMode ? annotations.getHighlight(verseKey(book.id, chapter, selectedVerses[0])) : activeKey ? annotations.getHighlight(activeKey) : null}
+        notes={!selectionMode && activeKey ? annotations.getNotes(activeKey) : []}
+        onColor={color => {
+          if (selectionMode) applyHighlightToSelected(color);
+          else if (activeKey) { annotations.setHighlight(activeKey, color, { verseText: activeVerseData?.text }); setActiveVerse(null); }
+        }}
+        onNote={() => {
+          if (selectionMode) startMultiVerseNote();
+          else { const verse = activeVerse; setActiveVerse(null); if (verse !== null) setEditingNote({ verses: [verse], noteId: null }); }
+        }}
+        onEditNote={noteId => { const verse = activeVerse; setActiveVerse(null); if (verse !== null) setEditingNote({ verses: [verse], noteId }); }}
         onAI={() => { haptics.soft(); setMeaningOpen(true); }}
-        onMoment={activeVerse !== null && findBibleMoment(book.id, chapter, activeVerse) ? () => {
-          const moment = findBibleMoment(book.id, chapter, activeVerse!);
-          if (moment) { haptics.soft(); pendingMoment.current = moment; setActiveVerse(null); }
-        } : undefined}
-        reference={
-          activeVerseData ? `${book.name} ${chapter}:${activeVerseData.number}` : null
-        }
-        previewText={activeVerseData?.text ?? null}
-        currentHighlight={
-          activeKey ? annotations.getHighlight(activeKey) : null
-        }
-        notes={activeKey ? annotations.getNotes(activeKey) : []}
-        onHighlight={(color) => {
-          if (!activeKey) return;
-          // Pass the verse text so the Notes / Highlights screens
-          // can show the actual scripture, not just a reference.
-          annotations.setHighlight(activeKey, color, {
-            verseText: activeVerseData?.text,
-          });
-          setActiveVerse(null);
-        }}
-        onAddNote={() => {
-          const v = activeVerse;
-          setActiveVerse(null);
-          // Close the sheet first; let its slide-out finish before
-          // opening the page-sheet editor — feels less jumpy.
-          setTimeout(() => {
-            if (v !== null) setEditingNote({ verses: [v], noteId: null });
-          }, 220);
-        }}
-        onEditNote={(noteId) => {
-          const v = activeVerse;
-          setActiveVerse(null);
-          setTimeout(() => {
-            if (v !== null) setEditingNote({ verses: [v], noteId });
-          }, 220);
-        }}
-        onShare={() => {
-          setActiveVerse(null);
-          setTimeout(handleShare, 240);
-        }}
-        onClose={() => {
-          setActiveVerse(null);
-          if (pendingMoment.current) {
-            const moment = pendingMoment.current;
-            pendingMoment.current = null;
-            setOpenMoment(moment);
-          }
-        }}
-      />
+        onShare={() => { if (selectionMode) void shareSelected(); else { void handleShare(); setActiveVerse(null); } }}
+        onClose={() => { setActiveVerse(null); exitSelection(); }}
+      />}
 
       {/* ─── Note editor ──────────────────────────────────────
           Same modal handles both "add new" and "edit existing" —
           differentiated by editingNote.noteId. On save we route to
           the right provider method. */}
-      <NoteEditor
+      <ReaderStickyNote
         visible={editingNote !== null}
         reference={editingReference}
         verseText={editingVerseData?.text ?? ""}
@@ -2102,9 +2084,11 @@ function VerseFlow({
   momentMotionActive?: boolean;
 }) {
   const annotations = useAnnotations();
+  const { ids: collectedMomentIds } = useBibleMomentCollection();
   const colors = useColors();
   const scheme = useResolvedScheme();
 
+  const [brushLines, setBrushLines] = useState<Array<{ x: number; y: number; width: number; height: number; verse: number }>>([]);
   const baseFontSize = 18 * scale;
   const baseLineHeight = 30 * scale;
   const verseNumSize = 11 * Math.sqrt(scale);
@@ -2177,12 +2161,20 @@ function VerseFlow({
         if (nextExpected > maxVerseNum) break;
       }
 
+      let currentVerse = decorated[0]?.number ?? 1;
+      const painted = lines.map(line => {
+        for (const [verse, y] of Object.entries(anchors)) { if (y <= line.y) currentVerse = Math.max(currentVerse, Number(verse)); }
+        return { x: line.x, y: line.y, width: line.width, height: line.height, verse: currentVerse };
+      });
+      if (onVerseLongPress) setBrushLines(previous => JSON.stringify(previous) === JSON.stringify(painted) ? previous : painted);
       onAnchors(anchors);
     },
-    [decorated, onAnchors, onMeasureLines],
+    [decorated, onAnchors, onMeasureLines, onVerseLongPress],
   );
 
   return (
+    <View>
+      {brushLines.map((line, index) => <ReaderHighlightBrush key={index} {...line} color={selectedSet?.has(line.verse) ? undefined : decorated.find(v => v.number === line.verse)?.highlight?.fill} />)}
     <Text
       onTextLayout={handleTextLayout}
       style={{
@@ -2197,6 +2189,7 @@ function VerseFlow({
       {decorated.map((v, i) => {
         const moment = findBibleMoment(bookId, chapter, v.number);
         const isFocus = focusVerse === v.number;
+        const isCollected = !!moment && collectedMomentIds.includes(moment.id);
         const isSelected = selectedSet?.has(v.number) ?? false;
 
         // Verse "innards" — verse number + note marker + spacer +
@@ -2240,7 +2233,7 @@ function VerseFlow({
             >
               {"  "}
             </Text>
-            {moment && onVerseLongPress ? <MomentShimmerText
+            {moment && !isCollected && onVerseLongPress ? <MomentShimmerText
               text={normalizeVerseBody(v.text)}
               momentId={moment.id}
               active={momentMotionActive && !isSelected && !v.highlight}
@@ -2254,7 +2247,9 @@ function VerseFlow({
                 fontSize: baseFontSize,
                 lineHeight: baseLineHeight,
                 letterSpacing: -0.1,
-                color: moment && !isSelected ? MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"] : colors.ink,
+                textDecorationLine: isCollected ? "underline" : "none",
+                textDecorationColor: "#FF5A3666",
+                color: moment && !isCollected && !isSelected ? MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"] : colors.ink,
               }}
             >
               {normalizeVerseBody(v.text)}
@@ -2272,7 +2267,7 @@ function VerseFlow({
         // invisible against the light background).
         const baseBg = isSelected
           ? `${colors.ink}2E`
-          : v.highlight?.fill ?? "transparent";
+          : brushLines.length ? "transparent" : v.highlight?.fill ?? "transparent";
 
         // Branch the wrapper element instead of computing a union
         // type for `backgroundColor` — the latter trips TS because
@@ -2296,7 +2291,7 @@ function VerseFlow({
               <MomentVerseText
                 onPress={() => onVerseLongPress(v.number)}
                 onUnlock={() => onVersePress(v.number)}
-                glowColor={MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"]}
+                glowColor={isCollected ? "transparent" : MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"]}
                 style={{ fontFamily: NEW_YORK, fontWeight: "400", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1, color: colors.ink, backgroundColor: baseBg }}
               >{inner}</MomentVerseText>
             ) : isFocus ? (
@@ -2344,6 +2339,7 @@ function VerseFlow({
         );
       })}
     </Text>
+    </View>
   );
 }
 
@@ -3459,6 +3455,7 @@ function ToolbarChip({
 }
 
 function ReaderToolbar({
+  bookTitle, onBack, onMoments, pocketRef, momentArrival, collecting, chromeVisible, chromeStyle, onSheetBusy,
   onAudio,
   onContents,
   textSizeId,
@@ -3467,6 +3464,15 @@ function ReaderToolbar({
   onChangeTranslation,
   initialSheet,
 }: {
+  chromeVisible: boolean;
+  chromeStyle: Animated.WithAnimatedObject<ViewStyle>;
+  onSheetBusy: (busy: boolean) => void;
+  momentArrival: number;
+  collecting: boolean;
+  bookTitle: string;
+  onBack: () => void;
+  onMoments: () => void;
+  pocketRef: React.RefObject<View | null>;
   onAudio: () => void;
   onContents: () => void;
   textSizeId: TextSizeId;
@@ -3477,7 +3483,7 @@ function ReaderToolbar({
 }) {
   const colors = useColors();
   const scheme = useResolvedScheme();
-  const { pref, setPref } = useTheme();
+  const { tone, setTone } = useReaderTone();
   const isLight = scheme === "light";
   const [draftTextSize, setDraftTextSize] = useState(textSizeId);
   const [textSizeOpen, setTextSizeOpen] = useState(initialSheet === "textsize");
@@ -3486,6 +3492,7 @@ function ReaderToolbar({
   // `visible` flips false. Hold the version pill until dismiss finishes,
   // and only then apply a pending translation change.
   const [versionSheetBusy, setVersionSheetBusy] = useState(false);
+  useEffect(() => { onSheetBusy(versionOpen || textSizeOpen || versionSheetBusy); }, [versionOpen, textSizeOpen, versionSheetBusy, onSheetBusy]);
   const pendingTranslationRef = useRef<TranslationId | null>(null);
 
   const versions = pickableTranslations();
@@ -3570,110 +3577,19 @@ function ReaderToolbar({
 
   return (
     <>
-      <View
-        pointerEvents="box-none"
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: READER_TOOLBAR_BOTTOM_INSET,
-          alignItems: "center",
-          paddingHorizontal: spacing[24],
-          zIndex: 40,
-        }}
-      >
-        {Platform.OS === "ios" ? <NativeReaderControls
-          onAudio={onAudio}
-          translation={translation.tag}
-          disabled={versionOpen || versionSheetBusy}
-          onContents={() => { haptics.soft(); onContents(); }}
-          onVersion={openVersionSheet}
-          onTextSize={() => { haptics.soft(); setDraftTextSize(textSizeId); setTextSizeOpen(true); }}
-        /> : (        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            columnGap: READER_PILL_GAP,
-          }}
-        >
-          <ToolbarChip
-            containerStyle={circleStyle}
-            accessibilityLabel="Open chapter contents"
-            onPress={() => {
-              haptics.soft();
-              onContents();
-            }}
-          >
-            <SFSymbol
-              name="list.bullet"
-              size={18}
-              color={iconColor}
-              weight="medium"
-            />
-          </ToolbarChip>
-
-          <ToolbarChip
-            containerStyle={[
-              {
-                height: READER_PILL_HEIGHT,
-                minWidth: 88,
-                paddingHorizontal: 18,
-                borderRadius: READER_PILL_HEIGHT / 2,
-                backgroundColor: pillBg,
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: pillBorder,
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: versionSheetBusy ? 0.55 : 1,
-              },
-              pillShadow,
-            ]}
-            accessibilityLabel={`Bible version ${translation.tag}`}
-            onPress={openVersionSheet}
-            disabled={versionOpen || versionSheetBusy}
-          >
-            <Text
-              style={[
-                typography.smallLabel,
-                {
-                  color: iconColor,
-                  textTransform: "uppercase",
-                  textAlign: "center",
-                },
-              ]}
-              allowFontScaling={false}
-            >
-              {translation.tag}
-            </Text>
-          </ToolbarChip>
-
-          <ToolbarChip
-            containerStyle={circleStyle}
-            accessibilityLabel="Reading appearance"
-            onPress={() => {
-              haptics.soft();
-              setDraftTextSize(textSizeId);
-              setTextSizeOpen(true);
-            }}
-          >
-            <Text
-              style={[
-                systemText.headline,
-                { color: iconColor, letterSpacing: -0.3 },
-              ]}
-              allowFontScaling={false}
-            >
-              Aa
-            </Text>
-          </ToolbarChip>
-
-          <ToolbarChip containerStyle={circleStyle} accessibilityLabel="Listen to this chapter" onPress={onAudio}><SFSymbol name="headphones" size={20} color={iconColor} /></ToolbarChip>
-
-        </View>)}
-      </View>
+      <Animated.View pointerEvents={chromeVisible ? "auto" : "none"} accessibilityElementsHidden={!chromeVisible} importantForAccessibility={chromeVisible ? "auto" : "no-hide-descendants"} style={[{ height: READER_HEADER_HEIGHT, flexDirection: "row", alignItems: "center", paddingHorizontal: 8, backgroundColor: colors.bg, zIndex: 40 }, chromeStyle]}>
+        <ReaderRibbon />
+        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><SFSymbol name="chevron.left" size={20} color={colors.ink} /></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Choose chapter, ${bookTitle}`} onPress={onContents} style={{ flex: 1, minHeight: 44, flexDirection: "row", gap: 5, alignItems: "center", justifyContent: "center", paddingHorizontal: 6 }}><Text numberOfLines={1} style={{ ...systemText.headline, color: colors.ink, flexShrink: 1, textAlign: "center" }}>{bookTitle}</Text><SFSymbol name="chevron.down" size={10} color={colors.inkMuted} /></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Bible version ${translation.tag}`} onPress={openVersionSheet} disabled={versionSheetBusy} style={{ minWidth: 44, height: 44, justifyContent: "center", alignItems: "center" }}><Text style={{ ...systemText.footnote, fontWeight: "600", color: colors.ink }}>{translation.tag}</Text></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Reading appearance" onPress={() => { setDraftTextSize(textSizeId); setTextSizeOpen(true); }} style={{ width: 44, height: 44, justifyContent: "center", alignItems: "center" }}><Text style={{ ...systemText.headline, color: colors.ink }}>Aa</Text></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Listen to this chapter" onPress={onAudio} style={{ width: 44, height: 44, justifyContent: "center", alignItems: "center" }}><SFSymbol name="headphones" size={20} color={colors.ink} /></Pressable>
+        <View ref={pocketRef} collapsable={false}><ReaderMomentPocket onPress={onMoments} arrival={momentArrival} collecting={collecting} /></View>
+      </Animated.View>
 
       {/* Keep sheets mounted — unmounting on close skips TrueSheet.dismiss(). */}
       <ReaderSheet
+        backgroundColor={colors.surface}
         visible={versionOpen}
         onClose={handleVersionClose}
         detents={["auto"]}
@@ -3712,6 +3628,7 @@ function ReaderToolbar({
       </ReaderSheet>
 
       <ReaderSheet
+        backgroundColor={colors.surface}
         visible={textSizeOpen}
         onClose={() => { setTextSizeOpen(false); if (draftTextSize !== textSizeId) onChangeTextSize(draftTextSize); }}
         detents={["auto"]}
@@ -3751,12 +3668,12 @@ function ReaderToolbar({
           />
           <Text style={{ color: colors.inkMuted, fontSize: 13, marginTop: 24, marginBottom: 8 }}>Appearance</Text>
           <SegmentedControl
-            values={["System", "Light", "Dark"]}
+            values={["Light", "Sepia", "Dark"]}
             appearance={scheme}
-            selectedIndex={["system", "light", "dark"].indexOf(pref)}
+            selectedIndex={["light", "sepia", "dark"].indexOf(tone)}
             onChange={event => {
-              const next = (["system", "light", "dark"] as const)[event.nativeEvent.selectedSegmentIndex];
-              if (next) { haptics.tick(); setPref(next); }
+              const next = (["light", "sepia", "dark"] as const)[event.nativeEvent.selectedSegmentIndex];
+              if (next) { haptics.tick(); setTone(next); }
             }}
             style={{ height: 44 }}
           />

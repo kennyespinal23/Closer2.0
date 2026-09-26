@@ -1,3 +1,6 @@
+import { LibraryBookOpening } from "@/components/LibraryBookcase";
+import { takeLibraryOpening } from "@/lib/libraryOpening";
+import { releaseCapture } from "react-native-view-shot";
 import { GenesisLivingCover } from "@/components/GenesisLivingCover";
 import { BookReaderPreparation } from "./[chapter]";
 import { usePreferences } from "@/state/preferences";
@@ -42,6 +45,8 @@ import { useColors, useResolvedScheme } from "@/state/theme";
 export default function BookOverviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const [opening, setOpening] = useState(() => takeLibraryOpening(id));
+  useEffect(() => () => { if (opening?.snapshot) releaseCapture(opening.snapshot); }, [opening]);
   const book = id ? findBookById(id) : undefined;
 
   if (!book) {
@@ -78,7 +83,7 @@ export default function BookOverviewScreen() {
     );
   }
 
-  return <BookDetail key={book.id} book={book} />;
+  return <View style={{ flex: 1 }}><BookDetail key={book.id} book={book} />{opening && <LibraryBookOpening book={book} source={opening.source} snapshot={opening.snapshot} onOpen={() => setOpening(null)} />}</View>;
 }
 
 function BookDetail({ book }: { book: Book }) {

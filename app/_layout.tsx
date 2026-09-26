@@ -42,7 +42,7 @@ import {
   StudySessionsProvider,
   useStudySessions,
 } from "@/state/studySessions";
-import { ThemeProvider, useTheme } from "@/state/theme";
+import { ThemeProvider, useTheme, useResolvedScheme } from "@/state/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   /* splash screen may already be hidden; safe to ignore */
@@ -173,12 +173,13 @@ export default function RootLayout() {
  */
 function AppShell() {
   const skyTop = useSkyTop();
+  const canvasScheme = useResolvedScheme();
 
   return (
     <View style={{ flex: 1, backgroundColor: skyTop }}>
       <SkyGradient />
       {/* White glyphs — sky is saturated in both day and night. */}
-      <StatusBar style="light" />
+      <StatusBar style={canvasScheme === "light" ? "dark" : "light"} />
       {/* Notification deep-link wiring. Lives INSIDE the
           HydrationGate so the navigator is mounted and the
           app shell is hydrated before we try to route on a
@@ -253,8 +254,9 @@ function AppShell() {
         />
         <Stack.Screen
           name="book"
-          options={{
-            animation: "slide_from_right",
+          options={({ route }) => {
+            const params = route.params as { libraryOpening?: string; params?: { libraryOpening?: string } } | undefined;
+            return { animation: params?.libraryOpening || params?.params?.libraryOpening ? "none" : "slide_from_right" };
           }}
         />
         {/* Top-level personal-scripture screens — drill-down

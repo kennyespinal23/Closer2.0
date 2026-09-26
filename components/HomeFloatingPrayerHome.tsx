@@ -1232,7 +1232,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                 style={[
                   typography.smallLabel,
                   {
-                    color: "rgba(255,255,255,0.85)",
+                    color: colors.textSecondary,
                     textTransform: "uppercase",
                   },
                 ]}
@@ -1244,7 +1244,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                 style={{
                   marginTop: contentLayout.textGap,
                   ...contentText.section,
-                  color: "#FFFFFF",
+                  color: colors.ink,
                 }}
                 numberOfLines={1}
               >

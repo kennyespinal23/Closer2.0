@@ -59,6 +59,7 @@ export async function removeKey(key: string): Promise<void> {
  */
 export const STORAGE_KEYS = {
   readerPaperTone: "closer.readerPaperTone.v1",
+  libraryDoorsSeen: "closer.libraryDoorsSeen.v1",
   bibleLibraryView: "closer.bibleLibraryView.v1",
   bibleIntro: "closer.bibleIntro.v1",
   onboarding: "closer.onboarding.v1",

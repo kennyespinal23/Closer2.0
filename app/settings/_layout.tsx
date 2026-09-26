@@ -3,7 +3,7 @@ import { Stack, useRouter } from "expo-router";
 import { HeaderBackButton } from "@react-navigation/elements";
 import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
 import { goBackOr } from "@/lib/navigation";
-import { SKY_CHROME_INK } from "@/components/HomeSkyGradient";
+import { useColors } from "@/state/theme";
 
 /**
  * Nested stack for `/settings/*`.
@@ -20,6 +20,7 @@ import { SKY_CHROME_INK } from "@/components/HomeSkyGradient";
  */
 export default function SettingsLayout() {
   const router = useRouter();
+  const colors = useColors();
 
   return (
     <View style={{ flex: 1, backgroundColor: "transparent" }}>
@@ -30,19 +31,19 @@ export default function SettingsLayout() {
             headerTransparent: true,
             headerShadowVisible: false,
             headerBackButtonDisplayMode: "minimal",
-            headerTintColor: SKY_CHROME_INK,
+            headerTintColor: colors.ink,
             headerStyle: { backgroundColor: "transparent" },
             headerTitleStyle: {
               fontFamily: "System",
               fontWeight: "600",
               fontSize: 17,
-              color: SKY_CHROME_INK,
+              color: colors.ink,
             },
             contentStyle: { backgroundColor: "transparent" },
             animation: "slide_from_right",
             headerLeft: () => (
               <HeaderBackButton
-                tintColor={SKY_CHROME_INK}
+                tintColor={colors.ink}
                 onPress={() => goBackOr(router, "/profile")}
               />
             ),

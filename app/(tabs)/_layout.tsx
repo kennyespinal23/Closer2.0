@@ -1,3 +1,4 @@
+import { useResolvedScheme } from "@/state/theme";
 import { View } from "react-native";
 import type {
   ParamListBase,
@@ -100,6 +101,7 @@ const NativeTabs = withLayoutContext<
 export default function TabsLayout() {
   // Day/night zenith fill so tab swaps never flash black under the sky.
   const skyTop = useSkyTop();
+  const scheme = useResolvedScheme();
 
   // Layered structure (back → front):
   //   1. Outer View with sky-top fill — prevents a black flash
@@ -119,7 +121,7 @@ export default function TabsLayout() {
       <View style={{ flex: 1 }}>
         <NativeTabs
           tabBarActiveTintColor={TAB_ACCENT_RED}
-          tabBarInactiveTintColor={TAB_BAR_INACTIVE}
+          tabBarInactiveTintColor={scheme === "light" ? "#66584D" : TAB_BAR_INACTIVE}
           // Force our custom tints onto the iOS 26+ Liquid Glass
           // tab bar. Without this the package returns nil for the
           // inactive tint on iOS 26+ (see TabViewProps.swift's

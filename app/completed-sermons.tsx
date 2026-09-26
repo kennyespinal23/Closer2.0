@@ -35,7 +35,7 @@ import {
 } from "@/state/annotations";
 import { type SermonCompletion, useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
-import { SKY_CHROME_INK, SkyGradient, useSkyTop } from "@/components/HomeSkyGradient";
+import { SkyGradient, useSkyTop } from "@/components/HomeSkyGradient";
 
 const PAPER = "#FFFCFA";
 const PAPER_INK = "#1A1510";
@@ -78,7 +78,7 @@ export default function CompletedSermonsScreen() {
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <NavBar
           onBack={() => goBackOr(router, "/(tabs)/today")}
-          ink={SKY_CHROME_INK}
+          ink={colors.ink}
         />
 
         <View style={{ paddingHorizontal: H_PAD, paddingBottom: 12 }}>

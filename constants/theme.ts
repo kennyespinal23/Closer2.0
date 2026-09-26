@@ -148,67 +148,9 @@ export type ColorPalette = {
   destructive: string;
 };
 
-/**
- * Closer's dark palette — "Apple Tuned."
- *
- * Iteration history:
- *   v1  pure black bg (#000) + #0F0F0F surface — read OLED-clinical,
- *       cards barely lifted off the void, whole app felt cold.
- *   v2  "Hallow tuned": warm-neutral dark bg (#141416) + plum-tinted
- *       surface (#22202A). Gained warmth, but the warm bg meant the
- *       sermon-type accent colors and the streak-ring colors lost
- *       their pop — everything sat in the same low-contrast soup.
- *   v3  (this) "Apple tuned." We pulled directly from Apple Fitness,
- *       Apple Games, and Apple TV iOS — the three apps the design
- *       brief explicitly targets — and adopted their shared dark-
- *       app system token-for-token. The principle is the same one
- *       all three follow: the canvas is a true-black void, the
- *       chrome is monochromatic and quiet, and the CONTENT carries
- *       all of the color (sermon-type accents, streak ring,
- *       per-day glow). On OLED this gives the void an actual
- *       "off pixels" depth that warm grays can't fake.
- *
- * The Apple dark-app system, as shipped:
- *
- *   bg            #000000   true black — Apple's page bg across
- *                            Fitness Summary, TV Watch Now, and
- *                            Games Home. OLED-floating depth.
- *   surface       #1C1C1E   iOS UIColor.systemGray6 dark — the
- *                            universal Apple inset-card fill.
- *                            Reads as a single elevation step
- *                            above bg without needing a border.
- *   accentSoft    #1C1C1E   same as surface — soft-accent wells
- *                            (avatar circle, glyph wells) become
- *                            elevation moves rather than colored
- *                            washes. Apple's circle avatars in
- *                            Fitness/TV use exactly this trick.
- *   border        #2C2C2E   iOS UIColor.separator dark — barely
- *                            perceptible. Used as a structural
- *                            hint, never as page chrome.
- *   borderStrong  #3A3A3C   iOS UIColor.opaqueSeparator dark —
- *                            used only when a real edge needs to
- *                            be visible (e.g., pressed states).
- *   inkMuted      #EBEBF5/99 iOS secondaryLabel dark (60% white).
- *                            Body copy, captions, metadata.
- *   inkSubtle     #EBEBF5/66 iOS tertiaryLabel dark (40% white).
- *                            Deep metadata: ref labels, timestamps.
- *
- * Why this matters: bg + surface + border are referenced in nearly
- * every screen via `bg-bg` / `bg-surface` / `border-border`, so
- * flipping the tokens here updates the whole app's feel in one
- * shot — every card on every tab now reads as an Apple dark-app
- * surface without per-screen edits.
- *
- * Cost we accepted: the warm plum tint that v2 brought is gone.
- * The user's brief was explicit (Apple Fitness / Apple Games /
- * Apple TV are the target), and the trade was the right one — a
- * neutral void is what lets the per-sermon accent colors and the
- * vibrant ambient atmosphere actually POP. With the warm bg, the
- * accents fought the canvas; on true black they read like the
- * Apple Fitness activity rings against their black summary.
- */
+/** Warm evening canvas shared with the library; neutral cards retain their elevation. */
 export const DARK_COLORS: ColorPalette = {
-  bg: "#000000",
+  bg: "#221819",
   surface: "#1C1C1E",
   // Apple's UIColor.secondarySystemBackground (dark). v1 of
   // this token shipped at #111111 (calmer than Apple defaults)
@@ -365,7 +307,7 @@ export const LIGHT_COLORS: ColorPalette = {
   //   • v3 #F8F7F4 — cooler daylight white
   //   • v4 #FDF6EC — warmer cream
   //   • v5 (this) #F9F0EB — soft blush cream
-  bg: "#F9F0EB",
+  bg: "#F1E1D2",
   surface: "#FFFFFF",
   // Light-mode counterparts to the dark elevation steps.
   // Surface inversion holds: pure white cards (#FFFFFF) lift

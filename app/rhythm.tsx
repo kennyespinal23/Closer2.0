@@ -1,3 +1,4 @@
+import { SkyGradient } from "@/components/HomeSkyGradient";
 import { StatusBar } from "expo-status-bar";
 import { useColors, useResolvedScheme } from "@/state/theme";
 import { useCallback } from "react";
@@ -23,6 +24,7 @@ export default function RhythmModalScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <SkyGradient />
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       <ModalNavBar title="Your Journey" onClose={close} />
 

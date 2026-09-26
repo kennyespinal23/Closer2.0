@@ -56,7 +56,7 @@ import {
   useTheme,
   type ThemePref,
 } from "@/state/theme";
-import { SKY_CHROME_INK } from "@/components/HomeSkyGradient";
+import { SkyGradient } from "@/components/HomeSkyGradient";
 
 /** Profile hero avatar diameter — large enough to read as identity. */
 const AVATAR_SIZE = 112;
@@ -242,6 +242,7 @@ export default function ProfileTabScreen() {
       style={{ flex: 1, backgroundColor: colors.bg, overflow: "hidden" }}
       edges={["top"]}
     >
+      <SkyGradient />
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: TAB_BAR_TOTAL_HEIGHT + 24 }}

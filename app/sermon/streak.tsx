@@ -1,3 +1,4 @@
+import { SkyGradient } from "@/components/HomeSkyGradient";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -159,6 +160,7 @@ export default function StreakScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <SkyGradient />
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <ScrollView

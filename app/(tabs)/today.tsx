@@ -79,7 +79,7 @@ import { useOnboarding } from "@/state/onboarding";
 import { useProgress } from "@/state/progress";
 import { type StudySession, useStudySessions } from "@/state/studySessions";
 import { useReadingGoal } from "@/state/readingGoal";
-import { useColors } from "@/state/theme";
+import { useColors, useResolvedScheme } from "@/state/theme";
 import { computeContinueReading } from "@/lib/continueReading";
 
 // Home — the Imprint pass.
@@ -309,6 +309,7 @@ export default function TodayScreen() {
   // a few precise font sizes / tracking values that read cleaner as
   // inline style than as utility composition.
   const colors = useColors();
+  const canvasScheme = useResolvedScheme();
 
   // Editorial date eyebrow that sits above the page title. Apple
   // uses small-caps section markers ("## Design", "## Cameras")
@@ -781,7 +782,7 @@ export default function TodayScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "transparent" }}>
-      {isFocused ? <StatusBar style="light" /> : null}
+      {isFocused ? <StatusBar style={canvasScheme === "light" ? "dark" : "light"} /> : null}
       <HomeDevotionalCarousel
         cards={carouselCards}
         onCompletedPress={handleOpenCompleted}

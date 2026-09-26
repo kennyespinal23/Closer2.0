@@ -14,25 +14,7 @@ import {
 
 type Variant = "thumb" | "card" | "hero";
 
-/**
- * One unified way to render a book "cover" across the app.
- *
- * If the book has registered art in constants/bookCovers.ts we
- * render the actual image. Otherwise we render a tasteful
- * placeholder — a vertical gradient tinted to the book's category
- * (so The Law, Wisdom, Apocalyptic, etc. all read as visually
- * distinct sections of the canon) with the book's abbreviation
- * centered in elegant typography.
- *
- * Three variants, picked by the consumer:
- *   • thumb — small list-row cell (Library list)
- *   • card  — medium card grid cell (future use)
- *   • hero  — full-bleed top of the book overview screen
- *
- * The component is intentionally dumb: it doesn't know anything
- * about layout boundaries beyond its own aspect-ratio (3:4). Wrap
- * it in a sized View to control its on-screen footprint.
- */
+/** Shared exported placeholder cover; variants only tune the outer corners. */
 export function BookCover({
   book,
   variant,

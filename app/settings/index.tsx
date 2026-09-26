@@ -14,6 +14,7 @@ export default function SettingsIndex() {
       <SettingsLinkRow label="Account & email" onPress={() => open("/settings/account")} />
     </SettingsSection>
     <SettingsSection title="Preferences">
+      <SettingsLinkRow label="My Blocks" sublabel="Manage app blocks and focus schedules" onPress={() => open("/settings/study-sessions")} showDivider />
       <SettingsLinkRow label="Notifications" onPress={() => open("/settings/notifications")} showDivider />
       <SettingsLinkRow label="Appearance" value={pref === "system" ? "System" : pref === "light" ? "Light" : "Dark"} onPress={() => open("/settings/appearance")} />
     </SettingsSection>

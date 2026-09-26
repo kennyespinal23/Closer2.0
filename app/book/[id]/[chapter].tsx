@@ -1,3 +1,4 @@
+import { ReaderSavedNote } from "@/components/ReaderSavedNote";
 import { ReaderVerseTools } from "@/components/ReaderVerseTools";
 import { ReaderStickyNote } from "@/components/ReaderStickyNote";
 import { useReaderChrome } from "@/lib/useReaderChrome";
@@ -1854,6 +1855,10 @@ function ChapterReaderContent() {
                       else setActiveVerse(n);
                     }
                   }}
+                  onNotePress={n => {
+                    const note = annotations.getNotes(verseKey(viewportBookId, viewportChapter, n))[0];
+                    if (note) { exitSelection(); setActiveVerse(null); setEditingNote({ verses: [n], noteId: note.id }); }
+                  }}
                   onVerseLongPress={(n) => {
                     // Long-press is a deliberate "I want more
                     // than a tap can give me" gesture, so it
@@ -2042,6 +2047,7 @@ function VerseFlow({
   scale,
   onVersePress,
   onVerseLongPress,
+  onNotePress,
   focusVerse,
   focusTint,
   focusGlow,
@@ -2061,6 +2067,7 @@ function VerseFlow({
    * need to plumb it through.
    */
   onVerseLongPress?: (verse: number) => void;
+  onNotePress?: (verse: number) => void;
   /** Verse number to spotlight, or null when no focus is active. */
   focusVerse: number | null;
   /** Hex color (with #) used for the focus glow background. */
@@ -2218,7 +2225,7 @@ function VerseFlow({
                   fontFamily: "System",
                   fontWeight: "700",
                   fontSize: verseNumSize * 0.95,
-                  color: NOTE_MARKER_COLOR,
+                  color: onVerseLongPress ? "transparent" : NOTE_MARKER_COLOR,
                 }}
               >
                 {" "}●{v.noteCount > 1 ? v.noteCount : ""}
@@ -2297,6 +2304,7 @@ function VerseFlow({
             ) : isFocus ? (
               <Animated.Text
                 onPress={() => onVersePress(v.number)}
+
                 onLongPress={
                   onVerseLongPress
                     ? () => onVerseLongPress(v.number)
@@ -2317,6 +2325,7 @@ function VerseFlow({
             ) : (
               <Text
                 onPress={() => onVersePress(v.number)}
+
                 onLongPress={
                   onVerseLongPress
                     ? () => onVerseLongPress(v.number)
@@ -2339,6 +2348,10 @@ function VerseFlow({
         );
       })}
     </Text>
+    {onVerseLongPress && decorated.filter(v => v.hasNote).map(v => {
+      const line = brushLines.find(line => line.verse === v.number);
+      return line ? <ReaderSavedNote key={v.key} x={line.x + 8 + String(v.number).length * verseNumSize * .62} y={line.y + Math.max(1, (baseLineHeight - 20) / 2)} verse={v.number} count={v.noteCount} onPress={() => (onNotePress ?? onVerseLongPress)(v.number)} /> : null;
+    })}
     </View>
   );
 }
@@ -2733,6 +2746,7 @@ function ReaderPageView({
   bookId,
   onVersePress,
   onVerseLongPress,
+  onNotePress,
   selectedSet,
   momentMotionActive = false,
   focusVerse,
@@ -2759,6 +2773,7 @@ function ReaderPageView({
   bookId: string;
   onVersePress: (verse: number) => void;
   onVerseLongPress?: (verse: number) => void;
+  onNotePress?: (verse: number) => void;
   selectedSet?: ReadonlySet<number>;
   momentMotionActive?: boolean;
   focusVerse: number | null;
@@ -2802,6 +2817,7 @@ function ReaderPageView({
         scale={scale}
         onVersePress={onVersePress}
         onVerseLongPress={onVerseLongPress}
+        onNotePress={onNotePress}
         selectedSet={selectedSet}
         momentMotionActive={momentMotionActive}
         focusVerse={focusVerse}
@@ -3577,7 +3593,7 @@ function ReaderToolbar({
 
   return (
     <>
-      <Animated.View pointerEvents={chromeVisible ? "auto" : "none"} accessibilityElementsHidden={!chromeVisible} importantForAccessibility={chromeVisible ? "auto" : "no-hide-descendants"} style={[{ height: READER_HEADER_HEIGHT, flexDirection: "row", alignItems: "center", paddingHorizontal: 8, backgroundColor: colors.bg, zIndex: 40 }, chromeStyle]}>
+      <Animated.View pointerEvents={chromeVisible ? "auto" : "none"} accessibilityElementsHidden={!chromeVisible} importantForAccessibility={chromeVisible ? "auto" : "no-hide-descendants"} style={[{ height: READER_HEADER_HEIGHT, flexDirection: "row", alignItems: "center", paddingHorizontal: 8, backgroundColor: tone === "sepia" ? "#E3D2B7" : isLight ? "#F0EBE5" : "#302925", borderBottomWidth: 1, borderBottomColor: isLight ? "#CBBFB2" : "#66564B", boxShadow: "0 4px 12px #00000018", zIndex: 40 }, chromeStyle]}>
         <ReaderRibbon />
         <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><SFSymbol name="chevron.left" size={20} color={colors.ink} /></Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel={`Choose chapter, ${bookTitle}`} onPress={onContents} style={{ flex: 1, minHeight: 44, flexDirection: "row", gap: 5, alignItems: "center", justifyContent: "center", paddingHorizontal: 6 }}><Text numberOfLines={1} style={{ ...systemText.headline, color: colors.ink, flexShrink: 1, textAlign: "center" }}>{bookTitle}</Text><SFSymbol name="chevron.down" size={10} color={colors.inkMuted} /></Pressable>

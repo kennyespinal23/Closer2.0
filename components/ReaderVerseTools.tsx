@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { BackHandler, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HIGHLIGHT_COLORS, type HighlightColorId } from "@/state/annotations";
 import { useReducedMotion } from "@/lib/useReducedMotion";
@@ -16,9 +16,9 @@ export function ReaderVerseTools({ anchorY, reference, currentHighlight, notes =
 }) {
   const { width, height } = useWindowDimensions(), insets = useSafeAreaInsets();
   const reduced = useReducedMotion(), progress = useSharedValue(reduced ? 1 : 0);
-  useEffect(() => { progress.value = reduced ? 1 : withSpring(1, { damping: 17, stiffness: 330 }); }, []);
+  useEffect(() => { progress.value = reduced ? 1 : withTiming(1, { duration: 140, easing: Easing.out(Easing.cubic) }); }, []);
   useEffect(() => { const subscription = BackHandler.addEventListener("hardwareBackPress", () => { onClose(); return true; }); return () => subscription.remove(); }, [onClose]);
-  const style = useAnimatedStyle(() => ({ opacity: progress.value, transform: [{ scale: .6 + .4 * progress.value }] }));
+  const style = useAnimatedStyle(() => ({ opacity: progress.value, transform: [{ scale: .96 + .04 * progress.value }] }));
   const compact = width < 400;
   const panelHeight = (compact ? 146 : 100) + (notes.length ? 44 : 0);
   const above = anchorY - panelHeight - 16 >= insets.top + 60;

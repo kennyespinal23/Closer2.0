@@ -24,7 +24,7 @@ export function MomentVerseText({ children, style, onPress, onUnlock, glowColor 
     accessibilityHint="Tap to discover a Bible Moment. Hold for highlighting and notes."
     accessibilityActions={[{ name: "activate", label: "Discover Bible Moment" }, { name: "longpress", label: "Verse actions" }]}
     onAccessibilityAction={(event) => event.nativeEvent.actionName === "longpress" ? onPress() : onUnlock()}
-    onPress={onUnlock} onLongPress={onPress}
+    onPress={onUnlock}  onLongPress={onPress}
     style={[style, { textShadowColor: glowColor, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: reduced ? 0 : 2 }]}
   >{children}</Text>;
 }

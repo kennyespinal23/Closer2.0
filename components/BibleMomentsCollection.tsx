@@ -1,6 +1,6 @@
 import { contentText, contentLayout } from "@/lib/contentStyles";
 import { type ReactNode, useRef, useState } from "react";
-import { FlatList, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Modal, ScrollView, FlatList, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import { useRouter, type Href } from "expo-router";
 import { Host, ContextMenu, Button as NativeButton } from "@expo/ui/swift-ui";
@@ -9,7 +9,9 @@ import { BIBLE_MOMENTS, MOMENT_CATEGORIES, type BibleMoment, type MomentCategory
 import { getBookCover } from "@/constants/bookCovers";
 import { useBibleMomentCollection, hydrateBibleMoments } from "@/state/bibleMoments";
 import { useColors, useResolvedScheme } from "@/state/theme";
-import { BibleMomentCard } from "@/components/BibleMoment";
+import { ReaderMomentDetail } from "@/components/ReaderMomentCardBox";
+import { MomentBookFoil } from "@/components/MomentBookFoil";
+import { findBookById } from "@/constants/books";
 import { SFSymbol } from "@/components/Symbol";
 import * as haptics from "@/lib/haptics";
 
@@ -24,6 +26,7 @@ export function BibleMomentsCollection({ standalone = false, initialCategory = "
   const { ids, hydrated, error } = useBibleMomentCollection();
   const [filter, setFilter] = useState<CategoryFilter>(initialCategory);
   const [view, setView] = useState(0);
+  const [foil, setFoil] = useState<string | null>(null);
   const [open, setOpen] = useState<BibleMoment | null>(null);
   const list = useRef<FlatList<BibleMoment>>(null);
   const earnedIds = new Set(ids);
@@ -34,8 +37,10 @@ export function BibleMomentsCollection({ standalone = false, initialCategory = "
   const columns = width < 350 || fontScale > 1.4 ? 1 : 2;
   const cardWidth = standalone ? (width - 40 - (columns - 1) * 12) / columns : 224;
   const resetScroll = () => list.current?.scrollToOffset({ offset: 0, animated: false });
+  const foilBooks = [...new Set(BIBLE_MOMENTS.map(m => m.bookId))].filter(id => BIBLE_MOMENTS.filter(m => m.bookId === id).every(m => earnedIds.has(m.id)));
   const header = <View style={{ gap: 16, paddingBottom: 16 }}>
     {journeyHeader}
+    {ready && foilBooks.length > 0 && <View style={{ gap: 12 }}><Text style={{ color: colors.ink, ...contentText.section }}>Silver collections</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingBottom: 10 }}>{foilBooks.map(id => <MomentBookFoil key={id} name={findBookById(id)?.name ?? "Book"} earned onPress={() => setFoil(id)} />)}</ScrollView></View>}
     {!journeyHeader && <View style={{ gap: contentLayout.textGap }}>
       <Text accessibilityRole="header" style={{ color: colors.ink, ...contentText.section }}>Bible Moments</Text>
       <Text style={{ color: colors.inkMuted, ...contentText.description }}>Stories to discover. Meaning to carry with you.</Text>
@@ -82,7 +87,8 @@ export function BibleMomentsCollection({ standalone = false, initialCategory = "
       contentContainerStyle={{ paddingHorizontal: contentLayout.gutter, paddingTop: 12, paddingBottom: 32 }} showsVerticalScrollIndicator={false} initialNumToRender={6} maxToRenderPerBatch={6} windowSize={5} /> : <>
       {header}<FlatList ref={list} horizontal data={ready ? moments : []} key={`${view}:${filter}`} keyExtractor={moment => moment.id} renderItem={renderCard} ListEmptyComponent={empty} contentContainerStyle={{ gap: 12 }} showsHorizontalScrollIndicator={false} />{badges}
     </>}
-    <BibleMomentCard moment={open} onClose={() => setOpen(null)} />
+    <Modal visible={!!open} transparent animationType="none" onRequestClose={() => setOpen(null)}>{open && <ReaderMomentDetail moment={open} onClose={() => setOpen(null)} />}</Modal>
+    <Modal visible={!!foil} transparent animationType="fade" onRequestClose={() => setFoil(null)}><View style={{ flex: 1, backgroundColor: "#000000CC", alignItems: "center", justifyContent: "center", gap: 24 }}>{foil && <MomentBookFoil name={findBookById(foil)?.name ?? "Book"} earned width={220} />}<Pressable accessibilityRole="button" onPress={() => setFoil(null)} style={{ padding: 18, minWidth: 160, backgroundColor: "white", borderRadius: 26, alignItems: "center" }}><Text style={{ color: "#202B3D", fontSize: 17, fontWeight: "600" }}>Done</Text></Pressable></View></Modal>
   </View>;
 }
 

@@ -66,7 +66,7 @@ export default function SettingsLayout() {
             name="expo-ui-smoke"
             options={{ title: "@expo/ui Smoke" }}
           />
-          <Stack.Screen name="study-sessions" options={{ title: "App Blocks" }} />
+          <Stack.Screen name="study-sessions" options={{ title: "My Blocks" }} />
         </Stack>
       </View>
       <FocusMiniPlayer aboveTabBar={false} />

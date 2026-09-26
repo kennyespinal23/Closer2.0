@@ -1,14 +1,14 @@
-import { LibraryBookOpening } from "@/components/LibraryBookcase";
-import { takeLibraryOpening } from "@/lib/libraryOpening";
+import { LibraryBookTransition, type BookTransitionPhase } from "@/components/LibraryBookTransition";
+import { useNavigation, usePreventRemove, type NavigationAction } from "@react-navigation/native";
+import { takeLibraryOpening, clearLibraryOpening } from "@/lib/libraryOpening";
 import { releaseCapture } from "react-native-view-shot";
-import { GenesisLivingCover } from "@/components/GenesisLivingCover";
 import { BookReaderPreparation } from "./[chapter]";
 import { usePreferences } from "@/state/preferences";
 import { findExpressBook, expressReadingMinutes } from "@/constants/expressBooks";
 import { Host, ContextMenu, Button as NativeButton, Image as NativeImage } from "@expo/ui/swift-ui";
 import { accessibilityLabel, frame } from "@expo/ui/swift-ui/modifiers";
 import { BookReadingProgress } from "@/components/BookReadingProgress";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Platform,
   useWindowDimensions,
@@ -45,7 +45,19 @@ import { useColors, useResolvedScheme } from "@/state/theme";
 export default function BookOverviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const [opening, setOpening] = useState(() => takeLibraryOpening(id));
+  const [opening] = useState(() => takeLibraryOpening(id));
+  useEffect(() => { clearLibraryOpening(opening); }, [opening]);
+  const [phase, setPhase] = useState<BookTransitionPhase>(opening ? "opening" : "idle");
+  const [exitReady, setExitReady] = useState(false);
+  const exitAction = useRef<NavigationAction | null>(null);
+  const navigation = useNavigation();
+  usePreventRemove(Boolean(opening && !exitReady), ({ data }) => {
+    exitAction.current = data.action;
+    setPhase("closing");
+  });
+  useEffect(() => {
+    if (exitReady && exitAction.current) navigation.dispatch(exitAction.current);
+  }, [exitReady, navigation]);
   useEffect(() => () => { if (opening?.snapshot) releaseCapture(opening.snapshot); }, [opening]);
   const book = id ? findBookById(id) : undefined;
 
@@ -83,10 +95,11 @@ export default function BookOverviewScreen() {
     );
   }
 
-  return <View style={{ flex: 1 }}><BookDetail key={book.id} book={book} />{opening && <LibraryBookOpening book={book} source={opening.source} snapshot={opening.snapshot} onOpen={() => setOpening(null)} />}</View>;
+  const detail = <BookDetail key={book.id} book={book} prepareReader={phase === "idle"} />;
+  return opening ? <LibraryBookTransition book={book} source={opening.source} snapshot={opening.snapshot} phase={phase} onOpened={() => setPhase("idle")} onClosed={() => setExitReady(true)}>{detail}</LibraryBookTransition> : detail;
 }
 
-function BookDetail({ book }: { book: Book }) {
+function BookDetail({ book, prepareReader = true }: { book: Book; prepareReader?: boolean }) {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -207,13 +220,15 @@ function BookDetail({ book }: { book: Book }) {
   const chapterColumns = Math.max(2, Math.min(5, Math.floor((width - 40) / (68 * Math.max(1, fontScale)))));
   return (
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
-      <BookReaderPreparation bookId={book.id} chapter={started ? continueChapter : 1} />
+      {prepareReader && <BookReaderPreparation bookId={book.id} chapter={started ? continueChapter : 1} />}
       <StatusBar style="light" />
       <Animated.ScrollView ref={scrollRef} onScroll={scrollHandler} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{ backgroundColor: colors.bg, paddingBottom: focusSpacing + dockHeight + 24 }}>
         <View style={{ backgroundColor: "#000000", minHeight: height - focusSpacing, justifyContent: "flex-end", paddingTop: insets.top + 64 + artSpace, paddingBottom: Math.max(insets.bottom, 20) + 16 }}>
           <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
-            {book.id === "genesis" ? <GenesisLivingCover /> : cover ? <Image source={cover} contentFit="cover" contentPosition="top center" style={[StyleSheet.absoluteFill, { bottom: undefined, height: "84%" }]} /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: CATEGORY_COVER_PALETTE[book.category].top }]} />}
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: CATEGORY_COVER_PALETTE[book.category].bottom }]} />
+            {cover && <Image source={cover} contentFit="contain" transition={0} style={{ position: "absolute", top: insets.top + 70, alignSelf: "center", width: Math.min(210, width * .5), height: Math.min(298, artSpace - 10) }} />}
+
             <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
               <Defs><LinearGradient id="bookHeroShade" x1="0" y1="0" x2="0" y2="1">
                 <Stop offset="0" stopColor="#000000" stopOpacity={0.24} />

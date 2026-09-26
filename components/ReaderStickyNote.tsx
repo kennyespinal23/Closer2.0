@@ -20,12 +20,12 @@ export function ReaderStickyNote({ visible, reference, initialNote, initialColor
     closing.current = false; setText(initialNote);
     setColor(findHighlightColor(initialColor as HighlightColorId)?.id ?? "amber");
     progress.value = reduced ? 1 : 0;
-    progress.value = reduced ? 1 : withSpring(1, { damping: 16, stiffness: 180, mass: .8 });
-    const timer = setTimeout(() => input.current?.focus(), reduced ? 0 : 400);
+    progress.value = reduced ? 1 : withSpring(1, { damping: 20, stiffness: 380, mass: .7 });
+    const timer = setTimeout(() => input.current?.focus(), reduced ? 0 : 180);
     return () => clearTimeout(timer);
   }, [visible, initialNote, initialColor, reduced]);
   const style = useAnimatedStyle(() => ({ opacity: Math.min(1, progress.value * 3), transform: [{ translateY: -560 * (1 - progress.value) }, { rotate: `${-8 + progress.value * 6.5}deg` }] }));
-  const dismiss = (action: () => void) => { if (closing.current) return; closing.current = true; Keyboard.dismiss(); progress.value = withTiming(0, { duration: reduced ? 0 : 320 }, done => { if (done) runOnJS(action)(); }); };
+  const dismiss = (action: () => void) => { if (closing.current) return; closing.current = true; Keyboard.dismiss(); progress.value = withTiming(0, { duration: reduced ? 0 : 180 }, done => { if (done) runOnJS(action)(); }); };
   return <Modal visible={visible} transparent animationType="none" onRequestClose={() => dismiss(onCancel)} statusBarTranslucent>
     <View style={{ flex: 1, backgroundColor: "#00000066" }}>
       <Pressable accessibilityRole="button" accessibilityLabel="Cancel note" onPress={() => dismiss(onCancel)} style={{ position: "absolute", inset: 0 }} />

@@ -566,7 +566,7 @@ export default function TodayScreen() {
   );
   const handleOpenStudySessions = useCallback(() => {
     haptics.soft();
-    router.navigate("/blocks");
+    router.push("/settings/study-sessions");
   }, [router]);
   const handleOpenRhythm = useCallback(() => {
     router.push("/rhythm");
@@ -3783,16 +3783,19 @@ function ActiveFocusHero({
   const colors = useColors();
   const router = useRouter();
 
+  const heroFocused = useIsFocused();
+
   // 1s tick. We re-render the time display once per second so the
   // countdown/elapsed counter ticks smoothly. The interval is torn
   // down on unmount or when session changes identity, so the
   // listener can't leak across screens.
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
+    if (!heroFocused) return;
     setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [session.startedAt]);
+  }, [session.startedAt, heroFocused]);
 
   // Pulsing dot — same value-based loop the mini-player uses.
   // Stops when the session is paused, so the visual rest state
@@ -3801,7 +3804,7 @@ function ActiveFocusHero({
   const isPaused = Boolean(session.pausedAt);
   const reducedMotionActive = useReducedMotion();
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || !heroFocused) return;
     if (reducedMotionActive) {
       pulse.setValue(0.5);
       return;
@@ -3825,7 +3828,7 @@ function ActiveFocusHero({
     );
     loop.start();
     return () => loop.stop();
-  }, [isPaused, pulse, reducedMotionActive]);
+  }, [isPaused, pulse, reducedMotionActive, heroFocused]);
 
   // Effective elapsed math — same formula as FocusMiniPlayer and
   // ActiveFocusCard. Kept inline (rather than extracted to a

@@ -61,11 +61,11 @@ export function ReaderMomentExperience({ moment, onFinish, pocketRef, showcase, 
       setRewards(result.categories);
       if (result.status === "existing") { setSelected(moment); onFinish(); return; }
       if (reduced) { reveal.value = 1; flip.value = 1; stamp.value = 1; flight.value = withDelay(900, withTiming(1, { duration: 0 }, done => { if (done) runOnJS(arrived)(); })); return; }
-      rays.value = withDelay(520, withTiming(1, { duration: 1600 }));
-      reveal.value = withTiming(1, { duration: 520, easing: Easing.bezier(.3, 1.2, .4, 1) });
-      flip.value = withDelay(520, withTiming(1, { duration: 700, easing: Easing.bezier(.3, 1.2, .4, 1) }));
-      stamp.value = withDelay(1140, withTiming(1, { duration: 550, easing: Easing.bezier(.3, 1.35, .4, 1) }));
-      flight.value = withDelay(2250, withTiming(1, { duration: 720, easing: Easing.inOut(Easing.cubic) }, done => { if (done) runOnJS(arrived)(); }));
+      rays.value = withDelay(280, withTiming(1, { duration: 1000 }));
+      reveal.value = withTiming(1, { duration: 320, easing: Easing.bezier(.3, 1.2, .4, 1) });
+      flip.value = withDelay(280, withTiming(1, { duration: 460, easing: Easing.bezier(.3, 1.2, .4, 1) }));
+      stamp.value = withDelay(700, withTiming(1, { duration: 260, easing: Easing.bezier(.3, 1.35, .4, 1) }));
+      flight.value = withDelay(1400, withTiming(1, { duration: 460, easing: Easing.inOut(Easing.cubic) }, done => { if (done) runOnJS(arrived)(); }));
     }).catch(() => { if (generation === alive.current) setSaveError(true); });
     return () => { alive.current++; cancelAnimation(reveal); cancelAnimation(flip); cancelAnimation(flight); cancelAnimation(stamp); cancelAnimation(rays); };
   }, [moment?.id, attempt]);

@@ -60,7 +60,7 @@ const NativeTabs = withLayoutContext<
 >(Navigator);
 
 /**
- * Bottom-tab layout for the main app — Home · Bible · My Blocks · Profile.
+ * Bottom-tab layout for the main app — Home · Bible · Community · Profile.
  * Journey / + Check-in / Library / Insights) was collapsed at
  * the user's request:
  *
@@ -169,12 +169,12 @@ export default function TabsLayout() {
             }}
           />
           <NativeTabs.Screen
-            name="blocks"
+            name="community"
             options={{
-              title: "My Blocks",
+              title: "Community",
               sfSymbol: {
-                default: "shield",
-                selected: "shield.fill",
+                default: "person.2",
+                selected: "person.2.fill",
               },
             }}
           />

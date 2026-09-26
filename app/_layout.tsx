@@ -256,7 +256,8 @@ function AppShell() {
           name="book"
           options={({ route }) => {
             const params = route.params as { libraryOpening?: string; params?: { libraryOpening?: string } } | undefined;
-            return { animation: params?.libraryOpening || params?.params?.libraryOpening ? "none" : "slide_from_right" };
+            const fromShelf = Boolean(params?.libraryOpening || params?.params?.libraryOpening);
+            return { animation: fromShelf ? "none" : "slide_from_right", gestureEnabled: !fromShelf };
           }}
         />
         {/* Top-level personal-scripture screens — drill-down

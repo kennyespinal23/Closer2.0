@@ -1,3 +1,4 @@
+import { MomentCollectibleFront } from "./MomentCollectible";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { AccessibilityInfo, BackHandler, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import Animated, { cancelAnimation, Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from "react-native-reanimated";
@@ -83,7 +84,7 @@ export function ReaderMomentExperience({ moment, onFinish, pocketRef, showcase, 
       <Animated.View style={[{ position: "absolute", left: (width - cardWidth) / 2, top: (height - cardHeight) / 2, width: cardWidth, height: cardHeight }, animated]}>
         <Animated.View style={[{ position: "absolute", inset: 0, backgroundColor: colors.surface, borderRadius: 22, borderWidth: 2, borderColor: "#A97B42", alignItems: "center", justifyContent: "center", padding: 24 }, back]}><SFSymbol name="rectangle.stack" size={44} color={colors.ink} /><Text style={{ ...systemText.title2, color: colors.ink, textAlign: "center", marginTop: 20 }}>{saveError ? "Couldn’t collect this Moment" : moment.title}</Text>{saveError && <Pressable accessibilityRole="button" onPress={() => setAttempt(attempt + 1)} style={{ minHeight: 48, justifyContent: "center" }}><Text style={{ ...systemText.headline, color: colors.ink }}>Try again</Text></Pressable>}</Animated.View>
         <Animated.View style={[{ position: "absolute", inset: 0, borderRadius: 22, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 2, borderColor: "#A97B42" }, front]}>
-          <View style={{ height: "52%" }}><ReaderMomentArt moment={moment} /></View><View style={{ padding: 14, gap: 8 }}><Text numberOfLines={2} style={{ ...systemText.headline, color: colors.ink }}>{moment.title}</Text><Text numberOfLines={3} style={{ ...systemText.footnote, color: colors.ink }}>“{moment.happened}”</Text><Text style={{ ...systemText.caption1, color: colors.inkMuted }}>{moment.reference}</Text></View>
+          <MomentCollectibleFront moment={moment} />
 
         </Animated.View>
         <Animated.View pointerEvents="none" style={[{ position: "absolute", bottom: -18, right: -18, width: 76, height: 76, borderRadius: 38, borderWidth: 3, borderColor: "#C9431F", overflow: "hidden", boxShadow: "0 4px 8px #00000044" }, stamped]}><LinearGradient colors={["#FF8B64", "#FF5A36", "#C9431F"]} style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 3 }}><SFSymbol name="checkmark" size={23} color="#FFF0DB" /><Text style={{ fontSize: 8, fontWeight: "800", letterSpacing: .5, color: "#FFF0DB" }}>COLLECTED</Text></LinearGradient></Animated.View>

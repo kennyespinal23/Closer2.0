@@ -53,15 +53,12 @@ const TAB_BAR_CONTENT_FALLBACK = 49;
 /**
  * Library — Imprint-inspired browse grid.
  *
- * Filter axis is just the two testaments (Old / New) via a native
- * UISegmentedControl — short fixed option set.
+ * Testament, collection, and layout share a native menu.
  *
  * Search overrides the filter — when the user types, we ignore
- * the active segment and search across the full canon.
+ * the active filters and search across the full canon.
  */
 type LibraryFilter = "old" | "new";
-
-const FILTER_SEGMENTS = ["Old Testament", "New Testament"] as const;
 
 const COLLECTIONS: { id: string; label: string; categories: BookCategory[] }[] = [
   { id: "all", label: "All books", categories: [] },
@@ -73,16 +70,6 @@ const COLLECTIONS: { id: string; label: string; categories: BookCategory[] }[] =
   { id: "letters", label: "Letters", categories: ["Pauline Epistles", "General Epistles"] },
   { id: "revelation", label: "Revelation", categories: ["Apocalyptic"] },
 ];
-
-const COLLECTION_DESCRIPTIONS: Record<string, string> = {
-  law: "Beginnings, covenant, and the foundations of faith.",
-  history: "The people and events that shaped the biblical story.",
-  wisdom: "Poetry, prayer, and wisdom for everyday life.",
-  prophets: "Calls to justice, faithfulness, and hope.",
-  gospels: "The life, teachings, death, and resurrection of Jesus.",
-  letters: "Encouragement and guidance for a life of faith.",
-  revelation: "A vision of hope and God’s final renewal.",
-};
 
 export default function LibraryScreen() {
   const [introduced, setIntroduced] = useState<boolean | null>(null);
@@ -173,7 +160,6 @@ function BibleLibrary() {
   const [searchSession, setSearchSession] = useState(0);
   const { lastVisited, hasReadChapter } = useProgress();
 
-  const filterIndex = filter === "old" ? 0 : 1;
 
   // Native scenes ignoreSafeArea under the floating Liquid Glass
   // bar, so scroll content must clear the measured bar height.
@@ -262,37 +248,12 @@ function BibleLibrary() {
         {/* ─── Search ─────────────────────────────────────────── */}
 
 
-        {/* ─── Testament segmented control ────────────────────── */}
-        <View
-          style={{
-            paddingHorizontal: SCREEN_H_PAD,
-            paddingTop: spacing[16],
-            paddingBottom: spacing[8],
-            minHeight: minTouchTarget,
-            justifyContent: "center",
-          }}
-        >
-          {/* Native UISegmentedControl — leave label/pill colors to
-              the system so selected vs. unselected meet OS contrast
-              (don't override with theme grays that fight HIG). */}
-          <SegmentedControl
-            appearance={scheme}
-            values={[...FILTER_SEGMENTS]}
-            selectedIndex={filterIndex}
-            onChange={(event) => {
-              const nextIndex = event.nativeEvent.selectedSegmentIndex;
-              haptics.tick();
-              setFilter(nextIndex === 1 ? "new" : "old");
-              setCollectionId("all");
-            }}
-            style={{ height: 36 }}
-          />
-        </View>
-
         {/* ─── Section header (current filter or search count) ── */}
         <SectionHeader
           onReplay={() => setDoorReplay(value => value + 1)}
-          title={collectionId === "all" ? "The books" : collection.label}
+          title={filter === "old" ? "Old Testament" : "New Testament"}
+          filter={filter}
+          onChangeFilter={next => { haptics.tick(); setFilter(next); setCollectionId("all"); }}
           count={filteredBooks.length}
           viewMode={viewMode}
           onChangeView={changeView}
@@ -300,9 +261,6 @@ function BibleLibrary() {
           collections={availableCollections}
           onSelect={id => { haptics.tick(); setCollectionId(id); }}
         />
-
-        {COLLECTION_DESCRIPTIONS[collectionId] && <ThemedText variant="subheadline" color="secondary"
-          style={{ paddingHorizontal: SCREEN_H_PAD, marginBottom: 16 }}>{COLLECTION_DESCRIPTIONS[collectionId]}</ThemedText>}
 
         {/* ─── Grid ───────────────────────────────────────────── */}
         {filteredBooks.length === 0 ? (
@@ -333,9 +291,11 @@ function SectionHeader({
   title,
   count,
   onReplay,
-  collectionId, collections, onSelect, viewMode, onChangeView,
+  collectionId, collections, onSelect, viewMode, onChangeView, filter, onChangeFilter,
 }: {
   title: string;
+  filter: LibraryFilter;
+  onChangeFilter: (filter: LibraryFilter) => void;
   count: number;
   onReplay: () => void;
   viewMode: "grid" | "list";
@@ -353,14 +313,18 @@ function SectionHeader({
     >
       <View style={{ flex: 1, marginRight: 8 }}>
         <ThemedText variant="title2" accessibilityRole="header">{title}</ThemedText>
-        <ThemedText variant="footnote" color="secondary" style={{ marginTop: 4 }}>{count} {count === 1 ? "book" : "books"}</ThemedText>
+        <ThemedText variant="footnote" color="secondary" style={{ marginTop: 4 }}>{collectionId !== "all" ? `${collections.find(item => item.id === collectionId)?.label} · ` : ""}{count} {count === 1 ? "book" : "books"}</ThemedText>
       </View>
-      <Host colorScheme={scheme} style={{ width: 112, height: 44 }}>
+      <Host colorScheme={scheme} style={{ width: 150, height: 44 }}>
         <ContextMenu activationMethod="singlePress">
           <ContextMenu.Trigger>
-            <NativeButton variant="bordered" systemImage="line.3.horizontal.decrease" modifiers={[accessibilityLabel("Library view options")]}>View</NativeButton>
+            <NativeButton variant="bordered" systemImage="line.3.horizontal.decrease" modifiers={[accessibilityLabel("Library view and filter options")]}>View & Filter</NativeButton>
           </ContextMenu.Trigger>
           <ContextMenu.Items>
+            <NativeSection title="Testament">
+              <NativeButton systemImage={filter === "old" ? "checkmark" : undefined} onPress={() => onChangeFilter("old")}>Old Testament</NativeButton>
+              <NativeButton systemImage={filter === "new" ? "checkmark" : undefined} onPress={() => onChangeFilter("new")}>New Testament</NativeButton>
+            </NativeSection>
             <NativeSection title="Layout">
               <NativeButton systemImage={viewMode === "grid" ? "checkmark" : "square.grid.2x2"} onPress={() => onChangeView("grid")}>Bookshelf</NativeButton>
               <NativeButton systemImage={viewMode === "list" ? "checkmark" : "list.bullet"} onPress={() => onChangeView("list")}>List</NativeButton>

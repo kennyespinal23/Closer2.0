@@ -1,3 +1,4 @@
+import { MomentCollectibleFront } from "./MomentCollectible";
 import { contentText, contentLayout } from "@/lib/contentStyles";
 import { type ReactNode, useRef, useState } from "react";
 import { Modal, ScrollView, FlatList, Pressable, Text, View, useWindowDimensions } from "react-native";
@@ -43,7 +44,6 @@ export function BibleMomentsCollection({ standalone = false, initialCategory = "
     {ready && foilBooks.length > 0 && <View style={{ gap: 12 }}><Text style={{ color: colors.ink, ...contentText.section }}>Silver collections</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingBottom: 10 }}>{foilBooks.map(id => <MomentBookFoil key={id} name={findBookById(id)?.name ?? "Book"} earned onPress={() => setFoil(id)} />)}</ScrollView></View>}
     {!journeyHeader && <View style={{ gap: contentLayout.textGap }}>
       <Text accessibilityRole="header" style={{ color: colors.ink, ...contentText.section }}>Bible Moments</Text>
-      <Text style={{ color: colors.inkMuted, ...contentText.description }}>Stories to discover. Meaning to carry with you.</Text>
     </View>}
     <View style={{ gap: 8 }}>
       <Text style={{ color: colors.inkMuted, ...contentText.metadata, fontVariant: ["tabular-nums"] }}>{ready ? `${ids.length} of ${BIBLE_MOMENTS.length} collected` : error ? "Collection unavailable" : "Loading your collection…"}</Text>
@@ -138,14 +138,7 @@ function MomentCollectionCard({ moment, earned, width, onPress }: { moment: Bibl
   const category = MOMENT_CATEGORIES[moment.category];
   return <Pressable accessibilityRole="button" accessibilityLabel={`${moment.event}. ${earned ? "Collected. Open moment" : `Not collected. Read ${moment.reference}`}`} onPress={onPress} onPressIn={() => setPressed(true)} onPressOut={() => setPressed(false)}
     style={{ width, borderRadius: 24, borderCurve: "continuous", overflow: "hidden", backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: earned ? `${category[scheme]}55` : colors.border, opacity: pressed ? 0.8 : 1 }}>
-    <View style={{ height: Math.min(224, width * 0.9), backgroundColor: colors.surfaceSecondary }}>
-      <Image source={getBookCover(moment.bookId)} contentFit="cover" transition={0} style={{ width: "100%", height: "100%", opacity: earned ? 1 : 0.5 }} />
-      <View style={{ position: "absolute", top: 12, right: 12, width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: "#000000A6" }}><SFSymbol name={earned ? "checkmark" : "lock.fill"} size={14} color={earned ? category.dark : "white"} /></View>
-    </View>
-    <View style={{ padding: 16, gap: 8, flex: 1 }}>
-      <Text style={{ color: colors.ink, ...contentText.title }}>{moment.title}</Text>
-      <Text style={{ color: colors.inkMuted, ...contentText.metadata }}>{moment.reference}</Text>
-
-    </View>
+    <View style={{ height: width * 1.38, opacity: earned ? 1 : .55 }}><MomentCollectibleFront moment={moment} compact /></View>
+    {!earned && <View style={{ position: "absolute", top: 12, right: 12 }}><SFSymbol name="lock.fill" size={16} color="white" /></View>}
   </Pressable>;
 }

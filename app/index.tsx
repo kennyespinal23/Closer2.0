@@ -14,7 +14,7 @@ import { useVideoPlayer, VideoView } from "expo-video";
 import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { FadeIn } from "@/components/FadeIn";
 import * as haptics from "@/lib/haptics";
-import { armLaunchSplash, skipLaunchSplashForSession } from "@/lib/launchSplashSession";
+import { armLaunchSplash } from "@/lib/launchSplashSession";
 import { useOnboarding } from "@/state/onboarding";
 
 const SIGN_IN_VIDEO = require("@/assets/videos/signinpage.mp4");
@@ -72,7 +72,6 @@ function GetStartedVideoBackground() {
 function GetStartedLanding() {
   const router = useRouter();
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
-  const { setAnswer } = useOnboarding();
   const videoReady = useMemo(() => hasNativeExpoVideo(), []);
 
   const compactLanding = screenHeight < 740 || screenWidth < 390;
@@ -81,10 +80,7 @@ function GetStartedLanding() {
 
   const handleGetStarted = () => {
     haptics.thud();
-    // TEMP: skip onboarding until that flow is ready to ship again.
-    skipLaunchSplashForSession();
-    setAnswer("completed", true);
-    router.replace("/today");
+    router.push("/onboarding/journey");
   };
 
   return (

@@ -1,10 +1,10 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, { FadeIn } from "react-native-reanimated";
+import Animated, { Easing, withSpring, withTiming } from "react-native-reanimated";
 import { findBookById, type Book } from "@/constants/books";
 import { getBookCover } from "@/constants/bookCovers";
 import { EXPRESS_CLOSING, findExpressBook, type ExpressBook } from "@/constants/expressBooks";
@@ -42,10 +42,13 @@ function ExpressReader({ book, express }: { book: Book; express: ExpressBook }) 
   const { textSize } = usePreferences();
   const progress = useExpressProgress(book.id, express.scenes.length);
   const scroll = useRef<ScrollView>(null);
+  const [direction, setDirection] = useState(1);
   const closing = progress.index === express.scenes.length;
   const scene = express.scenes[progress.index];
   const unit = express.kind === "beats" ? "Key beat" : "Scene";
   const goTo = (index: number) => {
+    if (index === progress.index) return;
+    setDirection(index > progress.index ? 1 : -1);
     haptics.soft();
     scroll.current?.scrollTo({ y: 0, animated: false });
     progress.goTo(index);
@@ -68,8 +71,8 @@ function ExpressReader({ book, express }: { book: Book; express: ExpressBook }) 
       {progress.error ? <Pressable accessibilityRole="button" onPress={progress.retry} style={{ padding: 16 }}><Text style={{ color: colors.ink, fontSize: 17 }}>{progress.error}</Text></Pressable> : <ActivityIndicator accessibilityLabel="Loading your Express reading place" color={colors.ink} />}
     </View> : <>
       <ScrollView ref={scroll} style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="never" contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32, width: "100%", maxWidth: 640, alignSelf: "center" }}>
-        <Animated.View key={progress.index} entering={reduced ? undefined : FadeIn.duration(180)}>
-          <View style={{ borderRadius: 24, borderCurve: "continuous", overflow: "hidden", marginBottom: 24 }}><Image source={getBookCover(book.id)} contentFit="cover" contentPosition="center" accessibilityLabel={`${book.name} cover artwork`} style={{ width: "100%", aspectRatio: closing ? 2.2 : 1.8 }} /></View>
+        <Animated.View key={progress.index} entering={reduced ? undefined : () => { "worklet"; return { initialValues: { opacity: 0, transform: [{ translateX: 40 * direction }] }, animations: { opacity: withTiming(1, { duration: 400 }), transform: [{ translateX: withSpring(0, { damping: 27, stiffness: 230, mass: 1 }) }] } }; }}>
+          <View style={{ borderRadius: 24, borderCurve: "continuous", overflow: "hidden", marginBottom: 24 }}><Animated.View entering={reduced ? undefined : () => { "worklet"; return { initialValues: { transform: [{ translateX: 18 }, { scale: 1.06 }] }, animations: { transform: [{ translateX: withTiming(0, { duration: 800, easing: Easing.bezier(.3, 1, .4, 1) }) }, { scale: withTiming(1, { duration: 800, easing: Easing.bezier(.3, 1, .4, 1) }) }] } }; }}><Image source={getBookCover(book.id)} contentFit="cover" contentPosition="center" accessibilityLabel={`${book.name} cover artwork`} style={{ width: "100%", aspectRatio: closing ? 2.2 : 1.8 }} /></Animated.View></View>
           <Text style={{ color: colors.inkSubtle, fontSize: 12, fontWeight: "600", letterSpacing: 1.3, marginBottom: 10 }}>{closing ? "EXPRESS COMPLETE" : `${unit.toUpperCase()} ${progress.index + 1} OF ${express.scenes.length}`}</Text>
           <Text accessibilityRole="header" style={{ color: colors.ink, fontSize: 30, lineHeight: 36, fontWeight: "700", letterSpacing: -0.6, marginBottom: 18 }}>{closing ? "The story stays with you." : scene.title}</Text>
           <Text selectable style={{ color: colors.ink, fontFamily: "System", fontSize: 19 * textSize.scale, lineHeight: 30 * textSize.scale }}>{closing ? EXPRESS_CLOSING : scene.body}</Text>

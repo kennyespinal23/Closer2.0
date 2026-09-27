@@ -185,8 +185,9 @@ function NativeBottomTabsNavigator({
         unfocusedIcon: unfocused,
         badge: options.badge,
         hidden: options.hidden,
-        // Preserve each tab, but suspend hidden React trees after focus cleanup.
-        freezeOnBlur: true,
+        // Keep tab surfaces mounted and ready; screen effects already pause on blur.
+        lazy: false,
+        freezeOnBlur: false,
       };
     });
 

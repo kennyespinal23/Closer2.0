@@ -98,7 +98,7 @@ export function BibleIntroScreen({ onComplete }: { onComplete: () => void }) {
         </View>
         <View style={{ flex: 1, minHeight: 16 }} />
         <Animated.View pointerEvents="none" accessibilityElementsHidden={!ready} importantForAccessibility={ready ? "auto" : "no-hide-descendants"} style={[{ minHeight: 52, marginBottom: 12, flexDirection: "row", gap: 10, alignItems: "center", justifyContent: "center" }, confirmationStyle]}>
-          <SFSymbol name="checkmark.circle.fill" size={25} color={colors.ink} />
+          <SFSymbol name="checkmark.circle.fill" size={25} color="#248A3D" />
           <Text accessibilityLiveRegion="polite" allowFontScaling={false} style={{ color: colors.ink, flexShrink: 1, textAlign: "center", fontWeight: "600", fontSize: 17 * fontScale, lineHeight: 24 * fontScale }}>{ready ? "Your library is ready" : ""}</Text>
         </Animated.View>
         <Pressable disabled={!ready} onPress={finish} onPressIn={() => setPressed(true)} onPressOut={() => setPressed(false)} accessibilityRole="button" accessibilityLabel={ready ? "Get started with the Bible" : "Preparing your library"} accessibilityState={{ disabled: !ready, busy: !ready }} style={{ width: "90%", maxWidth: 480, alignSelf: "center", minHeight: 56, padding: 16, borderRadius: 999, overflow: "hidden", backgroundColor: ready ? colors.ink : colors.surfaceSecondary, opacity: pressed ? 0.8 : 1, alignItems: "center", justifyContent: "center" }}>

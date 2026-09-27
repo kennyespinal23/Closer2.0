@@ -622,42 +622,28 @@ function ChevronIcon() {
 }
 
 function CheckIcon() {
-  const colors = useColors();
+  const scheme = useResolvedScheme();
   return (
     <SFSymbol
       name="checkmark"
       size={16}
-      color={colors.ink}
+      color={scheme === "dark" ? "#34C759" : "#248A3D"}
       weight="semibold"
     />
   );
 }
 
-/**
- * Checkmark used by `SettingsChoiceRow` for the active selection.
- *
- * Paints in iOS systemBlue — Apple's universal selection accent
- * used in every Settings picker (Bible Translation rows in the
- * reference shot, Wallpaper picker, Mail signature picker, etc.).
- * Blue here also pairs with the blue-tinted `SettingsInfoBanner`
- * pill so the selection cue and the info-card affordance share a
- * single accent across the surface.
- *
- * Renders inside a 22pt filled circle, the same way Apple paints
- * its "currently chosen" badge in picker lists with translation
- * tags — the chip reads as a clear "this is the active item" badge
- * rather than a bare glyph.
- */
+/** Shared green selection indicator for app settings. */
 function SelectedCheckIcon() {
   const scheme = useResolvedScheme();
-  const blue = scheme === "light" ? "#007AFF" : "#0A84FF";
+  const green = scheme === "light" ? "#248A3D" : "#34C759";
   return (
     <View
       style={{
         width: 22,
         height: 22,
         borderRadius: 11,
-        backgroundColor: blue,
+        backgroundColor: green,
         alignItems: "center",
         justifyContent: "center",
       }}

@@ -25,9 +25,9 @@ export function LibraryBookTransition({ book, source, snapshot, phase, onOpened,
     if (phase === "idle") return;
     if (reduced) { flight.value = 1; hinge.value = 1; expand.value = 1; phase === "opening" ? opened() : closed(); return; }
     if (phase === "opening") {
-      flight.value = withTiming(1, { duration: 260, easing: curve });
-      hinge.value = withDelay(120, withTiming(1, { duration: 300, easing: Easing.bezier(.65, 0, .35, 1) }));
-      expand.value = withDelay(350, withTiming(1, { duration: 230, easing: curve }, done => { if (done) runOnJS(opened)(); }));
+      flight.value = withTiming(1, { duration: 360, easing: curve });
+      hinge.value = withDelay(180, withTiming(1, { duration: 700, easing: Easing.bezier(.65, 0, .35, 1) }));
+      expand.value = withDelay(650, withTiming(1, { duration: 300, easing: curve }, done => { if (done) runOnJS(opened)(); }));
     } else {
       expand.value = withTiming(0, { duration: 220, easing: Easing.bezier(.4, 0, .3, 1) });
       hinge.value = withDelay(100, withTiming(0, { duration: 260, easing: Easing.bezier(.65, 0, .35, 1) }));

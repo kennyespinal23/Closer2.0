@@ -73,7 +73,7 @@ export function BibleMomentsCollection({ standalone = false, initialCategory = "
   </View>;
   const badges = ready && completed.length > 0 ? <View style={{ marginTop: 24, gap: 12 }}>
     <Text accessibilityRole="header" style={{ color: colors.ink, ...contentText.section }}>Category badges</Text>
-    {completed.map(([id, category]) => <View key={id} style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 16, borderRadius: 24, backgroundColor: colors.surfaceSecondary }}><SFSymbol name="seal.fill" size={28} color={category[scheme]} /><View style={{ flex: 1 }}><Text style={{ color: colors.ink, ...contentText.title }}>{category.name}</Text><Text style={{ color: colors.inkMuted, ...contentText.metadata }}>Every moment collected</Text></View><SFSymbol name="checkmark" size={18} color={category[scheme]} /></View>)}
+    {completed.map(([id, category]) => <View key={id} style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 16, borderRadius: 24, backgroundColor: colors.surfaceSecondary }}><SFSymbol name="seal.fill" size={28} color={category[scheme]} /><View style={{ flex: 1 }}><Text style={{ color: colors.ink, ...contentText.title }}>{category.name}</Text><Text style={{ color: colors.inkMuted, ...contentText.metadata }}>Every moment collected</Text></View><SFSymbol name="checkmark" size={18} color="#248A3D" /></View>)}
   </View> : null;
   const renderCard = ({ item }: { item: BibleMoment }) => <MomentCollectionCard moment={item} width={cardWidth} earned={earnedIds.has(item.id)} onPress={() => {
     haptics.soft();
@@ -106,13 +106,13 @@ function CategoryGoal({ category, moments, earnedIds, onDiscover }: {
   return <View style={{ ...contentLayout.card, gap: contentLayout.itemGap, backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border }}>
     <View style={{ flexDirection: "row", alignItems: "center", gap: contentLayout.itemGap }}>
       <View accessible={false} style={{ width: 52, height: 52, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }}>
-        <SFSymbol name={complete ? "checkmark.seal.fill" : "seal.fill"} size={34} color={complete ? definition[scheme] : colors.inkMuted} />
+        <SFSymbol name={complete ? "checkmark.seal.fill" : "seal.fill"} size={34} color={complete ? "#248A3D" : colors.inkMuted} />
       </View>
       <View style={{ flex: 1, gap: 4 }}>
         <Text style={{ color: colors.ink, ...contentText.title }}>{complete ? "Category complete" : "Your next collection badge"}</Text>
         <Text style={{ color: colors.inkMuted, ...contentText.metadata }}>{definition.name} · {complete ? "Badge earned" : "Badge locked"}</Text>
       </View>
-      {complete && <SFSymbol name="checkmark.circle.fill" size={22} color={green} />}
+      {complete && <SFSymbol name="checkmark.circle.fill" size={22} color="#248A3D" />}
     </View>
     <View style={{ gap: 8 }}>
       <Text style={{ color: complete ? green : colors.inkMuted, ...contentText.metadata, fontVariant: ["tabular-nums"] }}>{collected} of {moments.length} collected</Text>

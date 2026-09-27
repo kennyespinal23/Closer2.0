@@ -1,0 +1,41 @@
+import { useRef, useState } from "react";
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
+import Animated, { FadeInDown, ZoomIn, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import { useColors, useResolvedScheme } from "@/state/theme";
+import { useReducedMotion } from "@/lib/useReducedMotion";
+import { findBookById } from "@/constants/books";
+import type { StudyGroup } from "@/constants/communityPreview";
+import { LibraryBookCover } from "@/components/LibraryBookcase";
+import { SFSymbol, type SFSymbolName } from "@/components/Symbol";
+import * as haptics from "@/lib/haptics";
+const templates: { title: string; detail: string; name: string; book: string; pace: number; icon: SFSymbolName }[] = [
+  { title: "With a partner", detail: "A little time for the two of you.", name: "Us two", book: "ruth", pace: 0, icon: "heart" },
+  { title: "With family", detail: "Grow in faith together at home.", name: "Our family", book: "genesis", pace: 0, icon: "house" },
+  { title: "With friends", detail: "One book. A few familiar faces.", name: "Friends in John", book: "john", pace: 1, icon: "person.2" },
+  { title: "Small group", detail: "Make room for a weekly study.", name: "Our Bible study", book: "acts", pace: 2, icon: "book" },
+];
+const books = ["genesis", "ruth", "psalms", "proverbs", "luke", "john", "acts", "philippians", "james"];
+export function CreateStudyGroup({ onClose, onSave }: { onClose: () => void; onSave: (group: StudyGroup) => void }) {
+  const colors = useColors(), scheme = useResolvedScheme(), reduced = useReducedMotion();
+  const [template, setTemplate] = useState<number | null>(null), [name, setName] = useState(""), [bookId, setBookId] = useState("genesis"), [pace, setPace] = useState(0), [created, setCreated] = useState(false);
+  const group = useRef<StudyGroup | null>(null);
+  const save = () => {
+    if (group.current || template === null || !name.trim()) return;
+    group.current = { id: `local-${Date.now()}-${Math.random().toString(36).slice(2,7)}`, name: name.trim(), bookId, chapter: 1, schedule: ["Reads daily", "Three times a week", "Meets weekly"][pace], members: ["Y"], mine: true, joined: true, question: `What made you want to read ${findBookById(bookId)?.name} together?`, replies: [] };
+    haptics.success(); setCreated(true);
+  };
+  const finish = () => { if (group.current) { const value = group.current; group.current = null; onSave(value); } else onClose(); };
+  return <Modal presentationStyle="pageSheet" animationType={reduced ? "fade" : "slide"} onRequestClose={finish}><SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["bottom"]}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <View style={{ padding: 16, flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, color: colors.ink, fontSize: 17, fontWeight: "600" }}>Study groups</Text><Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={finish} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><SFSymbol name="xmark" size={20} color={colors.ink} /></Pressable></View>
+    {created ? <View style={{ flex: 1, justifyContent: "center", padding: 28, alignItems: "center", gap: 24 }}><Animated.View entering={reduced ? undefined : FadeInDown.springify().damping(16)} style={{ width: 230, height: 155, borderRadius: 16, backgroundColor: "#E8CFAB", alignItems: "center", justifyContent: "center", transform: [{ rotate: "-3deg" }], boxShadow: "0 14px 25px #00000025" }}><SFSymbol name="envelope" color="#6E5039" size={64} /><Animated.View entering={reduced ? undefined : ZoomIn.delay(180).springify().damping(14)} style={{ position: "absolute", right: 14, bottom: 14 }}><SFSymbol name="checkmark.seal.fill" color="#348257" size={42} /></Animated.View></Animated.View><Text style={{ fontSize: 28, fontWeight: "700", color: colors.ink, textAlign: "center" }}>{name} is ready.</Text><Text style={{ fontSize: 17, lineHeight: 25, color: colors.textSecondary, textAlign: "center" }}>Your local group is ready to explore. Invitations will be available when Community goes live.</Text></View> : <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 24, gap: 20 }}><Text style={{ fontSize: 30, fontWeight: "700", color: colors.ink }}>Start a group</Text><Text style={{ fontSize: 17, color: colors.textSecondary }}>Who are you reading with?</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>{templates.map((t, i) => <TemplateChoice key={t.title} {...t} selected={template === i} onPress={() => { setTemplate(i); setName(t.name); setBookId(t.book); setPace(t.pace); haptics.soft(); }} />)}</View>
+    {template !== null && <Animated.View entering={reduced ? undefined : FadeInDown.springify().damping(22)} style={{ gap: 20 }}><Text style={{ fontSize: 20, fontWeight: "600", color: colors.ink }}>Make it yours</Text><TextInput accessibilityLabel="Group name" value={name} onChangeText={setName} maxLength={40} placeholder="Group name" placeholderTextColor={colors.textSecondary} style={{ padding: 16, minHeight: 54, borderRadius: 16, backgroundColor: colors.surface, color: colors.ink, fontSize: 17 }} /><Text style={{ fontSize: 17, fontWeight: "600", color: colors.ink }}>Read together</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, padding: 4 }}>{books.map(id => { const book = findBookById(id)!; return <Pressable key={id} accessibilityRole="button" accessibilityLabel={book.name} accessibilityState={{ selected: id === bookId }} onPress={() => { setBookId(id); haptics.tick(); }} style={{ padding: 10, gap: 10, borderRadius: 14, borderWidth: 2, borderColor: id === bookId ? "#57A776" : "transparent", alignItems: "center" }}><LibraryBookCover book={book} width={64} /><Text style={{ color: colors.ink, fontSize: 13 }}>{book.name}</Text></Pressable>; })}</ScrollView><Text style={{ fontSize: 17, fontWeight: "600", color: colors.ink }}>How often</Text><SegmentedControl appearance={scheme} values={["Daily", "3× a week", "Weekly"]} selectedIndex={pace} onChange={e => setPace(e.nativeEvent.selectedSegmentIndex)} style={{ height: 40 }} /><Text style={{ fontSize: 15, lineHeight: 22, color: colors.textSecondary }}>Local preview · Saved on this device. No invitations are sent.</Text></Animated.View>}</ScrollView>}
+    <Pressable accessibilityRole="button" disabled={!created && (template === null || !name.trim())} onPress={created ? finish : save} style={{ margin: 20, minHeight: 54, padding: 16, borderRadius: 27, backgroundColor: colors.ink, opacity: !created && (template === null || !name.trim()) ? .4 : 1, alignItems: "center" }}><Text style={{ color: colors.bg, fontSize: 17, fontWeight: "600" }}>{created ? "See my group" : "Create local group"}</Text></Pressable>
+  </KeyboardAvoidingView></SafeAreaView></Modal>;
+}
+function TemplateChoice({ title, detail, icon, selected, onPress }: { title: string; detail: string; icon: SFSymbolName; selected: boolean; onPress: () => void }) {
+  const colors = useColors(), reduced = useReducedMotion(), scale = useSharedValue(1);
+  const motion = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return <Pressable accessibilityRole="button" accessibilityState={{ selected }} onPress={() => { if (!reduced) { scale.value = .95; scale.value = withSpring(1, { damping: 16, stiffness: 360 }); } onPress(); }} style={{ width: "48%" }}><Animated.View style={[{ minHeight: 154, padding: 16, gap: 10, borderRadius: 20, borderCurve: "continuous", backgroundColor: selected ? "#DDEEDB" : colors.surface, borderWidth: 1.5, borderColor: selected ? "#57A776" : colors.border }, motion]}><SFSymbol name={selected ? "checkmark.circle.fill" : icon} color={selected ? "#2B7149" : colors.ink} size={28} /><Text style={{ color: selected ? "#244531" : colors.ink, fontSize: 17, fontWeight: "600" }}>{title}</Text><Text style={{ color: selected ? "#3B6049" : colors.textSecondary, fontSize: 14, lineHeight: 20 }}>{detail}</Text></Animated.View></Pressable>;
+}

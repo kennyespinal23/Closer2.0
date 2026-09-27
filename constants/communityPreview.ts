@@ -1,7 +1,7 @@
 /** Illustrative content from the user's HTML prototype, never presented as a live feed. */
 export type PrayerNote = { id: string; text: string; author: string; tag: "Request" | "Praise" | "Answered"; count: number; age: string; color: string; mine?: boolean; update?: string; encouragements?: string[] };
 export type StudyGroup = { id: string; name: string; bookId: string; chapter: number; schedule: string; members: string[]; question: string; replies: { author: string; text: string }[]; joined?: boolean; mine?: boolean; prayer?: { text: string; author: string }; prayerPrayed?: boolean };
-export type CommunityPreviewState = { notes: PrayerNote[]; prayed: string[]; groups: StudyGroup[]; tutorialSeen: boolean };
+export type CommunityPreviewState = { notes: PrayerNote[]; prayed: string[]; groups: StudyGroup[]; tutorialSeen: boolean; groupTutorialSeen?: boolean };
 export const NOTE_COLORS = ["#FFF6B8", "#FFE3DB", "#DDF0FD", "#FBEFD6", "#FDE7C8"];
 export const COMMUNITY_PREVIEW: CommunityPreviewState = {
   tutorialSeen: false, prayed: [],
@@ -26,4 +26,11 @@ export const COMMUNITY_TUTORIAL = [
   { title: "Leave a little encouragement", text: "Hold to pray on an open note, or choose a few kind words. In this preview, no messages are sent." },
   { title: "There’s room for your note", text: "Ask for prayer or share something you’re thankful for. Use your first name, or stay anonymous. You can add an update later." },
   { title: "Read together", text: "Explore study groups, read the same chapter, and answer a question together. Try joining a sample group or creating your own local group." },
+];
+
+export const GROUP_TUTORIAL = [
+  { title: "Read together", text: "Choose a book with your partner, family, or friends. Make space for a question and a prayer along the way." },
+  { title: "Your group at a glance", text: "Each card shows the book, the current chapter, and the people reading together. Open a card to see the discussion." },
+  { title: "One chapter, shared", text: "Jump into the reading, reflect on the question, and pray for one another. Sample groups let you try it first." },
+  { title: "Start your own", text: "Choose who you’re reading with, pick a book, and set a pace. Groups are a local preview for now; no invitations are sent." },
 ];

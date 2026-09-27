@@ -1,3 +1,4 @@
+import { SkyGradient } from "./HomeSkyGradient";
 import { Host, ContextMenu, Button as NativeButton } from "@expo/ui/swift-ui";
 import { accessibilityLabel, tint } from "@expo/ui/swift-ui/modifiers";
 import { useMomentPaper } from "./MomentPaperTheme";
@@ -35,7 +36,7 @@ function TrayCard({ moment, index, earned, activeIndex, hidden, onOpen }: { mome
   useEffect(() => { rise.value = reduced ? 1 : withDelay(Math.min(index, 4) * 25, withSpring(1, spring)); }, []);
   const style = useAnimatedStyle(() => ({ opacity: hidden ? 0 : rise.value, zIndex: activeIndex.value === index && earned ? 4 : index === 0 ? 1 : 0, transform: [{ translateY: 24 * (1 - rise.value) - lift.value * 22 }, { rotate: `${((index * 7) % 5 - 2) * 1.6 * (1 - lift.value)}deg` }] }));
   return <Animated.View ref={ref} collapsable={false} style={[{ width: 106, height: 148, marginLeft: index ? -26 : 0, borderRadius: 10, backgroundColor: earned ? paper : empty, borderWidth: 2, borderColor: border, overflow: "hidden", boxShadow: "0 6px 12px #3C1E0A40" }, style]}>
-    <Pressable accessibilityRole="button" accessibilityLabel={earned ? `Open ${moment.title}` : `Undiscovered ${MOMENT_CATEGORIES[moment.category].name} Moment`} accessibilityState={{ disabled: !earned }} onTouchStart={e => { touch.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY, moved: false }; }} onTouchMove={e => { if (Math.abs(e.nativeEvent.pageX - touch.current.x) + Math.abs(e.nativeEvent.pageY - touch.current.y) > 10) touch.current.moved = true; }} onPressIn={() => { activeIndex.value = index; }} onPress={event => { const distance = Math.abs(event.nativeEvent.pageX - touch.current.x) + Math.abs(event.nativeEvent.pageY - touch.current.y); if (earned && !touch.current.moved && distance < 10) ref.current?.measureInWindow((x, y, width, height) => onOpen({ x, y, width, height })); }} style={{ flex: 1 }}>
+    <Pressable accessibilityRole="button" accessibilityLabel={earned ? `Open ${moment.title}` : `Undiscovered ${MOMENT_CATEGORIES[moment.category].name} Moment`} accessibilityState={{ disabled: !earned }} onTouchStart={e => { touch.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY, moved: false }; }} onTouchMove={e => { if (Math.abs(e.nativeEvent.pageX - touch.current.x) + Math.abs(e.nativeEvent.pageY - touch.current.y) > 10) touch.current.moved = true; }} onPressIn={() => { activeIndex.value = index; }} onPress={event => { const distance = Math.abs(event.nativeEvent.pageX - touch.current.x) + Math.abs(event.nativeEvent.pageY - touch.current.y); if (earned && !touch.current.moved && distance < 10) ref.current?.measureInWindow((x, y, width, height) => onOpen({ x: x + width / 2 - 53, y: y + height / 2 - 74 - 22 * (1 - lift.value), width: 106, height: 148 })); }} style={{ flex: 1 }}>
       {earned ? <MomentCollectibleFront moment={moment} compact /> : <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 8, gap: 12 }}><Text style={{ fontSize: 36, color: muted }}>?</Text><Text style={{ fontSize: 12, color: muted, textAlign: "center" }}>{MOMENT_CATEGORIES[moment.category].name}</Text></View>}
     </Pressable>
   </Animated.View>;
@@ -87,6 +88,9 @@ export function ReaderMomentCardBox({ bookId, pocketRef, onClose }: { bookId: st
     return [...grouped.entries()].sort(([a], [b]) => a === bookId ? -1 : b === bookId ? 1 : 0);
   }, [filter, bookId]);
   const collected = useMemo(() => new Set(ids), [ids]);
+  const bookMoments = BIBLE_MOMENTS.filter(m => m.bookId === bookId);
+  const foundInBook = bookMoments.filter(m => collected.has(m.id)).length;
+  const bookName = findBookById(bookId)?.name ?? "this book";
   const openMoment = useCallback((moment: BibleMoment, frame: CardFrame) => setSelected({ moment, frame }), []);
   const openFoil = useCallback((id: string) => {
     const all = BIBLE_MOMENTS.filter(m => m.bookId === id), found = all.filter(m => collected.has(m.id)).length;
@@ -97,25 +101,23 @@ export function ReaderMomentCardBox({ bookId, pocketRef, onClose }: { bookId: st
     <Pressable accessibilityRole="button" accessibilityLabel="Close card box" onPress={close} style={{ position: "absolute", inset: 0 }} />
     <Animated.View style={[{ position: "absolute", left: 10, right: 14, top: insets.top + 10, bottom: insets.bottom + 16, borderRadius: 18, backgroundColor: "#9C6536", padding: 10, boxShadow: "0 25px 50px #00000077" }, style]}>
       <Animated.View style={[{ height: 58, margin: -10, marginBottom: 8, zIndex: 3 }, lidStyle]}><LinearGradient colors={["#D29A62", "#9C6536", "#7A4C26"]} style={{ flex: 1, borderTopLeftRadius: 18, borderTopRightRadius: 18, paddingLeft: 16, paddingRight: 8, flexDirection: "row", alignItems: "center" }}><LinearGradient colors={["#F1D08C", "#C99A4B"]} style={{ minWidth: 150, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 4 }}><Text style={{ ...systemText.headline, color: "#3A2410" }}>Bible Moments</Text></LinearGradient><View style={{ flex: 1 }} /><Pressable accessibilityRole="button" accessibilityLabel="Close card box" onPress={close} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "#2A140540", alignItems: "center", justifyContent: "center" }}><SFSymbol name="xmark" size={18} color="#FBF1E4" /></Pressable></LinearGradient></Animated.View>
-      <FlatList data={hydrated && !error ? groups : []} keyExtractor={item => item[0]} initialNumToRender={2} maxToRenderPerBatch={1} windowSize={3} updateCellsBatchingPeriod={80} style={{ flex: 1, backgroundColor: canvas, borderRadius: 8 }} contentContainerStyle={{ paddingVertical: 22 }} ListHeaderComponent={<View>
-        <View style={{ paddingHorizontal: 16, flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <View style={{ flex: 1, gap: 4 }}>
-            <Text style={{ ...systemText.footnote, color: muted }}>{error ? "Your collection couldn’t load." : !hydrated ? "Loading your collection…" : `${ids.length} of ${BIBLE_MOMENTS.length} collected`}</Text>
-            {filter !== "all" && <Text style={{ ...systemText.subheadline, color: ink }}>{MOMENT_CATEGORIES[filter].name}</Text>}
-          </View>
-          <Host colorScheme={dark ? "dark" : "light"} style={{ width: 108, height: 44 }}>
-            <ContextMenu activationMethod="singlePress">
-              <ContextMenu.Trigger><NativeButton variant="bordered" systemImage="line.3.horizontal.decrease" modifiers={[accessibilityLabel("Filter Bible Moments"), tint("#FF5A36")]}>Filter</NativeButton></ContextMenu.Trigger>
-              <ContextMenu.Items>
-                {(["all", ...Object.keys(MOMENT_CATEGORIES)] as (MomentCategory | "all")[]).map(category => <NativeButton key={category} systemImage={filter === category ? "checkmark" : undefined} onPress={() => setFilter(category)}>{category === "all" ? "All categories" : MOMENT_CATEGORIES[category].name}</NativeButton>)}
-              </ContextMenu.Items>
-            </ContextMenu>
-          </Host>
+      <View pointerEvents="none" style={{ position: "absolute", left: 10, right: 10, top: 58, bottom: 10, borderRadius: 8, overflow: "hidden" }}><SkyGradient /></View>
+      <FlatList data={hydrated && !error ? groups : []} keyExtractor={item => item[0]} initialNumToRender={2} maxToRenderPerBatch={1} windowSize={3} updateCellsBatchingPeriod={80} style={{ flex: 1, backgroundColor: "transparent", borderRadius: 8 }} contentContainerStyle={{ paddingVertical: 22 }} ListHeaderComponent={<View>
+        <View style={{ paddingHorizontal: 16, gap: 8 }}>
+          <Text accessibilityRole="header" style={{ ...systemText.title1, fontWeight: "700", color: ink }}>Your Moments</Text>
+          <Text style={{ ...systemText.footnote, color: muted }}>{error ? "Your collection couldn’t load." : !hydrated ? "Loading your collection…" : `${ids.length} of ${BIBLE_MOMENTS.length} found across the Bible`}</Text>
+          {bookMoments.length > 0 && <View style={{ marginTop: 12, marginBottom: 12, padding: 16, borderRadius: 20, backgroundColor: dark ? "#100E0B" : "#EDE1CE", flexDirection: "row", alignItems: "center", gap: 14 }}>
+            <MomentBookFoil name={bookName} earned={foundInBook === bookMoments.length} width={44} onPress={() => openFoil(bookId)} />
+            <View style={{ flex: 1, gap: 6 }}><Text style={{ ...systemText.subheadline, fontWeight: "600", color: ink }}>{foundInBook === bookMoments.length ? `${bookName} foil unlocked` : `Find all ${bookMoments.length} in ${bookName}`}</Text><Text style={{ ...systemText.caption1, color: muted }}>{foundInBook === bookMoments.length ? "Every Moment, found." : `${bookMoments.length - foundInBook} to go for the silver foil card`}</Text><View style={{ height: 5, borderRadius: 3, backgroundColor: divider, overflow: "hidden", marginTop: 4 }}><View style={{ height: 5, width: `${foundInBook / bookMoments.length * 100}%`, backgroundColor: "#C6CBD0" }} /></View></View>
+          </View>}
         </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingVertical: 8 }}>
+          {(["all", ...Object.keys(MOMENT_CATEGORIES)] as (MomentCategory | "all")[]).map(category => <Pressable key={category} accessibilityRole="button" accessibilityState={{ selected: category === filter }} onPress={() => setFilter(category)} style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 14, borderRadius: 12, borderBottomLeftRadius: 3, backgroundColor: filter === category ? "#FF5A36" : dark ? "#352D1D" : "#E8D8BA" }}><Text style={{ ...systemText.footnote, fontWeight: "600", color: filter === category ? "#FFFFFF" : muted }}>{category === "all" ? "All" : MOMENT_CATEGORIES[category].name} {category === "all" ? ids.length : BIBLE_MOMENTS.filter(m => m.tags.includes(category) && collected.has(m.id)).length}</Text></Pressable>)}
+        </ScrollView>
         {hydrated && !error && ids.length === 0 && <Text style={{ ...systemText.footnote, color: muted, paddingHorizontal: 16, paddingTop: 12 }}>Tap a glowing verse to collect your first Moment.</Text>}
         {error && <Pressable onPress={() => void hydrateBibleMoments()} style={{ padding: 16 }}><Text style={{ color: ink }}>Try again</Text></Pressable>}
       </View>} renderItem={({ item: [, moments] }) => <CardTray showFoil={filter === "all"} onFoil={openFoil} moments={moments} collected={collected} selectedId={moments.some(m => m.id === selected?.moment.id) ? selected?.moment.id : undefined} onOpen={openMoment} />}
-      ListFooterComponent={<View style={{ height: 16 }} />} />
+      ListFooterComponent={<Text style={{ ...systemText.footnote, color: muted, padding: 20, lineHeight: 21 }}>Every card you find while reading ends up here. Question marks show what kind of Moment is waiting, never what it is.</Text>} />
     </Animated.View>
     {foilBook && <View accessibilityViewIsModal style={{ position: "absolute", inset: 0, zIndex: 6, backgroundColor: "#000000BB", justifyContent: "center", alignItems: "center", gap: 24 }}><MomentBookFoil name={findBookById(foilBook)?.name ?? "Book"} earned width={220} /><Text style={{ ...systemText.title2, color: "#FFFFFF" }}>Every Moment, collected.</Text><Pressable accessibilityRole="button" onPress={() => setFoilBook(null)} style={{ padding: 16, minWidth: 160, alignItems: "center", borderRadius: 24, backgroundColor: "#FFFFFF" }}><Text style={{ ...systemText.headline, color: "#202B3D" }}>Done</Text></Pressable></View>}
     {selected && <ReaderMomentDetail moment={selected.moment} source={selected.frame} onClose={() => setSelected(null)} />}

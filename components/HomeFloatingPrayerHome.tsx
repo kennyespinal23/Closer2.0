@@ -1,3 +1,5 @@
+import { DailyExperience } from "./DailyExperience";
+import { HomeDailyPath } from "./HomeDailyPath";
 import { contentText, contentLayout } from "@/lib/contentStyles";
 import { useAmbientMotionEnabled } from "@/lib/useAmbientMotionEnabled";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, forwardRef } from "react";
@@ -696,6 +698,9 @@ export type HomeFloatingPrayerHomeProps = {
   /** Returns true when navigation leaves home (e.g. streak screen). */
   onCompleteCard: (card: FloatingScriptureCard) => (() => void) | undefined;
   bottomInset: number;
+  continueReading?: { label: string; accessibilityLabel: string; onPress: () => void };
+  streakCount?: number;
+  onStreakPress?: () => void;
 };
 
 export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
@@ -705,6 +710,9 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   unlockedToday,
   onCompleteCard,
   bottomInset,
+  streakCount,
+  onStreakPress,
+  continueReading,
 }: HomeFloatingPrayerHomeProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -712,6 +720,10 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   const reducedMotion = useReducedMotion();
   const ambientEnabled = useAmbientMotionEnabled();
   const [active, setActive] = useState<FloatingScriptureCard>(card);
+  const [letter, setLetter] = useState<FloatingScriptureCard | null>(null);
+  const lastLetter = useRef(card);
+  if (letter) lastLetter.current = letter;
+  const afterLetter = useRef<(() => void) | undefined>(undefined);
   const [expanded, setExpanded] = useState(false);
   const pendingCompletion = useRef<(() => void) | undefined>(undefined);
   const completingRef = useRef(false);
@@ -830,6 +842,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
   ]);
 
   const measureMiniCard = useCallback((): Promise<CardBounds | null> => {
+    if (!miniCardRef.current) return Promise.resolve(null);
     return new Promise((resolve) => {
       miniCardRef.current?.measureInWindow((x, y, width, height) => {
         if (width > 0 && height > 0) {
@@ -1207,121 +1220,9 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
 
   return (
     <View style={{ flex: 1, backgroundColor: "transparent" }}>
-      <View
-        pointerEvents="box-none"
-        style={{
-          ...StyleSheet.absoluteFillObject,
-          alignItems: "center",
-          justifyContent: "center",
-          paddingBottom: 24,
-          backgroundColor: "transparent",
-        }}
-      >
-        {showCard ? (
-          <>
-            <View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                top: insets.top + 28,
-                left: 28,
-                right: 28,
-              }}
-            >
-              <Text
-                style={[
-                  typography.smallLabel,
-                  {
-                    color: colors.textSecondary,
-                    textTransform: "uppercase",
-                  },
-                ]}
-                allowFontScaling={false}
-              >
-                Today&apos;s reading
-              </Text>
-              <Text
-                style={{
-                  marginTop: contentLayout.textGap,
-                  ...contentText.section,
-                  color: colors.ink,
-                }}
-                numberOfLines={1}
-              >
-                Tap to open
-              </Text>
-            </View>
-            <View
-              style={{
-                position: "absolute",
-                right: -36,
-                bottom: Math.max(bottomInset - 28, 24),
-                transform: [{ rotate: "-10deg" }],
-              }}
-            >
-              <DevotionalEnvelope
-                ref={miniCardRef}
-                card={card}
-                width={Math.min(windowWidth * 0.98, 420)}
-                onOpened={() => {
-                  void openCard(card);
-                }}
-                hidden={expanded}
-              />
-            </View>
-          </>
-        ) : (
-          <View
-            pointerEvents="none"
-            style={{
-              alignItems: "center",
-              maxWidth: 360,
-              paddingHorizontal: 12,
-            }}
-          >
-            {homeQuote ? (
-              <HomeQuoteText quote={homeQuote} maxWidth={340} />
-            ) : null}
-            <View
-              style={{
-                marginTop: homeQuote ? 14 : 16,
-                flexDirection: "row",
-                alignItems: "center",
-                alignSelf: "center",
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                borderRadius: 999,
-                backgroundColor: colors.surface,
-                shadowColor: "#000",
-                shadowOpacity: 0.08,
-                shadowRadius: 10,
-                shadowOffset: { width: 0, height: 2 },
-              }}
-            >
-              <View
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: 999,
-                  marginRight: 7,
-                  backgroundColor: BREAK_TONE_DOT[nextBreakTone],
-                }}
-              />
-              <Text
-                style={{
-                  ...contentText.metadata,
-                  letterSpacing: -0.08,
-                  color: colors.inkMuted,
-                  textAlign: "center",
-                }}
-                numberOfLines={1}
-              >
-                {nextBreakLabel}
-              </Text>
-            </View>
-          </View>
-        )}
-      </View>
+      <HomeDailyPath card={card} completed={unlockedToday} onRead={item => setLetter(item)} onStreak={onStreakPress} streak={streakCount} bottomInset={bottomInset} continueReading={continueReading} />
+
+      <DailyExperience visible={letter !== null} kind="reading" card={letter ?? lastLetter.current} onClose={() => { setLetter(null); if (Platform.OS !== "ios") { const navigate = afterLetter.current; afterLetter.current = undefined; navigate?.(); } }} onComplete={() => { afterLetter.current = onCompleteCard(lastLetter.current); }} onDismiss={() => { const navigate = afterLetter.current; afterLetter.current = undefined; navigate?.(); }} />
 
       <Modal
         visible={expanded}

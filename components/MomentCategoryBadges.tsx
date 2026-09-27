@@ -22,7 +22,7 @@ export function MomentCategoryBadges({ onOpen }: { onOpen: (category: MomentCate
       const active = expanded === category;
       return <View key={category} style={{ backgroundColor: colors.surfaceSecondary, borderRadius: 24, borderCurve: "continuous", overflow: "hidden" }}>
         <Pressable accessibilityRole="button" accessibilityState={{ expanded: active }} accessibilityLabel={`${definition.name}. ${earned ? "Badge earned" : `${count} of ${moments.length} collected`}. Badge details`} onPress={() => setExpanded(active ? null : category)} style={{ flexDirection: "row", alignItems: "center", padding: 16, gap: contentLayout.itemGap, minHeight: 88 }}>
-          <SFSymbol name={earned ? "checkmark.seal.fill" : "seal.fill"} size={38} color={earned ? definition[scheme] : colors.inkMuted} />
+          <SFSymbol name={earned ? "checkmark.seal.fill" : "seal.fill"} size={38} color={earned ? "#248A3D" : colors.inkMuted} />
           <View style={{ flex: 1, gap: contentLayout.textGap }}><Text style={{ color: colors.ink, ...contentText.title }}>{definition.name}</Text><Text style={{ color: colors.inkMuted, ...contentText.metadata }}>{earned ? "Badge earned" : `${count} of ${moments.length} collected`}</Text></View>
           <SFSymbol name={active ? "chevron.up" : "chevron.down"} size={14} color={colors.inkMuted} />
         </Pressable>

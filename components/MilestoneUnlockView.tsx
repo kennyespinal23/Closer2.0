@@ -1,8 +1,8 @@
+import { WaxMedal } from "./WaxMedal";
 import { useEffect, useMemo, useRef } from "react";
 import {
   Animated,
   Easing,
-  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -12,7 +12,6 @@ import {
 import Svg, { Defs, Line, RadialGradient, Rect, Stop } from "react-native-svg";
 import type { Milestone } from "@/lib/milestones";
 import { getMilestoneAccent } from "@/lib/milestones";
-import { getMilestoneBadge } from "@/lib/milestoneBadges";
 import { typography } from "@/lib/typography";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useColors } from "@/state/theme";
@@ -242,12 +241,7 @@ export function MilestoneUnlockView({
                     : null,
                 ]}
               >
-                <Image
-                  source={getMilestoneBadge(badgeIndex)}
-                  style={styles.badgeImage}
-                  resizeMode="cover"
-                  accessibilityIgnoresInvertColors
-                />
+                <WaxMedal size={180} index={badgeIndex} />
               </View>
             </View>
           </View>

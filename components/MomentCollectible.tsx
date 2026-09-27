@@ -1,3 +1,4 @@
+import { SkyGradient } from "./HomeSkyGradient";
 import { useEffect, useState, useId, useRef } from "react";
 import { BackHandler, Modal, Pressable, ScrollView, Share, Text, View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
@@ -53,8 +54,11 @@ export function MomentCollectibleDetail({ moment, source, onClose }: { moment: B
   const dismiss = () => {
     if (closing.current) return;
     closing.current = true;
+    setReading(false);
+    dragX.value = withTiming(0, { duration: 160 }); dragY.value = withTiming(0, { duration: 160 });
+    tiltX.value = withTiming(0, { duration: 160 }); tiltY.value = withTiming(0, { duration: 160 }); lift.value = withTiming(1, { duration: 160 });
     rotation.value = withTiming(0, { duration: reduced ? 0 : 140 });
-    entry.value = withTiming(0, { duration: reduced ? 0 : 220, easing: Easing.inOut(Easing.cubic) }, done => { if (done) runOnJS(onClose)(); });
+    entry.value = withTiming(0, { duration: reduced ? 0 : 320, easing: Easing.inOut(Easing.cubic) }, done => { if (done) runOnJS(onClose)(); });
   };
   useEffect(() => { const sub = BackHandler.addEventListener("hardwareBackPress", () => { dismiss(); return true; }); return () => sub.remove(); }, []);
   const turn = () => {
@@ -99,10 +103,10 @@ export function MomentCollectibleDetail({ moment, source, onClose }: { moment: B
   const frontStyle = useAnimatedStyle(() => ({ opacity: rotation.value < 90 ? 1 : 0, transform: [{ perspective: 1100 }, { rotateX: `${tiltX.value}deg` }, { rotateY: `${rotation.value + tiltY.value}deg` }] }));
   const backStyle = useAnimatedStyle(() => ({ zIndex: reading ? 2 : 0, opacity: rotation.value >= 90 ? 1 : 0, transform: reading ? [] : [{ perspective: 1100 }, { rotateX: `${tiltX.value}deg` }, { rotateY: `${rotation.value - 180 + tiltY.value}deg` }] }));
   const backdropStyle = useAnimatedStyle(() => ({ opacity: entry.value }));
-  const face = { position: "absolute" as const, top: 0, bottom: 0, left: 0, right: 0, borderRadius: 22, borderCurve: "continuous" as const, borderWidth: 1, borderColor: "#D9C9A788", overflow: "hidden" as const, backgroundColor: dark ? "#183226" : "#EEE8D8", boxShadow: "0 14px 26px #00000044, 0 2px 0 #A3987C" };
+  const face = { position: "absolute" as const, top: 0, bottom: 0, left: 0, right: 0, borderRadius: 22, borderCurve: "continuous" as const, borderWidth: 1, borderColor: "#D9C9A788", overflow: "hidden" as const, backgroundColor: dark ? "#302626" : "#FFF7ED", boxShadow: "0 14px 26px #00000044, 0 2px 0 #A3987C" };
   const ink = dark ? "#FAF6E9" : "#213A2B", muted = dark ? "#BECEC0" : "#4B6150";
   return <Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={dismiss}><GestureHandlerRootView style={{ flex: 1 }}><View accessibilityViewIsModal style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, zIndex: 10 }}>
-    <Animated.View style={[{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }, backdropStyle]}><Pressable accessibilityRole="button" accessibilityLabel="Close Moment" onPress={dismiss} style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, backgroundColor: dark ? "#121B16" : "#E7E9DE" }} /></Animated.View>
+    <Animated.View style={[{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }, backdropStyle]}><Pressable accessibilityRole="button" accessibilityLabel="Close Moment" onPress={dismiss} style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, }}><SkyGradient /></Pressable></Animated.View>
     <View style={{ position: "absolute", top: insets.top + 8, left: 24, right: 24, flexDirection: "row", justifyContent: "space-between" }}>
       <MomentControl label="Close Moment" symbol="xmark" onPress={dismiss} />
       <MomentControl label="Share Moment" symbol="square.and.arrow.up" onPress={() => { void Share.share({ message: `${moment.title}\n${moment.reference}\n\n${moment.happened}\n\n${moment.importance}` }).catch(() => {}); }} />

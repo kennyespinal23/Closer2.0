@@ -396,6 +396,9 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
           unlockedToday={cardContent.unlockedToday}
           onCompleteCard={cardContent.onCompleteCard}
           bottomInset={bottomInset}
+          continueReading={continueReading}
+          streakCount={streakCount}
+          onStreakPress={onStreakPress}
         />
       ) : (
         <HomeHeroSlide
@@ -409,7 +412,7 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
 
       {/* Top chrome — collection + streak. Hidden while the unread
           envelope delivery room is active so nothing competes. */}
-      {!envelopeMode ? (
+      {!useCardLayout && !envelopeMode ? (
       <View
         pointerEvents="box-none"
         style={{
@@ -528,7 +531,7 @@ export const HomeDevotionalCarousel = memo(function HomeDevotionalCarousel({
       </View>
       ) : null}
 
-      {continueReading && !envelopeMode ? (
+      {continueReading && !useCardLayout && !envelopeMode ? (
         <View
           pointerEvents="box-none"
           style={{

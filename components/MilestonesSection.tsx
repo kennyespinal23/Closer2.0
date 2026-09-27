@@ -1,6 +1,6 @@
+import { WaxMedal } from "./WaxMedal";
 import { useMemo } from "react";
 import {
-  Image,
   Platform,
   StyleSheet,
   Text,
@@ -16,7 +16,6 @@ import {
   isMilestoneUnlocked,
   MILESTONES,
 } from "@/lib/milestones";
-import { getMilestoneBadge } from "@/lib/milestoneBadges";
 import * as haptics from "@/lib/haptics";
 import { systemText } from "@/lib/typography";
 import { useColors } from "@/state/theme";
@@ -188,17 +187,7 @@ function MilestoneCardChrome({
             overflow: "hidden",
           }}
         >
-          <Image
-            source={getMilestoneBadge(badgeIndex)}
-            style={{
-              width: "100%",
-              height: "100%",
-              borderRadius: ICON_SIZE / 2,
-            }}
-            blurRadius={unlocked ? 0 : Platform.OS === "ios" ? 14 : 8}
-            resizeMode="cover"
-            accessibilityIgnoresInvertColors
-          />
+          <WaxMedal size={ICON_SIZE} index={badgeIndex} earned={unlocked} />
         </View>
       </View>
 

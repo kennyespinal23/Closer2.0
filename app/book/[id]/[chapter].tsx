@@ -2261,6 +2261,7 @@ function VerseFlow({
             >
               {normalizeVerseBody(v.text)}
             </Text>}
+            {isCollected && <Text accessibilityLabel="Bible Moment collected" style={{ color: scheme === "dark" ? "#34C759" : "#248A3D", fontFamily: "System", fontWeight: "800", fontSize: baseFontSize }}> ✓</Text>}
           </>
         );
 
@@ -3596,10 +3597,10 @@ function ReaderToolbar({
       <Animated.View pointerEvents={chromeVisible ? "auto" : "none"} accessibilityElementsHidden={!chromeVisible} importantForAccessibility={chromeVisible ? "auto" : "no-hide-descendants"} style={[{ height: READER_HEADER_HEIGHT, flexDirection: "row", alignItems: "center", paddingHorizontal: 8, backgroundColor: tone === "sepia" ? "#E3D2B7" : isLight ? "#F0EBE5" : "#302925", borderBottomWidth: 1, borderBottomColor: isLight ? "#CBBFB2" : "#66564B", boxShadow: "0 4px 12px #00000018", zIndex: 40 }, chromeStyle]}>
         <ReaderRibbon />
         <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><SFSymbol name="chevron.left" size={20} color={colors.ink} /></Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={`Choose chapter, ${bookTitle}`} onPress={onContents} style={{ flex: 1, minHeight: 44, flexDirection: "row", gap: 5, alignItems: "center", justifyContent: "center", paddingHorizontal: 6 }}><Text numberOfLines={1} style={{ ...systemText.headline, color: colors.ink, flexShrink: 1, textAlign: "center" }}>{bookTitle}</Text><SFSymbol name="chevron.down" size={10} color={colors.inkMuted} /></Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={`Bible version ${translation.tag}`} onPress={openVersionSheet} disabled={versionSheetBusy} style={{ minWidth: 44, height: 44, justifyContent: "center", alignItems: "center" }}><Text style={{ ...systemText.footnote, fontWeight: "600", color: colors.ink }}>{translation.tag}</Text></Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Reading appearance" onPress={() => { setDraftTextSize(textSizeId); setTextSizeOpen(true); }} style={{ width: 44, height: 44, justifyContent: "center", alignItems: "center" }}><Text style={{ ...systemText.headline, color: colors.ink }}>Aa</Text></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Choose chapter, ${bookTitle}`} onPress={onContents} style={{ flex: 1, minHeight: 44, flexDirection: "row", gap: 5, alignItems: "center", justifyContent: "flex-start", paddingHorizontal: 8 }}><Text numberOfLines={1} style={{ ...systemText.headline, color: colors.ink, flexShrink: 1, textAlign: "left" }}>{bookTitle}</Text><SFSymbol name="chevron.down" size={10} color={colors.inkMuted} /></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Bible version ${translation.tag}`} onPress={openVersionSheet} disabled={versionSheetBusy} style={{ minWidth: 44, height: 44, justifyContent: "center", alignItems: "center" }}><View style={{ paddingHorizontal: 10, paddingVertical: 7, borderRadius: 16, backgroundColor: isLight ? "#00000008" : "#FFFFFF08" }}><Text style={{ ...systemText.caption1, fontWeight: "600", color: colors.ink }}>{translation.tag}</Text></View></Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel="Listen to this chapter" onPress={onAudio} style={{ width: 44, height: 44, justifyContent: "center", alignItems: "center" }}><SFSymbol name="headphones" size={20} color={colors.ink} /></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Reading appearance" onPress={() => { setDraftTextSize(textSizeId); setTextSizeOpen(true); }} style={{ width: 44, height: 44, justifyContent: "center", alignItems: "center" }}><Text style={{ ...systemText.headline, color: colors.ink }}>Aa</Text></Pressable>
         <View ref={pocketRef} collapsable={false}><ReaderMomentPocket onPress={onMoments} arrival={momentArrival} collecting={collecting} /></View>
       </Animated.View>
 

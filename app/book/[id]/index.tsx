@@ -1,3 +1,4 @@
+import { SkyGradient } from "@/components/HomeSkyGradient";
 import { LibraryBookTransition, type BookTransitionPhase } from "@/components/LibraryBookTransition";
 import { useNavigation, usePreventRemove, type NavigationAction } from "@react-navigation/native";
 import { takeLibraryOpening, clearLibraryOpening } from "@/lib/libraryOpening";
@@ -102,6 +103,8 @@ export default function BookOverviewScreen() {
 function BookDetail({ book, prepareReader = true }: { book: Book; prepareReader?: boolean }) {
   const router = useRouter();
   const colors = useColors();
+  const scheme = useResolvedScheme();
+  const dark = scheme === "dark";
   const insets = useSafeAreaInsets();
   const { height, width, fontScale } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
@@ -219,17 +222,17 @@ function BookDetail({ book, prepareReader = true }: { book: Book; prepareReader?
   const font = (size: number) => size * fontScale;
   const chapterColumns = Math.max(2, Math.min(5, Math.floor((width - 40) / (68 * Math.max(1, fontScale)))));
   return (
-    <View style={{ flex: 1, backgroundColor: "#000000" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {prepareReader && <BookReaderPreparation bookId={book.id} chapter={started ? continueChapter : 1} />}
-      <StatusBar style="light" />
+      <StatusBar style={dark ? "light" : "dark"} />
       <Animated.ScrollView ref={scrollRef} onScroll={scrollHandler} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{ backgroundColor: colors.bg, paddingBottom: focusSpacing + dockHeight + 24 }}>
-        <View style={{ backgroundColor: "#000000", minHeight: height - focusSpacing, justifyContent: "flex-end", paddingTop: insets.top + 64 + artSpace, paddingBottom: Math.max(insets.bottom, 20) + 16 }}>
+        <View style={{ backgroundColor: colors.bg, minHeight: height - focusSpacing, justifyContent: "flex-end", paddingTop: insets.top + 64 + artSpace, paddingBottom: Math.max(insets.bottom, 20) + 16 }}>
           <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: CATEGORY_COVER_PALETTE[book.category].bottom }]} />
+            <SkyGradient />
             {cover && <Image source={cover} contentFit="contain" transition={0} style={{ position: "absolute", top: insets.top + 70, alignSelf: "center", width: Math.min(210, width * .5), height: Math.min(298, artSpace - 10) }} />}
 
-            <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+            {dark && <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
               <Defs><LinearGradient id="bookHeroShade" x1="0" y1="0" x2="0" y2="1">
                 <Stop offset="0" stopColor="#000000" stopOpacity={0.24} />
                 <Stop offset="0.35" stopColor="#000000" stopOpacity={0} />
@@ -239,13 +242,13 @@ function BookDetail({ book, prepareReader = true }: { book: Book; prepareReader?
                 <Stop offset="1" stopColor="#000000" />
               </LinearGradient></Defs>
               <Rect width="100%" height="100%" fill="url(#bookHeroShade)" />
-            </Svg>
+            </Svg>}
           </View>
           <View onLayout={event => { heroContentY.value = event.nativeEvent.layout.y; }} style={{ paddingHorizontal: 32, width: "100%", maxWidth: 540, alignSelf: "center", alignItems: "center" }}>
-            <Text allowFontScaling={false} style={{ fontSize: font(10), lineHeight: font(16), letterSpacing: 2.4, fontWeight: "600", color: "#D3D7DE", textAlign: "center" }}>{book.testament === "old" ? "OLD TESTAMENT" : "NEW TESTAMENT"}</Text>
-            <Text onLayout={event => { heroTitleBottom.value = event.nativeEvent.layout.y + event.nativeEvent.layout.height; }} accessibilityRole="header" allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(36), lineHeight: font(44), fontWeight: "700", letterSpacing: -0.8, color: "white", textAlign: "center", marginTop: 6 }}>{book.name}</Text>
-            <Text allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(15), lineHeight: font(22), color: "#D3D7DE", textAlign: "center", marginTop: 8 }}>{theme || blurb}</Text>
-            <Text allowFontScaling={false} style={{ fontSize: font(12), lineHeight: font(18), color: "#B3BBC7", textAlign: "center", marginTop: 12 }}>{book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}{!started ? ` · About ${totalReadingTime}` : ""}</Text>
+            <Text allowFontScaling={false} style={{ fontSize: font(10), lineHeight: font(16), letterSpacing: 2.4, fontWeight: "600", color: colors.inkMuted, textAlign: "center" }}>{book.testament === "old" ? "OLD TESTAMENT" : "NEW TESTAMENT"}</Text>
+            <Text onLayout={event => { heroTitleBottom.value = event.nativeEvent.layout.y + event.nativeEvent.layout.height; }} accessibilityRole="header" allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(36), lineHeight: font(44), fontWeight: "700", letterSpacing: -0.8, color: colors.ink, textAlign: "center", marginTop: 6 }}>{book.name}</Text>
+            <Text allowFontScaling={false} style={{ fontFamily: "System", fontSize: font(15), lineHeight: font(22), color: colors.inkMuted, textAlign: "center", marginTop: 8 }}>{theme || blurb}</Text>
+            <Text allowFontScaling={false} style={{ fontSize: font(12), lineHeight: font(18), color: colors.inkMuted, textAlign: "center", marginTop: 12 }}>{book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}{!started ? ` · About ${totalReadingTime}` : ""}</Text>
             <View onLayout={event => { heroActionBottom.value = event.nativeEvent.layout.y + event.nativeEvent.layout.height; }} style={{ width: "100%", alignItems: "center" }}>
             {started && <BookReadingProgress read={readCount} total={book.chapters}
               onContinue={() => { haptics.soft(); openChapter(continueChapter); }}
@@ -253,19 +256,19 @@ function BookDetail({ book, prepareReader = true }: { book: Book; prepareReader?
             />}
             {!started && <Animated.View style={[{ marginTop: 16 }, readButtonStyle]}>
             <Pressable onPress={() => { haptics.soft(); openChapter(resumeChapter ?? 1); }} onPressIn={() => { animateReadPress(true); prefetchChapter(book.id, resumeChapter ?? 1, translation.id); }} onPressOut={() => animateReadPress(false)} accessibilityRole="button" accessibilityLabel={resumeChapter ? `Continue ${book.name}, chapter ${resumeChapter}` : `Read ${book.name}, chapter 1`}
-              style={{ backgroundColor: "#FFFFFF", borderRadius: 999, minHeight: 48, paddingHorizontal: 26, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
-              <Text allowFontScaling={false} style={{ color: "#101722", fontSize: font(15), lineHeight: font(22), fontWeight: "700" }}>{resumeChapter ? "Continue Reading" : "Read Now"}</Text>
-              <Animated.View style={readArrowStyle}><SFSymbol name="arrow.right" size={18} color="#101722" weight="semibold" /></Animated.View>
+              style={{ backgroundColor: colors.ink, borderRadius: 999, minHeight: 48, paddingHorizontal: 26, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              <Text allowFontScaling={false} style={{ color: colors.bg, fontSize: font(15), lineHeight: font(22), fontWeight: "700" }}>{resumeChapter ? "Continue Reading" : "Read Now"}</Text>
+              <Animated.View style={readArrowStyle}><SFSymbol name="arrow.right" size={18} color={colors.bg} weight="semibold" /></Animated.View>
             </Pressable>
             </Animated.View>}
             </View>
-            {express && <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name} Express version`} onPress={() => { haptics.soft(); router.push(`/book/${book.id}/express`); }} style={{ minHeight: 48, marginTop: 8, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24, borderWidth: 1, borderColor: "#FFFFFF40", backgroundColor: "#FFFFFF10", flexDirection: "row", alignItems: "center", gap: 10 }}>
-              <SFSymbol name="bolt" color="white" size={17} />
-              <Text style={{ color: "white", fontSize: 15, fontWeight: "600" }}>Read Express</Text>
-              <Text style={{ color: "#CDD3DC", fontSize: 13 }}>{expressReadingMinutes(express)} min</Text>
+            {express && <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name} Express version`} onPress={() => { haptics.soft(); router.push(`/book/${book.id}/express`); }} style={{ minHeight: 48, marginTop: 8, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <SFSymbol name="bolt" color={colors.ink} size={17} />
+              <Text style={{ color: colors.ink, fontSize: 15, fontWeight: "600" }}>Read Express</Text>
+              <Text style={{ color: colors.inkMuted, fontSize: 13 }}>{expressReadingMinutes(express)} min</Text>
             </Pressable>}
             <Pressable onPress={() => scrollTo(aboutY)} accessibilityRole="button" accessibilityLabel="About this book and chapters" style={{ minHeight: 44, marginTop: 8, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12 }}>
-              <Text allowFontScaling={false} style={{ fontSize: font(12), lineHeight: font(18), color: "#CDD3DC" }}>About this book</Text><SFSymbol name="chevron.down" size={12} color="#CDD3DC" />
+              <Text allowFontScaling={false} style={{ fontSize: font(12), lineHeight: font(18), color: colors.inkMuted }}>About this book</Text><SFSymbol name="chevron.down" size={12} color={colors.inkMuted} />
             </Pressable>
           </View>
         </View>
@@ -295,7 +298,7 @@ function BookDetail({ book, prepareReader = true }: { book: Book; prepareReader?
         accessibilityElementsHidden={!dockVisible}
         importantForAccessibility={dockVisible ? "auto" : "no-hide-descendants"}
         onLayout={event => setDockHeight(event.nativeEvent.layout.height)}
-        style={[{ position: "absolute", bottom: focusSpacing, left: 0, right: 0, backgroundColor: "#080808", borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#FFFFFF24", paddingHorizontal: 24, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 12) }, dockStyle]}
+        style={[{ position: "absolute", bottom: focusSpacing, left: 0, right: 0, backgroundColor: colors.bg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, paddingHorizontal: 24, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 12) }, dockStyle]}
       >
         <Animated.View style={[{ width: "100%", maxWidth: 492, alignSelf: "center" }, !started && readButtonStyle]}>
           {started ? <BookReadingProgress compact read={readCount} total={book.chapters}
@@ -304,22 +307,22 @@ function BookDetail({ book, prepareReader = true }: { book: Book; prepareReader?
           /> : <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name}, chapter 1`}
             onPress={() => { haptics.soft(); openChapter(1); }}
             onPressIn={() => { animateReadPress(true); prefetchChapter(book.id, 1, translation.id); }} onPressOut={() => animateReadPress(false)}
-            style={{ minHeight: 50, paddingVertical: 14, paddingHorizontal: 24, borderRadius: 28, borderCurve: "continuous", backgroundColor: "white", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
-            <Text style={{ color: "#101722", fontSize: 17, fontWeight: "600" }}>Read Now</Text><SFSymbol name="arrow.right" size={20} color="#101722" />
+            style={{ minHeight: 50, paddingVertical: 14, paddingHorizontal: 24, borderRadius: 28, borderCurve: "continuous", backgroundColor: colors.ink, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <Text style={{ color: colors.bg, fontSize: 17, fontWeight: "600" }}>Read Now</Text><SFSymbol name="arrow.right" size={20} color={colors.bg} />
           </Pressable>}
         </Animated.View>
       </Animated.View>
       <View style={{ position: "absolute", top: 0, left: 0, right: 0, paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 8, flexDirection: "row", justifyContent: "space-between" }} pointerEvents="box-none">
-        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: "#000000" }, headerShade]} />
-        <CircleButton icon="chevron.left" label="Back" tint="white" bg="rgba(10,15,24,0.48)" border="rgba(255,255,255,0.12)" onPress={() => goBackOr(router, "/(tabs)/library")} />
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg }, headerShade]} />
+        <CircleButton icon="chevron.left" label="Back" tint={colors.ink} bg={colors.surface} border={colors.border} onPress={() => goBackOr(router, "/(tabs)/library")} />
         <Animated.View pointerEvents="none" accessibilityElementsHidden={!headerTitleVisible} importantForAccessibility={headerTitleVisible ? "auto" : "no-hide-descendants"} style={[{ position: "absolute", left: 76, right: 76, top: insets.top + 8, height: 48, justifyContent: "center" }, headerTitleStyle]}>
-          <Text accessibilityRole="header" numberOfLines={1} ellipsizeMode="tail" maxFontSizeMultiplier={1.4} style={[systemText.headline, { color: "white", textAlign: "center" }]}>{book.name}</Text>
+          <Text accessibilityRole="header" numberOfLines={1} ellipsizeMode="tail" maxFontSizeMultiplier={1.4} style={[systemText.headline, { color: colors.ink, textAlign: "center" }]}>{book.name}</Text>
         </Animated.View>
-        <Host colorScheme="dark" style={{ width: 48, height: 48 }}>
+        <Host colorScheme={scheme} style={{ width: 48, height: 48 }}>
           <ContextMenu activationMethod="singlePress">
             <ContextMenu.Trigger>
               <NativeButton variant="bordered" modifiers={[accessibilityLabel("Book options")]}>
-                <NativeImage systemName="ellipsis" size={22} color="white" modifiers={[frame({ width: 24, height: 28 })]} />
+                <NativeImage systemName="ellipsis" size={22} color={colors.ink} modifiers={[frame({ width: 24, height: 28 })]} />
               </NativeButton>
             </ContextMenu.Trigger>
             <ContextMenu.Items>

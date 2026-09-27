@@ -1,6 +1,7 @@
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { Image } from "expo-image";
 import { getBookCover } from "@/constants/bookCovers";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useId } from "react";
 import { Pressable, ScrollView, Text, View,  } from "react-native";
 import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from "react-native-reanimated";
 import type { Book } from "@/constants/books";
@@ -13,17 +14,23 @@ import * as haptics from "@/lib/haptics";
 export type LibraryBookFrame = { x: number; y: number; width: number; height: number };
 
 export function LibraryBookCover({ book, width = 104 }: { book: Book; width?: number }) {
-  return <View style={{ width, height: width * 1.42, borderRadius: 3, backgroundColor: "#E0D2BA", boxShadow: "5px 7px 12px #140A0466" }}>
+  const id = `binding${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+  return <View style={{ width, height: width * 1.42, borderRadius: 4, backgroundColor: "#E0D2BA", boxShadow: "0 2px 3px #140A0438, 3px 10px 18px -5px #140A0466" }}>
     {[5, 3, 1].map((offset, i) => <View key={offset} style={{ position: "absolute", inset: 0, left: offset, right: -offset, top: i, bottom: -i, borderRadius: 3, backgroundColor: ["#C9B89C", "#E0D2BA", "#F4EBDD"][i] }} />)}
     <Image source={getBookCover(book.id)} contentFit="fill" transition={0} style={{ width, height: width * 1.42, borderRadius: 3 }} />
+    <Svg pointerEvents="none" width={width} height={width * 1.42} style={{ position: "absolute", top: 0, left: 0 }}>
+      <Defs><LinearGradient id={id} x1="0%" y1="0%" x2="100%" y2="8%"><Stop offset="0%" stopColor="#000000" stopOpacity={.22} /><Stop offset="7%" stopColor="#000000" stopOpacity={.1} /><Stop offset="11.5%" stopColor="#FFFFFF" stopOpacity={.32} /><Stop offset="17%" stopColor="#FFFFFF" stopOpacity={.06} /><Stop offset="27%" stopColor="#FFFFFF" stopOpacity={0} /><Stop offset="100%" stopColor="#000000" stopOpacity={.08} /></LinearGradient></Defs>
+      <Rect width={width} height={width * 1.42} rx={3} fill={`url(#${id})`} />
+      <Rect x={.5} y={.5} width={width - 1} height={width * 1.42 - 1} rx={3} fill="none" stroke="#FFFFFF" strokeOpacity={.23} strokeWidth={.7} />
+    </Svg>
   </View>;
 }
 
 export function LibraryBook({ book, index = 0, width = 104, onPick }: { book: Book; index?: number; width?: number; onPick: (book: Book, frame: LibraryBookFrame) => void }) {
   const ref = useRef<View>(null), reduced = useReducedMotion();
-  const enter = useSharedValue(reduced ? 1 : 0), lift = useSharedValue(0);
+  const enter = useSharedValue(1), lift = useSharedValue(0);
   const rotation = ((book.order * 37) % 7 - 3) * .55;
-  useEffect(() => { enter.value = reduced ? 1 : withDelay(Math.min(index * 45, 240), withSpring(1, { damping: 17, stiffness: 175 })); return () => { cancelAnimation(enter); cancelAnimation(lift); }; }, [reduced]);
+  useEffect(() => { enter.value = 1; return () => { cancelAnimation(enter); cancelAnimation(lift); }; }, [reduced]);
   const style = useAnimatedStyle(() => ({ opacity: enter.value, transformOrigin: "bottom", transform: [{ translateY: -60 * (1 - enter.value) - 8 * lift.value }, { rotate: `${rotation * (1 - lift.value)}deg` }, { scale: .94 + ((book.order * 53) % 7) / 100 + lift.value * .035 }] }));
   return <Animated.View ref={ref} collapsable={false} style={[{ width, height: width * 1.42 }, style]}><Pressable accessibilityRole="button" accessibilityLabel={`Open ${book.name}, ${book.chapters} ${book.chapters === 1 ? "chapter" : "chapters"}`} onPressIn={() => { lift.value = reduced ? 0 : withSpring(1, { damping: 20, stiffness: 350 }); }} onPressOut={() => { lift.value = withTiming(0, { duration: reduced ? 0 : 160 }); }} onPress={() => { haptics.soft(); ref.current?.measureInWindow((x, y, w, height) => onPick(book, { x, y, width: w, height })); }}><LibraryBookCover book={book} width={width} /></Pressable></Animated.View>;
 }

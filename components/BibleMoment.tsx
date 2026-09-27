@@ -163,11 +163,11 @@ export function BibleMomentCard({ moment, onClose }: { moment: BibleMoment | nul
             </View>
           </View> : <Pressable disabled={!saveFailed} onPress={save} accessibilityLabel={newlyCollected ? "Moment collected" : saved} accessibilityRole={saveFailed ? "button" : "text"} style={{ minHeight: 44, justifyContent: "center" }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, opacity: newlyCollected ? 0 : 1 }}>
-              {!saveFailed && saved === "In your collection" && <SFSymbol name="checkmark.circle.fill" size={16} color={MOMENT_CATEGORIES[moment.category].dark} />}
+              {!saveFailed && saved === "In your collection" && <SFSymbol name="checkmark.circle.fill" size={16} color="#248A3D" />}
               <Text accessibilityLiveRegion="polite" style={{ flex: 1, color: "#FFFFFFB8", fontSize: 14, lineHeight: 20 }}>{saved}</Text>
             </View>
             <Animated.View pointerEvents="none" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[{ position: "absolute", left: 0, right: 0, flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 16, backgroundColor: "#FFFFFF14" }, confirmationStyle]}>
-              <SFSymbol name="checkmark.seal.fill" size={20} color={MOMENT_CATEGORIES[moment.category].dark} />
+              <SFSymbol name="checkmark.seal.fill" size={20} color="#248A3D" />
               <Text style={{ flex: 1, color: "white", fontSize: 15, lineHeight: 20, fontWeight: "600" }}>Moment collected</Text>
             </Animated.View>
           </Pressable>}

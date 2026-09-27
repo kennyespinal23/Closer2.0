@@ -1,8 +1,8 @@
+import { WaxMedal } from "./WaxMedal";
 import { useAmbientMotionEnabled } from "@/lib/useAmbientMotionEnabled";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, withSpring } from "react-native-reanimated";
@@ -10,7 +10,6 @@ import Svg, { Defs, RadialGradient, Rect, Stop, Path } from "react-native-svg";
 import { SFSymbol } from "@/components/Symbol";
 import type { Milestone } from "@/lib/milestones";
 import { getMilestoneAccent } from "@/lib/milestones";
-import { getMilestoneBadge } from "@/lib/milestoneBadges";
 import { systemText } from "@/lib/typography";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -122,7 +121,7 @@ export function MilestoneDetailView({ milestone, badgeIndex, onClose, newlyUnloc
           <View style={{ zIndex: 1 }}>
           <GestureDetector gesture={badgeGesture}>
           <Animated.View shouldRasterizeIOS renderToHardwareTextureAndroid style={badgeStyle}>
-            <Image source={getMilestoneBadge(badgeIndex)} style={{ width: size, height: size }} contentFit="contain" accessibilityLabel={`${milestone.title} badge`} />
+            <WaxMedal size={size} index={badgeIndex} />
           </Animated.View>
           </GestureDetector>
           </View>
@@ -130,7 +129,7 @@ export function MilestoneDetailView({ milestone, badgeIndex, onClose, newlyUnloc
         <Text accessibilityRole="header" style={styles.title}>{milestone.title}</Text>
         <Text style={styles.description}>{milestone.day === 1 ? "You made time for God today.\nA small beginning. A beautiful step.\nKeep going — this is just the start." : `You kept showing up.\n${milestone.day} days of making room for God.\nEvery small step matters.`}</Text>
         <View style={styles.earned}>
-          <SFSymbol name="checkmark.seal.fill" size={19} color={color} />
+          <SFSymbol name="checkmark.seal.fill" size={19} color="#248A3D" />
           <Text style={styles.earnedText}>{newlyUnlocked ? "Milestone unlocked" : "Milestone earned"} · Day {milestone.day}</Text>
         </View>
         <Pressable onPress={() => setExpanded(value => !value)} accessibilityRole="button" accessibilityState={{ expanded }} style={{ minHeight: 44, justifyContent: "center", marginTop: 16 }}><Text style={styles.earnedText}>{expanded ? "Hide reflection" : "Read the reflection"}</Text></Pressable>

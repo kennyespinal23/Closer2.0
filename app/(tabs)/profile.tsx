@@ -1,3 +1,7 @@
+import { ReaderMaterialGradient } from "@/components/ReaderMaterialGradient";
+import { ProfileVerse } from "@/components/ProfileVerse";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { ProfileCollectionShelf } from "@/components/ProfileCollectionShelf";
 import { ReaderNativeButton } from "@/components/ReaderNativeButton";
@@ -59,11 +63,12 @@ import {
 import { SkyGradient } from "@/components/HomeSkyGradient";
 
 /** Profile hero avatar diameter — large enough to read as identity. */
-const AVATAR_SIZE = 112;
+const AVATAR_SIZE = 82;
 
 /** Personal identity, progress, and collected artwork. */
 export default function ProfileTabScreen() {
   const router = useRouter();
+  const reduced = useReducedMotion();
   const [savedTab, setSavedTab] = useState(0);
   const [savedExpanded, setSavedExpanded] = useState(false);
   const scheme = useResolvedScheme();
@@ -253,17 +258,18 @@ export default function ProfileTabScreen() {
             <Text accessibilityRole="header" style={[contentText.title, { color: colors.inkMuted }]}>Profile</Text>
             <ReaderNativeButton label="Settings" symbol="gearshape" onPress={() => navigateTo("/settings")} />
           </View>
-          <View style={{ alignItems: "center", gap: 16 }}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Change profile avatar" onPress={() => setAvatarPickerOpen(true)} style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_SIZE / 2, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-              {selectedAvatar ? <Image source={selectedAvatar.source} contentFit="cover" style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }} /> : <Text style={[systemText.title1, { color: colors.ink }]}>{firstName.charAt(0).toUpperCase()}</Text>}
+          <Animated.View entering={reduced ? undefined : FadeInDown.springify().damping(18)} style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Change profile avatar" onPress={() => setAvatarPickerOpen(true)} style={{ width: AVATAR_SIZE + 12, height: AVATAR_SIZE + 24, padding: 6, paddingBottom: 18, transform: [{ rotate: "-5deg" }], borderRadius: 3, backgroundColor: "#FFF9EE", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              {selectedAvatar ? <Image source={selectedAvatar.source} contentFit="cover" style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }} /> : <ReaderMaterialGradient colors={["#86BDE9", "#FFD9A8", "#FFB06A"]} style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, alignItems: "center", justifyContent: "center" }}><Text style={[systemText.title1, { color: "#30241D" }]}>{firstName.charAt(0).toUpperCase()}</Text></ReaderMaterialGradient>}
             </Pressable>
-            <View style={{ alignItems: "center", gap: 4 }}>
-              <Text style={[systemText.largeTitle, { color: colors.ink, textAlign: "center" }]}>{firstName}</Text>
+            <View style={{ flex: 1, gap: 6 }}>
+              <Text style={[systemText.largeTitle, { color: colors.ink, textAlign: "left" }]}>{firstName}</Text>
               {joinedLabel && <Text style={[contentText.metadata, { color: colors.inkMuted }]}>{joinedLabel}</Text>}
             </View>
-          </View>
+          </Animated.View>
         </View>
 
+        <ProfileVerse />
         <ProfileProgress />
 
         <ProfileCollectionShelf />
@@ -355,6 +361,16 @@ export default function ProfileTabScreen() {
 
         </>}
 
+        <View style={{ marginHorizontal: 20, marginTop: 28 }}>
+          <SettingsSection title="Settings">
+            <SettingsLinkRow label="Daily letter reminder" onPress={() => navigateTo("/settings/notifications")} showDivider />
+            <SettingsLinkRow label="App breaks" onPress={() => navigateTo("/settings/study-sessions")} showDivider />
+            <SettingsLinkRow label="Bible translation" onPress={() => navigateTo("/settings/translation")} showDivider />
+            <SettingsLinkRow label="Appearance" value={appearanceValue} onPress={() => navigateTo("/settings/appearance")} showDivider />
+            <SettingsLinkRow label="Help and feedback" onPress={() => navigateTo("/settings/help")} showDivider />
+            <SettingsLinkRow label="All settings" onPress={() => navigateTo("/settings")} />
+          </SettingsSection>
+        </View>
         {showDevShortcuts ? (
           <SettingsSection
             title="Developer"
@@ -374,6 +390,8 @@ export default function ProfileTabScreen() {
               showDivider
               onPress={() => { haptics.soft(); setReaderTutorialOpen(true); }}
             />
+            <SettingsLinkRow icon={<SFSymbol name="person.2" size={16} color={colors.ink}/>} label="Replay Community tutorial" onPress={() => router.push({ pathname: "/(tabs)/community", params: { tutorial: "community", replay: String(Date.now()) } })} showDivider />
+            <SettingsLinkRow icon={<SFSymbol name="book" size={16} color={colors.ink}/>} label="Replay Study Groups tutorial" onPress={() => router.push({ pathname: "/(tabs)/community", params: { tutorial: "groups", replay: String(Date.now()) } })} showDivider />
             <SettingsLinkRow
               icon={
                 <SFSymbol

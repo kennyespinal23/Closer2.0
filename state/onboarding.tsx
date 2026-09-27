@@ -124,6 +124,13 @@ export type Gender = "female" | "male" | "other";
 
 export type OnboardingAnswers = {
   name: string;
+  /** Optional welcome notes selected in the new onboarding. */
+  welcomeReasons?: string[];
+  faithNow?: string;
+  faithDuration?: string;
+  churchBackground?: string;
+  bibleFrequency?: string;
+  faithObstacles?: string[];
   /**
    * Built-in profile avatar id from `constants/avatars.ts`
    * (e.g. `"avatar-01"`). Optional — when unset the Profile

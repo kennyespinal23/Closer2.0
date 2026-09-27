@@ -1,12 +1,11 @@
+import { WaxMedal } from "./WaxMedal";
 import { contentText, contentLayout } from "@/lib/contentStyles";
 import { Pressable, Text, View } from "react-native";
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useProgress } from "@/state/progress";
 import { useBibleMomentCollection } from "@/state/bibleMoments";
 import { useColors } from "@/state/theme";
 import { MILESTONES, isMilestoneUnlocked } from "@/lib/milestones";
-import { getMilestoneBadge } from "@/lib/milestoneBadges";
 import { BIBLE_MOMENTS } from "@/constants/bibleMoments";
 import { SFSymbol } from "@/components/Symbol";
 import { systemText } from "@/lib/typography";
@@ -50,8 +49,8 @@ export function JourneySummary({ onSelect, compact = false, profile = false }: {
         <Text style={label}>Your last seven days</Text>
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
           {days.map((day, index) => <View key={index} accessible accessibilityLabel={`${day.full}: ${day.read ? "Read" : "No reading recorded"}`} style={{ alignItems: "center", gap: 8 }}>
-            <View style={{ width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: day.read ? colors.ink : colors.bg }}>
-              {day.read && <SFSymbol name="checkmark" size={12} color={colors.bg} />}
+            <View style={{ width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: day.read ? "#248A3D" : colors.bg }}>
+              {day.read && <SFSymbol name="checkmark" size={12} color="#FFFFFF" />}
             </View>
             <Text style={label}>{day.label}</Text>
           </View>)}
@@ -59,7 +58,7 @@ export function JourneySummary({ onSelect, compact = false, profile = false }: {
       </Pressable>}
       <View style={{ height: 1, backgroundColor: colors.ink, opacity: 0.08 }} />
       <Pressable accessibilityRole="button" onPress={() => latest ? router.push(`/milestone/${latest.day}`) : onSelect("badges")} style={{ flexDirection: "row", alignItems: "center", gap: contentLayout.itemGap }}>
-        <Image source={getMilestoneBadge(latest ? MILESTONES.indexOf(latest) + 1 : 1)} contentFit="contain" transition={0} style={{ width: 72, height: 72, opacity: latest ? 1 : 0.45 }} />
+        <WaxMedal size={64} index={0} />
         <View style={{ flex: 1, gap: 4 }}><Text style={label}>{latest ? "Latest milestone" : "Your first milestone awaits"}</Text><Text style={[systemText.headline, { color: colors.ink }]}>{latest?.title ?? "One small beginning"}</Text><Text style={label}>{latest ? `Earned at ${latest.day} ${latest.day === 1 ? "day" : "days"}` : "Begin with today's devotional."}</Text></View>
         <SFSymbol name="chevron.right" size={14} color={colors.inkMuted} />
       </Pressable>

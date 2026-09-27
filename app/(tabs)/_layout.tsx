@@ -13,7 +13,7 @@ import {
   type NativeBottomTabsScreenOptions,
 } from "@/components/NativeBottomTabsNavigator";
 
-import { TAB_ACCENT_RED } from "@/constants/theme";
+
 // #AAAAAA per explicit direction. Resolves to ~7.2:1 contrast
 // against pure black — comfortably above the WCAG AA 4.5:1 floor
 // for navigation text. Applied via `experimentalBakedTintColors`
@@ -120,7 +120,7 @@ export default function TabsLayout() {
       <SkyGradient />
       <View style={{ flex: 1 }}>
         <NativeTabs
-          tabBarActiveTintColor={TAB_ACCENT_RED}
+          tabBarActiveTintColor={scheme === "dark" ? "#FFFFFF" : "#30241D"}
           tabBarInactiveTintColor={scheme === "light" ? "#66584D" : TAB_BAR_INACTIVE}
           // Force our custom tints onto the iOS 26+ Liquid Glass
           // tab bar. Without this the package returns nil for the

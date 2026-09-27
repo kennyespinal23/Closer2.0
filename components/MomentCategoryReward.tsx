@@ -21,7 +21,7 @@ export function MomentCategoryReward({ category, expanded = false, additionalCou
   return <View style={{ flexDirection: expanded ? "column" : "row", alignItems: "center", gap: expanded ? 20 : 12, padding: expanded ? 24 : 14, borderRadius: 20, borderCurve: "continuous", backgroundColor: "#FFFFFF10" }}>
     <View style={{ width: expanded ? 120 : 48, height: expanded ? 120 : 48, alignItems: "center", justifyContent: "center" }}>
       <Animated.View pointerEvents="none" style={[{ position: "absolute", inset: 0, borderRadius: 60, backgroundColor: definition.dark }, halo]} />
-      <Animated.View style={badge}><SFSymbol name="checkmark.seal.fill" size={expanded ? 88 : 36} color={definition.dark} /></Animated.View>
+      <Animated.View style={badge}><SFSymbol name="checkmark.seal.fill" size={expanded ? 88 : 36} color="#248A3D" /></Animated.View>
     </View>
     <View style={{ flex: expanded ? undefined : 1, gap: 4, alignItems: expanded ? "center" : "flex-start" }}>
       <Text accessibilityRole="header" style={{ color: "white", fontSize: expanded ? 24 : 16, fontWeight: "700", textAlign: expanded ? "center" : "left" }}>{expanded ? definition.name : "Category complete"}</Text>

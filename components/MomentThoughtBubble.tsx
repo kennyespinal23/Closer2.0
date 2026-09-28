@@ -1,3 +1,5 @@
+import { ContextualReaderTip } from "./ContextualReaderTip";
+import { FeedbackPressable } from "./FeedbackPressable";
 import { useEffect, useRef, useState } from "react";
 import { BackHandler, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withDelay, withTiming, runOnJS } from "react-native-reanimated";
@@ -42,7 +44,8 @@ export function MomentThoughtBubble({ moment, anchorY, onClose, onCollect }: {
         <Text style={{ ...systemText.callout, color: ink, lineHeight: 23 }}>{moment.importance}</Text>
         <Text style={{ ...systemText.footnote, color: dark ? "#C9B7A1" : "#74614F" }}>{moment.reference}</Text>
       </ScrollView>
-      <Pressable accessibilityRole="button" onPress={() => bubbleRef.current?.measureInWindow((x, y, width, height) => onCollect({ x, y, width, height }))} style={{ minHeight: 48, padding: 12, borderRadius: 18, borderBottomLeftRadius: 6, backgroundColor: "#FF5A36", alignItems: "center", justifyContent: "center" }}><Text style={{ ...systemText.headline, color: "#26130D" }}>{collected ? "View collected Moment" : "Collect this Moment"}</Text></Pressable>
+      {!collected && <ContextualReaderTip id="collect" text="Collect this card to keep it in Your Moments." color={dark ? "#C9B7A1" : "#74614F"}/> }
+      <FeedbackPressable feedback="action" accessibilityRole="button" onPress={() => bubbleRef.current?.measureInWindow((x, y, width, height) => onCollect({ x, y, width, height }))} style={{ minHeight: 48, padding: 12, borderRadius: 18, borderBottomLeftRadius: 6, backgroundColor: "#FF5A36", alignItems: "center", justifyContent: "center" }}><Text style={{ ...systemText.headline, color: "#26130D" }}>{collected ? "View collected Moment" : "Collect this Moment"}</Text></FeedbackPressable>
       <Pressable accessibilityRole="button" onPress={dismiss} style={{ minHeight: 44, alignItems: "center", justifyContent: "center" }}><Text style={{ ...systemText.body, color: ink }}>Keep reading</Text></Pressable>
     </Animated.View>
   </View>;

@@ -18,7 +18,7 @@ function Paper({ children, index = 0, rotation = 0, exiting, style }: { children
   return <Animated.View shouldRasterizeIOS renderToHardwareTextureAndroid style={[{ position: "absolute" }, style, motion]}>{children}</Animated.View>;
 }
 function Stage({ children, label }: { children: ReactNode; label: string }) {
-  const { width } = useWindowDimensions(), scale = Math.min(1, (width - 48) / 340);
+  const { width } = useWindowDimensions(), scale = Math.min(1.12, (width - 56) / 340);
   return <View accessible accessibilityLabel={label} style={{ height: 340 * scale, alignItems: "center" }}><View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: 340, height: 340, transform: [{ scale }], transformOrigin: "top center" }}>{children}</View></View>;
 }
 export function OnboardingCommunityScene({ exiting, scene = 0 }: { exiting: boolean; scene?: number }) {

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { BackHandler, Linking, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { OnboardingFocusText, OnboardingMotionGroup } from "@/components/OnboardingMotion";
+import { OnboardingCommunityScene } from "@/components/OnboardingStoryScene";
+import { BibleGiftReveal, BibleRevealTitle, HoldToUnwrap } from "@/components/OnboardingBibleReveal";
 import { PaperEnvelope } from "@/components/PaperEnvelope";
 import { OnboardingChoice } from "@/components/OnboardingChoice";
 import { SFSymbol } from "@/components/Symbol";
@@ -26,17 +28,18 @@ const INTENTIONS = ["Peace", "Hope", "Courage", "Rest", "Forgiveness", "Joy"];
 const PAPER = ["#EDD8B7", "#DDDFC3", "#EAC8BC", "#D4DDE0", "#E1D3E2", "#E8DCA8"];
 const MOMENT = BIBLE_MOMENTS.find(m => m.id === "creation")!;
 const TIMES = [{ label: "Morning", time: "7:30 AM", hour: 7, minute: 30 }, { label: "Midday", time: "12:00 PM", hour: 12, minute: 0 }, { label: "Evening", time: "6:00 PM", hour: 18, minute: 0 }, { label: "Night", time: "9:00 PM", hour: 21, minute: 0 }];
-const ORDER = [0, 1, 2, 8, 9, 10, 11, 12, 13, 3, 4, 5, 16, 6, 7, 14, 15];
+const ORDER = [0, 1, 2, 8, 9, 10, 11, 17, 6, 12, 13, 18, 19, 20, 21, 3, 4, 5, 16, 7, 14, 15];
 const QUESTIONS = [
+  { step: 18, key: "faithCommunity", options: ["Yes, and I’m grateful", "A few, but I’d like more connection", "Not right now", "I’m still figuring that out"] },
   { step: 8, key: "faithNow", options: ["Close to him", "Drifting", "Coming back", "Not sure", "Just curious"] },
   { step: 9, key: "faithDuration", options: ["A few weeks", "A few months", "About a year", "Longer than that", "It’s always felt this way"] },
   { step: 10, key: "churchBackground", options: ["Every Sunday", "Now and then", "Not really", "Never"] },
   { step: 11, key: "bibleFrequency", options: ["Most days", "Once in a while", "Rarely", "I’ve never really read it"] },
 ] as const;
 const REPLIES: Record<string, string> = { "Close to him": "Good. Let’s keep making room for that.", Drifting: "That’s okay. Drifting is how many coming-back stories start.", "Coming back": "Welcome home. Nobody here is keeping score.", "Not sure": "Not sure is an honest answer. There’s room for your questions.", "Just curious": "Curious is a good place to start. Look around." };
-const OBSTACLES = ["Too busy", "Don’t know where to start", "The Bible feels confusing", "Guilt about coming back", "Church felt judgmental", "I have doubts"];
-const HEADINGS = ["Something was left for you.", "What brings you here?", "What should we call you?", "What do you need a little more of?", "A little time. A little closer.", "Keep the moments that move you.", "A place to begin.", "A quiet moment, just for you.", "Where are you with God right now?", "How long has it felt this way?", "Did you grow up going to church?", "How often do you read the Bible right now?", "There’s a place for you here.", "What’s made it hard to stay close?", "Want a quiet nudge?", "Make room for more with Closer Plus.", "Small steps worth keeping."];
-const DETAILS = ["A small invitation to begin again.", "Choose anything that sounds like you.", "A first name is enough. You can skip this.", "Choose a few intentions to carry with you.", "Choose a daily reading goal. You can change it any time.", "Discover the story behind a verse. Collect your first Moment from Genesis.", "Open Genesis and try a little of the reading experience.", "Choose when you’d like a daily reminder.", "An honest answer is a good place to begin.", "However long it’s been, you’re welcome here.", "No background needed. We’ll meet you where you are.", "There’s no right answer, just your starting point.", "A little encouragement for the season you’re in.", "Choose anything that applies. You can skip this.", "One gentle reminder when it’s time for your reading.", "An optional subscription to support your daily practice.", "Earn little reminders of the time you make for God. Swipe to explore."];
+const OBSTACLES = ["Too busy", "Don’t know where to start", "The Bible feels confusing", "Guilt about coming back", "Church felt judgmental", "I have doubts", "Nothing in particular"];
+const HEADINGS = ["Something was left for you.", "What brings you here?", "What should we call you?", "What do you need a little more of?", "A little time. A little closer.", "Keep the moments that move you.", "A place to begin.", "A quiet moment, just for you.", "Where are you with God right now?", "How long has it felt this way?", "Did you grow up going to church?", "How often do you read the Bible right now?", "There’s a place for you here.", "What’s made it hard to stay close?", "Want a quiet nudge?", "Make room for more with Closer Plus.", "Small steps worth keeping.", "The whole Bible. Yours to explore.", "Do you have people you can share your faith with?", "Grow together.", "Carry a little hope.", "Find your people."];
+const DETAILS = ["A small invitation to begin again.", "Choose anything that sounds like you.", "A first name is enough. You can skip this.", "Choose a few intentions to carry with you.", "Choose a daily reading goal. You can change it any time.", "Discover the story behind a verse. Collect your first Moment from Genesis.", "Open Genesis and try a little of the reading experience.", "Choose when you’d like a daily reminder.", "An honest answer is a good place to begin.", "However long it’s been, you’re welcome here.", "No background needed. We’ll meet you where you are.", "There’s no right answer, just your starting point.", "A little encouragement for the season you’re in.", "Choose anything that applies. You can skip this.", "One gentle reminder when it’s time for your reading.", "An optional subscription to support your daily practice.", "Earn little reminders of the time you make for God. Swipe to explore.", "All 66 books, free to read. Start wherever you are.", "Whatever your answer, there’s room for you here.", "A prayer, a verse, a little encouragement. There’s room for you here.", "A place to share what’s on your heart, and make room for someone else’s prayer.", "Read a little Scripture. Ask a question. Study groups are coming to Closer."];
 
 /** New onboarding lives after the original video welcome, which owns its own route. */
 export default function Journey() {
@@ -45,7 +48,8 @@ export default function Journey() {
   const { goalMinutes, setGoalMinutes } = useReadingGoal();
   const collection = useBibleMomentCollection();
   const subscription = useSubscription();
-  const [page, setPage] = useState(0), [opened, setOpened] = useState(false);
+  const { preview } = useLocalSearchParams<{ preview?: string }>();
+  const [page, setPage] = useState(() => __DEV__ && preview === "bible-gift" ? ORDER.indexOf(17) : __DEV__ && preview === "community" ? ORDER.indexOf(19) : 0), [opened, setOpened] = useState(false);
   const step = ORDER[page];
   const [exiting, setExiting] = useState(false);
   const transitionLock = useRef(false);
@@ -58,9 +62,18 @@ export default function Journey() {
     transitionLock.current = true; setExiting(true);
     transitionTimer.current = setTimeout(() => {
       setPage(target); setExiting(false); transitionLock.current = false;
-    }, 140);
+    }, step === 17 || (step >= 19 && step <= 21) ? 240 : 140);
   };
   const [readingExpanded, setReadingExpanded] = useState(false);
+  const [giftOpened, setGiftOpened] = useState(false);
+  useEffect(() => {
+    if (!__DEV__) return;
+    if (preview === "bible-gift" || preview === "bible-open") { setPage(ORDER.indexOf(17)); setGiftOpened(preview === "bible-open"); }
+    if (preview === "community") setPage(ORDER.indexOf(19));
+    if (preview === "community-prayer") setPage(ORDER.indexOf(20));
+    if (preview === "community-groups") setPage(ORDER.indexOf(21));
+    if (preview === "community-question") setPage(ORDER.indexOf(18));
+  }, [preview]);
   const question = QUESTIONS.find(q => q.step === step);
   const season = answers.faithNow === "Close to him" ? { title: "A growing season", body: "Paul kept reaching toward God even after years of faith. There is always more to discover.", reference: "Philippians 3:14" } : answers.faithNow === "Coming back" ? { title: "A coming-home season", body: "In Jesus’ story of the lost son, the father sees him from far away and runs to welcome him. You can begin again, too.", reference: "Luke 15:20" } : ["Not sure", "Just curious"].includes(answers.faithNow ?? "") ? { title: "A searching season", body: "Nicodemus came to Jesus with questions. Jesus made time for him. Your questions belong here, too.", reference: "John 3:1–16" } : { title: "A quiet season", body: "When Elijah felt worn out, God met him in a still, small voice. A quiet beginning can be enough.", reference: "1 Kings 19:12" };
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
@@ -70,7 +83,9 @@ export default function Journey() {
   const actionColors = paperActionColors(dark);
   const surface = dark ? "#362B24" : "#FFF9EE";
   const collected = collection.ids.includes(MOMENT.id);
+  const [goalChosen, setGoalChosen] = useState(false), [timeChosen, setTimeChosen] = useState(false);
   const reasons = answers.welcomeReasons ?? [], intentions = answers.growthAreas ?? [];
+  const answerMissing = Boolean(question && !question.options.includes(answers[question.key] as never)) || (step === 1 && reasons.length === 0) || (step === 3 && intentions.length === 0) || (step === 13 && !(answers.faithObstacles?.length)) || (step === 4 && !goalChosen) || (step === 7 && !timeChosen);
   const back = () => { if (busy) return; Keyboard.dismiss(); setError(""); if (page > 0) goToPage(page - 1); else router.back(); };
   useEffect(() => { const sub = BackHandler.addEventListener("hardwareBackPress", () => { back(); return true; }); return () => sub.remove(); }, [page, busy]);
   const next = () => { Keyboard.dismiss(); haptics.soft(); setError(""); goToPage(Math.min(ORDER.length - 1, page + 1)); };
@@ -81,7 +96,7 @@ export default function Journey() {
     router.replace("/today");
   };
   const submit = async () => {
-    if (lock.current || transitionLock.current) return;
+    if (lock.current || transitionLock.current || answerMissing) return;
     if (step === 0 && !opened) { setOpened(true); haptics.soft(); return; }
     if (step === 5 && !collected) {
       lock.current = true; setBusy(true); setError("");
@@ -90,6 +105,7 @@ export default function Journey() {
       finally { lock.current = false; setBusy(false); }
       return;
     }
+    if (step === 17 && !giftOpened) { setGiftOpened(true); haptics.soft(); return; }
     if (step === 6 && !readingExpanded) { setReadingExpanded(true); haptics.soft(); return; }
     if (step === 15) {
       if (subscription.isPro) { finish(); return; }
@@ -122,7 +138,7 @@ export default function Journey() {
   };
   const toggle = (key: "welcomeReasons" | "growthAreas" | "faithObstacles", value: string, list: string[]) => { haptics.tick(); setAnswer(key, list.includes(value) ? list.filter(v => v !== value) : [...list, value]); };
   const purchaseUnavailable = step === 15 && !subscription.isPro && (!subscription.configured || !subscription.monthlyPackage);
-  const label = busy ? "Saving…" : step === 0 ? opened ? "Let’s begin" : "Open my letter" : step === 5 ? collected ? "Continue" : "Collect this Moment" : step === 6 && !readingExpanded ? "Open reading preview" : step === 14 ? "Enable reminders" : step === 15 ? subscription.isPro ? "Continue" : purchaseUnavailable ? "Subscriptions coming soon" : "Subscribe" : "Continue";
+  const label = busy ? "Saving…" : step === 0 ? opened ? "Let’s begin" : "Open my letter" : step === 5 ? collected ? "Continue" : "Collect this Moment" : step === 6 && !readingExpanded ? "Open reading preview" : step === 17 && !giftOpened ? "Hold to unwrap your Bible" : step === 14 ? "Enable reminders" : step === 15 ? subscription.isPro ? "Continue" : purchaseUnavailable ? "Subscriptions coming soon" : "Subscribe" : "Continue";
   return <ReaderMaterialGradient colors={dark ? ["#372820", "#1D1916", "#171513"] : ["#F2DECB", "#F8EFE2", "#F9F4EA"]} style={{ flex: 1 }}>
     <SafeAreaView style={{ flex: 1 }}>
       <View style={s.top}>
@@ -131,13 +147,15 @@ export default function Journey() {
         <View style={s.icon} />
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-        <ScrollView key={step} keyboardShouldPersistTaps="handled" contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-          <OnboardingMotionGroup exiting={exiting}><View style={{ gap: 28 }}>
+        <ScrollView key={step} keyboardShouldPersistTaps="handled" contentContainerStyle={[s.content, step === 17 && { justifyContent: "flex-start", paddingTop: 24 }]} showsVerticalScrollIndicator={false}>
+          <OnboardingMotionGroup stationary={step === 17 || (step >= 19 && step <= 21)} exiting={exiting && step !== 17 && !(step >= 19 && step <= 21)}><View style={{ gap: 28 }}>
+            {step === 17 && <BibleGiftReveal opened={giftOpened}/>}
+            {step >= 19 && step <= 21 && <OnboardingCommunityScene scene={step - 19} exiting={exiting}/>}
             {step === 0 && <PaperEnvelope opened={opened} />}
             {step === 5 && <OnboardingMomentFan collected={collected} />}
             {step === 16 && <OnboardingBadgeCarousel />}
             {step === 6 && <OnboardingReadingPreview expanded={readingExpanded} onOpen={() => { setReadingExpanded(true); haptics.soft(); }} />}
-            <View style={{ gap: 12 }}><OnboardingFocusText exiting={exiting} delay={80} accessibilityRole="header" style={[s.title, { color: ink }]}>{step === 9 && answers.faithNow === "Close to him" ? "How long have you felt close to God?" : HEADINGS[step]}</OnboardingFocusText><OnboardingFocusText exiting={exiting} delay={170} style={[s.body, { color: muted }]}>{step === 6 && readingExpanded ? "One verse at a time. Read, reflect, and keep what speaks to you." : DETAILS[step]}</OnboardingFocusText></View>
+            <View style={{ gap: 12 }}>{step === 17 ? <BibleRevealTitle opened={giftOpened}/> : <OnboardingFocusText blurEnabled={step !== 17 && !(step >= 19 && step <= 21)} exiting={exiting} delay={80} accessibilityRole="header" style={[s.title, { color: ink }]}>{step === 17 ? giftOpened ? <>The whole Bible.{"\n"}<Text style={{ backgroundColor: "#CCE3AA", color: "#294A2E", fontWeight: "800" }}> FREE </Text> for you.</> : "A whole world waiting for you." : step === 9 && answers.faithNow === "Close to him" ? "How long have you felt close to God?" : HEADINGS[step]}</OnboardingFocusText>}<OnboardingFocusText blurEnabled={step !== 17 && !(step >= 19 && step <= 21)} exiting={exiting} delay={170} style={[s.body, { color: muted }]}>{step === 17 && !giftOpened ? (answers.bibleFrequency === "Most days" ? "More to discover each day. A gift for your journey." : "A fresh place to begin. A gift for your journey.") : step === 6 && readingExpanded ? "One verse at a time. Read, reflect, and keep what speaks to you." : DETAILS[step]}</OnboardingFocusText></View>
             {question && <View style={{ gap: 12 }}>{question.options.map((option, i) => <OnboardingMotionGroup key={option} exiting={exiting} delay={200 + i * 35}><OnboardingChoice label={option} selected={answers[question.key] === option} onPress={() => { setAnswer(question.key, option); haptics.tick(); }} /></OnboardingMotionGroup>)}{step === 8 && <View style={{ minHeight: 80, paddingTop: 8 }}>{answers.faithNow && <Animated.Text key={answers.faithNow} entering={FadeIn.duration(reduced ? 0 : 180)} accessibilityLiveRegion="polite" style={[s.body, { color: muted }]}>{REPLIES[answers.faithNow]}</Animated.Text>}</View>}</View>}
             {step === 12 && <View style={[s.plan, { backgroundColor: surface, alignItems: "center", paddingVertical: 36 }]}><SFSymbol name="leaf" size={48} color={ink} /><Text style={[s.planTitle, { color: ink }]}>{season.title}</Text><Text style={[s.body, { color: muted }]}>{season.body}</Text><Text style={{ color: muted, fontSize: 15 }}>{season.reference}</Text></View>}
             {step === 13 && <View style={{ gap: 12 }}>{OBSTACLES.map(item => { const selected = (answers.faithObstacles ?? []).includes(item); return <OnboardingChoice key={item} label={item} multiple selected={selected} onPress={() => toggle("faithObstacles", item, answers.faithObstacles ?? [])} />; })}</View>}
@@ -146,13 +164,13 @@ export default function Journey() {
             {step === 1 && <View style={{ gap: 16 }}>{REASONS.map((reason, i) => <OnboardingChoice key={reason} label={reason} multiple selected={reasons.includes(reason)} paper={PAPER[i]} rotation={i % 2 ? 1 : -1} onPress={() => toggle("welcomeReasons", reason, reasons)} />)}</View>}
             {step === 2 && <View style={[s.nameTag, { backgroundColor: surface }]}><View style={s.tagHeader}><Text style={{ color: "#FFF", fontSize: 20, fontWeight: "700" }}>Hello, my name is</Text></View><TextInput accessibilityLabel="First name" defaultValue={answers.name} onChangeText={name => setAnswer("name", name)} placeholder="Your name" placeholderTextColor={muted} maxLength={40} autoCapitalize="words" autoComplete="given-name" returnKeyType="done" onSubmitEditing={next} style={[s.input, { color: ink }]} /></View>}
             {step === 3 && <><View style={[s.jar, { borderColor: dark ? "#CDBAA177" : "#98877688", backgroundColor: dark ? "#FFFFFF08" : "#FFFFFF40" }]}><View style={[s.jarLid, { backgroundColor: dark ? "#8B7864" : "#C5B197" }]} />{intentions.length === 0 && <Text style={[s.body, { color: muted }]}>A little room for hope.</Text>}<View style={s.slips}>{intentions.map((item, i) => <Animated.View entering={reduced ? FadeIn.duration(0) : FadeInDown.springify().damping(20).stiffness(180)} key={item} style={[s.slip, { backgroundColor: PAPER[i % PAPER.length], transform: [{ rotate: `${i % 2 ? 7 : -6}deg` }] }]}><Text style={s.noteText}>{item}</Text></Animated.View>)}</View></View><View style={s.chips}>{INTENTIONS.map(item => <OnboardingChoice key={item} label={item} multiple compact selected={intentions.includes(item)} onPress={() => toggle("growthAreas", item, intentions)} />)}</View></>}
-            {step === 4 && <View style={s.candles}>{[3, 5, 10].map((minutes, i) => <Candle key={minutes} minutes={minutes} height={88 + i * 40} selected={goalMinutes === minutes} color={ink} onPress={() => { setGoalMinutes(minutes); haptics.tick(); }} />)}</View>}
+            {step === 4 && <View style={s.candles}>{[3, 5, 10].map((minutes, i) => <Candle key={minutes} minutes={minutes} height={88 + i * 40} selected={goalChosen && goalMinutes === minutes} color={ink} onPress={() => { setGoalMinutes(minutes); setGoalChosen(true); haptics.tick(); }} />)}</View>}
             {step === 5 && <>{collected && <Text style={[s.body, { color: muted }]}>{MOMENT.importance}</Text>}{collected && <Text accessibilityLiveRegion="polite" style={[s.body, { color: "#248A3D", fontWeight: "600" }]}>✓ Saved in your Bible Moments</Text>}</>}
             {step === 6 && <Text style={[s.body, { color: muted }]}>{goalMinutes} minutes a day{intentions[0] ? ` · A little more ${intentions[0].toLowerCase()}` : ""}</Text>}
-            {step === 7 && <><Sky time={time} /><View style={s.chips}>{TIMES.map((t, i) => <OnboardingChoice key={t.label} label={t.label} detail={t.time} selected={time === i} onPress={() => { setTime(i); haptics.tick(); }} style={{ width: "46%" }} />)}</View></>}
+            {step === 7 && <><Sky time={time} /><View style={s.chips}>{TIMES.map((t, i) => <OnboardingChoice key={t.label} label={t.label} detail={t.time} selected={timeChosen && time === i} onPress={() => { setTime(i); setTimeChosen(true); haptics.tick(); }} style={{ width: "46%" }} />)}</View></>}
           </View></OnboardingMotionGroup>
         </ScrollView>
-        <View style={s.footer}>{!!error && <Text accessibilityLiveRegion="polite" style={[s.body, { color: ink, fontSize: 15 }]}>{error}</Text>}<Pressable accessibilityRole="button" disabled={busy || purchaseUnavailable} onPress={submit} style={[s.cta, { backgroundColor: actionColors.backgroundColor, borderColor: actionColors.borderColor, borderWidth: 1, opacity: busy || purchaseUnavailable ? .55 : 1 }]}><Text style={[s.ctaText, { color: actionColors.color }]}>{label}</Text></Pressable>{(step === 2 || (step >= 8 && step <= 11) || step === 13 || step === 14 || step === 15) && <Pressable disabled={busy} accessibilityRole="button" onPress={step === 15 ? finish : next} style={s.secondary}><Text style={{ color: muted, fontSize: 16 }}>{step === 15 ? "Continue for free" : step === 14 ? "Not now" : "Skip for now"}</Text></Pressable>}</View>
+        <View style={s.footer}>{!!error && <Text accessibilityLiveRegion="polite" style={[s.body, { color: ink, fontSize: 15 }]}>{error}</Text>} {step === 17 && !giftOpened ? <HoldToUnwrap onUnwrap={() => setGiftOpened(true)}/> : <Pressable accessibilityRole="button" disabled={busy || purchaseUnavailable || answerMissing} accessibilityState={{ disabled: busy || purchaseUnavailable || answerMissing }} onPress={submit} style={[s.cta, { backgroundColor: actionColors.backgroundColor, borderColor: actionColors.borderColor, borderWidth: 1, opacity: busy || purchaseUnavailable || answerMissing ? .55 : 1 }]}><Text style={[s.ctaText, { color: actionColors.color }]}>{label}</Text></Pressable>}{(step === 2 || step === 14 || step === 15) && <Pressable disabled={busy} accessibilityRole="button" onPress={step === 15 ? finish : next} style={s.secondary}><Text style={{ color: muted, fontSize: 16 }}>{step === 15 ? "Continue for free" : step === 14 ? "Not now" : "Skip for now"}</Text></Pressable>}</View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   </ReaderMaterialGradient>;

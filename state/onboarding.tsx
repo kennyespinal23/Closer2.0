@@ -130,6 +130,7 @@ export type OnboardingAnswers = {
   faithDuration?: string;
   churchBackground?: string;
   bibleFrequency?: string;
+  faithCommunity?: string;
   faithObstacles?: string[];
   /**
    * Built-in profile avatar id from `constants/avatars.ts`

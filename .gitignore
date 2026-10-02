@@ -46,3 +46,6 @@ ios/.cp-home/
 ios/.cocoapods-specs/
 ios/pod-install.log
 ios/expo-run.log
+
+# Full-resolution Bible Moment artwork; optimized assets are committed.
+assets/bible-moments/original/

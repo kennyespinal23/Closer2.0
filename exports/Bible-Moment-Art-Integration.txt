@@ -1,0 +1,92 @@
+BIBLE MOMENT ART INTEGRATION
+
+69 mapped images; 9 held moments retain placeholders.
+Failed downloads: 0.
+Optimized JPEGs: 13,517,191 bytes (13.52 MB).
+Original PNGs: 416,538,659 bytes, retained locally and gitignored.
+Card layout retained; centered cover crops. No catalog or reward edits.
+
+Checks:
+TypeScript: passed.
+iOS export: passed; all 69 asset hashes verified in bundle.
+Partial/idempotent sync: passed (--only creation).
+Reward tests: passed. Express content tests: passed. Onboarding hold tests: 6 passed.
+Existing check-bible-moments test fails at line 85 because its expected return omits bookCompleted.
+Lint unavailable: no ESLint configuration/dependencies. Automatic install canceled; no added dependencies.
+
+Files changed:
+.gitignore
+assets/bible-moments/manifest.json
+scripts/sync-bible-moment-art.mjs
+constants/bibleMomentArt.ts
+components/ReaderMomentArt.tsx
+assets/bible-moments/abraham-called.jpg
+assets/bible-moments/babel.jpg
+assets/bible-moments/bethlehem-ruler.jpg
+assets/bible-moments/bleeding-woman.jpg
+assets/bible-moments/bronze-snake.jpg
+assets/bible-moments/centurion-faith.jpg
+assets/bible-moments/come-to-me.jpg
+assets/bible-moments/covering-shame.jpg
+assets/bible-moments/creation.jpg
+assets/bible-moments/david-everlasting-kingdom.jpg
+assets/bible-moments/elijah-fire.jpg
+assets/bible-moments/emmanuel.jpg
+assets/bible-moments/exodus.jpg
+assets/bible-moments/fall.jpg
+assets/bible-moments/feeding-five-thousand.jpg
+assets/bible-moments/first-passover.jpg
+assets/bible-moments/first-promise.jpg
+assets/bible-moments/gethsemane.jpg
+assets/bible-moments/god-heals.jpg
+assets/bible-moments/god-peace.jpg
+assets/bible-moments/god-provides.jpg
+assets/bible-moments/good-samaritan.jpg
+assets/bible-moments/good-shepherd.jpg
+assets/bible-moments/grace-enough.jpg
+assets/bible-moments/grateful-leper.jpg
+assets/bible-moments/humble-king.jpg
+assets/bible-moments/i-am.jpg
+assets/bible-moments/inseparable-love.jpg
+assets/bible-moments/jerusalem-falls.jpg
+assets/bible-moments/jesus-born.jpg
+assets/bible-moments/jonah-three-days.jpg
+assets/bible-moments/joseph-sold.jpg
+assets/bible-moments/last-supper.jpg
+assets/bible-moments/lost-sheep.jpg
+assets/bible-moments/man-born-blind.jpg
+assets/bible-moments/mary-magdalene.jpg
+assets/bible-moments/mary-martha.jpg
+assets/bible-moments/matthew-called.jpg
+assets/bible-moments/never-leave.jpg
+assets/bible-moments/nicodemus.jpg
+assets/bible-moments/peter-called.jpg
+assets/bible-moments/peter-restored.jpg
+assets/bible-moments/plans-exile.jpg
+assets/bible-moments/priest-king.jpg
+assets/bible-moments/prodigal-son.jpg
+assets/bible-moments/promised-child.jpg
+assets/bible-moments/prophet-like-moses.jpg
+assets/bible-moments/rainbow-covenant.jpg
+assets/bible-moments/resurrection.jpg
+assets/bible-moments/rich-young-ruler.jpg
+assets/bible-moments/saul-conversion.jpg
+assets/bible-moments/sermon-mount.jpg
+assets/bible-moments/suffering-servant.jpg
+assets/bible-moments/tears-wiped.jpg
+assets/bible-moments/ten-bridesmaids.jpg
+assets/bible-moments/ten-commandments.jpg
+assets/bible-moments/thirty-silver.jpg
+assets/bible-moments/thomas.jpg
+assets/bible-moments/two-builders.jpg
+assets/bible-moments/unforgiving-servant.jpg
+assets/bible-moments/vine-branches.jpg
+assets/bible-moments/vineyard-workers.jpg
+assets/bible-moments/washing-feet.jpg
+assets/bible-moments/widow-offering.jpg
+assets/bible-moments/with-you-always.jpg
+assets/bible-moments/woman-forgiven.jpg
+assets/bible-moments/woman-well.jpg
+assets/bible-moments/works-for-good.jpg
+assets/bible-moments/zacchaeus.jpg
+exports/Bible-Moment-Art-Integration.txt

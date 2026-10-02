@@ -95,7 +95,7 @@ function ShowcaseBadge({ index, position, width, reduced, title, icon, color, on
     const distance = Math.min(1, Math.abs(position.value-index));
     return { opacity: 1-distance*.45, transform: [{ scale: reduced ? 1 : 1-distance*.18 }, { translateY: reduced ? 0 : distance*14 }] };
   });
-  return <Animated.View style={[{ width }, style]}><Pressable accessibilityRole="button" accessibilityLabel={`${title}, achievement preview`} onPress={onPress} style={{ alignItems: "center", gap: 18, paddingVertical: 8 }}><AchievementMedal size={width*.8} icon={icon}/><Text style={{ color, fontSize: 17, fontWeight: "600", textAlign: "center" }}>{title}</Text></Pressable></Animated.View>;
+  return <Animated.View style={[{ width }, style]}><Pressable accessibilityRole="button" accessibilityLabel={`${title}, achievement preview`} onPress={onPress} style={{ alignItems: "center", gap: 18, paddingVertical: 8 }}><AchievementMedal achievementId={index === 0 ? "letters-1" : index === 1 ? "streak-7" : "moment"} size={width*.8} icon={icon}/><Text style={{ color, fontSize: 17, fontWeight: "600", textAlign: "center" }}>{title}</Text></Pressable></Animated.View>;
 }
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);

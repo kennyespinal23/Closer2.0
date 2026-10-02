@@ -241,7 +241,7 @@ export function MilestoneUnlockView({
                     : null,
                 ]}
               >
-                <WaxMedal size={180} index={badgeIndex} />
+                <WaxMedal day={milestone.day} size={180} index={badgeIndex} />
               </View>
             </View>
           </View>

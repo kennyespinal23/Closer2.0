@@ -1,3 +1,7 @@
+import { sheetText } from "@/lib/sheetStyles";
+import { tabContentClearance } from "@/lib/tabContentClearance";
+import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
+import { useTabContentFade } from '@/lib/useTabContentFade';
 import { CreateStudyGroup as CreateGroup } from "./CreateStudyGroup";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View, useWindowDimensions } from "react-native";
@@ -26,6 +30,8 @@ type NoteFrame = { x: number; y: number; width: number; height: number };
 export function CommunityScreen() {
   const colors = useColors(), scheme = useResolvedScheme(), insets = useSafeAreaInsets();
   const tabHeight = useBottomTabBarHeight(), reduced = useReducedMotion();
+  const focusSpacing = useFocusMiniPlayerSpacing();
+  const tabContentStyle = useTabContentFade(reduced);
   const router = useRouter();
   const { answers } = useOnboarding();
   const firstName = answers.name?.trim().split(/\s+/)[0] || "You";
@@ -59,11 +65,11 @@ export function CommunityScreen() {
   const updateGroup = (group: StudyGroup) => setState(s => ({ ...s, groups: s.groups.map(g => g.id === group.id ? group : g) }));
   const selectedNote = state.notes.find(n => n.id === selected?.id);
   const selectedGroup = state.groups.find(g => g.id === groupId);
-  const bottom = Math.max(tabHeight, insets.bottom + 64) + 28;
+  const bottom = tabContentClearance(tabHeight, insets.bottom, focusSpacing);
   const wall = (notes: PrayerNote[]) => <PrayerWall notes={notes} prayed={state.prayed} onPray={pray} onOpen={(id, source) => setSelected({ id, source })} />;
   return <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
     <SkyGradient />
-    <ScrollView contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: bottom, gap: 20 }}>
+    <Animated.ScrollView style={tabContentStyle} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: bottom, gap: 20 }}>
       <View style={styles.row}>
         <View style={{ flex: 1, gap: 6 }}><Text accessibilityRole="header" style={[systemText.largeTitle, { color: colors.ink }]}>Community</Text><Text style={[systemText.subheadline, { color: colors.textSecondary }]}>You don’t have to pray alone.</Text></View>
         <Pressable accessibilityRole="button" accessibilityLabel="How Community works" onPress={() => setTutorial(0)} style={[styles.circle, { backgroundColor: colors.surface }]}><SFSymbol name="questionmark" size={20} color={colors.ink} /></Pressable>
@@ -84,7 +90,7 @@ export function CommunityScreen() {
         {state.groups.map(group => <GroupCard key={group.id} group={group} onPress={() => { setGroupId(group.id); setGroupVisible(true); }} />)}
         <Pressable accessibilityRole="button" onPress={() => setCreatingGroup(true)} style={[styles.newGroup, { borderColor: colors.textSecondary }]}><Text style={[systemText.headline, { color: colors.ink }]}>+ Start a group with friends</Text></Pressable>
       </>}
-    </ScrollView>
+    </Animated.ScrollView>
     {composer && <PrayerComposer name={firstName} onClose={() => setComposer(false)} onSave={note => { setState(s => ({ ...s, notes: [note, ...s.notes] })); setComposer(false); setYours(true); haptics.soft(); }} />}
     {selected && selectedNote && <NoteDetail key={selected.id} note={selectedNote} source={selected.source} prayed={state.prayed.includes(selected.id)} onPray={() => pray(selected.id)} onChange={updateNote} onClose={() => setSelected(null)} onRemove={() => { setState(s => ({ ...s, notes: s.notes.filter(n => n.id !== selected.id), prayed: s.prayed.filter(id => id !== selected.id) })); setSelected(null); }} />}
     {selectedGroup && <GroupDetail visible={groupVisible} group={selectedGroup} onChange={updateGroup} onClose={() => setGroupVisible(false)} onRead={() => { pendingReading.current = { bookId: selectedGroup.bookId, chapter: selectedGroup.chapter }; setGroupVisible(false); }} onDismiss={() => { setGroupId(null); const target = pendingReading.current; pendingReading.current = null; if (target) router.push(`/book/${target.bookId}/${target.chapter}`); }} />}
@@ -122,7 +128,7 @@ function NoteTag({ note }: { note: PrayerNote }) { return <Text style={[systemTe
 
 function Sheet({ title, onClose, children, onDismiss, visible = true }: { visible?: boolean; title: string; onClose: () => void; children: ReactNode; onDismiss?: () => void }) {
   const colors = useColors(), reduced = useReducedMotion();
-  return <Modal visible={visible} presentationStyle="pageSheet" animationType={reduced ? "none" : "slide"} onRequestClose={onClose} onDismiss={onDismiss}><SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top", "bottom"]}><SkyGradient /><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}><View style={[styles.row, { padding: 20, gap: 12 }]}><Text accessibilityRole="header" style={[systemText.title2, { color: colors.ink, flex: 1 }]}>{title}</Text><Pressable accessibilityRole="button" accessibilityLabel={`Close ${title}`} onPress={onClose} style={[styles.circle, { backgroundColor: colors.surface }]}><SFSymbol name="xmark" size={19} color={colors.ink} /></Pressable></View><ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" contentContainerStyle={{ padding: 20, paddingTop: 0, gap: 20 }}>{children}</ScrollView></KeyboardAvoidingView></SafeAreaView></Modal>;
+  return <Modal visible={visible} presentationStyle="pageSheet" animationType={reduced ? "none" : "slide"} onRequestClose={onClose} onDismiss={onDismiss}><SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top", "bottom"]}><SkyGradient /><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}><View style={[styles.row, { padding: 20, gap: 12 }]}><Text accessibilityRole="header" style={[sheetText.title, { color: colors.ink, flex: 1 }]}>{title}</Text><Pressable accessibilityRole="button" accessibilityLabel={`Close ${title}`} onPress={onClose} style={[styles.circle, { backgroundColor: colors.surface }]}><SFSymbol name="xmark" size={19} color={colors.ink} /></Pressable></View><ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" contentContainerStyle={{ padding: 20, paddingTop: 0, gap: 20 }}>{children}</ScrollView></KeyboardAvoidingView></SafeAreaView></Modal>;
 }
 function PrimaryButton({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) { return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={[styles.ask, { justifyContent: "center", opacity: disabled ? .4 : 1 }]}><Text style={[systemText.headline, { color: INK, textAlign: "center" }]}>{label}</Text></Pressable>; }
 function PrayerComposer({ name, onClose, onSave }: { name: string; onClose: () => void; onSave: (note: PrayerNote) => void }) {

@@ -1,11 +1,8 @@
-import { MomentCollectibleFront } from "./MomentCollectible";
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { AccessibilityInfo, BackHandler, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
-import Animated, { cancelAnimation, Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from "react-native-reanimated";
-import { ReaderMomentArt } from "./ReaderMomentArt";
-import { ReaderMomentCardBox, ReaderMomentDetail } from "./ReaderMomentCardBox";
+import { AccessibilityInfo, BackHandler, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from "react-native-reanimated";
+import { ReaderMomentCardBox } from "./ReaderMomentCardBox";
 import Svg, { Path, Rect } from "react-native-svg";
-import { ReaderMaterialGradient as LinearGradient } from "./ReaderMaterialGradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useColors } from "@/state/theme";
@@ -14,84 +11,47 @@ import { type BibleMoment, type MomentCategory } from "@/constants/bibleMoments"
 import { systemText } from "@/lib/typography";
 import { SFSymbol } from "@/components/Symbol";
 import { MomentCategoryReward } from "@/components/MomentCategoryReward";
-import * as haptics from "@/lib/haptics";
+import { BibleMomentReveal, type BibleRevealRequest } from "./BibleMomentReveal";
 
-export function ReaderMomentExperience({ moment, onFinish, pocketRef, showcase, onCloseShowcase, bookId, onCollected, origin }: {
+export function ReaderMomentExperience({ moment, onFinish, pocketRef, showcase, onCloseShowcase, bookId, onCollected }: {
   origin: { x: number; y: number; width: number; height: number } | null;
   moment: BibleMoment | null; onFinish: () => void; pocketRef: RefObject<View | null>;
   showcase: boolean; onCloseShowcase: () => void; bookId: string; onCollected: () => void;
 }) {
-  const colors = useColors();
-  const reduced = useReducedMotion();
-  const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
-  const [selected, setSelected] = useState<BibleMoment | null>(null);
-  const [saveError, setSaveError] = useState(false);
-  const [attempt, setAttempt] = useState(0);
-  const [rewards, setRewards] = useState<MomentCategory[]>([]);
-  const alive = useRef(0);
-  const reveal = useSharedValue(0);
-  const flip = useSharedValue(0);
-  const rays = useSharedValue(0);
-  const flight = useSharedValue(0);
-  const stamp = useSharedValue(0);
-  const targetX = useSharedValue(0);
-  const targetY = useSharedValue(0);
-  const cardWidth = Math.min(250, width - 80);
-  const cardHeight = Math.min(cardWidth * 1.38, height - insets.top - insets.bottom - 120);
-  const arrived = () => { onCollected(); haptics.success(); AccessibilityInfo.announceForAccessibility("Bible Moment added to your card box"); onFinish(); };
-  const animated = useAnimatedStyle(() => ({ opacity: 1 - flight.value * 0.5, transform: [
-    { translateX: (origin ? origin.x + origin.width / 2 - width / 2 : 0) * (1 - reveal.value) + targetX.value * flight.value },
-    { translateY: (origin ? origin.y + origin.height / 2 - height / 2 : 0) * (1 - reveal.value) + targetY.value * flight.value - Math.sin(flight.value * Math.PI) * 38 },
-    { scaleX: (1 + ((origin?.width ?? cardWidth) / cardWidth - 1) * (1 - reveal.value)) * (1 - 0.92 * flight.value) },
-    { scaleY: (1 + ((origin?.height ?? cardHeight) / cardHeight - 1) * (1 - reveal.value)) * (1 - 0.92 * flight.value) },
-    { rotate: `${flight.value * 20 - Math.sin(flight.value * Math.PI) * 12}deg` },
-  ] }));
-  const rayStyle = useAnimatedStyle(() => ({ opacity: Math.sin(rays.value * Math.PI) * .5, transform: [{ scale: .4 + rays.value * .7 }, { rotate: `${rays.value * 40}deg` }] }));
-  const front = useAnimatedStyle(() => ({ backfaceVisibility: "hidden", transform: [{ perspective: 1000 }, { rotateY: `${-180 + flip.value * 180}deg` }] }));
-  const back = useAnimatedStyle(() => ({ backfaceVisibility: "hidden", transform: [{ perspective: 1000 }, { rotateY: `${flip.value * 180}deg` }] }));
-  const stamped = useAnimatedStyle(() => ({ opacity: stamp.value, transform: [{ scale: 2.6 - stamp.value * 1.6 }, { rotate: `${-30 + stamp.value * 22}deg` }] }));
-  useEffect(() => {
-    if (!moment) return;
-    const generation = ++alive.current;
-    setSaveError(false); reveal.value = reduced ? 1 : 0; flip.value = 0; rays.value = 0; flight.value = 0; stamp.value = 0;
-    pocketRef.current?.measureInWindow((x, y, w, h) => { targetX.value = x + w / 2 - width / 2; targetY.value = y + h / 2 - height / 2; });
-    targetX.value = width / 2 - 30; targetY.value = insets.top + 28 - height / 2;
-    void unlockBibleMomentWithRewards(moment.id).then(result => {
-      if (generation !== alive.current) return;
+  const colors = useColors(), insets = useSafeAreaInsets();
+  const [queue,setQueue] = useState<BibleRevealRequest[]>([]);
+  const [rewards,setRewards] = useState<MomentCategory[]>([]);
+  const [saveError,setSaveError] = useState(false), [attempt,setAttempt] = useState(0);
+  const alive=useRef(0);
+  useEffect(()=>{
+    if(!moment)return;
+    const generation=++alive.current;
+    setSaveError(false);
+    void unlockBibleMomentWithRewards(moment.id).then(result=>{
+      if(generation!==alive.current)return;
+      if(result.status==='existing'){setQueue([{kind:'moment',moment}]);return;}
       setRewards(result.categories);
-      if (result.status === "existing") { setSelected(moment); onFinish(); return; }
-      if (reduced) { reveal.value = 1; flip.value = 1; stamp.value = 1; flight.value = withDelay(900, withTiming(1, { duration: 0 }, done => { if (done) runOnJS(arrived)(); })); return; }
-      rays.value = withDelay(280, withTiming(1, { duration: 1000 }));
-      reveal.value = withTiming(1, { duration: 320, easing: Easing.bezier(.3, 1.2, .4, 1) });
-      flip.value = withDelay(280, withTiming(1, { duration: 460, easing: Easing.bezier(.3, 1.2, .4, 1) }));
-      stamp.value = withDelay(700, withTiming(1, { duration: 260, easing: Easing.bezier(.3, 1.35, .4, 1) }));
-      flight.value = withDelay(1400, withTiming(1, { duration: 460, easing: Easing.inOut(Easing.cubic) }, done => { if (done) runOnJS(arrived)(); }));
-    }).catch(() => { if (generation === alive.current) setSaveError(true); });
-    return () => { alive.current++; cancelAnimation(reveal); cancelAnimation(flip); cancelAnimation(flight); cancelAnimation(stamp); cancelAnimation(rays); };
-  }, [moment?.id, attempt]);
-  const close = () => { if (moment) onFinish(); else if (selected) setSelected(null); else if (rewards.length) setRewards([]); else onCloseShowcase(); };
-  useEffect(() => {
-    if (!moment && !showcase && !selected && !rewards.length) return;
-    const handler = BackHandler.addEventListener("hardwareBackPress", () => { close(); return true; });
-    return () => handler.remove();
-  }, [moment, showcase, selected, rewards.length]);
-  if (!moment && !showcase && !selected && !rewards.length) return null;
-  return <View accessibilityViewIsModal style={{ position: "absolute", inset: 0, zIndex: 210 }}>
-    <Pressable accessibilityRole="button" accessibilityLabel="Close Moments" onPress={close} style={{ position: "absolute", inset: 0, backgroundColor: "#00000077" }} />
-    {moment ? <>
-      <Animated.View pointerEvents="none" style={[{ position: "absolute", left: width / 2 - 240, top: height / 2 - 240, width: 480, height: 480 }, rayStyle]}><Svg width="480" height="480" viewBox="0 0 480 480">{Array.from({ length: 12 }, (_, i) => <Path key={i} d="M240 240L218 0H262Z" fill="#FFC56B" transform={`rotate(${i * 30} 240 240)`} />)}</Svg></Animated.View>
-      <Animated.View style={[{ position: "absolute", left: (width - cardWidth) / 2, top: (height - cardHeight) / 2, width: cardWidth, height: cardHeight }, animated]}>
-        <Animated.View style={[{ position: "absolute", inset: 0, backgroundColor: colors.surface, borderRadius: 22, borderWidth: 2, borderColor: "#A97B42", alignItems: "center", justifyContent: "center", padding: 24 }, back]}><SFSymbol name="rectangle.stack" size={44} color={colors.ink} /><Text style={{ ...systemText.title2, color: colors.ink, textAlign: "center", marginTop: 20 }}>{saveError ? "Couldn’t collect this Moment" : moment.title}</Text>{saveError && <Pressable accessibilityRole="button" onPress={() => setAttempt(attempt + 1)} style={{ minHeight: 48, justifyContent: "center" }}><Text style={{ ...systemText.headline, color: colors.ink }}>Try again</Text></Pressable>}</Animated.View>
-        <Animated.View style={[{ position: "absolute", inset: 0, borderRadius: 22, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 2, borderColor: "#A97B42" }, front]}>
-          <MomentCollectibleFront moment={moment} />
-
-        </Animated.View>
-        <Animated.View pointerEvents="none" style={[{ position: "absolute", bottom: -18, right: -18, width: 76, height: 76, borderRadius: 38, borderWidth: 3, borderColor: "#1B6E30", overflow: "hidden", boxShadow: "0 4px 8px #00000044" }, stamped]}><LinearGradient colors={["#59DC7A", "#34C759", "#248A3D"]} style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 3 }}><SFSymbol name="checkmark" size={23} color="#FFF0DB" /><Text style={{ fontSize: 8, fontWeight: "800", letterSpacing: .5, color: "#FFF0DB" }}>COLLECTED</Text></LinearGradient></Animated.View>
-      </Animated.View>
-      <Pressable accessibilityRole="button" accessibilityLabel="Return to reading" onPress={onFinish} style={{ position: "absolute", top: insets.top + 12, left: 20, width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><SFSymbol name="xmark" size={20} color="white" /></Pressable>
-    </> : selected ? <ReaderMomentDetail moment={selected} onClose={() => setSelected(null)} /> : rewards.length ? <View style={{ position: "absolute", top: insets.top + 24, left: 20, right: 20, backgroundColor: colors.surface, borderRadius: 24, padding: 20 }}><ScrollView>{rewards.map(category => <MomentCategoryReward key={category} category={category} expanded />)}<Pressable onPress={close} style={{ minHeight: 48, alignItems: "center", justifyContent: "center" }}><Text style={{ ...systemText.headline, color: colors.ink }}>Done</Text></Pressable></ScrollView></View> : <ReaderMomentCardBox bookId={bookId} pocketRef={pocketRef} onClose={onCloseShowcase} />}
-  </View>;
+      setQueue([{kind:'moment',moment},...(result.bookCompleted?[{kind:'silver' as const,bookId:moment.bookId}]:[])]);
+      onCollected();
+      AccessibilityInfo.announceForAccessibility('Bible Moment saved to your collection');
+    }).catch(()=>{if(generation===alive.current)setSaveError(true);});
+    return()=>{alive.current++;};
+  },[moment?.id,attempt]);
+  useEffect(()=>{
+    if(!showcase)return;
+    const handler=BackHandler.addEventListener('hardwareBackPress',()=>{onCloseShowcase();return true;});
+    return()=>handler.remove();
+  },[showcase,onCloseShowcase]);
+  const finishReveal=()=>{if(queue.length<=1)onFinish();setQueue(q=>q.slice(1));};
+  const closeCurrent=()=>{if(queue.length)finishReveal();else if(moment)onFinish();else setRewards([]);};
+  // One native presenter for saving, the reveal queue, existing cards and rewards.
+  // Swapping Modal hosts while a save resolves races UIKit presentation/dismissal.
+  if(queue.length || moment || rewards.length)return <Modal visible animationType="fade" presentationStyle="fullScreen" onRequestClose={closeCurrent}>
+    {queue.length?<BibleMomentReveal embedded autoPlay={queue[0].kind==='moment'} key={queue[0].kind+(queue[0].moment?.id??'')} request={queue[0]} onClose={finishReveal}/>
+    :moment?<View style={{flex:1,backgroundColor:'#211d18',justifyContent:'center',padding:32,gap:20}}><Text style={{...systemText.title2,color:'#fff5e8',textAlign:'center'}}>{saveError?'Couldn’t save this Moment':'Keeping your Moment…'}</Text>{saveError&&<Pressable accessibilityRole="button" onPress={()=>setAttempt(a=>a+1)} style={{padding:16,backgroundColor:'#fff2db',borderRadius:24,alignItems:'center'}}><Text>Try again</Text></Pressable>}<Pressable accessibilityRole="button" onPress={onFinish} style={{minHeight:44,alignItems:'center',justifyContent:'center'}}><Text style={{color:'#fff5e8'}}>Back to reading</Text></Pressable></View>
+    :<View style={{flex:1,backgroundColor:colors.surface,paddingTop:insets.top+24,paddingHorizontal:24,paddingBottom:insets.bottom+24}}><ScrollView>{rewards.map(category=><MomentCategoryReward key={category} category={category} expanded/>)}</ScrollView><Pressable accessibilityRole="button" onPress={()=>setRewards([])} style={{minHeight:48,alignItems:'center',justifyContent:'center'}}><Text style={{...systemText.headline,color:colors.ink}}>Done</Text></Pressable></View>}
+  </Modal>;
+  return showcase?<View accessibilityViewIsModal style={{position:"absolute",inset:0,zIndex:210,backgroundColor:"#00000077"}}><ReaderMomentCardBox bookId={bookId} pocketRef={pocketRef} onClose={onCloseShowcase}/></View>:null;
 }
 
 export function ReaderMomentPocket({ onPress, arrival, collecting }: { onPress: () => void; arrival: number; collecting?: boolean }) {

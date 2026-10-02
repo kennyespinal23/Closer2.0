@@ -1,0 +1,77 @@
+{
+  "status": "art-direction-preview",
+  "assets": [
+    {
+      "id": "first-letter",
+      "title": "First Letter",
+      "family": "Letters",
+      "material": "Cotton paper · Coral wax",
+      "description": "A small beginning, worth keeping.",
+      "background": {
+        "light": "#efcea9",
+        "dark": "#63422d"
+      },
+      "image": "first-letter.png"
+    },
+    {
+      "id": "seven-letters",
+      "title": "Seven Letters",
+      "family": "Letters",
+      "material": "Layered paper · Rose silk",
+      "description": "A week of words, tied together.",
+      "background": {
+        "light": "#efd3c8",
+        "dark": "#643c40"
+      },
+      "image": "seven-letters.png"
+    },
+    {
+      "id": "thirty-letters",
+      "title": "Thirty Letters",
+      "family": "Letters",
+      "material": "Walnut · Brushed brass",
+      "description": "Your quiet moments have become a treasure.",
+      "background": {
+        "light": "#e4bf92",
+        "dark": "#59412a"
+      },
+      "image": "thirty-letters.png"
+    },
+    {
+      "id": "seven-days",
+      "title": "Seven Days",
+      "family": "Streaks",
+      "material": "Glass · Brass · Warm light",
+      "description": "You kept a little light burning.",
+      "background": {
+        "light": "#efcf90",
+        "dark": "#57432b"
+      },
+      "image": "seven-days.png"
+    },
+    {
+      "id": "in-the-beginning",
+      "title": "In the Beginning",
+      "family": "Reading",
+      "material": "Emerald leather · Gilt edges",
+      "description": "The first book. A whole world opened.",
+      "background": {
+        "light": "#c5d6b8",
+        "dark": "#254a39"
+      },
+      "image": "in-the-beginning.png"
+    },
+    {
+      "id": "garden-set",
+      "title": "Garden Set",
+      "family": "Bible Moments",
+      "material": "Living moss · Iridescent glass",
+      "description": "Every Genesis moment, gathered and growing.",
+      "background": {
+        "light": "#d1ddc0",
+        "dark": "#294b40"
+      },
+      "image": "garden-set.png"
+    }
+  ]
+}

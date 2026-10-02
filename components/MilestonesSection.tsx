@@ -177,17 +177,9 @@ function MilestoneCardChrome({
           style={{
             width: ICON_SIZE,
             height: ICON_SIZE,
-            borderRadius: ICON_SIZE / 2,
-            padding: 2,
-            borderWidth: 1,
-            borderColor: unlocked
-              ? "rgba(255,255,255,0.28)"
-              : "rgba(255,255,255,0.16)",
-            backgroundColor: "rgba(255,255,255,0.06)",
-            overflow: "hidden",
           }}
         >
-          <WaxMedal size={ICON_SIZE} index={badgeIndex} earned={unlocked} />
+          <WaxMedal day={milestone.day} size={ICON_SIZE} index={badgeIndex} earned={unlocked} />
         </View>
       </View>
 

@@ -1,3 +1,8 @@
+import { SheetHeading } from "@/components/SheetHeading";
+import { sheetText, sheetSpace } from "@/lib/sheetStyles";
+import { ReaderSocialRail } from "@/components/ReaderSocialRail";
+import { rememberReaderHighlight } from "@/lib/readerHighlightColor";
+import { groupReadingVerses } from "@/lib/readingLayout";
 import { ReaderSavedNote } from "@/components/ReaderSavedNote";
 import { ReaderVerseTools } from "@/components/ReaderVerseTools";
 import { ReaderStickyNote } from "@/components/ReaderStickyNote";
@@ -44,7 +49,7 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Path, Defs, LinearGradient, Stop, Rect } from "react-native-svg";
 import { BlurView } from "expo-blur";
 import * as haptics from "@/lib/haptics";
 import { shareVerse, sharePassage } from "@/lib/share";
@@ -59,7 +64,7 @@ import { VerseMeaningCard } from "@/components/VerseMeaningCard";
 import { BookCover } from "@/components/BookCover";
 import { SFSymbol } from "@/components/Symbol";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
-import { Host, Picker as ExpoUIPicker } from "@expo/ui/swift-ui";
+import { Host, Slider as ExpoUISlider } from "@expo/ui/swift-ui";
 import { findBookById } from "@/constants/books";
 import {
   type Chapter,
@@ -461,7 +466,8 @@ function ChapterReaderContent() {
     hasReadChapter,
     recordChapterVisit,
   } = useProgress();
-  const { translation, textSize, setTextSize, setTranslation } = usePreferences();
+  const { translation, textSize, setTextSize, setTranslation, readingLayout } = usePreferences();
+  const verticalReading = readingLayout !== "pages";
   const annotations = useAnnotations();
 
   const [data, setData] = useState<Chapter | null>(null);
@@ -607,6 +613,7 @@ function ChapterReaderContent() {
   const applyHighlightToSelected = useCallback(
     (color: HighlightColorId | null) => {
       if (!book) return;
+      if (color) rememberReaderHighlight(color);
       for (const n of selectedVerses) {
         const key = verseKey(book.id, chapter, n);
         const v = data?.verses.find((x) => x.number === n);
@@ -1398,7 +1405,8 @@ function ChapterReaderContent() {
 
   // ─── Contents drawer (Apple-Books chapter list) ─────────────────
   const [listeningOpen, setListeningOpen] = useState(false);
-  const [contentsOpen, setContentsOpen] = useState(false);
+  const [contentsOpen, setContentsOpen] = useState(__DEV__ && chromeParam === "contents");
+  useEffect(() => { if (__DEV__ && chromeParam === "contents") setContentsOpen(true); }, [chromeParam]);
   const pendingExpress = useRef(false);
 
   // ─── Focus-verse spotlight (check-in deep link) ─────────────────
@@ -1440,7 +1448,7 @@ function ChapterReaderContent() {
   // to the right page and play a one-shot glow that fades back into
   // whatever the verse's persistent highlight was (often nothing).
   useEffect(() => {
-    if (focusVerse == null) return;
+    if (verticalReading || focusVerse == null) return;
     if (!data || !pages) return;
     const verseIndex = data.verses.findIndex(verse => verse.number === focusVerse);
     if (verseIndex < 0) return;
@@ -1495,6 +1503,39 @@ function ChapterReaderContent() {
     return buildReaderItems(pages, !!viewportPrev, !!viewportNext);
   }, [data, pages, viewportPrev, viewportNext]);
 
+  const verticalItems: ReaderListItem[] = useMemo(() => {
+    if (!data) return [];
+    return [...groupReadingVerses(data.verses, "verse").map((range, i): ReaderListItem => ({ kind: "page", key: `vertical-${i}`, page: { ...range, isFirst: false, startLine: 0, endLine: 0, offsetY: 0, contentHeight: 0 } })), { kind: "endMatter", key: "vertical-end" }];
+  }, [data, readingLayout]);
+  const visibleItems = verticalReading ? verticalItems : readerItems;
+  const [verticalIndex, setVerticalIndex] = useState(0);
+  const readingAnchor = useRef(0);
+  const layoutBefore = useRef(readingLayout);
+  const lastVerticalFocus = useRef<number | null>(null);
+  const verticalChapter = useRef("");
+  const visibleIndex = verticalReading ? Math.min(verticalIndex, Math.max(0, visibleItems.length - 1)) : currentPageIdx;
+  const pageExtent = verticalReading ? pagerHeight : screenWidth;
+  useLayoutEffect(() => {
+    const key = `${viewportBookId}:${viewportChapter}`;
+    if (!data || !pages || !visibleItems.length) return;
+    const changedChapter = verticalChapter.current !== key;
+    const changedLayout = layoutBefore.current !== readingLayout;
+    const changedFocus = focusVerse !== lastVerticalFocus.current;
+    if (!changedChapter && !changedLayout && !changedFocus) return;
+    if (changedLayout && layoutBefore.current === "pages") readingAnchor.current = pages[Math.max(0, currentPageIdx - (viewportPrev ? 1 : 0))]?.startVerseIdx ?? readingAnchor.current;
+    const targetVerse = focusVerse != null ? Math.max(0, data.verses.findIndex(v => v.number === focusVerse)) : changedChapter ? 0 : readingAnchor.current;
+    if (verticalReading) {
+      const idx = Math.max(0, verticalItems.findIndex(item => item.kind === "page" && targetVerse >= item.page.startVerseIdx && targetVerse <= item.page.endVerseIdx));
+      setVerticalIndex(idx);
+      pagerRef.current?.scrollToIndex({ index: idx, animated: false });
+    } else if (changedLayout) {
+      const idx = Math.max(0, pages.findIndex(p => targetVerse >= p.startVerseIdx && targetVerse <= p.endVerseIdx)) + (viewportPrev ? 1 : 0);
+      setCurrentPageIdx(idx);
+      pagerRef.current?.scrollToIndex({ index: idx, animated: false });
+    }
+    verticalChapter.current = key; layoutBefore.current = readingLayout; lastVerticalFocus.current = focusVerse;
+  }, [readingLayout, viewportBookId, viewportChapter, data, pages, visibleItems, focusVerse, verticalReading, verticalItems, viewportPrev]);
+
   const pagerReady = !!data && !!pages;
   const [prepareNeighbors, setPrepareNeighbors] = useState(false);
   useEffect(() => {
@@ -1525,7 +1566,7 @@ function ChapterReaderContent() {
   // scroll position after every settle was fighting native paging
   // momentum and felt like ~15fps.
   useLayoutEffect(() => {
-    if (!pagerReady || readerItems.length === 0) return;
+    if (verticalReading || !pagerReady || readerItems.length === 0) return;
     const safeIdx = Math.min(currentPageIdx, readerItems.length - 1);
     pagerRef.current?.scrollToIndex({
       index: safeIdx,
@@ -1563,7 +1604,8 @@ function ChapterReaderContent() {
 
   return (
     <View onTouchStart={event => { momentTouchY.current = event.nativeEvent.pageY; chrome.onTouch(); }} style={{ flex: 1, backgroundColor: colors.bg }}>
-      <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 7, borderRightWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSecondary, opacity: 0.45 }} />
+      {!verticalReading && <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 7, borderRightWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSecondary, opacity: 0.45 }} />}
+      {verticalReading && <Svg pointerEvents="none" width="100%" height="100%" style={{position:"absolute",inset:0}}><Defs><LinearGradient id="readerPaperWash" x1="1" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={readerScheme === "dark" ? "#916035" : "#D5BD97"} stopOpacity={0.12}/><Stop offset="1" stopColor={colors.bg} stopOpacity={0}/></LinearGradient></Defs><Rect width="100%" height="100%" fill="url(#readerPaperWash)"/></Svg>}
       {readerFocused && <StatusBar style={readerScheme === "dark" ? "light" : "dark"} />}
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
           <ReaderToolbar
@@ -1732,19 +1774,19 @@ function ChapterReaderContent() {
           <FlatList
             ref={pagerRef}
             key={
-              pagerMountKey ||
-              `${viewportBookId}-${viewportChapter}-${textSize.id}`
+              `${readingLayout}:${pagerMountKey || `${viewportBookId}-${viewportChapter}-${textSize.id}`}`
             }
-            data={readerItems}
+            data={visibleItems}
             extraData={paginationRevision}
-            horizontal
+            horizontal={!verticalReading}
+            showsVerticalScrollIndicator={false}
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            initialScrollIndex={currentPageIdx}
+            initialScrollIndex={visibleIndex}
             keyExtractor={(item) => item.key}
             getItemLayout={(_, index) => ({
-              length: screenWidth,
-              offset: screenWidth * index,
+              length: pageExtent,
+              offset: pageExtent * index,
               index,
             })}
             scrollEventThrottle={32}
@@ -1754,27 +1796,41 @@ function ChapterReaderContent() {
             onScrollToIndexFailed={(info) => {
               requestAnimationFrame(() => {
                 pagerRef.current?.scrollToIndex({
-                  index: Math.min(info.index, readerItems.length - 1),
+                  index: Math.min(info.index, visibleItems.length - 1),
                   animated: false,
                 });
               });
             }}
             onScrollBeginDrag={(e) => {
+              if (verticalReading) return;
               if (advanceLockRef.current) return;
               const x = e.nativeEvent.contentOffset.x;
               pageIdxAtDragStartRef.current = Math.round(x / screenWidth);
               dragStartOffsetRef.current = x;
             }}
             onMomentumScrollEnd={(e) => {
+              if (verticalReading) {
+                const idx = Math.max(0, Math.min(visibleItems.length - 1, Math.round(e.nativeEvent.contentOffset.y / pagerHeight)));
+                setVerticalIndex(idx);
+                const item = visibleItems[idx];
+                const anchor = item?.kind === "page" ? item.page.startVerseIdx : Math.max(0, data.verses.length - 1);
+                readingAnchor.current = anchor;
+                const horizontalIdx = Math.max(0, pages.findIndex(p => anchor >= p.startVerseIdx && anchor <= p.endVerseIdx));
+                setCurrentPageIdx(horizontalIdx + (viewportPrev ? 1 : 0));
+                return;
+              }
               if (advanceLockRef.current) return;
               const x = e.nativeEvent.contentOffset.x;
               const idx = Math.round(x / screenWidth);
+              const item = readerItems[idx];
+              if (item?.kind === "page") readingAnchor.current = item.page.startVerseIdx;
               handlePageSettled(idx);
             }}
             initialNumToRender={2}
             maxToRenderPerBatch={2}
             windowSize={3}
             renderItem={({ item, index }) => {
+              const wrap = (content: React.ReactElement) => verticalReading ? <View style={{ width: screenWidth, height: pagerHeight }}>{content}</View> : content;
               if (item.kind === "prevBridge" || item.kind === "nextBridge") {
                 const target = item.kind === "prevBridge" ? viewportPrev : viewportNext;
                 if (!target) return <View style={{ width: screenWidth, flex: 1 }} />;
@@ -1792,7 +1848,7 @@ function ChapterReaderContent() {
                 />;
               }
               if (item.kind === "endMatter") {
-                return (
+                return wrap(
                   <EndMatterPage
                     width={screenWidth}
                     paddingX={PAGE_PAD_X}
@@ -1817,8 +1873,9 @@ function ChapterReaderContent() {
                   />
                 );
               }
-              return (
+              return wrap(
                 <ReaderPageView
+                  vertical={verticalReading}
                   width={screenWidth}
                   paddingX={PAGE_PAD_X}
                   paddingTop={PAGE_PAD_Y_TOP}
@@ -1870,7 +1927,7 @@ function ChapterReaderContent() {
                     haptics.soft();
                     toggleVerseSelection(n);
                   }}
-                  momentMotionActive={index === currentPageIdx && !selectionMode && !discoveredMoment && !collectMoment && !momentShowcase && activeVerse === null}
+                  momentMotionActive={index === visibleIndex && !selectionMode && !discoveredMoment && !collectMoment && !momentShowcase && activeVerse === null}
                   selectedSet={selectedVersesSet}
                   focusVerse={focusVerse}
                   focusTint={focusTint}
@@ -1882,10 +1939,12 @@ function ChapterReaderContent() {
           </View>
         )}
 
-        {!selectionMode && <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 24, right: 24, bottom: 8, gap: 8, backgroundColor: colors.bg }, chrome.bottomStyle]}>
+        {!verticalReading && !selectionMode && <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 24, right: 24, bottom: 8, gap: 8, backgroundColor: colors.bg }, chrome.bottomStyle]}>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}><Text style={{ ...systemText.caption1, color: colors.inkMuted }}>Chapter {chapter} of {book.chapters}</Text><Text style={{ ...systemText.caption1, color: colors.inkMuted }}>{Math.round(headerProgress * 100)}%</Text></View>
           <View style={{ height: 3, borderRadius: 2, backgroundColor: colors.border }}><View style={{ height: 3, borderRadius: 2, width: `${Math.max(0, Math.min(100, headerProgress * 100))}%`, backgroundColor: colors.inkMuted }} /></View>
         </Animated.View>}
+        {verticalReading && data && !error && <View style={{position:'absolute',left:29,right:29,bottom:29,flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}><Text style={{color:colors.inkMuted,fontSize:12}}>{book.name} {chapter} · {Math.min(visibleIndex+1,visibleItems.length)} / {visibleItems.length}</Text><Pressable accessibilityRole="button" accessibilityLabel="Continue to next verse" disabled={visibleIndex>=visibleItems.length-1} onPress={()=>pagerRef.current?.scrollToIndex({index:Math.min(visibleIndex+1,visibleItems.length-1),animated:true})} style={{minHeight:44,justifyContent:'center'}}><Text style={{color:colors.inkMuted,fontSize:12}}>{visibleIndex<visibleItems.length-1?'Continue ↑':'Chapter complete'}</Text></Pressable></View>}
+        {verticalReading && data && !error && <View pointerEvents="none" accessible accessibilityRole="progressbar" accessibilityLabel="Chapter reading progress" accessibilityValue={{min:0,max:data.verses.length,now:Math.min(visibleIndex+1,data.verses.length)}} style={{position:'absolute',left:24,right:24,bottom:8,height:3,borderRadius:2,backgroundColor:colors.border,overflow:'hidden'}}><View style={{height:3,borderRadius:2,backgroundColor:"#C68C64",width:`${Math.min(1,(visibleIndex+1)/Math.max(1,data.verses.length))*100}%`}}/></View>}
         {/* Verse selection keeps its contextual actions near the selected text. */}
 
         {/* ─── Reading-goal celebration toast ────────────────────
@@ -1903,7 +1962,7 @@ function ChapterReaderContent() {
 
       <ReaderListeningPanel visible={listeningOpen} onClose={() => setListeningOpen(false)} bookId={book.id} bookName={book.name} chapter={chapter} />
       <ReaderTutorial />
-      {discoveredMoment && <MomentThoughtBubble moment={discoveredMoment} anchorY={momentTouchY.current} onClose={() => setDiscoveredMoment(null)} onCollect={origin => { setCollectOrigin(origin); const moment = discoveredMoment; setDiscoveredMoment(null); setCollectMoment(moment); }} />}
+      {discoveredMoment && <MomentThoughtBubble moment={discoveredMoment} anchorY={momentTouchY.current} onClose={() => setDiscoveredMoment(null)} onCollect={() => { setCollectOrigin(null); const moment = discoveredMoment; setDiscoveredMoment(null); setCollectMoment(moment); }} />}
       <ReaderMomentExperience origin={collectOrigin} onCollected={() => setMomentArrival(value => value + 1)} moment={collectMoment} onFinish={() => setCollectMoment(null)} pocketRef={pocketRef} showcase={momentShowcase} onCloseShowcase={() => setMomentShowcase(false)} bookId={book.id} />
       <VerseMeaningCard
         visible={meaningOpen}
@@ -1942,7 +2001,7 @@ function ChapterReaderContent() {
         notes={!selectionMode && activeKey ? annotations.getNotes(activeKey) : []}
         onColor={color => {
           if (selectionMode) applyHighlightToSelected(color);
-          else if (activeKey) { annotations.setHighlight(activeKey, color, { verseText: activeVerseData?.text }); setActiveVerse(null); }
+          else if (activeKey) { if (color) rememberReaderHighlight(color); annotations.setHighlight(activeKey, color, { verseText: activeVerseData?.text }); setActiveVerse(null); }
         }}
         onNote={() => {
           if (selectionMode) startMultiVerseNote();
@@ -2045,6 +2104,7 @@ function VerseFlow({
   bookId,
   chapter,
   scale,
+  feedStyle = false,
   onVersePress,
   onVerseLongPress,
   onNotePress,
@@ -2060,6 +2120,7 @@ function VerseFlow({
   bookId: string;
   chapter: number;
   scale: number;
+  feedStyle?: boolean;
   onVersePress: (verse: number) => void;
   /**
    * Long-press hook — used to enter (or extend) the multi-verse
@@ -2097,7 +2158,7 @@ function VerseFlow({
 
   const [brushLines, setBrushLines] = useState<Array<{ x: number; y: number; width: number; height: number; verse: number }>>([]);
   const baseFontSize = 18 * scale;
-  const baseLineHeight = 30 * scale;
+  const baseLineHeight = (feedStyle ? 27 : 30) * scale;
   const verseNumSize = 11 * Math.sqrt(scale);
 
   // Pre-compute keys + decoration once per render so per-verse
@@ -2185,7 +2246,7 @@ function VerseFlow({
     <Text
       onTextLayout={handleTextLayout}
       style={{
-        fontFamily: NEW_YORK,
+        fontFamily: feedStyle ? "Georgia" : NEW_YORK,
         fontWeight: "400",
         fontSize: baseFontSize,
         lineHeight: baseLineHeight,
@@ -2246,10 +2307,10 @@ function VerseFlow({
               active={momentMotionActive && !isSelected && !v.highlight}
               dark={scheme === "dark"}
               color={isSelected ? colors.ink : MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"]}
-              style={{ fontFamily: NEW_YORK, fontWeight: "400", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1 }}
+              style={{ fontFamily: feedStyle ? "Georgia" : NEW_YORK, fontWeight: "400", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1 }}
             /> : <Text
               style={{
-                fontFamily: NEW_YORK,
+                fontFamily: feedStyle ? "Georgia" : NEW_YORK,
                 fontWeight: "400",
                 fontSize: baseFontSize,
                 lineHeight: baseLineHeight,
@@ -2300,7 +2361,7 @@ function VerseFlow({
                 onPress={() => onVerseLongPress(v.number)}
                 onUnlock={() => onVersePress(v.number)}
                 glowColor={isCollected ? "transparent" : MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"]}
-                style={{ fontFamily: NEW_YORK, fontWeight: "400", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1, color: colors.ink, backgroundColor: baseBg }}
+                style={{ fontFamily: feedStyle ? "Georgia" : NEW_YORK, fontWeight: "400", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1, color: colors.ink, backgroundColor: baseBg }}
               >{inner}</MomentVerseText>
             ) : isFocus ? (
               <Animated.Text
@@ -2312,7 +2373,7 @@ function VerseFlow({
                     : undefined
                 }
                 style={{
-                  fontFamily: NEW_YORK,
+                  fontFamily: feedStyle ? "Georgia" : NEW_YORK,
                   fontWeight: "400",
                   fontSize: baseFontSize,
                   lineHeight: baseLineHeight,
@@ -2333,7 +2394,7 @@ function VerseFlow({
                     : undefined
                 }
                 style={{
-                  fontFamily: NEW_YORK,
+                  fontFamily: feedStyle ? "Georgia" : NEW_YORK,
                   fontWeight: "400",
                   fontSize: baseFontSize,
                   lineHeight: baseLineHeight,
@@ -2733,6 +2794,7 @@ function TranslationNotInstalledView({
 // ─────────────────────────────────────────────────────────────────
 
 function ReaderPageView({
+  vertical = false,
   width,
   paddingX,
   paddingTop,
@@ -2754,6 +2816,7 @@ function ReaderPageView({
   focusTint,
   focusGlow,
 }: {
+  vertical?: boolean;
   width: number;
   paddingX: number;
   paddingTop: number;
@@ -2799,23 +2862,33 @@ function ReaderPageView({
       ? verses.slice(startVerseIdx, endVerseIdx + 1)
       : [];
 
+  const colors = useColors();
+  const [verticalViewport, setVerticalViewport] = useState(0);
+  const [verticalContent, setVerticalContent] = useState(0);
+  const Content = vertical ? ScrollView : View;
   return (
-    <View
+    <View style={{ width, ...(vertical ? { flex: 1 } : {}) }}>
+    <Content
+      {...(vertical ? { onLayout: (e: { nativeEvent: { layout: { height: number } } }) => setVerticalViewport(e.nativeEvent.layout.height), onContentSizeChange: (_: number, height: number) => setVerticalContent(height), scrollEnabled: verticalContent > verticalViewport + 2, bounces: false, contentContainerStyle: { flexGrow: 1, justifyContent: "center" as const, paddingBottom: 110 }, showsVerticalScrollIndicator: false, nestedScrollEnabled: true } : {})}
       style={{
         width,
+        ...(vertical ? { flex: 1 } : {}),
         paddingHorizontal: paddingX,
+        ...(vertical ? { paddingRight: 58, paddingLeft: 25 } : {}),
         paddingTop,
         paddingBottom,
       }}
     >
-      {isFirst ? (
+      {vertical && <Text style={{ color: colors.inkMuted, fontSize: 12, fontWeight: "600", marginBottom: 22 }}>{bookName} {chapter}:{pageVerses[0]?.number}{pageVerses.length > 1 ? `–${pageVerses[pageVerses.length - 1]?.number}` : ""}</Text>}
+      {isFirst && !vertical ? (
         <ChapterHeading bookName={bookName} chapter={chapter} scale={scale} />
       ) : null}
       <VerseFlow
         verses={pageVerses}
         bookId={bookId}
         chapter={chapter}
-        scale={scale}
+        feedStyle={vertical}
+        scale={vertical ? scale * (25 / 18) : scale}
         onVersePress={onVersePress}
         onVerseLongPress={onVerseLongPress}
         onNotePress={onNotePress}
@@ -2828,6 +2901,9 @@ function ReaderPageView({
           /* page copies don't need to feed anchors back up */
         }}
       />
+    </Content>
+    {vertical && <ReaderSocialRail bookId={bookId} bookName={bookName} chapter={chapter} verses={pageVerses} />}
+
     </View>
   );
 }
@@ -3384,7 +3460,7 @@ const READER_PILL_ICON = 48;
 const READER_PILL_GAP = 12;
 // ─── Reader vertical layout budget (single source of truth) ───────
 // Height of the custom Header row (chevron + progress rule).
-const READER_HEADER_HEIGHT = 56;
+const READER_HEADER_HEIGHT = 64;
 // Gap from the safe-area bottom edge up to the floating toolbar pills.
 const READER_TOOLBAR_BOTTOM_INSET = spacing[16];
 // Breathing room between the last line of verse text and the top of
@@ -3502,6 +3578,13 @@ function ReaderToolbar({
   const scheme = useResolvedScheme();
   const { tone, setTone } = useReaderTone();
   const isLight = scheme === "light";
+  const { readingLayout, setReadingLayout } = usePreferences();
+  const pendingSettingsAction = useRef<"audio" | "translation" | null>(null);
+  const settingsPalette = tone === "dark"
+    ? { bg: "#201C18", ink: "#FBF1E3", muted: "#C1AC94", control: "#34312B", line: "#FFFFFF16" }
+    : tone === "sepia"
+    ? { bg: "#EAD8B8", ink: "#392C20", muted: "#766046", control: "#DCC6A2", line: "#49301B28" }
+    : { bg: "#FAF2E4", ink: "#32261F", muted: "#796654", control: "#E7DECF", line: "#49301B20" };
   const [draftTextSize, setDraftTextSize] = useState(textSizeId);
   const [textSizeOpen, setTextSizeOpen] = useState(initialSheet === "textsize");
   const [versionOpen, setVersionOpen] = useState(initialSheet === "version");
@@ -3576,6 +3659,7 @@ function ReaderToolbar({
   };
 
   const commitVersion = () => {
+    if (versionSheetBusy) return;
     const next = versions[draftVersionIndex];
     pendingTranslationRef.current =
       next && next.id !== translation.id ? next.id : null;
@@ -3594,106 +3678,103 @@ function ReaderToolbar({
 
   return (
     <>
-      <Animated.View pointerEvents={chromeVisible ? "auto" : "none"} accessibilityElementsHidden={!chromeVisible} importantForAccessibility={chromeVisible ? "auto" : "no-hide-descendants"} style={[{ height: READER_HEADER_HEIGHT, flexDirection: "row", alignItems: "center", paddingHorizontal: 8, backgroundColor: tone === "sepia" ? "#E3D2B7" : isLight ? "#F0EBE5" : "#302925", borderBottomWidth: 1, borderBottomColor: isLight ? "#CBBFB2" : "#66564B", boxShadow: "0 4px 12px #00000018", zIndex: 40 }, chromeStyle]}>
-        <ReaderRibbon />
-        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><SFSymbol name="chevron.left" size={20} color={colors.ink} /></Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={`Choose chapter, ${bookTitle}`} onPress={onContents} style={{ flex: 1, minHeight: 44, flexDirection: "row", gap: 5, alignItems: "center", justifyContent: "flex-start", paddingHorizontal: 8 }}><Text numberOfLines={1} style={{ ...systemText.headline, color: colors.ink, flexShrink: 1, textAlign: "left" }}>{bookTitle}</Text><SFSymbol name="chevron.down" size={10} color={colors.inkMuted} /></Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={`Bible version ${translation.tag}`} onPress={openVersionSheet} disabled={versionSheetBusy} style={{ minWidth: 44, height: 44, justifyContent: "center", alignItems: "center" }}><View style={{ paddingHorizontal: 10, paddingVertical: 7, borderRadius: 16, backgroundColor: isLight ? "#00000008" : "#FFFFFF08" }}><Text style={{ ...systemText.caption1, fontWeight: "600", color: colors.ink }}>{translation.tag}</Text></View></Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Listen to this chapter" onPress={onAudio} style={{ width: 44, height: 44, justifyContent: "center", alignItems: "center" }}><SFSymbol name="headphones" size={20} color={colors.ink} /></Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Reading appearance" onPress={() => { setDraftTextSize(textSizeId); setTextSizeOpen(true); }} style={{ width: 44, height: 44, justifyContent: "center", alignItems: "center" }}><Text style={{ ...systemText.headline, color: colors.ink }}>Aa</Text></Pressable>
-        <View ref={pocketRef} collapsable={false}><ReaderMomentPocket onPress={onMoments} arrival={momentArrival} collecting={collecting} /></View>
-      </Animated.View>
+      <View style={{ height: READER_HEADER_HEIGHT, paddingHorizontal: 12, paddingVertical: 4 }}>
+        <View style={{ flex: 1, borderRadius: 20, borderCurve: "continuous", paddingHorizontal: 8, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: tone === "dark" ? "#65503E" : tone === "sepia" ? "#967451" : "#A98B6C", borderWidth: StyleSheet.hairlineWidth, borderColor: "#FFFFFF35" }}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Back to book" onPress={onBack} style={{ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 4 }}>
+            <SFSymbol name="chevron.left" size={17} color="#FFF8EC"/>
+            <Text style={{ color: "#FFF8EC", fontSize: 14 }}>Back</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel={`Choose chapter, ${bookTitle}`} onPress={onContents} style={{ flex: 1, minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 }}>
+            <Text numberOfLines={1} style={{ color: "#FFF8EC", fontSize: 16, fontWeight: "600", flexShrink: 1 }}>{bookTitle}</Text>
+            <SFSymbol name="chevron.down" size={10} color="#FFF8EC"/>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Reading settings" onPress={() => { setDraftTextSize(textSizeId); setTextSizeOpen(true); }} style={{ width: 44, height: 44, borderRadius: 15, borderCurve: "continuous", backgroundColor: "#30261EE6", alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ color: "#FFF8EC", fontSize: 19, fontWeight: "500" }}>Aa</Text>
+          </Pressable>
+          <View ref={pocketRef} collapsable={false}>
+            <ReaderMomentPocket onPress={onMoments} arrival={momentArrival} collecting={collecting}/>
+          </View>
+        </View>
+      </View>
 
       {/* Keep sheets mounted — unmounting on close skips TrueSheet.dismiss(). */}
       <ReaderSheet
-        backgroundColor={colors.surface}
+        backgroundColor={settingsPalette.bg}
         visible={versionOpen}
         onClose={handleVersionClose}
-        detents={["auto"]}
-        grabber={false}
+        detents={[0.65, 1]}
+        scrollable
+        header={<View style={{ paddingHorizontal: sheetSpace.horizontal, paddingTop: sheetSpace.top, paddingBottom: sheetSpace.section, backgroundColor: settingsPalette.bg }}>
+          <SheetHeading title="Bible translation" actionLabel="Save" onDone={commitVersion} ink={settingsPalette.ink} background={settingsPalette.bg}/>
+          <Text style={[sheetText.supporting, { color: settingsPalette.muted, marginTop: 12 }]}>Choose the translation you want to read.</Text>
+        </View>}
       >
-        <SheetModalHeader
-          nativeControls
-          title="Bible Version"
-          cancelLabel="Cancel"
-          saveLabel="Save"
-          onCancel={() => {
-            pendingTranslationRef.current = null;
-            setVersionSheetBusy(true);
-            setVersionOpen(false);
-            setTimeout(() => setVersionSheetBusy(false), 450);
-          }}
-          onSave={commitVersion}
-        />
-        <View
-          style={{
-            paddingHorizontal: spacing[16],
-            paddingBottom: spacing[24],
-          }}
-        >
-          <Host style={{ width: "100%", height: 216 }} colorScheme={scheme}>
-            <ExpoUIPicker
-              options={versionLabels}
-              selectedIndex={draftVersionIndex}
-              variant="wheel"
-              onOptionSelected={({ nativeEvent: { index } }) => {
-                setDraftVersionIndex(index);
-              }}
-            />
-          </Host>
-        </View>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: sheetSpace.horizontal, paddingBottom: sheetSpace.bottom }}>
+          {versions.map((version, index) => {
+            const selected = draftVersionIndex === index;
+            return <Pressable key={version.id} accessibilityRole="radio" accessibilityState={{ checked: selected }} accessibilityLabel={version.fullName} onPress={() => { haptics.tick(); setDraftVersionIndex(index); }} style={{ minHeight: 64, paddingVertical: 16, flexDirection: "row", alignItems: "center", gap: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: settingsPalette.line }}>
+              <View style={{ flex: 1, gap: sheetSpace.text }}>
+                <Text style={[sheetText.row, { color: settingsPalette.ink, fontWeight: selected ? "600" : "400" }]}>{version.fullName}</Text>
+                <Text style={[sheetText.metadata, { color: settingsPalette.muted }]}>{version.tag}</Text>
+              </View>
+              <View style={{ width: 24, alignItems: "center" }}>{selected && <SFSymbol name="checkmark" size={18} color={tone === "dark" ? "#8BD3AB" : "#287746"}/>}</View>
+            </Pressable>;
+          })}
+          <Pressable accessibilityRole="button" onPress={() => { pendingTranslationRef.current = null; setVersionOpen(false); }} style={{ minHeight: 48, marginTop: 12, alignItems: "center", justifyContent: "center" }}><Text style={[sheetText.action, { color: settingsPalette.muted }]}>Cancel</Text></Pressable>
+        </ScrollView>
       </ReaderSheet>
 
       <ReaderSheet
-        backgroundColor={colors.surface}
+        backgroundColor={settingsPalette.bg}
         visible={textSizeOpen}
         onClose={() => { setTextSizeOpen(false); if (draftTextSize !== textSizeId) onChangeTextSize(draftTextSize); }}
+        onDidDismiss={() => {
+          const next = pendingSettingsAction.current;
+          pendingSettingsAction.current = null;
+          if (next === "audio") onAudio();
+          if (next === "translation") openVersionSheet();
+        }}
         detents={["auto"]}
         grabber
       >
-        <View
-          style={{
-            paddingHorizontal: spacing[16],
-            paddingTop: spacing[12],
-            paddingBottom: spacing[24],
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <Text accessibilityRole="header" style={{ color: colors.ink, fontSize: 22, fontWeight: "600" }}>Reading appearance</Text>
-            <ReaderNativeButton label="Done" onPress={() => setTextSizeOpen(false)} />
+        <View style={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 32 }}>
+          <View style={{ marginBottom: sheetSpace.section }}><SheetHeading title="Reading settings" onDone={() => setTextSizeOpen(false)} ink={settingsPalette.ink} background={settingsPalette.bg}/></View>
+          <Text style={[sheetText.section, { color: settingsPalette.muted, marginBottom: 12 }]}>Read your way</Text>
+          <View style={{ flexDirection: "row", padding: 4, gap: 3, borderRadius: 16, borderCurve: "continuous", backgroundColor: settingsPalette.control }}>
+            {([
+              { title: "Classic", icon: "book", selected: readingLayout === "pages", action: () => setReadingLayout("pages") },
+              { title: "Scroll", icon: "arrow.up.arrow.down", selected: readingLayout !== "pages", action: () => setReadingLayout("verse") },
+              { title: "Audio", icon: "headphones", selected: false, action: () => { pendingSettingsAction.current = "audio"; setTextSizeOpen(false); } },
+            ] as const).map(mode => <Pressable key={mode.title} accessibilityRole="button" accessibilityState={{ selected: mode.selected }} onPress={() => { haptics.tick(); mode.action(); }} style={{ flex: 1, minHeight: 64, paddingVertical: 10, gap: 6, borderRadius: 12, borderCurve: "continuous", alignItems: "center", justifyContent: "center", backgroundColor: mode.selected ? settingsPalette.bg : "transparent" }}>
+              <SFSymbol name={mode.icon} size={21} color={mode.selected ? settingsPalette.ink : settingsPalette.muted}/>
+              <Text style={{ color: mode.selected ? settingsPalette.ink : settingsPalette.muted, fontSize: 14, fontWeight: mode.selected ? "600" : "400" }}>{mode.title}</Text>
+            </Pressable>)}
           </View>
-          <View style={{ minHeight: 116, justifyContent: "center", paddingHorizontal: 8, paddingBottom: 20 }}>
-            <Text style={{ fontFamily: NEW_YORK, color: colors.ink, fontSize: 18 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1), lineHeight: 30 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1) }}>In the beginning, God created the heavens and the earth.</Text>
+          <View style={{ paddingVertical: 24 }}>
+            <Text style={{ fontFamily: readingLayout === "pages" ? NEW_YORK : "Georgia", color: settingsPalette.ink, fontSize: 23 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1), lineHeight: 34 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1) }}>In the beginning, God created the heavens and the earth.</Text>
           </View>
-          <Text style={{ color: colors.inkMuted, fontSize: 13, marginBottom: 8 }}>Text size</Text>
-          {/* Native UISegmentedControl — same control Library/Highlights use */}
-          <SegmentedControl
-            values={TEXT_SIZES.map((s) => s.name)}
-            appearance={scheme}
-            selectedIndex={Math.max(0, TEXT_SIZES.findIndex(s => s.id === draftTextSize))}
-            onChange={(e) => {
-              const index = e.nativeEvent.selectedSegmentIndex;
-              const next = TEXT_SIZES[index];
-              if (next) {
-                haptics.tick();
-                setDraftTextSize(next.id);
-              }
-            }}
-            fontStyle={{ fontSize: 14, color: colors.inkMuted }}
-            activeFontStyle={{ fontSize: 14, fontWeight: "600", color: colors.ink }}
-            style={{ width: "100%", height: 44 }}
-          />
-          <Text style={{ color: colors.inkMuted, fontSize: 13, marginTop: 24, marginBottom: 8 }}>Appearance</Text>
-          <SegmentedControl
-            values={["Light", "Sepia", "Dark"]}
-            appearance={scheme}
-            selectedIndex={["light", "sepia", "dark"].indexOf(tone)}
-            onChange={event => {
-              const next = (["light", "sepia", "dark"] as const)[event.nativeEvent.selectedSegmentIndex];
-              if (next) { haptics.tick(); setTone(next); }
-            }}
-            style={{ height: 44 }}
-          />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 8, minHeight: 54, borderRadius: 16, borderCurve: "continuous", backgroundColor: settingsPalette.control }}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Smaller text" onPress={() => setDraftTextSize(TEXT_SIZES[Math.max(0, TEXT_SIZES.findIndex(s => s.id === draftTextSize) - 1)].id)} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><Text style={{ color: settingsPalette.ink, fontSize: 17 }}>A</Text></Pressable>
+            <Host style={{ flex: 1, height: 44 }} colorScheme={scheme}>
+              <ExpoUISlider min={0} max={TEXT_SIZES.length - 1} steps={TEXT_SIZES.length - 2} value={Math.max(0, TEXT_SIZES.findIndex(s => s.id === draftTextSize))} color={settingsPalette.ink} onValueChange={value => { const next = TEXT_SIZES[Math.round(value)]; if (next && next.id !== draftTextSize) { haptics.tick(); setDraftTextSize(next.id); } }}/>
+            </Host>
+            <Pressable accessibilityRole="button" accessibilityLabel="Larger text" onPress={() => setDraftTextSize(TEXT_SIZES[Math.min(TEXT_SIZES.length - 1, TEXT_SIZES.findIndex(s => s.id === draftTextSize) + 1)].id)} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><Text style={{ color: settingsPalette.ink, fontSize: 25 }}>A</Text></Pressable>
+          </View>
+          <Text style={[sheetText.section, { color: settingsPalette.muted, marginTop: 24, marginBottom: 12 }]}>Page theme</Text>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            {([
+              { id: "light", label: "Light", bg: "#FFFAF1", ink: "#32261F" },
+              { id: "sepia", label: "Sepia", bg: "#DAC29D", ink: "#392C20" },
+              { id: "dark", label: "Dark", bg: "#302923", ink: "#FFF4E3" },
+            ] as const).map(option => <Pressable key={option.id} accessibilityRole="button" accessibilityState={{ selected: tone === option.id }} onPress={() => { haptics.tick(); setTone(option.id); }} style={{ flex: 1, borderRadius: 18, borderCurve: "continuous", padding: 3, borderWidth: 2, borderColor: tone === option.id ? settingsPalette.ink : "transparent" }}>
+              <View style={{ minHeight: 50, borderRadius: 13, borderCurve: "continuous", backgroundColor: option.bg, alignItems: "center", justifyContent: "center" }}><Text style={{ color: option.ink, fontSize: 15 }}>{option.label}</Text></View>
+            </Pressable>)}
+          </View>
+          <Pressable accessibilityRole="button" accessibilityLabel={`Translation, ${translation.fullName}`} onPress={() => { pendingSettingsAction.current = "translation"; setTextSizeOpen(false); }} style={{ marginTop: 24, paddingTop: 20, minHeight: 54, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: settingsPalette.line, flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Text style={{ color: settingsPalette.ink, fontSize: 15 }}>Translation</Text>
+            <Text numberOfLines={1} style={{ flex: 1, textAlign: "right", color: settingsPalette.muted, fontSize: 13 }}>{translation.fullName} · {translation.tag}</Text>
+            <SFSymbol name="chevron.right" size={11} color={settingsPalette.muted}/>
+          </Pressable>
         </View>
       </ReaderSheet>
     </>
@@ -4255,116 +4336,54 @@ function ContentsModal({
   onSelect: (chapter: number) => void;
   onExpress?: () => void;
 }) {
-  const colors = useColors();
-  const scheme = useResolvedScheme();
-  const isLight = scheme === "light";
-  const sheetBg = isLight ? "#F8F8F8" : colors.bg;
-  const selectedWell = isLight ? "rgba(0,0,0,0.06)" : colors.surface;
-
+  const { tone } = useReaderTone();
+  const insets = useSafeAreaInsets();
+  const { width, fontScale } = useWindowDimensions();
+  const columns = Math.max(2, Math.min(5, Math.floor((width - 48 + 8) / (48 * Math.max(1, fontScale) + 8))));
+  const palette = tone === "dark"
+    ? { bg: "#201C18", ink: "#FBF1E3", muted: "#C1AC94", tile: "#29231D", selected: "#352A20", border: "#FFFFFF12" }
+    : tone === "sepia"
+    ? { bg: "#EAD8B8", ink: "#392C20", muted: "#766046", tile: "#E2CEAC", selected: "#D5BB92", border: "#49301B20" }
+    : { bg: "#FAF2E4", ink: "#32261F", muted: "#796654", tile: "#F2E8D9", selected: "#E6D5BD", border: "#49301B16" };
+  const rows = Array.from({ length: Math.ceil(totalChapters / columns) }, (_, row) =>
+    Array.from({ length: columns }, (_, column) => row * columns + column + 1));
   return (
-    <AppleSheet
+    <ReaderSheet
       visible={visible}
       onClose={onClose}
       detents={[0.6, 1]}
-      backgroundColor={sheetBg}
+      backgroundColor={palette.bg}
       scrollable
+      header={
+        <View style={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 24, backgroundColor: palette.bg }}>
+          <SheetHeading title={bookName} onDone={onClose} ink={palette.ink} background={palette.bg}/>
+          <Text style={[sheetText.supporting, { color: palette.muted, marginTop: 24 }]}>Choose a chapter</Text>
+        </View>
+      }
     >
-      <View>
-        <Text
-          style={[
-            systemText.headline,
-            {
-              color: colors.ink,
-              textAlign: "center",
-              fontWeight: "700",
-              paddingTop: spacing[12],
-              paddingBottom: spacing[12],
-              paddingHorizontal: spacing[16],
-            },
-          ]}
-          accessibilityRole="header"
-          numberOfLines={1}
-        >
-          {bookName}
-        </Text>
-        <View
-          style={{
-            height: StyleSheet.hairlineWidth,
-            backgroundColor: colors.border,
-          }}
-        />
-
-        <ScrollView
-          contentContainerStyle={{
-            paddingBottom: spacing[40],
-          }}
-          showsVerticalScrollIndicator={false}
-        >
-          {onExpress && <Pressable accessibilityRole="button" onPress={onExpress} style={{ minHeight: 64, padding: 16, flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <SFSymbol name="bolt" size={20} color={colors.ink} />
-            <View style={{ flex: 1 }}><Text style={{ color: colors.ink, fontSize: 17, fontWeight: "600" }}>Read Express</Text><Text style={{ color: colors.inkMuted, fontSize: 13, marginTop: 4 }}>The heart of this book, in a few minutes</Text></View>
-            <SFSymbol name="chevron.right" size={14} color={colors.inkMuted} />
-          </Pressable>}
-          {Array.from({ length: totalChapters }, (_, i) => i + 1).map((c) => {
-            const read = hasReadChapter(bookId, c);
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: Math.max(30, insets.bottom + 16), gap: 8 }} showsVerticalScrollIndicator={false}>
+        {rows.map((row, index) => <View key={index} style={{ flexDirection: "row", gap: 8 }}>
+          {row.map(c => {
+            if (c > totalChapters) return <View key={c} style={{ flex: 1 }}/>;
             const current = c === currentChapter;
-            const upcoming = c > currentChapter && !read;
-            const titleColor = upcoming ? colors.inkMuted : colors.ink;
-            const pageCount = Math.max(1, chapterPageCounts[c - 1] ?? 1);
-            return (
-              <Pressable
-                key={c}
-                onPress={() => {
-                  haptics.soft();
-                  onSelect(c);
-                }}
-                accessibilityRole="button"
-                accessibilityState={{ selected: current }}
-                accessibilityLabel={`${bookName} chapter ${c}, ${pageCount} pages`}
-                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    minHeight: minTouchTarget,
-                    paddingVertical: spacing[8],
-                    paddingHorizontal: spacing[16],
-                    backgroundColor: current ? selectedWell : "transparent",
-                  }}
-                >
-                  <Text
-                    style={[
-                      systemText.body,
-                      {
-                        flex: 1,
-                        fontWeight: current || read ? "700" : "600",
-                        color: titleColor,
-                      },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    Chapter {c}
-                  </Text>
-                  <Text
-                    style={[
-                      systemText.subheadline,
-                      {
-                        color: colors.inkMuted,
-                        fontVariant: ["tabular-nums"],
-                        marginLeft: spacing[12],
-                      },
-                    ]}
-                  >
-                    {pageCount}
-                  </Text>
-                </View>
-              </Pressable>
-            );
+            const read = hasReadChapter(bookId, c);
+            return <Pressable key={c} accessibilityRole="button" accessibilityState={{ selected: current }} accessibilityLabel={`${bookName} chapter ${c}${current ? ", current chapter" : ""}${read ? ", completed" : ""}`} onPress={() => { haptics.soft(); onSelect(c); }} style={{
+              flex: 1, minHeight: 48, paddingVertical: 12, alignItems: "center", justifyContent: "center",
+              borderRadius: 12, borderCurve: "continuous", borderWidth: current ? 1.5 : 1,
+              borderColor: current ? palette.muted : palette.border,
+              backgroundColor: current ? palette.selected : palette.tile,
+            }}>
+              <Text style={{ color: current ? palette.ink : palette.muted, fontSize: 17, fontWeight: current ? "600" : "400", fontVariant: ["tabular-nums"] }}>{c}</Text>
+              {read && <View style={{ position: "absolute", right: 4, top: 4 }}><SFSymbol name="checkmark" size={8} color={tone === "dark" ? "#8BD3AB" : "#287746"}/></View>}
+            </Pressable>;
           })}
-        </ScrollView>
-      </View>
-    </AppleSheet>
+        </View>)}
+        {onExpress && <Pressable accessibilityRole="button" onPress={onExpress} style={{ minHeight: 44, marginTop: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 }}>
+          <SFSymbol name="bolt" size={15} color={palette.muted}/>
+          <Text style={{ color: palette.muted, fontSize: 14 }}>Read Express</Text>
+        </Pressable>}
+      </ScrollView>
+    </ReaderSheet>
   );
 }
 

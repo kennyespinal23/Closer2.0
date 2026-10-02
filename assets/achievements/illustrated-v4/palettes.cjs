@@ -1,0 +1,21 @@
+// Interior + enamel highlight + enamel midtone + enamel shadow + accent.
+module.exports={
+'letters-7':['#293c48','#d6f4f0','#72b6bb','#327782','#e8c98c'],
+'letters-30':['#442840','#f2d3ed','#bf83bb','#794983','#e8c69a'],
+'letters-100':['#402a23','#ffd7b5','#d58256','#974b36','#e8c394'],
+'streak-1':['#34292d','#ffdad0','#ef917e','#b24b58','#e9bd8e'],
+'streak-100':['#23372c','#e3edb5','#a4bc6b','#55764b','#f0c96a'],
+'chapter':['#37323f','#eee8ff','#b5a5d5','#776b9c','#cdb1d8'],
+'highlight':['#3c3320','#fff2ab','#eac453','#b28632','#e7d6a0'],
+'note':['#203d3a','#c6f1e2','#6cbaa6','#378475','#e4d2b0'],
+'listener':['#292344','#ddd1ff','#a388e6','#6754ae','#d7b5e4'],
+'express':['#3d2821','#ffe0af','#f09d56','#c06236','#f4cc8f'],
+'law':['#343a43','#e5ebef','#9eaebc','#5b7187','#d9c6a4'],
+'bible':['#233e37','#d3e8d0','#79ac90','#3e775f','#e9d092'],
+'moment':['#1e3c46','#c2f6ff','#6bc7dd','#3089af','#a3eadb'],
+ 'ten':['#443428','#ffe8b0','#dcb264','#a77539','#f2cd90'],
+ 'all':['#363341','#f5e7ff','#c9b9e9','#8c78b7','#d5e8e9'],
+ 'honest':['#42263a','#ffdae5','#e591b1','#ae537b','#edc4db'],
+ 'quiz':['#24364b','#d3e9ff','#84b3ed','#467bbc','#cfddf0'],
+ 'verse':['#323d26','#e9f0c7','#b4c783','#778d53','#e7d2a6']
+};

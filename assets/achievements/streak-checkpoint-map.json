@@ -1,0 +1,545 @@
+{
+  "status": "family mapping only; custom checkpoint artwork not yet designed",
+  "checkpoints": [
+    {
+      "day": 1,
+      "title": "First morning",
+      "assetId": "streak-1",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 2,
+      "title": "Again",
+      "assetId": "streak-1",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 3,
+      "title": "Three mornings now",
+      "assetId": "streak-1",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 4,
+      "title": "Past the hard part",
+      "assetId": "streak-1",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 5,
+      "title": "Five",
+      "assetId": "streak-1",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 6,
+      "title": "One more morning",
+      "assetId": "streak-1",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 7,
+      "title": "A week of mornings",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 8,
+      "title": "Into a second week",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 9,
+      "title": "Still here",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 10,
+      "title": "Double digits",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 11,
+      "title": "Ordinary and faithful",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 12,
+      "title": "Building toward two weeks",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 13,
+      "title": "One morning from two weeks",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 14,
+      "title": "Two weeks steady",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 16,
+      "title": "Sixteen mornings",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 18,
+      "title": "Eighteen",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 20,
+      "title": "Twenty",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 21,
+      "title": "Three weeks",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 22,
+      "title": "Twenty-two",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 24,
+      "title": "Twenty-four",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 26,
+      "title": "Twenty-six",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 28,
+      "title": "Twenty-eight",
+      "assetId": "streak-7",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 30,
+      "title": "A full month",
+      "assetId": "streak-30",
+      "treatment": "landmark"
+    },
+    {
+      "day": 33,
+      "title": "Into month two",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 36,
+      "title": "Thirty-six",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 39,
+      "title": "Thirty-nine",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 42,
+      "title": "Forty-two",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 45,
+      "title": "Halfway to a hundred",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 48,
+      "title": "Forty-eight",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 51,
+      "title": "Fifty-one",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 54,
+      "title": "Fifty-four",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 57,
+      "title": "Fifty-seven",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 60,
+      "title": "Two months",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 64,
+      "title": "Sixty-four",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 68,
+      "title": "Sixty-eight",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 72,
+      "title": "Seventy-two",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 76,
+      "title": "Seventy-six",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 80,
+      "title": "Eighty",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 84,
+      "title": "Eighty-four",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 88,
+      "title": "Eighty-eight",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 90,
+      "title": "Ninety mornings",
+      "assetId": "streak-30",
+      "treatment": "landmark"
+    },
+    {
+      "day": 92,
+      "title": "Ninety-two",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 96,
+      "title": "Ninety-six",
+      "assetId": "streak-30",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 100,
+      "title": "One hundred",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 105,
+      "title": "Past the hundred",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 110,
+      "title": "One hundred ten",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 115,
+      "title": "One hundred fifteen",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 120,
+      "title": "One hundred twenty",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 125,
+      "title": "One hundred twenty-five",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 130,
+      "title": "One hundred thirty",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 135,
+      "title": "One hundred thirty-five",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 140,
+      "title": "One hundred forty",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 145,
+      "title": "One hundred forty-five",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 150,
+      "title": "One hundred fifty",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 155,
+      "title": "One hundred fifty-five",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 160,
+      "title": "One hundred sixty",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 165,
+      "title": "One hundred sixty-five",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 170,
+      "title": "One hundred seventy",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 175,
+      "title": "One hundred seventy-five",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 180,
+      "title": "Six months",
+      "assetId": "streak-100",
+      "treatment": "landmark"
+    },
+    {
+      "day": 185,
+      "title": "One hundred eighty-five",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 190,
+      "title": "One hundred ninety",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 195,
+      "title": "One hundred ninety-five",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 200,
+      "title": "Two hundred",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 207,
+      "title": "Two hundred seven",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 214,
+      "title": "Two hundred fourteen",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 221,
+      "title": "Two hundred twenty-one",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 228,
+      "title": "Two hundred twenty-eight",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 235,
+      "title": "Two hundred thirty-five",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 242,
+      "title": "Two hundred forty-two",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 249,
+      "title": "Two hundred forty-nine",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 250,
+      "title": "Two hundred fifty",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 256,
+      "title": "Two hundred fifty-six",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 263,
+      "title": "Two hundred sixty-three",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 270,
+      "title": "Two hundred seventy",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 277,
+      "title": "Two hundred seventy-seven",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 284,
+      "title": "Two hundred eighty-four",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 291,
+      "title": "Two hundred ninety-one",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 298,
+      "title": "Two hundred ninety-eight",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 300,
+      "title": "Three hundred",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 305,
+      "title": "Three hundred five",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 312,
+      "title": "Three hundred twelve",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 319,
+      "title": "Three hundred nineteen",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 326,
+      "title": "Three hundred twenty-six",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 333,
+      "title": "Three hundred thirty-three",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 340,
+      "title": "Three hundred forty",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 347,
+      "title": "Three hundred forty-seven",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 354,
+      "title": "Three hundred fifty-four",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 361,
+      "title": "Three hundred sixty-one",
+      "assetId": "streak-100",
+      "treatment": "checkpoint"
+    },
+    {
+      "day": 365,
+      "title": "One full year",
+      "assetId": "streak-100",
+      "treatment": "landmark"
+    }
+  ]
+}

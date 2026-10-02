@@ -1,3 +1,4 @@
+import { BibleReadingRewards } from "@/components/BibleReadingRewards";
 import "../global.css";
 
 import { useEffect } from "react";
@@ -187,6 +188,7 @@ function AppShell() {
           lib/notificationDeepLink.tsx for the three paths
           this handles (cold / warm / foreground). */}
       <NotificationDeepLinkHandler />
+      <BibleReadingRewards />
       <ScheduledBlockGuard />
       {/* LaunchSplash — orange brand canvas + Closer+ wordmark.
           Sits as an absolutely-positioned overlay above the

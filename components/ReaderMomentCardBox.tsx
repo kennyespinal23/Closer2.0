@@ -1,3 +1,6 @@
+import { BibleMomentReveal, type BibleRevealKind } from "./BibleMomentReveal";
+import { earnedBibleReadingRewards } from "@/lib/bibleReadingRewards";
+import { useProgress } from "@/state/progress";
 import { SkyGradient } from "./HomeSkyGradient";
 import { Host, ContextMenu, Button as NativeButton } from "@expo/ui/swift-ui";
 import { accessibilityLabel, tint } from "@expo/ui/swift-ui/modifiers";
@@ -20,8 +23,7 @@ export type CardFrame = { x: number; y: number; width: number; height: number };
 
 const spring = { damping: 24, stiffness: 380, mass: 0.65 };
 
-export { MomentCollectibleDetail as ReaderMomentDetail } from "./MomentCollectible";
-import { MomentCollectibleDetail as ReaderMomentDetail, MomentCollectibleFront } from "./MomentCollectible";
+import { MomentCollectibleFront } from "./MomentCollectible";
 
 function TrayCard({ moment, index, earned, activeIndex, hidden, onOpen }: { moment: BibleMoment; index: number; earned: boolean; activeIndex: SharedValue<number>; hidden: boolean; onOpen: (frame: CardFrame) => void }) {
   const { ink, muted, paper, canvas, empty, border, divider, dark } = useMomentPaper();
@@ -63,6 +65,9 @@ export function ReaderMomentCardBox({ bookId, pocketRef, onClose }: { bookId: st
   const { ink, muted, paper, canvas, empty, border, divider, dark } = useMomentPaper();
   const { width, height } = useWindowDimensions(), insets = useSafeAreaInsets();
   const reduced = useReducedMotion(), { ids, hydrated, error } = useBibleMomentCollection();
+  const { chaptersRead } = useProgress();
+  const readingRewards = earnedBibleReadingRewards(chaptersRead);
+  const [readingReward, setReadingReward] = useState<BibleRevealKind | null>(null);
   const [foilBook, setFoilBook] = useState<string | null>(null);
   const [filter, setFilter] = useState<MomentCategory | "all">("all");
   useEffect(() => {
@@ -111,6 +116,7 @@ export function ReaderMomentCardBox({ bookId, pocketRef, onClose }: { bookId: st
             <View style={{ flex: 1, gap: 6 }}><Text style={{ ...systemText.subheadline, fontWeight: "600", color: ink }}>{foundInBook === bookMoments.length ? `${bookName} foil unlocked` : `Find all ${bookMoments.length} in ${bookName}`}</Text><Text style={{ ...systemText.caption1, color: muted }}>{foundInBook === bookMoments.length ? "Every Moment, found." : `${bookMoments.length - foundInBook} to go for the silver foil card`}</Text><View style={{ height: 5, borderRadius: 3, backgroundColor: divider, overflow: "hidden", marginTop: 4 }}><View style={{ height: 5, width: `${foundInBook / bookMoments.length * 100}%`, backgroundColor: "#C6CBD0" }} /></View></View>
           </View>}
         </View>
+        {readingRewards.length > 0 && <View style={{paddingHorizontal:16,gap:8,marginBottom:16}}><Text style={{...systemText.headline,color:ink}}>Your reading keepsakes</Text>{readingRewards.map(kind=><Pressable key={kind} accessibilityRole="button" onPress={()=>setReadingReward(kind)} style={{minHeight:56,borderRadius:16,padding:14,backgroundColor:paper,flexDirection:'row',alignItems:'center',gap:12}}><SFSymbol name="sparkles" size={22} color={kind==='crown'?'#9A8359':'#BA9147'}/><Text style={{...systemText.subheadline,color:ink,flex:1}}>{kind==='old-gold'?'Old Testament · Gold':kind==='new-gold'?'New Testament · Gold':'The Whole Bible · Crown'}</Text><SFSymbol name="chevron.right" size={12} color={muted}/></Pressable>)}</View>}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingVertical: 8 }}>
           {(["all", ...Object.keys(MOMENT_CATEGORIES)] as (MomentCategory | "all")[]).map(category => <Pressable key={category} accessibilityRole="button" accessibilityState={{ selected: category === filter }} onPress={() => setFilter(category)} style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 14, borderRadius: 12, borderBottomLeftRadius: 3, backgroundColor: filter === category ? "#FF5A36" : dark ? "#352D1D" : "#E8D8BA" }}><Text style={{ ...systemText.footnote, fontWeight: "600", color: filter === category ? "#FFFFFF" : muted }}>{category === "all" ? "All" : MOMENT_CATEGORIES[category].name} {category === "all" ? ids.length : BIBLE_MOMENTS.filter(m => m.tags.includes(category) && collected.has(m.id)).length}</Text></Pressable>)}
         </ScrollView>
@@ -119,7 +125,9 @@ export function ReaderMomentCardBox({ bookId, pocketRef, onClose }: { bookId: st
       </View>} renderItem={({ item: [, moments] }) => <CardTray showFoil={filter === "all"} onFoil={openFoil} moments={moments} collected={collected} selectedId={moments.some(m => m.id === selected?.moment.id) ? selected?.moment.id : undefined} onOpen={openMoment} />}
       ListFooterComponent={<Text style={{ ...systemText.footnote, color: muted, padding: 20, lineHeight: 21 }}>Every card you find while reading ends up here. Question marks show what kind of Moment is waiting, never what it is.</Text>} />
     </Animated.View>
-    {foilBook && <View accessibilityViewIsModal style={{ position: "absolute", inset: 0, zIndex: 6, backgroundColor: "#000000BB", justifyContent: "center", alignItems: "center", gap: 24 }}><MomentBookFoil name={findBookById(foilBook)?.name ?? "Book"} earned width={220} /><Text style={{ ...systemText.title2, color: "#FFFFFF" }}>Every Moment, collected.</Text><Pressable accessibilityRole="button" onPress={() => setFoilBook(null)} style={{ padding: 16, minWidth: 160, alignItems: "center", borderRadius: 24, backgroundColor: "#FFFFFF" }}><Text style={{ ...systemText.headline, color: "#202B3D" }}>Done</Text></Pressable></View>}
-    {selected && <ReaderMomentDetail moment={selected.moment} source={selected.frame} onClose={() => setSelected(null)} />}
+    {foilBook && <BibleMomentReveal request={{kind:'silver',bookId:foilBook}} onClose={()=>setFoilBook(null)}/>}
+    {readingReward && <BibleMomentReveal request={{kind:readingReward}} onClose={()=>setReadingReward(null)}/>}
+
+    {selected && <BibleMomentReveal autoPlay request={{kind:'moment',moment:selected.moment}} onClose={() => setSelected(null)} />}
   </View>;
 }

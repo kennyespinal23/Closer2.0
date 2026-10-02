@@ -1,0 +1,342 @@
+{
+  "status": "review-only",
+  "version": 1,
+  "achievements": [
+    {
+      "id": "letters-1",
+      "title": "First Letter",
+      "family": "Daily letters",
+      "tier": 1,
+      "asset": "assets/achievements/letters-1.svg",
+      "material": "Copper · Folded paper",
+      "background": {
+        "light": "#EED2AB",
+        "dark": "#694028"
+      },
+      "reveal": "unfold",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "letters-7",
+      "title": "Seven Letters",
+      "family": "Daily letters",
+      "tier": 2,
+      "asset": "assets/achievements/letters-7.svg",
+      "material": "Copper · Folded paper",
+      "background": {
+        "light": "#EED2AB",
+        "dark": "#694028"
+      },
+      "reveal": "unfold",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "letters-30",
+      "title": "Thirty Letters",
+      "family": "Daily letters",
+      "tier": 3,
+      "asset": "assets/achievements/letters-30.svg",
+      "material": "Copper · Folded paper",
+      "background": {
+        "light": "#EED2AB",
+        "dark": "#694028"
+      },
+      "reveal": "unfold",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "letters-100",
+      "title": "A Hundred Letters",
+      "family": "Daily letters",
+      "tier": 4,
+      "asset": "assets/achievements/letters-100.svg",
+      "material": "Copper · Folded paper",
+      "background": {
+        "light": "#EED2AB",
+        "dark": "#694028"
+      },
+      "reveal": "unfold",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "streak-1",
+      "title": "Lit the Match",
+      "family": "Streaks",
+      "tier": 1,
+      "asset": "assets/achievements/streak-1.svg",
+      "material": "Amber enamel · Gold",
+      "background": {
+        "light": "#F1CA82",
+        "dark": "#624020"
+      },
+      "reveal": "ignite",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "streak-7",
+      "title": "Seven Days",
+      "family": "Streaks",
+      "tier": 2,
+      "asset": "assets/achievements/streak-7.svg",
+      "material": "Amber enamel · Gold",
+      "background": {
+        "light": "#F1CA82",
+        "dark": "#624020"
+      },
+      "reveal": "ignite",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "streak-30",
+      "title": "Thirty Days",
+      "family": "Streaks",
+      "tier": 3,
+      "asset": "assets/achievements/streak-30.svg",
+      "material": "Amber enamel · Gold",
+      "background": {
+        "light": "#F1CA82",
+        "dark": "#624020"
+      },
+      "reveal": "ignite",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "streak-100",
+      "title": "A Hundred Days",
+      "family": "Streaks",
+      "tier": 4,
+      "asset": "assets/achievements/streak-100.svg",
+      "material": "Amber enamel · Gold",
+      "background": {
+        "light": "#F1CA82",
+        "dark": "#624020"
+      },
+      "reveal": "ignite",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "chapter",
+      "title": "Turned the Page",
+      "family": "Reading",
+      "tier": 1,
+      "asset": "assets/achievements/chapter.svg",
+      "material": "Forest enamel · Ivory",
+      "background": {
+        "light": "#C6D6BD",
+        "dark": "#254B39"
+      },
+      "reveal": "pages",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "highlight",
+      "title": "First Highlight",
+      "family": "Reading",
+      "tier": 1,
+      "asset": "assets/achievements/highlight.svg",
+      "material": "Forest enamel · Ivory",
+      "background": {
+        "light": "#C6D6BD",
+        "dark": "#254B39"
+      },
+      "reveal": "pages",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "note",
+      "title": "First Note",
+      "family": "Reading",
+      "tier": 1,
+      "asset": "assets/achievements/note.svg",
+      "material": "Forest enamel · Ivory",
+      "background": {
+        "light": "#C6D6BD",
+        "dark": "#254B39"
+      },
+      "reveal": "pages",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "listener",
+      "title": "Listener",
+      "family": "Reading",
+      "tier": 2,
+      "asset": "assets/achievements/listener.svg",
+      "material": "Forest enamel · Ivory",
+      "background": {
+        "light": "#C6D6BD",
+        "dark": "#254B39"
+      },
+      "reveal": "pages",
+      "availability": "Reserved — recordings not yet available"
+    },
+    {
+      "id": "genesis",
+      "title": "In the Beginning",
+      "family": "Reading",
+      "tier": 2,
+      "asset": "assets/achievements/genesis.svg",
+      "material": "Forest enamel · Ivory",
+      "background": {
+        "light": "#C6D6BD",
+        "dark": "#254B39"
+      },
+      "reveal": "pages",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "express",
+      "title": "Express Lane",
+      "family": "Reading",
+      "tier": 2,
+      "asset": "assets/achievements/express.svg",
+      "material": "Forest enamel · Ivory",
+      "background": {
+        "light": "#C6D6BD",
+        "dark": "#254B39"
+      },
+      "reveal": "pages",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "law",
+      "title": "The Law",
+      "family": "Reading",
+      "tier": 3,
+      "asset": "assets/achievements/law.svg",
+      "material": "Forest enamel · Ivory",
+      "background": {
+        "light": "#C6D6BD",
+        "dark": "#254B39"
+      },
+      "reveal": "pages",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "bible",
+      "title": "Every Word",
+      "family": "Reading",
+      "tier": 4,
+      "asset": "assets/achievements/bible.svg",
+      "material": "Forest enamel · Ivory",
+      "background": {
+        "light": "#C6D6BD",
+        "dark": "#254B39"
+      },
+      "reveal": "pages",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "moment",
+      "title": "First Moment",
+      "family": "Bible Moments",
+      "tier": 1,
+      "asset": "assets/achievements/moment.svg",
+      "material": "Teal enamel · Silver",
+      "background": {
+        "light": "#C5DEDC",
+        "dark": "#23434D"
+      },
+      "reveal": "foil",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "garden",
+      "title": "Garden Set",
+      "family": "Bible Moments",
+      "tier": 3,
+      "asset": "assets/achievements/garden.svg",
+      "material": "Brushed silver · Iridescent foil",
+      "background": {
+        "light": "#CEDBDF",
+        "dark": "#34434D"
+      },
+      "reveal": "foil",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "ten",
+      "title": "Ten Moments",
+      "family": "Bible Moments",
+      "tier": 2,
+      "asset": "assets/achievements/ten.svg",
+      "material": "Teal enamel · Silver",
+      "background": {
+        "light": "#C5DEDC",
+        "dark": "#23434D"
+      },
+      "reveal": "foil",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "all",
+      "title": "Every Moment",
+      "family": "Bible Moments",
+      "tier": 4,
+      "asset": "assets/achievements/all.svg",
+      "material": "Brushed silver · Iridescent foil",
+      "background": {
+        "light": "#CEDBDF",
+        "dark": "#34434D"
+      },
+      "reveal": "foil",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "amen",
+      "title": "First Amen",
+      "family": "Prayer and questions",
+      "tier": 1,
+      "asset": "assets/achievements/amen.svg",
+      "material": "Sage enamel · Champagne",
+      "background": {
+        "light": "#D9DFC1",
+        "dark": "#3B5140"
+      },
+      "reveal": "bloom",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "honest",
+      "title": "Honest Answer",
+      "family": "Prayer and questions",
+      "tier": 1,
+      "asset": "assets/achievements/honest.svg",
+      "material": "Sage enamel · Champagne",
+      "background": {
+        "light": "#D9DFC1",
+        "dark": "#3B5140"
+      },
+      "reveal": "bloom",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "quiz",
+      "title": "Sharp Eye",
+      "family": "Prayer and questions",
+      "tier": 2,
+      "asset": "assets/achievements/quiz.svg",
+      "material": "Sage enamel · Champagne",
+      "background": {
+        "light": "#D9DFC1",
+        "dark": "#3B5140"
+      },
+      "reveal": "bloom",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "verse",
+      "title": "Your Verse",
+      "family": "Prayer and questions",
+      "tier": 2,
+      "asset": "assets/achievements/verse.svg",
+      "material": "Sage enamel · Champagne",
+      "background": {
+        "light": "#D9DFC1",
+        "dark": "#3B5140"
+      },
+      "reveal": "bloom",
+      "availability": "Existing achievement"
+    }
+  ]
+}

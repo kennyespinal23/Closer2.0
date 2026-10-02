@@ -139,6 +139,7 @@ export type OnboardingAnswers = {
    * Picked on the Profile tab; not required during onboarding.
    */
   avatarId?: string;
+  avatarPhotoUri?: string;
   /** Year of birth from /onboarding/about-you. */
   birthYear?: number;
   /** Sex from /onboarding/about-you. */

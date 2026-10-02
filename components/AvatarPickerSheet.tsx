@@ -47,6 +47,8 @@ export function AvatarPickerSheet({
 }: AvatarPickerSheetProps) {
   const colors = useColors();
   const { width: screenWidth } = useWindowDimensions();
+  const [gridWidth, setGridWidth] = useState<number | null>(null);
+  const [pressedClear, setPressedClear] = useState(false);
   const [draft, setDraft] = useState<string | undefined>(selectedId);
 
   useEffect(() => {
@@ -54,9 +56,9 @@ export function AvatarPickerSheet({
   }, [visible, selectedId]);
 
   const cellSize = useMemo(() => {
-    const inner = screenWidth - H_PAD * 2 - GRID_GAP * (COLS - 1);
+    const inner = (gridWidth ?? screenWidth - H_PAD * 2) - GRID_GAP * (COLS - 1);
     return Math.floor(inner / COLS);
-  }, [screenWidth]);
+  }, [screenWidth, gridWidth]);
 
   const handleConfirm = () => {
     if (draft && findAvatar(draft)) {
@@ -71,15 +73,16 @@ export function AvatarPickerSheet({
     <AppleSheet
       visible={visible}
       onClose={onClose}
-      detents={["auto", 1]}
-    >
-      <SheetModalHeader
+      detents={[0.75, 1]}
+      scrollable
+      header={<SheetModalHeader
         title="Choose avatar"
         cancelLabel="Cancel"
         saveLabel="Save"
         onCancel={onClose}
         onSave={handleConfirm}
-      />
+      />}
+    >
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: H_PAD,
@@ -89,6 +92,7 @@ export function AvatarPickerSheet({
         showsVerticalScrollIndicator={false}
       >
         <View
+          onLayout={event => setGridWidth(event.nativeEvent.layout.width)}
           style={{
             flexDirection: "row",
             flexWrap: "wrap",
@@ -134,16 +138,18 @@ export function AvatarPickerSheet({
             }}
             accessibilityRole="button"
             accessibilityLabel="Use initials instead of an avatar"
-            style={({ pressed }) => ({
+            onPressIn={() => setPressedClear(true)}
+            onPressOut={() => setPressedClear(false)}
+            style={{
               minHeight: minTouchTarget,
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 12,
               backgroundColor: colors.surfaceSecondary,
-              opacity: pressed ? 0.75 : 1,
+              opacity: pressedClear ? 0.75 : 1,
               borderWidth: draft == null ? 2 : StyleSheet.hairlineWidth,
               borderColor: draft == null ? colors.select : colors.border,
-            })}
+            }}
           >
             <Text
               style={{

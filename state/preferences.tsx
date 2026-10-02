@@ -1,3 +1,4 @@
+import { READING_LAYOUTS, type ReadingLayout } from "@/lib/readingLayout";
 import {
   createContext,
   useCallback,
@@ -153,6 +154,7 @@ export function findTextSize(id: TextSizeId): TextSize {
 // ─────────────────────────────────────────────────────────────────
 
 export type PreferencesState = {
+  readingLayout: ReadingLayout;
   translationId: TranslationId;
   textSizeId: TextSizeId;
   /**
@@ -177,6 +179,7 @@ export type PreferencesState = {
 type PreferencesContextValue = PreferencesState & {
   translation: Translation;
   textSize: TextSize;
+  setReadingLayout: (layout: ReadingLayout) => void;
   setTranslation: (id: TranslationId) => void;
   setTextSize: (id: TextSizeId) => void;
   setReduceMotionOverride: (value: boolean) => void;
@@ -186,6 +189,7 @@ type PreferencesContextValue = PreferencesState & {
 };
 
 const DEFAULT: PreferencesState = {
+  readingLayout: "pages",
   translationId: "web",
   textSizeId: "default",
   reduceMotionOverride: false,
@@ -216,6 +220,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     // "true" string) doesn't slip through and break Switch.
     const safeOverride = loaded.reduceMotionOverride === true;
     setState({
+      readingLayout: READING_LAYOUTS.some(l => l.id === loaded.readingLayout) ? loaded.readingLayout : "pages",
       translationId: safeTranslation,
       textSizeId: safeTextSize,
       reduceMotionOverride: safeOverride,
@@ -227,6 +232,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     state,
     applyLoaded,
   );
+
+  const setReadingLayout = useCallback((readingLayout: ReadingLayout) => { setState(s => ({ ...s, readingLayout })); }, []);
 
   const setTranslation = useCallback((id: TranslationId) => {
     setState((s) => ({ ...s, translationId: id }));
@@ -250,6 +257,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       ...state,
       translation: findTranslation(state.translationId),
       textSize: findTextSize(state.textSizeId),
+      setReadingLayout,
       setTranslation,
       setTextSize,
       setReduceMotionOverride,
@@ -258,6 +266,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     }),
     [
       state,
+      setReadingLayout,
       setTranslation,
       setTextSize,
       setReduceMotionOverride,

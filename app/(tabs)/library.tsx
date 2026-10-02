@@ -1,3 +1,7 @@
+import { tabContentClearance } from "@/lib/tabContentClearance";
+import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
+import Animated from 'react-native-reanimated';
+import { useTabContentFade } from '@/lib/useTabContentFade';
 import { LibraryGuidedPath } from "@/components/LibraryGuidedPath";
 import { LibraryBookCover } from "@/components/LibraryBookcase";
 import { getBookTheme } from "@/constants/bookBlurbs";
@@ -93,6 +97,7 @@ function BibleLibrary() {
   const canvasRef = useRef<View>(null);
   const openingRef = useRef(false);
   const reducedOpening = useReducedMotion();
+  const tabContentStyle = useTabContentFade(reducedOpening);
   const snapshotRef = useRef<string | undefined>(undefined);
   const captureTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const captureVersion = useRef(0);
@@ -138,6 +143,7 @@ function BibleLibrary() {
   // context is a different React.createContext and throws/returns
   // unrelated values under our native TabView shell.
   const measuredTabBarHeight = useBottomTabBarHeight();
+  const focusSpacing = useFocusMiniPlayerSpacing();
   const [libraryMode, setLibraryMode] = useState<"browse" | "guided">("browse");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const viewChanged = useRef(false);
@@ -161,18 +167,7 @@ function BibleLibrary() {
   const { lastVisited, hasReadChapter } = useProgress();
 
 
-  // Native scenes ignoreSafeArea under the floating Liquid Glass
-  // bar, so scroll content must clear the measured bar height.
-  // Measured frame ≥70 already includes the home-indicator band
-  // (runtime on iPhone 17 Pro Max: bar=83); shorter reports are
-  // content-only and need insets.bottom added.
-  const tabClearance =
-    measuredTabBarHeight > 0
-      ? measuredTabBarHeight >= 70
-        ? measuredTabBarHeight
-        : measuredTabBarHeight + insets.bottom
-      : TAB_BAR_CONTENT_FALLBACK + insets.bottom;
-  const scrollBottomPad = tabClearance + spacing[24];
+  const scrollBottomPad = tabContentClearance(measuredTabBarHeight, insets.bottom, focusSpacing);
 
   const collection = COLLECTIONS.find(item => item.id === collectionId) ?? COLLECTIONS[0];
   const availableCollections = COLLECTIONS.filter(item => item.id === "all" || BOOKS.some(book => book.testament === filter && item.categories.includes(book.category)));
@@ -199,7 +194,7 @@ function BibleLibrary() {
     // surface fills; cards and search sit on solid dark chrome.
     <SafeAreaView ref={canvasRef} onLayout={cacheShelf} collapsable={false} className="flex-1" style={{ backgroundColor: colors.bg }} edges={["top"]}>
       <LibraryAtmosphere />
-      <ScrollView onScrollBeginDrag={cancelShelfCapture} onMomentumScrollBegin={cancelShelfCapture} onScrollEndDrag={cacheShelf} onMomentumScrollEnd={cacheShelf}
+      <Animated.ScrollView style={tabContentStyle} onScrollBeginDrag={cancelShelfCapture} onMomentumScrollBegin={cancelShelfCapture} onScrollEndDrag={cacheShelf} onMomentumScrollEnd={cacheShelf}
         contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{
           paddingBottom: scrollBottomPad,
@@ -271,7 +266,7 @@ function BibleLibrary() {
           <LibraryBookcase books={filteredBooks} onPick={pickBook} onSettled={cacheShelf} />
         )}
         </>}
-      </ScrollView>
+      </Animated.ScrollView>
       {/* Fresh input and results before presentation; onShow runs too late to reset them. */}
       <LibraryDoors replay={doorReplay} />
       <BibleSearch key={searchSession} visible={searchOpen} onClose={() => setSearchOpen(false)} onPick={book => {

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ReaderNativeButton } from "@/components/ReaderNativeButton";
 import { Pressable, Text, View } from "react-native";
 import { systemText } from "@/lib/typography";
+import { sheetText, sheetSpace } from "@/lib/sheetStyles";
 import { useColors } from "@/state/theme";
 
 /** Balanced Cancel / title / Save row — equal side columns keep
@@ -39,7 +40,7 @@ export function SheetModalHeader({
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 16,
-        paddingTop: 20,
+        paddingTop: sheetSpace.top,
         paddingBottom: 16,
         minHeight: 44,
       }}
@@ -64,7 +65,7 @@ export function SheetModalHeader({
         <Text
           numberOfLines={1}
           style={[
-            systemText.headline,
+            sheetText.navigationTitle,
             {
               fontWeight: "700",
               color: colors.ink,

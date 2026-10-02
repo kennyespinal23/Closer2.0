@@ -1,0 +1,317 @@
+{
+  "status": "prototype",
+  "badges": [
+    {
+      "id": "letters-1",
+      "title": "First Letter",
+      "family": "Letters",
+      "description": "A little room for God. A beginning worth keeping.",
+      "background": {
+        "light": "#f4c9ab",
+        "dark": "#683444"
+      },
+      "material": "Sculpted enamel · rose rim",
+      "asset": "letters-1.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "letters-7",
+      "title": "Seven Letters",
+      "family": "Letters",
+      "description": "A week of words to carry with you.",
+      "background": {
+        "light": "#d6f4f0",
+        "dark": "#293c48"
+      },
+      "material": "Sculpted enamel · rose rim",
+      "asset": "letters-7.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "letters-30",
+      "title": "Thirty Letters",
+      "family": "Letters",
+      "description": "Thirty quiet moments, written into your story.",
+      "background": {
+        "light": "#f2d3ed",
+        "dark": "#442840"
+      },
+      "material": "Sculpted enamel · gold rim",
+      "asset": "letters-30.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "letters-100",
+      "title": "A Hundred Letters",
+      "family": "Letters",
+      "description": "A hundred invitations to draw closer.",
+      "background": {
+        "light": "#ffd7b5",
+        "dark": "#402a23"
+      },
+      "material": "Sculpted enamel · silver rim",
+      "asset": "letters-100.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "streak-1",
+      "title": "Lit the Match",
+      "family": "Streaks",
+      "description": "You made a start. Keep that spark.",
+      "background": {
+        "light": "#ffdad0",
+        "dark": "#34292d"
+      },
+      "material": "Sculpted enamel · rose rim",
+      "asset": "streak-1.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "streak-7",
+      "title": "Seven Days",
+      "family": "Streaks",
+      "description": "Seven days of keeping your light alive.",
+      "background": {
+        "light": "#f4d899",
+        "dark": "#614127"
+      },
+      "material": "Sculpted enamel · gold rim",
+      "asset": "streak-7.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "streak-30",
+      "title": "Thirty Days",
+      "family": "Streaks",
+      "description": "One faithful step after another.",
+      "background": {
+        "light": "#d7c9f2",
+        "dark": "#373465"
+      },
+      "material": "Sculpted enamel · silver rim",
+      "asset": "streak-30.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "streak-100",
+      "title": "A Hundred Days",
+      "family": "Streaks",
+      "description": "A steady light, a hundred days strong.",
+      "background": {
+        "light": "#e3edb5",
+        "dark": "#23372c"
+      },
+      "material": "Sculpted enamel · gold rim",
+      "asset": "streak-100.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "chapter",
+      "title": "Turned the Page",
+      "family": "Reading",
+      "description": "One chapter. One step closer.",
+      "background": {
+        "light": "#eee8ff",
+        "dark": "#37323f"
+      },
+      "material": "Sculpted enamel · silver rim",
+      "asset": "chapter.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "highlight",
+      "title": "First Highlight",
+      "family": "Reading",
+      "description": "A few words you wanted to keep.",
+      "background": {
+        "light": "#fff2ab",
+        "dark": "#3c3320"
+      },
+      "material": "Sculpted enamel · gold rim",
+      "asset": "highlight.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "note",
+      "title": "First Note",
+      "family": "Reading",
+      "description": "You made room for your own reflection.",
+      "background": {
+        "light": "#c6f1e2",
+        "dark": "#203d3a"
+      },
+      "material": "Sculpted enamel · rose rim",
+      "asset": "note.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "listener",
+      "title": "Listener",
+      "family": "Reading",
+      "description": "Reserved for when Bible recordings arrive.",
+      "background": {
+        "light": "#ddd1ff",
+        "dark": "#292344"
+      },
+      "material": "Sculpted enamel · silver rim",
+      "asset": "listener.svg",
+      "availability": "Reserved until recordings are available"
+    },
+    {
+      "id": "genesis",
+      "title": "In the Beginning",
+      "family": "Reading",
+      "description": "The first book. A whole world opened.",
+      "background": {
+        "light": "#bfdfe0",
+        "dark": "#1b4050"
+      },
+      "material": "Sculpted enamel · gold rim",
+      "asset": "genesis.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "express",
+      "title": "Express Lane",
+      "family": "Reading",
+      "description": "A shorter read. A bigger picture.",
+      "background": {
+        "light": "#ffe0af",
+        "dark": "#3d2821"
+      },
+      "material": "Sculpted enamel · gold rim",
+      "asset": "express.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "law",
+      "title": "The Law",
+      "family": "Reading",
+      "description": "The first five books, read and remembered.",
+      "background": {
+        "light": "#e5ebef",
+        "dark": "#343a43"
+      },
+      "material": "Sculpted enamel · silver rim",
+      "asset": "law.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "bible",
+      "title": "Every Word",
+      "family": "Reading",
+      "description": "All sixty-six books. One unfolding story.",
+      "background": {
+        "light": "#d3e8d0",
+        "dark": "#233e37"
+      },
+      "material": "Sculpted enamel · gold rim",
+      "asset": "bible.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "moment",
+      "title": "First Moment",
+      "family": "Bible Moments",
+      "description": "Your first discovery, yours to keep.",
+      "background": {
+        "light": "#c2f6ff",
+        "dark": "#1e3c46"
+      },
+      "material": "Sculpted enamel · silver rim",
+      "asset": "moment.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "garden",
+      "title": "Garden Set",
+      "family": "Bible Moments",
+      "description": "Every Genesis moment, gathered together.",
+      "background": {
+        "light": "#c9dfc9",
+        "dark": "#254b43"
+      },
+      "material": "Sculpted enamel · silver rim",
+      "asset": "garden.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "ten",
+      "title": "Ten Moments",
+      "family": "Bible Moments",
+      "description": "Ten discoveries along the way.",
+      "background": {
+        "light": "#ffe8b0",
+        "dark": "#443428"
+      },
+      "material": "Sculpted enamel · silver rim",
+      "asset": "ten.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "all",
+      "title": "Every Moment",
+      "family": "Bible Moments",
+      "description": "Every moment, gathered in one collection.",
+      "background": {
+        "light": "#f5e7ff",
+        "dark": "#363341"
+      },
+      "material": "Sculpted enamel · silver rim",
+      "asset": "all.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "amen",
+      "title": "First Amen",
+      "family": "Prayer",
+      "description": "A quiet prayer. A new beginning.",
+      "background": {
+        "light": "#d1ddf3",
+        "dark": "#293e62"
+      },
+      "material": "Sculpted enamel · silver rim",
+      "asset": "amen.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "honest",
+      "title": "Honest Answer",
+      "family": "Prayer",
+      "description": "You showed up just as you are.",
+      "background": {
+        "light": "#ffdae5",
+        "dark": "#42263a"
+      },
+      "material": "Sculpted enamel · rose rim",
+      "asset": "honest.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "quiz",
+      "title": "Sharp Eye",
+      "family": "Prayer",
+      "description": "Five answers. A little more understanding.",
+      "background": {
+        "light": "#d3e9ff",
+        "dark": "#24364b"
+      },
+      "material": "Sculpted enamel · silver rim",
+      "asset": "quiz.svg",
+      "availability": "Existing achievement"
+    },
+    {
+      "id": "verse",
+      "title": "Your Verse",
+      "family": "Prayer",
+      "description": "Words that feel like home.",
+      "background": {
+        "light": "#e9f0c7",
+        "dark": "#323d26"
+      },
+      "material": "Sculpted enamel · gold rim",
+      "asset": "verse.svg",
+      "availability": "Existing achievement"
+    }
+  ]
+}

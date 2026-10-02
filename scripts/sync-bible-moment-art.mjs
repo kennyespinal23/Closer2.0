@@ -19,7 +19,7 @@ const generated=rows.filter(r=>r.status.startsWith('generated'));
 const exists=async p=>fs.access(p).then(()=>true,()=>false);
 await fs.mkdir(path.join(dir,'original'),{recursive:true});
 async function dimensions(file){const {stdout}=await exec('sips',['-g','pixelWidth','-g','pixelHeight',file]);const w=Number(stdout.match(/pixelWidth:\s*(\d+)/)?.[1]),h=Number(stdout.match(/pixelHeight:\s*(\d+)/)?.[1]);if(!w||!h)throw new Error('Image could not be decoded');return {w,h};}
-async function validate(file){const bytes=await fs.readFile(file);if(!bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))throw new Error('Not a PNG');const {w,h}=await dimensions(file);if(w<=h||Math.abs(w/h-1.5)>.15)throw new Error(`Expected landscape approximately 3:2, got ${w}x${h}`);}
+async function validate(file){const bytes=await fs.readFile(file);if(!bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))throw new Error('Not a PNG');const {w,h}=await dimensions(file);if(w>=h||Math.abs(w/h-.75)>.015)throw new Error(`Expected uncropped 3:4 portrait, got ${w}x${h}`);}
 const failures=[];
 const queue=generated.filter(r=>!only||only.has(r.id));
 await Promise.all(Array.from({length:4},async()=>{while(queue.length){const row=queue.shift();const original=path.join(dir,'original',row.id+'.png'),out=path.join(dir,row.id+'.jpg'),tmp=original+'.download',jpgTmp=out+'.tmp.jpg';try{
@@ -29,7 +29,7 @@ await Promise.all(Array.from({length:4},async()=>{while(queue.length){const row=
   const {stdout}=await exec('curl',['--fail','--silent','--show-error','--max-time','90','--proto','=https','--write-out','%{http_code}',url.href,'-o',tmp]);
   if(stdout!=='200')throw new Error(`HTTP ${stdout}`);await validate(tmp);await fs.rename(tmp,original);
  }else await validate(original);
- if(force||!await exists(out)){const {w}=await dimensions(original);await exec('sips',['-s','format','jpeg','-s','formatOptions','85','--resampleWidth',String(Math.min(1200,w)),original,'--out',jpgTmp]);await dimensions(jpgTmp);await fs.rename(jpgTmp,out);}else await dimensions(out);
+ if(force||!await exists(out)){await exec('sips',['-s','format','jpeg','-s','formatOptions','85','--resampleWidth',String(1200),original,'--out',jpgTmp]);await dimensions(jpgTmp);await fs.rename(jpgTmp,out);}else await dimensions(out);
  console.log(`OK ${row.id}`);
  }catch(error){failures.push(`${row.id}: ${error.message}`);}finally{await fs.rm(tmp,{force:true});await fs.rm(jpgTmp,{force:true});}
 }}));

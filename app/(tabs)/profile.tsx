@@ -1,3 +1,7 @@
+import { ProfileAudioPreview } from "@/components/audio/ProfileAudioPlayer";
+import { ProfileJourney, PROFILE_PALETTE } from "@/components/ProfileJourney";
+import { BibleMomentReveal, type BibleRevealKind } from "@/components/BibleMomentReveal";
+import { useTabContentFade } from '@/lib/useTabContentFade';
 import { ReaderMaterialGradient } from "@/components/ReaderMaterialGradient";
 import { ProfileVerse } from "@/components/ProfileVerse";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -9,14 +13,16 @@ import { contentText, contentLayout } from "@/lib/contentStyles";
 import { ProfileProgress } from "@/components/ProfileProgress";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, type Href } from "expo-router";
 import { Image } from "expo-image";
 import { SFSymbol } from "@/components/Symbol";
 import { ReaderTutorial } from "@/components/ReaderTutorial";
 import { BibleIntroScreen } from "@/components/BibleIntroScreen";
-import { AvatarPickerSheet } from "@/components/AvatarPickerSheet";
-import { TAB_BAR_TOTAL_HEIGHT } from "@/components/GlassTabBar";
+import { ProfilePhotoSheet } from "@/components/ProfilePhotoSheet";
+import { useBottomTabBarHeight } from "react-native-bottom-tabs";
+import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
+import { tabContentClearance } from "@/lib/tabContentClearance";
 import {
   SettingsInfoBanner,
   SettingsLinkRow,
@@ -67,10 +73,14 @@ const AVATAR_SIZE = 82;
 
 /** Personal identity, progress, and collected artwork. */
 export default function ProfileTabScreen() {
+  const insets = useSafeAreaInsets();
+  const tabHeight = useBottomTabBarHeight();
+  const focusSpacing = useFocusMiniPlayerSpacing();
   const router = useRouter();
   const reduced = useReducedMotion();
   const [savedTab, setSavedTab] = useState(0);
   const [savedExpanded, setSavedExpanded] = useState(false);
+  const [verseExpanded, setVerseExpanded] = useState(false);
   const scheme = useResolvedScheme();
   const { answers, setAnswer } = useOnboarding();
   const { allNotes, allHighlights, counts: annotationCounts } =
@@ -93,7 +103,9 @@ export default function ProfileTabScreen() {
   const { streak } = useProgress();
   const colors = useColors();
   const { pref: themePref } = useTheme();
+  const [revealPreview, setRevealPreview] = useState<BibleRevealKind | null>(null);
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const [audioPreview, setAudioPreview] = useState(false);
   const [readerTutorialOpen, setReaderTutorialOpen] = useState(false);
   const [bibleIntroPreviewOpen, setBibleIntroPreviewOpen] = useState(false);
   const quoteCount = allHomeQuotes().length;
@@ -242,41 +254,32 @@ export default function ProfileTabScreen() {
     );
   };
 
+  const tabContentStyle = useTabContentFade(reduced);
+
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.bg, overflow: "hidden" }}
+      style={{ flex: 1, backgroundColor: PROFILE_PALETTE[scheme].bg, overflow: "hidden" }}
       edges={["top"]}
     >
-      <SkyGradient />
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: TAB_BAR_TOTAL_HEIGHT + 24 }}
+
+      <Animated.ScrollView
+        style={[{ flex: 1 }, tabContentStyle]}
+        contentContainerStyle={{ paddingBottom: tabContentClearance(tabHeight, insets.bottom, focusSpacing) }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ paddingHorizontal: contentLayout.gutter, paddingTop: 8, paddingBottom: 24, gap: 24 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text accessibilityRole="header" style={[contentText.title, { color: colors.inkMuted }]}>Profile</Text>
-            <ReaderNativeButton label="Settings" symbol="gearshape" onPress={() => navigateTo("/settings")} />
-          </View>
-          <Animated.View entering={reduced ? undefined : FadeInDown.springify().damping(18)} style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Change profile avatar" onPress={() => setAvatarPickerOpen(true)} style={{ width: AVATAR_SIZE + 12, height: AVATAR_SIZE + 24, padding: 6, paddingBottom: 18, transform: [{ rotate: "-5deg" }], borderRadius: 3, backgroundColor: "#FFF9EE", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-              {selectedAvatar ? <Image source={selectedAvatar.source} contentFit="cover" style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }} /> : <ReaderMaterialGradient colors={["#86BDE9", "#FFD9A8", "#FFB06A"]} style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, alignItems: "center", justifyContent: "center" }}><Text style={[systemText.title1, { color: "#30241D" }]}>{firstName.charAt(0).toUpperCase()}</Text></ReaderMaterialGradient>}
-            </Pressable>
-            <View style={{ flex: 1, gap: 6 }}>
-              <Text style={[systemText.largeTitle, { color: colors.ink, textAlign: "left" }]}>{firstName}</Text>
-              {joinedLabel && <Text style={[contentText.metadata, { color: colors.inkMuted }]}>{joinedLabel}</Text>}
-            </View>
-          </Animated.View>
+        <ProfileJourney name={firstName} joined={joinedLabel} avatar={answers.avatarPhotoUri ? {uri: answers.avatarPhotoUri} : selectedAvatar?.source} onAvatar={() => setAvatarPickerOpen(true)} onSettings={() => navigateTo("/settings")} />
+        <View style={{ marginHorizontal: 21, marginTop: 20 }}>
+          <Pressable accessibilityRole="button" accessibilityState={{ expanded: verseExpanded }} onPress={() => setVerseExpanded(!verseExpanded)} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <SFSymbol name="text.quote" size={20} color={colors.ink} />
+            <Text style={{ fontSize: 15, fontWeight: "600", color: colors.ink, flex: 1 }}>Your profile verse</Text>
+            <SFSymbol name={verseExpanded ? "chevron.up" : "chevron.down"} size={12} color={colors.inkMuted} />
+          </Pressable>
         </View>
-
-        <ProfileVerse />
-        <ProfileProgress />
-
-        <ProfileCollectionShelf />
-        <View style={{ marginHorizontal: contentLayout.gutter, marginTop: 32, gap: 16 }}>
+        {verseExpanded && <ProfileVerse />}
+        <View style={{ marginHorizontal: contentLayout.gutter, marginTop: 4, gap: 16 }}>
           <Pressable accessibilityRole="button" accessibilityState={{ expanded: savedExpanded }} onPress={() => setSavedExpanded(!savedExpanded)} style={{ minHeight: 52, flexDirection: "row", alignItems: "center", gap: 12 }}>
             <SFSymbol name="bookmark" size={22} color={colors.ink} />
-            <Text style={[contentText.title, { color: colors.ink, flex: 1 }]}>Saved for you</Text>
+            <Text style={[{ fontSize: 15, fontWeight: "600", color: colors.ink, flex: 1 }]}>Saved for you</Text>
             <SFSymbol name={savedExpanded ? "chevron.up" : "chevron.down"} size={14} color={colors.inkMuted} />
           </Pressable>
           {savedExpanded && <SegmentedControl appearance={scheme} values={["Devotionals", "Highlights", "Notes"]} selectedIndex={savedTab} onChange={event => setSavedTab(event.nativeEvent.selectedSegmentIndex)} style={{ height: 44 }} />}
@@ -361,21 +364,23 @@ export default function ProfileTabScreen() {
 
         </>}
 
-        <View style={{ marginHorizontal: 20, marginTop: 28 }}>
-          <SettingsSection title="Settings">
-            <SettingsLinkRow label="Daily letter reminder" onPress={() => navigateTo("/settings/notifications")} showDivider />
-            <SettingsLinkRow label="App breaks" onPress={() => navigateTo("/settings/study-sessions")} showDivider />
-            <SettingsLinkRow label="Bible translation" onPress={() => navigateTo("/settings/translation")} showDivider />
-            <SettingsLinkRow label="Appearance" value={appearanceValue} onPress={() => navigateTo("/settings/appearance")} showDivider />
-            <SettingsLinkRow label="Help and feedback" onPress={() => navigateTo("/settings/help")} showDivider />
-            <SettingsLinkRow label="All settings" onPress={() => navigateTo("/settings")} />
-          </SettingsSection>
+        <View style={{ marginHorizontal: 21, marginTop: 12 }}>
+          <SettingsSection><SettingsLinkRow label="Settings & preferences" icon={<SFSymbol name="gearshape" size={20} color={colors.ink}/>} onPress={() => navigateTo("/settings")} /></SettingsSection>
+          <Text style={{ fontFamily: "Georgia", fontSize: 13, textAlign: "center", color: colors.inkMuted, marginVertical: 26 }}>Small beginnings. A meaningful journey.</Text>
         </View>
         {showDevShortcuts ? (
           <SettingsSection
             title="Developer"
             footer="Internal QA only. Reset and Restart wipe every provider on disk — progress, notes, focus sessions, reminders — then route to a fresh entry."
           >
+            <SettingsLinkRow label="Preview audio player" sublabel="Compact bar & expanded controls · No audio" onPress={() => setAudioPreview(true)} showDivider />
+            {([
+              ['moment', 'Preview Moment reveal'],
+              ['silver', 'Preview silver foil reveal'],
+              ['old-gold', 'Preview Old Testament gold'],
+              ['new-gold', 'Preview New Testament gold'],
+              ['crown', 'Preview whole Bible Crown'],
+            ] as const).map(([kind, label]) => <SettingsLinkRow key={kind} icon={<SFSymbol name="sparkles" size={16} color={colors.ink}/>} label={label} sublabel="More particles · Does not change progress" onPress={() => setRevealPreview(kind)} showDivider />)}
             <SettingsLinkRow
               icon={<SFSymbol name="book" size={16} color={colors.ink} />}
               label="Preview Bible intro"
@@ -539,26 +544,16 @@ export default function ProfileTabScreen() {
           </SettingsSection>
         ) : null}
 
-      </ScrollView>
+      </Animated.ScrollView>
 
+      {showDevShortcuts && revealPreview && <BibleMomentReveal preview request={{ kind: revealPreview, bookId: "genesis" }} onClose={() => setRevealPreview(null)} />}
       {readerTutorialOpen && <ReaderTutorial preview onClose={() => setReaderTutorialOpen(false)} />}
       {showDevShortcuts && bibleIntroPreviewOpen ? (
         <BibleIntroScreen onComplete={() => setBibleIntroPreviewOpen(false)} />
       ) : null}
 
-      <AvatarPickerSheet
-        visible={avatarPickerOpen}
-        selectedId={answers.avatarId}
-        onSelect={(id) => {
-          haptics.tick();
-          setAnswer("avatarId", id);
-        }}
-        onClear={() => {
-          haptics.tick();
-          setAnswer("avatarId", undefined);
-        }}
-        onClose={() => setAvatarPickerOpen(false)}
-      />
+      {showDevShortcuts && audioPreview && <ProfileAudioPreview bottom={tabHeight + 12 + focusSpacing} onClose={() => setAudioPreview(false)} />}
+      <ProfilePhotoSheet visible={avatarPickerOpen} onClose={() => setAvatarPickerOpen(false)} />
     </SafeAreaView>
   );
 }

@@ -1,7 +1,7 @@
 import { MomentCollectibleFront } from "./MomentCollectible";
 import { contentText, contentLayout } from "@/lib/contentStyles";
 import { type ReactNode, useRef, useState } from "react";
-import { Modal, ScrollView, FlatList, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { ScrollView, FlatList, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import { useRouter, type Href } from "expo-router";
 import { Host, ContextMenu, Button as NativeButton } from "@expo/ui/swift-ui";
@@ -10,7 +10,7 @@ import { BIBLE_MOMENTS, MOMENT_CATEGORIES, type BibleMoment, type MomentCategory
 import { getBookCover } from "@/constants/bookCovers";
 import { useBibleMomentCollection, hydrateBibleMoments } from "@/state/bibleMoments";
 import { useColors, useResolvedScheme } from "@/state/theme";
-import { ReaderMomentDetail } from "@/components/ReaderMomentCardBox";
+import { BibleMomentReveal } from "@/components/BibleMomentReveal";
 import { MomentBookFoil } from "@/components/MomentBookFoil";
 import { findBookById } from "@/constants/books";
 import { SFSymbol } from "@/components/Symbol";
@@ -87,8 +87,8 @@ export function BibleMomentsCollection({ standalone = false, initialCategory = "
       contentContainerStyle={{ paddingHorizontal: contentLayout.gutter, paddingTop: 12, paddingBottom: 32 }} showsVerticalScrollIndicator={false} initialNumToRender={6} maxToRenderPerBatch={6} windowSize={5} /> : <>
       {header}<FlatList ref={list} horizontal data={ready ? moments : []} key={`${view}:${filter}`} keyExtractor={moment => moment.id} renderItem={renderCard} ListEmptyComponent={empty} contentContainerStyle={{ gap: 12 }} showsHorizontalScrollIndicator={false} />{badges}
     </>}
-    <Modal visible={!!open} transparent animationType="none" onRequestClose={() => setOpen(null)}>{open && <ReaderMomentDetail moment={open} onClose={() => setOpen(null)} />}</Modal>
-    <Modal visible={!!foil} transparent animationType="fade" onRequestClose={() => setFoil(null)}><View style={{ flex: 1, backgroundColor: "#000000CC", alignItems: "center", justifyContent: "center", gap: 24 }}>{foil && <MomentBookFoil name={findBookById(foil)?.name ?? "Book"} earned width={220} />}<Pressable accessibilityRole="button" onPress={() => setFoil(null)} style={{ padding: 18, minWidth: 160, backgroundColor: "white", borderRadius: 26, alignItems: "center" }}><Text style={{ color: "#202B3D", fontSize: 17, fontWeight: "600" }}>Done</Text></Pressable></View></Modal>
+    {open && <BibleMomentReveal autoPlay request={{kind:'moment',moment:open}} onClose={() => setOpen(null)} />}
+    {foil && <BibleMomentReveal request={{kind:'silver',bookId:foil}} onClose={() => setFoil(null)} />}
   </View>;
 }
 

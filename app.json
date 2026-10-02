@@ -74,6 +74,14 @@
           "appleTeamId": "7ZKDS4X5B9",
           "appGroup": "group.com.espinalcapital.closer"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose a profile photo for Closer.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {

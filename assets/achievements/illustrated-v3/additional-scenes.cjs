@@ -1,0 +1,26 @@
+// Filled enamel illustrations. One object, or one object and a supporting symbol.
+const path=(d,fill='pink',stroke='#ffe5cd')=>`<path d="${d}" fill="url(#${fill})" stroke="${stroke}" stroke-width="2" stroke-linejoin="round"/>`;
+const line=(d,c='#95788c',w=3)=>`<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
+const envelope=path('M80 112H220V207H80Z')+line('M82 114L150 166L218 114M82 205L126 165M218 205L174 165');
+const book=path('M71 113Q111 93 150 117Q189 93 229 113V217Q187 196 150 220Q111 196 71 217Z','green','#8ed5b6')+path('M78 105Q117 92 150 113Q183 92 222 105V204Q184 189 150 211Q116 189 78 204Z')+line('M150 115V209M90 130Q113 121 136 133M90 146Q113 137 136 149M164 133Q187 121 210 130M164 149Q187 137 210 146');
+const sparkle=path('M150 108Q155 137 180 150Q156 158 150 190Q143 161 120 150Q144 137 150 108Z','fire');
+module.exports={
+ bundle:envelope+path('M135 112H162V209H135Z','blue','#bfc9fa')+path('M149 126C94 113 121 83 149 120C175 81 208 112 149 126Z','blue','#bfc9fa'),
+ scroll:path('M94 90H214Q192 107 199 126L188 211H86Q108 195 104 175L117 111H93Q78 104 94 90Z')+line('M131 120H181M128 141H179M125 162H166')+path('M139 179H169V239L154 229L139 239Z','fire'),
+ mailbox:path('M86 133Q86 98 119 98H178Q211 98 211 133V200H86Z','blue','#bacdfc')+path('M86 133Q86 98 119 98Q152 99 152 133V200H86Z','green','#a7e4c7')+line('M109 149H130','#daf3dc',5)+path('M185 113V79H216V104H192V146H185Z','pink')+line('M147 202V237','#d9bf91',12),
+ match:line('M116 223L161 150','#edc48f',15)+path('M165 81C174 105 193 116 184 139C176 158 151 158 144 138C136 120 157 105 165 81Z','fire'),
+ lantern:path('M114 110H186L203 209H97Z','blue','#c2dcf7')+path('M123 116H177L185 198H114Z','fire')+path('M112 96H189V112H112ZM94 207H207V223H94Z','green','#b0d9b1')+line('M122 95V84Q150 58 178 84V95','#e4c181',8),
+ page:path('M101 79H177L208 111V224H101Z')+path('M177 79V113H208Z','fire')+line('M120 140H188M120 160H188M120 180H167'),
+ highlight:path('M80 137H211V215H80Z')+line('M97 158H181M97 178H159')+path('M125 182L154 181L217 105L192 84L131 158Z','fire')+path('M125 182L131 158L154 181Z','blue','#bdd6ff'),
+ note:path('M90 88H211V187L169 226H90Z','fire')+path('M169 226V187H211Z')+line('M111 115H188M111 138H176M111 161H156','#b77c66'),
+ audio:line('M97 163V137C97 67 206 67 206 137V163','#b9cffe',17)+path('M81 149Q81 137 95 137H114V201H95Q81 201 81 188Z','blue','#b9cffe')+path('M189 137H208Q222 137 222 151V188Q222 201 208 201H189Z','blue','#b9cffe')+line('M132 153V179M151 141V192M170 153V179','#f0c9a7',6),
+ express:path('M167 72L102 158H146L128 231L214 126H164Z','fire'),
+ tablets:path('M76 120Q76 85 112 85Q148 85 148 120V223H76Z','blue','#c4d8fc')+path('M155 120Q155 85 190 85Q226 85 226 120V223H155Z','pink')+line('M94 129H129M94 151H129M94 174H121M172 129H208M172 151H208M172 174H200'),
+ bible:book+path('M142 61H157V76H173V89H157V105H142V89H128V76H142Z','fire'),
+ moment:path('M97 83H203Q214 83 214 95V226H97Z','blue','#c2d4fe')+sparkle,
+ ten:path('M82 109L168 88L197 216L111 237Z','green','#bde9c3')+path('M124 82L217 101L191 227L99 208Z','blue','#bfd9ff')+`<g transform="translate(33 35) scale(.78)">${sparkle}</g>`,
+ collection:path('M88 94Q88 85 99 85H206Q218 85 218 97V221H88Z','blue','#dce5ff')+path('M88 97H110V221H88Z','green','#c8e5d6')+path('M151 113Q159 140 184 152Q159 160 151 190Q144 162 122 152Q144 138 151 113Z','pink')+line('M97 114V200','#eef3fa',3),
+ heart:path('M150 219C118 192 76 169 83 129C89 91 132 90 150 120C171 88 216 94 220 130C225 167 184 199 150 219Z','pink'),
+ eye:path('M68 151Q150 77 234 151Q150 229 68 151Z','pink')+`<circle cx="151" cy="152" r="36" fill="url(#blue)" stroke="#b7d0f8" stroke-width="2"/>`+line('M133 151L146 164L172 137','#fff0cd',7),
+ verse:book+path('M182 104H201V181L192 174L182 181Z','fire')
+};

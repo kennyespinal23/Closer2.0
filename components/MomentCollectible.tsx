@@ -30,13 +30,13 @@ export function MomentCollectibleFront({ moment, compact = false, onBook }: { mo
     <View style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}><ReaderMomentArt moment={moment} /></View>
     <Svg pointerEvents="none" width="100%" height="100%" style={{ position: "absolute", top: 0, left: 0 }}><Defs><LinearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%"><Stop offset="0.38" stopColor="#071D17" stopOpacity={0} /><Stop offset="0.65" stopColor="#071D17" stopOpacity={.45} /><Stop offset="1" stopColor="#071D17" stopOpacity={.97} /></LinearGradient></Defs><Rect width="100%" height="100%" fill={`url(#${gradientId})`} /></Svg>
     <View style={{ position: "absolute", bottom: compact ? 10 : 20, left: compact ? 10 : 22, right: compact ? 10 : 22, gap: 12 }}>
-      <Text numberOfLines={compact ? 3 : undefined} style={{ color: "#FFFAF0", fontSize: compact ? 14 : 28, lineHeight: compact ? 17 : 32, fontWeight: "700", letterSpacing: -.4 }}>{moment.title}</Text>
+      {compact && <Text numberOfLines={2} style={{ color: "#FFFAF0", fontSize: 14, lineHeight: 17, fontWeight: "600" }}>{name}</Text>}
       {!compact && (onBook ? <Pressable accessibilityRole="button" accessibilityLabel={`Open ${name}`} onPress={onBook} style={{ alignSelf: "center", minHeight: 44, justifyContent: "center", maxWidth: "100%" }}>{badge}</Pressable> : <View style={{ alignSelf: "center", maxWidth: "100%" }}>{badge}</View>)}
     </View>
   </View>;
 }
 
-export function MomentCollectibleDetail({ moment, source, onClose }: { moment: BibleMoment; source?: { x: number; y: number; width: number; height: number }; onClose: () => void }) {
+export function MomentCollectibleDetail({ moment, source, onClose, embedded = false }: { moment: BibleMoment; embedded?: boolean; source?: { x: number; y: number; width: number; height: number }; onClose: () => void }) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets(), reduced = useReducedMotion(), router = useRouter();
   const { dark } = useMomentPaper();
@@ -105,7 +105,7 @@ export function MomentCollectibleDetail({ moment, source, onClose }: { moment: B
   const backdropStyle = useAnimatedStyle(() => ({ opacity: entry.value }));
   const face = { position: "absolute" as const, top: 0, bottom: 0, left: 0, right: 0, borderRadius: 22, borderCurve: "continuous" as const, borderWidth: 1, borderColor: "#D9C9A788", overflow: "hidden" as const, backgroundColor: dark ? "#302626" : "#FFF7ED", boxShadow: "0 14px 26px #00000044, 0 2px 0 #A3987C" };
   const ink = dark ? "#FAF6E9" : "#213A2B", muted = dark ? "#BECEC0" : "#4B6150";
-  return <Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={dismiss}><GestureHandlerRootView style={{ flex: 1 }}><View accessibilityViewIsModal style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, zIndex: 10 }}>
+  const content=<GestureHandlerRootView style={{ flex: 1 }}><View accessibilityViewIsModal style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, zIndex: 10 }}>
     <Animated.View style={[{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }, backdropStyle]}><Pressable accessibilityRole="button" accessibilityLabel="Close Moment" onPress={dismiss} style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, }}><SkyGradient /></Pressable></Animated.View>
     <View style={{ position: "absolute", top: insets.top + 8, left: 24, right: 24, flexDirection: "row", justifyContent: "space-between" }}>
       <MomentControl label="Close Moment" symbol="xmark" onPress={dismiss} />
@@ -130,7 +130,8 @@ export function MomentCollectibleDetail({ moment, source, onClose }: { moment: B
       </Animated.View>
     </Animated.View>
     <Pressable accessibilityRole="button" onPress={turn} style={{ position: "absolute", top: y + h + 24, alignSelf: "center", minHeight: 48, paddingHorizontal: 24, borderRadius: 24, borderCurve: "continuous", backgroundColor: dark ? "#EEE8D6" : "#213A2B", alignItems: "center", justifyContent: "center", opacity: 1 }}><Text style={{ ...systemText.headline, color: dark ? "#30362A" : "#FFFFFF" }}>{back ? "Return to artwork" : "Read the meaning"}</Text></Pressable>
-  </View></GestureHandlerRootView></Modal>;
+  </View></GestureHandlerRootView>;
+  return embedded?content:<Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={dismiss}>{content}</Modal>;
 }
 
 function MomentControl({ label, symbol, onPress }: { label: string; symbol: "xmark" | "square.and.arrow.up"; onPress: () => void }) {

@@ -1,0 +1,1263 @@
+[
+  {
+    "id": "creation",
+    "bookId": "genesis",
+    "chapter": 1,
+    "verse": 1,
+    "endVerse": 1,
+    "title": "In the beginning",
+    "event": "Creation",
+    "reference": "Genesis 1:1",
+    "importance": "God makes the sky, the land, animals, and people. He calls His creation good. Our world is a gift, and we have a part in caring for it.",
+    "happened": "In the beginning, God created the heavens and the earth.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "fall",
+    "bookId": "genesis",
+    "chapter": 3,
+    "verse": 6,
+    "endVerse": 6,
+    "title": "A broken world",
+    "event": "The Fall",
+    "reference": "Genesis 3:6",
+    "importance": "Adam and Eve turn away from God's command. Their choice brings shame and pain. The story that follows shows God reaching out to a broken world.",
+    "happened": "When the woman saw that the tree was good for food, and that it was a delight to the eyes, and that the tree was to be desired to make one wise, she took some of its fruit, and ate; and she gave some to her husband with her, and he ate it, too.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "covering-shame",
+    "bookId": "genesis",
+    "chapter": 3,
+    "verse": 21,
+    "endVerse": 21,
+    "title": "Covering the shame",
+    "event": "Covering the Shame",
+    "reference": "Genesis 3:21",
+    "importance": "God makes clothes for Adam and Eve after they sin. Even when they have done wrong, He cares for them. Their failure does not end His care.",
+    "happened": "Yahweh God made coats of animal skins for Adam and for his wife, and clothed them.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "rainbow-covenant",
+    "bookId": "genesis",
+    "chapter": 9,
+    "verse": 13,
+    "endVerse": 13,
+    "title": "A promise after the storm",
+    "event": "Noah's Flood / Rainbow Promise",
+    "reference": "Genesis 9:13",
+    "importance": "After the flood, God gives the rainbow as a sign of His promise. He will never again destroy all life with a flood. The rainbow points to His care for the earth.",
+    "happened": "I set my rainbow in the cloud, and it will be a sign of a covenant between me and the earth.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "babel",
+    "bookId": "genesis",
+    "chapter": 11,
+    "verse": 9,
+    "endVerse": 9,
+    "title": "One language becomes many",
+    "event": "The Tower of Babel",
+    "reference": "Genesis 11:9",
+    "importance": "People build a city and tower to make a great name for themselves. God mixes up their language, and they spread out. Their plan reminds us how pride can pull people away from God.",
+    "happened": "Therefore its name was called Babel, because there Yahweh confused the language of all the earth. From there, Yahweh scattered them abroad on the surface of all the earth.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "abraham-called",
+    "bookId": "genesis",
+    "chapter": 12,
+    "verse": 2,
+    "endVerse": 2,
+    "title": "One family, one plan",
+    "event": "The Call of Abraham",
+    "reference": "Genesis 12:2",
+    "importance": "God calls Abraham to leave home and trust Him. He promises to bless other families through him. One person's step of faith becomes part of a much bigger story.",
+    "happened": "I will make of you a great nation. I will bless you and make your name great. You will be a blessing.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "joseph-sold",
+    "bookId": "genesis",
+    "chapter": 37,
+    "verse": 28,
+    "endVerse": 28,
+    "title": "Bad turns into good",
+    "event": "Joseph Sold by His Brothers",
+    "reference": "Genesis 37:28",
+    "importance": "Joseph's brothers sell him as a slave. Much later, he helps save his family from hunger. Their cruel choice was wrong, but it did not stop God from bringing good.",
+    "happened": "Midianites who were merchants passed by, and they drew and lifted up Joseph out of the pit, and sold Joseph to the Ishmaelites for twenty pieces of silver. They brought Joseph into Egypt.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "exodus",
+    "bookId": "exodus",
+    "chapter": 14,
+    "verse": 21,
+    "endVerse": 21,
+    "title": "God sets His people free",
+    "event": "The Exodus",
+    "reference": "Exodus 14:21",
+    "importance": "God makes a path through the sea so His people can escape slavery. They walk toward freedom where there seemed to be no way. This rescue becomes a story they remember for years.",
+    "happened": "Moses stretched out his hand over the sea, and Yahweh caused the sea to go back by a strong east wind all night, and made the sea dry land, and the waters were divided.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "first-passover",
+    "bookId": "exodus",
+    "chapter": 12,
+    "verse": 13,
+    "endVerse": 13,
+    "title": "A night that changes everything",
+    "event": "The First Passover",
+    "reference": "Exodus 12:13",
+    "importance": "God tells His people to mark their doors with blood from a lamb. It is a sign that their homes will be spared. They remember this night as the start of their rescue from Egypt.",
+    "happened": "The blood shall be to you for a token on the houses where you are: and when I see the blood, I will pass over you, and there shall no plague be on you to destroy you, when I strike the land of Egypt.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "ten-commandments",
+    "bookId": "exodus",
+    "chapter": 20,
+    "verse": 3,
+    "endVerse": 3,
+    "title": "Rules to live by",
+    "event": "The Ten Commandments",
+    "reference": "Exodus 20:3",
+    "importance": "God gives His people commands about how to live. They teach love for God and care for others. Freedom comes with the call to treat people well.",
+    "happened": "“You shall have no other gods before me.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "elijah-fire",
+    "bookId": "1-kings",
+    "chapter": 18,
+    "verse": 38,
+    "endVerse": 38,
+    "title": "Fire falls from the sky",
+    "event": "Elijah and the Fire",
+    "reference": "1 Kings 18:38",
+    "importance": "Elijah asks God to answer him, and fire falls on the offering. The people see God's power. They are called to turn back to Him.",
+    "happened": "Then Yahweh’s fire fell, and consumed the burnt offering, the wood, the stones, and the dust, and licked up the water that was in the trench.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "jerusalem-falls",
+    "bookId": "2-kings",
+    "chapter": 25,
+    "verse": 9,
+    "endVerse": 9,
+    "title": "The lowest point",
+    "event": "Jerusalem Falls",
+    "reference": "2 Kings 25:9",
+    "importance": "An army burns Jerusalem and the temple. God's people lose their home and face deep grief. Even this painful loss is not the end of their story.",
+    "happened": "He burned Yahweh’s house, the king’s house, and all the houses of Jerusalem, even every great house, he burned with fire.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "david-everlasting-kingdom",
+    "bookId": "2-samuel",
+    "chapter": 7,
+    "verse": 12,
+    "endVerse": 13,
+    "title": "A king forever",
+    "event": "God's Promise to David",
+    "reference": "2 Samuel 7:12-13",
+    "importance": "God promises David a kingdom that will last. Christians see this promise fulfilled in Jesus, who comes from David's family. It gives hope in a King whose rule will never end.",
+    "happened": "When your days are fulfilled, and you sleep with your fathers, I will set up your offspring after you, who will proceed out of your body, and I will establish his kingdom. He will build a house for my name, and I will establish the throne of his kingdom forever.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points",
+      "prophecy"
+    ]
+  },
+  {
+    "id": "mary-annunciation",
+    "bookId": "luke",
+    "chapter": 1,
+    "verse": 31,
+    "endVerse": 31,
+    "title": "A baby is promised",
+    "event": "The Angel Visits Mary",
+    "reference": "Luke 1:31",
+    "importance": "An angel tells Mary she will have a son named Jesus. God invites her into a plan much bigger than she knows. She chooses to trust Him.",
+    "happened": "Behold, you will conceive in your womb, and give birth to a son, and will call his name ‘Jesus.’",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "jesus-born",
+    "bookId": "luke",
+    "chapter": 2,
+    "verse": 7,
+    "endVerse": 7,
+    "title": "God becomes a person",
+    "event": "Jesus Is Born",
+    "reference": "Luke 2:7",
+    "importance": "Jesus is born and laid in a manger. His story begins in a humble place, far from a palace. Christians believe God came close to us through Him.",
+    "happened": "She gave birth to her firstborn son. She wrapped him in bands of cloth, and laid him in a feeding trough, because there was no room for them in the inn.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "jesus-baptized",
+    "bookId": "matthew",
+    "chapter": 3,
+    "verse": 17,
+    "endVerse": 17,
+    "title": "God speaks up",
+    "event": "Jesus Is Baptized",
+    "reference": "Matthew 3:17",
+    "importance": "After Jesus is baptized, a voice from heaven calls Him God's beloved Son. This moment shows who He is as His public work begins.",
+    "happened": "Behold, a voice out of the heavens said, “This is my beloved Son, with whom I am well pleased.”",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "sermon-mount",
+    "bookId": "matthew",
+    "chapter": 5,
+    "verse": 3,
+    "endVerse": 3,
+    "title": "A new way to live",
+    "event": "The Sermon on the Mount",
+    "reference": "Matthew 5:3",
+    "importance": "Jesus calls the poor in spirit blessed. His teaching gives hope to people who feel small or broken. Life with God is not about looking powerful.",
+    "happened": "“Blessed are the poor in spirit,\nfor theirs is the Kingdom of Heaven.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "transfiguration",
+    "bookId": "matthew",
+    "chapter": 17,
+    "verse": 2,
+    "endVerse": 2,
+    "title": "Jesus shows who He really is",
+    "event": "Jesus Shines Bright",
+    "reference": "Matthew 17:2",
+    "importance": "Jesus shines with light before three of His friends. They catch a glimpse of His glory. God tells them to listen to Him.",
+    "happened": "He was transfigured before them. His face shone like the sun, and his garments became as white as the light.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "last-supper",
+    "bookId": "luke",
+    "chapter": 22,
+    "verse": 19,
+    "endVerse": 19,
+    "title": "A meal with meaning",
+    "event": "The Last Supper",
+    "reference": "Luke 22:19",
+    "importance": "Jesus shares bread with His friends and tells them to remember Him. The meal points to His life given for them. Christians still share this meal to remember His love.",
+    "happened": "He took bread, and when he had given thanks, he broke, and gave it to them, saying,\n“This is my body which is given for you. Do this in memory of me.”",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "gethsemane",
+    "bookId": "luke",
+    "chapter": 22,
+    "verse": 42,
+    "endVerse": 42,
+    "title": "Jesus says yes anyway",
+    "event": "Jesus Prays in the Garden",
+    "reference": "Luke 22:42",
+    "importance": "Jesus prays in deep pain before His death. He asks His Father for another way, yet trusts His will. We can bring our fear and hard choices to God too.",
+    "happened": "saying,\n“Father, if you are willing, remove this cup from me. Nevertheless, not my will, but yours, be done.”",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "crucifixion",
+    "bookId": "john",
+    "chapter": 19,
+    "verse": 30,
+    "endVerse": 30,
+    "title": "It is finished",
+    "event": "Jesus Dies on the Cross",
+    "reference": "John 19:30",
+    "importance": "Jesus says His work is finished and gives up His life. Christians see the cross as God's great act of love and rescue. His death stands at the heart of their hope.",
+    "happened": "When Jesus therefore had received the vinegar, he said,\n“It is finished.” He bowed his head, and gave up his spirit.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "resurrection",
+    "bookId": "matthew",
+    "chapter": 28,
+    "verse": 6,
+    "endVerse": 6,
+    "title": "He's alive",
+    "event": "Jesus Comes Back to Life",
+    "reference": "Matthew 28:6",
+    "importance": "The women come to Jesus' tomb and hear that He has risen. Death has not won. The resurrection is at the heart of Christian faith and hope.",
+    "happened": "He is not here, for he has risen, just like he said. Come, see the place where the Lord was lying.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "ascension",
+    "bookId": "acts",
+    "chapter": 1,
+    "verse": 9,
+    "endVerse": 9,
+    "title": "Jesus goes home",
+    "event": "Jesus Goes to Heaven",
+    "reference": "Acts 1:9",
+    "importance": "Jesus is taken up as His friends watch. He has promised the Holy Spirit will help them. Their work of sharing His good news is about to begin.",
+    "happened": "When he had said these things, as they were looking, he was taken up, and a cloud received him out of their sight.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "pentecost",
+    "bookId": "acts",
+    "chapter": 2,
+    "verse": 4,
+    "endVerse": 4,
+    "title": "God's Spirit comes",
+    "event": "The Holy Spirit Comes",
+    "reference": "Acts 2:4",
+    "importance": "The Holy Spirit fills Jesus' followers. They begin speaking in other languages so people can hear God's great works. The good news reaches beyond one nation.",
+    "happened": "They were all filled with the Holy Spirit, and began to speak with other languages, as the Spirit gave them the ability to speak.",
+    "category": "turning-points",
+    "tags": [
+      "turning-points"
+    ]
+  },
+  {
+    "id": "first-promise",
+    "bookId": "genesis",
+    "chapter": 3,
+    "verse": 15,
+    "endVerse": 15,
+    "title": "Hope after the fall",
+    "event": "The First Promise",
+    "reference": "Genesis 3:15",
+    "importance": "Right after sin enters the story, God speaks of evil being defeated. Christians see the first hint of Jesus' victory here. Hope begins even in a moment of loss.",
+    "happened": "I will put hostility between you and the woman,\nand between your offspring and her offspring.\nHe will bruise your head,\nand you will bruise his heel.”",
+    "category": "prophecy",
+    "tags": [
+      "prophecy"
+    ]
+  },
+  {
+    "id": "bronze-snake",
+    "bookId": "numbers",
+    "chapter": 21,
+    "verse": 9,
+    "endVerse": 9,
+    "title": "Look and live",
+    "event": "The Bronze Snake",
+    "reference": "Numbers 21:9",
+    "importance": "God tells Moses to raise a bronze snake, and those who look at it live. Jesus later uses this picture to speak of His own death. It points people toward trust in Him.",
+    "happened": "Moses made a serpent of brass, and set it on the pole. If a serpent had bitten any man, when he looked at the serpent of brass, he lived.",
+    "category": "prophecy",
+    "tags": [
+      "prophecy"
+    ]
+  },
+  {
+    "id": "prophet-like-moses",
+    "bookId": "deuteronomy",
+    "chapter": 18,
+    "verse": 15,
+    "endVerse": 15,
+    "title": "God will speak again",
+    "event": "A Prophet Like Moses",
+    "reference": "Deuteronomy 18:15",
+    "importance": "Moses tells the people that God will raise up a prophet like him. They should listen. Jesus' followers later connect this promise with Him.",
+    "happened": "Yahweh your God will raise up to you a prophet from among you, of your brothers, like me. You shall listen to him.",
+    "category": "prophecy",
+    "tags": [
+      "prophecy"
+    ]
+  },
+  {
+    "id": "priest-king",
+    "bookId": "genesis",
+    "chapter": 14,
+    "verse": 18,
+    "endVerse": 18,
+    "title": "A king and a priest",
+    "event": "The Priest-King",
+    "reference": "Genesis 14:18",
+    "importance": "Melchizedek meets Abraham as both a king and a priest of God. Later, the Bible uses him to help explain Jesus' role. Jesus rules and brings people close to God.",
+    "happened": "Melchizedek king of Salem brought out bread and wine: and he was priest of God Most High.",
+    "category": "prophecy",
+    "tags": [
+      "prophecy"
+    ]
+  },
+  {
+    "id": "psalm-22",
+    "bookId": "psalms",
+    "chapter": 22,
+    "verse": 16,
+    "endVerse": 18,
+    "title": "Pain written in a psalm",
+    "event": "Details Written Early",
+    "reference": "Psalm 22:16-18",
+    "importance": "This psalm describes deep pain and people dividing someone's clothes. The Gospel writers connect it with Jesus' death. Christians hear both suffering and hope in its words.",
+    "happened": "For dogs have surrounded me.\nA company of evildoers have enclosed me.\nThey have pierced my hands and feet. I can count all of my bones.\nThey look and stare at me. They divide my garments among them.\nThey cast lots for my clothing.",
+    "category": "prophecy",
+    "tags": [
+      "prophecy"
+    ]
+  },
+  {
+    "id": "promised-child",
+    "bookId": "isaiah",
+    "chapter": 9,
+    "verse": 6,
+    "endVerse": 6,
+    "title": "A child who brings peace",
+    "event": "A Child Already Named",
+    "reference": "Isaiah 9:6",
+    "importance": "Isaiah tells of a child who will rule with justice and peace. Christians connect these names with Jesus. The promise offers hope when life feels dark.",
+    "happened": "For to us a child is born. To us a son is given; and the government will be on his shoulders. His name will be called Wonderful, Counselor, Mighty God, Everlasting Father, Prince of Peace.",
+    "category": "prophecy",
+    "tags": [
+      "prophecy"
+    ]
+  },
+  {
+    "id": "suffering-servant",
+    "bookId": "isaiah",
+    "chapter": 53,
+    "verse": 5,
+    "endVerse": 5,
+    "title": "He carries our pain",
+    "event": "Suffering for Others",
+    "reference": "Isaiah 53:5",
+    "importance": "Isaiah tells of a servant who suffers for the wrong things others have done. Christians see Jesus in this passage. His love shows that God does not turn away from our pain.",
+    "happened": "But he was pierced for our transgressions.\nHe was crushed for our iniquities.\nThe punishment that brought our peace was on him;\nand by his wounds we are healed.",
+    "category": "prophecy",
+    "tags": [
+      "prophecy",
+      "turning-points"
+    ]
+  },
+  {
+    "id": "bethlehem-ruler",
+    "bookId": "micah",
+    "chapter": 5,
+    "verse": 2,
+    "endVerse": 2,
+    "title": "Great hope from a small town",
+    "event": "Born in a Small Town",
+    "reference": "Micah 5:2",
+    "importance": "Micah names Bethlehem as the home of a coming ruler. Jesus is later born there. A place that seems small can have a big part in God's story.",
+    "happened": "But you, Bethlehem Ephrathah,\nbeing small among the clans of Judah,\nout of you one will come out to me that is to be ruler in Israel;\nwhose goings out are from of old, from ancient times.",
+    "category": "prophecy",
+    "tags": [
+      "prophecy"
+    ]
+  },
+  {
+    "id": "humble-king",
+    "bookId": "zechariah",
+    "chapter": 9,
+    "verse": 9,
+    "endVerse": 9,
+    "title": "A king on a donkey",
+    "event": "A King on a Donkey",
+    "reference": "Zechariah 9:9",
+    "importance": "Zechariah describes a humble king riding a donkey. Jesus enters Jerusalem this way. His kind of power looks different from an army marching to war.",
+    "happened": "Rejoice greatly, daughter of Zion!\nShout, daughter of Jerusalem!\nBehold, your King comes to you!\nHe is righteous, and having salvation;\nlowly, and riding on a donkey,\neven on a colt, the foal of a donkey.",
+    "category": "prophecy",
+    "tags": [
+      "prophecy"
+    ]
+  },
+  {
+    "id": "thirty-silver",
+    "bookId": "zechariah",
+    "chapter": 11,
+    "verse": 12,
+    "endVerse": 13,
+    "title": "Thirty pieces of silver",
+    "event": "Thirty Pieces of Silver",
+    "reference": "Zechariah 11:12-13",
+    "importance": "Zechariah writes about a shepherd's pay of thirty silver pieces. Matthew later connects this passage with Judas and Jesus. It is a painful picture of a shepherd being rejected.",
+    "happened": "I said to them, “If you think it best, give me my wages; and if not, keep them.” So they weighed for my wages thirty pieces of silver. Yahweh said to me, “Throw it to the potter, the handsome price that I was valued at by them!” I took the thirty pieces of silver, and threw them to the potter, in Yahweh’s house.",
+    "category": "prophecy",
+    "tags": [
+      "prophecy"
+    ]
+  },
+  {
+    "id": "pierced-mourned",
+    "bookId": "zechariah",
+    "chapter": 12,
+    "verse": 10,
+    "endVerse": 10,
+    "title": "Grief and a changed heart",
+    "event": "Pierced and Mourned",
+    "reference": "Zechariah 12:10",
+    "importance": "Zechariah describes people mourning for one who was pierced. John's Gospel connects this with Jesus. The passage invites sorrow over wrong and a return to God.",
+    "happened": "I will pour on David’s house, and on the inhabitants of Jerusalem, the spirit of grace and of supplication; and they will look to me whom they have pierced; and they shall mourn for him, as one mourns for his only son, and will grieve bitterly for him, as one grieves for his firstborn.",
+    "category": "prophecy",
+    "tags": [
+      "prophecy"
+    ]
+  },
+  {
+    "id": "jonah-three-days",
+    "bookId": "jonah",
+    "chapter": 1,
+    "verse": 17,
+    "endVerse": 17,
+    "title": "Three days in the dark",
+    "event": "Three Days in the Dark",
+    "reference": "Jonah 1:17",
+    "importance": "Jonah spends three days in a great fish. Jesus later points to Jonah as a sign of His own death and rising. What looks like the end can become a new beginning.",
+    "happened": "Yahweh prepared a great fish to swallow up Jonah, and Jonah was in the belly of the fish three days and three nights.",
+    "category": "prophecy",
+    "tags": [
+      "prophecy"
+    ]
+  },
+  {
+    "id": "good-samaritan",
+    "bookId": "luke",
+    "chapter": 10,
+    "verse": 33,
+    "endVerse": 34,
+    "title": "Help from someone unexpected",
+    "event": "The Good Samaritan",
+    "reference": "Luke 10:33-34",
+    "importance": "Two people pass a wounded man, but a Samaritan stops to care for him. Jesus teaches that being a neighbor means showing mercy. Love crosses the lines people draw.",
+    "happened": "But a certain Samaritan, as he traveled, came where he was. When he saw him, he was moved with compassion, came to him, and bound up his wounds, pouring on oil and wine. He set him on his own animal, and brought him to an inn, and took care of him.",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "prodigal-son",
+    "bookId": "luke",
+    "chapter": 15,
+    "verse": 20,
+    "endVerse": 20,
+    "title": "Coming home with nothing",
+    "event": "The Prodigal Son",
+    "reference": "Luke 15:20",
+    "importance": "A son wastes his money and returns home ashamed. His father runs to welcome him. Jesus uses this story to show the joy of welcoming someone who was lost.",
+    "happened": "“He arose, and came to his father. But while he was still far off, his father saw him, and was moved with compassion, and ran, and fell on his neck, and kissed him.",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "widow-offering",
+    "bookId": "mark",
+    "chapter": 12,
+    "verse": 42,
+    "endVerse": 44,
+    "title": "Two tiny coins",
+    "event": "The Widow's Offering",
+    "reference": "Mark 12:42-44",
+    "importance": "A widow gives two small coins, all she has to live on. Jesus notices her gift. Its value is not just the amount, but how much she gives of herself.",
+    "happened": "A poor widow came, and she cast in two small brass coins, which equal a quadrans coin. He called his disciples to himself, and said to them,\n“Most certainly I tell you, this poor widow gave more than all those who are giving into the treasury, for they all gave out of their abundance, but she, out of her poverty, gave all that she had to live on.”",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "lost-sheep",
+    "bookId": "luke",
+    "chapter": 15,
+    "verse": 4,
+    "endVerse": 4,
+    "title": "Looking for the one",
+    "event": "The Lost Sheep",
+    "reference": "Luke 15:4",
+    "importance": "A shepherd searches for one lost sheep. Jesus uses this story to show God's joy when someone turns back to Him. No person is too small to matter.",
+    "happened": "“Which of you men, if you had one hundred sheep, and lost one of them, wouldn’t leave the ninety-nine in the wilderness, and go after the one that was lost, until he found it?",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "feeding-five-thousand",
+    "bookId": "john",
+    "chapter": 6,
+    "verse": 11,
+    "endVerse": 11,
+    "title": "One small lunch",
+    "event": "Feeding the 5,000",
+    "reference": "John 6:11",
+    "importance": "Jesus feeds a huge crowd with bread and fish from a boy's lunch. There is even food left over. A small gift becomes part of His care for many people.",
+    "happened": "Jesus took the loaves; and having given thanks, he distributed to the disciples, and the disciples to those who were sitting down; likewise also of the fish as much as they desired.",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "two-builders",
+    "bookId": "matthew",
+    "chapter": 7,
+    "verse": 24,
+    "endVerse": 27,
+    "title": "Same storm, different ground",
+    "event": "The Wise and Foolish Builders",
+    "reference": "Matthew 7:24-27",
+    "importance": "One builder uses rock and another uses sand. Only one house stands when the storm comes. Jesus says hearing His words and living them is like building on rock.",
+    "happened": "“Everyone therefore who hears these words of mine, and does them, I will liken him to a wise man, who built his house on a rock. The rain came down, the floods came, and the winds blew, and beat on that house; and it didn’t fall, for it was founded on the rock. Everyone who hears these words of mine, and doesn’t do them will be like a foolish man, who built his house on the sand. The rain came down, the floods came, and the winds blew, and beat on that house; and it fell—and great was its fall.”",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "vineyard-workers",
+    "bookId": "matthew",
+    "chapter": 20,
+    "verse": 9,
+    "endVerse": 10,
+    "title": "A generous gift",
+    "event": "The Workers in the Vineyard",
+    "reference": "Matthew 20:9-10",
+    "importance": "Workers hired late receive the same pay as those who worked all day. Jesus challenges their view of what is fair. God's generosity is not something we earn by being first.",
+    "happened": "“When those who were hired at about the eleventh hour came, they each received a denarius. When the first came, they supposed that they would receive more; and they likewise each received a denarius.",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "unforgiving-servant",
+    "bookId": "matthew",
+    "chapter": 18,
+    "verse": 32,
+    "endVerse": 33,
+    "title": "Learning to forgive",
+    "event": "The Unforgiving Servant",
+    "reference": "Matthew 18:32-33",
+    "importance": "A man is freed from a huge debt but refuses to forgive a small one. Jesus calls His followers to show others the mercy they have received.",
+    "happened": "Then his lord called him in, and said to him, ‘You wicked servant! I forgave you all that debt, because you begged me. Shouldn’t you also have had mercy on your fellow servant, even as I had mercy on you?’",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "mary-martha",
+    "bookId": "luke",
+    "chapter": 10,
+    "verse": 41,
+    "endVerse": 42,
+    "title": "Making room to listen",
+    "event": "Mary and Martha",
+    "reference": "Luke 10:41-42",
+    "importance": "Martha is busy serving while Mary listens to Jesus. Jesus invites Martha out of worry. Caring for others matters, and so does making room to be with Him.",
+    "happened": "Jesus answered her,\n“Martha, Martha, you are anxious and troubled about many things, but one thing is needed. Mary has chosen the good part, which will not be taken away from her.”",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "rich-young-ruler",
+    "bookId": "mark",
+    "chapter": 10,
+    "verse": 21,
+    "endVerse": 22,
+    "title": "The thing he cannot let go",
+    "event": "The Rich Young Ruler",
+    "reference": "Mark 10:21-22",
+    "importance": "Jesus loves a rich man and invites him to give to the poor and follow Him. The man walks away sad. The story asks what we hold more tightly than God.",
+    "happened": "Jesus looking at him loved him, and said to him,\n“One thing you lack. Go, sell whatever you have, and give to the poor, and you will have treasure in heaven; and come, follow me, taking up the cross.” But his face fell at that saying, and he went away sorrowful, for he was one who had great possessions.",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "ten-bridesmaids",
+    "bookId": "matthew",
+    "chapter": 25,
+    "verse": 10,
+    "endVerse": 13,
+    "title": "Ready for the moment",
+    "event": "The Ten Bridesmaids",
+    "reference": "Matthew 25:10-13",
+    "importance": "Some bridesmaids bring extra oil for their lamps, while others do not. Jesus uses their story to teach watchfulness. Following Him includes being ready, even when the wait is long.",
+    "happened": "While they went away to buy, the bridegroom came, and those who were ready went in with him to the marriage feast, and the door was shut. Afterward the other virgins also came, saying, ‘Lord, Lord, open to us.’ But he answered, ‘Most certainly I tell you, I don’t know you.’ Watch therefore, for you don’t know the day nor the hour in which the Son of Man is coming.",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "vine-branches",
+    "bookId": "john",
+    "chapter": 15,
+    "verse": 5,
+    "endVerse": 5,
+    "title": "Stay connected",
+    "event": "The Vine and Branches",
+    "reference": "John 15:5",
+    "importance": "Jesus calls Himself the vine and His followers the branches. Branches need the vine to grow fruit. We need to stay close to Him as we learn to love and live well.",
+    "happened": "I am the vine. You are the branches. He who remains in me, and I in him, the same bears much fruit, for apart from me you can do nothing.",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "washing-feet",
+    "bookId": "john",
+    "chapter": 13,
+    "verse": 14,
+    "endVerse": 15,
+    "title": "The leader who serves",
+    "event": "Washing Feet",
+    "reference": "John 13:14-15",
+    "importance": "Jesus washes His friends' feet, doing a servant's task. He asks them to care for one another in the same way. Greatness can look like humble service.",
+    "happened": "If I then, the Lord and the Teacher, have washed your feet, you also ought to wash one another’s feet. For I have given you an example, that you also should do as I have done to you.",
+    "category": "lessons",
+    "tags": [
+      "lessons"
+    ]
+  },
+  {
+    "id": "zacchaeus",
+    "bookId": "luke",
+    "chapter": 19,
+    "verse": 5,
+    "endVerse": 6,
+    "title": "Seen in the crowd",
+    "event": "Zacchaeus",
+    "reference": "Luke 19:5-6",
+    "importance": "Jesus notices Zacchaeus in a tree and goes to his home. A man others reject is welcomed. That welcome helps lead him toward a changed life.",
+    "happened": "When Jesus came to the place, he looked up and saw him, and said to him,\n“Zacchaeus, hurry and come down, for today I must stay at your house.” He hurried, came down, and received him joyfully.",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "woman-forgiven",
+    "bookId": "john",
+    "chapter": 8,
+    "verse": 10,
+    "endVerse": 11,
+    "title": "A second chance",
+    "event": "The Woman Caught in Sin",
+    "reference": "John 8:10-11",
+    "importance": "A woman faces a crowd ready to condemn her. Jesus sends her away without condemning her and calls her to leave sin behind. Mercy opens a path toward change.",
+    "happened": "Jesus, standing up, saw her and said,\n“Woman, where are your accusers? Did no one condemn you?” She said, “No one, Lord.”\nJesus said,\n“Neither do I condemn you. Go your way. From now on, sin no more.”",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "woman-well",
+    "bookId": "john",
+    "chapter": 4,
+    "verse": 17,
+    "endVerse": 18,
+    "title": "Known and still welcomed",
+    "event": "The Woman at the Well",
+    "reference": "John 4:17-18",
+    "importance": "Jesus knows the truth about a woman's life and keeps talking with her. He offers her living water. Being fully known does not put her beyond His care.",
+    "happened": "The woman answered, “I have no husband.”\nJesus said to her,\n“You said well, ‘I have no husband,’ for you have had five husbands; and he whom you now have is not your husband. This you have said truly.”",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "peter-called",
+    "bookId": "luke",
+    "chapter": 5,
+    "verse": 10,
+    "endVerse": 10,
+    "title": "A new calling",
+    "event": "Peter Is Called",
+    "reference": "Luke 5:10",
+    "importance": "Jesus tells Peter not to be afraid and gives him a new calling. The fisherman leaves his nets to follow. An ordinary life becomes part of sharing good news.",
+    "happened": "and so also were James and John, sons of Zebedee, who were partners with Simon.\nJesus said to Simon,\n“Don’t be afraid. From now on you will be catching people alive.”",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "matthew-called",
+    "bookId": "matthew",
+    "chapter": 9,
+    "verse": 9,
+    "endVerse": 9,
+    "title": "Called from the tax booth",
+    "event": "Matthew the Tax Collector",
+    "reference": "Matthew 9:9",
+    "importance": "Jesus sees Matthew at work and says, Follow me. Matthew gets up and follows. His past and his unpopular job do not keep Jesus from calling him.",
+    "happened": "As Jesus passed by from there, he saw a man called Matthew sitting at the tax collection office. He said to him,\n“Follow me.” He got up and followed him.",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "thomas",
+    "bookId": "john",
+    "chapter": 20,
+    "verse": 27,
+    "endVerse": 29,
+    "title": "Room for honest doubt",
+    "event": "Doubting Thomas",
+    "reference": "John 20:27-29",
+    "importance": "Thomas struggles to believe Jesus is alive. Jesus meets him and shows His wounds. He also blesses those who trust Him without seeing Him in person.",
+    "happened": "Then he said to Thomas,\n“Reach here your finger, and see my hands. Reach here your hand, and put it into my side. Don’t be unbelieving, but believing.” Thomas answered him, “My Lord and my God!” Jesus said to him,\n“Because you have seen me,\nyou have believed. Blessed are those who have not seen, and have believed.”",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "thief-cross",
+    "bookId": "luke",
+    "chapter": 23,
+    "verse": 42,
+    "endVerse": 43,
+    "title": "Remember me",
+    "event": "The Thief on the Cross",
+    "reference": "Luke 23:42-43",
+    "importance": "A dying man asks Jesus to remember him. Jesus promises he will be with Him in paradise. The moment shows mercy reaching someone with nothing left to offer.",
+    "happened": "He said to Jesus, “Lord, remember me when you come into your Kingdom.” Jesus said to him,\n“Assuredly I tell you, today you will be with me in Paradise.”",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "saul-conversion",
+    "bookId": "acts",
+    "chapter": 9,
+    "verse": 3,
+    "endVerse": 4,
+    "title": "An enemy becomes a follower",
+    "event": "Saul Meets Jesus",
+    "reference": "Acts 9:3-4",
+    "importance": "Saul is on his way to arrest Jesus' followers when a bright light stops him. Jesus speaks to him, and his life changes. The man who hurt the church becomes a man who shares its good news.",
+    "happened": "As he traveled, he got close to Damascus, and suddenly a light from the sky shone around him. He fell on the earth, and heard a voice saying to him,\n“Saul, Saul, why do you persecute me?”",
+    "category": "changed",
+    "tags": [
+      "changed",
+      "turning-points"
+    ]
+  },
+  {
+    "id": "bleeding-woman",
+    "bookId": "mark",
+    "chapter": 5,
+    "verse": 29,
+    "endVerse": 29,
+    "title": "Twelve years of waiting",
+    "event": "The Bleeding Woman",
+    "reference": "Mark 5:29",
+    "importance": "A woman who has been sick for years touches Jesus' clothes and is healed. Jesus notices her and speaks with care. Her pain has not made her invisible to Him.",
+    "happened": "Immediately the flow of her blood was dried up, and she felt in her body that she was healed of her affliction.",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "nicodemus",
+    "bookId": "john",
+    "chapter": 3,
+    "verse": 3,
+    "endVerse": 3,
+    "title": "A fresh start",
+    "event": "Nicodemus",
+    "reference": "John 3:3",
+    "importance": "A teacher named Nicodemus comes to Jesus at night. Jesus tells him he must be born again. Life with God means more than a good name or knowing the rules.",
+    "happened": "Jesus answered him,\n“Most certainly, I tell you, unless one is born anew,\n\nhe can’t see God’s Kingdom.”",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "mary-magdalene",
+    "bookId": "john",
+    "chapter": 20,
+    "verse": 16,
+    "endVerse": 16,
+    "title": "He says her name",
+    "event": "Mary Magdalene",
+    "reference": "John 20:16",
+    "importance": "Mary is crying near the empty tomb when Jesus calls her by name. She knows who He is. Her grief turns to joy, and she carries the news to His friends.",
+    "happened": "Jesus said to her,\n“Mary.”\nShe turned and said to him, “Rabboni!” which is to say, “Teacher!”",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "centurion-faith",
+    "bookId": "matthew",
+    "chapter": 8,
+    "verse": 8,
+    "endVerse": 8,
+    "title": "Just say the word",
+    "event": "The Centurion's Faith",
+    "reference": "Matthew 8:8",
+    "importance": "An officer trusts that Jesus can heal his servant with a word. Jesus praises his faith. Trust in Him can come from people others do not expect.",
+    "happened": "The centurion answered, “Lord, I’m not worthy for you to come under my roof. Just say the word, and my servant will be healed.",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "man-born-blind",
+    "bookId": "john",
+    "chapter": 9,
+    "verse": 25,
+    "endVerse": 25,
+    "title": "Now I can see",
+    "event": "The Man Born Blind",
+    "reference": "John 9:25",
+    "importance": "A man healed by Jesus is asked many questions. He does not know every answer, but he knows he can see. His own story becomes a simple, brave witness.",
+    "happened": "He therefore answered, “I don’t know if he is a sinner. One thing I do know: that though I was blind, now I see.”",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "peter-restored",
+    "bookId": "john",
+    "chapter": 21,
+    "verse": 17,
+    "endVerse": 17,
+    "title": "A way back",
+    "event": "Peter's Denial and Restoration",
+    "reference": "John 21:17",
+    "importance": "Peter denied Jesus three times. Later, Jesus asks about his love and gives him work caring for His people. Failure does not have to be the end of his calling.",
+    "happened": "He said to him the third time,\n“Simon, son of Jonah, do you have affection for me?”\nPeter was grieved because he asked him the third time,\n“Do you have affection for me?” He said to him, “Lord, you know everything. You know that I have affection for you.”\nJesus said to him,\n“Feed my sheep.",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "grateful-leper",
+    "bookId": "luke",
+    "chapter": 17,
+    "verse": 15,
+    "endVerse": 16,
+    "title": "Coming back to say thanks",
+    "event": "The Samaritan Leper",
+    "reference": "Luke 17:15-16",
+    "importance": "Jesus heals ten men, but one returns to thank Him. The man is a Samaritan. His grateful response reminds us to notice the gifts we receive.",
+    "happened": "One of them, when he saw that he was healed, turned back, glorifying God with a loud voice. He fell on his face at Jesus’ feet, giving him thanks; and he was a Samaritan.",
+    "category": "changed",
+    "tags": [
+      "changed"
+    ]
+  },
+  {
+    "id": "god-provides",
+    "bookId": "genesis",
+    "chapter": 22,
+    "verse": 13,
+    "endVerse": 14,
+    "title": "God makes a way",
+    "event": "God Provides / Jehovah-Jireh",
+    "reference": "Genesis 22:13-14",
+    "importance": "Abraham offers a ram instead of his son and names the place The Lord Will Provide. God has made a way. Christians also see a picture of Jesus giving His life for others.",
+    "happened": "Abraham lifted up his eyes, and looked, and saw that behind him was a ram caught in the thicket by his horns. Abraham went and took the ram, and offered him up for a burnt offering instead of his son. Abraham called the name of that place Yahweh Will Provide. As it is said to this day, “On Yahweh’s mountain, it will be provided.”",
+    "category": "promises",
+    "tags": [
+      "promises",
+      "prophecy"
+    ]
+  },
+  {
+    "id": "i-am",
+    "bookId": "exodus",
+    "chapter": 3,
+    "verse": 14,
+    "endVerse": 14,
+    "title": "God makes His name known",
+    "event": "I AM",
+    "reference": "Exodus 3:14",
+    "importance": "Moses asks who has sent him, and God answers, I AM WHO I AM. Moses does not go in his own power. The living God will be with him.",
+    "happened": "God said to Moses, “I AM WHO I AM,” and he said, “You shall tell the children of Israel this: ‘I AM has sent me to you.’”",
+    "category": "promises",
+    "tags": [
+      "promises"
+    ]
+  },
+  {
+    "id": "god-heals",
+    "bookId": "exodus",
+    "chapter": 15,
+    "verse": 26,
+    "endVerse": 26,
+    "title": "The Lord who heals",
+    "event": "Jehovah-Rapha",
+    "reference": "Exodus 15:26",
+    "importance": "God calls Himself the Lord who heals His people. He also calls them to listen and follow His ways. This passage shows His care for their lives and health.",
+    "happened": "and he said, “If you will diligently listen to Yahweh your God’s voice, and will do that which is right in his eyes, and will pay attention to his commandments, and keep all his statutes, I will put none of the diseases on you, which I have put on the Egyptians; for I am Yahweh who heals you.”",
+    "category": "promises",
+    "tags": [
+      "promises"
+    ]
+  },
+  {
+    "id": "god-peace",
+    "bookId": "judges",
+    "chapter": 6,
+    "verse": 24,
+    "endVerse": 24,
+    "title": "Peace in the middle of fear",
+    "event": "Jehovah-Shalom",
+    "reference": "Judges 6:24",
+    "importance": "Gideon is afraid, but God speaks peace to him. He builds an altar called The Lord Is Peace. God's care meets him in a fearful moment.",
+    "happened": "Then Gideon built an altar there to Yahweh, and called it “Yahweh is Peace.” To this day it is still in Ophrah of the Abiezrites.",
+    "category": "promises",
+    "tags": [
+      "promises"
+    ]
+  },
+  {
+    "id": "emmanuel",
+    "bookId": "isaiah",
+    "chapter": 7,
+    "verse": 14,
+    "endVerse": 14,
+    "title": "God with us",
+    "event": "Emmanuel",
+    "reference": "Isaiah 7:14",
+    "importance": "The name Emmanuel means God with us. Matthew connects this promise with Jesus' birth. Christians believe God has come close, sharing life with His people.",
+    "happened": "Therefore the Lord himself will give you a sign. Behold, the virgin will conceive, and bear a son, and shall call his name Immanuel.",
+    "category": "promises",
+    "tags": [
+      "promises"
+    ],
+    "additionalAnchors": [
+      {
+        "bookId": "matthew",
+        "chapter": 1,
+        "verse": 23,
+        "endVerse": 23
+      }
+    ]
+  },
+  {
+    "id": "good-shepherd",
+    "bookId": "john",
+    "chapter": 10,
+    "verse": 14,
+    "endVerse": 15,
+    "title": "Known and loved",
+    "event": "The Good Shepherd",
+    "reference": "John 10:14-15",
+    "importance": "Jesus calls Himself the good shepherd. He knows His people and gives His life for them. We are not just faces in a crowd to Him. He knows us and calls us to follow.",
+    "happened": "I am the good shepherd. I know my own, and I’m known by my own; even as the Father knows me, and I know the Father. I lay down my life for the sheep.",
+    "category": "promises",
+    "tags": [
+      "promises",
+      "lessons"
+    ]
+  },
+  {
+    "id": "plans-exile",
+    "bookId": "jeremiah",
+    "chapter": 29,
+    "verse": 11,
+    "endVerse": 11,
+    "title": "Hope far from home",
+    "event": "A Plan for You",
+    "reference": "Jeremiah 29:11",
+    "importance": "God speaks hope to people living in exile. Their wait will be long, but He has not forgotten them. This promise is about His faithful care through a hard season.",
+    "happened": "For I know the thoughts that I think toward you,” says Yahweh, “thoughts of peace, and not of evil, to give you hope and a future.",
+    "category": "promises",
+    "tags": [
+      "promises"
+    ]
+  },
+  {
+    "id": "inseparable-love",
+    "bookId": "romans",
+    "chapter": 8,
+    "verse": 38,
+    "endVerse": 39,
+    "title": "Nothing can separate us",
+    "event": "Nothing Can Separate Us",
+    "reference": "Romans 8:38-39",
+    "importance": "Paul lists things people fear, even death, and says they cannot separate us from God's love in Christ. That love is stronger than the things we face.",
+    "happened": "For I am persuaded that neither death, nor life, nor angels, nor principalities, nor things present, nor things to come, nor powers, nor height, nor depth, nor any other created thing, will be able to separate us from God’s love, which is in Christ Jesus our Lord.",
+    "category": "promises",
+    "tags": [
+      "promises"
+    ]
+  },
+  {
+    "id": "works-for-good",
+    "bookId": "romans",
+    "chapter": 8,
+    "verse": 28,
+    "endVerse": 28,
+    "title": "Pain is not the last word",
+    "event": "Good Out of Everything",
+    "reference": "Romans 8:28",
+    "importance": "Paul says God works for good in the lives of those who love Him. He does not call every painful thing good. He points to a God whose purpose can keep working through it.",
+    "happened": "We know that all things work together for good for those who love God, to those who are called according to his purpose.",
+    "category": "promises",
+    "tags": [
+      "promises"
+    ]
+  },
+  {
+    "id": "grace-enough",
+    "bookId": "2-corinthians",
+    "chapter": 12,
+    "verse": 9,
+    "endVerse": 9,
+    "title": "Strength in weakness",
+    "event": "My Grace Is Enough",
+    "reference": "2 Corinthians 12:9",
+    "importance": "Paul asks God to remove a painful struggle. God tells him His grace is enough. Paul learns that he does not have to rely only on his own strength.",
+    "happened": "He has said to me,\n“My grace is sufficient for you, for my power is made perfect in weakness.” Most gladly therefore I will rather glory in my weaknesses, that the power of Christ may rest on me.",
+    "category": "promises",
+    "tags": [
+      "promises"
+    ]
+  },
+  {
+    "id": "with-you-always",
+    "bookId": "matthew",
+    "chapter": 28,
+    "verse": 20,
+    "endVerse": 20,
+    "title": "With you always",
+    "event": "I Am With You Always",
+    "reference": "Matthew 28:20",
+    "importance": "Jesus sends His followers to teach others and promises to be with them. They will not do this work alone. His presence gives them courage to keep going.",
+    "happened": "teaching them to observe all things that I commanded you. Behold, I am with you always, even to the end of the age.” Amen.",
+    "category": "promises",
+    "tags": [
+      "promises"
+    ]
+  },
+  {
+    "id": "come-to-me",
+    "bookId": "matthew",
+    "chapter": 11,
+    "verse": 28,
+    "endVerse": 28,
+    "title": "Rest for the weary",
+    "event": "Come to Me",
+    "reference": "Matthew 11:28",
+    "importance": "Jesus invites tired and burdened people to come to Him. We can bring Him our weariness. His invitation is to learn from Him and find rest.",
+    "happened": "“Come to me, all you who labor and are heavily burdened, and I will give you rest.",
+    "category": "promises",
+    "tags": [
+      "promises"
+    ]
+  },
+  {
+    "id": "never-leave",
+    "bookId": "hebrews",
+    "chapter": 13,
+    "verse": 5,
+    "endVerse": 5,
+    "title": "You are not abandoned",
+    "event": "Never Leave You",
+    "reference": "Hebrews 13:5",
+    "importance": "God's people are reminded that He will never leave them. The promise helps them live without making money their source of safety. They can trust His care.",
+    "happened": "Be free from the love of money, content with such things as you have, for he has said, “I will in no way leave you, neither will I in any way forsake you.”",
+    "category": "promises",
+    "tags": [
+      "promises"
+    ]
+  },
+  {
+    "id": "tears-wiped",
+    "bookId": "revelation",
+    "chapter": 21,
+    "verse": 4,
+    "endVerse": 4,
+    "title": "Every tear wiped away",
+    "event": "Every Tear Wiped Away",
+    "reference": "Revelation 21:4",
+    "importance": "John sees a future where God wipes away every tear. Death and pain no longer rule. The Bible's closing vision gives hope for a world made new.",
+    "happened": "He will wipe away every tear from their eyes. Death will be no more; neither will there be mourning, nor crying, nor pain, any more. The first things have passed away.”",
+    "category": "promises",
+    "tags": [
+      "promises"
+    ]
+  }
+]

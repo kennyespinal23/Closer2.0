@@ -23,21 +23,32 @@ export async function unlockBibleMoment(id: string): Promise<"new" | "existing">
 }
 
 /** Rewards are returned only by the write that completes a category, never by hydration. */
-export async function unlockBibleMomentWithRewards(id: string): Promise<{ status: "new" | "existing"; categories: MomentCategory[] }> {
+type UnlockResult = { status: "new" | "existing"; categories: MomentCategory[]; bookCompleted: boolean };
+const inFlightUnlocks = new Map<string, Promise<UnlockResult>>();
+// Re-subscribing while a save is pending must retain its completion rewards.
+export function unlockBibleMomentWithRewards(id: string): Promise<UnlockResult> {
+  const pending = inFlightUnlocks.get(id);
+  if (pending) return pending;
+  const operation = saveBibleMomentWithRewards(id).finally(() => inFlightUnlocks.delete(id));
+  inFlightUnlocks.set(id, operation);
+  return operation;
+}
+async function saveBibleMomentWithRewards(id: string): Promise<UnlockResult> {
   await hydrateBibleMoments();
   if (!snapshot.hydrated) throw new Error("Could not load collection");
   if (!BIBLE_MOMENTS.some(moment => moment.id === id)) throw new Error("Unknown moment");
-  if (snapshot.ids.includes(id)) return { status: "existing", categories: [] };
+  if (snapshot.ids.includes(id)) return { status: "existing", categories: [], bookCompleted: false };
   await AsyncStorage.setItem(key(id), "true");
   // Recheck after the write, so concurrent opens only celebrate once.
-  if (snapshot.ids.includes(id)) return { status: "existing", categories: [] };
+  if (snapshot.ids.includes(id)) return { status: "existing", categories: [], bookCompleted: false };
   const moment = BIBLE_MOMENTS.find(item => item.id === id)!;
   const categories = moment.tags.filter(category => BIBLE_MOMENTS
     .filter(item => item.tags.includes(category))
     .every(item => item.id === id || snapshot.ids.includes(item.id)));
+  const bookCompleted = BIBLE_MOMENTS.filter(item => item.bookId === moment.bookId).every(item => item.id === id || snapshot.ids.includes(item.id));
   snapshot = { ids: [...snapshot.ids, id], hydrated: true, error: null };
   emit();
-  return { status: "new", categories };
+  return { status: "new", categories, bookCompleted };
 }
 export function useBibleMomentCollection() {
   const state = useSyncExternalStore(callback => { listeners.add(callback); return () => { listeners.delete(callback); }; }, () => snapshot);

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { useRouter } from "expo-router";
@@ -32,6 +33,7 @@ export function OnboardingChrome({
   onBack,
 }: OnboardingChromeProps) {
   const router = useRouter();
+  const [pressed, setPressed] = useState(false);
   const colors = useColors();
 
   const chevronColor =
@@ -58,15 +60,17 @@ export function OnboardingChrome({
           onPress={handleBack}
           accessibilityRole="button"
           accessibilityLabel="Go back"
-          style={({ pressed }) => ({
-            width: 40,
-            height: 40,
+          onPressIn={() => setPressed(true)}
+          onPressOut={() => setPressed(false)}
+          style={{
+            width: 44,
+            height: 44,
             borderRadius: 20,
             alignItems: "center",
             justifyContent: "center",
             opacity: pressed ? 0.6 : 1,
             zIndex: 1,
-          })}
+          }}
         >
           <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
             <Path

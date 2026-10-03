@@ -26,8 +26,8 @@ export function BibleRevealTitle({ opened }: { opened: boolean }) {
   const dark = useResolvedScheme() === "dark", reduced = useReducedMotion(), p = useSharedValue(opened ? 0 : 1);
   useEffect(()=>{ p.value = reduced ? 1 : withDelay(250,withSpring(1,SPRING)); return ()=>cancelAnimation(p); },[opened,reduced]);
   const motion = useAnimatedStyle(()=>({ transform: [{ rotate: `${-3*p.value}deg` }, { scale: .7+.3*p.value }] }));
-  const text = { color: dark ? "#FFF5E6" : "#32271E", fontSize: 33, lineHeight: 38, letterSpacing: -1, fontWeight: "700" as const, textAlign: "center" as const };
-  return opened ? <View accessible accessibilityRole="header" accessibilityLabel="The whole Bible. FREE for you." style={{ alignItems: "center", gap: 4 }}><Text style={text}>The whole Bible.</Text><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 8 }}><Animated.View style={[{ paddingHorizontal: 12, paddingVertical: 3, borderRadius: 12, backgroundColor: dark ? "#D9EDB7" : "#CCE3AA", boxShadow: "0 3px 0 #76975430" },motion]}><Text style={[text,{ color: "#294A2E" }]}>FREE</Text></Animated.View><Text style={text}>for you.</Text></View></View> : <Text accessibilityRole="header" style={text}>{"A whole world\nwaiting for you."}</Text>;
+  const text = { color: dark ? "#FFF5E6" : "#32271E", fontSize: 36, lineHeight: 38, letterSpacing: -1, fontWeight: "700" as const, textAlign: "center" as const };
+  return <View accessible accessibilityRole="header" accessibilityLabel="The whole Bible. Free." style={{ alignItems: "center", gap: 4 }}><Text style={text}>The whole Bible.</Text><Animated.Text style={[text, { color: dark ? "#D9EDB7" : "#294A2E" }, motion]}>Free.</Animated.Text></View>;
 }
 const SPRING = { damping: 18, stiffness: 150 };
 
@@ -87,7 +87,7 @@ export function BibleGiftReveal({ opened }: { opened: boolean }) {
     <Animated.ScrollView ref={scroller} pointerEvents={opened ? "auto" : "none"} accessibilityElementsHidden={!opened} importantForAccessibility={opened ? "auto" : "no-hide-descendants"} horizontal showsHorizontalScrollIndicator={false} snapToInterval={cardWidth + 23} decelerationRate="fast" onTouchStart={()=>cancelAnimation(offset)} onScrollBeginDrag={()=>cancelAnimation(offset)} accessibilityLabel="Explore Bible books" style={{ width: available, height: artHeight - 34, opacity: opened ? 1 : 0 }} contentContainerStyle={{ paddingHorizontal: (available-cardWidth)/2, paddingTop: 46, paddingBottom: 40 }}>
       {BOOK_LIST.map((book,index)=><CarouselBook key={book.id} index={index} opened={opened} reduced={reduced} cardWidth={cardWidth}/>)}
     </Animated.ScrollView>
-    <Text style={{ position: "absolute", bottom: 8, color: dark ? "#C3B59C" : "#796A56", fontSize: 13 }}>{opened ? "Swipe to explore" : "A gift for you. Hold below to unwrap."}</Text>
+
   </View>;
 }
 const styles = StyleSheet.create({ hold: { minHeight: 56, padding: 16, borderRadius: 28, borderCurve: "continuous", overflow: "hidden", alignItems: "center", justifyContent: "center" } });

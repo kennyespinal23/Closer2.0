@@ -39,7 +39,7 @@ export function OnboardingChoice({ label, detail, selected, onPress, multiple = 
 const styles = StyleSheet.create({
   card: { minHeight: 64, borderRadius: 16, borderCurve: "continuous", borderWidth: 1, padding: 18, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 14 },
   compact: { minHeight: 48, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 24, gap: 8 },
-  label: { fontSize: 17, lineHeight: 24, fontWeight: "500" }, detail: { fontSize: 14, lineHeight: 20 },
+  label: { fontSize: 18, lineHeight: 25, fontWeight: "500" }, detail: { fontSize: 14, lineHeight: 20 },
   check: { width: 23, height: 23, flexShrink: 0, borderRadius: 12, borderWidth: 1 },
   tick: { backgroundColor: "#478657", borderRadius: 12, alignItems: "center", justifyContent: "center" },
 });

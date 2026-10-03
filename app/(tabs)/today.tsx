@@ -1,20 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Alert,
-  Animated,
-  Easing,
-  type ImageSourcePropType,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Alert, Animated, Easing, type ImageSourcePropType, type NativeScrollEvent, type NativeSyntheticEvent, Platform, Pressable, ScrollView, StyleSheet, Switch, useWindowDimensions, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";

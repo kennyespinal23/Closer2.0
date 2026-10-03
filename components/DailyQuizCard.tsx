@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { cancelAnimation, FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import type { DailyQuestion } from '@/lib/dailyQuiz';
 import { useReducedMotion } from '@/lib/useReducedMotion';

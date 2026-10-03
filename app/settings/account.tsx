@@ -1,4 +1,5 @@
-import { Alert, Text, View } from "react-native";
+import { Alert, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import {
   SettingsInfoBanner,
   SettingsLinkRow,

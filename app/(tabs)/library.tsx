@@ -19,17 +19,8 @@ import { BookReaderPreparation } from "@/app/book/[id]/[chapter]";
 import { BibleIntroScreen } from "@/components/BibleIntroScreen";
 import { loadJSON, saveJSON, STORAGE_KEYS } from "@/lib/storage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Pressable,
-  Modal,
-  TextInput,
-  FlatList,
-  Keyboard,
-  ScrollView,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Pressable, Modal, FlatList, Keyboard, ScrollView, useWindowDimensions, View } from "react-native";
+import { TextInput, Text } from "@/components/CloserText";
 import {
   SafeAreaView,
   useSafeAreaInsets,

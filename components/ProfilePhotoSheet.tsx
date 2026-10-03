@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from 'expo-image';
 import { File, Paths } from 'expo-file-system';
 import { ReaderSheet } from './ReaderSheet';

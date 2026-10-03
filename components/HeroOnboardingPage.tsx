@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { Animated, Easing, Pressable, Text, View } from "react-native";
+import { Animated, Easing, Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { FadeIn } from "@/components/FadeIn";

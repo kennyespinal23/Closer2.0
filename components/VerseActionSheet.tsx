@@ -1,12 +1,8 @@
 import { useState } from "react";
 import { ReaderSheet } from "@/components/ReaderSheet";
 import { ReaderNativeButton } from "@/components/ReaderNativeButton";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import * as haptics from "@/lib/haptics";
 import { SFSymbol } from "@/components/Symbol";
 import {

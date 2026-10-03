@@ -1,6 +1,7 @@
 import Animated, { cancelAnimation, Easing, Extrapolation, interpolate, runOnJS, type SharedValue, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from "react-native-reanimated";
 import { useEffect, useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Pressable, Text, View, type ViewStyle } from "react-native";
+import { Pressable, View, type ViewStyle } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import { BrandGlyph } from "@/components/BrandGlyph";

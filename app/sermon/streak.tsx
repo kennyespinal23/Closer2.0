@@ -1,14 +1,7 @@
 import { SkyGradient } from "@/components/HomeSkyGradient";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Animated,
-  Easing,
-  Pressable,
-  StyleSheet,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Animated, Easing, Pressable, StyleSheet, ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";

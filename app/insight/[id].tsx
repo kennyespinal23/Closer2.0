@@ -1,11 +1,6 @@
 import { useMemo } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { goBackOr } from "@/lib/navigation";

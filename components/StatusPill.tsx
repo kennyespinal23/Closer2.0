@@ -52,7 +52,8 @@
  *     its bright steady state instead of oscillating.
  */
 import { memo, useEffect, useRef } from "react";
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import * as haptics from "@/lib/haptics";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useColors } from "@/state/theme";

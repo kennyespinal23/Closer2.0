@@ -1,9 +1,10 @@
+import { buttonStyles } from '@/lib/buttonStyles';
 import { useState } from "react";
 import type { PressableProps } from "react-native";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import * as haptics from "@/lib/haptics";
-import { typography } from "@/lib/typography";
 import { useColors } from "@/state/theme";
 
 type Variant = "primary" | "secondary" | "ghost";
@@ -66,10 +67,7 @@ export function Button({
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       style={{
         width: fullWidth ? "100%" : undefined,
-        minHeight: 52,
-        borderRadius: 999,
-        paddingVertical: 14,
-        paddingHorizontal: 24,
+        ...buttonStyles.primary,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
@@ -83,7 +81,7 @@ export function Button({
       {loading ? <ActivityIndicator color={colors.ink} style={{ marginRight: 10 }} /> : leadingIcon ? <View style={{ marginRight: 10 }}>{leadingIcon}</View> : null}
       <Text
         style={[
-          typography.button,
+          buttonStyles.label,
           { color: variant === "ghost" ? colors.inkMuted : colors.ink },
         ]}
       >

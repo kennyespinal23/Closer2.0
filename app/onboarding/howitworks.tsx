@@ -1,13 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import {
-  Animated,
-  Easing,
-  Image,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { Animated, Easing, Image, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";

@@ -3,19 +3,8 @@ import { HomeDailyPath } from "./HomeDailyPath";
 import { contentText, contentLayout } from "@/lib/contentStyles";
 import { useAmbientMotionEnabled } from "@/lib/useAmbientMotionEnabled";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, forwardRef } from "react";
-import {
-  Animated,
-  Easing,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-  type View as RNView,
-} from "react-native";
+import { Animated, Easing, Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View, type View as RNView } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

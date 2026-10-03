@@ -1,11 +1,6 @@
 import { useState } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import { useRouter } from "expo-router";

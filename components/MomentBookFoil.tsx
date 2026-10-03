@@ -1,6 +1,7 @@
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useEffect, useId } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { ReaderMaterialGradient } from "./ReaderMaterialGradient";
 import { SFSymbol } from "./Symbol";

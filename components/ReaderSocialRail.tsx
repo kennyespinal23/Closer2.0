@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, View } from "react-native";
+import { Text, TextInput } from "@/components/CloserText";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

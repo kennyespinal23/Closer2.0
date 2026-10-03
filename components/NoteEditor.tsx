@@ -1,18 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Animated,
-  Easing,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  Share,
-  Text,
-  TextInput,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Animated, Easing, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Share, useWindowDimensions, View } from "react-native";
+import { Text, TextInput } from "@/components/CloserText";
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BubbleBackButton } from "@/components/BubbleBackButton";

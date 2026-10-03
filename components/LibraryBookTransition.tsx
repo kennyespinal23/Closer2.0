@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { Text, View, useWindowDimensions } from "react-native";
+import { View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import Animated, { cancelAnimation, Easing, interpolate, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 import type { Book } from "@/constants/books";

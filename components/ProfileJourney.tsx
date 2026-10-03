@@ -1,6 +1,7 @@
 import { ProfileActivitySheet } from "./ProfileActivitySheet";
 import { useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, ScrollView, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image, type ImageSource } from 'expo-image';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';

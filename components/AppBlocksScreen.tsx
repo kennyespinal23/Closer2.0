@@ -1,15 +1,6 @@
 import { useCallback, useState, type ReactNode } from "react";
-import {
-  ActionSheetIOS,
-  Alert,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from "react-native";
+import { ActionSheetIOS, Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { BlockedAppsEditor } from "@/components/BlockedAppsEditor";

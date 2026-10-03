@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { AppleSheet } from "@/components/AppleSheet";
 import { SheetModalHeader } from "@/components/SheetModalHeader";
 import { BrandGlyph } from "@/components/BrandGlyph";

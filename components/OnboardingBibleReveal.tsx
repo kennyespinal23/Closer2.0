@@ -1,5 +1,8 @@
+import { Text as CloserAnimatedTextBase } from "@/components/CloserText";
+import { buttonStyles } from '@/lib/buttonStyles';
 import { useEffect, useRef, useId, useState, type ReactNode } from "react";
-import { AppState, Pressable, StyleSheet, Text, View, useWindowDimensions, type ViewStyle } from "react-native";
+import { AppState, Pressable, StyleSheet, View, useWindowDimensions, type ViewStyle } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { cancelAnimation, Easing, runOnJS, scrollTo, useAnimatedRef, useAnimatedStyle, useDerivedValue, useSharedValue, withDelay, withRepeat, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop, Path } from "react-native-svg";
@@ -27,7 +30,7 @@ export function BibleRevealTitle({ opened }: { opened: boolean }) {
   useEffect(()=>{ p.value = reduced ? 1 : withDelay(250,withSpring(1,SPRING)); return ()=>cancelAnimation(p); },[opened,reduced]);
   const motion = useAnimatedStyle(()=>({ transform: [{ rotate: `${-3*p.value}deg` }, { scale: .7+.3*p.value }] }));
   const text = { color: dark ? "#FFF5E6" : "#32271E", fontSize: 36, lineHeight: 38, letterSpacing: -1, fontWeight: "700" as const, textAlign: "center" as const };
-  return <View accessible accessibilityRole="header" accessibilityLabel="The whole Bible. Free." style={{ alignItems: "center", gap: 4 }}><Text style={text}>The whole Bible.</Text><Animated.Text style={[text, { color: dark ? "#D9EDB7" : "#294A2E" }, motion]}>Free.</Animated.Text></View>;
+  return <View accessible accessibilityRole="header" accessibilityLabel="The whole Bible. Free." style={{ alignItems: "center", gap: 4 }}><Text style={text}>The whole Bible.</Text><NunitoAnimatedText style={[text, { color: dark ? "#D9EDB7" : "#294A2E" }, motion]}>Free.</NunitoAnimatedText></View>;
 }
 const SPRING = { damping: 18, stiffness: 150 };
 
@@ -40,7 +43,7 @@ export function HoldToUnwrap({ onUnwrap }: { onUnwrap: () => void }) {
   const fill = useAnimatedStyle(() => ({ transform: [{ translateX: -(1-progress.value)*width.value }] }));
   return <Pressable accessibilityRole="button" accessibilityLabel="Hold to unwrap your Bible" accessibilityHint="Hold for one second. Double-tap with VoiceOver to unwrap." accessibilityActions={[{ name: "activate", label: "Unwrap your Bible" }]} onAccessibilityTap={complete} onAccessibilityAction={event => { if (event.nativeEvent.actionName === "activate") complete(); }} onLayout={e => { width.value = e.nativeEvent.layout.width; }} onPressIn={() => { if (completed.current) return; holding.current = true; const token = ++attempt.current; haptics.soft(); progress.value = withTiming(1, { duration: 1100, easing: Easing.linear }, finished => { if (finished) runOnJS(completeHold)(token); }); }} onPressOut={cancel} style={[styles.hold, { backgroundColor: dark ? "#FFF5E6" : "#32271E" }]}>
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: dark ? "#ABC79B" : "#36563A" }, fill]}/>
-    <Text style={{ color: dark ? "#32271E" : "#FFF9F0", fontSize: 17, fontWeight: "600", textAlign: "center" }}>Hold to unwrap your Bible</Text>
+    <Text style={{ color: dark ? "#32271E" : "#FFF9F0", ...buttonStyles.label }}>Hold to unwrap your Bible</Text>
   </Pressable>;
 }
 
@@ -90,4 +93,6 @@ export function BibleGiftReveal({ opened }: { opened: boolean }) {
 
   </View>;
 }
-const styles = StyleSheet.create({ hold: { minHeight: 56, padding: 16, borderRadius: 28, borderCurve: "continuous", overflow: "hidden", alignItems: "center", justifyContent: "center" } });
+const styles = StyleSheet.create({ hold: { ...buttonStyles.primary, overflow: "hidden", alignItems: "center", justifyContent: "center" } });
+
+const NunitoAnimatedText = Animated.createAnimatedComponent(CloserAnimatedTextBase);

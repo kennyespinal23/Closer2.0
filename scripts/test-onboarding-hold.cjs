@@ -9,10 +9,12 @@ function mount() {
   let background, unwraps = 0;
   const jsx = (type, props) => ({ type, props });
   const mocks = {
+    '@/components/CloserText': { Text: 'Text' },
+    '@/lib/buttonStyles': { buttonStyles: { primary: {}, label: {} } },
     react: { useRef: current => ({ current }), useEffect: fn => cleanups.push(fn()) },
     'react/jsx-runtime': { jsx, jsxs: jsx },
     'react-native': { Pressable: 'Pressable', Text: 'Text', StyleSheet: { create: x => x, absoluteFill: {} }, AppState: { addEventListener: (_, fn) => { background = fn; return { remove() {} }; } } },
-    'react-native-reanimated': { default: { View: 'Animated.View' }, useSharedValue: value => ({ value }), useAnimatedStyle: fn => fn(), cancelAnimation() {}, Easing: { linear: x => x }, withTiming: (value, config, callback) => { if (callback) completions.push(callback); return value; }, runOnJS: fn => fn },
+    'react-native-reanimated': { default: { View: 'Animated.View', createAnimatedComponent: x => x }, useSharedValue: value => ({ value }), useAnimatedStyle: fn => fn(), cancelAnimation() {}, Easing: { linear: x => x }, withTiming: (value, config, callback) => { if (callback) completions.push(callback); return value; }, runOnJS: fn => fn },
     'react-native-gesture-handler': {}, 'react-native-svg': {},
     '@/lib/useReducedMotion': {}, '@/state/theme': { useResolvedScheme: () => 'light' }, './ReaderMaterialGradient': {}, '@/lib/haptics': { soft() {}, success() {} },
   };

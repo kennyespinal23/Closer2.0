@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { AccessibilityInfo, BackHandler, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { AccessibilityInfo, BackHandler, Modal, Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from "react-native-reanimated";
 import { ReaderMomentCardBox } from "./ReaderMomentCardBox";
 import Svg, { Path, Rect } from "react-native-svg";

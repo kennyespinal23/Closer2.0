@@ -1,6 +1,7 @@
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useEffect, useState } from "react";
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, ScrollView, View } from "react-native";
+import { Text, TextInput } from "@/components/CloserText";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/state/theme";
 export function ProfileVerse() {

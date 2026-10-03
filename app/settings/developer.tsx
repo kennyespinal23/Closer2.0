@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import {

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Modal, Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

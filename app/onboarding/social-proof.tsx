@@ -1,4 +1,5 @@
-import { ImageBackground, StyleSheet, Text, View } from "react-native";
+import { ImageBackground, StyleSheet, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";

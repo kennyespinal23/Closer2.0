@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { TextInput, View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { TextInput, Text } from "@/components/CloserText";
 import type { TextInputProps } from "react-native";
 import { useColors } from "@/state/theme";
 

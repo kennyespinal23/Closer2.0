@@ -1,4 +1,5 @@
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { ReaderSheet } from "@/components/ReaderSheet";
 import { ReaderNativeButton } from "@/components/ReaderNativeButton";
 import { SFSymbol } from "@/components/Symbol";

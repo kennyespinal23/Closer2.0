@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SFSymbol } from "@/components/Symbol";
 import * as haptics from "@/lib/haptics";

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ReaderNativeButton } from "@/components/ReaderNativeButton";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { systemText } from "@/lib/typography";
 import { sheetText, sheetSpace } from "@/lib/sheetStyles";
 import { useColors } from "@/state/theme";

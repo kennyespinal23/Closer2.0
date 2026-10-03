@@ -1,7 +1,8 @@
 import { AchievementShelf } from "./AchievementShelf";
 import { useAchievements } from "@/lib/useAchievements";
 import { useState } from "react";
-import { ScrollView, Pressable, Text, View } from "react-native";
+import { ScrollView, Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { BibleMomentsCollection } from "@/components/BibleMomentsCollection";
 import { StreakFireAnimation } from "@/components/StreakFireAnimation";

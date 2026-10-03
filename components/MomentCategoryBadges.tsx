@@ -1,6 +1,7 @@
 import { contentText, contentLayout } from "@/lib/contentStyles";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { BIBLE_MOMENTS, MOMENT_CATEGORIES, type MomentCategory } from "@/constants/bibleMoments";
 import { useBibleMomentCollection } from "@/state/bibleMoments";
 import { useColors, useResolvedScheme } from "@/state/theme";

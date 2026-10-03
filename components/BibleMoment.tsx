@@ -1,7 +1,8 @@
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, cancelAnimation, runOnJS, Easing } from "react-native-reanimated";
 import * as haptics from "@/lib/haptics";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AccessibilityInfo, Modal, Pressable, ScrollView, Text, View, type TextStyle, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Modal, Pressable, ScrollView, View, type TextStyle, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useReducedMotion } from "@/lib/useReducedMotion";

@@ -4,7 +4,8 @@ import SegmentedControl from "@react-native-segmented-control/segmented-control"
 import { JourneySummary } from "@/components/JourneySummary";
 import { BibleMomentsCollection } from "@/components/BibleMomentsCollection";
 import { useMemo, useRef, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { MilestonesSection } from "@/components/MilestonesSection";
 import { StreakFireAnimation } from "@/components/StreakFireAnimation";
 import { SFSymbol } from "@/components/Symbol";

@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/CloserText";
 import type { HomeQuote, HomeQuoteSegment } from "@/lib/homeQuotes";
 import { SF_PRO } from "@/lib/typography";
 import { useColors, useResolvedScheme } from "@/state/theme";

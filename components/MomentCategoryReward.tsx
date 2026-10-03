@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 import { MOMENT_CATEGORIES, type MomentCategory } from "@/constants/bibleMoments";
 import { SFSymbol } from "@/components/Symbol";

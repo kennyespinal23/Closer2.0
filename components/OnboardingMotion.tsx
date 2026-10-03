@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from "react";
-import { Platform, StyleSheet, Text, View, type TextProps } from "react-native";
+import { Platform, StyleSheet, View, type TextProps } from "react-native";
+import { Text } from "@/components/CloserText";
 import { BlurView } from "expo-blur";
 import Animated, { cancelAnimation, Easing, useAnimatedProps, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 import { useReducedMotion } from "@/lib/useReducedMotion";

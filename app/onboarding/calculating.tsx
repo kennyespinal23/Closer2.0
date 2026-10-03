@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { Animated, Easing, Text, View } from "react-native";
+import { Animated, Easing, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";

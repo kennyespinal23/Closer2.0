@@ -1,5 +1,7 @@
+import { Text as CloserAnimatedTextBase } from "@/components/CloserText";
 import { memo, useEffect, useMemo } from "react";
-import { Text, type TextStyle } from "react-native";
+import { type TextStyle } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { cancelAnimation, Easing, interpolateColor, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming, type SharedValue } from "react-native-reanimated";
 import { useAmbientMotionEnabled } from "@/lib/useAmbientMotionEnabled";
 import { useBibleMomentCollection } from "@/state/bibleMoments";
@@ -51,5 +53,7 @@ const ShimmerWord = memo(function ShimmerWord({ children, progress, center, colo
     const strength = enabled ? Math.min(1, Math.max(0, (0.36 - distance) / 0.24)) : 0;
     return { color: interpolateColor(strength, [0, 1], [color, shine]) };
   });
-  return <Animated.Text style={animated}>{children}</Animated.Text>;
+  return <NunitoAnimatedText style={animated}>{children}</NunitoAnimatedText>;
 });
+
+const NunitoAnimatedText = Animated.createAnimatedComponent(CloserAnimatedTextBase);

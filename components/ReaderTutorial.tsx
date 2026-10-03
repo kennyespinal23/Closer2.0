@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { FlatList, Modal, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { FlatList, Modal, Pressable, ScrollView, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import { useIsFocused } from "@react-navigation/native";
 import { CardGlass } from "@/components/CardGlass";
 import { systemText } from "@/lib/typography";

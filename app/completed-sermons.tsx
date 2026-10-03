@@ -1,15 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Animated,
-  Easing,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Animated, Easing, Modal, Platform, Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";

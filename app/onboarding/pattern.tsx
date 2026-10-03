@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { Animated, Easing, Text, View } from "react-native";
+import { Animated, Easing, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { useRouter } from "expo-router";
 import { HeroDisc, HeroOnboardingPage } from "@/components/HeroOnboardingPage";
 import { AppIcon } from "@/components/SocialAppCard";

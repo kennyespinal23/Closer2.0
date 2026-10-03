@@ -10,16 +10,8 @@ import { Host, ContextMenu, Button as NativeButton, Image as NativeImage } from 
 import { accessibilityLabel, frame } from "@expo/ui/swift-ui/modifiers";
 import { BookReadingProgress } from "@/components/BookReadingProgress";
 import { useEffect, useRef, useState } from "react";
-import {
-  Platform,
-  useWindowDimensions,
-  Pressable,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Platform, useWindowDimensions, Pressable, ScrollView, Share, StyleSheet, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import { SFSymbol } from "@/components/Symbol";

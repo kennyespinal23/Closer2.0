@@ -1,6 +1,7 @@
 import { WaxMedal } from "./WaxMedal";
 import { contentText, contentLayout } from "@/lib/contentStyles";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { useRouter } from "expo-router";
 import { useProgress } from "@/state/progress";
 import { useBibleMomentCollection } from "@/state/bibleMoments";

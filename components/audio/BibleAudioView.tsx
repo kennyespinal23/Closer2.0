@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, ScrollView, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

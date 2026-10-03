@@ -1,45 +1,15 @@
 import { Platform, type TextStyle } from "react-native";
 
 /**
- * Closer typography system.
- *
- * SF Pro is the interface face: navigation, cards, controls and metadata.
- * New York is the scripture face: Bible reading and reflective quotations.
- *
- * Both faces are iOS system fonts (SF Pro since iOS 9, New York
- * since iOS 13), so we don't ship font files for them. Setting
- * `fontFamily: "System"` tells React Native to pick the platform
- * default — SF Pro on iOS, Roboto on Android. Setting
- * `fontFamily: NEW_YORK` (which is `"ui-serif"` on iOS) picks the
- * system serif design — New York. Raw `"New York"` does NOT work
- * in React Native; see the NEW_YORK export comment.
- *
- * The role tokens below are the canonical vocabulary every screen
- * should reach for. Spread them into a Text `style` prop instead
- * of re-authoring fontFamily / fontWeight / fontSize / lineHeight
- * by hand at each call site — the moment three different
- * "section title" definitions exist in the codebase the system
- * starts to drift.
- *
- *   <Text style={typography.body}>...</Text>
- *   <Text style={[typography.body, { color: ink }]}>...</Text>
- *
- * Per-role overrides (a specific color, a tighter margin, etc.)
- * compose cleanly on top of the preset via the array form — the
- * preset stays the source of truth for family + weight + size +
- * leading + tracking.
+ * Closer type roles. Interface Text/TextInput render through CloserText,
+ * which resolves these semantic weights to bundled Nunito faces.
+ * Large bold headings use Nunito Black; Scripture keeps New York/Georgia;
+ * personal handwritten moments explicitly select Shantell Sans.
  */
 
 // ─── Font families ────────────────────────────────────────────
 
-/**
- * The interface face. `"System"` resolves to SF Pro on iOS (with
- * automatic Display/Text optical-size selection based on size)
- * and Roboto on Android. We never set fontFamily to anything
- * other than this for interface text — every weight is reached
- * via the `fontWeight` property below, not by stringifying the
- * face name.
- */
+/** Legacy semantic interface alias. CloserText maps System to Nunito by weight. */
 export const SF_PRO = "System";
 
 /**
@@ -130,7 +100,7 @@ const body: TextStyle = {
  */
 const button: TextStyle = {
   fontFamily: SF_PRO,
-  fontWeight: fontWeight.semibold,
+  fontWeight: fontWeight.extrabold,
   fontSize: 17,
 };
 

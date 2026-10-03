@@ -1,13 +1,6 @@
 import { useEffect, useRef } from "react";
-import {
-  Animated,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Animated, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";

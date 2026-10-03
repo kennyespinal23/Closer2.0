@@ -1,5 +1,7 @@
+import { Text as CloserAnimatedTextBase } from "@/components/CloserText";
 import { useEffect } from "react";
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useResolvedScheme } from "@/state/theme";
@@ -31,7 +33,7 @@ export function OnboardingChoice({ label, detail, selected, onPress, multiple = 
     onPressOut={() => { press.value = reduced ? 1 : withSpring(1, { stiffness: 460, damping: 24 }); }}
     onPress={onPress} style={style}>
     <Animated.View style={[styles.card, compact && styles.compact, card]}>
-      <View style={{ flexShrink: 1, gap: 6 }}><Animated.Text style={[styles.label, text]}>{label}</Animated.Text>{detail && <Animated.Text style={[styles.detail, text]}>{detail}</Animated.Text>}</View>
+      <View style={{ flexShrink: 1, gap: 6 }}><NunitoAnimatedText style={[styles.label, text]}>{label}</NunitoAnimatedText>{detail && <NunitoAnimatedText style={[styles.detail, text]}>{detail}</NunitoAnimatedText>}</View>
       <View style={[styles.check, { borderColor: paper || !dark ? "#8A7965" : "#BBAA97" }]}><Animated.View style={[StyleSheet.absoluteFill, styles.tick, tick]}><SFSymbol name="checkmark" size={13} weight="bold" color="#FFFFFF" /></Animated.View></View>
     </Animated.View>
   </Pressable>;
@@ -39,7 +41,9 @@ export function OnboardingChoice({ label, detail, selected, onPress, multiple = 
 const styles = StyleSheet.create({
   card: { minHeight: 64, borderRadius: 16, borderCurve: "continuous", borderWidth: 1, padding: 18, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 14 },
   compact: { minHeight: 48, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 24, gap: 8 },
-  label: { fontSize: 18, lineHeight: 25, fontWeight: "500" }, detail: { fontSize: 14, lineHeight: 20 },
+  label: { fontSize: 18, lineHeight: 25, fontWeight: "700" }, detail: { fontSize: 14, lineHeight: 20 },
   check: { width: 23, height: 23, flexShrink: 0, borderRadius: 12, borderWidth: 1 },
   tick: { backgroundColor: "#478657", borderRadius: 12, alignItems: "center", justifyContent: "center" },
 });
+
+const NunitoAnimatedText = Animated.createAnimatedComponent(CloserAnimatedTextBase);

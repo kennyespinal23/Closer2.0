@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Modal, Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/Button";

@@ -1,4 +1,5 @@
-import { Text, View, type ImageStyle, type StyleProp, type ViewStyle } from "react-native";
+import { View, type ImageStyle, type StyleProp, type ViewStyle } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import Svg, {
   Defs,

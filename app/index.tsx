@@ -1,11 +1,6 @@
 import { useEffect, useMemo } from "react";
-import {
-  Linking,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Linking, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Redirect, useRouter } from "expo-router";

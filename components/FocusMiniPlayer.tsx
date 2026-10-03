@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Animated, Easing, Platform, Pressable, Text, View } from "react-native";
+import { Alert, Animated, Easing, Platform, Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useSegments } from "expo-router";

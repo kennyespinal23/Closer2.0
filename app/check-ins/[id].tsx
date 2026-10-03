@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Alert,
-  Animated,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Animated, Image, Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { goBackOr } from "@/lib/navigation";

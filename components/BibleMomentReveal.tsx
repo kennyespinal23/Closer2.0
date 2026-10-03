@@ -1,5 +1,7 @@
+import { buttonStyles } from '@/lib/buttonStyles';
 import { useEffect, useId, useRef, useState } from 'react';
-import { AccessibilityInfo, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { cancelAnimation, Easing, interpolate, runOnJS, useAnimatedProps, useAnimatedStyle, useDerivedValue, useSharedValue, withDelay, withRepeat, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { Image } from 'expo-image';
@@ -145,4 +147,4 @@ export function BibleMomentReveal({ request, onClose, preview=false, autoPlay=fa
   </View></>;
   return embedded?content:<Modal visible animationType="fade" presentationStyle="fullScreen" onRequestClose={()=>detailOrigin?setDetailOrigin(null):onClose()}>{content}</Modal>;
 }
-const s=StyleSheet.create({root:{flex:1,backgroundColor:'#211d18'},center:{...StyleSheet.absoluteFillObject,alignItems:'center',justifyContent:'center'},inset:{position:'absolute',inset:12,borderWidth:1,borderRadius:14},face:{...StyleSheet.absoluteFillObject,borderRadius:23,overflow:'hidden',borderWidth:1,backgroundColor:'#375849',boxShadow:'2px 4px 0 #816248, 0 22px 35px #00000044'},title:{fontSize:27,fontWeight:'700',letterSpacing:-.7,textAlign:'center',color:INK},subtitle:{fontSize:13,color:'#c5b9ab',textAlign:'center',lineHeight:19},footer:{paddingHorizontal:24,paddingTop:18,paddingBottom:12},button:{minHeight:48,borderRadius:30,backgroundColor:'#fff2db',justifyContent:'center',alignItems:'center',paddingHorizontal:22,paddingVertical:14},buttonText:{fontSize:16,fontWeight:'600',color:'#32271f'}});
+const s=StyleSheet.create({root:{flex:1,backgroundColor:'#211d18'},center:{...StyleSheet.absoluteFillObject,alignItems:'center',justifyContent:'center'},inset:{position:'absolute',inset:12,borderWidth:1,borderRadius:14},face:{...StyleSheet.absoluteFillObject,borderRadius:23,overflow:'hidden',borderWidth:1,backgroundColor:'#375849',boxShadow:'2px 4px 0 #816248, 0 22px 35px #00000044'},title:{fontSize:27,fontWeight:'700',letterSpacing:-.7,textAlign:'center',color:INK},subtitle:{fontSize:13,color:'#c5b9ab',textAlign:'center',lineHeight:19},footer:{paddingHorizontal:24,paddingTop:18,paddingBottom:12},button:{...buttonStyles.primary,backgroundColor:'#fff2db',justifyContent:'center',alignItems:'center'},buttonText:{...buttonStyles.label,color:'#32271f'}});

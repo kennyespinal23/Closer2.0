@@ -1,15 +1,7 @@
 import { contentText, contentLayout } from "@/lib/contentStyles";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Animated,
-  Easing,
-  InteractionManager,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Animated, Easing, InteractionManager, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import Svg, { Circle } from "react-native-svg";
 import Animated, { cancelAnimation, Easing, useAnimatedProps, useSharedValue, withTiming } from "react-native-reanimated";
 import { SFSymbol } from "@/components/Symbol";

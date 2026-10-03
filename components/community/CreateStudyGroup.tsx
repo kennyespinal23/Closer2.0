@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from "react-native";
+import { Text, TextInput } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import Animated, { FadeInDown, ZoomIn, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";

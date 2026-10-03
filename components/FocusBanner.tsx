@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import Svg, { Path } from "react-native-svg";
 import {
   isShieldSupported,

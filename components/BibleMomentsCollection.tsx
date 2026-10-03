@@ -1,7 +1,8 @@
 import { MomentCollectibleFront } from "./MomentCollectible";
 import { contentText, contentLayout } from "@/lib/contentStyles";
 import { type ReactNode, useRef, useState } from "react";
-import { ScrollView, FlatList, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { ScrollView, FlatList, Pressable, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import { useRouter, type Href } from "expo-router";
 import { Host, ContextMenu, Button as NativeButton } from "@expo/ui/swift-ui";

@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
+import { Text, TextInput } from "@/components/CloserText";
 import { AppleSheet, SheetContent } from "@/components/AppleSheet";
 import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { SheetModalHeader } from "@/components/SheetModalHeader";

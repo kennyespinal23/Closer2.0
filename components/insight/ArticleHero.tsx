@@ -1,4 +1,5 @@
-import { Image, Text, View } from "react-native";
+import { Image, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import type { Insight } from "@/constants/insights";
 import { systemText } from "@/lib/typography";
 

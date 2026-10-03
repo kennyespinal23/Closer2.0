@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";

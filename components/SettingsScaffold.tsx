@@ -1,13 +1,7 @@
 import { contentText } from "@/lib/contentStyles";
 import { useLayoutEffect, type ReactNode } from "react";
-import {
-  Linking,
-  Pressable,
-  ScrollView,
-  Switch,
-  Text,
-  View,
-} from "react-native";
+import { Linking, Pressable, ScrollView, Switch, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "expo-router";
 import { useHeaderHeight } from "@react-navigation/elements";

@@ -1,12 +1,7 @@
 import { WaxMedal } from "./WaxMedal";
 import { useMemo } from "react";
-import {
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { SFSymbol } from "@/components/Symbol";

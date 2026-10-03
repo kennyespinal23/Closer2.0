@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
-import { Animated, Pressable, Text, View } from "react-native";
+import { Animated, Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Host, Picker as ExpoUIPicker } from "@expo/ui/swift-ui";

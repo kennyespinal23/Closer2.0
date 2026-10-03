@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";

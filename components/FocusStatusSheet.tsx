@@ -38,7 +38,8 @@
  * shape unchanged for the call site in today.tsx.
  */
 
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import * as haptics from "@/lib/haptics";
 import { findSocialApp, type SocialAppId } from "@/lib/focus";
 import { AppleSheet } from "@/components/AppleSheet";

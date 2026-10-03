@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ComponentProps } from "react";
-import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from "react-native";
+import { Text, TextInput } from "@/components/CloserText";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HIGHLIGHT_COLORS, findHighlightColor, type HighlightColorId } from "@/state/annotations";

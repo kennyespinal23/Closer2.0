@@ -1,4 +1,5 @@
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { SkyGradient } from "@/components/HomeSkyGradient";

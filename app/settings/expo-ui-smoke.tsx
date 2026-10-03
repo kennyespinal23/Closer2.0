@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Button, Host, Text as ExpoUIText, VStack } from "@expo/ui/swift-ui";
 import { SettingsScaffold, SettingsSection } from "@/components/SettingsScaffold";
 import { spacing } from "@/constants/spacing";

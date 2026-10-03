@@ -1,14 +1,7 @@
 import { WaxMedal } from "./WaxMedal";
 import { useEffect, useMemo, useRef } from "react";
-import {
-  Animated,
-  Easing,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Animated, Easing, Platform, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import Svg, { Defs, Line, RadialGradient, Rect, Stop } from "react-native-svg";
 import type { Milestone } from "@/lib/milestones";
 import { getMilestoneAccent } from "@/lib/milestones";

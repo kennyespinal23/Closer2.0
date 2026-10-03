@@ -1,12 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
+import { Text, TextInput } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRouter } from "expo-router";
 import { useOnboarding } from "@/state/onboarding";

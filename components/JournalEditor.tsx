@@ -1,13 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, useWindowDimensions, View } from "react-native";
+import { Text, TextInput } from "@/components/CloserText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppleSheet } from "@/components/AppleSheet";
 import { SFSymbol } from "@/components/Symbol";

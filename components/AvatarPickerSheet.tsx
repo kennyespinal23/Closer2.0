@@ -1,12 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import { AppleSheet } from "@/components/AppleSheet";
 import { SheetModalHeader } from "@/components/SheetModalHeader";

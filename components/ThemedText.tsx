@@ -1,4 +1,5 @@
-import { Text, type TextProps, type TextStyle } from "react-native";
+import { type TextProps, type TextStyle } from "react-native";
+import { Text } from "@/components/CloserText";
 import {
   systemText,
   typography,

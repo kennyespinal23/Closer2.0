@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-  Keyboard,
-  Platform,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Keyboard, Platform, View } from "react-native";
+import { Text, TextInput } from "@/components/CloserText";
 import {
   SafeAreaView,
   useSafeAreaInsets,

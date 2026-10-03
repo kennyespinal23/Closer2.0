@@ -1,6 +1,7 @@
 import { SkyGradient } from "./HomeSkyGradient";
 import { useEffect, useState, useId, useRef } from "react";
-import { BackHandler, Modal, Pressable, ScrollView, Share, Text, View, useWindowDimensions } from "react-native";
+import { BackHandler, Modal, Pressable, ScrollView, Share, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

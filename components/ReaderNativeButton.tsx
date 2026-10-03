@@ -1,4 +1,5 @@
-import { Platform, Pressable, Text as RNText } from "react-native";
+import { Platform, Pressable } from "react-native";
+import { Text as RNText } from "@/components/CloserText";
 import { Host, Button, Image, Text } from "@expo/ui/swift-ui";
 import { accessibilityLabel, frame } from "@expo/ui/swift-ui/modifiers";
 import { useColors, useResolvedScheme } from "@/state/theme";

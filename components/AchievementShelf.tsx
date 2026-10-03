@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Modal, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Modal, Pressable, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useColors } from "@/state/theme";

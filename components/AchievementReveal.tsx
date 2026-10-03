@@ -1,5 +1,7 @@
+import { buttonStyles } from '@/lib/buttonStyles';
 import { useEffect } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { cancelAnimation, Easing, interpolate, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withSpring, withTiming, type SharedValue } from "react-native-reanimated";
@@ -72,6 +74,6 @@ export function AchievementReveal({ achievementId, title, detail, icon = "envelo
         <Text style={{ fontSize: 16 * scale, lineHeight: 24.8 * scale, color: dark ? "#C0A894" : "#806F60", textAlign: "center" }}>{detail}</Text>
       </Animated.View>
     </ScrollView>
-    <Animated.View style={[{ paddingHorizontal: 25 * scale, paddingTop: 25 * scale, paddingBottom: Math.max(inset.bottom, 18) + 32 * scale }, buttonStyle]}><Pressable accessibilityRole="button" onPress={onContinue} style={{ backgroundColor: action.backgroundColor, minHeight: 54 * scale, padding: 16, borderRadius: 28 * scale, alignItems: "center", justifyContent: "center" }}><Text style={{ color: action.color, fontSize: 16 * scale, fontWeight: "600" }}>Continue</Text></Pressable></Animated.View>
+    <Animated.View style={[{ paddingHorizontal: 25 * scale, paddingTop: 25 * scale, paddingBottom: Math.max(inset.bottom, 18) + 32 * scale }, buttonStyle]}><Pressable accessibilityRole="button" onPress={onContinue} style={{ backgroundColor: action.backgroundColor, ...buttonStyles.primary }}><Text style={{ color: action.color, ...buttonStyles.label }}>Continue</Text></Pressable></Animated.View>
   </ReaderMaterialGradient>;
 }

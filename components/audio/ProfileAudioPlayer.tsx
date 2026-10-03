@@ -1,7 +1,8 @@
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from 'expo-image';
 import { Host, Slider } from '@expo/ui/swift-ui';
 import { ReaderSheet } from '../ReaderSheet';

@@ -1,4 +1,5 @@
-import { Linking, Text, View } from "react-native";
+import { Linking, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import Svg, { Path, Rect } from "react-native-svg";
 import {
   SettingsInfoBanner,

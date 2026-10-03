@@ -1,3 +1,4 @@
+import { Text as CloserAnimatedTextBase } from "@/components/CloserText";
 import { SheetHeading } from "@/components/SheetHeading";
 import { sheetText, sheetSpace } from "@/lib/sheetStyles";
 import { ReaderSocialRail } from "@/components/ReaderSocialRail";
@@ -28,25 +29,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  Animated,
-  AppState,
-  type AppStateStatus,
-  FlatList,
-  Platform,
-  PixelRatio,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  type StyleProp,
-  Text,
-  type TextLayoutEventData,
-  type NativeSyntheticEvent,
-  type NativeScrollEvent,
-  useWindowDimensions,
-  View,
-  type ViewStyle,
-} from "react-native";
+import { Animated, AppState, type AppStateStatus, FlatList, Platform, PixelRatio, Pressable, ScrollView, StyleSheet, type StyleProp, type TextLayoutEventData, type NativeSyntheticEvent, type NativeScrollEvent, useWindowDimensions, View, type ViewStyle } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import Svg, { Path, Defs, LinearGradient, Stop, Rect } from "react-native-svg";
@@ -2340,7 +2324,7 @@ function VerseFlow({
 
         // Branch the wrapper element instead of computing a union
         // type for `backgroundColor` — the latter trips TS because
-        // Animated.Text and Text don't share a single style-prop
+        // NunitoAnimatedText and Text don't share a single style-prop
         // overload that accepts both static colors and animated
         // interpolations.
         //
@@ -2364,7 +2348,7 @@ function VerseFlow({
                 style={{ fontFamily: feedStyle ? "Georgia" : NEW_YORK, fontWeight: "400", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1, color: colors.ink, backgroundColor: baseBg }}
               >{inner}</MomentVerseText>
             ) : isFocus ? (
-              <Animated.Text
+              <NunitoAnimatedText
                 onPress={() => onVersePress(v.number)}
 
                 onLongPress={
@@ -2383,7 +2367,7 @@ function VerseFlow({
                 }}
               >
                 {inner}
-              </Animated.Text>
+              </NunitoAnimatedText>
             ) : (
               <Text
                 onPress={() => onVersePress(v.number)}
@@ -4718,3 +4702,5 @@ function NotFound({ message }: { message: string }) {
     </SafeAreaView>
   );
 }
+
+const NunitoAnimatedText = Animated.createAnimatedComponent(CloserAnimatedTextBase);

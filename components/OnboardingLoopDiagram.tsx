@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import { SFSymbol } from "@/components/Symbol";
 import { CLOSER_ACCENT } from "@/constants/theme";

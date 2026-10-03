@@ -1,11 +1,7 @@
+import { buttonStyles } from '@/lib/buttonStyles';
 import { useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Animated,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Animated, Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import type { PressableProps } from "react-native";
 import { SFSymbol } from "@/components/Symbol";
 import {
@@ -14,7 +10,6 @@ import {
 } from "@/constants/heroChrome";
 import { CLOSER_ACCENT } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
-import { typography } from "@/lib/typography";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 export type PrimaryPillVariant = "primary" | "completed";
@@ -121,10 +116,7 @@ export function PrimaryPillButton({
         <View
           style={{
             backgroundColor: pillBg,
-            borderRadius: 999,
-            paddingVertical: 16,
-            paddingHorizontal: 24,
-            minHeight: 52,
+            ...buttonStyles.primary,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
@@ -138,7 +130,7 @@ export function PrimaryPillButton({
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text
                   style={[
-                    typography.button,
+                    buttonStyles.label,
                     {
                       color: pillInk,
                       flexShrink: 1,

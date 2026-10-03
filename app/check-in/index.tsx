@@ -1,15 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Animated,
-  Easing,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import type { ImageSourcePropType } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";

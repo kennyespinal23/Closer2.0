@@ -1,14 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Alert,
-  Linking,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";

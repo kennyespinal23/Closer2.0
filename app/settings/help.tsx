@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { Animated, Easing, Linking, Pressable, Text, View } from "react-native";
+import { Animated, Easing, Linking, Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { useRouter } from "expo-router";
 import { SFSymbol } from "@/components/Symbol";
 import {

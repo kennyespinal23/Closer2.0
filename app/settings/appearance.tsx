@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { useRouter } from "expo-router";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import * as haptics from "@/lib/haptics";

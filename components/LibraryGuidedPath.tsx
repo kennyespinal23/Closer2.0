@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Alert, Text, View, useWindowDimensions } from "react-native";
+import { Alert, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import Svg, { Path } from "react-native-svg";
 import { BOOKS, type Book } from "@/constants/books";
 import { useProgress } from "@/state/progress";

@@ -1,7 +1,8 @@
 import { ContextualReaderTip } from "./ContextualReaderTip";
 import { FeedbackPressable } from "./FeedbackPressable";
 import { useEffect, useState } from "react";
-import { BackHandler, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { BackHandler, Pressable, ScrollView, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withDelay, withTiming, runOnJS } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useReducedMotion } from "@/lib/useReducedMotion";

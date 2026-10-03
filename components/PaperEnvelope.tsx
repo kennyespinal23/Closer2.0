@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from "react";
-import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from "react-native-reanimated";
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Pattern, RadialGradient, Rect, Stop } from "react-native-svg";
 import { useReducedMotion } from "@/lib/useReducedMotion";

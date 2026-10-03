@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/CloserText";
 
 /** Inline emoji + label — matches the home hero metadata row. */
 export function EmojiMeta({ emoji, label }: { emoji: string; label: string }) {

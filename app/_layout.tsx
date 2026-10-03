@@ -6,9 +6,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts, ShantellSans_700Bold } from "@expo-google-fonts/shantell-sans";
-// Interface + reading live on iOS system fonts (SF Pro / New York).
-// Shantell Sans Bold is the only bundled face — home quote body.
-// See lib/typography.ts + components/HomeQuoteText.tsx.
+// Nunito is the interface face; Scripture and handwritten accents retain their own fonts.
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { View } from "react-native";
 import { LaunchSplash } from "@/components/LaunchSplash";
@@ -62,6 +60,13 @@ ensureAndroidChannel().catch(() => {
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     ShantellSans_700Bold,
+    NunitoRegular: require("../assets/fonts/nunito/nunito-400.ttf"),
+    NunitoMedium: require("../assets/fonts/nunito/nunito-500.ttf"),
+    NunitoSemiBold: require("../assets/fonts/nunito/nunito-600.ttf"),
+    NunitoBold: require("../assets/fonts/nunito/nunito-700.ttf"),
+    NunitoExtraBold: require("../assets/fonts/nunito/nunito-800.ttf"),
+    NunitoBlack: require("../assets/fonts/nunito/nunito-900.ttf"),
+
   });
 
   useEffect(() => {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import { Modal, Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { STORAGE_KEYS, loadJSON, saveJSON } from "@/lib/storage";

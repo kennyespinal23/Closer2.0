@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Animated, Easing, Text, View } from "react-native";
+import { Animated, Easing, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import Svg, {
   Circle,
   Defs,

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/CloserText";
 import Animated, { cancelAnimation, useAnimatedStyle, useAnimatedScrollHandler, useSharedValue, withDelay, withSpring, withTiming, useAnimatedProps, type SharedValue } from "react-native-reanimated";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useResolvedScheme } from "@/state/theme";

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Platform, Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import * as AppleAuthentication from "expo-apple-authentication";
 import Svg, { Path } from "react-native-svg";
 import { minTouchTarget, spacing } from "@/constants/spacing";

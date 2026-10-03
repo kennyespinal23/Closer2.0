@@ -1,16 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Animated,
-  Easing,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Animated, Easing, Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/SocialAppCard";

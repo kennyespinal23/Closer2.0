@@ -1,4 +1,5 @@
-import { Alert, Linking, Text, View } from "react-native";
+import { Alert, Linking, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { useRouter } from "expo-router";
 import { SFSymbol } from "@/components/Symbol";
 import {

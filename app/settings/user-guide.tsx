@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SFSymbol } from "@/components/Symbol";
 import { SettingsScaffold } from "@/components/SettingsScaffold";
 import { useColors } from "@/state/theme";

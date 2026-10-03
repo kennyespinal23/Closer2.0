@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { BrandMark } from "@/components/BrandMark";

@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { useRouter } from "expo-router";
 import { HeroDisc, HeroOnboardingPage } from "@/components/HeroOnboardingPage";
 import { useColors } from "@/state/theme";

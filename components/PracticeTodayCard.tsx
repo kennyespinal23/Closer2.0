@@ -1,11 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import * as haptics from "@/lib/haptics";
 import { systemText, typography } from "@/lib/typography";
 import { AppleSheet, type AppleSheetRef } from "@/components/AppleSheet";

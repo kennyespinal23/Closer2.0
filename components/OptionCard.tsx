@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import Svg, { Path } from "react-native-svg";
 import { minTouchTarget, spacing } from "@/constants/spacing";
 import { CLOSER_ACCENT } from "@/constants/theme";

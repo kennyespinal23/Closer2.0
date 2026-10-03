@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/CloserText";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import * as haptics from "@/lib/haptics";
 import { SFSymbol } from "@/components/Symbol";

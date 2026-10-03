@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { SFSymbol } from "@/components/Symbol";
 import {
   SettingsScaffold,

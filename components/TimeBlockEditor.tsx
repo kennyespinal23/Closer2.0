@@ -1,15 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  ActionSheetIOS,
-  LayoutAnimation,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  UIManager,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { ActionSheetIOS, LayoutAnimation, Platform, Pressable, StyleSheet, UIManager, useWindowDimensions, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "@/components/CloserText";
 import { FamilyActivityAppsEditor } from "@/components/FamilyActivityAppsEditor";
 import { SFSymbol } from "@/components/Symbol";
 import { BrandGlyph } from "@/components/BrandGlyph";

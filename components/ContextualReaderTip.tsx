@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/CloserText";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FeedbackPressable } from "./FeedbackPressable";
 import { SFSymbol } from "./Symbol";

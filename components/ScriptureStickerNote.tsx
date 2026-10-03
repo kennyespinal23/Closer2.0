@@ -1,12 +1,6 @@
 import { useCallback, useState } from "react";
-import {
-  Animated,
-  Platform,
-  type StyleProp,
-  Text,
-  View,
-  type ViewStyle,
-} from "react-native";
+import { Animated, Platform, type StyleProp, View, type ViewStyle } from "react-native";
+import { Text } from "@/components/CloserText";
 import Svg, { G, Line, Path } from "react-native-svg";
 import { typography } from "@/lib/typography";
 

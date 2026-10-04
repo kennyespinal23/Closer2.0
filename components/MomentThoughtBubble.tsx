@@ -1,3 +1,6 @@
+import { buttonStyles } from '@/lib/buttonStyles';
+import { contentLayout } from '@/lib/contentStyles';
+import { paperActionColors } from '@/lib/paperControls';
 import { ContextualReaderTip } from "./ContextualReaderTip";
 import { FeedbackPressable } from "./FeedbackPressable";
 import { useEffect, useState } from "react";
@@ -21,6 +24,7 @@ export function MomentThoughtBubble({ moment, anchorY, onClose, onCollect }: {
     return () => back.remove();
   }, [onClose]);
   const dark = useResolvedScheme() === "dark";
+  const action = paperActionColors(dark);
   const reduced = useReducedMotion();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
@@ -37,15 +41,15 @@ export function MomentThoughtBubble({ moment, anchorY, onClose, onCollect }: {
   return <View accessibilityViewIsModal style={{ position: "absolute", inset: 0, zIndex: 200 }}>
     <Pressable accessibilityRole="button" accessibilityLabel="Keep reading" onPress={dismiss} style={{ position: "absolute", inset: 0, backgroundColor: dark ? "#00000066" : "#20150D30" }} />
     <View pointerEvents="none" accessible={false} style={{ position: "absolute", left: 46, top: top - 58 }}>{[10, 16, 22].map((size, index) => <ThoughtDot key={size} size={size} index={index} paper={paper} ink={ink} reduced={reduced} />)}</View>
-    <Animated.View onLayout={event => setMeasured(event.nativeEvent.layout.height)} style={[{ position: "absolute", left: 20, right: 20, top, maxHeight: height - insets.top - insets.bottom - 100, borderRadius: 36, borderTopLeftRadius: 24, borderBottomRightRadius: 28, borderCurve: "continuous", borderWidth: 2, borderColor: dark ? "#806C54" : "#493424", backgroundColor: paper, padding: 20, gap: 12 }, style]}>
+    <Animated.View onLayout={event => setMeasured(event.nativeEvent.layout.height)} style={[{ position: "absolute", left: contentLayout.gutter, right: contentLayout.gutter, top, maxHeight: height - insets.top - insets.bottom - 100, borderRadius: 36, borderTopLeftRadius: 24, borderBottomRightRadius: 28, borderCurve: "continuous", borderWidth: 2, borderColor: dark ? "#806C54" : "#493424", backgroundColor: paper, padding: 24, gap: 12 }, style]}>
       <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}><SFSymbol name="sparkles" size={16} color={dark ? "#FFAC86" : "#A63C20"} /><Text style={{ ...systemText.footnote, color: dark ? "#FFAC86" : "#A63C20", flex: 1 }}>{collected ? "A Moment in your collection" : "You found a Bible Moment"}</Text></View>
       <ScrollView bounces={false} contentContainerStyle={{ gap: 12 }}>
-        <Text accessibilityRole="header" style={{ ...systemText.title2, fontSize: 24, lineHeight: 29, fontWeight: "700", color: ink }}>{moment.title}</Text>
+        <Text accessibilityRole="header" style={{ ...systemText.title2, color: ink }}>{moment.title}</Text>
         <Text style={{ ...systemText.callout, color: ink, lineHeight: 23 }}>{moment.importance}</Text>
         <Text style={{ ...systemText.footnote, color: dark ? "#C9B7A1" : "#74614F" }}>{moment.reference}</Text>
       </ScrollView>
       {!collected && <ContextualReaderTip id="collect" text="Collect this card to keep it in Your Moments." color={dark ? "#C9B7A1" : "#74614F"}/> }
-      <FeedbackPressable feedback="action" accessibilityRole="button" onPress={onCollect} style={{ minHeight: 48, padding: 12, borderRadius: 18, borderBottomLeftRadius: 6, backgroundColor: "#FF5A36", alignItems: "center", justifyContent: "center" }}><Text style={{ ...systemText.headline, color: "#26130D" }}>{collected ? "View collected Moment" : "Collect this Moment"}</Text></FeedbackPressable>
+      <FeedbackPressable feedback="action" accessibilityRole="button" onPress={onCollect} style={[buttonStyles.primary, { backgroundColor: action.backgroundColor }]}><Text style={[buttonStyles.label, { color: action.color }]}>{collected ? "View collected Moment" : "Collect this Moment"}</Text></FeedbackPressable>
       <Pressable accessibilityRole="button" onPress={dismiss} style={{ minHeight: 44, alignItems: "center", justifyContent: "center" }}><Text style={{ ...systemText.body, color: ink }}>Keep reading</Text></Pressable>
     </Animated.View>
   </View>;

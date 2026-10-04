@@ -21,7 +21,7 @@ import { SFSymbol } from './Symbol';
 import * as haptics from '@/lib/haptics';
 
 export type BibleRevealKind = 'moment' | 'silver' | 'old-gold' | 'new-gold' | 'crown';
-export type BibleRevealRequest = { kind: BibleRevealKind; moment?: BibleMoment; bookId?: string };
+export type BibleRevealRequest = { kind: BibleRevealKind; moment?: BibleMoment; bookId?: string; collected?: boolean };
 const INK = '#fff5e8';
 const SILVER = ['#454d4f','#d6d9d5','#858e8c','#f4f1df','#687373','#d5d8d3'];
 const GOLD = ['#755021','#ce9744','#f9de8e','#bc802e','#fff0b4','#d6a74d','#8f6024','#e4bd66'];
@@ -106,12 +106,12 @@ export function BibleMomentReveal({ request, onClose, preview=false, autoPlay=fa
   const name=regular?moment.title:silver?book:crown?'The Whole Bible':kind==='new-gold'?'New Testament':'Old Testament';
   const count=BIBLE_MOMENTS.filter(m=>m.bookId===bookId).length;
   const {width,height}=useWindowDimensions(), insets=useSafeAreaInsets(), reduced=useReducedMotion();
-  const [intro,setIntro]=useState(!regular), [running,setRunning]=useState(false), [done,setDone]=useState(false);
+  const [intro,setIntro]=useState(!regular && !request.collected), [running,setRunning]=useState(false), [done,setDone]=useState(!!request.collected);
   const [artOpen,setArtOpen]=useState(false);
   const heroRef=useRef<View>(null);
   const [detailOrigin,setDetailOrigin]=useState<MomentDetailOrigin|null>(null);
   const openDetail=()=>heroRef.current?.measureInWindow((x,y,width,height)=>{if(width>0&&height>0){haptics.soft();setDetailOrigin({x,y,width,height});}});
-  const started=useRef(false), time=useSharedValue(0), gloss=useSharedValue(-1), entry=useSharedValue(0);
+  const started=useRef(!!request.collected), time=useSharedValue(request.collected ? 5000 : 0), gloss=useSharedValue(-1), entry=useSharedValue(0);
   const p=palette(bookId), world=regular?p.world:silver?['#384149','#21262d','#131619']:crown?['#3c3d50','#242431','#15151d']:['#443724','#272119','#171411'];
   const glint=regular?p.glint:crown?'#ede2be':silver?'#d8e5e7':'#f3cb6e';
   const burstAt=regular?1900:crown?1950:1600, duration=regular?3000:crown?3350:2700;
@@ -121,7 +121,7 @@ export function BibleMomentReveal({ request, onClose, preview=false, autoPlay=fa
   useEffect(()=>{entry.value=withTiming(1,{duration:reduced?180:650,easing:ease});return()=>{[time,gloss,entry].forEach(cancelAnimation);};},[]);
   useEffect(()=>{if(done&&!reduced)gloss.value=withRepeat(withSequence(withTiming(1,{duration:1500,easing:Easing.inOut(Easing.cubic)}),withDelay(2800,withTiming(-1,{duration:0}))),-1);},[done,reduced]);
   const start=()=>{if(started.current)return;started.current=true;setIntro(false);setRunning(true);haptics.soft();time.value=withTiming(duration,{duration:reduced?180:duration,easing:Easing.linear},finished=>{if(finished){runOnJS(finish)();time.value=withTiming(duration+2000,{duration:reduced?0:2000,easing:Easing.linear});}});};
-  useEffect(()=>{if(!autoPlay)return;const timer=setTimeout(start,preview?1500:350);return()=>clearTimeout(timer);},[autoPlay,preview]);
+  useEffect(()=>{if(!autoPlay || request.collected)return;const timer=setTimeout(start,preview?1500:350);return()=>clearTimeout(timer);},[autoPlay,preview]);
   useEffect(()=>{if(!preview||!previewDetail||!done||!regular)return;const timer=setTimeout(openDetail,900);return()=>clearTimeout(timer)},[preview,previewDetail,done]);
   const heroTime=useDerivedValue(()=>{
     if(reduced)return time.value;

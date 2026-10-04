@@ -88,8 +88,8 @@ export function BibleMomentsCollection({ standalone = false, initialCategory = "
       contentContainerStyle={{ paddingHorizontal: contentLayout.gutter, paddingTop: 12, paddingBottom: 32 }} showsVerticalScrollIndicator={false} initialNumToRender={6} maxToRenderPerBatch={6} windowSize={5} /> : <>
       {header}<FlatList ref={list} horizontal data={ready ? moments : []} key={`${view}:${filter}`} keyExtractor={moment => moment.id} renderItem={renderCard} ListEmptyComponent={empty} contentContainerStyle={{ gap: 12 }} showsHorizontalScrollIndicator={false} />{badges}
     </>}
-    {open && <BibleMomentReveal autoPlay request={{kind:'moment',moment:open}} onClose={() => setOpen(null)} />}
-    {foil && <BibleMomentReveal request={{kind:'silver',bookId:foil}} onClose={() => setFoil(null)} />}
+    {open && <BibleMomentReveal autoPlay request={{collected:true,kind:'moment',moment:open}} onClose={() => setOpen(null)} />}
+    {foil && <BibleMomentReveal request={{collected:true,kind:'silver',bookId:foil}} onClose={() => setFoil(null)} />}
   </View>;
 }
 

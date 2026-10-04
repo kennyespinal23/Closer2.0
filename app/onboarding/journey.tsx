@@ -1,3 +1,4 @@
+import { SCREEN_H_PAD } from "@/lib/layout";
 import { uiText } from '@/lib/typography';
 import { OnboardingContent, OnboardingChoicesLayout } from '@/components/OnboardingContent';
 import { buttonStyles } from '@/lib/buttonStyles';
@@ -6,7 +7,7 @@ import { BackHandler, Linking, Keyboard, KeyboardAvoidingView, Platform, Pressab
 import { Text, TextInput } from "@/components/CloserText";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { OnboardingFocusText, OnboardingMotionGroup } from "@/components/OnboardingMotion";
 import { OnboardingCommunityScene } from "@/components/OnboardingStoryScene";
@@ -50,7 +51,10 @@ const DETAILS = ["A small invitation to begin again.", "Choose all that feel rig
 
 /** New onboarding lives after the original video welcome, which owns its own route. */
 export default function Journey() {
-  const { previewTheme } = useLocalSearchParams<{ previewTheme?: string }>();
+  const { previewTheme, preview } = useLocalSearchParams<{ previewTheme?: string; preview?: string }>();
+  const { answers: savedAnswers, hydrated } = useOnboarding();
+  if (!hydrated) return null;
+  if (savedAnswers.completed && !(__DEV__ && preview)) return <Redirect href="/today" />;
   if (__DEV__ && (previewTheme === "light" || previewTheme === "dark")) {
     return <ThemeSurface scheme={previewTheme} colors={previewTheme === "light" ? LIGHT_COLORS : DARK_COLORS}><JourneyFlow /></ThemeSurface>;
   }
@@ -123,7 +127,7 @@ function JourneyFlow() {
   const [goalChosen, setGoalChosen] = useState(false), [timeChosen, setTimeChosen] = useState(false);
   const reasons = answers.welcomeReasons ?? [], intentions = answers.growthAreas ?? [];
   const answerMissing = Boolean(question && !question.options.includes(answers[question.key] as never)) || (step === 1 && reasons.length === 0) || (step === 3 && intentions.length === 0) || (step === 13 && !(answers.faithObstacles?.length)) || (step === 4 && !goalChosen) || (step === 7 && !timeChosen);
-  const back = () => { if (busy || transitionLock.current) return; Keyboard.dismiss(); setError(""); if (page > 0) goToPage(page - 1); else router.back(); };
+  const back = () => { if (busy || transitionLock.current) return; Keyboard.dismiss(); setError(""); if (page > 1) goToPage(page - 1); else router.back(); };
   useEffect(() => { const sub = BackHandler.addEventListener("hardwareBackPress", () => { back(); return true; }); return () => sub.remove(); }, [page, busy]);
   const next = () => { Keyboard.dismiss(); haptics.soft(); setError(""); goToPage(Math.min(ORDER.length - 1, page + 1)); };
   const finish = () => {
@@ -180,13 +184,14 @@ function JourneyFlow() {
     setAnswer(key, nextValues);
   };
   const purchaseUnavailable = step === 15 && !subscription.isPro && (!subscription.configured || !subscription.monthlyPackage);
+  const continueDisabled = busy || exiting || openingLeaving || purchaseUnavailable || answerMissing;
   const label = busy ? "Saving…" : step === 5 ? collected ? "Continue" : "Collect this Moment" : step === 6 && !readingExpanded ? "Open reading preview" : step === 17 && !giftOpened ? "Hold to unwrap your Bible" : step === 14 ? "Enable reminders" : step === 15 ? subscription.isPro ? "Continue" : purchaseUnavailable ? "Subscriptions coming soon" : "Subscribe" : "Continue";
   return <View style={{flex:1}} pointerEvents={openingLeaving ? "none" : "auto"}>
     {step !== 0 && <ReaderMaterialGradient colors={dark ? ["#372820", "#1D1916", "#171513"] : ["#F2DECB", "#F8EFE2", "#F9F4EA"]} style={{ flex: 1 }}>
     <SafeAreaView style={{ flex: 1 }}>
       <StatusBar style={dark ? "light" : "dark"} />
       <View style={s.top}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Go back" disabled={busy || exiting} onPress={back} style={s.icon}><SFSymbol name="chevron.left" size={20} color={ink} /></Pressable>
+        {page > 1 ? <Pressable accessibilityRole="button" accessibilityLabel="Go back" disabled={busy || exiting} onPress={back} style={s.icon}><SFSymbol name="chevron.left" size={20} color={ink} /></Pressable> : <View style={s.icon} />}
         <OnboardingProgress page={page} total={ORDER.length} color={ink} dark={dark}/>
         <View style={s.icon} />
       </View>
@@ -215,7 +220,7 @@ function JourneyFlow() {
             {step === 7 && <><Sky time={time} /><View style={s.chips}>{TIMES.map((t, i) => <OnboardingChoice key={t.label} label={t.label} detail={t.time} selected={timeChosen && time === i} onPress={() => { setTime(i); setTimeChosen(true); haptics.tick(); }} style={{ width: "46%" }} />)}</View></>}
           </View></OnboardingMotionGroup>
         </OnboardingContent>}
-        <View style={s.footer}>{!!error && <Text accessibilityLiveRegion="polite" style={[s.body, { color: ink, fontSize: 15 }]}>{error}</Text>}{step === 17 && !giftOpened ? <HoldToUnwrap onUnwrap={() => setGiftOpened(true)}/> : <Pressable accessibilityRole="button" disabled={busy || exiting || purchaseUnavailable || answerMissing} accessibilityState={{ disabled: busy || purchaseUnavailable || answerMissing }} onPress={submit} style={[s.cta, { backgroundColor: actionColors.backgroundColor, borderColor: actionColors.borderColor, borderWidth: 1, opacity: busy || purchaseUnavailable || answerMissing ? .55 : 1 }]}><Text style={[s.ctaText, { color: actionColors.color }]}>{label}</Text></Pressable>}{(step === 2 || step === 14 || step === 15) && <Pressable disabled={busy || exiting} accessibilityRole="button" onPress={step === 15 ? finish : next} style={s.secondary}><Text style={{ color: muted, fontSize: 16 }}>{step === 15 ? "Continue for free" : step === 14 ? "Not now" : "Skip for now"}</Text></Pressable>}</View>
+        <View style={s.footer}>{!!error && <Text accessibilityLiveRegion="polite" style={[s.body, { color: ink, fontSize: 15 }]}>{error}</Text>}{step === 17 && !giftOpened ? <HoldToUnwrap onUnwrap={() => setGiftOpened(true)}/> : <Pressable accessibilityRole="button" disabled={continueDisabled} accessibilityState={{ disabled: continueDisabled, busy }} onPress={submit} style={[s.cta, { backgroundColor: continueDisabled ? (dark ? "#443B34" : "#E4DBD0") : actionColors.backgroundColor, borderColor: continueDisabled ? "transparent" : actionColors.borderColor, borderWidth: 1, boxShadow: continueDisabled ? "none" : s.cta.boxShadow }]}><Text style={[s.ctaText, { color: continueDisabled ? (dark ? "#B9ADA1" : "#786B60") : actionColors.color }]}>{label}</Text></Pressable>}{(step === 2 || step === 14 || step === 15) && <Pressable disabled={busy || exiting} accessibilityRole="button" onPress={step === 15 ? finish : next} style={s.secondary}><Text style={{ color: muted, fontSize: 16 }}>{step === 15 ? "Continue for free" : step === 14 ? "Not now" : "Skip for now"}</Text></Pressable>}</View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   </ReaderMaterialGradient>}
@@ -253,7 +258,7 @@ function Sky({ time }: { time: number }) {
 const s = StyleSheet.create({
   top: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, height: 56 }, icon: { width: 44, height: 44, alignItems: "center", justifyContent: "center" }, progress: { flex: 1, height: 8, borderRadius: 4, overflow: "hidden", maxWidth: 240, marginHorizontal: "auto" },
   questionTitle: { textAlign: "left", fontSize: 36, lineHeight: 42 },
-  content: { flexGrow: 1, padding: 28, paddingTop: 32, justifyContent: "flex-start" }, title: { ...uiText.screenTitle, textAlign: "center" }, body: { fontSize: 16, lineHeight: 24, textAlign: "center" }, footer: { paddingHorizontal: 28, paddingTop: 12, paddingBottom: 12, gap: 12 }, cta: { ...buttonStyles.primary, backgroundColor: "#FFFAF1", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 12px #00000010" }, ctaText: { ...buttonStyles.label, color: "#30251E" }, secondary: { minHeight: 44, alignItems: "center", justifyContent: "center" },
+  content: { flexGrow: 1, padding: SCREEN_H_PAD, paddingTop: 32, justifyContent: "flex-start" }, title: { ...uiText.screenTitle, textAlign: "center" }, body: { fontSize: 16, lineHeight: 24, textAlign: "center" }, footer: { paddingHorizontal: SCREEN_H_PAD, paddingTop: 12, paddingBottom: 12, gap: 12 }, cta: { ...buttonStyles.primary, backgroundColor: "#FFFAF1", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 12px #00000010" }, ctaText: { ...buttonStyles.label, color: "#30251E" }, secondary: { minHeight: 44, alignItems: "center", justifyContent: "center" },
   note: { padding: 20, borderRadius: 12, borderCurve: "continuous", gap: 12, boxShadow: "0 6px 10px #00000018" }, noteText: { color: "#362A22", fontSize: 17, lineHeight: 24, fontWeight: "500" }, stamp: { color: "#655044", fontSize: 13, fontWeight: "600" }, nameTag: { borderRadius: 24, borderCurve: "continuous", overflow: "hidden", boxShadow: "0 16px 28px #00000018" }, tagHeader: { backgroundColor: "#AC5A41", padding: 20, alignItems: "center" }, input: { minHeight: 120, padding: 24, fontSize: 30, textAlign: "center" },
   jar: { alignSelf: "center", width: 240, minHeight: 220, borderWidth: 2, borderRadius: 36, borderCurve: "continuous", padding: 20, paddingTop: 30, justifyContent: "flex-end" }, jarLid: { position: "absolute", top: -8, left: 12, right: 12, height: 18, borderRadius: 8 }, slips: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 10 }, slip: { padding: 8, paddingHorizontal: 12, borderRadius: 4 }, chips: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 12 }, chip: { paddingHorizontal: 20, paddingVertical: 14, borderRadius: 24, borderCurve: "continuous", minHeight: 48 }, candles: { flexDirection: "row", justifyContent: "space-evenly", paddingBottom: 16 }, candleChoice: { alignItems: "center", width: 88, minHeight: 330 },
   plan: { padding: 24, gap: 20, borderRadius: 24, borderCurve: "continuous" }, planTitle: { fontSize: 24, fontWeight: "600" }, planRow: { flexDirection: "row", gap: 16, alignItems: "center", minHeight: 60 }, number: { fontSize: 22, fontWeight: "600", width: 24 }, time: { width: "46%", padding: 16, minHeight: 80, borderRadius: 20, borderCurve: "continuous", gap: 8 }, sky: { height: 190, borderRadius: 28, borderCurve: "continuous", alignItems: "center", justifyContent: "center" }, sun: { width: 46, height: 46, borderRadius: 23, marginTop: 60 }, hill: { position: "absolute", bottom: -75, width: "130%", height: 130, borderRadius: 150, backgroundColor: "#756B56" },

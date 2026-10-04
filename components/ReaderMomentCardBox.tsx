@@ -126,9 +126,9 @@ export function ReaderMomentCardBox({ bookId, pocketRef, onClose }: { bookId: st
       </View>} renderItem={({ item: [, moments] }) => <CardTray showFoil={filter === "all"} onFoil={openFoil} moments={moments} collected={collected} selectedId={moments.some(m => m.id === selected?.moment.id) ? selected?.moment.id : undefined} onOpen={openMoment} />}
       ListFooterComponent={<Text style={{ ...systemText.footnote, color: muted, padding: 20, lineHeight: 21 }}>Every card you find while reading ends up here. Question marks show what kind of Moment is waiting, never what it is.</Text>} />
     </Animated.View>
-    {foilBook && <BibleMomentReveal request={{kind:'silver',bookId:foilBook}} onClose={()=>setFoilBook(null)}/>}
-    {readingReward && <BibleMomentReveal request={{kind:readingReward}} onClose={()=>setReadingReward(null)}/>}
+    {foilBook && <BibleMomentReveal request={{collected:true,kind:'silver',bookId:foilBook}} onClose={()=>setFoilBook(null)}/>}
+    {readingReward && <BibleMomentReveal request={{kind:readingReward,collected:true}} onClose={()=>setReadingReward(null)}/>}
 
-    {selected && <BibleMomentReveal autoPlay request={{kind:'moment',moment:selected.moment}} onClose={() => setSelected(null)} />}
+    {selected && <BibleMomentReveal autoPlay request={{collected:true,kind:'moment',moment:selected.moment}} onClose={() => setSelected(null)} />}
   </View>;
 }

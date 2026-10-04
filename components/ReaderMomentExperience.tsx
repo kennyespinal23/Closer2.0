@@ -1,3 +1,5 @@
+import { buttonStyles } from '@/lib/buttonStyles';
+import { contentLayout } from '@/lib/contentStyles';
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { AccessibilityInfo, BackHandler, Modal, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -30,7 +32,7 @@ export function ReaderMomentExperience({ moment, onFinish, pocketRef, showcase, 
     setSaveError(false);
     void unlockBibleMomentWithRewards(moment.id).then(result=>{
       if(generation!==alive.current)return;
-      if(result.status==='existing'){setQueue([{kind:'moment',moment}]);return;}
+      if(result.status==='existing'){setQueue([{kind:'moment',moment,collected:true}]);return;}
       setRewards(result.categories);
       setQueue([{kind:'moment',moment},...(result.bookCompleted?[{kind:'silver' as const,bookId:moment.bookId}]:[])]);
       onCollected();
@@ -49,8 +51,8 @@ export function ReaderMomentExperience({ moment, onFinish, pocketRef, showcase, 
   // Swapping Modal hosts while a save resolves races UIKit presentation/dismissal.
   if(queue.length || moment || rewards.length)return <Modal visible animationType="fade" presentationStyle="fullScreen" onRequestClose={closeCurrent}>
     {queue.length?<BibleMomentReveal embedded autoPlay={queue[0].kind==='moment'} key={queue[0].kind+(queue[0].moment?.id??'')} request={queue[0]} onClose={finishReveal}/>
-    :moment?<View style={{flex:1,backgroundColor:'#211d18',justifyContent:'center',padding:32,gap:20}}><Text style={{...systemText.title2,color:'#fff5e8',textAlign:'center'}}>{saveError?'Couldn’t save this Moment':'Keeping your Moment…'}</Text>{saveError&&<Pressable accessibilityRole="button" onPress={()=>setAttempt(a=>a+1)} style={{padding:16,backgroundColor:'#fff2db',borderRadius:24,alignItems:'center'}}><Text>Try again</Text></Pressable>}<Pressable accessibilityRole="button" onPress={onFinish} style={{minHeight:44,alignItems:'center',justifyContent:'center'}}><Text style={{color:'#fff5e8'}}>Back to reading</Text></Pressable></View>
-    :<View style={{flex:1,backgroundColor:colors.surface,paddingTop:insets.top+24,paddingHorizontal:24,paddingBottom:insets.bottom+24}}><ScrollView>{rewards.map(category=><MomentCategoryReward key={category} category={category} expanded/>)}</ScrollView><Pressable accessibilityRole="button" onPress={()=>setRewards([])} style={{minHeight:48,alignItems:'center',justifyContent:'center'}}><Text style={{...systemText.headline,color:colors.ink}}>Done</Text></Pressable></View>}
+    :moment?<View style={{flex:1,backgroundColor:'#211d18',justifyContent:'center',padding:contentLayout.gutter,gap:24}}><Text style={{...systemText.title2,color:'#fff5e8',textAlign:'center'}}>{saveError?'Couldn’t save this Moment':'Keeping your Moment…'}</Text>{saveError&&<Pressable accessibilityRole="button" onPress={()=>setAttempt(a=>a+1)} style={[buttonStyles.primary,{backgroundColor:'#fff2db'}]}><Text style={[buttonStyles.label,{color:'#30251E'}]}>Try again</Text></Pressable>}<Pressable accessibilityRole="button" onPress={onFinish} style={{minHeight:44,alignItems:'center',justifyContent:'center'}}><Text style={{color:'#fff5e8'}}>Back to reading</Text></Pressable></View>
+    :<View style={{flex:1,backgroundColor:colors.surface,paddingTop:insets.top+24,paddingHorizontal:24,paddingBottom:insets.bottom+24}}><ScrollView>{rewards.map(category=><MomentCategoryReward key={category} category={category} expanded/>)}</ScrollView><Pressable accessibilityRole="button" onPress={()=>setRewards([])} style={buttonStyles.primary}><Text style={[buttonStyles.label,{color:colors.ink}]}>Done</Text></Pressable></View>}
   </Modal>;
   return showcase?<View accessibilityViewIsModal style={{position:"absolute",inset:0,zIndex:210,backgroundColor:"#00000077"}}><ReaderMomentCardBox bookId={bookId} pocketRef={pocketRef} onClose={onCloseShowcase}/></View>:null;
 }

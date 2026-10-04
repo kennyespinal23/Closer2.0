@@ -1,3 +1,5 @@
+import { buttonStyles } from "@/lib/buttonStyles";
+import { paperActionColors } from "@/lib/paperControls";
 import { tabContentClearance } from "@/lib/tabContentClearance";
 import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
 import Animated from 'react-native-reanimated';
@@ -408,7 +410,7 @@ function BibleSearch({ visible, onClose, onPick }: {
         </Pressable>
       </View>
       <FlatList data={results} keyExtractor={book => book.id} keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
+        keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets contentContainerStyle={{ paddingHorizontal: SCREEN_H_PAD, paddingBottom: 24 }}
         ListHeaderComponent={query.trim() ? <ThemedText variant="footnote" color="secondary" style={{ marginBottom: 12 }}>{results.length} {results.length === 1 ? "book" : "books"}</ThemedText> : null}
         ListEmptyComponent={query.trim() ? <EmptyState query={query} /> : <View style={{ paddingTop: 28, gap: 8 }}>
           <ThemedText variant="title2">Find your next passage</ThemedText>
@@ -480,12 +482,13 @@ function ContinueReadingHero({ book, chapter, onPress, onPick }: {
   onPick: (book: Book, frame: LibraryBookFrame) => void;
 }) {
   const colors = useColors();
+  const action = paperActionColors(useResolvedScheme() === "dark");
   const { chaptersRead } = useProgress();
   const read = new Set(chaptersRead.filter(item => item.bookId === book.id && item.chapter >= 1 && item.chapter <= book.chapters).map(item => item.chapter)).size;
   return <View style={{ flexDirection: "row", alignItems: "center", gap: 22, paddingTop: 16, paddingBottom: 28 }}>
     <BookReaderPreparation bookId={book.id} chapter={chapter} />
     <View style={{ transform: [{ rotate: "-4deg" }], marginLeft: 4 }}><LibraryBook book={book} width={110} onPick={onPick} /><View pointerEvents="none" style={{ position: "absolute", bottom: -17, right: 22, width: 12, height: 30, backgroundColor: "#FF5A36" }}><View style={{ position: "absolute", bottom: -1, left: 0, borderLeftWidth: 6, borderRightWidth: 6, borderBottomWidth: 7, borderLeftColor: "transparent", borderRightColor: "transparent", borderBottomColor: colors.bg }} /></View></View>
-    <View style={{ flex: 1, gap: 6 }}><Text style={{ ...systemText.footnote, color: "#FF5A36" }}>Where you left off</Text><ThemedText variant="title2" numberOfLines={2}>{book.name}</ThemedText><ThemedText variant="subheadline" color="secondary">Chapter {chapter} of {book.chapters}</ThemedText><Pressable accessibilityRole="button" accessibilityLabel={`Keep reading ${book.name}, chapter ${chapter}`} onPress={onPress} style={{ alignSelf: "flex-start", minHeight: 46, paddingHorizontal: 18, marginTop: 8, borderRadius: 14, borderBottomLeftRadius: 4, backgroundColor: "#FF5A36", justifyContent: "center" }}><Text style={{ ...systemText.headline, color: "#24160E" }}>Keep reading</Text></Pressable></View>
+    <View style={{ flex: 1, gap: 6 }}><Text style={{ ...systemText.footnote, color: "#FF5A36" }}>Where you left off</Text><ThemedText variant="title2" numberOfLines={2}>{book.name}</ThemedText><ThemedText variant="subheadline" color="secondary">Chapter {chapter} of {book.chapters}</ThemedText><Pressable accessibilityRole="button" accessibilityLabel={`Keep reading ${book.name}, chapter ${chapter}`} onPress={onPress} style={[buttonStyles.primary, { marginTop: 8, backgroundColor: action.backgroundColor }]}><Text style={[buttonStyles.label, { color: action.color }]}>Keep reading</Text></Pressable></View>
   </View>;
 }
 

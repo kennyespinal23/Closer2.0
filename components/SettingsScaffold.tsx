@@ -1,3 +1,4 @@
+import { SCREEN_H_PAD } from "@/lib/layout";
 import { contentText } from "@/lib/contentStyles";
 import { useLayoutEffect, type ReactNode } from "react";
 import { Linking, Pressable, ScrollView, Switch, View } from "react-native";
@@ -148,7 +149,7 @@ export function SettingsInfoBanner({
     }
   };
   return (
-    <View className="px-5 mt-2">
+    <View className="mt-2" style={{ paddingHorizontal: SCREEN_H_PAD }}>
       <View
         style={{
           borderRadius: 16,
@@ -249,7 +250,7 @@ export function SettingsSection({
   children: ReactNode;
 }) {
   return (
-    <View className="px-5 mt-7">
+    <View className="mt-7" style={{ paddingHorizontal: SCREEN_H_PAD }}>
       {title && (
         <Text
           className="text-ink-secondary uppercase mb-2.5 ml-1"

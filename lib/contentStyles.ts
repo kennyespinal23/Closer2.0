@@ -1,3 +1,4 @@
+import { SCREEN_H_PAD } from "./layout";
 import { type ViewStyle } from "react-native";
 import { spacing } from "@/constants/spacing";
 import { systemText, typography } from "@/lib/typography";
@@ -13,7 +14,7 @@ export const contentText = {
 
 /** Content surfaces only; native sheets, artwork and controls keep their own geometry. */
 export const contentLayout = {
-  gutter: spacing[20],
+  gutter: SCREEN_H_PAD,
   sectionGap: spacing[24],
   itemGap: spacing[12],
   textGap: spacing[4],

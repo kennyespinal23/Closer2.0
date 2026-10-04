@@ -304,7 +304,7 @@ export default function VerseDeliveryScreen() {
                 // CTAs); New York for the verse text alone.
                 style={{
                   fontFamily: NEW_YORK,
-                  fontWeight: "400",
+                  fontWeight: "500",
                   fontStyle: "italic",
                   letterSpacing: 0,
                 }}

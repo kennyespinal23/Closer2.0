@@ -1,9 +1,9 @@
-import { Platform, type TextStyle } from "react-native";
+import { type TextStyle } from "react-native";
 
 /**
  * Closer type roles. Interface Text/TextInput render through CloserText,
  * which resolves these semantic weights to bundled Nunito faces.
- * Large bold headings use Nunito Black; Scripture keeps New York/Georgia;
+ * Large bold headings use Nunito Black; Scripture uses Nunito Medium;
  * personal handwritten moments explicitly select Shantell Sans.
  */
 
@@ -12,25 +12,10 @@ import { Platform, type TextStyle } from "react-native";
 /** Legacy semantic interface alias. CloserText maps System to Nunito by weight. */
 export const SF_PRO = "System";
 
-/**
- * The reflection / reading face (Apple New York on iOS).
- *
- * IMPORTANT — do NOT set `fontFamily: "New York"`.
- * RCTFont looks that string up via `UIFont fontNamesForFamilyName:` /
- * `fontWithName:`, which fails for New York (it's a private system
- * face: `.NewYork-Regular`). RN then logs "Unrecognized font family"
- * and silently falls back to SF Pro — which is what we were seeing
- * on the Genesis reader and the scripture screen.
- *
- * The supported RN/iOS bridge for Apple's system serif design is
- * `"ui-serif"` (same family as `"ui-rounded"` / `"ui-monospace"`).
- * That path goes through `UIFontDescriptorSystemDesignSerif`, which
- * is New York on every iOS 13+ device. Android falls back to Georgia.
- */
-export const NEW_YORK = Platform.select({
-  ios: "ui-serif",
-  default: "Georgia",
-}) as string;
+/** Shared upright reading face for Scripture and devotional passages. */
+export const SCRIPTURE_FONT = "NunitoMedium";
+/** Compatibility alias for existing reading surfaces. */
+export const NEW_YORK = SCRIPTURE_FONT;
 
 // ─── Weight vocabulary ────────────────────────────────────────
 //
@@ -124,62 +109,32 @@ const smallLabel: TextStyle = {
   letterSpacing: 0.8,
 };
 
-/**
- * Reflective quote — the ONLY place New York Italic appears in
- * the app. Scripture callouts on the sermon detail page, the
- * opening / closing reflective quotes on intro screens, and
- * short standalone blockquotes inside reading flows. Centered
- * by default with a max-width of 85% (~340pt on a 6.1" iPhone)
- * so the line measure stays short and the eye doesn't have to
- * track across a full-bleed line of italics.
- *
- * Default size 26pt (range 24-28). Leading 36pt (the upper end
- * of the spec's 34-38 range) because italics need slightly more
- * vertical room than upright text — the descenders are longer
- * and the ascenders sweep further.
- *
- * Callers compose max-width via the parent View, not via the
- * Text style itself (RN Text doesn't honor maxWidth on its own).
- */
+/** Scripture callouts use Nunito Medium with generous leading. */
 const reflectiveQuote: TextStyle = {
   fontFamily: NEW_YORK,
-  fontStyle: "italic",
-  fontWeight: fontWeight.regular,
+  fontStyle: "normal",
+  fontWeight: "500",
   fontSize: 26,
   lineHeight: 36,
   textAlign: "center",
   letterSpacing: 0,
 };
 
-/**
- * Photo-overlaid verse / title — upright New York on dimmed
- * photography (home verse-share hero, photo heroes). Italic
- * Playfair / reflectiveQuote tested poorly at length; upright
- * keeps legibility once the image brightness ceiling is locked.
- */
+/** Photo-overlaid Scripture uses the same upright reading face. */
 const photoQuote: TextStyle = {
   fontFamily: NEW_YORK,
   fontStyle: "normal",
-  fontWeight: fontWeight.regular,
+  fontWeight: "500",
   fontSize: 26,
   lineHeight: 36,
   textAlign: "center",
   letterSpacing: 0,
 };
 
-/**
- * Reader body — continuous Bible chapter prose in the chapter
- * reader. Upright New York (not italic) so long-form scripture
- * matches Apple Books' system-serif reading surface. SF Pro stays
- * on chrome (page indicators, toolbars, headers). Callers still
- * multiply size/leading via scale; this token only locks the face.
- *
- * iOS resolves New York via `NEW_YORK` (`"ui-serif"` — see the
- * NEW_YORK export comment). Do not pass `"New York"` directly.
- */
+/** Reader body. Callers scale size and leading; measurement uses this same face. */
 const readerBody: TextStyle = {
   fontFamily: NEW_YORK,
-  fontWeight: fontWeight.regular,
+  fontWeight: "500",
   fontSize: 18,
   lineHeight: 30,
   letterSpacing: -0.1,
@@ -362,7 +317,7 @@ export function fromLegacy(family: LegacyFontFamily): TextStyle {
       return {
         fontFamily: SF_PRO,
         fontWeight: fontWeight.medium,
-        fontStyle: "italic",
+        fontStyle: "normal",
       };
     case "PlusJakartaSans_600SemiBold":
       return { fontFamily: SF_PRO, fontWeight: fontWeight.semibold };
@@ -372,7 +327,7 @@ export function fromLegacy(family: LegacyFontFamily): TextStyle {
       return {
         fontFamily: SF_PRO,
         fontWeight: fontWeight.bold,
-        fontStyle: "italic",
+        fontStyle: "normal",
       };
     case "PlusJakartaSans_800ExtraBold":
       return { fontFamily: SF_PRO, fontWeight: fontWeight.extrabold };

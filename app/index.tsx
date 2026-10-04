@@ -1,31 +1,28 @@
-import { useEffect, useMemo } from "react";
-import { Linking, StyleSheet, useWindowDimensions, View } from "react-native";
+import { useEffect, useState } from "react";
+import { AppState, Linking, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "@/components/CloserText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Redirect, useRouter } from "expo-router";
-import { requireOptionalNativeModule } from "expo-modules-core";
+import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
+import { useIsFocused } from "@react-navigation/native";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import { PrimaryPillButton } from "@/components/PrimaryPillButton";
 import { FadeIn } from "@/components/FadeIn";
 import * as haptics from "@/lib/haptics";
 import { armLaunchSplash } from "@/lib/launchSplashSession";
 import { useOnboarding } from "@/state/onboarding";
 
-const SIGN_IN_VIDEO = require("@/assets/videos/signinpage.mp4");
+const SPACE_BACKGROUND = require("@/assets/onboarding/globe/loading.jpg");
 const TERMS_URL = "https://closer.app/terms";
 const PRIVACY_URL = "https://closer.app/privacy";
-
-/** True only after a native rebuild that linked expo-video. */
-function hasNativeExpoVideo(): boolean {
-  return requireOptionalNativeModule("ExpoVideo") != null;
-}
 
 /**
  * Root launch gate.
  *
  * Returning users (`completed === true`) never see the Get Started
- * landing — they route straight home. New users see the video
+ * landing — they route straight home. New users see the space
  * Get Started landing below.
  */
 export default function IndexScreen() {
@@ -42,32 +39,35 @@ export default function IndexScreen() {
   return <GetStartedLanding />;
 }
 
-function GetStartedVideoBackground() {
-  const player = useVideoPlayer(SIGN_IN_VIDEO, (p) => {
-    p.loop = true;
+function WelcomeStarfield() {
+  const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const player = useVideoPlayer(require("@/assets/onboarding/globe/starfield.mp4"), p => {
     p.muted = true;
-    p.play();
+    p.loop = true;
+    p.staysActiveInBackground = false;
+    if (AppState.currentState === "active") p.play();
   });
-
-  return (
-    <VideoView
-      player={player}
-      style={StyleSheet.absoluteFillObject}
-      contentFit="cover"
-      nativeControls={false}
-    />
-  );
+  useEffect(() => {
+    const app = AppState.addEventListener("change", state => {
+      if (state === "active") player.play(); else player.pause();
+    });
+    const status = player.addListener("statusChange", event => {
+      if (event.status === "error") setFailed(true);
+    });
+    return () => { app.remove(); status.remove(); };
+  }, [player]);
+  return failed ? null : <VideoView player={player} contentFit="cover" nativeControls={false}
+    accessible={false} onFirstFrameRender={() => setReady(true)}
+    style={[StyleSheet.absoluteFillObject, {opacity: ready ? 1 : 0}]}/>;
 }
 
-/**
- * First screen of the app for new users: looping full-bleed video
- * behind the Get Started CTA (falls back to black until native
- * expo-video is linked via `npx expo run:ios`).
- */
+/** The same starfield as the globe opening, before the Earth arrives. */
 function GetStartedLanding() {
   const router = useRouter();
+  const focused = useIsFocused();
+  const reduced = useReducedMotion();
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
-  const videoReady = useMemo(() => hasNativeExpoVideo(), []);
 
   const compactLanding = screenHeight < 740 || screenWidth < 390;
   const headlineSize = compactLanding ? 32 : 36;
@@ -82,12 +82,8 @@ function GetStartedLanding() {
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      {videoReady ? <GetStartedVideoBackground /> : null}
-
-      <View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFillObject, styles.scrim]}
-      />
+      <Image source={SPACE_BACKGROUND} style={StyleSheet.absoluteFillObject} contentFit="cover" accessible={false}/>
+      {focused && !reduced && <WelcomeStarfield/>}
 
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.spacer} />
@@ -134,6 +130,7 @@ function GetStartedLanding() {
             <FadeIn delayMs={700} durationMs={700}>
               <PrimaryPillButton
                 label="Get Started"
+                variant="cream"
                 onPress={handleGetStarted}
                 heavy
               />
@@ -193,10 +190,7 @@ function GetStartedLanding() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#000000",
-  },
-  scrim: {
-    backgroundColor: "rgba(0,0,0,0.42)",
+    backgroundColor: "#0C0E1E",
   },
   safe: {
     flex: 1,

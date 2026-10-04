@@ -10,7 +10,7 @@ import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSpr
 import { OnboardingFocusText, OnboardingMotionGroup } from "@/components/OnboardingMotion";
 import { OnboardingCommunityScene } from "@/components/OnboardingStoryScene";
 import { BibleGiftReveal, BibleRevealTitle, HoldToUnwrap } from "@/components/OnboardingBibleReveal";
-import { PaperEnvelope } from "@/components/PaperEnvelope";
+import { OnboardingGlobeOpening } from "@/components/OnboardingGlobeOpening";
 import { OnboardingChoice } from "@/components/OnboardingChoice";
 import { SFSymbol } from "@/components/Symbol";
 import { ReaderMaterialGradient } from "@/components/ReaderMaterialGradient";
@@ -29,6 +29,7 @@ import { DARK_COLORS, LIGHT_COLORS } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
 
 const REASONS = ["I want to read, but don’t know where to start.", "I’m finding my way back to God.", "I want a little quiet in my day.", "Honestly, I’m just curious."];
+const REASON_ICONS = ["book", "arrow.uturn.backward", "leaf", "questionmark.circle"] as const;
 const INTENTIONS = ["Peace", "Hope", "Courage", "Rest", "Forgiveness", "Joy"];
 const PAPER = ["#EDD8B7", "#DDDFC3", "#EAC8BC", "#D4DDE0", "#E1D3E2", "#E8DCA8"];
 const MOMENT = BIBLE_MOMENTS.find(m => m.id === "creation")!;
@@ -52,7 +53,7 @@ export default function Journey() {
   if (__DEV__ && (previewTheme === "light" || previewTheme === "dark")) {
     return <ThemeSurface scheme={previewTheme} colors={previewTheme === "light" ? LIGHT_COLORS : DARK_COLORS}><JourneyFlow /></ThemeSurface>;
   }
-  return <JourneyFlow />;
+  return <ThemeSurface scheme="dark" colors={DARK_COLORS}><JourneyFlow /></ThemeSurface>;
 }
 
 function JourneyFlow() {
@@ -69,8 +70,9 @@ function JourneyFlow() {
   const collection = useBibleMomentCollection();
   const subscription = useSubscription();
   const { preview } = useLocalSearchParams<{ preview?: string }>();
-  const [page, setPage] = useState(() => __DEV__ && preview === "bible-gift" ? ORDER.indexOf(17) : __DEV__ && preview === "community" ? ORDER.indexOf(19) : 0), [opened, setOpened] = useState(false);
+  const [page, setPage] = useState(() => __DEV__ && preview === "bible-gift" ? ORDER.indexOf(17) : __DEV__ && preview === "community" ? ORDER.indexOf(19) : 0);
   const step = ORDER[page];
+  const [openingLeaving, setOpeningLeaving] = useState(false);
   const [exiting, setExiting] = useState(false);
   const transitionLock = useRef(false);
   const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -133,7 +135,6 @@ function JourneyFlow() {
   };
   const submit = async () => {
     if (lock.current || transitionLock.current || answerMissing) return;
-    if (step === 0 && !opened) { setOpened(true); haptics.soft(); return; }
     if (step === 5 && !collected) {
       lock.current = true; setBusy(true); setError("");
       try { await unlockBibleMoment(MOMENT.id); haptics.success(); }
@@ -178,25 +179,25 @@ function JourneyFlow() {
     setAnswer(key, nextValues);
   };
   const purchaseUnavailable = step === 15 && !subscription.isPro && (!subscription.configured || !subscription.monthlyPackage);
-  const label = busy ? "Saving…" : step === 0 ? opened ? "Let’s begin" : "Open my letter" : step === 5 ? collected ? "Continue" : "Collect this Moment" : step === 6 && !readingExpanded ? "Open reading preview" : step === 17 && !giftOpened ? "Hold to unwrap your Bible" : step === 14 ? "Enable reminders" : step === 15 ? subscription.isPro ? "Continue" : purchaseUnavailable ? "Subscriptions coming soon" : "Subscribe" : "Continue";
-  return <ReaderMaterialGradient colors={dark ? ["#372820", "#1D1916", "#171513"] : ["#F2DECB", "#F8EFE2", "#F9F4EA"]} style={{ flex: 1 }}>
+  const label = busy ? "Saving…" : step === 5 ? collected ? "Continue" : "Collect this Moment" : step === 6 && !readingExpanded ? "Open reading preview" : step === 17 && !giftOpened ? "Hold to unwrap your Bible" : step === 14 ? "Enable reminders" : step === 15 ? subscription.isPro ? "Continue" : purchaseUnavailable ? "Subscriptions coming soon" : "Subscribe" : "Continue";
+  return <View style={{flex:1}} pointerEvents={openingLeaving ? "none" : "auto"}>
+    {step !== 0 && <ReaderMaterialGradient colors={dark ? ["#372820", "#1D1916", "#171513"] : ["#F2DECB", "#F8EFE2", "#F9F4EA"]} style={{ flex: 1 }}>
     <SafeAreaView style={{ flex: 1 }}>
       <StatusBar style={dark ? "light" : "dark"} />
       <View style={s.top}>
         <Pressable accessibilityRole="button" accessibilityLabel="Go back" disabled={busy || exiting} onPress={back} style={s.icon}><SFSymbol name="chevron.left" size={20} color={ink} /></Pressable>
-        <View style={s.progress} accessibilityLabel={`Step ${page + 1} of ${ORDER.length}`} accessibilityRole="progressbar" accessibilityValue={{ min: 1, max: ORDER.length, now: page + 1 }}>{ORDER.map((_, i) => <View key={i} style={[s.segment, { backgroundColor: i <= page ? ink : dark ? "#FFFFFF20" : "#30251E20" }]} />)}</View>
+        <OnboardingProgress page={page} total={ORDER.length} color={ink} dark={dark}/>
         <View style={s.icon} />
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         {question || step === 1 || step === 13 ? <OnboardingChoicesLayout key={step} header={<View style={{gap:16}}><Text accessibilityRole="header" style={[s.title,s.questionTitle,{color:ink}]}>{title}</Text>{!!detail&&<Text style={[s.body,{color:muted,textAlign:"left"}]}>{detail}</Text>}</View>}>
           <OnboardingMotionGroup exiting={exiting}><View accessibilityRole={question ? "radiogroup" : undefined} style={{gap:12}}>
-            {question ? question.options.map(option=><OnboardingChoice key={option} label={option} selected={answers[question.key]===option} onPress={()=>{setAnswer(question.key,option);haptics.tick();}}/>) : step===1 ? REASONS.map(reason=><OnboardingChoice key={reason} label={reason} multiple selected={reasons.includes(reason)} onPress={()=>toggle("welcomeReasons",reason,reasons)}/>) : OBSTACLES.map(item=><OnboardingChoice key={item} label={item} multiple selected={(answers.faithObstacles??[]).includes(item)} onPress={()=>toggle("faithObstacles",item,answers.faithObstacles??[])}/>)}
+            {question ? question.options.map(option=><OnboardingChoice key={option} label={option} selected={answers[question.key]===option} onPress={()=>{setAnswer(question.key,option);haptics.tick();}}/>) : step===1 ? REASONS.map((reason, index)=><OnboardingChoice key={reason} label={reason} icon={REASON_ICONS[index]} multiple selected={reasons.includes(reason)} onPress={()=>toggle("welcomeReasons",reason,reasons)}/>) : OBSTACLES.map(item=><OnboardingChoice key={item} label={item} multiple selected={(answers.faithObstacles??[]).includes(item)} onPress={()=>toggle("faithObstacles",item,answers.faithObstacles??[])}/>)}
           </View></OnboardingMotionGroup>
         </OnboardingChoicesLayout> : <OnboardingContent key={step} contentContainerStyle={[s.content, step === 17 && {paddingTop:24}]} >
           <OnboardingMotionGroup stationary={step === 17 || (step >= 19 && step <= 21)} exiting={exiting && step !== 17 && !(step >= 19 && step <= 21)}><View style={{ gap: 28 }}>
 
             {step >= 19 && step <= 21 && <OnboardingCommunityScene scene={step - 19} exiting={exiting}/>}
-            {step === 0 && <PaperEnvelope opened={opened} />}
             {step === 5 && <OnboardingMomentFan collected={collected} />}
             {step === 16 && <OnboardingBadgeCarousel />}
             {step === 6 && <OnboardingReadingPreview expanded={readingExpanded} onOpen={() => { setReadingExpanded(true); haptics.soft(); }} />}
@@ -216,7 +217,22 @@ function JourneyFlow() {
         <View style={s.footer}>{!!error && <Text accessibilityLiveRegion="polite" style={[s.body, { color: ink, fontSize: 15 }]}>{error}</Text>}{step === 17 && !giftOpened ? <HoldToUnwrap onUnwrap={() => setGiftOpened(true)}/> : <Pressable accessibilityRole="button" disabled={busy || exiting || purchaseUnavailable || answerMissing} accessibilityState={{ disabled: busy || purchaseUnavailable || answerMissing }} onPress={submit} style={[s.cta, { backgroundColor: actionColors.backgroundColor, borderColor: actionColors.borderColor, borderWidth: 1, opacity: busy || purchaseUnavailable || answerMissing ? .55 : 1 }]}><Text style={[s.ctaText, { color: actionColors.color }]}>{label}</Text></Pressable>}{(step === 2 || step === 14 || step === 15) && <Pressable disabled={busy || exiting} accessibilityRole="button" onPress={step === 15 ? finish : next} style={s.secondary}><Text style={{ color: muted, fontSize: 16 }}>{step === 15 ? "Continue for free" : step === 14 ? "Not now" : "Skip for now"}</Text></Pressable>}</View>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  </ReaderMaterialGradient>;
+  </ReaderMaterialGradient>}
+    {(step === 0 || openingLeaving) && <View style={StyleSheet.absoluteFill} pointerEvents={openingLeaving ? "none" : "auto"}>
+      <OnboardingGlobeOpening onRevealNext={() => { setOpeningLeaving(true); setPage(1); }} onContinue={() => setOpeningLeaving(false)} onBack={back}/>
+    </View>}
+  </View>;
+}
+
+function OnboardingProgress({page,total,color,dark}: {page:number;total:number;color:string;dark:boolean}) {
+  const reduced = useReducedMotion();
+  const [trackWidth, setTrackWidth] = useState(240);
+  const progress = useSharedValue((page + 1) / total);
+  useEffect(() => { progress.value = withTiming((page + 1) / total, {duration: reduced ? 0 : 320}); }, [page,total,reduced,progress]);
+  const fill = useAnimatedStyle(() => ({transform:[{translateX:(progress.value - 1) * trackWidth}]}));
+  return <View onLayout={event => setTrackWidth(event.nativeEvent.layout.width)} style={[s.progress,{backgroundColor:dark ? "#FFFFFF20" : "#30251E20"}]} accessibilityLabel={`Step ${page + 1} of ${total}`} accessibilityRole="progressbar" accessibilityValue={{min:1,max:total,now:page+1}}>
+    <Animated.View style={[StyleSheet.absoluteFill,{backgroundColor:color,borderRadius:4},fill]}/>
+  </View>;
 }
 
 function Candle({ minutes, height, selected, color, onPress }: { minutes: number; height: number; selected: boolean; color: string; onPress: () => void }) {
@@ -234,7 +250,7 @@ function Sky({ time }: { time: number }) {
   return <ReaderMaterialGradient colors={time === 3 ? ["#242A44", "#5A556B"] : time === 2 ? ["#C88465", "#E5B788"] : ["#B4CCD3", "#F0DBC0"]} style={s.sky}><Animated.View style={[s.sun, { backgroundColor: time === 3 ? "#F1E7CD" : "#FFE8AD" }, style]} /><View style={s.hill} /></ReaderMaterialGradient>;
 }
 const s = StyleSheet.create({
-  top: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, height: 56 }, icon: { width: 44, height: 44, alignItems: "center", justifyContent: "center" }, progress: { flex: 1, flexDirection: "row", gap: 5, maxWidth: 240, marginHorizontal: "auto" }, segment: { height: 3, flex: 1, borderRadius: 3 },
+  top: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, height: 56 }, icon: { width: 44, height: 44, alignItems: "center", justifyContent: "center" }, progress: { flex: 1, height: 8, borderRadius: 4, overflow: "hidden", maxWidth: 240, marginHorizontal: "auto" },
   questionTitle: { textAlign: "left", fontSize: 36, lineHeight: 42 },
   content: { flexGrow: 1, padding: 28, paddingTop: 32, justifyContent: "flex-start" }, title: { fontSize: 36, lineHeight: 42, fontWeight: "700", letterSpacing: -.7, textAlign: "center" }, body: { fontSize: 16, lineHeight: 24, textAlign: "center" }, footer: { paddingHorizontal: 28, paddingTop: 12, paddingBottom: 12, gap: 12 }, cta: { ...buttonStyles.primary, backgroundColor: "#FFFAF1", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 12px #00000010" }, ctaText: { ...buttonStyles.label, color: "#30251E" }, secondary: { minHeight: 44, alignItems: "center", justifyContent: "center" },
   note: { padding: 20, borderRadius: 12, borderCurve: "continuous", gap: 12, boxShadow: "0 6px 10px #00000018" }, noteText: { color: "#362A22", fontSize: 17, lineHeight: 24, fontWeight: "500" }, stamp: { color: "#655044", fontSize: 13, fontWeight: "600" }, nameTag: { borderRadius: 24, borderCurve: "continuous", overflow: "hidden", boxShadow: "0 16px 28px #00000018" }, tagHeader: { backgroundColor: "#AC5A41", padding: 20, alignItems: "center" }, input: { minHeight: 120, padding: 24, fontSize: 30, textAlign: "center" },

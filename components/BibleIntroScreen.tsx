@@ -91,7 +91,7 @@ export function BibleIntroScreen({ onComplete }: { onComplete: () => void }) {
         </View>
         <View style={{ alignItems: "center", marginTop: 32, paddingHorizontal: 32, maxWidth: 480, alignSelf: "center" }}>
           <Animated.View style={headingStyle}>
-            <Text accessibilityRole="header" style={{ fontFamily: NEW_YORK, color: colors.ink, fontSize: 30, lineHeight: 34, textAlign: "center" }}>The Bible is yours.{"\n"}Discover its story.</Text>
+            <Text accessibilityRole="header" style={{ fontFamily: NEW_YORK, fontWeight: "500", color: colors.ink, fontSize: 30, lineHeight: 34, textAlign: "center" }}>The Bible is yours.{"\n"}Discover its story.</Text>
           </Animated.View>
           <Animated.View style={subtitleStyle}>
             <Text style={[systemText.subheadline, { color: colors.inkMuted, textAlign: "center", marginTop: 16 }]}>Thank you for choosing Closer. Explore all 66 books, freely—one chapter at a time.</Text>

@@ -1120,7 +1120,7 @@ function PinnedScrap({
                 <Text
                   style={{
                     fontFamily: NEW_YORK,
-                    fontWeight: "400",
+                    fontWeight: "500",
                     fontSize: 14,
                     lineHeight: 20,
                     color: PAPER_INK,
@@ -1314,7 +1314,7 @@ function EmptyState({
               </View>
               <Text
                 style={{
-                  fontFamily: NEW_YORK,
+                  fontFamily: NEW_YORK, fontWeight: "500",
                   fontSize: 13,
                   lineHeight: 18,
                   color: "rgba(26,21,16,0.45)",

@@ -176,7 +176,7 @@ export default function AppearanceScreen() {
             <Text
               style={{
                 color: colors.ink,
-                fontFamily: NEW_YORK,
+                fontFamily: NEW_YORK, fontWeight: "500",
                 fontSize: Math.round(20 * currentTextSize.scale),
                 lineHeight: Math.round(28 * currentTextSize.scale),
               }}

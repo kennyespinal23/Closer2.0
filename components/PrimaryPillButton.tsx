@@ -12,7 +12,7 @@ import { CLOSER_ACCENT } from "@/constants/theme";
 import * as haptics from "@/lib/haptics";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
-export type PrimaryPillVariant = "primary" | "completed";
+export type PrimaryPillVariant = "primary" | "completed" | "cream";
 
 type PrimaryPillButtonProps = {
   label: string;
@@ -50,8 +50,8 @@ export function PrimaryPillButton({
   const [pressed, setPressed] = useState(false);
   const isDisabled = disabled || loading;
   const isCompleted = variant === "completed";
-  const pillBg = isCompleted ? COMPLETED_READ_GREEN : CLOSER_ACCENT;
-  const pillInk = "#FFFFFF";
+  const pillBg = isCompleted ? COMPLETED_READ_GREEN : variant === "cream" ? "#F9F0EB" : CLOSER_ACCENT;
+  const pillInk = variant === "cream" ? "#30251E" : "#FFFFFF";
   const reducedMotion = useReducedMotion();
   const scale = useRef(new Animated.Value(1)).current;
 

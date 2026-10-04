@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { ReaderChromeBusyContext } from "@/lib/useReaderChrome";
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, View } from "react-native";
 import { Text, TextInput } from "@/components/CloserText";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -22,11 +23,14 @@ export function ReaderSocialRail({ bookId, bookName, chapter, verses }: { bookId
   const {translation} = usePreferences();
   const [colorsOpen,setColorsOpen] = useState(false);
   const sharing=useRef(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const setChromeBusy = useContext(ReaderChromeBusyContext);
   const share = async () => {
-    const verse=verses[0];if(!verse||sharing.current)return;sharing.current=true;haptics.soft();
-    try{const result=await shareVerse({text:verse.text,reference:`${bookName} ${chapter}:${verse.number}`,translation:translation.name});if(result.status==='error')Alert.alert('Couldn’t share verse',result.message);}finally{sharing.current=false;}
+    const verse=verses[0];if(!verse||sharing.current)return;sharing.current=true;setShareOpen(true);haptics.soft();
+    try{const result=await shareVerse({text:verse.text,reference:`${bookName} ${chapter}:${verse.number}`,translation:translation.name});if(result.status==='error')Alert.alert('Couldn’t share verse',result.message);}finally{sharing.current=false;setShareOpen(false);}
   };
   const [open, setOpen] = useState(false), [burst, setBurst] = useState(0);
+  useEffect(() => { if (!open && !colorsOpen && !shareOpen) return; setChromeBusy(true); return () => setChromeBusy(false); }, [open,colorsOpen,shareOpen,setChromeBusy]);
   const allHighlighted = verses.length > 0 && verses.every(v => !!a.getHighlight(verseKey(bookId, chapter, v.number)));
   const count = verses.reduce((n,v) => n + a.getNotes(verseKey(bookId, chapter, v.number)).length, 0);
   const [stats, setStats] = useState({total:0, unread:0});

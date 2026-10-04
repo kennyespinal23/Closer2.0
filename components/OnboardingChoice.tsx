@@ -5,11 +5,11 @@ import { Text } from "@/components/CloserText";
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useResolvedScheme } from "@/state/theme";
-import { SFSymbol } from "./Symbol";
+import { SFSymbol, type SFSymbolProps } from "./Symbol";
 
 /** One selection motion for notes, questions, intentions and reminder times. */
-export function OnboardingChoice({ label, detail, selected, onPress, multiple = false, paper, rotation = 0, compact = false, style }: {
-  label: string; detail?: string; selected: boolean; onPress: () => void;
+export function OnboardingChoice({ label, detail, icon, selected, onPress, multiple = false, paper, rotation = 0, compact = false, style }: {
+  label: string; detail?: string; icon?: SFSymbolProps["name"]; selected: boolean; onPress: () => void;
   multiple?: boolean; paper?: string; rotation?: number; compact?: boolean; style?: StyleProp<ViewStyle>;
 }) {
   const dark = useResolvedScheme() === "dark", reduced = useReducedMotion();
@@ -33,7 +33,8 @@ export function OnboardingChoice({ label, detail, selected, onPress, multiple = 
     onPressOut={() => { press.value = reduced ? 1 : withSpring(1, { stiffness: 460, damping: 24 }); }}
     onPress={onPress} style={style}>
     <Animated.View style={[styles.card, compact && styles.compact, card]}>
-      <View style={{ flexShrink: 1, gap: 6 }}><NunitoAnimatedText style={[styles.label, text]}>{label}</NunitoAnimatedText>{detail && <NunitoAnimatedText style={[styles.detail, text]}>{detail}</NunitoAnimatedText>}</View>
+      {icon && <View accessible={false} importantForAccessibility="no-hide-descendants" style={{width:26, alignItems:"center", flexShrink:0}}><SFSymbol name={icon} size={22} weight="regular" color={selected ? selectedInk : dark ? "#CDBBAA" : "#806C58"}/></View>}
+      <View style={[{ flexShrink: 1, gap: 6 }, icon && {flex:1}]}><NunitoAnimatedText style={[styles.label, text]}>{label}</NunitoAnimatedText>{detail && <NunitoAnimatedText style={[styles.detail, text]}>{detail}</NunitoAnimatedText>}</View>
       <View style={[styles.check, { borderColor: paper || !dark ? "#8A7965" : "#BBAA97" }]}><Animated.View style={[StyleSheet.absoluteFill, styles.tick, tick]}><SFSymbol name="checkmark" size={13} weight="bold" color="#FFFFFF" /></Animated.View></View>
     </Animated.View>
   </Pressable>;

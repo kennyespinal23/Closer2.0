@@ -238,12 +238,10 @@ function AppShell() {
           name="(tabs)"
           options={{ animation: "fade" }}
         />
-        {/* Onboarding group — explicit drill-in from the landing.
-            Inherits the default slide_from_right, but called out
-            here for clarity. */}
+        {/* Keep the welcome starfield continuous as the globe opening begins. */}
         <Stack.Screen
           name="onboarding"
-          options={{ animation: "slide_from_right" }}
+          options={{ animation: "fade", animationDuration: 500 }}
         />
         {/* Profile used to live here as a transparentModal drawer
             launched from the home avatar. It was promoted to a

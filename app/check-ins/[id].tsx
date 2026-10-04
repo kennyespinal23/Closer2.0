@@ -261,7 +261,7 @@ export default function CheckInDetailScreen() {
               // ritual revisited.
               style={{
                 fontFamily: NEW_YORK,
-                fontWeight: "400",
+                fontWeight: "500",
                 fontStyle: "italic",
                 letterSpacing: 0,
               }}

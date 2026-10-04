@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Animated } from "react-native";
 import { useReducedMotion } from "./useReducedMotion";
 
+export const ReaderChromeBusyContext = createContext<(busy: boolean) => void>(() => {});
+
 /** Keep layout fixed while chrome leaves, so hiding never repaginates scripture. */
-export function useReaderChrome(paused: boolean, focused: boolean) {
+export function useReaderChrome(paused: boolean, focused: boolean, idleMs = 4200) {
   const reduced = useReducedMotion();
   const [visible, setVisible] = useState(true);
   const [screenReader, setScreenReader] = useState(false);
@@ -13,8 +15,8 @@ export function useReaderChrome(paused: boolean, focused: boolean) {
   const clear = useCallback(() => { if (timer.current) clearTimeout(timer.current); timer.current = null; }, []);
   const reveal = useCallback(() => {
     clear(); visibleRef.current = true; setVisible(true);
-    if (!paused && !screenReader && focused) timer.current = setTimeout(() => { visibleRef.current = false; setVisible(false); }, 4200);
-  }, [paused, screenReader, focused, clear]);
+    if (!paused && !screenReader && focused) timer.current = setTimeout(() => { visibleRef.current = false; setVisible(false); }, idleMs);
+  }, [paused, screenReader, focused, clear, idleMs]);
   useEffect(() => { let alive = true; void AccessibilityInfo.isScreenReaderEnabled().then(value => { if (alive) setScreenReader(value); }); const event = AccessibilityInfo.addEventListener("screenReaderChanged", setScreenReader); return () => { alive = false; event.remove(); }; }, []);
   useEffect(() => { reveal(); return clear; }, [reveal, clear]);
   useEffect(() => { Animated.timing(visibility, { toValue: visible ? 1 : 0, duration: reduced ? 0 : 280, useNativeDriver: true }).start(); return () => visibility.stopAnimation(); }, [visible, reduced, visibility]);

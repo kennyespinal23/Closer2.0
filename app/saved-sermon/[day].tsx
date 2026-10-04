@@ -166,7 +166,7 @@ export default function SavedDevotionalScreen() {
         <Text
           style={{
             fontFamily: NEW_YORK,
-            fontWeight: "400",
+            fontWeight: "500",
             fontSize: 18,
             lineHeight: 30,
             color: colors.ink,

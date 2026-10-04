@@ -7,7 +7,7 @@ import { groupReadingVerses } from "@/lib/readingLayout";
 import { ReaderSavedNote } from "@/components/ReaderSavedNote";
 import { ReaderVerseTools } from "@/components/ReaderVerseTools";
 import { ReaderStickyNote } from "@/components/ReaderStickyNote";
-import { useReaderChrome } from "@/lib/useReaderChrome";
+import { ReaderChromeBusyContext, useReaderChrome } from "@/lib/useReaderChrome";
 import { useBibleMomentCollection } from "@/state/bibleMoments";
 import { ReaderHighlightBrush } from "@/components/ReaderHighlightBrush";
 import { ReaderPaperTheme, useReaderTone } from "@/components/ReaderPaperTheme";
@@ -1584,10 +1584,11 @@ function ChapterReaderContent() {
   );
 
   const [chromeSheetOpen, setChromeSheetOpen] = useState(false);
-  const chrome = useReaderChrome(!!(activeVerse !== null || selectionMode || editingNote || discoveredMoment || collectMoment || momentShowcase || meaningOpen || listeningOpen || contentsOpen || chromeSheetOpen), readerFocused);
+  const [socialSheetOpen, setSocialSheetOpen] = useState(false);
+  const chrome = useReaderChrome(!!(activeVerse !== null || selectionMode || editingNote || discoveredMoment || collectMoment || momentShowcase || meaningOpen || listeningOpen || contentsOpen || chromeSheetOpen || socialSheetOpen), readerFocused, verticalReading ? 3000 : 4200);
 
   return (
-    <View onTouchStart={event => { momentTouchY.current = event.nativeEvent.pageY; chrome.onTouch(); }} style={{ flex: 1, backgroundColor: colors.bg }}>
+    <ReaderChromeBusyContext.Provider value={setSocialSheetOpen}><View onTouchStart={event => { momentTouchY.current = event.nativeEvent.pageY; chrome.onTouch(); }} style={{ flex: 1, backgroundColor: colors.bg }}>
       {!verticalReading && <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 7, borderRightWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSecondary, opacity: 0.45 }} />}
       {verticalReading && <Svg pointerEvents="none" width="100%" height="100%" style={{position:"absolute",inset:0}}><Defs><LinearGradient id="readerPaperWash" x1="1" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={readerScheme === "dark" ? "#916035" : "#D5BD97"} stopOpacity={0.12}/><Stop offset="1" stopColor={colors.bg} stopOpacity={0}/></LinearGradient></Defs><Rect width="100%" height="100%" fill="url(#readerPaperWash)"/></Svg>}
       {readerFocused && <StatusBar style={readerScheme === "dark" ? "light" : "dark"} />}
@@ -1927,8 +1928,8 @@ function ChapterReaderContent() {
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}><Text style={{ ...systemText.caption1, color: colors.inkMuted }}>Chapter {chapter} of {book.chapters}</Text><Text style={{ ...systemText.caption1, color: colors.inkMuted }}>{Math.round(headerProgress * 100)}%</Text></View>
           <View style={{ height: 3, borderRadius: 2, backgroundColor: colors.border }}><View style={{ height: 3, borderRadius: 2, width: `${Math.max(0, Math.min(100, headerProgress * 100))}%`, backgroundColor: colors.inkMuted }} /></View>
         </Animated.View>}
-        {verticalReading && data && !error && <View style={{position:'absolute',left:29,right:29,bottom:29,flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}><Text style={{color:colors.inkMuted,fontSize:12}}>{book.name} {chapter} · {Math.min(visibleIndex+1,visibleItems.length)} / {visibleItems.length}</Text><Pressable accessibilityRole="button" accessibilityLabel="Continue to next verse" disabled={visibleIndex>=visibleItems.length-1} onPress={()=>pagerRef.current?.scrollToIndex({index:Math.min(visibleIndex+1,visibleItems.length-1),animated:true})} style={{minHeight:44,justifyContent:'center'}}><Text style={{color:colors.inkMuted,fontSize:12}}>{visibleIndex<visibleItems.length-1?'Continue ↑':'Chapter complete'}</Text></Pressable></View>}
-        {verticalReading && data && !error && <View pointerEvents="none" accessible accessibilityRole="progressbar" accessibilityLabel="Chapter reading progress" accessibilityValue={{min:0,max:data.verses.length,now:Math.min(visibleIndex+1,data.verses.length)}} style={{position:'absolute',left:24,right:24,bottom:8,height:3,borderRadius:2,backgroundColor:colors.border,overflow:'hidden'}}><View style={{height:3,borderRadius:2,backgroundColor:"#C68C64",width:`${Math.min(1,(visibleIndex+1)/Math.max(1,data.verses.length))*100}%`}}/></View>}
+        {verticalReading && data && !error && <Animated.View pointerEvents={chrome.visible ? "auto" : "none"} accessibilityElementsHidden={!chrome.visible} importantForAccessibility={chrome.visible ? "auto" : "no-hide-descendants"} style={[{position:'absolute',left:29,right:29,bottom:29,flexDirection:'row',alignItems:'center',justifyContent:'space-between'}, chrome.bottomStyle]}><Text style={{color:colors.inkMuted,fontSize:12}}>{book.name} {chapter} · {Math.min(visibleIndex+1,visibleItems.length)} / {visibleItems.length}</Text><Pressable accessibilityRole="button" accessibilityLabel="Continue to next verse" disabled={visibleIndex>=visibleItems.length-1} onPress={()=>pagerRef.current?.scrollToIndex({index:Math.min(visibleIndex+1,visibleItems.length-1),animated:true})} style={{minHeight:44,justifyContent:'center'}}><Text style={{color:colors.inkMuted,fontSize:12}}>{visibleIndex<visibleItems.length-1?'Continue ↑':'Chapter complete'}</Text></Pressable></Animated.View>}
+        {verticalReading && data && !error && <Animated.View accessibilityElementsHidden={!chrome.visible} importantForAccessibility={chrome.visible ? "auto" : "no-hide-descendants"} pointerEvents="none" accessible accessibilityRole="progressbar" accessibilityLabel="Chapter reading progress" accessibilityValue={{min:0,max:data.verses.length,now:Math.min(visibleIndex+1,data.verses.length)}} style={[{position:'absolute',left:24,right:24,bottom:8,height:3,borderRadius:2,backgroundColor:colors.border,overflow:'hidden'}, chrome.bottomStyle]}><View style={{height:3,borderRadius:2,backgroundColor:"#C68C64",width:`${Math.min(1,(visibleIndex+1)/Math.max(1,data.verses.length))*100}%`}}/></Animated.View>}
         {/* Verse selection keeps its contextual actions near the selected text. */}
 
         {/* ─── Reading-goal celebration toast ────────────────────
@@ -2046,7 +2047,7 @@ function ChapterReaderContent() {
         onCancel={() => setEditingNote(null)}
       />
       </SafeAreaView>
-    </View>
+    </View></ReaderChromeBusyContext.Provider>
   );
 }
 
@@ -2230,8 +2231,8 @@ function VerseFlow({
     <Text
       onTextLayout={handleTextLayout}
       style={{
-        fontFamily: feedStyle ? "Georgia" : NEW_YORK,
-        fontWeight: "400",
+        fontFamily: NEW_YORK,
+        fontWeight: "500",
         fontSize: baseFontSize,
         lineHeight: baseLineHeight,
         color: colors.ink,
@@ -2291,11 +2292,11 @@ function VerseFlow({
               active={momentMotionActive && !isSelected && !v.highlight}
               dark={scheme === "dark"}
               color={isSelected ? colors.ink : MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"]}
-              style={{ fontFamily: feedStyle ? "Georgia" : NEW_YORK, fontWeight: "400", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1 }}
+              style={{ fontFamily: NEW_YORK, fontWeight: "500", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1 }}
             /> : <Text
               style={{
-                fontFamily: feedStyle ? "Georgia" : NEW_YORK,
-                fontWeight: "400",
+                fontFamily: NEW_YORK,
+                fontWeight: "500",
                 fontSize: baseFontSize,
                 lineHeight: baseLineHeight,
                 letterSpacing: -0.1,
@@ -2345,7 +2346,7 @@ function VerseFlow({
                 onPress={() => onVerseLongPress(v.number)}
                 onUnlock={() => onVersePress(v.number)}
                 glowColor={isCollected ? "transparent" : MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"]}
-                style={{ fontFamily: feedStyle ? "Georgia" : NEW_YORK, fontWeight: "400", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1, color: colors.ink, backgroundColor: baseBg }}
+                style={{ fontFamily: NEW_YORK, fontWeight: "500", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1, color: colors.ink, backgroundColor: baseBg }}
               >{inner}</MomentVerseText>
             ) : isFocus ? (
               <NunitoAnimatedText
@@ -2357,8 +2358,8 @@ function VerseFlow({
                     : undefined
                 }
                 style={{
-                  fontFamily: feedStyle ? "Georgia" : NEW_YORK,
-                  fontWeight: "400",
+                  fontFamily: NEW_YORK,
+                  fontWeight: "500",
                   fontSize: baseFontSize,
                   lineHeight: baseLineHeight,
                   letterSpacing: -0.1,
@@ -2378,8 +2379,8 @@ function VerseFlow({
                     : undefined
                 }
                 style={{
-                  fontFamily: feedStyle ? "Georgia" : NEW_YORK,
-                  fontWeight: "400",
+                  fontFamily: NEW_YORK,
+                  fontWeight: "500",
                   fontSize: baseFontSize,
                   lineHeight: baseLineHeight,
                   letterSpacing: -0.1,
@@ -3662,7 +3663,7 @@ function ReaderToolbar({
 
   return (
     <>
-      <View style={{ height: READER_HEADER_HEIGHT, paddingHorizontal: 12, paddingVertical: 4 }}>
+      <Animated.View pointerEvents={chromeVisible ? "auto" : "none"} accessibilityElementsHidden={!chromeVisible} importantForAccessibility={chromeVisible ? "auto" : "no-hide-descendants"} style={[{ height: READER_HEADER_HEIGHT, paddingHorizontal: 12, paddingVertical: 4 }, chromeStyle]}>
         <View style={{ flex: 1, borderRadius: 20, borderCurve: "continuous", paddingHorizontal: 8, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: tone === "dark" ? "#65503E" : tone === "sepia" ? "#967451" : "#A98B6C", borderWidth: StyleSheet.hairlineWidth, borderColor: "#FFFFFF35" }}>
           <Pressable accessibilityRole="button" accessibilityLabel="Back to book" onPress={onBack} style={{ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 4 }}>
             <SFSymbol name="chevron.left" size={17} color="#FFF8EC"/>
@@ -3679,7 +3680,7 @@ function ReaderToolbar({
             <ReaderMomentPocket onPress={onMoments} arrival={momentArrival} collecting={collecting}/>
           </View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Keep sheets mounted — unmounting on close skips TrueSheet.dismiss(). */}
       <ReaderSheet
@@ -3735,7 +3736,7 @@ function ReaderToolbar({
             </Pressable>)}
           </View>
           <View style={{ paddingVertical: 24 }}>
-            <Text style={{ fontFamily: readingLayout === "pages" ? NEW_YORK : "Georgia", color: settingsPalette.ink, fontSize: 23 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1), lineHeight: 34 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1) }}>In the beginning, God created the heavens and the earth.</Text>
+            <Text style={{ fontFamily: NEW_YORK, fontWeight: "500", color: settingsPalette.ink, fontSize: 23 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1), lineHeight: 34 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1) }}>In the beginning, God created the heavens and the earth.</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 8, minHeight: 54, borderRadius: 16, borderCurve: "continuous", backgroundColor: settingsPalette.control }}>
             <Pressable accessibilityRole="button" accessibilityLabel="Smaller text" onPress={() => setDraftTextSize(TEXT_SIZES[Math.max(0, TEXT_SIZES.findIndex(s => s.id === draftTextSize) - 1)].id)} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><Text style={{ color: settingsPalette.ink, fontSize: 17 }}>A</Text></Pressable>

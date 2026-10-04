@@ -1,3 +1,4 @@
+import { DARK_CANVAS } from "@/constants/theme";
 import { useId } from "react";
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from "react-native-svg";
 import { StyleSheet, View } from "react-native";
@@ -6,7 +7,7 @@ import { useResolvedScheme } from "@/state/theme";
 /** Shared atmospheric canvas, derived from the library's day/evening palette. */
 export const APP_CANVAS = {
   light: ["#FBF3EC", "#F1E1D2", "#EBD7C1"],
-  dark: ["#3A2B2A", "#221819", "#221819"],
+  dark: [DARK_CANVAS.background, DARK_CANVAS.background, DARK_CANVAS.background],
 } as const;
 export const SKY_TOP_DAY = APP_CANVAS.light[0];
 export const SKY_TOP_NIGHT = APP_CANVAS.dark[0];
@@ -21,11 +22,13 @@ export function SkyGradient() {
   const id = useId().replace(/:/g, "");
   const scheme = useResolvedScheme();
   const stops = APP_CANVAS[scheme];
+  // General dark screens match Profile exactly; artwork owns its own lighting.
+  if (scheme === "dark") return <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[StyleSheet.absoluteFill, { backgroundColor: DARK_CANVAS.background }]} />;
   return <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[StyleSheet.absoluteFill, { backgroundColor: stops[0] }]}>
     <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
       <Defs>
         <LinearGradient id={`${id}canvas`} x1="0" y1="0" x2="0" y2="1">{stops.map((color, i) => <Stop key={i} offset={i / 2} stopColor={color} />)}</LinearGradient>
-        <RadialGradient id={`${id}glow`} cx="82%" cy="0%" rx="80%" ry="39%"><Stop offset="0" stopColor="#FFBA64" stopOpacity={scheme === "dark" ? .17 : 0} /><Stop offset="1" stopColor="#FFBA64" stopOpacity="0" /></RadialGradient>
+        <RadialGradient id={`${id}glow`} cx="82%" cy="0%" rx="80%" ry="39%"><Stop offset="0" stopColor="#FFBA64" stopOpacity={0} /><Stop offset="1" stopColor="#FFBA64" stopOpacity="0" /></RadialGradient>
       </Defs>
       <Rect width="100%" height="100%" fill={`url(#${id}canvas)`} /><Rect width="100%" height="100%" fill={`url(#${id}glow)`} />
     </Svg>

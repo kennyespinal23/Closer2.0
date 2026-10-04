@@ -390,26 +390,14 @@ export default function TodayScreen() {
    */
   const handleCompleteFloatingCard = useCallback(
     (card: FloatingScriptureCard): (() => void) | undefined => {
-      setLeavingDevotional(true);
-      const { newStreak, crossedMilestone } =
-        recordCompletion("daily", {
-          title: card.title || card.scriptureReference,
-          pastor: "",
-          day: card.day,
-        });
-      void endFocusSession().catch(() => {
-        /* shield stop is best-effort */
+      recordCompletion("daily", {
+        title: card.title || card.scriptureReference,
+        pastor: "",
+        day: card.day,
       });
-      // Every completed devotional reaches the recap, including another
-      // reading on the same day. recordCompletion alone owns streak credit.
-      // The modal invokes this only after its native dismissal completes.
-        return () => router.replace({
-          pathname: "/sermon/streak",
-          params: {
-            days: String(newStreak),
-            milestone: crossedMilestone ? String(crossedMilestone) : "",
-          },
-        });
+      void endFocusSession().catch(() => {});
+      // Return to Home for the remaining tasks. Reading alone earns no streak.
+      return undefined;
     },
     [endFocusSession, recordCompletion, router],
   );

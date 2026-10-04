@@ -25,7 +25,8 @@ const SHELF_EASE = Easing.bezier(.2, .8, .2, 1);
 const SPRING = { stiffness: 230, damping: 28, mass: .85, overshootClamping: true };
 
 /** A bounded deck, not overlapping virtualized cells. All drag geometry runs on the UI thread. */
-export function LibraryShelf({ books, selectedId, onSelect, onJump, onPick, departure }: {
+export function LibraryShelf({ books, selectedId, onSelect, onJump, onPick, departure, availableHeight }: {
+  availableHeight: number;
   departure: SharedValue<number>;
   books: readonly Book[]; selectedId: string; onSelect: (book: Book) => void; onJump: (book: Book) => void;
   onPick: (book: Book, frame: LibraryBookFrame, chapter?: number) => void;
@@ -55,7 +56,7 @@ export function LibraryShelf({ books, selectedId, onSelect, onJump, onPick, depa
     transform: [{ translateY: reduced ? 0 : departure.value * 16 }],
   }));
   // Keep the action row and testament shortcuts clear of the tab bar on short phones.
-  const coverWidth = Math.min(196, width * .505, height * .21);
+  const coverWidth = Math.max(60, Math.min(196, width * .505, (availableHeight - (fontScale > 1.2 ? 360 : 290) * Math.max(1, fontScale)) / 1.42));
   useEffect(() => {
     // Warm only shortcut destinations and their neighbors, not all 66 full-size covers.
     const targets = books.filter((candidate, i) => i < 3 || candidate.testament !== books[i - 1]?.testament || (i > 0 && books[i - 1]?.testament !== books[i - 2]?.testament));
@@ -143,8 +144,8 @@ export function LibraryShelf({ books, selectedId, onSelect, onJump, onPick, depa
     </GestureDetector>
     <Animated.View pointerEvents={opening ? "none" : "auto"} style={[{ paddingHorizontal: 24, gap: 6 }, detailsStyle]}>
       <Text style={{ ...systemText.footnote, fontWeight: "700", color: colors.textSecondary }}>{book.testament === "old" ? "Old Testament" : "New Testament"} · {book.category}</Text>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <Text accessibilityRole="header" style={{ ...typography.devotionalTitle, fontWeight: "900", flex: 1, color: colors.ink }}>{book.name}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+        <Text accessibilityRole="header" style={{ ...typography.devotionalTitle, fontWeight: "900", flexShrink: 1, color: colors.ink }}>{book.name}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel={`About ${book.name}`} onPress={() => { if (moving.value) return; haptics.soft(); router.push(`/book/${book.id}`); }} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
           <SFSymbol name="info.circle" size={22} color={colors.textSecondary}/>
         </Pressable>

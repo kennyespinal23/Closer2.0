@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { MILESTONE_DAYS } from "@/lib/milestones";
+import { canCompleteDailyTasks } from "@/lib/dailyTaskCompletion";
 import { removeKey, STORAGE_KEYS, usePersistence } from "@/lib/storage";
 
 /**
@@ -16,11 +16,11 @@ import { removeKey, STORAGE_KEYS, usePersistence } from "@/lib/storage";
  *   1. Sermons completed (per type + total)
  *   2. Chapters read (deduplicated by book+chapter)
  *
- * Only sermon completions feed `engagedDates` — the source of truth
+ * Only completed daily task sets feed `engagedDates` — the source of truth
  * for streaks. Chapter reads are tracked separately for the reader's
  * own UI (Continue Reading, auto-mark logic, Library) but they do
  * NOT count toward the streak. The streak is intentionally tied to
- * the sermon as the daily anchor.
+ * all four daily tasks as the daily anchor.
  *
  * Streak philosophy (deliberate, see help.tsx FAQ):
  *   • Encouraging, never shaming
@@ -104,9 +104,9 @@ export type ProgressState = {
   sermonCompletions: ReadonlyArray<SermonCompletion>;
 
   /**
-   * Sorted, unique list of ISO dates the user finished a sermon on.
+   * Sorted, unique dates the user completed all four daily tasks on.
    * The single source of truth for streaks and the weekly journey
-   * dots. Tied specifically to sermons (not chapter reads) so the
+   * dots. Tied to the full daily practice (not chapter reads) so the
    * streak rewards the daily anchor behavior the app is built around.
    */
   engagedDates: ReadonlyArray<string>;
@@ -167,6 +167,7 @@ type ProgressContextValue = ProgressState & {
     typeId: string,
     details?: SermonCompletionDetails,
   ) => RecordResult;
+  completeDailyTasks: (day: number, practice: { prayer?: boolean; quiz?: boolean; action?: boolean }) => void;
   recordChapterRead: (bookId: string, chapter: number) => void;
   /** True iff (bookId, chapter) has been marked read at any point. */
   hasReadChapter: (bookId: string, chapter: number) => boolean;
@@ -301,21 +302,11 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         day: details?.day ?? null,
       };
 
-      // Compute streak BEFORE and AFTER this completion so callers
-      // can tell (a) whether the streak actually advanced (first
-      // completion of the day) and (b) whether it crossed a
-      // milestone threshold. If today was already engaged (e.g.
-      // "Read again" same-day), prev and new are equal — no
-      // advance, no milestone.
-      const wasEngagedToday = state.engagedDates.includes(todayISO());
-      const prevStreak = computeStreak(state.engagedDates).current;
-      const newEngagedDates = withTodayEngaged(state.engagedDates);
+      // Reading is one daily task; only completeDailyTasks awards the date.
+      const newEngagedDates = state.engagedDates;
       const newStreak = computeStreak(newEngagedDates).current;
-      const streakAdvanced = !wasEngagedToday;
-      const crossedMilestone =
-        MILESTONE_DAYS.find(
-          (threshold) => prevStreak < threshold && newStreak >= threshold,
-        ) ?? null;
+      const streakAdvanced = false;
+      const crossedMilestone = null;
 
       setState({
         ...state,
@@ -341,6 +332,15 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     },
     [state, withTodayEngaged],
   );
+
+  const completeDailyTasks = useCallback((day: number, practice: { prayer?: boolean; quiz?: boolean; action?: boolean }) => {
+    if (!practice.prayer || !practice.quiz || !practice.action) return;
+    setState(previous => {
+      const today = todayISO();
+      if (previous.engagedDates.includes(today) || !canCompleteDailyTasks(day, today, practice, previous.sermonCompletions)) return previous;
+      return { ...previous, engagedDates: withTodayEngaged(previous.engagedDates) };
+    });
+  }, [withTodayEngaged]);
 
   const recordChapterRead = useCallback(
     (bookId: string, chapter: number) => {
@@ -443,6 +443,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     () => ({
       ...state,
       recordCompletion,
+      completeDailyTasks,
       recordChapterRead,
       hasReadChapter,
       recordChapterVisit,
@@ -455,6 +456,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     [
       state,
       recordCompletion,
+      completeDailyTasks,
       recordChapterRead,
       hasReadChapter,
       recordChapterVisit,

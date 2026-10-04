@@ -2338,7 +2338,7 @@ function VerseFlow({
         // overload that accepts both static colors and animated
         // interpolations.
         //
-        // A "\n" before each verse (except the first) forces every
+        // A newline plus a 10pt spacer before each verse forces every
         // verse to start on its own line — and that guarantee is
         // what makes verse-aligned pagination actually work. With
         // inline prose, two verses can share a single rendered line,
@@ -2349,7 +2349,7 @@ function VerseFlow({
         // Tree, etc.) handles paginated reading.
         return (
           <Fragment key={v.number}>
-            {i > 0 ? <Text>{"\n"}</Text> : null}
+            {i > 0 ? <><Text>{"\n"}</Text><Text style={{ fontSize: 1, lineHeight: 10 * scale }}>{"\n"}</Text></> : null}
             {moment && onVerseLongPress ? (
               <MomentVerseText
                 onPress={() => onVerseLongPress(v.number)}

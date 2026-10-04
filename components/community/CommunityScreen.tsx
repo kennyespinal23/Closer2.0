@@ -76,14 +76,14 @@ export function CommunityScreen() {
     <SkyGradient />
     <Animated.ScrollView style={tabContentStyle} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: bottom, gap: 20 }}>
       <View style={styles.row}>
-        <View style={{ flex: 1, gap: 6 }}><Text accessibilityRole="header" style={[systemText.largeTitle, { color: colors.ink }]}>Community</Text><Text style={[systemText.subheadline, { color: colors.textSecondary }]}>You don’t have to pray alone.</Text></View>
+        <View style={{ flex: 1, gap: 6 }}><Text accessibilityRole="header" style={[systemText.largeTitle, { color: colors.ink }]}>Community</Text></View>
         <Pressable accessibilityRole="button" accessibilityLabel="How Community works" onPress={() => setTutorial(0)} style={[styles.circle, { backgroundColor: colors.surface }]}><SFSymbol name="questionmark" size={20} color={colors.ink} /></Pressable>
       </View>
-      <Text style={[systemText.caption1, { color: colors.textSecondary }]}>Local preview · sample community · saved on this device</Text>
-      <SegmentedControl appearance={scheme} values={["Prayer wall", "Study groups"]} selectedIndex={mode} onChange={e => { setMode(e.nativeEvent.selectedSegmentIndex); haptics.tick(); }} style={{ height: 40 }} />
+
+      <SegmentedControl appearance={scheme} values={["Prayer wall · Preview", "Study groups"]} selectedIndex={mode} onChange={e => { setMode(e.nativeEvent.selectedSegmentIndex); haptics.tick(); }} style={{ height: 40 }} />
       {mode === 0 ? <>
-        <Pressable accessibilityRole="button" onPress={() => setComposer(true)} disabled={!hydrated} style={[styles.ask, !hydrated && { opacity: .5 }]}><View style={styles.noteIcon}><SFSymbol name="plus" size={24} color={CORAL} /></View><View style={{ flex: 1, gap: 4 }}><Text style={[systemText.headline, { color: INK }]}>Ask for prayer</Text><Text style={[systemText.footnote, { color: INK }]}>Stick a note on the wall. Anonymous if you like.</Text></View></Pressable>
-        <View style={[styles.row, { gap: 7 }]}><SFSymbol name="lock" size={14} color={colors.textSecondary} /><Text style={[systemText.caption1, { color: colors.textSecondary, flex: 1 }]}>First names only, or keep your note anonymous.</Text></View>
+        <Pressable accessibilityRole="button" onPress={() => setComposer(true)} disabled={!hydrated} style={[styles.ask, !hydrated && { opacity: .5 }]}><View style={styles.noteIcon}><SFSymbol name="plus" size={24} color={CORAL} /></View><View style={{ flex: 1, gap: 4 }}><Text style={[systemText.headline, { color: INK }]}>Ask for prayer</Text></View></Pressable>
+
         <View accessibilityRole="tablist" style={[styles.row, { gap: 8 }]}>{["Everyone", "Yours"].map((label, i) => <Pressable key={label} accessibilityRole="tab" accessibilityState={{ selected: yours === Boolean(i) }} onPress={() => setYours(Boolean(i))} style={[styles.filter, { backgroundColor: yours === Boolean(i) ? colors.ink : colors.surface }]}><Text style={[systemText.subheadline, { fontWeight: "600", color: yours === Boolean(i) ? colors.bg : colors.ink }]}>{label}</Text></Pressable>)}</View>
         {yours ? <>
           <SectionLabel title="Your notes" />

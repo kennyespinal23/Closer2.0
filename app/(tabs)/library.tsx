@@ -132,6 +132,8 @@ function BibleLibrary() {
   const [searchSession, setSearchSession] = useState(0);
 
 
+  const { height: screenHeight, fontScale } = useWindowDimensions();
+  const shelfView = libraryMode === "browse" && viewMode === "grid";
   const scrollBottomPad = tabContentClearance(measuredTabBarHeight, insets.bottom, focusSpacing);
 
   const collection = COLLECTIONS.find(item => item.id === collectionId) ?? COLLECTIONS[0];
@@ -161,10 +163,13 @@ function BibleLibrary() {
     // surface fills; cards and search sit on solid dark chrome.
     <SafeAreaView ref={canvasRef} collapsable={false} className="flex-1" style={{ backgroundColor: colors.bg }} edges={["top"]}>
       <LibraryAtmosphere bookId={libraryMode === "browse" && viewMode === "grid" ? (filteredBooks.find(book => book.id === selectedBookId) ?? filteredBooks[0])?.id : undefined} />
-      <Animated.ScrollView style={tabContentStyle}
+      <Animated.ScrollView style={[{ flex: 1 }, tabContentStyle]}
+        scrollEnabled={!shelfView}
+        bounces={!shelfView}
         contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{
           paddingBottom: scrollBottomPad,
+          flexGrow: shelfView ? 1 : undefined,
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -178,7 +183,7 @@ function BibleLibrary() {
         <View style={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <View style={{ flex: 1 }}>
             <Text accessibilityRole="header" style={{ ...systemText.largeTitle, color: colors.ink }}>Library</Text>
-            <Text style={{ fontSize: 13, lineHeight: 18, fontWeight: "700", color: colors.textSecondary }}>{libraryMode === "guided" ? "Your reading path" : `Book ${Math.max(0, filteredBooks.findIndex(book => book.id === selectedBookId)) + 1} of ${filteredBooks.length}`}</Text>
+            {shelfView && <Text style={{ ...systemText.footnote, color: colors.textSecondary, marginTop: 4 }}>Book {BOOKS.findIndex(book => book.id === selectedBookId) + 1} of {BOOKS.length}</Text>}
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel={libraryMode === "browse" ? "Guided reading path" : "Browse books"} onPress={() => { haptics.tick(); setLibraryMode(mode => mode === "browse" ? "guided" : "browse"); }} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}><SFSymbol name={libraryMode === "browse" ? "map" : "books.vertical"} size={21} color={colors.ink} /></Pressable>
           <SectionHeader compact
@@ -189,7 +194,7 @@ function BibleLibrary() {
             onSelect={id => { haptics.tick(); setCollectionId(id); }} />
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel="Search Bible books" onPress={() => { setSearchSession(session => session + 1); setSearchOpen(true); }} style={[searchStyles.field, { marginHorizontal: 24, backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <SFSymbol name="magnifyingglass" size={20} color={colors.textSecondary} /><Text style={[searchStyles.text, { color: colors.textSecondary }]}>Find a book — try Ruth or John</Text>
+          <SFSymbol name="magnifyingglass" size={20} color={colors.textSecondary} /><Text style={[searchStyles.text, { color: colors.textSecondary }]}>Find a book</Text>
         </Pressable>
         </Animated.View>
         {libraryMode === "guided" ? <LibraryGuidedPath onPick={pickBook} /> : <>
@@ -230,7 +235,7 @@ function BibleLibrary() {
         ) : viewMode === "list" ? (
           <BookList books={filteredBooks} onPick={pickBook} />
         ) : (
-          <LibraryShelf departure={shelfDeparture} key={`${collectionId}:${shelfJump}`} books={filteredBooks} selectedId={selectedBookId} onSelect={book => setSelectedBookId(book.id)} onJump={book => { setSelectedBookId(book.id); setShelfJump(value => value + 1); }} onPick={pickBook} />
+          <LibraryShelf availableHeight={screenHeight - insets.top - scrollBottomPad - 140 * Math.max(1, fontScale)} departure={shelfDeparture} key={`${collectionId}:${shelfJump}`} books={filteredBooks} selectedId={selectedBookId} onSelect={book => setSelectedBookId(book.id)} onJump={book => { setSelectedBookId(book.id); setShelfJump(value => value + 1); }} onPick={pickBook} />
         )}
         </>}
       </Animated.ScrollView>

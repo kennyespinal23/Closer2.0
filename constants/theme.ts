@@ -148,35 +148,20 @@ export type ColorPalette = {
   destructive: string;
 };
 
-/** Warm evening canvas shared with the library; neutral cards retain their elevation. */
+/** Profile's warm dark canvas is shared by ordinary app screens. */
+export const DARK_CANVAS = {
+  background: "#211D19",
+  surface: "#302920",
+  raised: "#3B332A",
+  recessed: "#1B1714",
+} as const;
+
 export const DARK_COLORS: ColorPalette = {
-  bg: "#221819",
-  surface: "#1C1C1E",
-  // Apple's UIColor.secondarySystemBackground (dark). v1 of
-  // this token shipped at #111111 (calmer than Apple defaults)
-  // but the user's audit flagged the cards as "too close to
-  // the background" — squinting at the home screen, the
-  // section boundaries blurred into the page bg. Bumping to
-  // Apple's stock #1C1C1E gives every card a perceptually
-  // clear lift off the page without introducing borders or
-  // shadows (the audit explicitly forbade chrome). Apple
-  // Fitness, Health, and Journal all use exactly this value
-  // for their grouped inset surfaces.
-  surfaceSecondary: "#1C1C1E",
-  // Apple's UIColor.tertiarySystemBackground (dark). Same
-  // bump rationale as `surfaceSecondary` — v1 shipped at
-  // #1A1A1A which gave the inner type chip ~3% contrast over
-  // its secondary parent. #2C2C2E on #1C1C1E delivers ~6%
-  // which is what Apple HIG and iOS itself use to read inner
-  // controls as "lifted" without any border. Used for the
-  // type pill inside the devotional card, and the empty-state
-  // CTA on the App Blocks card.
-  surfaceTertiary: "#2C2C2E",
-  // Dark mode: devotional card sits ONE step DARKER than the
-  // utility surfaceSecondary (#1C1C1E) so the editorial anchor
-  // reads as the page's deepest tier. Squinting at the home
-  // page, the devotional is the inkiest non-background surface.
-  devotionalSurface: "#151515",
+  bg: DARK_CANVAS.background,
+  surface: DARK_CANVAS.surface,
+  surfaceSecondary: DARK_CANVAS.surface,
+  surfaceTertiary: DARK_CANVAS.raised,
+  devotionalSurface: DARK_CANVAS.recessed,
   ink: "#FFFFFF",
   // 92% white — bumped past Apple's secondaryLabel (0.60) and
   // past the previous 0.80 to put body copy on dark surfaces

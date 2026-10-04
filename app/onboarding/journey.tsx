@@ -1,3 +1,4 @@
+import { uiText } from '@/lib/typography';
 import { OnboardingContent, OnboardingChoicesLayout } from '@/components/OnboardingContent';
 import { buttonStyles } from '@/lib/buttonStyles';
 import { useEffect, useRef, useState } from "react";
@@ -219,7 +220,7 @@ function JourneyFlow() {
     </SafeAreaView>
   </ReaderMaterialGradient>}
     {(step === 0 || openingLeaving) && <View style={StyleSheet.absoluteFill} pointerEvents={openingLeaving ? "none" : "auto"}>
-      <OnboardingGlobeOpening onRevealNext={() => { setOpeningLeaving(true); setPage(1); }} onContinue={() => setOpeningLeaving(false)} onBack={back}/>
+      <OnboardingGlobeOpening onRevealNext={() => { setOpeningLeaving(true); setPage(1); }} onContinue={() => setOpeningLeaving(false)}/>
     </View>}
   </View>;
 }
@@ -252,7 +253,7 @@ function Sky({ time }: { time: number }) {
 const s = StyleSheet.create({
   top: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, height: 56 }, icon: { width: 44, height: 44, alignItems: "center", justifyContent: "center" }, progress: { flex: 1, height: 8, borderRadius: 4, overflow: "hidden", maxWidth: 240, marginHorizontal: "auto" },
   questionTitle: { textAlign: "left", fontSize: 36, lineHeight: 42 },
-  content: { flexGrow: 1, padding: 28, paddingTop: 32, justifyContent: "flex-start" }, title: { fontSize: 36, lineHeight: 42, fontWeight: "700", letterSpacing: -.7, textAlign: "center" }, body: { fontSize: 16, lineHeight: 24, textAlign: "center" }, footer: { paddingHorizontal: 28, paddingTop: 12, paddingBottom: 12, gap: 12 }, cta: { ...buttonStyles.primary, backgroundColor: "#FFFAF1", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 12px #00000010" }, ctaText: { ...buttonStyles.label, color: "#30251E" }, secondary: { minHeight: 44, alignItems: "center", justifyContent: "center" },
+  content: { flexGrow: 1, padding: 28, paddingTop: 32, justifyContent: "flex-start" }, title: { ...uiText.screenTitle, textAlign: "center" }, body: { fontSize: 16, lineHeight: 24, textAlign: "center" }, footer: { paddingHorizontal: 28, paddingTop: 12, paddingBottom: 12, gap: 12 }, cta: { ...buttonStyles.primary, backgroundColor: "#FFFAF1", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 12px #00000010" }, ctaText: { ...buttonStyles.label, color: "#30251E" }, secondary: { minHeight: 44, alignItems: "center", justifyContent: "center" },
   note: { padding: 20, borderRadius: 12, borderCurve: "continuous", gap: 12, boxShadow: "0 6px 10px #00000018" }, noteText: { color: "#362A22", fontSize: 17, lineHeight: 24, fontWeight: "500" }, stamp: { color: "#655044", fontSize: 13, fontWeight: "600" }, nameTag: { borderRadius: 24, borderCurve: "continuous", overflow: "hidden", boxShadow: "0 16px 28px #00000018" }, tagHeader: { backgroundColor: "#AC5A41", padding: 20, alignItems: "center" }, input: { minHeight: 120, padding: 24, fontSize: 30, textAlign: "center" },
   jar: { alignSelf: "center", width: 240, minHeight: 220, borderWidth: 2, borderRadius: 36, borderCurve: "continuous", padding: 20, paddingTop: 30, justifyContent: "flex-end" }, jarLid: { position: "absolute", top: -8, left: 12, right: 12, height: 18, borderRadius: 8 }, slips: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 10 }, slip: { padding: 8, paddingHorizontal: 12, borderRadius: 4 }, chips: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 12 }, chip: { paddingHorizontal: 20, paddingVertical: 14, borderRadius: 24, borderCurve: "continuous", minHeight: 48 }, candles: { flexDirection: "row", justifyContent: "space-evenly", paddingBottom: 16 }, candleChoice: { alignItems: "center", width: 88, minHeight: 330 },
   plan: { padding: 24, gap: 20, borderRadius: 24, borderCurve: "continuous" }, planTitle: { fontSize: 24, fontWeight: "600" }, planRow: { flexDirection: "row", gap: 16, alignItems: "center", minHeight: 60 }, number: { fontSize: 22, fontWeight: "600", width: 24 }, time: { width: "46%", padding: 16, minHeight: 80, borderRadius: 20, borderCurve: "continuous", gap: 8 }, sky: { height: 190, borderRadius: 28, borderCurve: "continuous", alignItems: "center", justifyContent: "center" }, sun: { width: 46, height: 46, borderRadius: 23, marginTop: 60 }, hill: { position: "absolute", bottom: -75, width: "130%", height: 130, borderRadius: 150, backgroundColor: "#756B56" },

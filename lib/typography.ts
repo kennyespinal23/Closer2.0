@@ -17,6 +17,14 @@ export const SCRIPTURE_FONT = "NunitoMedium";
 /** Compatibility alias for existing reading surfaces. */
 export const NEW_YORK = SCRIPTURE_FONT;
 
+/** Shared visual hierarchy. Native compact navigation titles retain platform sizing. */
+export const uiText = {
+  screenTitle: {fontFamily: SF_PRO, fontSize:36, lineHeight:42, fontWeight:'900', letterSpacing:-.72} satisfies TextStyle,
+  sectionTitle: {fontFamily: SF_PRO, fontSize:24, lineHeight:30, fontWeight:'800'} satisfies TextStyle,
+  body: {fontFamily: SF_PRO, fontSize:17, lineHeight:25, fontWeight:'400'} satisfies TextStyle,
+  supporting: {fontFamily: SF_PRO, fontSize:15, lineHeight:22, fontWeight:'500'} satisfies TextStyle,
+} as const;
+
 // ─── Weight vocabulary ────────────────────────────────────────
 //
 // Apple HIG explicitly forbids Thin / ExtraLight / Light at body
@@ -40,13 +48,7 @@ export const fontWeight = {
  * Kept as an alias of Apple Large Title (34/41) so leftover
  * call sites match HIG instead of the old Closer-only 40pt.
  */
-const pageTitle: TextStyle = {
-  fontFamily: SF_PRO,
-  fontWeight: fontWeight.bold,
-  fontSize: 34,
-  lineHeight: 41,
-  letterSpacing: -1.05,
-};
+const pageTitle: TextStyle = uiText.screenTitle;
 
 /**
  * Devotional title — the in-card / in-sermon title that names
@@ -171,13 +173,7 @@ export type TypographyRole = keyof typeof typography;
  * Text styles tighten slightly around body, then open again at
  * caption sizes.
  */
-const largeTitle: TextStyle = {
-  fontFamily: SF_PRO,
-  fontWeight: fontWeight.bold,
-  fontSize: 34,
-  lineHeight: 41,
-  letterSpacing: -1.05,
-};
+const largeTitle: TextStyle = uiText.screenTitle;
 
 const title1: TextStyle = {
   fontFamily: SF_PRO,
@@ -187,13 +183,7 @@ const title1: TextStyle = {
   letterSpacing: -0.8,
 };
 
-const title2: TextStyle = {
-  fontFamily: SF_PRO,
-  fontWeight: fontWeight.bold,
-  fontSize: 22,
-  lineHeight: 28,
-  letterSpacing: -0.7,
-};
+const title2: TextStyle = uiText.sectionTitle;
 
 const title3: TextStyle = {
   fontFamily: SF_PRO,

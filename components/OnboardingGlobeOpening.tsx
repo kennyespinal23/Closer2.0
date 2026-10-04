@@ -7,7 +7,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as haptics from '@/lib/haptics';
 import { Text } from './CloserText';
 import { ReaderMaterialGradient } from './ReaderMaterialGradient';
-import { SFSymbol } from './Symbol';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import { buttonStyles } from '@/lib/buttonStyles';
 import { OPENING_BEATS, OPENING_PIVOT_TIME, openingBeatAt } from '@/lib/onboardingOpening';
@@ -20,7 +19,7 @@ const assets = {
   pivot: require('../assets/onboarding/globe/pivot.jpg'),
 };
 
-export function OnboardingGlobeOpening(props: { onContinue: () => void; onRevealNext: () => void; onBack: () => void }) {
+export function OnboardingGlobeOpening(props: { onContinue: () => void; onRevealNext: () => void }) {
   const reduced = useReducedMotion();
   const [screenReader, setScreenReader] = useState(false);
   useEffect(() => {
@@ -32,7 +31,7 @@ export function OnboardingGlobeOpening(props: { onContinue: () => void; onReveal
   return <OpeningScene key={reduced || screenReader ? 'still' : 'video'} {...props} still={reduced || screenReader}/>;
 }
 
-function OpeningScene({ onContinue, onRevealNext, onBack, still }: { onContinue: () => void; onRevealNext: () => void; onBack: () => void; still: boolean }) {
+function OpeningScene({ onContinue, onRevealNext, still }: { onContinue: () => void; onRevealNext: () => void; still: boolean }) {
   const inset = useSafeAreaInsets(), { height, width } = useWindowDimensions();
   const [time, setTime] = useState(0), [manualBeat, setManualBeat] = useState(0);
   const [ready, setReady] = useState(false), [idleReady, setIdleReady] = useState(false);
@@ -139,9 +138,6 @@ function OpeningScene({ onContinue, onRevealNext, onBack, still }: { onContinue:
       {!(pivot && idleReady) && <VideoView player={master} onFirstFrameRender={() => setReady(true)} contentFit="cover" nativeControls={false} surfaceType="textureView" style={[StyleSheet.absoluteFill, { opacity: ready ? 1 : 0 }]} accessible={false}/>}
       <VideoView player={idle} onFirstFrameRender={() => setIdleReady(true)} contentFit="cover" nativeControls={false} surfaceType="textureView" style={[StyleSheet.absoluteFill, { opacity: pivot && idleReady ? 1 : 0 }]} accessible={false}/>
     </>}
-    <View style={[styles.nav, { top: inset.top + 4 }]}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={onBack} style={styles.icon}><SFSymbol name="chevron.left" size={20} color="#F9F0EB"/></Pressable>
-    </View>
     {beat.index >= 0 && <View pointerEvents="none" style={{ position: 'absolute', top: textTop, left: 28, right: 28, opacity: beat.opacity }}>
       <Text accessibilityRole="header" style={[styles.title, { fontSize: width < 380 ? 30 : 34, lineHeight: width < 380 ? 36 : 40 }]}>{OPENING_BEATS[beat.index].text}</Text>
     </View>}
@@ -167,8 +163,6 @@ function OpeningScene({ onContinue, onRevealNext, onBack, still }: { onContinue:
 }
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0C0E1E' },
-  nav: { position: 'absolute', left: 12, right: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  icon: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   title: { color: '#F9F0EB', fontWeight: '900', textAlign: 'center' },
   footer: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 28, paddingTop: 12 },
 });

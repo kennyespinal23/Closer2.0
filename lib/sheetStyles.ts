@@ -1,9 +1,9 @@
 import { type TextStyle } from "react-native";
-import { SF_PRO, systemText } from "@/lib/typography";
+import { SF_PRO, systemText, uiText } from "@/lib/typography";
 
 /** Semantic sheet roles. Sizes remain scalable with the device text setting. */
 export const sheetText = {
-  title: { fontFamily: SF_PRO, fontSize: 22, lineHeight: 28, fontWeight: "700", letterSpacing: -.4 } satisfies TextStyle,
+  title: uiText.sectionTitle,
   navigationTitle: systemText.headline,
   section: { ...systemText.footnote, fontWeight: "600" } satisfies TextStyle,
   row: systemText.body,

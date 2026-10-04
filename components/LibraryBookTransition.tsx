@@ -52,9 +52,10 @@ export function LibraryBookTransition({ book, source, snapshot, phase, onOpened,
     { scale: source.width / w + (1 - source.width / w) * flight.value },
   ] }));
   const cover = useAnimatedStyle(() => ({ transformOrigin: "left", transform: [{ perspective: 1800 }, { rotateY: `${-178 * hinge.value}deg` }] }));
+  const shelfOpacity = useAnimatedStyle(() => ({ opacity: interpolate(flight.value, [0, .35, 1], [1, 0, 0]) }));
   const scrim = useAnimatedStyle(() => ({ opacity: interpolate(flight.value, [0, 1], [0, .7]) * (1 - expand.value) }));
   return <View style={{ flex: 1, backgroundColor: "#221819" }}>
-    {phase !== "idle" && <View pointerEvents="none" style={{ position: "absolute", inset: 0 }}>{snapshot && <Image source={{ uri: snapshot }} cachePolicy="memory" transition={0} contentFit="fill" style={{ position: "absolute", inset: 0 }} />}<Animated.View style={[{ position: "absolute", inset: 0, backgroundColor: "#160D07" }, scrim]} /></View>}
+    {phase !== "idle" && <View pointerEvents="none" style={{ position: "absolute", inset: 0 }}>{snapshot && <Animated.View style={[{ position: "absolute", inset: 0 }, shelfOpacity]}><Image source={{ uri: snapshot }} cachePolicy="memory" transition={0} contentFit="fill" style={{ position: "absolute", inset: 0 }} /></Animated.View>}<Animated.View style={[{ position: "absolute", inset: 0, backgroundColor: "#160D07" }, scrim]} /></View>}
     <Animated.View pointerEvents={phase === "idle" ? "auto" : "none"} accessibilityElementsHidden={phase !== "idle"} style={[{ width, height, overflow: "hidden" }, scene]}>{children}</Animated.View>
     {phase !== "idle" && <View pointerEvents="auto" accessibilityElementsHidden style={{ position: "absolute", inset: 0, justifyContent: "center", alignItems: "center" }}><Animated.View style={[{ width: w, height: h }, bookFrame]}><Animated.View style={[{ width: w, height: h }, cover]}>
       <View style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden", backgroundColor: "#FFFBF4", transform: [{ rotateY: "180deg" }], alignItems: "center", justifyContent: "center", padding: 32 }}><Text style={{ color: "#6F5E50", fontFamily: "System", fontSize: 20, textAlign: "center" }}>The Lord is closer than you think.</Text></View>

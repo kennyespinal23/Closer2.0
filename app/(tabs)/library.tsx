@@ -4,6 +4,7 @@ import { tabContentClearance } from "@/lib/tabContentClearance";
 import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
 import Animated from 'react-native-reanimated';
 import { useTabContentFade } from '@/lib/useTabContentFade';
+import { LibraryShelf } from "@/components/LibraryShelf";
 import { LibraryGuidedPath } from "@/components/LibraryGuidedPath";
 import { LibraryBookCover } from "@/components/LibraryBookcase";
 import { getBookTheme } from "@/constants/bookBlurbs";
@@ -11,7 +12,7 @@ import { captureScreen, releaseCapture } from "react-native-view-shot";
 import { prepareLibraryOpening } from "@/lib/libraryOpening";
 import { LibraryAtmosphere } from "@/components/LibraryAtmosphere";
 import { LibraryEnvironment } from "@/components/LibraryEnvironment";
-import { LibraryBook, LibraryBookcase, type LibraryBookFrame } from "@/components/LibraryBookcase";
+import { LibraryBook, type LibraryBookFrame } from "@/components/LibraryBookcase";
 import { LibraryDoors } from "@/components/LibraryDoors";
 import { systemText } from "@/lib/typography";
 import { Host, ContextMenu, Section as NativeSection, Button as NativeButton } from "@expo/ui/swift-ui";
@@ -28,7 +29,6 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
-import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { useBottomTabBarHeight } from "react-native-bottom-tabs";
 import { SFSymbol } from "@/components/Symbol";
 import { BookCover } from "@/components/BookCover";
@@ -92,38 +92,28 @@ function BibleLibrary() {
   const reducedOpening = useReducedMotion();
   const tabContentStyle = useTabContentFade(reducedOpening);
   const snapshotRef = useRef<string | undefined>(undefined);
-  const captureTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const captureVersion = useRef(0);
   const libraryFocused = useRef(false);
-  const cancelShelfCapture = useCallback(() => {
-    ++captureVersion.current;
-    clearTimeout(captureTimer.current);
-  }, []);
-  const cacheShelf = useCallback(() => {
-    if (!libraryFocused.current || reducedOpening) return;
-    clearTimeout(captureTimer.current);
-    const version = ++captureVersion.current;
-    captureTimer.current = setTimeout(async () => {
-      try {
-        const uri = await captureScreen({ format: "jpg", quality: .8, width: 900, result: "tmpfile" });
-        if (version !== captureVersion.current) { releaseCapture(uri); return; }
-        if (snapshotRef.current) releaseCapture(snapshotRef.current);
-        snapshotRef.current = uri;
-      } catch { /* Navigation remains immediate if an idle capture is unavailable. */ }
-    }, 750);
-  }, [reducedOpening]);
   useFocusEffect(useCallback(() => {
     openingRef.current = false;
     libraryFocused.current = true;
-    cacheShelf();
-    return () => { libraryFocused.current = false; ++captureVersion.current; clearTimeout(captureTimer.current); };
-  }, [cacheShelf]));
+    return () => { libraryFocused.current = false; };
+  }, []));
   useEffect(() => () => { if (snapshotRef.current) releaseCapture(snapshotRef.current); }, []);
-  const pickBook = (book: Book, frame: LibraryBookFrame) => {
+  const pickBook = async (book: Book, frame: LibraryBookFrame) => {
     if (openingRef.current) return;
     openingRef.current = true;
-    cancelShelfCapture();
     if (!reducedOpening) {
+      // Capture only when opening. Capturing after swipes interrupts the next gesture.
+      try {
+        const uri = await captureScreen({ format: "png", quality: 1, result: "tmpfile" });
+        if (!libraryFocused.current) { releaseCapture(uri); openingRef.current = false; return; }
+        if (snapshotRef.current) releaseCapture(snapshotRef.current);
+        snapshotRef.current = uri;
+      } catch {
+        if (snapshotRef.current) releaseCapture(snapshotRef.current);
+        snapshotRef.current = undefined;
+      }
+      if (!libraryFocused.current) { openingRef.current = false; return; }
       prepareLibraryOpening({ bookId: book.id, source: frame, snapshot: snapshotRef.current });
       snapshotRef.current = undefined; // The detail owns this image until it returns to the shelf.
     }
@@ -153,21 +143,23 @@ function BibleLibrary() {
     haptics.tick();
     void saveJSON(STORAGE_KEYS.bibleLibraryView, next);
   };
+  const { lastVisited, hasReadChapter } = useProgress();
+  const [shelfJump, setShelfJump] = useState(0);
+  const [selectedBookId, setSelectedBookId] = useState(() => lastVisited?.bookId ?? "genesis");
   const [collectionId, setCollectionId] = useState("all");
-  const [filter, setFilter] = useState<LibraryFilter>("old");
+  const [filter, setFilter] = useState<LibraryFilter>(() => BOOKS.find(book => book.id === lastVisited?.bookId)?.testament ?? "old");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchSession, setSearchSession] = useState(0);
-  const { lastVisited, hasReadChapter } = useProgress();
 
 
   const scrollBottomPad = tabContentClearance(measuredTabBarHeight, insets.bottom, focusSpacing);
 
   const collection = COLLECTIONS.find(item => item.id === collectionId) ?? COLLECTIONS[0];
   const availableCollections = COLLECTIONS.filter(item => item.id === "all" || BOOKS.some(book => book.testament === filter && item.categories.includes(book.category)));
-  const filteredBooks = useMemo(() => BOOKS.filter(book => book.testament === filter &&
-    (collection.id === "all" || collection.categories.includes(book.category))), [filter, collection]);
+  const filteredBooks = useMemo(() => BOOKS.filter(book => (viewMode === "grid" || book.testament === filter) &&
+    (collection.id === "all" || collection.categories.includes(book.category))), [filter, collection, viewMode]);
 
-  useEffect(cacheShelf, [cacheShelf, filteredBooks, scheme, viewMode, libraryMode]);
+
 
   // Continue Reading — moved here from the Home screen. Surfaces
   // the user's most recent reader visit so they can pick up exactly
@@ -185,9 +177,9 @@ function BibleLibrary() {
     // Opaque root so the previous tab's snapshot never shows through
     // during native tab swaps. Scroll content still carries its own
     // surface fills; cards and search sit on solid dark chrome.
-    <SafeAreaView ref={canvasRef} onLayout={cacheShelf} collapsable={false} className="flex-1" style={{ backgroundColor: colors.bg }} edges={["top"]}>
-      <LibraryAtmosphere />
-      <Animated.ScrollView style={tabContentStyle} onScrollBeginDrag={cancelShelfCapture} onMomentumScrollBegin={cancelShelfCapture} onScrollEndDrag={cacheShelf} onMomentumScrollEnd={cacheShelf}
+    <SafeAreaView ref={canvasRef} collapsable={false} className="flex-1" style={{ backgroundColor: colors.bg }} edges={["top"]}>
+      <LibraryAtmosphere bookId={libraryMode === "browse" && viewMode === "grid" ? (filteredBooks.find(book => book.id === selectedBookId) ?? filteredBooks[0])?.id : undefined} />
+      <Animated.ScrollView style={tabContentStyle}
         contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{
           paddingBottom: scrollBottomPad,
@@ -200,17 +192,28 @@ function BibleLibrary() {
             Apple Large Title via ThemedText variant="largeTitle"
             (34pt Bold). Matches Home / Profile tab anchors. */}
 
-        <View style={{ paddingHorizontal: SCREEN_H_PAD, paddingTop: 22, minHeight: 140, flexDirection: "row", justifyContent: "space-between" }}>
-          <View style={{ flex: 1, paddingRight: 12, gap: 8 }}><ThemedText variant="largeTitle" accessibilityRole="header">The Library</ThemedText><ThemedText variant="subheadline" color="secondary">Sixty-six books, one story.</ThemedText><Pressable onPress={() => { setSearchSession(session => session + 1); setSearchOpen(true); }} accessibilityRole="button" accessibilityLabel="Search Bible books" style={{ alignSelf: "flex-start", minHeight: 44, flexDirection: "row", alignItems: "center", gap: 7 }}><SFSymbol name="magnifyingglass" size={17} color={colors.ink} /><ThemedText variant="subheadline">Find a book</ThemedText></Pressable></View>
+        <View style={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <Text accessibilityRole="header" style={{ fontSize: 32, lineHeight: 36, fontWeight: "900", color: colors.ink }}>Library</Text>
+            <Text style={{ fontSize: 13, lineHeight: 18, fontWeight: "700", color: colors.textSecondary }}>{libraryMode === "guided" ? "Your reading path" : `Book ${Math.max(0, filteredBooks.findIndex(book => book.id === selectedBookId)) + 1} of ${filteredBooks.length}`}</Text>
+          </View>
+          <Pressable accessibilityRole="button" accessibilityLabel={libraryMode === "browse" ? "Guided reading path" : "Browse books"} onPress={() => { haptics.tick(); setLibraryMode(mode => mode === "browse" ? "guided" : "browse"); }} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}><SFSymbol name={libraryMode === "browse" ? "map" : "books.vertical"} size={21} color={colors.ink} /></Pressable>
+          <SectionHeader compact
+            onReplay={() => setDoorReplay(value => value + 1)} title="" filter={filter}
+            onChangeFilter={next => { haptics.tick(); setFilter(next); setCollectionId("all"); const first = BOOKS.find(book => book.testament === next); if (first) { setSelectedBookId(first.id); setShelfJump(value => value + 1); } }}
+            count={filteredBooks.length} viewMode={viewMode} onChangeView={changeView}
+            collectionId={collectionId} collections={viewMode === "grid" ? COLLECTIONS : availableCollections}
+            onSelect={id => { haptics.tick(); setCollectionId(id); }} />
         </View>
-
-        <View style={{ marginHorizontal: SCREEN_H_PAD, marginBottom: 20 }}><SegmentedControl appearance={scheme} values={["Browse", "Guided"]} selectedIndex={libraryMode === "browse" ? 0 : 1} onChange={event => { setLibraryMode(event.nativeEvent.selectedSegmentIndex === 0 ? "browse" : "guided"); haptics.tick(); }} style={{ height: 36 }} /></View>
+        <Pressable accessibilityRole="button" accessibilityLabel="Search Bible books" onPress={() => { setSearchSession(session => session + 1); setSearchOpen(true); }} style={{ marginHorizontal: 24, minHeight: 48, paddingHorizontal: 16, borderRadius: 24, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <SFSymbol name="magnifyingglass" size={20} color={colors.textSecondary} /><Text style={{ fontSize: 16, lineHeight: 22, color: colors.textSecondary, flexShrink: 1 }}>Find a book — try Ruth or John</Text>
+        </Pressable>
         {libraryMode === "guided" ? <LibraryGuidedPath onPick={pickBook} /> : <>
         {/* ─── Continue Reading hero (conditional) ────────────────
             Sits between the title and search so the user lands on
             either "what I was just reading" or "what's available
             to read" — never both fighting for the first scroll. */}
-        {continueReading && (
+        {continueReading && viewMode === "list" && (
             <View style={{ paddingHorizontal: SCREEN_H_PAD }}>
               <ContinueReadingHero
                 onPick={pickBook}
@@ -237,31 +240,18 @@ function BibleLibrary() {
 
 
         {/* ─── Section header (current filter or search count) ── */}
-        <SectionHeader
-          onReplay={() => setDoorReplay(value => value + 1)}
-          title={filter === "old" ? "Old Testament" : "New Testament"}
-          filter={filter}
-          onChangeFilter={next => { haptics.tick(); setFilter(next); setCollectionId("all"); }}
-          count={filteredBooks.length}
-          viewMode={viewMode}
-          onChangeView={changeView}
-          collectionId={collectionId}
-          collections={availableCollections}
-          onSelect={id => { haptics.tick(); setCollectionId(id); }}
-        />
-
         {/* ─── Grid ───────────────────────────────────────────── */}
         {filteredBooks.length === 0 ? (
           <EmptyState query="" />
         ) : viewMode === "list" ? (
           <BookList books={filteredBooks} onPick={pickBook} />
         ) : (
-          <LibraryBookcase books={filteredBooks} onPick={pickBook} onSettled={cacheShelf} />
+          <LibraryShelf key={`${collectionId}:${shelfJump}`} books={filteredBooks} selectedId={selectedBookId} onSelect={book => setSelectedBookId(book.id)} onJump={book => { setSelectedBookId(book.id); setShelfJump(value => value + 1); }} onPick={pickBook} />
         )}
         </>}
       </Animated.ScrollView>
       {/* Fresh input and results before presentation; onShow runs too late to reset them. */}
-      <LibraryDoors replay={doorReplay} />
+      {doorReplay > 0 && <LibraryDoors key={doorReplay} replay={doorReplay} />}
       <BibleSearch key={searchSession} visible={searchOpen} onClose={() => setSearchOpen(false)} onPick={book => {
         setSearchOpen(false);
         router.push(`/book/${book.id}`);
@@ -276,12 +266,12 @@ function BibleLibrary() {
 // ─────────────────────────────────────────────────────────────────
 
 function SectionHeader({
-  title,
+  compact = false, title,
   count,
   onReplay,
   collectionId, collections, onSelect, viewMode, onChangeView, filter, onChangeFilter,
 }: {
-  title: string;
+  compact?: boolean; title: string;
   filter: LibraryFilter;
   onChangeFilter: (filter: LibraryFilter) => void;
   count: number;
@@ -296,17 +286,17 @@ function SectionHeader({
   const colors = useColors();
   return (
     <View
-      className="mt-4 mb-4 flex-row items-center justify-between"
-      style={{ paddingHorizontal: SCREEN_H_PAD }}
+      className="flex-row items-center justify-between"
+      style={{ paddingHorizontal: compact ? 0 : SCREEN_H_PAD }}
     >
-      <View style={{ flex: 1, marginRight: 8 }}>
-        <ThemedText variant="title2" accessibilityRole="header">{title}</ThemedText>
-        <ThemedText variant="footnote" color="secondary" style={{ marginTop: 4 }}>{collectionId !== "all" ? `${collections.find(item => item.id === collectionId)?.label} · ` : ""}{count} {count === 1 ? "book" : "books"}</ThemedText>
-      </View>
-      <Host colorScheme={scheme} style={{ width: 150, height: 44 }}>
+      {!compact && <View style={{ flex: 1, marginRight: 8 }}>
+        <ThemedText variant="headline" accessibilityRole="header">{title}</ThemedText>
+        {viewMode === "list" && <ThemedText variant="footnote" color="secondary" style={{ marginTop: 4 }}>{collectionId !== "all" ? `${collections.find(item => item.id === collectionId)?.label} · ` : ""}{count} {count === 1 ? "book" : "books"}</ThemedText>}
+      </View>}
+      <Host colorScheme={scheme} style={{ width: compact ? 44 : 150, height: 44 }}>
         <ContextMenu activationMethod="singlePress">
           <ContextMenu.Trigger>
-            <NativeButton variant="bordered" systemImage="line.3.horizontal.decrease" modifiers={[accessibilityLabel("Library view and filter options")]}>View & Filter</NativeButton>
+            <NativeButton variant="bordered" systemImage="line.3.horizontal.decrease" modifiers={[accessibilityLabel("Library view and filter options")]}>{compact ? "" : "Options"}</NativeButton>
           </ContextMenu.Trigger>
           <ContextMenu.Items>
             <NativeSection title="Testament">

@@ -1,3 +1,4 @@
+import { goBackOr } from "@/lib/navigation";
 import { useCallback, useState, type ReactNode } from "react";
 import { ActionSheetIOS, Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -204,7 +205,7 @@ export function AppBlocksScreen({
             paddingBottom: 4,
           }}
         >
-          <BubbleBackButton onPress={() => router.back()} />
+          <BubbleBackButton onPress={() => goBackOr(router, "/profile")} />
         </View>
       ) : null}
 

@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useState } from "react";
 import { ReaderNativeButton } from "@/components/ReaderNativeButton";
 import { Pressable, View } from "react-native";
@@ -56,7 +57,7 @@ export function SheetModalHeader({
           onPressOut={() => setPressedAction(null)}
           style={{ minWidth: 44, minHeight: 44, justifyContent: "center", opacity: pressedAction === "cancel" ? 0.6 : 1 }}
         >
-          <Text style={[systemText.body, { color: colors.inkMuted }]}>
+          <Text style={[{ color: colors.inkMuted }, buttonStyles.compactLabel]}>
             {cancelLabel}
           </Text>
         </Pressable>}
@@ -93,13 +94,7 @@ export function SheetModalHeader({
             style={{ minWidth: 44, minHeight: 44, justifyContent: "center", opacity: pressedAction === "save" || saveDisabled ? 0.4 : 1 }}
           >
             <Text
-              style={[
-                systemText.body,
-                {
-                  fontWeight: "600",
-                  color: saveDisabled ? colors.inkSubtle : "#007AFF",
-                },
-              ]}
+              style={[{ color: saveDisabled ? colors.inkSubtle : "#007AFF" }, buttonStyles.compactLabel]}
             >
               {saveLabel}
             </Text>

@@ -1,3 +1,4 @@
+import { CloseButton } from "@/components/CloseButton";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Animated, Easing, Platform, Pressable, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -590,15 +591,10 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
               paddingRight: 4,
             }}
           >
-            <Pressable
-              onPress={(e) => {
+            <CloseButton onPress={(e) => {
                 e.stopPropagation?.();
                 handleEnd();
-              }}
-              hitSlop={6}
-              accessibilityRole="button"
-              accessibilityLabel="End focus session"
-              style={({ pressed }) => ({
+              }} hitSlop={6} accessibilityRole="button" accessibilityLabel="End focus session" style={({ pressed }) => ({
                 width: 38,
                 height: 38,
                 borderRadius: 19,
@@ -606,15 +602,7 @@ export function FocusMiniPlayer({ aboveTabBar = true }: FocusMiniPlayerProps = {
                 justifyContent: "center",
                 backgroundColor: endBg,
                 opacity: pressed ? 0.55 : 1,
-              })}
-            >
-              <SFSymbol
-                name="xmark"
-                size={12}
-                weight="bold"
-                color={endLabelColor}
-              />
-            </Pressable>
+              })} color={endLabelColor} />
             {!sermonCompleted ? (
               <Pressable
                 onPress={(e) => {

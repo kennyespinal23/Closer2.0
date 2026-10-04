@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Animated, Image, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -336,11 +337,7 @@ export default function CheckInDetailScreen() {
                   <PenGlyph color={accent} />
                   <Text
                     className="text-[11px] ml-1.5"
-                    style={{
-                      fontFamily: "System",
-                      fontWeight: "700",
-                      color: accent,
-                    }}
+                    style={[{ color: accent }, buttonStyles.textLabel]}
                   >
                     Edit
                   </Text>
@@ -411,11 +408,7 @@ export default function CheckInDetailScreen() {
           >
             <Text
               className="text-[13px]"
-              style={{
-                fontFamily: "System",
-                fontWeight: "600",
-                color: colors.destructive,
-              }}
+              style={[{ color: colors.destructive }, buttonStyles.textLabel]}
             >
               Delete check-in
             </Text>

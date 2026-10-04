@@ -13,6 +13,7 @@ export type BubbleBackButtonProps = {
   /** Override bubble fill (defaults to charcoal chrome disc). */
   backgroundColor?: string;
   accessibilityLabel?: string;
+  disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -26,6 +27,7 @@ export function BubbleBackButton({
   backgroundColor,
   accessibilityLabel = "Back",
   style,
+  disabled = false,
 }: BubbleBackButtonProps) {
   const [pressed, setPressed] = useState(false);
   const colors = useColors();
@@ -45,6 +47,8 @@ export function BubbleBackButton({
         haptics.soft();
         onPress();
       }}
+      disabled={disabled}
+      accessibilityState={{ disabled }}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
@@ -53,10 +57,11 @@ export function BubbleBackButton({
           width: SIZE,
           height: SIZE,
           borderRadius: SIZE / 2,
+          borderCurve: "continuous",
           backgroundColor: fill,
           alignItems: "center",
           justifyContent: "center",
-          opacity: pressed ? 0.75 : 1,
+          opacity: disabled ? 0.4 : pressed ? 0.75 : 1,
         },
         style,
       ]}

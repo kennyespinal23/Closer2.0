@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -166,14 +167,7 @@ export default function AccountScreen() {
                 >
                   Already have an account?{" "}
                   <Text
-                    style={[
-                      typography.button,
-                      {
-                        color: colors.ink,
-                        fontSize: 15,
-                        lineHeight: 20,
-                      },
-                    ]}
+                    style={[{ color: colors.ink }, buttonStyles.textLabel]}
                   >
                     Log in
                   </Text>

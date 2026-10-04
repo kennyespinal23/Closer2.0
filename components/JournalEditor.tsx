@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, useWindowDimensions, View } from "react-native";
 import { Text, TextInput } from "@/components/CloserText";
@@ -99,7 +100,7 @@ export function JournalEditor({
           >
             <Text
               className="text-ink-muted text-[15px]"
-              style={{ fontFamily: "System", fontWeight: "500" }}
+              style={buttonStyles.compactLabel}
             >
               Cancel
             </Text>
@@ -121,11 +122,7 @@ export function JournalEditor({
           >
             <Text
               className="text-[15px]"
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: canSave && dirty ? moodAccent : colors.inkSubtle,
-              }}
+              style={[{ color: canSave && dirty ? moodAccent : colors.inkSubtle }, buttonStyles.compactLabel]}
             >
               Save
             </Text>
@@ -199,11 +196,7 @@ export function JournalEditor({
                 <TrashIcon />
                 <Text
                   className="text-[14px] ml-2"
-                  style={{
-                    fontFamily: "System",
-                    fontWeight: "600",
-                    color: colors.destructive,
-                  }}
+                  style={[{ color: colors.destructive }, buttonStyles.textLabel]}
                 >
                   Delete journal
                 </Text>

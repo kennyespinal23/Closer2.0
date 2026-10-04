@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -323,12 +324,7 @@ export default function QuietAppsScreen() {
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "600",
-                fontSize: 13,
-                color: colors.inkMuted,
-              }}
+              style={[{ color: colors.inkMuted }, buttonStyles.textLabel]}
             >
               Set up later
             </Text>
@@ -457,12 +453,7 @@ function StatusCard({
             }}
           >
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                fontSize: 12,
-                color: colors.primaryFg,
-              }}
+              style={[{ color: colors.primaryFg }, buttonStyles.compactLabel]}
             >
               {cta}
             </Text>

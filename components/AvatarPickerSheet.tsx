@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -146,12 +147,7 @@ export function AvatarPickerSheet({
             }}
           >
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "600",
-                fontSize: 15,
-                color: colors.ink,
-              }}
+              style={[{ color: colors.ink }, buttonStyles.compactLabel]}
             >
               Use initials
             </Text>

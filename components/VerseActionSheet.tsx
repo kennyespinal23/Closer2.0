@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useState } from "react";
 import { ReaderSheet } from "@/components/ReaderSheet";
 import { ReaderNativeButton } from "@/components/ReaderNativeButton";
@@ -306,7 +307,7 @@ function ActionButton({
       {icon}
       <Text
         className="text-ink text-[14px] ml-2"
-        style={{ fontFamily: "System", fontWeight: "600", flexShrink: 1 }}
+        style={[{ flexShrink: 1 }, buttonStyles.compactLabel]}
       >
         {label}
       </Text>

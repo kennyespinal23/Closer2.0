@@ -1,3 +1,4 @@
+import { CloseButton } from "@/components/CloseButton";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing, Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -914,12 +915,7 @@ export const HomeDevotionalCardSlide = memo(function HomeDevotionalCardSlide({
                   justifyContent: "space-between",
                 }}
               >
-                <Pressable
-                  onPress={closeExpanded}
-                  hitSlop={12}
-                  accessibilityRole="button"
-                  accessibilityLabel="Close"
-                  style={({ pressed }) => ({
+                <CloseButton onPress={closeExpanded} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close" style={({ pressed }) => ({
                     width: 44,
                     height: 44,
                     borderRadius: 22,
@@ -927,15 +923,7 @@ export const HomeDevotionalCardSlide = memo(function HomeDevotionalCardSlide({
                     alignItems: "center",
                     justifyContent: "center",
                     opacity: pressed ? 0.7 : 1,
-                  })}
-                >
-                  <SFSymbol
-                    name="xmark"
-                    size={15}
-                    color={CARD_INK}
-                    weight="semibold"
-                  />
-                </Pressable>
+                  })} color={CARD_INK} />
 
                 <Text
                   style={{

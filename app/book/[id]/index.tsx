@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { SkyGradient } from "@/components/HomeSkyGradient";
 import { LibraryBookTransition, type BookTransitionPhase } from "@/components/LibraryBookTransition";
 import { useNavigation, usePreventRemove, type NavigationAction } from "@react-navigation/native";
@@ -21,7 +22,7 @@ import { StatusBar } from "expo-status-bar";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
 import { BubbleBackButton } from "@/components/BubbleBackButton";
-import { SFSymbol, type SFSymbolName } from "@/components/Symbol";
+import { SFSymbol } from "@/components/Symbol";
 import { CATEGORY_COVER_PALETTE, getBookCover } from "@/constants/bookCovers";
 import { getBookBlurb, getBookTheme } from "@/constants/bookBlurbs";
 import { type Book, findBookById, siblingBooks } from "@/constants/books";
@@ -78,7 +79,7 @@ export default function BookOverviewScreen() {
           >
             <Text
               className="text-primary-fg text-[13px]"
-              style={{ fontFamily: "System", fontWeight: "700" }}
+              style={buttonStyles.textLabel}
             >
               Back to Library
             </Text>
@@ -248,15 +249,15 @@ function BookDetail({ book, prepareReader = true }: { book: Book; prepareReader?
             />}
             {!started && <Animated.View style={[{ marginTop: 16 }, readButtonStyle]}>
             <Pressable onPress={() => { haptics.soft(); openChapter(resumeChapter ?? 1); }} onPressIn={() => { animateReadPress(true); prefetchChapter(book.id, resumeChapter ?? 1, translation.id); }} onPressOut={() => animateReadPress(false)} accessibilityRole="button" accessibilityLabel={resumeChapter ? `Continue ${book.name}, chapter ${resumeChapter}` : `Read ${book.name}, chapter 1`}
-              style={{ backgroundColor: colors.ink, borderRadius: 999, minHeight: 48, paddingHorizontal: 26, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
-              <Text allowFontScaling={false} style={{ color: colors.bg, fontSize: font(15), lineHeight: font(22), fontWeight: "700" }}>{resumeChapter ? "Continue Reading" : "Read Now"}</Text>
+              style={[buttonStyles.primary, { backgroundColor: colors.ink, flexDirection: "row", gap: 10 }]}>
+              <Text style={[buttonStyles.label, { color: colors.bg }]}>{resumeChapter ? "Continue Reading" : "Read Now"}</Text>
               <Animated.View style={readArrowStyle}><SFSymbol name="arrow.right" size={18} color={colors.bg} weight="semibold" /></Animated.View>
             </Pressable>
             </Animated.View>}
             </View>
-            {express && <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name} Express version`} onPress={() => { haptics.soft(); router.push(`/book/${book.id}/express`); }} style={{ minHeight: 48, marginTop: 8, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, flexDirection: "row", alignItems: "center", gap: 10 }}>
+            {express && <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name} Express version`} onPress={() => { haptics.soft(); router.push(`/book/${book.id}/express`); }} style={[buttonStyles.primary, { marginTop: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, flexDirection: "row", gap: 10 }]}>
               <SFSymbol name="bolt" color={colors.ink} size={17} />
-              <Text style={{ color: colors.ink, fontSize: 15, fontWeight: "600" }}>Read Express</Text>
+              <Text style={[buttonStyles.label, { color: colors.ink }]}>Read Express</Text>
               <Text style={{ color: colors.inkMuted, fontSize: 13 }}>{expressReadingMinutes(express)} min</Text>
             </Pressable>}
             <Pressable onPress={() => scrollTo(aboutY)} accessibilityRole="button" accessibilityLabel="About this book and chapters" style={{ minHeight: 44, marginTop: 8, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12 }}>
@@ -299,14 +300,14 @@ function BookDetail({ book, prepareReader = true }: { book: Book; prepareReader?
           /> : <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name}, chapter 1`}
             onPress={() => { haptics.soft(); openChapter(1); }}
             onPressIn={() => { animateReadPress(true); prefetchChapter(book.id, 1, translation.id); }} onPressOut={() => animateReadPress(false)}
-            style={{ minHeight: 50, paddingVertical: 14, paddingHorizontal: 24, borderRadius: 28, borderCurve: "continuous", backgroundColor: colors.ink, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
-            <Text style={{ color: colors.bg, fontSize: 17, fontWeight: "600" }}>Read Now</Text><SFSymbol name="arrow.right" size={20} color={colors.bg} />
+            style={[buttonStyles.primary, { backgroundColor: colors.ink, flexDirection: "row", gap: 10 }]}>
+            <Text style={[buttonStyles.label, { color: colors.bg }]}>Read Now</Text><SFSymbol name="arrow.right" size={20} color={colors.bg} />
           </Pressable>}
         </Animated.View>
       </Animated.View>
       <View style={{ position: "absolute", top: 0, left: 0, right: 0, paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 8, flexDirection: "row", justifyContent: "space-between" }} pointerEvents="box-none">
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg }, headerShade]} />
-        <CircleButton icon="chevron.left" label="Back" tint={colors.ink} bg={colors.surface} border={colors.border} onPress={() => goBackOr(router, "/(tabs)/library")} />
+        <BubbleBackButton onPress={() => goBackOr(router, "/(tabs)/library")} />
         <Animated.View pointerEvents="none" accessibilityElementsHidden={!headerTitleVisible} importantForAccessibility={headerTitleVisible ? "auto" : "no-hide-descendants"} style={[{ position: "absolute", left: 76, right: 76, top: insets.top + 8, height: 48, justifyContent: "center" }, headerTitleStyle]}>
           <Text accessibilityRole="header" numberOfLines={1} ellipsizeMode="tail" maxFontSizeMultiplier={1.4} style={[systemText.headline, { color: colors.ink, textAlign: "center" }]}>{book.name}</Text>
         </Animated.View>
@@ -328,59 +329,6 @@ function BookDetail({ book, prepareReader = true }: { book: Book; prepareReader?
         </Host>
       </View>
     </View>
-  );
-}
-
-function CircleButton({
-  icon,
-  label,
-  tint,
-  bg,
-  border,
-  onPress,
-}: {
-  icon: SFSymbolName;
-  label: string;
-  tint: string;
-  bg: string;
-  border: string;
-  onPress: () => void;
-}) {
-  const [pressed, setPressed] = useState(false);
-  // NOTE: this app's Pressable drops function-form `style` backgrounds,
-  // so visuals use a plain style object and press feedback is driven
-  // by local state instead of the ({ pressed }) callback.
-  return (
-    <Pressable
-      onPress={onPress}
-      onPressIn={() => setPressed(true)}
-      onPressOut={() => setPressed(false)}
-      hitSlop={8}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={{
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: bg,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: border,
-        opacity: pressed ? 0.6 : 1,
-        ...Platform.select({
-          ios: {
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.12,
-            shadowRadius: 6,
-          },
-          android: { elevation: 3 },
-        }),
-      }}
-    >
-      <SFSymbol name={icon} size={18} color={tint} weight="semibold" />
-    </Pressable>
   );
 }
 

@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useState } from "react";
 import { Platform, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -166,7 +167,7 @@ export default function RatingScreen() {
                 >
                   <Text
                     className="text-select text-[14px]"
-                    style={{ fontFamily: "System", fontWeight: "500" }}
+                    style={buttonStyles.textLabel}
                   >
                     Maybe later
                   </Text>

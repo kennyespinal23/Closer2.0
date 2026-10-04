@@ -115,7 +115,6 @@ export default function AppearanceScreen() {
     <SettingsScaffold title="Appearance">
       <SettingsSection
         title="Theme"
-        footer="A handful of sermon illustrations were authored against a dark backdrop and may read as floating cards on the light canvas — we're refining those in follow-ups."
       >
         <View style={styles.controlBlock}>
           <SegmentedControl

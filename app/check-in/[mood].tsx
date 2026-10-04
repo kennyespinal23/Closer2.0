@@ -1,3 +1,6 @@
+import { buttonStyles } from "@/lib/buttonStyles";
+import { goBackOr } from "@/lib/navigation";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Image, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -206,16 +209,7 @@ export default function VerseDeliveryScreen() {
       >
         {/* ─── Top bar ─────────────────────────────────────── */}
         <View className="px-6 pt-2 flex-row items-center justify-between">
-          <Pressable
-            hitSlop={12}
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel="Pick a different mood"
-            className="w-9 h-9 rounded-full bg-accent-soft border border-border items-center justify-center"
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-          >
-            <SFSymbol name="chevron.left" size={14} color={colors.ink} weight="semibold" />
-          </Pressable>
+          <BubbleBackButton onPress={() => goBackOr(router, "/check-in")} accessibilityLabel="Pick a different mood" />
           <Text
             className="text-ink-muted text-[11px] tracking-[1px] uppercase"
             style={{ fontFamily: "System", fontWeight: "700" }}
@@ -386,7 +380,7 @@ export default function VerseDeliveryScreen() {
                 </Text>
                 <Text
                   className="text-ink-muted text-[11px]"
-                  style={{ fontFamily: "System", fontWeight: "500" }}
+                  style={buttonStyles.compactLabel}
                 >
                   Edit
                 </Text>

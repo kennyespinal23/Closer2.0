@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -41,7 +42,7 @@ export function ProfilePhotoSheet({visible,onClose}:{visible:boolean;onClose:()=
       </View>
       {gallery&&<View style={{flexDirection:'row',flexWrap:'wrap',gap:16}}>{AVATARS.map(a=><Pressable key={a.id} accessibilityRole="button" accessibilityLabel={`Choose ${a.id}`} accessibilityState={{selected:a.id===id&&!uri}} onPress={()=>{setId(a.id);setUri(undefined);}} style={{padding:3,borderRadius:36,borderWidth:2,borderColor:a.id===id&&!uri?c.ink:'transparent'}}><Image source={a.source} style={{width:60,height:60,borderRadius:30}}/></Pressable>)}</View>}
       <Text style={{fontSize:13,lineHeight:19,color:c.inkMuted}}>You can also choose a Memoji image saved to your photos. Your profile photo stays on this device.</Text>
-      <Pressable accessibilityRole="button" disabled={busy} onPress={save} style={{backgroundColor:c.ink,borderRadius:16,minHeight:50,alignItems:'center',justifyContent:'center',opacity:busy?.5:1}}><Text style={{color:c.bg,fontSize:17,fontWeight:'600'}}>{busy?'Saving…':'Save'}</Text></Pressable>
+      <Pressable accessibilityRole="button" disabled={busy} onPress={save} style={{backgroundColor:c.ink,borderRadius:16,minHeight:50,alignItems:'center',justifyContent:'center',opacity:busy?.5:1}}><Text style={[{ color:c.bg }, buttonStyles.label]}>{busy?'Saving…':'Save'}</Text></Pressable>
     </ScrollView>
   </ReaderSheet>;
 }

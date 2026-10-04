@@ -17,7 +17,7 @@ export function OnboardingContent({ children, contentContainerStyle }: { childre
 /** Keep the question in place while long answer lists scroll. Large text gets a full-page fallback. */
 export function OnboardingChoicesLayout({ header, children }: { header: ReactNode; children: ReactNode }) {
   const { fontScale, height } = useWindowDimensions();
-  if (fontScale > 1.3 || height < 650) return <OnboardingContent contentContainerStyle={{ padding: 28, gap: 24 }}>{header}{children}</OnboardingContent>;
+  if (fontScale > 1.3 || height < 700) return <OnboardingContent contentContainerStyle={{ padding: 28, gap: 24 }}>{header}{children}</OnboardingContent>;
   return <View style={{ flex: 1 }}>
     <View style={{ paddingHorizontal: 28, paddingTop: 24, paddingBottom: 24 }}>{header}</View>
     <OnboardingContent contentContainerStyle={{ paddingHorizontal: 28, paddingBottom: 16 }}>{children}</OnboardingContent>

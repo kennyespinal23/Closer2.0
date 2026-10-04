@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { WaxMedal } from "./WaxMedal";
 import { useEffect, useMemo, useRef } from "react";
 import { Animated, Easing, Platform, Pressable, StyleSheet, View } from "react-native";
@@ -274,7 +275,7 @@ export function MilestoneUnlockView({
                 pressed && { opacity: 0.72 },
               ]}
             >
-              <Text style={[styles.viewLink, { color: accentColor }]}>
+              <Text style={[styles.viewLink, { color: accentColor }, buttonStyles.textLabel]}>
                 View badge
               </Text>
             </Pressable>

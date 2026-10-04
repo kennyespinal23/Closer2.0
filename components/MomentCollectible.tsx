@@ -1,3 +1,5 @@
+import { buttonStyles } from "@/lib/buttonStyles";
+import { CloseButton } from "@/components/CloseButton";
 import { SkyGradient } from "./HomeSkyGradient";
 import { useEffect, useState, useId, useRef } from "react";
 import { BackHandler, Modal, Pressable, ScrollView, Share, View, useWindowDimensions } from "react-native";
@@ -130,12 +132,13 @@ export function MomentCollectibleDetail({ moment, source, onClose, embedded = fa
         <CardFinish subtle />
       </Animated.View>
     </Animated.View>
-    <Pressable accessibilityRole="button" onPress={turn} style={{ position: "absolute", top: y + h + 24, alignSelf: "center", minHeight: 48, paddingHorizontal: 24, borderRadius: 24, borderCurve: "continuous", backgroundColor: dark ? "#EEE8D6" : "#213A2B", alignItems: "center", justifyContent: "center", opacity: 1 }}><Text style={{ ...systemText.headline, color: dark ? "#30362A" : "#FFFFFF" }}>{back ? "Return to artwork" : "Read the meaning"}</Text></Pressable>
+    <Pressable accessibilityRole="button" onPress={turn} style={{ position: "absolute", top: y + h + 24, alignSelf: "center", minHeight: 48, paddingHorizontal: 24, borderRadius: 24, borderCurve: "continuous", backgroundColor: dark ? "#EEE8D6" : "#213A2B", alignItems: "center", justifyContent: "center", opacity: 1 }}><Text style={[{ color: dark ? "#30362A" : "#FFFFFF" }, buttonStyles.label]}>{back ? "Return to artwork" : "Read the meaning"}</Text></Pressable>
   </View></GestureHandlerRootView>;
   return embedded?content:<Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={dismiss}>{content}</Modal>;
 }
 
 function MomentControl({ label, symbol, onPress }: { label: string; symbol: "xmark" | "square.and.arrow.up"; onPress: () => void }) {
+  if (symbol === "xmark") return <CloseButton accessibilityLabel={label} onPress={onPress} color="#FFFFFF" style={{ backgroundColor: "#263D30" }} />;
   return <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={{ width: 44, height: 44, borderRadius: 22, borderCurve: "continuous", overflow: "hidden", alignItems: "center", justifyContent: "center", opacity: 1 }}><CardGlass tint="#263D30" /><SFSymbol name={symbol} size={19} color="#FFFFFF" /></Pressable>;
 }
 

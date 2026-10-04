@@ -1,3 +1,4 @@
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 import { uiText } from '@/lib/typography';
 import { MomentArtworkViewer } from './MomentArtworkViewer';
 import { buttonStyles } from '@/lib/buttonStyles';
@@ -53,7 +54,7 @@ export function MomentRevealDetail({moment,origin,onBack,onClose,preview,preview
   const label=useAnimatedStyle(()=>({opacity:Math.max(0,1-progress.value*4)}));
   return <View ref={rootRef} collapsable={false} style={{flex:1}}>
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill,{backgroundColor:'#211c18'},backdrop]}/>
-    <Animated.View style={[styles.nav,copy]}><Pressable accessibilityRole="button" accessibilityLabel="Back to revealed card" onPress={returnToCard} style={styles.icon}><SFSymbol name="chevron.left" size={19} color="#e7d4c0"/></Pressable><View style={styles.icon}/></Animated.View>
+    <Animated.View style={[styles.nav,copy]}><BubbleBackButton accessibilityLabel="Back to revealed card" onPress={returnToCard} color="#e7d4c0" backgroundColor="rgba(255,255,255,0.1)" /><View style={styles.icon}/></Animated.View>
     <Animated.ScrollView style={{flex:1}} onLayout={e=>setViewport(e.nativeEvent.layout.height)} onContentSizeChange={(_,h)=>setContentHeight(h)} onScroll={onScroll} scrollEventThrottle={16} scrollEnabled={arrived} contentContainerStyle={{paddingHorizontal:24,paddingTop:18,paddingBottom:16}} showsVerticalScrollIndicator indicatorStyle="white">
       <View style={{flexDirection:'row',gap:16,minHeight:cardHeight+12,alignItems:'center'}}>
         <View ref={thumbRef} collapsable={false} onLayout={measureDestination} style={{width:cardWidth,height:cardHeight}}><Animated.View style={[styles.thumb,{width:cardWidth,height:cardHeight},thumbnailStyle]}><Pressable disabled={!arrived} accessibilityRole="button" accessibilityLabel="View artwork full screen" onPress={()=>setArtOpen(true)} style={{flex:1}}><ReaderMomentArt moment={moment}/></Pressable></Animated.View></View>

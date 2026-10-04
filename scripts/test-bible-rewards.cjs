@@ -24,7 +24,7 @@ assert.deepEqual(plain(earned([...old, ...fresh])), ['old-gold', 'new-gold', 'cr
 const BIBLE_MOMENTS = JSON.parse(fs.readFileSync('constants/bibleMomentsData.json', 'utf8'));
 const saved = new Map();
 let fail = false;
-const storage = { multiGet: async keys => keys.map(k => [k, saved.get(k) ?? null]), setItem: async (k, v) => { if (fail) throw Error('Write failed'); saved.set(k, v); } };
+const storage = { multiSet: async rows => { if (fail) throw Error('Write failed'); for (const [k,v] of rows) saved.set(k,v); }, multiGet: async keys => keys.map(k => [k, saved.get(k) ?? null]), setItem: async (k, v) => { if (fail) throw Error('Write failed'); saved.set(k, v); } };
 const store = load('state/bibleMoments.ts', id => id === 'react' ? { useEffect() {}, useSyncExternalStore: (_, snapshot) => snapshot() } : id.includes('async-storage') ? { default: storage } : { BIBLE_MOMENTS });
 (async () => {
   const genesis = BIBLE_MOMENTS.filter(m => m.bookId === 'genesis');
@@ -42,7 +42,7 @@ const store = load('state/bibleMoments.ts', id => id === 'react' ? { useEffect()
   const finalId = 'god-provides';
   const nine = new Map(genesis.filter(m => m.id !== finalId).map(m => [`closer.bible-moment.${m.id}.v1`, 'true']));
   let writes = 0;
-  const finalStorage = { multiGet: async keys => keys.map(k => [k, nine.get(k) ?? null]), setItem: async (k,v) => { writes++; nine.set(k,v); } };
+  const finalStorage = { multiSet: async rows => { writes++; for (const [k,v] of rows) nine.set(k,v); }, multiGet: async keys => keys.map(k => [k, nine.get(k) ?? null]), setItem: async (k,v) => { writes++; nine.set(k,v); } };
   const finalStore = load('state/bibleMoments.ts', id => id === 'react' ? { useEffect() {}, useSyncExternalStore: (_, snapshot) => snapshot() } : id.includes('async-storage') ? { default: finalStorage } : { BIBLE_MOMENTS });
   await finalStore.hydrateBibleMoments();
   assert.equal(finalStore.useBibleMomentCollection().ids.length, 9);

@@ -1,3 +1,5 @@
+import { buttonStyles } from "@/lib/buttonStyles";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 import { useMemo } from "react";
 import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -106,15 +108,7 @@ export default function InsightDetailScreen() {
                   hero, magazine-detail-page style. */}
         {insight.coverIncludesTitle ? (
           <View className="flex-row items-center justify-between px-4 pt-2 pb-3">
-            <Pressable
-              onPress={() => goBackOr(router, "/(tabs)/today")}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="Back"
-              className="w-10 h-10 rounded-full items-center justify-center"
-            >
-              <BackChevronIcon />
-            </Pressable>
+            <BubbleBackButton onPress={() => goBackOr(router, "/(tabs)/today")} />
             <Pressable
               onPress={() => toggle(insight.id)}
               hitSlop={12}
@@ -136,9 +130,7 @@ export default function InsightDetailScreen() {
               zIndex: 10,
             }}
           >
-            <RoundChip onPress={() => goBackOr(router, "/(tabs)/today")} accessibilityLabel="Back">
-              <BackChevronIcon />
-            </RoundChip>
+            <BubbleBackButton onPress={() => goBackOr(router, "/(tabs)/today")} />
             <RoundChip
               onPress={() => toggle(insight.id)}
               accessibilityLabel={saved ? "Unsave article" : "Save article"}
@@ -644,7 +636,7 @@ function ActionPill({
       >
         {icon}
         <Text
-          style={[systemText.footnote, { fontWeight: "700", color: tint ?? colors.ink, marginLeft: 8 }]}
+          style={[{ color: tint ?? colors.ink, marginLeft: 8 }, buttonStyles.compactLabel]}
         >
           {label}
         </Text>
@@ -661,13 +653,7 @@ function InsightNotFound({ onBack }: { onBack: () => void }) {
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: "transparent" }} edges={["top", "bottom"]}>
       <View className="flex-row items-center px-4 pt-2 pb-3">
-        <Pressable
-          onPress={onBack}
-          hitSlop={12}
-          className="w-10 h-10 rounded-full items-center justify-center"
-        >
-          <BackChevronIcon />
-        </Pressable>
+        <BubbleBackButton onPress={onBack} />
         <Text
           className="text-ink text-[17px] flex-1 text-center"
           style={{ fontFamily: "System", fontWeight: "700" }}
@@ -769,13 +755,6 @@ function extractInitial(title: string): string {
 // ─────────────────────────────────────────────────────────────────
 // Icons
 // ─────────────────────────────────────────────────────────────────
-
-function BackChevronIcon() {
-  const colors = useColors();
-  return (
-    <SFSymbol name="chevron.left" size={17} color={colors.ink} weight="semibold" />
-  );
-}
 
 function BookmarkIcon({
   filled,

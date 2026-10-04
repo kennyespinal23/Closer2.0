@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { MomentCollectibleFront } from "./MomentCollectible";
 import { contentText, contentLayout } from "@/lib/contentStyles";
 import { type ReactNode, useRef, useState } from "react";
@@ -70,7 +71,7 @@ export function BibleMomentsCollection({ standalone = false, initialCategory = "
   const empty = <View style={{ padding: 24, gap: 10, borderRadius: 24, backgroundColor: colors.surfaceSecondary }}>
     <Text style={{ color: colors.ink, ...contentText.section }}>{error ? "Let’s try that again" : !hydrated ? "Gathering your Moments" : view === 1 ? "Your collection starts with a verse" : "Every Moment here is yours"}</Text>
     <Text style={{ color: colors.inkMuted, ...contentText.description }}>{error ? "Your collection couldn’t be loaded. Your saved Moments haven’t been changed." : !hydrated ? "Your saved discoveries will appear here." : view === 1 ? "Open Discover, choose a story, then tap its glowing verse in the reader to collect it." : "You’ve collected every Moment in this selection. Revisit them in Collected."}</Text>
-    {(error || hydrated) && <Pressable accessibilityRole="button" onPress={() => { if (error) void hydrateBibleMoments(); else { setView(view === 1 ? 2 : 1); resetScroll(); } }} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: colors.ink, ...contentText.title }}>{error ? "Try again" : view === 1 ? "Discover Moments" : "View collected"}</Text></Pressable>}
+    {(error || hydrated) && <Pressable accessibilityRole="button" onPress={() => { if (error) void hydrateBibleMoments(); else { setView(view === 1 ? 2 : 1); resetScroll(); } }} style={{ minHeight: 44, justifyContent: "center" }}><Text style={[{ color: colors.ink }, buttonStyles.label]}>{error ? "Try again" : view === 1 ? "Discover Moments" : "View collected"}</Text></Pressable>}
   </View>;
   const badges = ready && completed.length > 0 ? <View style={{ marginTop: 24, gap: 12 }}>
     <Text accessibilityRole="header" style={{ color: colors.ink, ...contentText.section }}>Category badges</Text>

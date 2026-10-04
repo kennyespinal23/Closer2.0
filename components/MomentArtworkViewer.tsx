@@ -1,3 +1,4 @@
+import { CloseButton } from "@/components/CloseButton";
 import { useEffect, useRef } from 'react';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS } from 'react-native-reanimated';
 import { useReducedMotion } from '@/lib/useReducedMotion';
@@ -31,7 +32,7 @@ export function MomentArtworkViewer({moment,onClose}:{moment:BibleMoment;onClose
     <View style={{flex:1,paddingTop:inset.top,paddingBottom:inset.bottom}} accessibilityViewIsModal>
       <Animated.View pointerEvents="none" style={[{position:'absolute',inset:0,backgroundColor:'#11100F'},backdropStyle]}/>
       <View style={{height:56,paddingHorizontal:16,flexDirection:'row',alignItems:'center',justifyContent:'flex-end'}}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Close artwork" onPress={close} style={{width:44,height:44,alignItems:'center',justifyContent:'center'}}><SFSymbol name="xmark" size={22} color="#FFF5E8"/></Pressable>
+        <CloseButton accessibilityRole="button" accessibilityLabel="Close artwork" onPress={close} style={{width:44,height:44,alignItems:'center',justifyContent:'center'}} color="#FFF5E8" />
       </View>
       <View style={{flex:1,alignItems:'center',justifyContent:'center',padding:16}}>
         <Animated.View style={[{width:artWidth,height:artHeight,borderRadius:24,borderCurve:'continuous',overflow:'hidden'},artworkStyle]}>

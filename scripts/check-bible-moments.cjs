@@ -88,5 +88,20 @@ const makeStore = () => loadTS('state/bibleMoments.ts', {
   const afterCompletion = makeStore();
   await afterCompletion.hydrateBibleMoments();
   assert.deepEqual(await afterCompletion.unlockBibleMomentWithRewards(final.id), { status: 'existing', categories: [], bookCompleted: false });
-  console.log(`Verified 78 cards, ${anchors.size} verse triggers, category totals, legacy unlocks, concurrent discovery, write failure, and relaunch persistence.`);
+  // Complete Genesis from two outstanding Moments concurrently: one foil only.
+  disk.clear();
+  const genesis = data.filter(moment => moment.bookId === 'genesis');
+  for (const moment of genesis.slice(0, -2)) disk.set(`closer.bible-moment.${moment.id}.v1`, 'true');
+  const genesisStore = makeStore();
+  await genesisStore.hydrateBibleMoments();
+  const finalTwo = genesis.slice(-2);
+  const bookResults = await Promise.all(finalTwo.map(moment => genesisStore.unlockBibleMomentWithRewards(moment.id)));
+  assert.equal(bookResults.filter(result => result.bookCompleted).length, 1);
+  assert(genesis.every(moment => genesisStore.useBibleMomentCollection().ids.includes(moment.id)));
+  const earnedDate = genesisStore.useBibleMomentCollection().collectedAt[finalTwo[1].id];
+  const genesisRestart = makeStore();
+  await genesisRestart.hydrateBibleMoments();
+  for (const moment of finalTwo) assert.deepEqual(await genesisRestart.unlockBibleMomentWithRewards(moment.id), { status: 'existing', categories: [], bookCompleted: false });
+  assert.equal(genesisRestart.useBibleMomentCollection().collectedAt[finalTwo[1].id], earnedDate);
+  console.log(`Verified 78 cards, ${anchors.size} verse triggers, category totals, legacy unlocks, concurrent discovery, write failure, Genesis silver completion, and relaunch persistence.`);
 })().catch(error => { console.error(error); process.exitCode = 1; });

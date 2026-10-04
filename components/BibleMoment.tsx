@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, cancelAnimation, runOnJS, Easing } from "react-native-reanimated";
 import * as haptics from "@/lib/haptics";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -159,8 +160,8 @@ export function BibleMomentCard({ moment, onClose }: { moment: BibleMoment | nul
           {rewards.length > 0 ? <View style={{ gap: 8 }}>
             {!viewBadge && <MomentCategoryReward category={rewards[0]} additionalCount={rewards.length - 1} />}
             <View style={{ flexDirection: "row", gap: 12 }}>
-              <Pressable accessibilityRole="button" onPress={() => setViewBadge(!viewBadge)} style={{ flex: 1, minHeight: 48, padding: 12, borderRadius: 24, backgroundColor: "#FFFFFF18", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "white", fontSize: 15, fontWeight: "600" }}>{viewBadge ? "Back to Moment" : rewards.length > 1 ? "View badges" : "View badge"}</Text></Pressable>
-              <Pressable accessibilityRole="button" onPress={close} style={{ flex: 1, minHeight: 48, padding: 12, borderRadius: 24, backgroundColor: "white", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#111827", fontSize: 15, fontWeight: "600" }}>Keep reading</Text></Pressable>
+              <Pressable accessibilityRole="button" onPress={() => setViewBadge(!viewBadge)} style={{ flex: 1, minHeight: 48, padding: 12, borderRadius: 24, backgroundColor: "#FFFFFF18", alignItems: "center", justifyContent: "center" }}><Text style={[{ color: "white" }, buttonStyles.label]}>{viewBadge ? "Back to Moment" : rewards.length > 1 ? "View badges" : "View badge"}</Text></Pressable>
+              <Pressable accessibilityRole="button" onPress={close} style={{ flex: 1, minHeight: 48, padding: 12, borderRadius: 24, backgroundColor: "white", alignItems: "center", justifyContent: "center" }}><Text style={[{ color: "#111827" }, buttonStyles.label]}>Keep reading</Text></Pressable>
             </View>
           </View> : <Pressable disabled={!saveFailed} onPress={save} accessibilityLabel={newlyCollected ? "Moment collected" : saved} accessibilityRole={saveFailed ? "button" : "text"} style={{ minHeight: 44, justifyContent: "center" }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, opacity: newlyCollected ? 0 : 1 }}>

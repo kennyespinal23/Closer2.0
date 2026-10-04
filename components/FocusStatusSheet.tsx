@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 /**
  * FocusStatusSheet — slide-up modal that explains "what's the app-
  * block system doing right now?"
@@ -382,16 +383,10 @@ export function FocusStatusSheet({
             })}
           >
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color:
+              style={[{ color:
                   state === "live"
                     ? "#EF4444" // destructive red on the End-focus CTA
-                    : colors.primaryFg,
-                fontSize: 16,
-                letterSpacing: -0.2,
-              }}
+                    : colors.primaryFg }, buttonStyles.label]}
             >
               {copy.cta}
             </Text>

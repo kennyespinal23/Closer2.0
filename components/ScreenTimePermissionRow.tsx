@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -192,12 +193,7 @@ export function ScreenTimePermissionRow({
               }}
             >
               <Text
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 12,
-                  color: colors.primaryFg,
-                }}
+                style={[{ color: colors.primaryFg }, buttonStyles.compactLabel]}
               >
                 {ctaLabel}
               </Text>

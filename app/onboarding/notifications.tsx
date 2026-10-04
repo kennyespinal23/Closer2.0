@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useState } from "react";
 import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -98,7 +99,7 @@ export default function NotificationsScreen() {
           })}
         >
           <View style={styles.skipWrap}>
-            <Text style={styles.skip}>I'll do this later</Text>
+            <Text style={[styles.skip, buttonStyles.textLabel]}>I'll do this later</Text>
           </View>
         </Pressable>
       </View>

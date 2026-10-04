@@ -83,12 +83,14 @@ const body: TextStyle = {
  * Button — the canonical primary-action label. Semibold @17pt
  * matches Apple's Human Interface Guidelines for filled-pill
  * buttons (the same label weight UIKit's UIButton uses by
- * default). No lineHeight — buttons are single-line.
+ * default). A shared line height also keeps wrapped labels aligned.
  */
 const button: TextStyle = {
   fontFamily: SF_PRO,
   fontWeight: fontWeight.extrabold,
   fontSize: 17,
+  lineHeight: 24,
+  letterSpacing: 0,
 };
 
 /**

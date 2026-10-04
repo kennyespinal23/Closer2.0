@@ -1,3 +1,4 @@
+import { CloseButton } from "@/components/CloseButton";
 import { DailyExperience } from "./DailyExperience";
 import { HomeDailyPath } from "./HomeDailyPath";
 import { contentText, contentLayout } from "@/lib/contentStyles";
@@ -1476,14 +1477,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                 Hidden during a live app-block gate — they must finish
                 the card (Hold to Unlock) rather than dismiss. */}
             {!dismissLocked ? (
-              <Pressable
-                onPress={closeExpanded}
-                onPressIn={() => setClosePressed(true)}
-                onPressOut={() => setClosePressed(false)}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-                style={{
+              <CloseButton onPress={closeExpanded} onPressIn={() => setClosePressed(true)} onPressOut={() => setClosePressed(false)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close" style={{
                   position: "absolute",
                   top: Math.max(insets.top, 12) + 4,
                   left: 16,
@@ -1502,15 +1496,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
                   shadowOpacity: 0.18,
                   shadowRadius: 10,
                   shadowOffset: { width: 0, height: 4 },
-                }}
-              >
-                <SFSymbol
-                  name="xmark"
-                  size={16}
-                  color="#0F0F0F"
-                  weight="semibold"
-                />
-              </Pressable>
+                }} color="#0F0F0F" />
             ) : null}
           </View>
         </GestureHandlerRootView>

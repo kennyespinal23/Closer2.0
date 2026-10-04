@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from "react-native";
 import { Text, TextInput } from "@/components/CloserText";
@@ -42,9 +43,9 @@ export function ReaderStickyNote({ visible, reference, initialNote, initialColor
               </View>
               <View style={{ flexDirection: "row", justifyContent: "center" }}>{HIGHLIGHT_COLORS.map(c => <Pressable key={c.id} accessibilityRole="button" accessibilityLabel={`${c.name} note color`} accessibilityState={{ selected: color === c.id }} onPress={() => setColor(c.id)} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: c.swatch, borderColor: "#2A1F18", borderWidth: color === c.id ? 2 : 0 }} /></Pressable>)}</View>
               <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
-                {!!initialNote.trim() && <Pressable accessibilityRole="button" onPress={() => dismiss(onDelete)} style={{ minHeight: 44, paddingHorizontal: 10, justifyContent: "center", marginRight: "auto" }}><Text style={{ ...systemText.footnote, color: "#84331F" }}>Delete</Text></Pressable>}
-                <Pressable accessibilityRole="button" onPress={() => dismiss(onCancel)} style={{ minHeight: 44, paddingHorizontal: 14, borderRadius: 12, backgroundColor: "#2A1F181A", justifyContent: "center" }}><Text style={{ ...systemText.headline, color: "#2A1F18" }}>Cancel</Text></Pressable>
-                <Pressable accessibilityRole="button" disabled={!text.trim()} accessibilityState={{ disabled: !text.trim() }} onPress={() => dismiss(() => onSave(text.trim(), color))} style={{ minHeight: 44, paddingHorizontal: 16, borderRadius: 12, backgroundColor: "#2A1F18", opacity: text.trim() ? 1 : .4, justifyContent: "center" }}><Text style={{ ...systemText.headline, color: "#FFF4D6" }}>Stick it</Text></Pressable>
+                {!!initialNote.trim() && <Pressable accessibilityRole="button" onPress={() => dismiss(onDelete)} style={{ minHeight: 44, paddingHorizontal: 10, justifyContent: "center", marginRight: "auto" }}><Text style={[{ color: "#84331F" }, buttonStyles.textLabel]}>Delete</Text></Pressable>}
+                <Pressable accessibilityRole="button" onPress={() => dismiss(onCancel)} style={{ minHeight: 44, paddingHorizontal: 14, borderRadius: 12, backgroundColor: "#2A1F181A", justifyContent: "center" }}><Text style={[{ color: "#2A1F18" }, buttonStyles.textLabel]}>Cancel</Text></Pressable>
+                <Pressable accessibilityRole="button" disabled={!text.trim()} accessibilityState={{ disabled: !text.trim() }} onPress={() => dismiss(() => onSave(text.trim(), color))} style={{ minHeight: 44, paddingHorizontal: 16, borderRadius: 12, backgroundColor: "#2A1F18", opacity: text.trim() ? 1 : .4, justifyContent: "center" }}><Text style={[{ color: "#FFF4D6" }, buttonStyles.compactLabel]}>Stick it</Text></Pressable>
               </View>
               <View pointerEvents="none" style={{ position: "absolute", bottom: 0, right: 0, width: 16, height: 16, borderTopLeftRadius: 3, backgroundColor: "#9B7D4455" }} />
             </View>

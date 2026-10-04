@@ -1,3 +1,4 @@
+import { CloseButton } from "@/components/CloseButton";
 import { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
@@ -101,18 +102,7 @@ export function SermonHeader({ step, stepProgress }: SermonHeaderProps) {
             PERCEIVE the tap area, not just feel it (HIG calls
             for the visible control to meet 44pt, not just the
             hit-tested region under hitSlop). */}
-        <Pressable
-          hitSlop={8}
-          onPress={handleClose}
-          className="w-11 h-11 rounded-full items-center justify-center bg-surface border border-border"
-        >
-          <SFSymbol
-            name="xmark"
-            size={16}
-            weight="semibold"
-            color={colors.ink}
-          />
-        </Pressable>
+        <CloseButton hitSlop={8} onPress={handleClose} color={colors.ink} />
 
         {showProgress ? (
           <View className="flex-1 ml-4">

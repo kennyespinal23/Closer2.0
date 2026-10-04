@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useCallback, useEffect, useState } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -166,7 +167,7 @@ export default function NotificationsScreen() {
             <ExternalIcon />
             <Text
               className="text-ink text-[14px] ml-2.5"
-              style={{ fontFamily: "System", fontWeight: "700" }}
+              style={buttonStyles.label}
             >
               Open Settings
             </Text>

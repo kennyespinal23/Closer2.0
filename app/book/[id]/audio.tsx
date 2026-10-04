@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -14,7 +15,7 @@ export default function BibleAudioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const book = findBookById(id ?? "");
   const router = useRouter();
-  if (!book) return <View style={{ flex: 1, backgroundColor: "black", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "white" }}>Book not found</Text><Pressable onPress={() => goBackOr(router, "/library")} style={{ padding: 20 }}><Text style={{ color: "white" }}>Back to Bible</Text></Pressable></View>;
+  if (!book) return <View style={{ flex: 1, backgroundColor: "black", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "white" }}>Book not found</Text><Pressable onPress={() => goBackOr(router, "/library")} style={{ padding: 20 }}><Text style={[{ color: "white" }, buttonStyles.compactLabel]}>Back to Bible</Text></Pressable></View>;
   return <AudioPreview key={book.id} book={book} />;
 }
 
@@ -37,7 +38,7 @@ function AudioPreview({ book }: { book: Book }) {
       onChapters={() => setChaptersOpen(true)} onRate={() => setRate(value => value >= 2 ? 0.75 : value + 0.25)} />
     <Modal visible={chaptersOpen} presentationStyle="pageSheet" animationType={reducedMotion ? "none" : "slide"} onRequestClose={() => setChaptersOpen(false)} onDismiss={() => setChaptersOpen(false)}>
       <View style={{ flex: 1, backgroundColor: "#101010", paddingTop: 24 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 24 }}><Text accessibilityRole="header" style={{ color: "white", fontSize: 21, fontWeight: "700" }}>{book.name}</Text><Pressable onPress={() => setChaptersOpen(false)} accessibilityRole="button" style={{ padding: 14 }}><Text style={{ color: "white" }}>Done</Text></Pressable></View>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 24 }}><Text accessibilityRole="header" style={{ color: "white", fontSize: 21, fontWeight: "700" }}>{book.name}</Text><Pressable onPress={() => setChaptersOpen(false)} accessibilityRole="button" style={{ padding: 14 }}><Text style={[{ color: "white" }, buttonStyles.compactLabel]}>Done</Text></Pressable></View>
         <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: insets.bottom + 24 }}>{Array.from({ length: book.chapters }, (_, i) => i + 1).map(number => <Pressable key={number} accessibilityRole="button" accessibilityState={{ selected: number === chapter }} onPress={() => { setChapter(number); setChaptersOpen(false); }} style={{ padding: 18, marginBottom: 8, borderRadius: 16, backgroundColor: number === chapter ? "#383838" : "#1C1C1E" }}><Text style={{ color: "white", fontSize: 17 }}>Chapter {number}{number === chapter ? "  ✓" : ""}</Text></Pressable>)}</ScrollView>
       </View>
     </Modal>

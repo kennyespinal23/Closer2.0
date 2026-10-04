@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useState, useCallback, useEffect } from "react";
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -261,7 +262,7 @@ export default function FocusSettingsScreen() {
             <ShieldIcon stroke={colors.ink} />
             <Text
               className="text-ink text-[14px] ml-2.5 flex-1"
-              style={{ fontFamily: "System", fontWeight: "700" }}
+              style={buttonStyles.compactLabel}
             >
               Preview next shield
             </Text>

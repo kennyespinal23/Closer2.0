@@ -1,6 +1,6 @@
+import { BubbleBackButton } from "@/components/BubbleBackButton";
 import { View } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { HeaderBackButton } from "@react-navigation/elements";
 import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
 import { goBackOr } from "@/lib/navigation";
 import { useColors } from "@/state/theme";
@@ -42,8 +42,9 @@ export default function SettingsLayout() {
             contentStyle: { backgroundColor: "transparent" },
             animation: "slide_from_right",
             headerLeft: () => (
-              <HeaderBackButton
-                tintColor={colors.ink}
+              <BubbleBackButton
+                color={colors.ink}
+                backgroundColor="transparent"
                 onPress={() => goBackOr(router, "/profile")}
               />
             ),

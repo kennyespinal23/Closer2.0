@@ -1,3 +1,5 @@
+import { buttonStyles } from "@/lib/buttonStyles";
+import { CloseButton } from "@/components/CloseButton";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -320,16 +322,7 @@ function Header({ onDismiss }: { onDismiss: () => void }) {
   const colors = useColors();
   return (
     <View className="flex-row items-center justify-end px-4 pt-2 pb-1">
-      <Pressable
-        onPress={onDismiss}
-        hitSlop={12}
-        accessibilityRole="button"
-        accessibilityLabel="Close"
-        className="w-10 h-10 rounded-full items-center justify-center"
-        style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-      >
-        <CloseIcon stroke={colors.inkMuted} />
-      </Pressable>
+      <CloseButton onPress={onDismiss} />
     </View>
   );
 }
@@ -400,11 +393,7 @@ function FocusRow({
       >
         <Text
           className="text-[12px] tracking-[0.5px]"
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            color: colors.inkMuted,
-          }}
+          style={[{ color: colors.inkMuted }, buttonStyles.textLabel]}
         >
           Skip
         </Text>
@@ -450,9 +439,7 @@ function ShieldGlyph({ stroke }: { stroke: string }) {
   );
 }
 
-function CloseIcon({ stroke }: { stroke: string }) {
-  return <SFSymbol name="xmark" size={20} color={stroke} weight="semibold" />;
-}
+
 
 function AccentGlow({ color }: { color: string }) {
   return (

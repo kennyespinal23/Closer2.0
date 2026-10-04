@@ -1,3 +1,5 @@
+import { buttonStyles } from "@/lib/buttonStyles";
+import { CloseButton } from "@/components/CloseButton";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -129,16 +131,7 @@ export default function MoodSelectScreen() {
           >
             Check-in
           </Text>
-          <Pressable
-            hitSlop={12}
-            onPress={handleClose}
-            accessibilityRole="button"
-            accessibilityLabel="Close check-in"
-            className="w-9 h-9 rounded-full bg-accent-soft border border-border items-center justify-center"
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-          >
-            <SFSymbol name="xmark" size={13} color={colors.ink} weight="semibold" />
-          </Pressable>
+          <CloseButton hitSlop={12} onPress={handleClose} accessibilityRole="button" accessibilityLabel="Close check-in" style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })} color={colors.ink} />
         </View>
 
         {/* ─── Headline ────────────────────────────────────── */}
@@ -357,12 +350,7 @@ function ConfirmationPanel({
               </Text>
             </View>
 
-            <Pressable
-              onPress={onDismiss}
-              accessibilityRole="button"
-              accessibilityLabel="Clear selection"
-              hitSlop={10}
-              style={({ pressed }) => ({
+            <CloseButton onPress={onDismiss} accessibilityRole="button" accessibilityLabel="Clear selection" hitSlop={10} style={({ pressed }) => ({
                 opacity: pressed ? 0.55 : 1,
                 marginLeft: 6,
                 width: 36,
@@ -372,15 +360,7 @@ function ConfirmationPanel({
                 borderWidth: StyleSheet.hairlineWidth,
                 alignItems: "center",
                 justifyContent: "center",
-              })}
-            >
-              <SFSymbol
-                name="xmark"
-                size={14}
-                color={colors.inkMuted}
-                weight="semibold"
-              />
-            </Pressable>
+              })} color={colors.inkMuted} />
           </View>
 
           <Pressable
@@ -404,11 +384,7 @@ function ConfirmationPanel({
             >
               <Text
                 className="text-[14px] tracking-[0.2px]"
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  color: pickReadableText(active.swatch),
-                }}
+                style={[{ color: pickReadableText(active.swatch) }, buttonStyles.label]}
               >
                 Receive your verse
               </Text>

@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Animated, Easing, type ImageSourcePropType, type NativeScrollEvent, type NativeSyntheticEvent, Platform, Pressable, ScrollView, StyleSheet, Switch, useWindowDimensions, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -1116,13 +1117,7 @@ const AppBlocksEmptyState = memo(function AppBlocksEmptyState({
           }}
         >
           <Text
-            style={{
-              color: colors.ink,
-              fontFamily: "System",
-              fontWeight: "600",
-              fontSize: 15,
-              letterSpacing: 0.2,
-            }}
+            style={[{ color: colors.ink }, buttonStyles.compactLabel]}
           >
             Set Up a Block
           </Text>
@@ -2477,14 +2472,7 @@ const GentlerStreakSermonCard = memo(function GentlerStreakSermonCard({
               }}
             >
               <Text
-                style={{
-                  color: "#FFFFFF",
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  fontSize: 15,
-                  letterSpacing: 0.2,
-                  marginRight: 8,
-                }}
+                style={[{ color: "#FFFFFF", marginRight: 8 }, buttonStyles.label]}
               >
                 {completed ? "Read Again" : "Read Now"}
               </Text>
@@ -4062,7 +4050,7 @@ function ActiveFocusHero({
                 land as a balanced couplet rather than a runner. */}
             <Text
               className="text-ink text-[25px] leading-[31px] tracking-[-0.4px] mt-3"
-              style={{ fontFamily: "System", fontWeight: "700" }}
+              style={buttonStyles.label}
             >
               Read today&apos;s sermon
             </Text>
@@ -4106,13 +4094,7 @@ function ActiveFocusHero({
                   }}
                 >
                   <Text
-                    style={{
-                      fontFamily: "System",
-                      fontWeight: "700",
-                      color: "#FFFFFF",
-                      fontSize: 16,
-                      letterSpacing: 0.3,
-                    }}
+                    style={[{ color: "#FFFFFF" }, buttonStyles.label]}
                   >
                     Read sermon
                   </Text>
@@ -4267,7 +4249,7 @@ function ActiveFocusHero({
                     >
                       <Text
                         className="text-ink text-[15px]"
-                        style={{ fontFamily: "System", fontWeight: "700" }}
+                        style={buttonStyles.compactLabel}
                       >
                         {isPaused ? "Resume" : "Break"}
                       </Text>
@@ -4296,11 +4278,7 @@ function ActiveFocusHero({
                   >
                     <Text
                       className="text-[15px]"
-                      style={{
-                        fontFamily: "System",
-                        fontWeight: "700",
-                        color: "#FFFFFF",
-                      }}
+                      style={[{ color: "#FFFFFF" }, buttonStyles.compactLabel]}
                     >
                       End
                     </Text>
@@ -4803,14 +4781,7 @@ const RhythmGrid = memo(function RhythmGrid({
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: CLOSER_ACCENT,
-                fontSize: 13,
-                letterSpacing: -0.1,
-                marginRight: 4,
-              }}
+              style={[{ color: CLOSER_ACCENT, marginRight: 4 }, buttonStyles.textLabel]}
             >
               View all
             </Text>
@@ -5878,7 +5849,7 @@ function NextSermonPill({
       </Svg>
       <Text
         className="text-ink-muted text-[13px] ml-2"
-        style={{ fontFamily: "System", fontWeight: "600" }}
+        style={buttonStyles.label}
       >
         Next Reading
       </Text>
@@ -6066,11 +6037,7 @@ function RoutineCard({
           >
             <Text
               className="text-[12px] tracking-[0.5px]"
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: colors.ink,
-              }}
+              style={[{ color: colors.ink }, buttonStyles.compactLabel]}
             >
               End
             </Text>
@@ -6248,13 +6215,13 @@ function PreviewShieldPill({ onPress }: { onPress: () => void }) {
       </Svg>
       <Text
         className="text-ink-muted text-[13px] ml-2"
-        style={{ fontFamily: "System", fontWeight: "600" }}
+        style={buttonStyles.compactLabel}
       >
         Preview Shield
       </Text>
       <Text
         className="text-ink-muted text-[12px] ml-2.5 tracking-[1px] uppercase"
-        style={{ fontFamily: "System", fontWeight: "700" }}
+        style={buttonStyles.label}
       >
         Next App
       </Text>
@@ -6314,11 +6281,7 @@ function DevSessionPill({
       </Svg>
       <Text
         className="text-[13px] ml-2"
-        style={{
-          fontFamily: "System",
-          fontWeight: "700",
-          color: active ? accent : colors.inkMuted,
-        }}
+        style={[{ color: active ? accent : colors.inkMuted }, buttonStyles.compactLabel]}
       >
         {active ? "End focus session" : "Start focus session"}
       </Text>
@@ -6764,11 +6727,7 @@ function TodayRhythm({
               </Text>
               <Text
                 className="text-[11px] tracking-[1.5px] uppercase"
-                style={{
-                  fontFamily: "System",
-                  fontWeight: "700",
-                  color: FOCUS_HERO_ACCENT,
-                }}
+                style={[{ color: FOCUS_HERO_ACCENT }, buttonStyles.compactLabel]}
               >
                 Focus
               </Text>
@@ -6999,10 +6958,7 @@ function RhythmRow({
         <View style={{ alignItems: "flex-end", justifyContent: "center" }}>
           {isDone ? (
             <Text
-              style={[
-                systemText.captionEmphasized,
-                { color: colors.inkMuted },
-              ]}
+              style={[{ color: colors.inkMuted }, buttonStyles.compactLabel]}
             >
               Done
             </Text>

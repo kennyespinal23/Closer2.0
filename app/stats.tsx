@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useMemo } from "react";
 import { Image, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -542,7 +543,7 @@ function SectionHeader({
         <Pressable onPress={onSeeAll} hitSlop={8}>
           <Text
             className="text-primary text-[12px]"
-            style={{ fontFamily: "System", fontWeight: "700" }}
+            style={buttonStyles.textLabel}
           >
             See all
           </Text>

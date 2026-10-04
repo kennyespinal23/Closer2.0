@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { BubbleBackButton } from "@/components/BubbleBackButton";
+import { View } from "react-native";
 import { Text } from "@/components/CloserText";
-import Svg, { Path } from "react-native-svg";
 import { useRouter } from "expo-router";
 import { CLOSER_ACCENT } from "@/constants/theme";
 import { useColors } from "@/state/theme";
@@ -34,7 +33,6 @@ export function OnboardingChrome({
   onBack,
 }: OnboardingChromeProps) {
   const router = useRouter();
-  const [pressed, setPressed] = useState(false);
   const colors = useColors();
 
   const chevronColor =
@@ -56,33 +54,7 @@ export function OnboardingChrome({
   return (
     <View style={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 10 }}>
       <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <Pressable
-          hitSlop={14}
-          onPress={handleBack}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          onPressIn={() => setPressed(true)}
-          onPressOut={() => setPressed(false)}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 20,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: pressed ? 0.6 : 1,
-            zIndex: 1,
-          }}
-        >
-          <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M15 18l-6-6 6-6"
-              stroke={chevronColor}
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
-        </Pressable>
+        <BubbleBackButton onPress={handleBack} color={chevronColor} backgroundColor={tone === "dark" ? "rgba(255,255,255,0.1)" : undefined} />
 
         {title ? (
           <Text
@@ -111,7 +83,7 @@ export function OnboardingChrome({
         <View
           style={{
             marginTop: 10,
-            height: 3,
+            height: 8,
             backgroundColor: trackColor,
             borderRadius: 999,
             overflow: "hidden",

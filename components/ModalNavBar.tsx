@@ -1,3 +1,4 @@
+import { CloseButton } from "@/components/CloseButton";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Pressable, View } from "react-native";
@@ -55,17 +56,10 @@ export function ModalNavBar({
           }}
         >
           {leading ?? (
-            <Pressable
-              onPressIn={() => setPressed(true)}
-              onPressOut={() => setPressed(false)}
-              onPress={() => {
+            <CloseButton onPressIn={() => setPressed(true)} onPressOut={() => setPressed(false)} onPress={() => {
                 haptics.soft();
                 onClose();
-              }}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel={closeAccessibilityLabel}
-              style={{
+              }} hitSlop={12} accessibilityRole="button" accessibilityLabel={closeAccessibilityLabel} style={{
                 width: 44,
                 height: 44,
                 borderRadius: 22,
@@ -73,15 +67,7 @@ export function ModalNavBar({
                 alignItems: "center",
                 justifyContent: "center",
                 opacity: pressed ? 0.7 : 1,
-              }}
-            >
-              <SFSymbol
-                name="xmark"
-                size={14}
-                color={colors.ink}
-                weight="semibold"
-              />
-            </Pressable>
+              }} color={colors.ink} />
           )}
         </View>
 

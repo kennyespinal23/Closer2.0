@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import Animated, { cancelAnimation, Easing, Extrapolation, interpolate, runOnJS, type SharedValue, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from "react-native-reanimated";
 import { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
@@ -104,7 +105,7 @@ export function BibleIntroScreen({ onComplete }: { onComplete: () => void }) {
         </Animated.View>
         <Pressable disabled={!ready} onPress={finish} onPressIn={() => setPressed(true)} onPressOut={() => setPressed(false)} accessibilityRole="button" accessibilityLabel={ready ? "Get started with the Bible" : "Preparing your library"} accessibilityState={{ disabled: !ready, busy: !ready }} style={{ width: "90%", maxWidth: 480, alignSelf: "center", minHeight: 56, padding: 16, borderRadius: 999, overflow: "hidden", backgroundColor: ready ? colors.ink : colors.surfaceSecondary, opacity: pressed ? 0.8 : 1, alignItems: "center", justifyContent: "center" }}>
           <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { right: undefined, backgroundColor: colors.ink, opacity: ready ? 1 : 0.12 }, fillStyle]} />
-          <Text accessibilityLiveRegion="polite" allowFontScaling={false} style={{ color: ready ? colors.bg : colors.ink, fontWeight: "600", fontSize: 17 * fontScale, lineHeight: 24 * fontScale }}>{ready ? "Get started" : "Preparing your library…"}</Text>
+          <Text accessibilityLiveRegion="polite"  style={[{ color: ready ? colors.bg : colors.ink }, buttonStyles.label]}>{ready ? "Get started" : "Preparing your library…"}</Text>
         </Pressable>
       </ScrollView>
     </View>

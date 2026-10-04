@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { ReaderProgressBar } from '@/components/ReaderProgressBar';
 import { Text as CloserAnimatedTextBase } from "@/components/CloserText";
 import { SheetHeading } from "@/components/SheetHeading";
@@ -2672,7 +2673,7 @@ function ErrorView({
       >
         <Text
           className="text-ink text-[13px]"
-          style={{ fontFamily: "System", fontWeight: "600" }}
+          style={buttonStyles.textLabel}
         >
           Try again
         </Text>
@@ -2734,12 +2735,7 @@ function TranslationNotInstalledView({
       >
         <Text
           className="text-[13px]"
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            color: "#FFFFFF",
-            letterSpacing: 0.2,
-          }}
+          style={[{ color: "#FFFFFF" }, buttonStyles.label]}
         >
           Switch translation
         </Text>
@@ -3112,13 +3108,7 @@ function EndMatterPage({
           <View className="flex-row items-center">
             <PrimaryCheckIcon color={colors.primaryFg} />
             <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: colors.primaryFg,
-                fontSize: 17,
-                marginLeft: 8,
-              }}
+              style={[{ color: colors.primaryFg, marginLeft: 8 }, buttonStyles.label]}
             >
               Marked as Read
             </Text>
@@ -3666,10 +3656,7 @@ function ReaderToolbar({
     <>
       <Animated.View pointerEvents={chromeVisible ? "auto" : "none"} accessibilityElementsHidden={!chromeVisible} importantForAccessibility={chromeVisible ? "auto" : "no-hide-descendants"} style={[{ height: READER_HEADER_HEIGHT, paddingHorizontal: 12, paddingVertical: 4 }, chromeStyle]}>
         <View style={{ flex: 1, borderRadius: 20, borderCurve: "continuous", paddingHorizontal: 8, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: tone === "dark" ? "#65503E" : tone === "sepia" ? "#967451" : "#A98B6C", borderWidth: StyleSheet.hairlineWidth, borderColor: "#FFFFFF35" }}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Back to book" onPress={onBack} style={{ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 4 }}>
-            <SFSymbol name="chevron.left" size={17} color="#FFF8EC"/>
-            <Text style={{ color: "#FFF8EC", fontSize: 14 }}>Back</Text>
-          </Pressable>
+          <BubbleBackButton accessibilityLabel="Back to book" onPress={onBack} color="#FFF8EC" backgroundColor="rgba(255,255,255,0.1)" />
           <Pressable accessibilityRole="button" accessibilityLabel={`Choose chapter, ${bookTitle}`} onPress={onContents} style={{ flex: 1, minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 }}>
             <Text numberOfLines={1} style={{ color: "#FFF8EC", fontSize: 16, fontWeight: "600", flexShrink: 1 }}>{bookTitle}</Text>
             <SFSymbol name="chevron.down" size={10} color="#FFF8EC"/>
@@ -4366,7 +4353,7 @@ function ContentsModal({
         </View>)}
         {onExpress && <Pressable accessibilityRole="button" onPress={onExpress} style={{ minHeight: 44, marginTop: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 }}>
           <SFSymbol name="bolt" size={15} color={palette.muted}/>
-          <Text style={{ color: palette.muted, fontSize: 14 }}>Read Express</Text>
+          <Text style={[{ color: palette.muted }, buttonStyles.textLabel]}>Read Express</Text>
         </Pressable>}
       </ScrollView>
     </ReaderSheet>

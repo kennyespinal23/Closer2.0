@@ -1,3 +1,5 @@
+import { buttonStyles } from "@/lib/buttonStyles";
+import { CloseButton } from "@/components/CloseButton";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -200,22 +202,7 @@ export default function PaywallScreen() {
       <StatusBar style="dark" />
       <SafeAreaView style={styles.flex} edges={["top", "bottom"]}>
         <View style={styles.topBar}>
-          <Pressable
-            onPress={finishOnboarding}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-            style={({ pressed }) => ({ opacity: pressed ? 0.55 : 1 })}
-          >
-            <View style={styles.closeHit}>
-              <SFSymbol
-                name="xmark"
-                size={15}
-                color={colors.ink}
-                weight="bold"
-              />
-            </View>
-          </Pressable>
+          <CloseButton onPress={finishOnboarding} />
         </View>
 
         <ScrollView
@@ -490,7 +477,7 @@ function FootLink({
   const colors = useColors();
   return (
     <Pressable hitSlop={8} onPress={onPress}>
-      <Text style={[styles.footLink, { color: colors.inkMuted }]}>{label}</Text>
+      <Text style={[styles.footLink, { color: colors.inkMuted }, buttonStyles.textLabel]}>{label}</Text>
     </Pressable>
   );
 }

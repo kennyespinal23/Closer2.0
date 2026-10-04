@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { Text, TextInput } from "@/components/CloserText";
@@ -40,7 +41,7 @@ export default function EditNameScreen() {
           style={({ pressed }) => ({ opacity: pressed && canSave ? 0.6 : 1 })}
         >
           <Text
-            style={[systemText.headline, { color: canSave ? "#007AFF" : colors.inkSubtle }]}
+            style={[{ color: canSave ? "#007AFF" : colors.inkSubtle }, buttonStyles.compactLabel]}
           >
             Save
           </Text>

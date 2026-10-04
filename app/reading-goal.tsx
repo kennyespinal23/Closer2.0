@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useMemo } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -211,7 +212,7 @@ export default function ReadingGoalDetailScreen() {
               <SlidersIcon />
               <Text
                 className="text-ink text-[14px] ml-2"
-                style={{ fontFamily: "System", fontWeight: "700" }}
+                style={buttonStyles.compactLabel}
               >
                 Edit daily goal
               </Text>

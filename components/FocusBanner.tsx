@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useCallback, useState } from "react";
 import { Alert, Pressable, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -132,11 +133,7 @@ export function FocusBanner() {
         >
           <Text
             className="text-[12px] tracking-[0.5px]"
-            style={{
-              fontFamily: "System",
-              fontWeight: "700",
-              color: colors.ink,
-            }}
+            style={[{ color: colors.ink }, buttonStyles.compactLabel]}
           >
             End
           </Text>

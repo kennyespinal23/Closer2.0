@@ -1,3 +1,4 @@
+import { CloseButton } from "@/components/CloseButton";
 import { Text as CloserAnimatedTextBase } from "@/components/CloserText";
 import { buttonStyles } from '@/lib/buttonStyles';
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -42,10 +43,10 @@ export function DailyExperience({ visible, kind, card, onClose, onComplete, onDi
   const disabled = busy || (kind === "reading" && opening && !opened) || (kind === "quiz" && !result && !answered);
   return <Modal visible={visible} presentationStyle="fullScreen" animationType={reduced ? "fade" : "slide"} onDismiss={onDismiss} onRequestClose={() => { if (!busy) onClose(); }}><GestureHandlerRootView style={{ flex: 1 }}><ReaderMaterialGradient colors={kind === "quiz" ? [...quiz.background] : dark ? ["#32271F", "#1B1815"] : ["#F3E5D3", "#FBF5EB"]} style={{ flex: 1, paddingTop: inset.top, backgroundColor: dark ? "#1B1815" : "#FBF5EB" }}>
     {kind === "quiz" ? <View style={[s.top, { justifyContent: "space-between", paddingHorizontal: 24 }]}>
-      <Pressable disabled={busy} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close quiz" style={[s.close, { backgroundColor: quiz.paper, borderWidth: 1, borderColor: quiz.line }]}><SFSymbol name="xmark" color={quiz.ink} size={16}/></Pressable>
+      <CloseButton disabled={busy} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close quiz" style={[s.close, { backgroundColor: quiz.paper, borderWidth: 1, borderColor: quiz.line }]} color={quiz.ink} />
       <Text style={{ color: quiz.ink, fontSize: 14, fontWeight: "600" }}>Quick check</Text>
       <View accessibilityLabel={`Question ${question + 1} of ${questions.length}`} style={{ flexDirection: "row", gap: 5, minWidth: 44 }}>{questions.map((_, i) => <View key={i} style={{ width: i === question ? 26 : 16, height: 6, borderRadius: 5, backgroundColor: i <= question ? "#D66B43" : quiz.line }}/>)}</View>
-    </View> : <View style={s.top}><Pressable disabled={busy} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" style={[s.close, { backgroundColor: paper }]}><SFSymbol name="xmark" color={ink} size={18} /></Pressable><View style={{ flex: 1, gap: 8 }}><Text style={{ color: muted, fontSize: 13, fontWeight: "600" }}>{kind === "reading" ? "Today’s letter" : kind === "prayer" ? "Daily prayer" : "One small step"}</Text></View></View>}
+    </View> : <View style={s.top}><CloseButton disabled={busy} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" style={[s.close, { backgroundColor: paper }]} color={ink} /><View style={{ flex: 1, gap: 8 }}><Text style={{ color: muted, fontSize: 13, fontWeight: "600" }}>{kind === "reading" ? "Today’s letter" : kind === "prayer" ? "Daily prayer" : "One small step"}</Text></View></View>}
     <ScrollView style={{ flex: 1 }} key={`${kind}-${opened}-${question}-${result}`} contentContainerStyle={{ padding: 24, paddingBottom: 36, flexGrow: kind === "reading" && opened ? 0 : 1 }} showsVerticalScrollIndicator={false}>
       <View style={{ gap: 24, flexShrink: 0 }}>
         {kind === "reading" && !opened ? <View style={{ flex: 1, justifyContent: "center", gap: 28 }}><PaperEnvelope opened={opening} onRevealed={() => setOpened(true)} /><Text style={[s.heading, { color: ink, textAlign: "center" }]}>A letter for today.</Text><Text style={[s.body, { color: muted, textAlign: "center" }]}>{card.title}</Text></View> : kind === "reading" ? <>

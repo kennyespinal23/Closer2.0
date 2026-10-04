@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { useEffect, useState } from "react";
 import { Modal, Pressable, View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -38,6 +39,6 @@ export function LibraryDoors({ replay = 0 }: { replay?: number }) {
     <Animated.View style={[{ padding: 30, gap: 12 }, title]}><Text style={{ ...systemText.largeTitle, color: "#2A1F18", textAlign: "center" }}>The Library</Text><Text style={{ ...systemText.body, color: "#6F5E50", textAlign: "center" }}>Sixty-six books, one story.</Text></Animated.View>
     {[left, right].map((style, index) => <Animated.View key={index} style={[{ position: "absolute", top: 0, bottom: 0, width: "50%", ...(index ? { right: 0 } : { left: 0 }) }, style]}><ReaderMaterialGradient colors={["#7A4C2A", "#5A3620", "#7A4C2A"]} style={{ flex: 1, borderWidth: 10, borderColor: "#4A2C18", paddingHorizontal: 14, paddingVertical: insets.top + 30, gap: 30 }}>{[0, 1].map(panel => <View key={panel} style={{ flex: 1, borderRadius: 6, borderWidth: 4, borderColor: "#3C2517", backgroundColor: "#714529" }} />)}<View style={{ position: "absolute", top: "50%", ...(index ? { left: 10 } : { right: 10 }), width: 14, height: 14, borderRadius: 7, backgroundColor: "#D5AD62", borderWidth: 2, borderColor: "#F1D08C" }} /></ReaderMaterialGradient></Animated.View>)}
     <Animated.View style={[{ position: "absolute", top: "22%" }, plaque]}><ReaderMaterialGradient colors={["#F1D08C", "#C99A4B"]} style={{ paddingHorizontal: 22, paddingVertical: 10, borderRadius: 5 }}><Text style={{ ...systemText.title2, color: "#3A2410" }}>Library</Text></ReaderMaterialGradient></Animated.View>
-    <Pressable accessibilityRole="button" accessibilityLabel="Enter the library" onPress={() => setVisible(false)} style={{ position: "absolute", bottom: insets.bottom + 28, minHeight: 44, paddingHorizontal: 24, borderRadius: 22, backgroundColor: "#FFF4EBDD", justifyContent: "center" }}><Text style={{ ...systemText.headline, color: "#3A2410" }}>Enter library</Text></Pressable>
+    <Pressable accessibilityRole="button" accessibilityLabel="Enter the library" onPress={() => setVisible(false)} style={{ position: "absolute", bottom: insets.bottom + 28, minHeight: 44, paddingHorizontal: 24, borderRadius: 22, backgroundColor: "#FFF4EBDD", justifyContent: "center" }}><Text style={[{ color: "#3A2410" }, buttonStyles.label]}>Enter library</Text></Pressable>
   </View></Modal>;
 }

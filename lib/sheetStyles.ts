@@ -1,3 +1,4 @@
+import { buttonStyles } from "./buttonStyles";
 import { type TextStyle } from "react-native";
 import { SF_PRO, systemText, uiText } from "@/lib/typography";
 
@@ -9,6 +10,6 @@ export const sheetText = {
   row: systemText.body,
   supporting: systemText.subheadline,
   metadata: systemText.footnote,
-  action: { ...systemText.body, fontWeight: "600", lineHeight: 22 } satisfies TextStyle,
+  action: buttonStyles.compactLabel,
 };
 export const sheetSpace = { horizontal: 24, top: 32, section: 24, item: 12, text: 4, bottom: 32 } as const;

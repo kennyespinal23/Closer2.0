@@ -1,3 +1,5 @@
+import { buttonStyles } from "@/lib/buttonStyles";
+import { CloseButton } from "@/components/CloseButton";
 import { useEffect, useRef, useState } from "react";
 import { FlatList, Modal, Pressable, ScrollView, View, useWindowDimensions } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -58,12 +60,12 @@ export function ReaderTutorial({ preview = false, onClose }: { preview?: boolean
               </View>
             </ScrollView>
           </View>} />
-        <Pressable accessibilityRole="button" accessibilityLabel="Skip reading tutorial" onPress={finish} style={{ position: "absolute", right: 12, top: 12, width: 44, height: 44, backgroundColor: "#FFFFFF18", borderRadius: 22, alignItems: "center", justifyContent: "center" }}><SFSymbol name="xmark" size={16} color="#FFFFFF" /></Pressable>
+        <CloseButton accessibilityRole="button" accessibilityLabel="Skip reading tutorial" onPress={finish} style={{ position: "absolute", right: 12, top: 12, width: 44, height: 44, backgroundColor: "#FFFFFF18", borderRadius: 22, alignItems: "center", justifyContent: "center" }} color="#FFFFFF" />
         <View style={{ paddingHorizontal: 24, paddingBottom: 22, paddingTop: 10 }}>
           <View accessible accessibilityRole="text" accessibilityLabel={`Tutorial page ${index + 1} of ${slides.length}`} style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 7, paddingVertical: 14, marginBottom: 10 }}>
             {slides.map((slide, i) => <View key={slide.title} style={{ width: i === index ? 24 : 7, height: 7, borderRadius: 4, backgroundColor: i === index ? "#FFFFFF" : "#FFFFFF30" }} />)}
           </View>
-          <Pressable accessibilityRole="button" onPress={() => { if (index === slides.length - 1) finish(); else { const next = index + 1; setIndex(next); list.current?.scrollToIndex({ index: next, animated: !reduced }); } }} style={{ minHeight: 50, borderRadius: 25, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center", padding: 12 }}><Text style={[systemText.headline, { color: "#111111" }]}>{index === slides.length - 1 ? "Start reading" : "Next"}</Text></Pressable>
+          <Pressable accessibilityRole="button" onPress={() => { if (index === slides.length - 1) finish(); else { const next = index + 1; setIndex(next); list.current?.scrollToIndex({ index: next, animated: !reduced }); } }} style={{ minHeight: 50, borderRadius: 25, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center", padding: 12 }}><Text style={[{ color: "#111111" }, buttonStyles.label]}>{index === slides.length - 1 ? "Start reading" : "Next"}</Text></Pressable>
         </View>
       </View>
     </View>

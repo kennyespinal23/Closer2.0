@@ -50,7 +50,7 @@ export function MomentThoughtBubble({ moment, anchorY, onClose, onCollect }: {
       </ScrollView>
       {!collected && <ContextualReaderTip id="collect" text="Collect this card to keep it in Your Moments." color={dark ? "#C9B7A1" : "#74614F"}/> }
       <FeedbackPressable feedback="action" accessibilityRole="button" onPress={onCollect} style={[buttonStyles.primary, { backgroundColor: action.backgroundColor }]}><Text style={[buttonStyles.label, { color: action.color }]}>{collected ? "View collected Moment" : "Collect this Moment"}</Text></FeedbackPressable>
-      <Pressable accessibilityRole="button" onPress={dismiss} style={{ minHeight: 44, alignItems: "center", justifyContent: "center" }}><Text style={{ ...systemText.body, color: ink }}>Keep reading</Text></Pressable>
+      <Pressable accessibilityRole="button" onPress={dismiss} style={{ minHeight: 44, alignItems: "center", justifyContent: "center" }}><Text style={[{ color: ink }, buttonStyles.textLabel]}>Keep reading</Text></Pressable>
     </Animated.View>
   </View>;
 }

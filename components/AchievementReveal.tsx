@@ -27,7 +27,7 @@ function Confetti({ index, progress }: { index: number; progress: SharedValue<nu
   return <Animated.View style={[{ position: "absolute", left: "50%", top: "40%", width: 4 + index % 3, height: 7 + index % 5, borderRadius: 2, backgroundColor: ["#D57851", "#D9AF63", "#5C947E", "#F8E1BF"][index % 4] }, style]}/>;
 }
 
-export function AchievementReveal({ achievementId, title, detail, icon = "envelope", newlyEarned = false, earned = true, onContinue }: { achievementId?: string; title: string; detail: string; icon?: SFSymbolName; newlyEarned?: boolean; earned?: boolean; onContinue: () => void }) {
+export function AchievementReveal({ achievementId, earnedAt, title, detail, icon = "envelope", newlyEarned = false, earned = true, onContinue }: { achievementId?: string; earnedAt?: number; title: string; detail: string; icon?: SFSymbolName; newlyEarned?: boolean; earned?: boolean; onContinue: () => void }) {
   const { scheme } = useTheme(), dark = scheme === "dark", reduced = useReducedMotion(), inset = useSafeAreaInsets();
   const { width } = useWindowDimensions(), action = paperActionColors(dark);
   const ambient = useAmbientMotionEnabled();
@@ -64,7 +64,7 @@ export function AchievementReveal({ achievementId, title, detail, icon = "envelo
   return <ReaderMaterialGradient colors={dark ? [badge.dark, "#172027", "#111913"] : [badge.light, "#FBF2E5", "#FFFAF2"]} locations={[0, .53, .82]} style={{ flex: 1 }}>
     <StatusBar style={dark ? "light" : "dark"}/>
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, alignItems: "center", paddingHorizontal: 25 * scale, paddingTop: inset.top + 25 * scale, paddingBottom: 24 }}>
-      <Text style={{ fontSize: 13 * scale, fontWeight: "600", color: dark ? "#C0A894" : "#806F60", textAlign: "center", marginBottom: 8 * scale }}>{earned ? newlyEarned ? "Achievement unlocked" : "Achievement earned" : "Still ahead"}</Text>
+      {!earned && <Text style={{ fontSize: 13 * scale, fontWeight: "600", color: dark ? "#C0A894" : "#806F60", textAlign: "center", marginBottom: 8 * scale }}>Still ahead</Text>}
       <View style={{ width: "100%", maxWidth: 440, height: 280 * scale, alignItems: "center", justifyContent: "center" }}>
         <Animated.View style={art}><EnamelAchievement size={badgeSize} achievementId={achievementId} icon={icon} earned={earned}/>{earned && !reduced && <AchievementSheen size={badgeSize} achievementId={achievementId} icon={icon} progress={shine}/>}</Animated.View>
         {newlyEarned && earned && !reduced && <View pointerEvents="none" style={StyleSheet.absoluteFill}>{Array.from({length:36},(_,i)=><Confetti key={i} index={i} progress={burst}/>)}</View>}
@@ -72,6 +72,7 @@ export function AchievementReveal({ achievementId, title, detail, icon = "envelo
       <Animated.View style={[{ alignItems: "center", maxWidth: 310 * scale, marginTop: 4 * scale }, textStyle]}>
         <Text accessibilityRole="header" style={{ fontSize: 32 * scale, lineHeight: 35.2 * scale, fontWeight: "700", letterSpacing: -.85 * scale, color: dark ? "#FBF1E5" : "#30251E", textAlign: "center", marginBottom: 15 * scale }}>{title}</Text>
         <Text style={{ fontSize: 16 * scale, lineHeight: 24.8 * scale, color: dark ? "#C0A894" : "#806F60", textAlign: "center" }}>{detail}</Text>
+        {earned && <View style={{alignSelf:'stretch',marginTop:24,paddingTop:20,borderTopWidth:StyleSheet.hairlineWidth,borderTopColor:dark?'#FFFFFF30':'#30251E30'}}><Text style={{fontSize:15,lineHeight:22,color:dark?'#C0A894':'#806F60',textAlign:'center'}}>{earnedAt ? `Earned ${new Date(earnedAt).toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}` : 'Earned date unavailable'}</Text></View>}
       </Animated.View>
     </ScrollView>
     <Animated.View style={[{ paddingHorizontal: 25 * scale, paddingTop: 25 * scale, paddingBottom: Math.max(inset.bottom, 18) + 32 * scale }, buttonStyle]}><Pressable accessibilityRole="button" onPress={onContinue} style={{ backgroundColor: action.backgroundColor, ...buttonStyles.primary }}><Text style={{ color: action.color, ...buttonStyles.label }}>Continue</Text></Pressable></Animated.View>

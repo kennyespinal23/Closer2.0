@@ -48,6 +48,7 @@ const makeStore = () => loadTS('state/bibleMoments.ts', {
   '@/constants/bibleMoments': catalog,
   react: { useEffect: () => {}, useSyncExternalStore: (_, get) => get() },
   '@react-native-async-storage/async-storage': {
+    multiSet: async rows => { if (failWrite) throw Error('Disk unavailable'); for (const [key,value] of rows) disk.set(key,value); },
     multiGet: async keys => keys.map(key => [key, disk.get(key) ?? null]),
     setItem: async (key, value) => { if (failWrite) throw Error('Disk unavailable'); disk.set(key, value); },
   },
@@ -56,9 +57,12 @@ const makeStore = () => loadTS('state/bibleMoments.ts', {
   const store = makeStore();
   await store.hydrateBibleMoments();
   assert.deepEqual([...store.useBibleMomentCollection().ids].sort(), ['creation', 'resurrection']);
+  assert.equal(store.useBibleMomentCollection().collectedAt.creation, undefined);
   const results = await Promise.all([store.unlockBibleMoment('good-shepherd'), store.unlockBibleMoment('good-shepherd')]);
-  assert.equal(results.filter(r => r === 'new').length, 1);
+  // Subscribers share the pending operation and its result; the collection writes once.
+  assert.deepEqual(results, ['new', 'new']);
   assert.equal(store.useBibleMomentCollection().ids.length, 3);
+  assert(store.useBibleMomentCollection().collectedAt['good-shepherd'] > 0);
   failWrite = true;
   await assert.rejects(store.unlockBibleMoment('first-promise'));
   assert(!store.useBibleMomentCollection().ids.includes('first-promise'));
@@ -79,9 +83,10 @@ const makeStore = () => loadTS('state/bibleMoments.ts', {
   await assert.rejects(almostComplete.unlockBibleMomentWithRewards(final.id));
   failWrite = false;
   const rewards = await Promise.all([almostComplete.unlockBibleMomentWithRewards(final.id), almostComplete.unlockBibleMomentWithRewards(final.id)]);
-  assert.equal(rewards.filter(result => result.categories.includes('prophecy')).length, 1);
+  assert(rewards.every(result => result.categories.includes('prophecy')));
+  assert.equal(almostComplete.useBibleMomentCollection().ids.filter(id => id === final.id).length, 1);
   const afterCompletion = makeStore();
   await afterCompletion.hydrateBibleMoments();
-  assert.deepEqual(await afterCompletion.unlockBibleMomentWithRewards(final.id), { status: 'existing', categories: [] });
+  assert.deepEqual(await afterCompletion.unlockBibleMomentWithRewards(final.id), { status: 'existing', categories: [], bookCompleted: false });
   console.log(`Verified 78 cards, ${anchors.size} verse triggers, category totals, legacy unlocks, concurrent discovery, write failure, and relaunch persistence.`);
 })().catch(error => { console.error(error); process.exitCode = 1; });

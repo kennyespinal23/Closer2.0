@@ -23,6 +23,6 @@ function AchievementDetail({ achievement: a, onClose }: { achievement: Achieveme
   const earned = a.value >= a.target;
   const firstLetter = a.id === "letters-1" && earned;
   return <Modal animationType="fade" presentationStyle="fullScreen" onRequestClose={onClose}>
-    <AchievementReveal achievementId={a.id} title={firstLetter ? "Your first letter." : a.title} detail={firstLetter ? "You made a little room for God.\nA small beginning worth keeping." : a.detail} icon={a.icon} earned={earned} onContinue={onClose}/>
+    <AchievementReveal achievementId={a.id} earnedAt={a.earnedAt} title={firstLetter ? "Your first letter." : a.title} detail={firstLetter ? "You made a little room for God.\nA small beginning worth keeping." : a.detail} icon={a.icon} earned={earned} onContinue={onClose}/>
   </Modal>;
 }

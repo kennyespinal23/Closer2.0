@@ -25,7 +25,7 @@ export function MomentCollectibleFront({ moment, compact = false, onBook }: { mo
   const name = findBookById(moment.bookId)?.name ?? moment.bookId;
   const badge = <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, borderCurve: "continuous", backgroundColor: "#E2EEE026", borderWidth: 1, borderColor: "#FFFFFF26", maxWidth: "100%" }}>
     <Image source={getBookCover(moment.bookId)} style={{ width: 15, height: 21, borderRadius: 2 }} contentFit="cover" transition={0} />
-    <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: "500", color: "#F4F5EB", flexShrink: 1 }}>{name}</Text>
+    <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: "500", color: "#F4F5EB", flexShrink: 1 }}>{moment.reference}</Text>
   </View>;
   return <View style={{ flex: 1, overflow: "hidden", borderRadius: compact ? 10 : 22, borderCurve: "continuous" }}>
     <View style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}><ReaderMomentArt moment={moment} /></View>

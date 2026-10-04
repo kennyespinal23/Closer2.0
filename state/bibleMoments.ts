@@ -4,15 +4,16 @@ import { BIBLE_MOMENTS, type MomentCategory } from "@/constants/bibleMoments";
 
 const key = (id: string) => `closer.bible-moment.${id}.v1`;
 const listeners = new Set<() => void>();
-let snapshot: { ids: readonly string[]; hydrated: boolean; error: string | null } = { ids: [], hydrated: false, error: null };
+let snapshot: { ids: readonly string[]; collectedAt: Readonly<Record<string, number>>; hydrated: boolean; error: string | null } = { ids: [], collectedAt: {}, hydrated: false, error: null };
 let pending: Promise<void> | null = null;
 const emit = () => listeners.forEach(listener => listener());
 export function hydrateBibleMoments() {
   if (snapshot.hydrated) return Promise.resolve();
   if (pending) return pending;
-  pending = AsyncStorage.multiGet(BIBLE_MOMENTS.map(moment => key(moment.id))).then(values => {
+  pending = AsyncStorage.multiGet(BIBLE_MOMENTS.flatMap(moment => [key(moment.id), `${key(moment.id)}.collectedAt`])).then(values => {
     const ids = values.flatMap(([storedKey, value]) => value === "true" ? [storedKey.slice("closer.bible-moment.".length, -3)] : []);
-    snapshot = { ids: [...new Set([...snapshot.ids, ...ids])], hydrated: true, error: null };
+    const collectedAt = Object.fromEntries(values.filter(([k,v]) => k.endsWith(".collectedAt") && Number(v) > 0).map(([k,v]) => [k.slice("closer.bible-moment.".length, -".v1.collectedAt".length), Number(v)]));
+    snapshot = { ids: [...new Set([...snapshot.ids, ...ids])], collectedAt: { ...collectedAt, ...snapshot.collectedAt }, hydrated: true, error: null };
     emit();
   }).catch(() => { snapshot = { ...snapshot, error: "Couldn't load your moments. Tap to retry." }; emit(); })
     .finally(() => { pending = null; });
@@ -38,7 +39,8 @@ async function saveBibleMomentWithRewards(id: string): Promise<UnlockResult> {
   if (!snapshot.hydrated) throw new Error("Could not load collection");
   if (!BIBLE_MOMENTS.some(moment => moment.id === id)) throw new Error("Unknown moment");
   if (snapshot.ids.includes(id)) return { status: "existing", categories: [], bookCompleted: false };
-  await AsyncStorage.setItem(key(id), "true");
+  const collectedAt = Date.now();
+  await AsyncStorage.multiSet([[key(id), "true"], [`${key(id)}.collectedAt`, String(collectedAt)]]);
   // Recheck after the write, so concurrent opens only celebrate once.
   if (snapshot.ids.includes(id)) return { status: "existing", categories: [], bookCompleted: false };
   const moment = BIBLE_MOMENTS.find(item => item.id === id)!;
@@ -46,7 +48,7 @@ async function saveBibleMomentWithRewards(id: string): Promise<UnlockResult> {
     .filter(item => item.tags.includes(category))
     .every(item => item.id === id || snapshot.ids.includes(item.id)));
   const bookCompleted = BIBLE_MOMENTS.filter(item => item.bookId === moment.bookId).every(item => item.id === id || snapshot.ids.includes(item.id));
-  snapshot = { ids: [...snapshot.ids, id], hydrated: true, error: null };
+  snapshot = { ids: [...snapshot.ids, id], collectedAt: { ...snapshot.collectedAt, [id]: collectedAt }, hydrated: true, error: null };
   emit();
   return { status: "new", categories, bookCompleted };
 }

@@ -14,7 +14,7 @@ import * as haptics from "@/lib/haptics";
 import { armLaunchSplash } from "@/lib/launchSplashSession";
 import { useOnboarding } from "@/state/onboarding";
 
-const SPACE_BACKGROUND = require("@/assets/onboarding/globe/loading.jpg");
+const SPACE_BACKGROUND = require("@/assets/onboarding/welcome/space-cross-poster.jpg");
 const TERMS_URL = "https://closer.app/terms";
 const PRIVACY_URL = "https://closer.app/privacy";
 
@@ -39,10 +39,10 @@ export default function IndexScreen() {
   return <GetStartedLanding />;
 }
 
-function WelcomeStarfield() {
+function WelcomeSpaceCross() {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  const player = useVideoPlayer(require("@/assets/onboarding/globe/starfield.mp4"), p => {
+  const player = useVideoPlayer(require("@/assets/onboarding/welcome/space-cross.mp4"), p => {
     p.muted = true;
     p.loop = true;
     p.staysActiveInBackground = false;
@@ -62,7 +62,7 @@ function WelcomeStarfield() {
     style={[StyleSheet.absoluteFillObject, {opacity: ready ? 1 : 0}]}/>;
 }
 
-/** The same starfield as the globe opening, before the Earth arrives. */
+/** The animated cross shares the globe opening’s space background. */
 function GetStartedLanding() {
   const router = useRouter();
   const focused = useIsFocused();
@@ -83,7 +83,7 @@ function GetStartedLanding() {
       <StatusBar style="light" />
 
       <Image source={SPACE_BACKGROUND} style={StyleSheet.absoluteFillObject} contentFit="cover" accessible={false}/>
-      {focused && !reduced && <WelcomeStarfield/>}
+      {focused && !reduced && <WelcomeSpaceCross/>}
 
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.spacer} />

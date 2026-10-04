@@ -1,3 +1,4 @@
+import { streakEarnedAt } from "./achievementDates";
 import { useDevTools } from "@/state/devTools";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
@@ -8,12 +9,12 @@ import { useBibleMomentCollection } from "@/state/bibleMoments";
 import { BOOKS } from "@/constants/books";
 import { BIBLE_MOMENTS } from "@/constants/bibleMoments";
 import type { SFSymbolName } from "@/components/Symbol";
-export type Achievement = { id: string; category: string; title: string; detail: string; icon: SFSymbolName; value: number; target: number };
+export type Achievement = { id: string; category: string; title: string; detail: string; icon: SFSymbolName; value: number; target: number; earnedAt?: number };
 export function useAchievements() {
   const { unlockAllMilestones } = useDevTools();
-  const { totalCompletions, streak, chaptersRead } = useProgress();
-  const { counts } = useAnnotations();
-  const { ids } = useBibleMomentCollection();
+  const { totalCompletions, streak, chaptersRead, sermonCompletions, engagedDates } = useProgress();
+  const { counts, notes } = useAnnotations();
+  const { ids, collectedAt } = useBibleMomentCollection();
   const [extras, setExtras] = useState({ express: 0, prayer: 0, right: 0, verse: 0 });
   useFocusEffect(useCallback(() => {
     let alive = true;
@@ -47,5 +48,30 @@ export function useAchievements() {
   add("honest", "Prayer and questions", "Honest Answer", "Write your first reflection as a note on Scripture.", "heart", counts.notes);
   add("quiz", "Prayer and questions", "Sharp Eye", "Get five daily quick-check questions right.", "eye", extras.right, 5);
   add("verse", "Prayer and questions", "Your Verse", "Choose a verse of your own for your profile.", "sun.max", extras.verse);
+  const nth = (dates: number[], n: number) => dates.filter(t => Number.isFinite(t) && t > 0).sort((a,b)=>a-b)[n-1];
+  const finishedAt = (bookId: string) => {
+    const book = BOOKS.find(b=>b.id===bookId)!;
+    const dates = Array.from({length:book.chapters},(_,i)=>nth(chaptersRead.filter(c=>c.bookId===bookId&&c.chapter===i+1).map(c=>c.completedAt),1));
+    return dates.every(Boolean) ? Math.max(...dates as number[]) : undefined;
+  };
+  for (const a of result) {
+    if (a.value < a.target) continue;
+    if (a.id.startsWith('letters-')) a.earnedAt=nth(sermonCompletions.map(c=>c.completedAt),a.target);
+    if (a.id.startsWith('streak-')) a.earnedAt=streakEarnedAt(engagedDates,a.target);
+    if(a.id==='chapter') a.earnedAt=nth(chaptersRead.map(c=>c.completedAt),1);
+    if(a.id==='note'||a.id==='honest') a.earnedAt=nth(Object.values(notes).flat().map(n=>n.createdAt),1);
+    if(a.id==='genesis') a.earnedAt=finishedAt('genesis');
+    if(a.id==='law'||a.id==='bible') {
+      const books=a.id==='law'?['genesis','exodus','leviticus','numbers','deuteronomy']:BOOKS.map(b=>b.id);
+      const dates=books.map(finishedAt);
+      if(dates.every(Boolean)) a.earnedAt=Math.max(...dates as number[]);
+    }
+    if(['moment','ten','all','garden'].includes(a.id)) {
+      const relevant=a.id==='garden'?genesis.map(m=>m.id):[...ids];
+      const dates=relevant.map(id=>collectedAt[id]).filter(Boolean);
+      // Unknown legacy dates must not be replaced with today's date.
+      if(dates.length===relevant.length) a.earnedAt=nth(dates,a.target);
+    }
+  }
   return { achievements: unlockAllMilestones ? result.map(a => ({ ...a, value: Math.max(a.value, a.target) })) : result, finishedBooks: finished.length };
 }

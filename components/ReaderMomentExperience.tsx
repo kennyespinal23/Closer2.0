@@ -8,7 +8,7 @@ import { ReaderMomentCardBox } from "./ReaderMomentCardBox";
 import Svg, { Path, Rect } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-import { useColors } from "@/state/theme";
+import { useColors, useResolvedScheme } from "@/state/theme";
 import { useBibleMomentCollection, unlockBibleMomentWithRewards } from "@/state/bibleMoments";
 import { type BibleMoment, type MomentCategory } from "@/constants/bibleMoments";
 import { systemText } from "@/lib/typography";
@@ -59,6 +59,7 @@ export function ReaderMomentExperience({ moment, onFinish, pocketRef, showcase, 
 
 export function ReaderMomentPocket({ onPress, arrival, collecting }: { onPress: () => void; arrival: number; collecting?: boolean }) {
   const colors = useColors();
+  const scheme = useResolvedScheme();
   const { ids } = useBibleMomentCollection();
   const reduced = useReducedMotion();
   const scale = useSharedValue(1);
@@ -66,8 +67,11 @@ export function ReaderMomentPocket({ onPress, arrival, collecting }: { onPress: 
   useEffect(() => { if (!collecting) setDisplayCount(ids.length); }, [ids.length, collecting, arrival]);
   useEffect(() => { if (arrival && !reduced) scale.value = withSequence(withTiming(1.25, { duration: 180 }), withTiming(1, { duration: 320 })); }, [arrival, reduced]);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }, { rotate: `${(scale.value - 1) * -24}deg` }] }));
-  return <Pressable accessibilityRole="button" accessibilityLabel={`Open your Bible Moments card box, ${displayCount} collected`} onPress={onPress} style={{ width: 44, height: 44, justifyContent: "center", alignItems: "center" }}>
-    <Animated.View style={style}><Svg width={26} height={28} viewBox="0 0 26 28"><Rect x="3" y="4" width="17" height="22" rx="3" fill="#FFFBF4" stroke="#2A1F18" strokeWidth="2" transform="rotate(-10 11 15)" /><Rect x="8" y="2" width="17" height="22" rx="3" fill="#FF5A36" stroke="#2A1F18" strokeWidth="2" transform="rotate(8 16 13)" /></Svg>{displayCount > 0 && <View style={{ position: "absolute", top: -7, right: -9, minWidth: 17, height: 17, borderRadius: 9, paddingHorizontal: 3, backgroundColor: "#52B3F6", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#12304A", fontSize: 10, fontWeight: "700" }}>{displayCount}</Text></View>}</Animated.View>
+  return <Pressable accessibilityRole="button" accessibilityLabel={`Open your Bible Moments card box, ${displayCount} collected`} onPress={onPress} style={{ width: 44, height: 44, borderRadius: 22, borderCurve: "continuous", borderWidth: 0.5, borderColor: scheme === "light" ? "#D3C4B2" : colors.border, backgroundColor: scheme === "light" ? "#EDE3D6" : colors.surface, justifyContent: "center", alignItems: "center" }}>
+    <Animated.View style={style}>
+      <SFSymbol name="rectangle.stack" size={21} color={colors.ink}/>
+      {displayCount > 0 && <View style={{ position: "absolute", top: -15, right: -16, minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 4, backgroundColor: colors.ink, alignItems: "center", justifyContent: "center" }}><Text style={{ color: colors.bg, fontSize: 11, fontWeight: "900", fontVariant: ["tabular-nums"] }}>{displayCount}</Text></View>}
+    </Animated.View>
   </Pressable>;
 }
 

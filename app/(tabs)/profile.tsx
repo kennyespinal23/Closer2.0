@@ -1,3 +1,4 @@
+import { buttonStyles } from "@/lib/buttonStyles";
 import { ProfileAudioPreview } from "@/components/audio/ProfileAudioPlayer";
 import { ProfileJourney, PROFILE_PALETTE } from "@/components/ProfileJourney";
 import { BibleMomentReveal, type BibleRevealKind } from "@/components/BibleMomentReveal";
@@ -367,7 +368,7 @@ export default function ProfileTabScreen() {
 
         <View style={{ marginHorizontal: 21, marginTop: 12 }}>
           <SettingsSection><SettingsLinkRow label="Settings & preferences" icon={<SFSymbol name="gearshape" size={20} color={colors.ink}/>} onPress={() => navigateTo("/settings")} /></SettingsSection>
-          <Text style={{ fontFamily: "Georgia", fontSize: 13, textAlign: "center", color: colors.inkMuted, marginVertical: 26 }}>Small beginnings. A meaningful journey.</Text>
+          <Text style={{ fontSize: 13, lineHeight: 18, fontWeight: "500", textAlign: "center", color: colors.inkMuted, marginVertical: 26 }}>Small beginnings. A meaningful journey.</Text>
         </View>
         {showDevShortcuts ? (
           <SettingsSection
@@ -645,14 +646,7 @@ function SectionHeader({
           })}
         >
           <Text
-            style={{
-              fontFamily: "System",
-              fontWeight: "600",
-              color: blue,
-              fontSize: 14,
-              letterSpacing: -0.1,
-              marginRight: 2,
-            }}
+            style={[buttonStyles.textLabel, { color: blue, marginRight: 2 }]}
           >
             See All
           </Text>

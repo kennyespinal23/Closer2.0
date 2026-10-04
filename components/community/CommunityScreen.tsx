@@ -1,3 +1,4 @@
+import { useIsFocused } from "@react-navigation/native";
 import { buttonStyles } from "@/lib/buttonStyles";
 import { CloseButton } from "@/components/CloseButton";
 import { sheetText } from "@/lib/sheetStyles";
@@ -49,6 +50,7 @@ export function CommunityScreen() {
   const [groupVisible, setGroupVisible] = useState(false);
   const [tutorial, setTutorial] = useState<number | null>(null);
   const tutorialChecked = useRef(false);
+  const focused = useIsFocused();
   const { tutorial: replayKind, replay } = useLocalSearchParams<{ tutorial?: string; replay?: string }>();
   useEffect(() => { if (!hydrated || !replay || !replayKind) return; setMode(replayKind === "groups" ? 1 : 0); setTutorial(0); }, [hydrated, replay, replayKind]);
   const pendingReading = useRef<{ bookId: string; chapter: number } | null>(null);
@@ -98,7 +100,7 @@ export function CommunityScreen() {
     {selected && selectedNote && <NoteDetail key={selected.id} note={selectedNote} source={selected.source} prayed={state.prayed.includes(selected.id)} onPray={() => pray(selected.id)} onChange={updateNote} onClose={() => setSelected(null)} onRemove={() => { setState(s => ({ ...s, notes: s.notes.filter(n => n.id !== selected.id), prayed: s.prayed.filter(id => id !== selected.id) })); setSelected(null); }} />}
     {selectedGroup && <GroupDetail visible={groupVisible} group={selectedGroup} onChange={updateGroup} onClose={() => setGroupVisible(false)} onRead={() => { pendingReading.current = { bookId: selectedGroup.bookId, chapter: selectedGroup.chapter }; setGroupVisible(false); }} onDismiss={() => { setGroupId(null); const target = pendingReading.current; pendingReading.current = null; if (target) router.push(`/book/${target.bookId}/${target.chapter}`); }} />}
     {creatingGroup && <CreateGroup onClose={() => setCreatingGroup(false)} onSave={group => { setState(s => ({ ...s, groups: [group, ...s.groups] })); setCreatingGroup(false); }} />}
-    {tutorial !== null && <Modal transparent animationType={reduced ? "none" : "fade"} onRequestClose={finishTutorial}><View style={styles.centered}><View style={styles.scrim} /><Animated.View key={tutorial} entering={reduced ? undefined : FadeInDown.springify().damping(18)} style={[styles.tutorial, { transform: [{ rotate: "-1deg" }] }]}><View style={styles.tape} /><Text style={[systemText.caption1, { color: MUTED }]}>{tutorial === 0 ? "WELCOME" : `${tutorial} OF ${tutorialItems.length - 1}`}</Text><Text accessibilityRole="header" style={[systemText.title2, { color: INK, marginTop: 10 }]}>{tutorialItems[tutorial].title}</Text><Text style={[systemText.body, { color: INK, marginTop: 12 }]}>{tutorialItems[tutorial].text}</Text><View style={[styles.row, { marginTop: 24, gap: 8 }]}><View style={[styles.row, { flex: 1, gap: 5 }]}>{tutorialItems.map((_, i) => <View key={i} style={{ width: i === tutorial ? 18 : 6, height: 6, borderRadius: 3, backgroundColor: i === tutorial ? CORAL : "#2A1F1833" }} />)}</View><Pressable onPress={finishTutorial} accessibilityRole="button" style={styles.textButton}><Text style={[{ color: MUTED }, buttonStyles.textLabel]}>Skip</Text></Pressable><Pressable accessibilityRole="button" style={styles.darkButton} onPress={() => tutorial === tutorialItems.length - 1 ? finishTutorial() : setTutorial(tutorial + 1)}><Text style={[{ color: "#FFF6B8" }, buttonStyles.label]}>{tutorial === 0 ? "Show me" : tutorial === tutorialItems.length - 1 ? "Got it" : "Next"}</Text></Pressable></View></Animated.View></View></Modal>}
+    {focused && tutorial !== null && <Modal transparent animationType={reduced ? "none" : "fade"} onRequestClose={finishTutorial}><View style={styles.centered}><View style={styles.scrim} /><Animated.View key={tutorial} entering={reduced ? undefined : FadeInDown.springify().damping(18)} style={[styles.tutorial, { transform: [{ rotate: "-1deg" }] }]}><View style={styles.tape} /><Text style={[systemText.caption1, { color: MUTED }]}>{tutorial === 0 ? "WELCOME" : `${tutorial} OF ${tutorialItems.length - 1}`}</Text><Text accessibilityRole="header" style={[systemText.title2, { color: INK, marginTop: 10 }]}>{tutorialItems[tutorial].title}</Text><Text style={[systemText.body, { color: INK, marginTop: 12 }]}>{tutorialItems[tutorial].text}</Text><View style={[styles.row, { marginTop: 24, gap: 8 }]}><View style={[styles.row, { flex: 1, gap: 5 }]}>{tutorialItems.map((_, i) => <View key={i} style={{ width: i === tutorial ? 18 : 6, height: 6, borderRadius: 3, backgroundColor: i === tutorial ? CORAL : "#2A1F1833" }} />)}</View><Pressable onPress={finishTutorial} accessibilityRole="button" style={styles.textButton}><Text style={[{ color: MUTED }, buttonStyles.textLabel]}>Skip</Text></Pressable><Pressable accessibilityRole="button" style={styles.darkButton} onPress={() => tutorial === tutorialItems.length - 1 ? finishTutorial() : setTutorial(tutorial + 1)}><Text style={[{ color: "#FFF6B8" }, buttonStyles.label]}>{tutorial === 0 ? "Show me" : tutorial === tutorialItems.length - 1 ? "Got it" : "Next"}</Text></Pressable></View></Animated.View></View></Modal>}
   </SafeAreaView>;
 }
 
@@ -194,5 +196,5 @@ const styles = StyleSheet.create({
   scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "#160D07AA" },
   tutorial: { backgroundColor: "#FFF6B8", padding: 24, borderRadius: 3, boxShadow: "0px 18px 40px #00000055" },
   textButton: { minHeight: 44, paddingHorizontal: 8, justifyContent: "center", alignItems: "center" },
-  darkButton: { minHeight: 44, paddingHorizontal: 16, borderRadius: 12, borderBottomLeftRadius: 4, backgroundColor: INK, alignItems: "center", justifyContent: "center" },
+  darkButton: { ...buttonStyles.primary, backgroundColor: INK },
 });

@@ -41,11 +41,11 @@ export default function BookLayout() {
           }}
         >
           <Stack.Screen name="[id]/express" options={{ animation: reducedMotion ? "fade" : "slide_from_right" }} />
-          <Stack.Screen name="[id]/[chapter]" options={{
-            animation: reducedMotion ? "fade" : "slide_from_right",
-            ...(reducedMotion ? { animationDuration: 150 } : {}),
+          <Stack.Screen name="[id]/[chapter]" options={({ route }) => ({
+            animation: reducedMotion || (route.params as { libraryReader?: string })?.libraryReader ? "fade" : "slide_from_right",
+            animationDuration: reducedMotion ? 150 : 350,
             gestureEnabled: true,
-          }} />
+          })} />
         </Stack>
       </View>
       <FocusMiniPlayer aboveTabBar={false} />

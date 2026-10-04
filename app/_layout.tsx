@@ -260,8 +260,10 @@ function AppShell() {
         <Stack.Screen
           name="book"
           options={({ route }) => {
-            const params = route.params as { libraryOpening?: string; params?: { libraryOpening?: string } } | undefined;
+            const params = route.params as { libraryOpening?: string; libraryReader?: string; params?: { libraryOpening?: string; libraryReader?: string } } | undefined;
             const fromShelf = Boolean(params?.libraryOpening || params?.params?.libraryOpening);
+            const quickReader = Boolean(params?.libraryReader || params?.params?.libraryReader);
+            if (quickReader) return { animation: "fade", animationDuration: 350, gestureEnabled: true };
             return { animation: fromShelf ? "none" : "slide_from_right", gestureEnabled: !fromShelf };
           }}
         />

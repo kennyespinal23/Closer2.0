@@ -1,3 +1,6 @@
+import { getChapterTitle, chapterHeadingHeight } from "@/lib/chapterTitles";
+
+import { CloseButton } from "@/components/CloseButton";
 import { buttonStyles } from "@/lib/buttonStyles";
 import { ReaderProgressBar } from '@/components/ReaderProgressBar';
 import { Text as CloserAnimatedTextBase } from "@/components/CloserText";
@@ -12,7 +15,7 @@ import { ReaderStickyNote } from "@/components/ReaderStickyNote";
 import { ReaderChromeBusyContext, useReaderChrome } from "@/lib/useReaderChrome";
 import { useBibleMomentCollection } from "@/state/bibleMoments";
 import { ReaderHighlightBrush } from "@/components/ReaderHighlightBrush";
-import { ReaderPaperTheme, useReaderTone } from "@/components/ReaderPaperTheme";
+import { ReaderPaperTheme, useReaderTone, prepareReaderTone } from "@/components/ReaderPaperTheme";
 import { ReaderMomentExperience, ReaderMomentPocket, ReaderRibbon } from "@/components/ReaderMomentExperience";
 import { ReaderSheet } from "@/components/ReaderSheet";
 import { ReaderNativeButton } from "@/components/ReaderNativeButton";
@@ -168,7 +171,7 @@ function readerPaginationKey(
   pageContentWidth: number,
   pageContentHeight: number,
 ): string {
-  return `${translationId}:${bookId}:${chapter}:${textSizeId}:${PixelRatio.getFontScale()}:${Math.round(pageContentWidth)}x${Math.round(pageContentHeight)}`;
+  return `titles-v1:${translationId}:${bookId}:${chapter}:${textSizeId}:${PixelRatio.getFontScale()}:${Math.round(pageContentWidth)}x${Math.round(pageContentHeight)}`;
 }
 
 type ReaderPaginationContext = {
@@ -787,7 +790,7 @@ function ChapterReaderContent() {
     pagerHeight - PAGE_PAD_Y_TOP - toolbarZone - READER_TEXT_TOOLBAR_GAP,
   );
   // Chapter heading + ornament on page 1 only (~ label + title + rule).
-  const FIRST_PAGE_HEADING_HEIGHT = 96 * Math.sqrt(textSize.scale) * fontScale;
+  const FIRST_PAGE_HEADING_HEIGHT = chapterHeadingHeight(book.id, chapter, pageContentWidth, textSize.scale, fontScale);
 
   const [pages, setPages] = useState<ReaderPage[] | null>(null);
   const [currentPageIdx, setCurrentPageIdx] = useState(0);
@@ -1492,14 +1495,21 @@ function ChapterReaderContent() {
   const verticalItems: ReaderListItem[] = useMemo(() => {
     if (!data) return [];
     return [...groupReadingVerses(data.verses, "verse").map((range, i): ReaderListItem => ({ kind: "page", key: `vertical-${i}`, page: { ...range, isFirst: false, startLine: 0, endLine: 0, offsetY: 0, contentHeight: 0 } })), { kind: "endMatter", key: "vertical-end" }];
-  }, [data, readingLayout]);
+  }, [data]);
   const visibleItems = verticalReading ? verticalItems : readerItems;
   const [verticalIndex, setVerticalIndex] = useState(0);
   const readingAnchor = useRef(0);
   const layoutBefore = useRef(readingLayout);
   const lastVerticalFocus = useRef<number | null>(null);
   const verticalChapter = useRef("");
-  const visibleIndex = verticalReading ? Math.min(verticalIndex, Math.max(0, visibleItems.length - 1)) : currentPageIdx;
+  const switchingLayout = layoutBefore.current !== readingLayout;
+  const switchAnchor = layoutBefore.current === "pages"
+    ? pages?.[Math.max(0, currentPageIdx - (viewportPrev ? 1 : 0))]?.startVerseIdx ?? readingAnchor.current
+    : readingAnchor.current;
+  const switchIndex = verticalReading
+    ? Math.max(0, verticalItems.findIndex(item => item.kind === "page" && switchAnchor >= item.page.startVerseIdx && switchAnchor <= item.page.endVerseIdx))
+    : Math.max(0, pages?.findIndex(page => switchAnchor >= page.startVerseIdx && switchAnchor <= page.endVerseIdx) ?? 0) + (viewportPrev ? 1 : 0);
+  const visibleIndex = switchingLayout ? switchIndex : verticalReading ? Math.min(verticalIndex, Math.max(0, visibleItems.length - 1)) : currentPageIdx;
   const pageExtent = verticalReading ? pagerHeight : screenWidth;
   useLayoutEffect(() => {
     const key = `${viewportBookId}:${viewportChapter}`;
@@ -1513,11 +1523,11 @@ function ChapterReaderContent() {
     if (verticalReading) {
       const idx = Math.max(0, verticalItems.findIndex(item => item.kind === "page" && targetVerse >= item.page.startVerseIdx && targetVerse <= item.page.endVerseIdx));
       setVerticalIndex(idx);
-      pagerRef.current?.scrollToIndex({ index: idx, animated: false });
+      if (!changedLayout) pagerRef.current?.scrollToIndex({ index: idx, animated: false });
     } else if (changedLayout) {
       const idx = Math.max(0, pages.findIndex(p => targetVerse >= p.startVerseIdx && targetVerse <= p.endVerseIdx)) + (viewportPrev ? 1 : 0);
       setCurrentPageIdx(idx);
-      pagerRef.current?.scrollToIndex({ index: idx, animated: false });
+      if (!changedLayout) pagerRef.current?.scrollToIndex({ index: idx, animated: false });
     }
     verticalChapter.current = key; layoutBefore.current = readingLayout; lastVerticalFocus.current = focusVerse;
   }, [readingLayout, viewportBookId, viewportChapter, data, pages, visibleItems, focusVerse, verticalReading, verticalItems, viewportPrev]);
@@ -1587,7 +1597,7 @@ function ChapterReaderContent() {
 
   const [chromeSheetOpen, setChromeSheetOpen] = useState(false);
   const [socialSheetOpen, setSocialSheetOpen] = useState(false);
-  const chrome = useReaderChrome(!!(activeVerse !== null || selectionMode || editingNote || discoveredMoment || collectMoment || momentShowcase || meaningOpen || listeningOpen || contentsOpen || chromeSheetOpen || socialSheetOpen), readerFocused, verticalReading ? 3000 : 4200);
+  const chrome = useReaderChrome(!verticalReading || !!(activeVerse !== null || selectionMode || editingNote || discoveredMoment || collectMoment || momentShowcase || meaningOpen || listeningOpen || contentsOpen || chromeSheetOpen || socialSheetOpen), readerFocused, verticalReading ? 3000 : 4200);
 
   return (
     <ReaderChromeBusyContext.Provider value={setSocialSheetOpen}><View onTouchStart={event => { momentTouchY.current = event.nativeEvent.pageY; chrome.onTouch(); }} style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -1599,7 +1609,7 @@ function ChapterReaderContent() {
             chromeVisible={chrome.visible}
             chromeStyle={chrome.topStyle}
             onSheetBusy={setChromeSheetOpen}
-            bookTitle={`${book.name} ${chapter}`}
+            bookTitle={`${book.name === "Psalms" ? "Psalm" : book.name} ${chapter}`}
             onBack={() => goBackOr(router, `/book/${book.id}`)}
             onMoments={() => setMomentShowcase(true)}
             pocketRef={pocketRef}
@@ -2077,13 +2087,9 @@ function ChapterReaderContent() {
  * multiplied by `scale`. Verse numbers scale a bit less so they
  * don't overpower the line.
  */
-/**
- * Poetry keeps single `\n` stanza breaks. OEB (and others) often insert
- * blank-line runs around block quotes — at 30pt line-height that reads
- * as a hole in the page. Collapse runs to one break.
- */
+/** Reflow source poetry indentation at the device width; verse boundaries stay intact. */
 function normalizeVerseBody(text: string): string {
-  return text.replace(/\n{2,}/g, "\n");
+  return text.replace(/\s+/g, " ").trim();
 }
 
 function VerseFlow({
@@ -2239,6 +2245,7 @@ function VerseFlow({
         lineHeight: baseLineHeight,
         color: colors.ink,
         letterSpacing: -0.1,
+        textAlign: "left",
       }}
     >
       {decorated.map((v, i) => {
@@ -2260,7 +2267,7 @@ function VerseFlow({
                 color: moment ? MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"] : isSelected ? colors.ink : colors.inkSubtle,
               }}
             >
-              {"  "}{v.number}
+              {v.number}
             </Text>
             {/* Note indicator — a bright red filled disc placed
                 inline right after the verse number, like a sticky-
@@ -2464,7 +2471,7 @@ function PendingChapterMeasurer({
         lines,
         target.data.verses,
         pageContentHeight,
-        firstPageHeadingHeight,
+        chapterHeadingHeight(target.bookId, target.chapter, pageContentWidth, scale, PixelRatio.getFontScale()),
       );
       finish(computed);
     },
@@ -2474,6 +2481,7 @@ function PendingChapterMeasurer({
       firstPageHeadingHeight,
       pageContentHeight,
       target.data.verses,
+      target.bookId, target.chapter, pageContentWidth, scale,
     ],
   );
 
@@ -2537,7 +2545,7 @@ function PendingChapterMeasurer({
 }
 
 /** Prepare real page breaks on the overview without mounting reader behavior. */
-export function BookReaderPreparation({ bookId, chapter }: { bookId: string; chapter: number }) {
+export function BookReaderPreparation({ bookId, chapter, onReady }: { bookId: string; chapter: number; onReady?: () => void }) {
   const focused = useIsFocused();
   const { translation, textSize } = usePreferences();
   const { width, height, fontScale } = useWindowDimensions();
@@ -2546,23 +2554,24 @@ export function BookReaderPreparation({ bookId, chapter }: { bookId: string; cha
   const [, setRevision] = useState(0);
   const contentWidth = width - spacing[24] * 2;
   const contentHeight = Math.max(280, height - insets.top - insets.bottom - READER_HEADER_HEIGHT
-    - spacing[16] - READER_TOOLBAR_BOTTOM_INSET - READER_PILL_HEIGHT - READER_TEXT_TOOLBAR_GAP);
+    - spacing[16] - 32 - READER_TEXT_TOOLBAR_GAP);
   const key = readerPaginationKey(bookId, chapter, translation.id, textSize.id, contentWidth, contentHeight);
   useEffect(() => {
-    if (!focused || readerPaginationCache.has(key)) return;
+    if (!focused) return;
+    if (readerPaginationCache.has(key)) { void prepareReaderTone().then(() => onReady?.()); return; }
     let cancelled = false;
     const cached = getCachedChapter(bookId, chapter, translation.id);
     if (cached) setPrepared({ key, data: cached });
     else void fetchChapter(bookId, chapter, translation.id).then(data => {
       if (!cancelled) setPrepared({ key, data });
-    }).catch(() => { /* The reader owns retry and translation-install UI. */ });
+    }).catch(() => { if (!cancelled) void prepareReaderTone().then(() => onReady?.()); /* The reader owns retry and translation-install UI. */ });
     return () => { cancelled = true; };
   }, [focused, key, bookId, chapter, translation.id]);
-  const measured = useCallback(() => setRevision(value => value + 1), []);
+  const measured = useCallback(() => { setRevision(value => value + 1); void prepareReaderTone().then(() => onReady?.()); }, [onReady]);
   if (!focused || prepared?.key !== key || readerPaginationCache.has(key)) return null;
   return <AdjacentChapterMeasurer key={key} bookId={bookId} chapter={chapter}
     verses={prepared.data.verses} cacheKey={key} pageContentWidth={contentWidth}
-    pageContentHeight={contentHeight} firstPageHeadingHeight={96 * Math.sqrt(textSize.scale) * fontScale}
+    pageContentHeight={contentHeight} firstPageHeadingHeight={chapterHeadingHeight(bookId, chapter, contentWidth, textSize.scale, fontScale)}
     scale={textSize.scale} onMeasured={measured} />;
 }
 
@@ -2595,14 +2604,14 @@ function AdjacentChapterMeasurer({
         lines,
         verses,
         pageContentHeight,
-        firstPageHeadingHeight,
+        chapterHeadingHeight(bookId, chapter, pageContentWidth, scale, PixelRatio.getFontScale()),
       );
       if (computed.length > 0) {
         readerPaginationCache.set(cacheKey, computed);
         onMeasured?.();
       }
     },
-    [cacheKey, verses, pageContentHeight, firstPageHeadingHeight, onMeasured],
+    [cacheKey, verses, pageContentHeight, bookId, chapter, pageContentWidth, scale, onMeasured],
   );
 
   if (readerPaginationCache.has(cacheKey)) return null;
@@ -2863,7 +2872,7 @@ function ReaderPageView({
     >
       {vertical && <Text style={{ color: colors.inkMuted, fontSize: 12, fontWeight: "600", marginBottom: 22 }}>{bookName} {chapter}:{pageVerses[0]?.number}{pageVerses.length > 1 ? `–${pageVerses[pageVerses.length - 1]?.number}` : ""}</Text>}
       {isFirst && !vertical ? (
-        <ChapterHeading bookName={bookName} chapter={chapter} scale={scale} />
+        <ChapterHeading bookId={bookId} bookName={bookName} chapter={chapter} scale={scale} />
       ) : null}
       <VerseFlow
         verses={pageVerses}
@@ -2891,54 +2900,26 @@ function ReaderPageView({
 }
 
 function ChapterHeading({
+  bookId,
   bookName,
   chapter,
   scale,
 }: {
+  bookId: string;
   bookName: string;
   chapter: number;
   scale: number;
 }) {
   const colors = useColors();
-  return (
-    <View
-      style={{
-        width: "100%",
-        alignItems: "center",
-        marginBottom: spacing[12],
-      }}
-    >
-      <Text
-        style={[
-          typography.smallLabel,
-          {
-            color: colors.inkMuted,
-            textTransform: "uppercase",
-            textAlign: "center",
-            letterSpacing: 1,
-          },
-        ]}
-      >
-        {bookName}
-      </Text>
-      <Text
-        style={{
-          fontFamily: "System",
-          fontWeight: "700",
-          fontSize: 26 * Math.sqrt(scale),
-          lineHeight: 34 * Math.sqrt(scale),
-          letterSpacing: 0.5,
-          color: colors.ink,
-          marginTop: spacing[8],
-          textAlign: "center",
-          width: "100%",
-        }}
-      >
-        Chapter {chapter}
-      </Text>
-      <ChapterOrnament />
+  const { width, fontScale } = useWindowDimensions();
+  const k = Math.sqrt(scale);
+  return <View accessibilityRole="header" accessibilityLabel={`${bookName} ${chapter}: ${getChapterTitle(bookId, chapter)}`} style={{ height: chapterHeadingHeight(bookId, chapter, width - 48, scale, fontScale), flexDirection: "row", alignItems: "center", gap: 16, paddingBottom: 12 }}>
+    <Text accessible={false} style={{ fontSize: 64 * k, lineHeight: 76 * k, fontWeight: "900", letterSpacing: -2, color: colors.ink, fontVariant: ["tabular-nums"] }}>{chapter}</Text>
+    <View style={{ flex: 1, gap: 4 }}>
+      <Text accessible={false} style={{ fontSize: 11, lineHeight: 15, fontWeight: "800", letterSpacing: 1.1, textTransform: "uppercase", color: colors.inkMuted }}>{bookName}</Text>
+      <Text accessible={false} style={{ fontSize: 17 * k, lineHeight: 23 * k, fontWeight: "800", color: colors.ink }}>{getChapterTitle(bookId, chapter)}</Text>
     </View>
-  );
+  </View>;
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -3654,18 +3635,23 @@ function ReaderToolbar({
 
   return (
     <>
-      <Animated.View pointerEvents={chromeVisible ? "auto" : "none"} accessibilityElementsHidden={!chromeVisible} importantForAccessibility={chromeVisible ? "auto" : "no-hide-descendants"} style={[{ height: READER_HEADER_HEIGHT, paddingHorizontal: 12, paddingVertical: 4 }, chromeStyle]}>
-        <View style={{ flex: 1, borderRadius: 20, borderCurve: "continuous", paddingHorizontal: 8, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: tone === "dark" ? "#65503E" : tone === "sepia" ? "#967451" : "#A98B6C", borderWidth: StyleSheet.hairlineWidth, borderColor: "#FFFFFF35" }}>
-          <BubbleBackButton accessibilityLabel="Back to book" onPress={onBack} color="#FFF8EC" backgroundColor="rgba(255,255,255,0.1)" />
-          <Pressable accessibilityRole="button" accessibilityLabel={`Choose chapter, ${bookTitle}`} onPress={onContents} style={{ flex: 1, minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 }}>
-            <Text numberOfLines={1} style={{ color: "#FFF8EC", fontSize: 16, fontWeight: "600", flexShrink: 1 }}>{bookTitle}</Text>
-            <SFSymbol name="chevron.down" size={10} color="#FFF8EC"/>
+      <Animated.View pointerEvents={chromeVisible ? "auto" : "none"} accessibilityElementsHidden={!chromeVisible} importantForAccessibility={chromeVisible ? "auto" : "no-hide-descendants"} style={[{ height: READER_HEADER_HEIGHT, paddingHorizontal: 16, paddingVertical: 10 }, chromeStyle]}>
+        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={{ width: 96 }}><CloseButton accessibilityLabel="Close reader" onPress={onBack} color={colors.ink} style={{ backgroundColor: isLight ? "#EDE3D6" : colors.surface }}/></View>
+          <Pressable accessibilityRole="button" accessibilityLabel={`Choose chapter, ${bookTitle}`} onPress={onContents} style={{ flex: 1, minHeight: 44, alignItems: "center", justifyContent: "center", gap: 2 }}>
+            <Text numberOfLines={1} style={{ color: colors.ink, fontSize: 15, lineHeight: 20, fontWeight: "900" }}>{bookTitle}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Text numberOfLines={1} style={{ color: colors.textSecondary, fontSize: 11, lineHeight: 15, fontWeight: "800" }}>{readingLayout === "pages" ? "Read" : "Scroll"} · {translation.tag}</Text>
+              <SFSymbol name="chevron.down" size={9} color={colors.textSecondary}/>
+            </View>
           </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="Reading settings" onPress={() => { setDraftTextSize(textSizeId); setTextSizeOpen(true); }} style={{ width: 44, height: 44, borderRadius: 15, borderCurve: "continuous", backgroundColor: "#30261EE6", alignItems: "center", justifyContent: "center" }}>
-            <Text style={{ color: "#FFF8EC", fontSize: 19, fontWeight: "500" }}>Aa</Text>
-          </Pressable>
+          <View style={{ width: 96, flexDirection: "row", gap: 8, alignItems: "center" }}>
           <View ref={pocketRef} collapsable={false}>
             <ReaderMomentPocket onPress={onMoments} arrival={momentArrival} collecting={collecting}/>
+          </View>
+          <Pressable accessibilityRole="button" accessibilityLabel="Reading settings" onPress={() => { setDraftTextSize(textSizeId); setTextSizeOpen(true); }} style={{ width: 44, height: 44, borderRadius: 22, borderCurve: "continuous", borderWidth: StyleSheet.hairlineWidth, borderColor: isLight ? "#D3C4B2" : colors.border, backgroundColor: isLight ? "#EDE3D6" : colors.surface, alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ color: colors.ink, fontSize: 15, fontWeight: "900" }}>Aa</Text>
+          </Pressable>
           </View>
         </View>
       </Animated.View>
@@ -3711,20 +3697,20 @@ function ReaderToolbar({
         grabber
       >
         <View style={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 32 }}>
-          <View style={{ marginBottom: sheetSpace.section }}><SheetHeading title="Reading settings" onDone={() => setTextSizeOpen(false)} ink={settingsPalette.ink} background={settingsPalette.bg}/></View>
-          <Text style={[sheetText.section, { color: settingsPalette.muted, marginBottom: 12 }]}>Read your way</Text>
-          <View style={{ flexDirection: "row", padding: 4, gap: 3, borderRadius: 16, borderCurve: "continuous", backgroundColor: settingsPalette.control }}>
+          <View style={{ marginBottom: sheetSpace.section }}><SheetHeading title="Read your way" onDone={() => setTextSizeOpen(false)} ink={settingsPalette.ink} background={settingsPalette.bg}/></View>
+          <View style={{ flexDirection: "row", gap: 10 }}>
             {([
-              { title: "Classic", icon: "book", selected: readingLayout === "pages", action: () => setReadingLayout("pages") },
-              { title: "Scroll", icon: "arrow.up.arrow.down", selected: readingLayout !== "pages", action: () => setReadingLayout("verse") },
-              { title: "Audio", icon: "headphones", selected: false, action: () => { pendingSettingsAction.current = "audio"; setTextSizeOpen(false); } },
-            ] as const).map(mode => <Pressable key={mode.title} accessibilityRole="button" accessibilityState={{ selected: mode.selected }} onPress={() => { haptics.tick(); mode.action(); }} style={{ flex: 1, minHeight: 64, paddingVertical: 10, gap: 6, borderRadius: 12, borderCurve: "continuous", alignItems: "center", justifyContent: "center", backgroundColor: mode.selected ? settingsPalette.bg : "transparent" }}>
+              { title: "Read", detail: "Page by page", icon: "book", selected: readingLayout === "pages", action: () => { setReadingLayout("pages"); setTextSizeOpen(false); } },
+              { title: "Scroll", detail: "One verse at a time", icon: "arrow.up.arrow.down", selected: readingLayout !== "pages", action: () => { setReadingLayout("verse"); setTextSizeOpen(false); } },
+              { title: "Listen", detail: "Read aloud", icon: "headphones", selected: false, action: () => { pendingSettingsAction.current = "audio"; setTextSizeOpen(false); } },
+            ] as const).map(mode => <Pressable key={mode.title} accessibilityRole="button" accessibilityLabel={`${mode.title} reading mode`} accessibilityState={{ selected: mode.selected }} onPress={() => { haptics.tick(); mode.action(); }} style={{ flex: 1, minHeight: 116, padding: 12, gap: 8, borderRadius: 16, borderCurve: "continuous", borderWidth: 1.5, borderColor: mode.selected ? settingsPalette.ink : settingsPalette.line, backgroundColor: mode.selected ? settingsPalette.control : "transparent" }}>
               <SFSymbol name={mode.icon} size={21} color={mode.selected ? settingsPalette.ink : settingsPalette.muted}/>
-              <Text style={{ color: mode.selected ? settingsPalette.ink : settingsPalette.muted, fontSize: 14, fontWeight: mode.selected ? "600" : "400" }}>{mode.title}</Text>
+              <View style={{ gap: 4 }}><Text style={[buttonStyles.compactLabel, { textAlign: "left", color: settingsPalette.ink }]}>{mode.title}</Text><Text style={[sheetText.metadata, { fontSize: 12, lineHeight: 17, color: settingsPalette.muted }]}>{mode.detail}</Text></View>
             </Pressable>)}
           </View>
-          <View style={{ paddingVertical: 24 }}>
-            <Text style={{ fontFamily: NEW_YORK, fontWeight: "500", color: settingsPalette.ink, fontSize: 23 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1), lineHeight: 34 * (TEXT_SIZES.find(s => s.id === draftTextSize)?.scale ?? 1) }}>In the beginning, God created the heavens and the earth.</Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 24, marginBottom: 8 }}>
+            <Text style={[sheetText.section, { color: settingsPalette.muted }]}>Text size</Text>
+            <Text style={[sheetText.section, { color: settingsPalette.muted }]}>{TEXT_SIZES.find(s => s.id === draftTextSize)?.name}</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 8, minHeight: 54, borderRadius: 16, borderCurve: "continuous", backgroundColor: settingsPalette.control }}>
             <Pressable accessibilityRole="button" accessibilityLabel="Smaller text" onPress={() => setDraftTextSize(TEXT_SIZES[Math.max(0, TEXT_SIZES.findIndex(s => s.id === draftTextSize) - 1)].id)} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><Text style={{ color: settingsPalette.ink, fontSize: 17 }}>A</Text></Pressable>
@@ -3739,8 +3725,8 @@ function ReaderToolbar({
               { id: "light", label: "Light", bg: "#FFFAF1", ink: "#32261F" },
               { id: "sepia", label: "Sepia", bg: "#DAC29D", ink: "#392C20" },
               { id: "dark", label: "Dark", bg: "#302923", ink: "#FFF4E3" },
-            ] as const).map(option => <Pressable key={option.id} accessibilityRole="button" accessibilityState={{ selected: tone === option.id }} onPress={() => { haptics.tick(); setTone(option.id); }} style={{ flex: 1, borderRadius: 18, borderCurve: "continuous", padding: 3, borderWidth: 2, borderColor: tone === option.id ? settingsPalette.ink : "transparent" }}>
-              <View style={{ minHeight: 50, borderRadius: 13, borderCurve: "continuous", backgroundColor: option.bg, alignItems: "center", justifyContent: "center" }}><Text style={{ color: option.ink, fontSize: 15 }}>{option.label}</Text></View>
+            ] as const).map(option => <Pressable key={option.id} accessibilityRole="button" accessibilityLabel={`${option.label} appearance`} accessibilityState={{ selected: tone === option.id }} onPress={() => { haptics.tick(); setTone(option.id); }} style={{ flex: 1, borderRadius: 18, borderCurve: "continuous", padding: 3, borderWidth: 2, borderColor: tone === option.id ? settingsPalette.ink : "transparent" }}>
+              <View style={{ minHeight: 50, borderRadius: 13, borderCurve: "continuous", backgroundColor: option.bg, alignItems: "center", justifyContent: "center" }}><Text style={[buttonStyles.compactLabel, { color: option.ink }]}>{option.label}</Text></View>
             </Pressable>)}
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel={`Translation, ${translation.fullName}`} onPress={() => { pendingSettingsAction.current = "translation"; setTextSizeOpen(false); }} style={{ marginTop: 24, paddingTop: 20, minHeight: 54, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: settingsPalette.line, flexDirection: "row", alignItems: "center", gap: 12 }}>

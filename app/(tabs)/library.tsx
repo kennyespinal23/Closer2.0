@@ -1,22 +1,21 @@
+import { searchStyles } from "@/lib/searchStyles";
 import { buttonStyles } from "@/lib/buttonStyles";
 import { paperActionColors } from "@/lib/paperControls";
 import { tabContentClearance } from "@/lib/tabContentClearance";
 import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
-import Animated from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { useTabContentFade } from '@/lib/useTabContentFade';
 import { LibraryShelf } from "@/components/LibraryShelf";
 import { LibraryGuidedPath } from "@/components/LibraryGuidedPath";
 import { LibraryBookCover } from "@/components/LibraryBookcase";
 import { getBookTheme } from "@/constants/bookBlurbs";
-import { captureScreen, releaseCapture } from "react-native-view-shot";
-import { prepareLibraryOpening } from "@/lib/libraryOpening";
 import { LibraryAtmosphere } from "@/components/LibraryAtmosphere";
 import { LibraryEnvironment } from "@/components/LibraryEnvironment";
 import { LibraryBook, type LibraryBookFrame } from "@/components/LibraryBookcase";
 import { LibraryDoors } from "@/components/LibraryDoors";
 import { systemText } from "@/lib/typography";
-import { Host, ContextMenu, Section as NativeSection, Button as NativeButton } from "@expo/ui/swift-ui";
-import { accessibilityLabel } from "@expo/ui/swift-ui/modifiers";
+import { Host, Image as NativeSymbol, ContextMenu, Section as NativeSection, Button as NativeButton } from "@expo/ui/swift-ui";
+import { accessibilityLabel, frame, background, clipShape } from "@expo/ui/swift-ui/modifiers";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { BookReaderPreparation } from "@/app/book/[id]/[chapter]";
 import { BibleIntroScreen } from "@/components/BibleIntroScreen";
@@ -91,33 +90,14 @@ function BibleLibrary() {
   const openingRef = useRef(false);
   const reducedOpening = useReducedMotion();
   const tabContentStyle = useTabContentFade(reducedOpening);
-  const snapshotRef = useRef<string | undefined>(undefined);
-  const libraryFocused = useRef(false);
-  useFocusEffect(useCallback(() => {
-    openingRef.current = false;
-    libraryFocused.current = true;
-    return () => { libraryFocused.current = false; };
-  }, []));
-  useEffect(() => () => { if (snapshotRef.current) releaseCapture(snapshotRef.current); }, []);
-  const pickBook = async (book: Book, frame: LibraryBookFrame) => {
+  useFocusEffect(useCallback(() => { openingRef.current = false; }, []));
+  const pickBook = (book: Book, _frame: LibraryBookFrame, targetChapter?: number) => {
     if (openingRef.current) return;
     openingRef.current = true;
-    if (!reducedOpening) {
-      // Capture only when opening. Capturing after swipes interrupts the next gesture.
-      try {
-        const uri = await captureScreen({ format: "png", quality: 1, result: "tmpfile" });
-        if (!libraryFocused.current) { releaseCapture(uri); openingRef.current = false; return; }
-        if (snapshotRef.current) releaseCapture(snapshotRef.current);
-        snapshotRef.current = uri;
-      } catch {
-        if (snapshotRef.current) releaseCapture(snapshotRef.current);
-        snapshotRef.current = undefined;
-      }
-      if (!libraryFocused.current) { openingRef.current = false; return; }
-      prepareLibraryOpening({ bookId: book.id, source: frame, snapshot: snapshotRef.current });
-      snapshotRef.current = undefined; // The detail owns this image until it returns to the shelf.
-    }
-    router.push({ pathname: "/book/[id]", params: { id: book.id, libraryOpening: "1" } });
+    const last = lastVisited?.bookId === book.id ? lastVisited.chapter : 0;
+    const chapter = targetChapter ?? (last ? Math.min(book.chapters, last + (hasReadChapter(book.id, last) ? 1 : 0)) : 1);
+    // Continue is a quick reader entrance, not the decorative book-detail reveal.
+    router.push({ pathname: "/book/[id]/[chapter]", params: { id: book.id, chapter: String(chapter), libraryReader: "1" } });
   };
   const scheme = useResolvedScheme();
   const insets = useSafeAreaInsets();
@@ -168,6 +148,8 @@ function BibleLibrary() {
   // there's nothing fresh to point at (stale > 14 days, or end of
   // book with no next chapter), so the Library doesn't grow a
   // permanent "ghost" hero.
+  const shelfDeparture = useSharedValue(0);
+  const shelfHeaderStyle = useAnimatedStyle(() => ({ opacity: 1 - shelfDeparture.value, transform: [{ translateY: -12 * shelfDeparture.value }] }));
   const continueReading = useMemo(
     () => computeContinueReading(lastVisited, hasReadChapter),
     [lastVisited, hasReadChapter],
@@ -192,6 +174,7 @@ function BibleLibrary() {
             Apple Large Title via ThemedText variant="largeTitle"
             (34pt Bold). Matches Home / Profile tab anchors. */}
 
+        <Animated.View style={shelfHeaderStyle}>
         <View style={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <View style={{ flex: 1 }}>
             <Text accessibilityRole="header" style={{ ...systemText.largeTitle, color: colors.ink }}>Library</Text>
@@ -205,9 +188,10 @@ function BibleLibrary() {
             collectionId={collectionId} collections={viewMode === "grid" ? COLLECTIONS : availableCollections}
             onSelect={id => { haptics.tick(); setCollectionId(id); }} />
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Search Bible books" onPress={() => { setSearchSession(session => session + 1); setSearchOpen(true); }} style={{ marginHorizontal: 24, minHeight: 48, paddingHorizontal: 16, borderRadius: 24, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <SFSymbol name="magnifyingglass" size={20} color={colors.textSecondary} /><Text style={{ fontSize: 16, lineHeight: 22, color: colors.textSecondary, flexShrink: 1 }}>Find a book — try Ruth or John</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="Search Bible books" onPress={() => { setSearchSession(session => session + 1); setSearchOpen(true); }} style={[searchStyles.field, { marginHorizontal: 24, backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <SFSymbol name="magnifyingglass" size={20} color={colors.textSecondary} /><Text style={[searchStyles.text, { color: colors.textSecondary }]}>Find a book — try Ruth or John</Text>
         </Pressable>
+        </Animated.View>
         {libraryMode === "guided" ? <LibraryGuidedPath onPick={pickBook} /> : <>
         {/* ─── Continue Reading hero (conditional) ────────────────
             Sits between the title and search so the user lands on
@@ -246,7 +230,7 @@ function BibleLibrary() {
         ) : viewMode === "list" ? (
           <BookList books={filteredBooks} onPick={pickBook} />
         ) : (
-          <LibraryShelf key={`${collectionId}:${shelfJump}`} books={filteredBooks} selectedId={selectedBookId} onSelect={book => setSelectedBookId(book.id)} onJump={book => { setSelectedBookId(book.id); setShelfJump(value => value + 1); }} onPick={pickBook} />
+          <LibraryShelf departure={shelfDeparture} key={`${collectionId}:${shelfJump}`} books={filteredBooks} selectedId={selectedBookId} onSelect={book => setSelectedBookId(book.id)} onJump={book => { setSelectedBookId(book.id); setShelfJump(value => value + 1); }} onPick={pickBook} />
         )}
         </>}
       </Animated.ScrollView>
@@ -296,7 +280,9 @@ function SectionHeader({
       <Host colorScheme={scheme} style={{ width: compact ? 44 : 150, height: 44 }}>
         <ContextMenu activationMethod="singlePress">
           <ContextMenu.Trigger>
-            <NativeButton variant="bordered" systemImage="line.3.horizontal.decrease" modifiers={[accessibilityLabel("Library view and filter options")]}>{compact ? "" : "Options"}</NativeButton>
+            {compact ? <NativeButton variant="plain" modifiers={[accessibilityLabel("Library view and filter options")]}>
+              <NativeSymbol systemName="line.3.horizontal.decrease" size={21} color={colors.ink} modifiers={[frame({ width: 44, height: 44 }), background(colors.surface), clipShape("circle")]} />
+            </NativeButton> : <NativeButton variant="bordered" systemImage="line.3.horizontal.decrease" modifiers={[accessibilityLabel("Library view and filter options")]}>Options</NativeButton>}
           </ContextMenu.Trigger>
           <ContextMenu.Items>
             <NativeSection title="Testament">
@@ -386,14 +372,13 @@ function BibleSearch({ visible, onClose, onPick }: {
     }} onShow={() => input.current?.focus()}>
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.bg }}>
       <View style={{ padding: 20, paddingBottom: 12, flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12,
-          minHeight: 48, borderRadius: 14, borderCurve: "continuous", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderStrong }}>
-          <SFSymbol name="magnifyingglass" size={18} color={colors.textSecondary} />
+        <View style={[searchStyles.field, { flex: 1, backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <SFSymbol name="magnifyingglass" size={20} color={colors.textSecondary} />
           <TextInput ref={input} autoFocus defaultValue="" onChangeText={setQuery} placeholder="Find a book"
             accessibilityLabel="Search Bible books" placeholderTextColor={colors.textSecondary}
             autoCorrect={false} autoCapitalize="none" clearButtonMode="while-editing" returnKeyType="search"
             keyboardAppearance={scheme} onSubmitEditing={Keyboard.dismiss}
-            style={{ flex: 1, minHeight: 46, fontFamily: "System", fontSize: 17, color: colors.ink }} />
+            style={[searchStyles.text, { color: colors.ink }]} />
         </View>
         <Pressable accessibilityRole="button" onPress={close} style={{ minHeight: 44, justifyContent: "center" }}>
           <ThemedText variant="headline">Cancel</ThemedText>

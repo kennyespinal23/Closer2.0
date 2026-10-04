@@ -194,7 +194,7 @@ function BibleLibrary() {
 
         <View style={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <View style={{ flex: 1 }}>
-            <Text accessibilityRole="header" style={{ fontSize: 32, lineHeight: 36, fontWeight: "900", color: colors.ink }}>Library</Text>
+            <Text accessibilityRole="header" style={{ ...systemText.largeTitle, color: colors.ink }}>Library</Text>
             <Text style={{ fontSize: 13, lineHeight: 18, fontWeight: "700", color: colors.textSecondary }}>{libraryMode === "guided" ? "Your reading path" : `Book ${Math.max(0, filteredBooks.findIndex(book => book.id === selectedBookId)) + 1} of ${filteredBooks.length}`}</Text>
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel={libraryMode === "browse" ? "Guided reading path" : "Browse books"} onPress={() => { haptics.tick(); setLibraryMode(mode => mode === "browse" ? "guided" : "browse"); }} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}><SFSymbol name={libraryMode === "browse" ? "map" : "books.vertical"} size={21} color={colors.ink} /></Pressable>

@@ -14,6 +14,7 @@ import { findExpressBook } from "@/constants/expressBooks";
 import { useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
 import { useReducedMotion } from "@/lib/useReducedMotion";
+import { systemText, uiText } from "@/lib/typography";
 import { buttonStyles } from "@/lib/buttonStyles";
 import { paperActionColors } from "@/lib/paperControls";
 import * as haptics from "@/lib/haptics";
@@ -93,14 +94,14 @@ export function LibraryShelf({ books, selectedId, onSelect, onJump, onPick }: {
       </View>
     </GestureDetector>
     <View key={`${book.id}-${fontScale}`} style={{ paddingHorizontal: 24, gap: 6 }}>
-      <Text style={{ fontSize: 12, lineHeight: 17, fontWeight: "800", color: colors.textSecondary }}>{book.testament === "old" ? "Old Testament" : "New Testament"} · {book.category}</Text>
-      <Text accessibilityRole="header" style={{ fontSize: 30, lineHeight: 36, fontWeight: "900", color: colors.ink }}>{book.name}</Text>
-      <Text style={{ fontSize: 16, lineHeight: 22, fontWeight: "600", color: colors.textSecondary, minHeight: 44, flexShrink: 0 }}>{getBookTheme(book.id)}</Text>
+      <Text style={{ ...systemText.footnote, fontWeight: "700", color: colors.textSecondary }}>{book.testament === "old" ? "Old Testament" : "New Testament"} · {book.category}</Text>
+      <Text accessibilityRole="header" style={{ ...uiText.sectionTitle, color: colors.ink }}>{book.name}</Text>
+      <Text style={{ ...uiText.supporting, color: colors.textSecondary, minHeight: 44, flexShrink: 0 }}>{getBookTheme(book.id)}</Text>
       {read > 0 && <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 4 }}>
         <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: book.chapters, now: read, text: `${read} of ${book.chapters} chapters read` }} style={{ flex: 1, height: 8, borderRadius: 4, overflow: "hidden", backgroundColor: colors.border }}>
           <View style={{ width: `${read / book.chapters * 100}%`, height: 8, borderRadius: 4, backgroundColor: colors.ink }} />
         </View>
-        <Text style={{ fontSize: 12, lineHeight: 17, fontWeight: "700", color: colors.textSecondary }}>{read} of {book.chapters}</Text>
+        <Text style={{ ...systemText.footnote, fontVariant: ["tabular-nums"], color: colors.textSecondary }}>{read} of {book.chapters}</Text>
       </View>}
       <View style={{ flexDirection: fontScale > 1.2 ? "column" : "row", gap: 10, marginTop: 14 }}>
         <Pressable accessibilityRole="button" onPress={last ? () => { if (moving.value) return; haptics.soft(); router.push(`/book/${book.id}/${chapter}`); } : open}
@@ -109,7 +110,7 @@ export function LibraryShelf({ books, selectedId, onSelect, onJump, onPick }: {
         </Pressable>
         {findExpressBook(book.id) && <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name} Express`} onPress={() => { if (moving.value) return; haptics.soft(); router.push(`/book/${book.id}/express`); }}
           style={[buttonStyles.primary, { paddingHorizontal: 18, flexDirection: "row", gap: 6, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }]}>
-          <SFSymbol name="bolt" size={17} color={colors.ink} /><Text style={[buttonStyles.compactLabel, { color: colors.ink }]}>Express</Text>
+          <SFSymbol name="bolt" size={17} color={colors.ink} /><Text style={[buttonStyles.label, { color: colors.ink }]}>Express</Text>
         </Pressable>}
       </View>
       <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16, gap: 8 }}>

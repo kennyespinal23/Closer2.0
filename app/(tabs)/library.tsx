@@ -1,3 +1,4 @@
+import { contentLayout } from "@/lib/contentStyles";
 import { searchStyles } from "@/lib/searchStyles";
 import { buttonStyles } from "@/lib/buttonStyles";
 import { paperActionColors } from "@/lib/paperControls";
@@ -180,7 +181,7 @@ function BibleLibrary() {
             (34pt Bold). Matches Home / Profile tab anchors. */}
 
         <Animated.View style={shelfHeaderStyle}>
-        <View style={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <View style={{ paddingHorizontal: contentLayout.gutter, paddingTop: contentLayout.screenTop, paddingBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <View style={{ flex: 1 }}>
             <Text accessibilityRole="header" style={{ ...systemText.largeTitle, color: colors.ink }}>Library</Text>
             {shelfView && <Text style={{ ...systemText.footnote, color: colors.textSecondary, marginTop: 4 }}>Book {BOOKS.findIndex(book => book.id === selectedBookId) + 1} of {BOOKS.length}</Text>}
@@ -235,7 +236,7 @@ function BibleLibrary() {
         ) : viewMode === "list" ? (
           <BookList books={filteredBooks} onPick={pickBook} />
         ) : (
-          <LibraryShelf availableHeight={screenHeight - insets.top - scrollBottomPad - 140 * Math.max(1, fontScale)} departure={shelfDeparture} key={`${collectionId}:${shelfJump}`} books={filteredBooks} selectedId={selectedBookId} onSelect={book => setSelectedBookId(book.id)} onJump={book => { setSelectedBookId(book.id); setShelfJump(value => value + 1); }} onPick={pickBook} />
+          <LibraryShelf availableHeight={screenHeight - insets.top - scrollBottomPad - 144 * Math.max(1, fontScale)} departure={shelfDeparture} key={`${collectionId}:${shelfJump}`} books={filteredBooks} selectedId={selectedBookId} onSelect={book => setSelectedBookId(book.id)} onPick={pickBook} />
         )}
         </>}
       </Animated.ScrollView>

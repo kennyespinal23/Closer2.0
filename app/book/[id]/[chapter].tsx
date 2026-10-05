@@ -1,3 +1,4 @@
+import { findVerseStartLines, paginateLines } from "@/lib/readerPagination";
 import { getChapterTitle, chapterHeadingHeight } from "@/lib/chapterTitles";
 
 import { CloseButton } from "@/components/CloseButton";
@@ -171,7 +172,7 @@ function readerPaginationKey(
   pageContentWidth: number,
   pageContentHeight: number,
 ): string {
-  return `titles-v1:${translationId}:${bookId}:${chapter}:${textSizeId}:${PixelRatio.getFontScale()}:${Math.round(pageContentWidth)}x${Math.round(pageContentHeight)}`;
+  return `verse-safe-v3:${translationId}:${bookId}:${chapter}:${textSizeId}:${PixelRatio.getFontScale()}:${Math.round(pageContentWidth)}x${Math.round(pageContentHeight)}`;
 }
 
 type ReaderPaginationContext = {
@@ -314,23 +315,7 @@ function linesToReaderPages(
   pageContentHeight: number,
   firstPageHeadingHeight: number,
 ): ReaderPage[] {
-  const map = new Map<number, number>();
-  const maxVerseNum = verses[verses.length - 1]?.number ?? 0;
-  let nextExpected = verses[0]?.number ?? 1;
-  for (let li = 0; li < lines.length; li++) {
-    const lineText = lines[li].text;
-    let cursor = 0;
-    while (nextExpected <= maxVerseNum) {
-      const found = findVerseMarker(lineText, nextExpected, cursor);
-      if (!found) break;
-      if (!map.has(nextExpected)) {
-        map.set(nextExpected, li);
-      }
-      cursor = found.end;
-      nextExpected += 1;
-    }
-    if (nextExpected > maxVerseNum) break;
-  }
+  const map = findVerseStartLines(lines, verses);
   const verseStartLines = Array.from(map.values()).sort((a, b) => a - b);
   return paginateLines(
     lines,
@@ -476,6 +461,8 @@ function ChapterReaderContent() {
     };
   }, [readerBookId, readerChapter]);
 
+  const activeTranslationRef = useRef(translation.id);
+  activeTranslationRef.current = translation.id;
   const translationChangedRef = useRef(false);
   // Must run in useLayoutEffect BEFORE the chapter-load layout effect
   // so we never paint a frame that thinks the old placement is still
@@ -485,9 +472,8 @@ function ChapterReaderContent() {
       translationChangedRef.current = true;
       return;
     }
-    // Keep prior chapter text until the new translation measures —
-    // wiping `data` blanked the reader and left the toolbar feeling
-    // dead under TrueSheet's dismiss dim.
+    // Never measure old text under the new translation cache key.
+    setData(null);
     setPages(null);
     setMeasureTarget(null);
     placedPageForChapterRef.current = null;
@@ -961,6 +947,7 @@ function ChapterReaderContent() {
       computed: ReaderPage[],
       landOnLast: boolean,
     ) => {
+      if (activeTranslationRef.current !== translation.id) return;
       const target = readerTargetRef.current;
       if (
         target.bookId !== targetBookId ||
@@ -1016,25 +1003,10 @@ function ChapterReaderContent() {
   const handleMeasureLines = useCallback(
     (lines: ReadonlyArray<TextLayoutLine>) => {
       if (!lines || lines.length === 0 || !data) return;
+      if (data !== getCachedChapter(readerBookId, readerChapter, translation.id)) return;
       if (book.id !== readerBookId || chapter !== readerChapter) return;
 
-      const map = new Map<number, number>();
-      const maxVerseNum = data.verses[data.verses.length - 1]?.number ?? 0;
-      let nextExpected = data.verses[0]?.number ?? 1;
-      for (let li = 0; li < lines.length; li++) {
-        const lineText = lines[li].text;
-        let cursor = 0;
-        while (nextExpected <= maxVerseNum) {
-          const found = findVerseMarker(lineText, nextExpected, cursor);
-          if (!found) break;
-          if (!map.has(nextExpected)) {
-            map.set(nextExpected, li);
-          }
-          cursor = found.end;
-          nextExpected += 1;
-        }
-        if (nextExpected > maxVerseNum) break;
-      }
+      const map = findVerseStartLines(lines, data.verses);
       verseToLineRef.current = map;
 
       const computed = linesToReaderPages(
@@ -1836,6 +1808,7 @@ function ChapterReaderContent() {
                 const targetPage = item.kind === "prevBridge" ? targetPages?.[targetPages.length - 1] : targetPages?.[0];
                 if (!targetData || !targetPage) return <View style={{ width: screenWidth, flex: 1 }}><LoadingView /></View>;
                 return <ReaderPageView
+                  viewportHeight={pageContentHeight + PAGE_PAD_Y_TOP + PAGE_PAD_Y_BOTTOM}
                   width={screenWidth} paddingX={PAGE_PAD_X} paddingTop={PAGE_PAD_Y_TOP} paddingBottom={PAGE_PAD_Y_BOTTOM}
                   isFirst={targetPage.isFirst} bookName={findBookById(target.bookId)?.name ?? viewportBook.name}
                   chapter={target.chapter} scale={textSize.scale} verses={targetData.verses}
@@ -1872,6 +1845,7 @@ function ChapterReaderContent() {
               }
               return wrap(
                 <ReaderPageView
+                  viewportHeight={pageContentHeight + PAGE_PAD_Y_TOP + PAGE_PAD_Y_BOTTOM}
                   vertical={verticalReading}
                   width={screenWidth}
                   paddingX={PAGE_PAD_X}
@@ -2204,23 +2178,7 @@ function VerseFlow({
       onMeasureLines?.(lines as ReadonlyArray<TextLayoutLine>);
 
       const anchors: Record<number, number> = {};
-      let nextExpected = decorated[0]?.number ?? 1;
-      const maxVerseNum = decorated[decorated.length - 1]?.number ?? 0;
-
-      for (const line of lines) {
-        const text = line.text;
-        let cursor = 0;
-        while (nextExpected <= maxVerseNum) {
-          const found = findVerseMarker(text, nextExpected, cursor);
-          if (!found) break;
-          if (anchors[nextExpected] === undefined) {
-            anchors[nextExpected] = line.y;
-          }
-          cursor = found.end;
-          nextExpected += 1;
-        }
-        if (nextExpected > maxVerseNum) break;
-      }
+      for (const [verse, index] of findVerseStartLines(lines, decorated)) anchors[verse] = lines[index].y;
 
       let currentVerse = decorated[0]?.number ?? 1;
       const painted = lines.map(line => {
@@ -2493,23 +2451,16 @@ function PendingChapterMeasurer({
   }, [cacheKey, finish]);
 
   // New Architecture / off-screen Text can skip onTextLayout forever.
-  // Fall back to a single full-chapter page so we never spin on
+  // Fall back to one verse per bounded page so we never spin on
   // "Drawing near" indefinitely.
   useEffect(() => {
     const timer = setTimeout(() => {
       if (committedRef.current) return;
       const verseCount = target.data.verses.length;
-      finish([
-        {
-          startLine: 0,
-          endLine: 0,
-          offsetY: 0,
-          contentHeight: pageContentHeight,
-          startVerseIdx: 0,
-          endVerseIdx: Math.max(0, verseCount - 1),
-          isFirst: true,
-        },
-      ]);
+      finish(Array.from({ length: verseCount }, (_, index) => ({
+        startLine: 0, endLine: 0, offsetY: 0, contentHeight: 0,
+        startVerseIdx: index, endVerseIdx: index, isFirst: index === 0,
+      })));
     }, 600);
     return () => clearTimeout(timer);
   }, [finish, pageContentHeight, target.data.verses.length]);
@@ -2785,6 +2736,7 @@ function TranslationNotInstalledView({
 // ─────────────────────────────────────────────────────────────────
 
 function ReaderPageView({
+  viewportHeight,
   vertical = false,
   width,
   paddingX,
@@ -2807,6 +2759,7 @@ function ReaderPageView({
   focusTint,
   focusGlow,
 }: {
+  viewportHeight?: number;
   vertical?: boolean;
   width: number;
   paddingX: number;
@@ -2856,19 +2809,22 @@ function ReaderPageView({
   const colors = useColors();
   const [verticalViewport, setVerticalViewport] = useState(0);
   const [verticalContent, setVerticalContent] = useState(0);
-  const Content = vertical ? ScrollView : View;
+  const Content = ScrollView;
   return (
-    <View style={{ width, ...(vertical ? { flex: 1 } : {}) }}>
+    <View style={{ width, ...(vertical ? { flex: 1 } : { height: viewportHeight }), overflow: "hidden" }}>
     <Content
-      {...(vertical ? { onLayout: (e: { nativeEvent: { layout: { height: number } } }) => setVerticalViewport(e.nativeEvent.layout.height), onContentSizeChange: (_: number, height: number) => setVerticalContent(height), scrollEnabled: verticalContent > verticalViewport + 2, bounces: false, contentContainerStyle: { flexGrow: 1, justifyContent: "center" as const, paddingBottom: 110 }, showsVerticalScrollIndicator: false, nestedScrollEnabled: true } : {})}
-      style={{
-        width,
-        ...(vertical ? { flex: 1 } : {}),
-        paddingHorizontal: paddingX,
-        ...(vertical ? { paddingRight: 58, paddingLeft: 25 } : {}),
+      onLayout={e => setVerticalViewport(e.nativeEvent.layout.height)}
+      onContentSizeChange={(_, height) => setVerticalContent(height)}
+      scrollEnabled={verticalContent > verticalViewport + 2}
+      bounces={false}
+      showsVerticalScrollIndicator={!vertical}
+      nestedScrollEnabled
+      contentContainerStyle={{
+        flexGrow: 1,
+        ...(vertical ? { justifyContent: "center", paddingRight: 58, paddingLeft: 25, paddingBottom: 110 } : { paddingHorizontal: paddingX, paddingBottom }),
         paddingTop,
-        paddingBottom,
       }}
+      style={{ width, flex: 1 }}
     >
       {vertical && <Text style={{ color: colors.inkMuted, fontSize: 12, fontWeight: "600", marginBottom: 22 }}>{bookName} {chapter}:{pageVerses[0]?.number}{pageVerses.length > 1 ? `–${pageVerses[pageVerses.length - 1]?.number}` : ""}</Text>}
       {isFirst && !vertical ? (
@@ -4440,205 +4396,6 @@ function Chevron({ direction }: { direction: "prev" | "next" }) {
   );
 }
 
-/**
- * Find the position of verse N's number marker inside a single
- * rendered line of text, starting the search at `from`. Returns the
- * `idx` where the marker begins and the `end` index immediately
- * after the marker (so callers can advance their search cursor).
- *
- * The visible marker shape depends on whether the verse has notes:
- *   • plain:        "  N  " (two-space + number + two-space)
- *   • with note:    "  N ●…  " (number + single space + bullet +
- *                   optional count digits + two-space)
- *
- * Important real-world wrinkle: iOS (CoreText / RCTTextLayoutManager)
- * strips leading whitespace from any line that begins fresh after a
- * `\n` or a hard wrap. So a verse that starts at the top of a line
- * — which is the COMMON case now that we put each verse on its own
- * paragraph — sees its `"  "` prefix removed and we get back just
- * `"N  body"`. To stay correct in both shapes we also accept the
- * leading-stripped variant when searching at `from == 0`.
- *
- * Returns null if N's marker isn't present at/after `from`.
- */
-function findVerseMarker(
-  text: string,
-  verseNum: number,
-  from: number,
-): { idx: number; end: number } | null {
-  const plain = `  ${verseNum}  `;
-  const plainIdx = text.indexOf(plain, from);
-  if (plainIdx !== -1) {
-    return { idx: plainIdx, end: plainIdx + plain.length };
-  }
-  // U+25CF BLACK CIRCLE — the note marker rendered inline next to
-  // the verse number. Embed the literal so the regex source mirrors
-  // exactly what onTextLayout's `text` field contains.
-  const noteRe = new RegExp(`  ${verseNum} ●\\d*  `);
-  const slice = text.slice(from);
-  const m = noteRe.exec(slice);
-  if (m) {
-    return { idx: from + m.index, end: from + m.index + m[0].length };
-  }
-  // Line-start variant: when iOS strips the leading `"  "` from a
-  // wrapped / post-newline line, the marker shows up as `"N  body"`
-  // (or `"N ●…  body"`) at index 0. Only check at the start of the
-  // line to avoid false-positives where a verse body happens to
-  // contain something like "10 men" mid-line.
-  if (from === 0) {
-    const lineStart = `${verseNum}  `;
-    if (text.startsWith(lineStart)) {
-      return { idx: 0, end: lineStart.length };
-    }
-    const lineStartNoteRe = new RegExp(`^${verseNum} ●\\d*  `);
-    const m2 = lineStartNoteRe.exec(text);
-    if (m2) {
-      return { idx: 0, end: m2[0].length };
-    }
-  }
-  return null;
-}
-
-/**
- * Walk a measured line array and group consecutive lines into pages
- * that fit inside the given content height — breaking ONLY at verse
- * boundaries, never in the middle of a verse.
- *
- * The first page receives `firstPageHeadingHeight` less vertical
- * room — the visible chapter heading + ornament prepended at the
- * top of page 1 lives outside the clipped text region, so the
- * verse content on page 1 has to fit in the remainder.
- *
- * `verseStartLines` is a sorted array of line indices where each
- * verse number first appears in the measured text. When a line
- * doesn't fit on the current page, we walk backwards to the last
- * verse boundary inside the page's range and end the page there
- * — so the next page starts at the top of a fresh verse and the
- * reader never has to chase a verse across the gutter.
- *
- * Pathological case: a single verse so long that it can't fit on
- * one page (theoretical — would need an enormous font on a tiny
- * screen). We fall back to line-level breaking only for that one
- * verse so we don't infinite-loop.
- */
-function paginateLines(
-  lines: ReadonlyArray<TextLayoutLine>,
-  pageContentHeight: number,
-  firstPageHeadingHeight: number,
-  verseStartLines: ReadonlyArray<number>,
-  totalVerseCount: number,
-): ReaderPage[] {
-  if (lines.length === 0) {
-    return [
-      {
-        startLine: 0,
-        endLine: -1,
-        offsetY: 0,
-        contentHeight: 0,
-        startVerseIdx: 0,
-        endVerseIdx: Math.max(0, totalVerseCount - 1),
-        isFirst: true,
-      },
-    ];
-  }
-
-  /**
-   * Convert a measured line index back to the 0-based verse index it
-   * belongs to. Walks the sorted `verseStartLines` and returns the
-   * index of the last verse whose start line is <= the query line.
-   * Falls back to 0 for queries before the first verse's start (the
-   * theoretical case where a few leading lines precede verse 1).
-   */
-  function verseIdxAtLine(line: number): number {
-    let best = 0;
-    for (let i = 0; i < verseStartLines.length; i++) {
-      if (verseStartLines[i] <= line) best = i;
-      else break;
-    }
-    return best;
-  }
-
-  /**
-   * Largest verse-start line index that's strictly greater than
-   * `after` and ≤ `upto`. Returns -1 when there's no boundary in
-   * range (i.e. the current page would still contain just one
-   * verse and we have to fall back to line-level breaking).
-   */
-  function lastVerseBoundary(after: number, upto: number): number {
-    let best = -1;
-    for (const vs of verseStartLines) {
-      if (vs > after && vs <= upto && vs > best) best = vs;
-    }
-    return best;
-  }
-
-  /**
-   * Exact pixel height of the slice [from..to] relative to the slice
-   * start. We use this as the clip box height so no content from
-   * after `to` bleeds into the page.
-   */
-  function sliceHeight(from: number, to: number): number {
-    if (to < from) return 0;
-    const startY = lines[from].y;
-    const endLine = lines[to];
-    return endLine.y + endLine.height - startY;
-  }
-
-  const pages: ReaderPage[] = [];
-  let startLine = 0;
-  let startY = lines[0].y;
-  let isFirst = true;
-
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    const cumulative = line.y + line.height - startY;
-    const room = isFirst
-      ? Math.max(80, pageContentHeight - firstPageHeadingHeight)
-      : pageContentHeight;
-
-    if (cumulative > room && i > startLine) {
-      // Prefer to close on a verse boundary so we never split a
-      // verse across two pages. Fall back to a line break only when
-      // a single verse alone is too tall to fit.
-      const boundary = lastVerseBoundary(startLine, i);
-      const cutAt = boundary > startLine ? boundary : i;
-      pages.push({
-        startLine,
-        endLine: cutAt - 1,
-        offsetY: startY,
-        contentHeight: sliceHeight(startLine, cutAt - 1),
-        startVerseIdx: verseIdxAtLine(startLine),
-        endVerseIdx: verseIdxAtLine(cutAt - 1),
-        isFirst,
-      });
-      startLine = cutAt;
-      startY = lines[cutAt].y;
-      isFirst = false;
-      i = cutAt;
-      continue;
-    }
-    i++;
-  }
-
-  pages.push({
-    startLine,
-    endLine: lines.length - 1,
-    offsetY: startY,
-    contentHeight: sliceHeight(startLine, lines.length - 1),
-    startVerseIdx: verseIdxAtLine(startLine),
-    endVerseIdx: Math.max(0, totalVerseCount - 1),
-    isFirst,
-  });
-
-  return pages;
-}
-
-/**
- * Append a 0–1 alpha to a 6-digit hex color, returning the 8-digit
- * hex form (`#RRGGBBAA`). Used to drive the focus-glow background
- * interpolation in VerseFlow.
- */
 function hexAlpha(hex: string, alpha: number): string {
   const a = Math.max(0, Math.min(1, alpha));
   const hh = Math.round(a * 255)

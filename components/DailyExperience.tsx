@@ -1,3 +1,6 @@
+import { DailyStoryProgress } from './DailyStoryProgress';
+import { useDailyPractice } from '@/lib/dailyPractice';
+import { useProgress } from '@/state/progress';
 import { CloseButton } from "@/components/CloseButton";
 import { Text as CloserAnimatedTextBase } from "@/components/CloserText";
 import { buttonStyles } from '@/lib/buttonStyles';
@@ -24,6 +27,9 @@ import { PaperEnvelope } from "./PaperEnvelope";
 export type DailyExperienceKind = "reading" | "prayer" | "quiz" | "action";
 export function DailyExperience({ visible, kind, card, onClose, onComplete, onDismiss }: { visible: boolean; kind: DailyExperienceKind; card: FloatingScriptureCard; onClose: () => void; onComplete: (score?: number) => Promise<void> | void; onDismiss?: () => void }) {
   const dark = useResolvedScheme() === "dark", reduced = useReducedMotion(), inset = useSafeAreaInsets();
+  const { saved } = useDailyPractice(card.id);
+  const { sermonCompletions } = useProgress();
+  const [readingFraction, setReadingFraction] = useState(0);
   const [opening, setOpening] = useState(false);
   const [opened, setOpened] = useState(false), [question, setQuestion] = useState(0), [answers, setAnswers] = useState<number[]>([]), [result, setResult] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const saving = useRef(false), chosenRef = useRef(false);
@@ -31,7 +37,7 @@ export function DailyExperience({ visible, kind, card, onClose, onComplete, onDi
   const completionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (completionTimer.current) clearTimeout(completionTimer.current); }, []);
   const questions = useMemo(() => buildDailyQuiz(card), [card]);
-  useEffect(() => { if (visible) { setCelebrating(false); setBusy(false); if (completionTimer.current) clearTimeout(completionTimer.current); setOpening(false); setOpened(false); setQuestion(0); setAnswers([]); setResult(false); setError(""); saving.current = false; chosenRef.current = false; } }, [visible, card.id, kind]);
+  useEffect(() => { if (visible) { setReadingFraction(0); setCelebrating(false); setBusy(false); if (completionTimer.current) clearTimeout(completionTimer.current); setOpening(false); setOpened(false); setQuestion(0); setAnswers([]); setResult(false); setError(""); saving.current = false; chosenRef.current = false; } }, [visible, card.id, kind]);
   const quiz = quizColors(dark);
   const actionColors = kind === "quiz" ? { backgroundColor: quiz.ink, color: quiz.paper } : paperActionColors(dark);
   const ink = dark ? "#F8EFE3" : "#34271F", muted = dark ? "#C1AE9A" : "#786554", paper = dark ? "#3A3027" : "#FFFCF3";
@@ -42,12 +48,13 @@ export function DailyExperience({ visible, kind, card, onClose, onComplete, onDi
   const advance = () => { haptics.soft(); if (kind === "reading" && !opened) setOpening(true); else if (kind === "quiz" && !result) { if (question === questions.length - 1) { setResult(true); haptics.success(); } else { chosenRef.current = false; setQuestion(i => i + 1); } } else void complete(); };
   const disabled = busy || (kind === "reading" && opening && !opened) || (kind === "quiz" && !result && !answered);
   return <Modal visible={visible} presentationStyle="fullScreen" animationType={reduced ? "fade" : "slide"} onDismiss={onDismiss} onRequestClose={() => { if (!busy) onClose(); }}><GestureHandlerRootView style={{ flex: 1 }}><ReaderMaterialGradient colors={kind === "quiz" ? [...quiz.background] : dark ? ["#32271F", "#1B1815"] : ["#F3E5D3", "#FBF5EB"]} style={{ flex: 1, paddingTop: inset.top, backgroundColor: dark ? "#1B1815" : "#FBF5EB" }}>
+    <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 4 }}><DailyStoryProgress completed={{ ...saved, reading: sermonCompletions.some(c => c.day === card.day), ...(celebrating ? { [kind]: true } : {}) }} active={kind} fraction={kind === 'quiz' ? answers.length / questions.length * .9 : kind === 'reading' ? readingFraction : 0} color={kind === 'quiz' ? quiz.ink : ink} track={kind === 'quiz' ? quiz.line : dark ? '#FFFFFF22' : '#34271F22'} /></View>
     {kind === "quiz" ? <View style={[s.top, { justifyContent: "space-between", paddingHorizontal: 24 }]}>
       <CloseButton disabled={busy} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close quiz" style={[s.close, { backgroundColor: quiz.paper, borderWidth: 1, borderColor: quiz.line }]} color={quiz.ink} />
       <Text style={{ color: quiz.ink, fontSize: 14, fontWeight: "600" }}>Quick check</Text>
-      <View accessibilityLabel={`Question ${question + 1} of ${questions.length}`} style={{ flexDirection: "row", gap: 5, minWidth: 44 }}>{questions.map((_, i) => <View key={i} style={{ width: i === question ? 26 : 16, height: 6, borderRadius: 5, backgroundColor: i <= question ? "#D66B43" : quiz.line }}/>)}</View>
+      <View style={{ width: 44 }} />
     </View> : <View style={s.top}><CloseButton disabled={busy} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" style={[s.close, { backgroundColor: paper }]} color={ink} /><View style={{ flex: 1, gap: 8 }}><Text style={{ color: muted, fontSize: 13, fontWeight: "600" }}>{kind === "reading" ? "Today’s letter" : kind === "prayer" ? "Daily prayer" : "One small step"}</Text></View></View>}
-    <ScrollView style={{ flex: 1 }} key={`${kind}-${opened}-${question}-${result}`} contentContainerStyle={{ padding: 24, paddingBottom: 36, flexGrow: kind === "reading" && opened ? 0 : 1 }} showsVerticalScrollIndicator={false}>
+    <ScrollView onScroll={event => { if (kind !== 'reading' || !opened) return; const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent; const distance = contentSize.height - layoutMeasurement.height; setReadingFraction(distance > 0 ? Math.min(.9, Math.max(0, contentOffset.y / distance) * .9) : .9); }} scrollEventThrottle={100} style={{ flex: 1 }} key={`${kind}-${opened}-${question}-${result}`} contentContainerStyle={{ padding: 24, paddingBottom: 36, flexGrow: kind === "reading" && opened ? 0 : 1 }} showsVerticalScrollIndicator={false}>
       <View style={{ gap: 24, flexShrink: 0 }}>
         {kind === "reading" && !opened ? <View style={{ flex: 1, justifyContent: "center", gap: 28 }}><PaperEnvelope opened={opening} onRevealed={() => setOpened(true)} /><Text style={[s.heading, { color: ink, textAlign: "center" }]}>A letter for today.</Text><Text style={[s.body, { color: muted, textAlign: "center" }]}>{card.title}</Text></View> : kind === "reading" ? <>
           <Text style={{ color: muted, fontSize: 14 }}>Day {card.day}</Text><Text style={[s.heading, { color: ink }]}>{card.title}</Text><View style={{ alignSelf: "flex-start", borderRadius: 16, backgroundColor: paper, paddingHorizontal: 12, paddingVertical: 8 }}><Text style={{ color: muted, fontSize: 14 }}>{card.scriptureReference}</Text></View><View style={{ height: 240, borderRadius: 22, overflow: "hidden" }}><ReaderMomentArt moment={art} /></View>

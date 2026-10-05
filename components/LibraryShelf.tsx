@@ -25,10 +25,10 @@ const SHELF_EASE = Easing.bezier(.2, .8, .2, 1);
 const SPRING = { stiffness: 230, damping: 28, mass: .85, overshootClamping: true };
 
 /** A bounded deck, not overlapping virtualized cells. All drag geometry runs on the UI thread. */
-export function LibraryShelf({ books, selectedId, onSelect, onJump, onPick, departure, availableHeight }: {
+export function LibraryShelf({ books, selectedId, onSelect, onPick, departure, availableHeight }: {
   availableHeight: number;
   departure: SharedValue<number>;
-  books: readonly Book[]; selectedId: string; onSelect: (book: Book) => void; onJump: (book: Book) => void;
+  books: readonly Book[]; selectedId: string; onSelect: (book: Book) => void;
   onPick: (book: Book, frame: LibraryBookFrame, chapter?: number) => void;
 }) {
   const { width, height, fontScale } = useWindowDimensions();
@@ -56,7 +56,7 @@ export function LibraryShelf({ books, selectedId, onSelect, onJump, onPick, depa
     transform: [{ translateY: reduced ? 0 : departure.value * 16 }],
   }));
   // Keep the action row and testament shortcuts clear of the tab bar on short phones.
-  const coverWidth = Math.max(60, Math.min(196, width * .505, (availableHeight - (fontScale > 1.2 ? 360 : 290) * Math.max(1, fontScale)) / 1.42));
+  const coverWidth = Math.max(60, Math.min(216, width * .54, (availableHeight - (fontScale > 1.2 ? 350 : 278) * Math.max(1, fontScale)) / 1.42));
   useEffect(() => {
     // Warm only shortcut destinations and their neighbors, not all 66 full-size covers.
     const targets = books.filter((candidate, i) => i < 3 || candidate.testament !== books[i - 1]?.testament || (i > 0 && books[i - 1]?.testament !== books[i - 2]?.testament));
@@ -134,15 +134,15 @@ export function LibraryShelf({ books, selectedId, onSelect, onJump, onPick, depa
     }
   }, [pendingOpen, readyKey, preparationKey]);
   const visible = books.slice(Math.max(0, index - 4), index + 5);
-  return <View>
+  return <View style={{ height: availableHeight, justifyContent: "space-between" }}>
     <BookReaderPreparation key={`${book.id}:${chapter}`} bookId={book.id} chapter={chapter} onReady={() => setReadyKey(preparationKey)} />
     <GestureDetector gesture={pan}>
-      <View ref={deckRef} collapsable={false} style={{ height: coverWidth * 1.42 + 32, marginTop: 16, overflow: "visible" }}>
+      <View ref={deckRef} collapsable={false} style={{ height: coverWidth * 1.42 + 32, marginTop: 24, overflow: "visible" }}>
         {visible.map(item => <ShelfCover key={item.id} book={item} index={books.indexOf(item)} position={position} departure={departure} lift={lift} width={coverWidth} reduced={reduced}
           selected={item.id === book.id} onPress={() => item.id === book.id ? open() : select(books.indexOf(item))} />)}
       </View>
     </GestureDetector>
-    <Animated.View pointerEvents={opening ? "none" : "auto"} style={[{ paddingHorizontal: 24, gap: 6 }, detailsStyle]}>
+    <Animated.View pointerEvents={opening ? "none" : "auto"} style={[{ paddingHorizontal: 24, gap: 12 }, detailsStyle]}>
       <Text style={{ ...systemText.footnote, fontWeight: "700", color: colors.textSecondary }}>{book.testament === "old" ? "Old Testament" : "New Testament"} · {book.category}</Text>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
         <Text accessibilityRole="header" style={{ ...typography.devotionalTitle, fontWeight: "900", flexShrink: 1, color: colors.ink }}>{book.name}</Text>
@@ -157,7 +157,7 @@ export function LibraryShelf({ books, selectedId, onSelect, onJump, onPick, depa
         </View>
         <Text style={{ ...systemText.footnote, fontVariant: ["tabular-nums"], color: colors.textSecondary }}>{read} of {book.chapters}</Text>
       </View>}
-      <View style={{ flexDirection: fontScale > 1.2 ? "column" : "row", gap: 12, marginTop: 16 }}>
+      <View style={{ flexDirection: fontScale > 1.2 ? "column" : "row", gap: 12, marginTop: 24 }}>
         <Pressable accessibilityRole="button" accessibilityLabel={last ? `Continue ${book.name} chapter ${chapter}` : `Start reading ${book.name}`} onPress={open} accessibilityState={{ busy: pendingOpen, disabled: pendingOpen || opening }} disabled={pendingOpen || opening}
           style={[buttonStyles.primary, { flex: fontScale > 1.2 ? undefined : 1, backgroundColor: action.backgroundColor }]}>
           <Text style={[buttonStyles.label, { color: action.color }]}>{pendingOpen ? "Preparing chapter…" : last ? `Continue · Ch. ${chapter}` : "Start reading"}</Text>
@@ -167,14 +167,7 @@ export function LibraryShelf({ books, selectedId, onSelect, onJump, onPick, depa
           <SFSymbol name="bolt" size={17} color={colors.ink} /><Text style={[buttonStyles.label, { color: colors.ink }]}>Express</Text>
         </Pressable>}
       </View>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 12, gap: 8 }}>
-        {(["old", "new"] as const).map(testament => {
-          const first = books.find(candidate => candidate.testament === testament);
-          return first ? <Pressable key={testament} accessibilityRole="button" accessibilityLabel={`Jump to ${testament === "old" ? "Old" : "New"} Testament`} onPress={() => { haptics.tick(); onJump(first); }} style={{ minHeight: 44, justifyContent: "center", flexShrink: 1 }}>
-            <Text style={[buttonStyles.textLabel, { color: colors.textSecondary, textAlign: testament === "old" ? "left" : "right" }]}>{testament === "old" ? "Old Testament" : "New Testament"}</Text>
-          </Pressable> : null;
-        })}
-      </View>
+
     </Animated.View>
   </View>;
 }

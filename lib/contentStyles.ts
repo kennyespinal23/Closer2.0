@@ -15,6 +15,7 @@ export const contentText = {
 /** Content surfaces only; native sheets, artwork and controls keep their own geometry. */
 export const contentLayout = {
   gutter: SCREEN_H_PAD,
+  screenTop: spacing[12],
   sectionGap: spacing[24],
   itemGap: spacing[12],
   textGap: spacing[4],

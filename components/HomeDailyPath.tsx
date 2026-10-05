@@ -1,5 +1,8 @@
+import { useDailyPractice } from '@/lib/dailyPractice';
+import { DailyStoryProgress } from './DailyStoryProgress';
+import { contentLayout } from "@/lib/contentStyles";
 import { uiText } from "@/lib/typography";
-import { todayISO } from "@/state/progress";
+
 import { buttonStyles } from "@/lib/buttonStyles";
 import { CloseButton } from "@/components/CloseButton";
 import { useTabContentFade } from '@/lib/useTabContentFade';
@@ -12,7 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { Modal, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "@/components/CloserText";
 import Animated, { FadeIn, LinearTransition } from "react-native-reanimated";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useOnboarding } from "@/state/onboarding";
@@ -34,18 +37,6 @@ const ACTIONS: { id: Practice | "reading"; title: string; icon: SFSymbolName }[]
   { id: "quiz", title: "Quick check", icon: "questionmark.bubble" },
   { id: "action", title: "One small step", icon: "sun.max" },
 ];
-// Preserve existing task ticks once when moving to date-scoped progress.
-async function loadDailyPractice(key: string, legacyKey: string) {
-  const current = await AsyncStorage.getItem(key);
-  if (current !== null) return current;
-  const migrationKey = `${legacyKey}.migrated`;
-  const legacy = await AsyncStorage.getItem(legacyKey);
-  if (legacy && !(await AsyncStorage.getItem(migrationKey))) {
-    await AsyncStorage.multiSet([[key, legacy], [migrationKey, key]]);
-    return legacy;
-  }
-  return null;
-}
 export function HomeDailyPath({ card, completed, onRead, onStreak, streak = 0, bottomInset, continueReading }: { card: FloatingScriptureCard; completed: boolean; onRead: (card: FloatingScriptureCard) => void; onStreak?: () => void; streak?: number; bottomInset: number; continueReading?: { label: string; accessibilityLabel: string; onPress: () => void } }) {
   const { goalMinutes } = useReadingGoal();
   const router = useRouter(), insets = useSafeAreaInsets(), dark = useResolvedScheme() === "dark", reduced = useReducedMotion();
@@ -55,31 +46,28 @@ export function HomeDailyPath({ card, completed, onRead, onStreak, streak = 0, b
   const lastPractice = useRef<Practice>("prayer");
   if (active) lastPractice.current = active;
   const sheetPractice = active ?? lastPractice.current;
-  const [saved, setSaved] = useState<Partial<Record<Practice, boolean>>>({}), [ready, setReady] = useState(false), [error, setError] = useState("");
-  const [loadedKey, setLoadedKey] = useState("");
+  const { saved, ready, error, save, key: storageKey } = useDailyPractice(card.id);
   const [saving, setSaving] = useState(false);
   const currentWeek = Math.ceil(card.day / 7), [week, setWeek] = useState(currentWeek);
-  const storageKey = `closer.daily-practice.${card.id}.${todayISO()}.v2`;
-  useEffect(() => { setWeek(currentWeek);  }, [card.id]);
-  useEffect(() => { let live = true; setReady(false); setSaved({}); loadDailyPractice(storageKey, `closer.daily-practice.${card.id}.v1`).then(raw => { if (live) { setSaved(raw ? JSON.parse(raw) : {}); setLoadedKey(storageKey); setReady(true); } }).catch(() => { if (live) setError("Couldn’t load your practice. Reopen Home to retry."); }); return () => { live = false; }; }, [storageKey]);
+  useEffect(() => { setWeek(currentWeek); }, [currentWeek]);
   const ink = dark ? "#F7F0E6" : "#30241D", muted = dark ? "#BBAA99" : "#7C6B5B", surface = dark ? "#302820" : "#FFFAF0", border = dark ? "#FFFFFF13" : "#6B49251A";
   const done = (id: string) => id === "reading" ? completed : !!saved[id as Practice];
   const count = ACTIONS.filter(a => done(a.id)).length, next = ACTIONS.find(a => !done(a.id))?.id;
   useEffect(() => {
-    if (ready && loadedKey === storageKey && hydrated && count === 4) completeDailyTasks(card.day, saved);
-  }, [ready, loadedKey, storageKey, hydrated, count, card.day, saved, completeDailyTasks]);
+    if (ready && hydrated && count === 4) completeDailyTasks(card.day, saved);
+  }, [ready, storageKey, hydrated, count, card.day, saved, completeDailyTasks]);
   const firstVisit = ready && sermonCompletions.length === 0 && count === 0;
   const actionColors = paperActionColors(dark);
   const openTask = (id: Practice | "reading") => { if (!ready || saving) return; haptics.soft(); if (id === "reading") onRead(card); else setActive(id); };
   const days = MOMENTS.filter(m => Math.ceil(m.day / 7) === week);
   const art = (reference: string) => BIBLE_MOMENTS.find(m => reference.toLowerCase().startsWith(m.bookId.replaceAll("-", " "))) ?? BIBLE_MOMENTS[0];
-  const mark = async (score?: number) => { if (!active || saving) return; if (!ready) throw new Error("Practice has not loaded"); setSaving(true); setError(""); const nextSaved = { ...saved, [active]: true, ...(active === "quiz" ? { quizScore: score } : {}) }; try { await AsyncStorage.setItem(storageKey, JSON.stringify(nextSaved)); setSaved(nextSaved); } catch { throw new Error("Couldn’t save practice"); } finally { setSaving(false); } };
-  const dismiss = () => { if (!saving) { setActive(null); setWeekPicker(false); setError(""); } };
-  return <View style={{ flex: 1 }}><Animated.ScrollView style={tabContentStyle} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: bottomInset + 28 }}>
+  const mark = async (score?: number) => { if (!active || saving) return; if (!ready) throw new Error("Practice has not loaded"); setSaving(true); try { await save(active, score); } finally { setSaving(false); } };
+  const dismiss = () => { if (!saving) { setActive(null); setWeekPicker(false); } };
+  return <View style={{ flex: 1 }}><Animated.ScrollView style={tabContentStyle} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + contentLayout.screenTop, paddingHorizontal: contentLayout.gutter, paddingBottom: bottomInset + 28 }}>
     <View style={s.top}><Pressable onPress={() => setWeekPicker(true)} accessibilityRole="button" accessibilityLabel="Choose a week" style={[s.pill, { backgroundColor: surface }]}><Text style={{ color: ink, fontSize: 18, fontWeight: "600" }}>Week {week}</Text><SFSymbol name="chevron.down" size={12} color={muted} /></Pressable><View style={{ flex: 1 }} />{ready && count === 4 && <Pressable onPress={onStreak} accessibilityRole="button" accessibilityLabel={`${streak} day streak`} style={[s.pill, { backgroundColor: surface }]}><SFSymbol name="flame.fill" color="#E9884F" size={23} /><Text style={{ color: ink, fontSize: 17, fontWeight: "600" }}>{streak}</Text></Pressable>}<Pressable onPress={() => router.push("/profile")} accessibilityRole="button" accessibilityLabel="Your profile" style={s.portrait}><ReaderMaterialGradient colors={["#A6CFD0", "#E8B98B"]} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#30241D", fontSize: 20, fontWeight: "600" }}>{answers.name.trim()[0]?.toUpperCase() || "C"}</Text></ReaderMaterialGradient></Pressable></View>
     {firstVisit && <View style={{ marginTop: 28, gap: 8 }}><Text accessibilityRole="header" style={{ ...uiText.screenTitle, color: ink }}>{answers.name.trim() ? `A little closer, ${answers.name.trim().split(" ")[0]}.` : "Your first small step."}</Text><Text style={{ color: muted, fontSize: 16, lineHeight: 23 }}>{goalMinutes} minutes today</Text></View>}
     <Animated.View layout={reduced ? undefined : LinearTransition.duration(220)} style={[s.today, { backgroundColor: surface }]}>
-      <View style={s.head}><View style={s.thumb}><ReaderMomentArt moment={art(card.scriptureReference)} /></View><View style={{ flex: 1, gap: 8 }}><Text style={{ color: muted, fontSize: 13, fontWeight: "600" }}>Day {card.day} · Today</Text><Text style={{ ...uiText.sectionTitle, color: ink }}>{card.title}</Text><View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}><Text style={{ color: muted, fontSize: 13 }}>{count}/4 done</Text><View style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: border, overflow: "hidden" }}><View style={{ width: `${count * 25}%`, height: 5, backgroundColor: count === 4 ? SUCCESS_GREEN : "#83B8C8" }} /></View></View></View></View>
+      <View style={s.head}><View style={s.thumb}><ReaderMomentArt moment={art(card.scriptureReference)} /></View><View style={{ flex: 1, gap: 8 }}><Text style={{ color: muted, fontSize: 13, fontWeight: "600" }}>Day {card.day} · Today</Text><Text style={{ ...uiText.sectionTitle, color: ink }}>{card.title}</Text><View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}><Text style={{ color: muted, fontSize: 13 }}>{count}/4 done</Text><View style={{ flex: 1 }}><DailyStoryProgress completed={{ ...saved, reading: completed }} color={ink} track={border} /></View></View></View></View>
       {ready && next && <Pressable feedback="action" accessibilityRole="button" onPress={() => openTask(next)} style={[buttonStyles.primary, { marginHorizontal: 16, marginBottom: 16, backgroundColor: actionColors.backgroundColor }]}><Text style={[{ color: actionColors.color }, buttonStyles.label]}>{count === 0 ? "Start today" : next === "reading" ? "Read today’s letter" : next === "quiz" ? "Try the quick check" : next === "action" ? "Take one small step" : "Begin your prayer"}</Text></Pressable>}
       {ready && count === 4 && <Text accessibilityLiveRegion="polite" style={{ color: muted, fontSize: 15, textAlign: "center", paddingBottom: 16 }}>All four tasks complete</Text>}
       {<Animated.View entering={FadeIn.duration(reduced ? 0 : 160)}>{ACTIONS.map(a => <Pressable key={a.id} accessibilityRole="button" disabled={!ready || saving} onPress={() => openTask(a.id)} style={[s.row, { borderTopColor: border }]}><SFSymbol name={a.icon} color={ink} size={23} /><View style={{ flex: 1, gap: 4 }}><Text style={{ ...uiText.body, color: done(a.id) ? muted : ink, fontWeight: "800" }}>{a.title}</Text></View>{done(a.id) ? <SuccessMark size={26} /> : <SFSymbol name="circle.dashed" size={26} color={next === a.id ? "#83B8C8" : muted} />}</Pressable>)}<View style={{ height: 12 }} /></Animated.View>}

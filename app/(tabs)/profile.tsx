@@ -82,7 +82,6 @@ export default function ProfileTabScreen() {
   const reduced = useReducedMotion();
   const [savedTab, setSavedTab] = useState(0);
   const [savedExpanded, setSavedExpanded] = useState(false);
-  const [verseExpanded, setVerseExpanded] = useState(false);
   const scheme = useResolvedScheme();
   const { answers, setAnswer } = useOnboarding();
   const { allNotes, allHighlights, counts: annotationCounts } =
@@ -137,14 +136,6 @@ export default function ProfileTabScreen() {
     }
   }, [answers.completed, answers.joinedAt, setAnswer]);
 
-  const joinedLabel = useMemo(() => {
-    if (typeof answers.joinedAt !== "number") return null;
-    const when = new Date(answers.joinedAt).toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric",
-    });
-    return `Joined ${when}`;
-  }, [answers.joinedAt]);
 
   // Newest-first slices. We render at most 3 previews of each so
   // the page stays scannable; the "See all" link routes to the
@@ -261,7 +252,7 @@ export default function ProfileTabScreen() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: PROFILE_PALETTE[scheme].bg, overflow: "hidden" }}
-      edges={["top"]}
+      edges={[]}
     >
 
       <Animated.ScrollView
@@ -269,15 +260,8 @@ export default function ProfileTabScreen() {
         contentContainerStyle={{ paddingBottom: tabContentClearance(tabHeight, insets.bottom, focusSpacing) }}
         showsVerticalScrollIndicator={false}
       >
-        <ProfileJourney name={firstName} joined={joinedLabel} avatar={answers.avatarPhotoUri ? {uri: answers.avatarPhotoUri} : selectedAvatar?.source} onAvatar={() => setAvatarPickerOpen(true)} onSettings={() => navigateTo("/settings")} />
-        <View style={{ marginHorizontal: 21, marginTop: 20 }}>
-          <Pressable accessibilityRole="button" accessibilityState={{ expanded: verseExpanded }} onPress={() => setVerseExpanded(!verseExpanded)} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <SFSymbol name="text.quote" size={20} color={colors.ink} />
-            <Text style={{ fontSize: 15, fontWeight: "600", color: colors.ink, flex: 1 }}>Your profile verse</Text>
-            <SFSymbol name={verseExpanded ? "chevron.up" : "chevron.down"} size={12} color={colors.inkMuted} />
-          </Pressable>
-        </View>
-        {verseExpanded && <ProfileVerse />}
+        <ProfileJourney name={firstName} joinedAt={typeof answers.joinedAt === "number" ? answers.joinedAt : undefined} avatar={answers.avatarPhotoUri ? {uri: answers.avatarPhotoUri} : selectedAvatar?.source} onAvatar={() => setAvatarPickerOpen(true)} onSettings={() => navigateTo("/settings")} />
+        <ProfileVerse />
         <View style={{ marginHorizontal: contentLayout.gutter, marginTop: 4, gap: 16 }}>
           <Pressable accessibilityRole="button" accessibilityState={{ expanded: savedExpanded }} onPress={() => setSavedExpanded(!savedExpanded)} style={{ minHeight: 52, flexDirection: "row", alignItems: "center", gap: 12 }}>
             <SFSymbol name="bookmark" size={22} color={colors.ink} />

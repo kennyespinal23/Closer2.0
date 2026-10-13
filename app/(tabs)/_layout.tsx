@@ -120,7 +120,7 @@ export default function TabsLayout() {
       <SkyGradient />
       <View style={{ flex: 1 }}>
         <NativeTabs
-          tabBarActiveTintColor={scheme === "dark" ? "#FFFFFF" : "#30241D"}
+          tabBarActiveTintColor={scheme === "dark" ? "#FF6A4F" : "#D9381C"}
           tabBarInactiveTintColor={scheme === "light" ? "#66584D" : TAB_BAR_INACTIVE}
           // Force our custom tints onto the iOS 26+ Liquid Glass
           // tab bar. Without this the package returns nil for the
@@ -154,7 +154,7 @@ export default function TabsLayout() {
           <NativeTabs.Screen
             name="today"
             options={{
-              title: "Home",
+              title: "Today",
               sfSymbol: { default: "house", selected: "house.fill" },
             }}
           />

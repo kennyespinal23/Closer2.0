@@ -1,82 +1,110 @@
 import { StatusBar } from 'expo-status-bar';
 import { useIsFocused } from '@react-navigation/native';
 import { useRef, useState } from 'react';
-import { FlatList, Modal, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, Share, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
-import { Stack, useRouter } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/components/CloserText';
-import { CloseButton } from '@/components/CloseButton';
 import { BubbleBackButton } from '@/components/BubbleBackButton';
 import { FeedbackPressable as Pressable } from '@/components/FeedbackPressable';
-import { SFSymbol } from '@/components/Symbol';
-import { useCommunityVideos, COMMUNITY_VIDEO_POSTER, COMMUNITY_VIDEO_PREVIEW } from '@/lib/communityVideo';
 import { ReaderMaterialGradient } from '@/components/ReaderMaterialGradient';
+import { SFSymbol } from '@/components/Symbol';
+import { FilmBadge, filmNumber, openFilm, platformsFor } from '@/components/films';
+import { useCommunityVideos, COMMUNITY_VIDEO_POSTER, COMMUNITY_VIDEO_PREVIEW, type CommunityVideo } from '@/lib/communityVideo';
 import { useReducedMotion } from '@/lib/useReducedMotion';
-import { contentLayout } from '@/lib/contentStyles';
 import { uiText } from '@/lib/typography';
-import { buttonStyles } from '@/lib/buttonStyles';
-import { SOCIAL_APP_ICON_SOURCES } from '@/lib/socialAppIconAssets';
-import { paperActionColors } from '@/lib/paperControls';
+import * as haptics from '@/lib/haptics';
 
-/** A stable destination for Community's weekly film, including the pre-release state. */
+const ink = '#FFF1E4', muted = '#D8BDA5', ground = '#120D0A';
+
+/** One film's page: poster, story, and the apps you can watch it on. Also the pre-release state. */
 export default function CommunityVideoScreen() {
-  const router = useRouter(), videos = useCommunityVideos(), reduced = useReducedMotion();
-  const [collectionOpen, setCollectionOpen] = useState(false), [selectedId, setSelectedId] = useState<string | null>(null);
-  const video = videos.find(item => item.id === selectedId) ?? videos[0] ?? null;
-  const collection: { id: string; title: string; thumbnail_url: string | null }[] = videos.length ? videos : [{ ...COMMUNITY_VIDEO_PREVIEW, id: 'preview', thumbnail_url: null }];
-  const scroll = useRef<ScrollView>(null);
-  const focused = useIsFocused();
-  const action = paperActionColors(true);
-  const bg = '#080B12', ink = '#FFF4E5', muted = '#E2D9CC', surface = '#00000055';
+  const router = useRouter(), videos = useCommunityVideos(), reduced = useReducedMotion(), focused = useIsFocused();
+  const insets = useSafeAreaInsets(), { width } = useWindowDimensions();
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const video = videos.find(item => item.id === id) ?? (id === 'preview' ? null : videos[0]) ?? null;
   const [opening, setOpening] = useState(false), [error, setError] = useState('');
   const launching = useRef(false);
-  const back = () => router.canGoBack() ? router.back() : router.replace('/community');
-  const watch = async (url = video?.watch_url) => {
+  const back = () => router.canGoBack() ? router.back() : router.replace('/videos');
+  const watch = async (url?: string | null) => {
     if (!url || launching.current) return;
-    try { if (new URL(url).protocol !== 'https:') return; } catch { return; }
     launching.current = true; setOpening(true); setError('');
-    try { await WebBrowser.openBrowserAsync(url, { toolbarColor: bg, controlsColor: ink }); }
-    catch { setError('The video couldn’t open. Please try again.'); }
-    finally { launching.current = false; setOpening(false); }
+    const ok = await openFilm(url);
+    if (!ok) setError('The short couldn’t open. Please try again.');
+    launching.current = false; setOpening(false);
   };
-  return <View style={{ flex: 1, backgroundColor: bg }}>
+  const platforms = video ? platformsFor(video) : [];
+  const [main, ...others] = platforms;
+  const mainUrl = main?.url ?? video?.watch_url;
+  const more = video ? videos.filter(v => v.id !== video.id).slice(0, 3) : [];
+  const title = video?.title ?? COMMUNITY_VIDEO_PREVIEW.title;
+  const synopsis = video ? video.synopsis : COMMUNITY_VIDEO_PREVIEW.synopsis;
+  const share = () => { if (!video) return; haptics.soft(); void Share.share({ message: `${video.title}, a Closer Short\n${mainUrl ?? ''}`.trim() }); };
+  const openOther = (other: CommunityVideo) => { haptics.soft(); router.replace({ pathname: '/community-video', params: { id: other.id } }); };
+  const posterH = Math.min(440, width * 1.05);
+
+  return <View style={{ flex: 1, backgroundColor: ground }}>
     {focused && <StatusBar style="light" />}
-    <Stack.Screen options={{ animation: reduced ? 'fade' : 'slide_from_right' }} />
-    <Image accessible={false} source={video ? { uri: video.thumbnail_url } : COMMUNITY_VIDEO_POSTER} placeholder={video ? undefined : COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={{ left: '76%', top: '50%' }} transition={reduced ? 0 : 180} style={StyleSheet.absoluteFill} />
-    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#00000026' }]} />
-    <ReaderMaterialGradient colors={['#00000035', '#00000008', '#00000085', '#000000E0']} style={StyleSheet.absoluteFill} />
-    <SafeAreaView style={{ flex: 1 }}>
-    <View style={s.header}><BubbleBackButton onPress={back} color={ink} backgroundColor={surface} accessibilityLabel="Back to Community" /><View style={{ flex: 1, alignItems: 'center' }}><Pressable accessibilityRole="button" accessibilityLabel="New, browse all videos" accessibilityState={{ expanded: collectionOpen }} onPress={() => setCollectionOpen(true)} style={[s.selector, { backgroundColor: surface }]}><Text style={[buttonStyles.label, { color: ink }]}>New</Text><SFSymbol name="chevron.down" size={13} color={ink} /></Pressable></View><View style={{ width: 44 }} /></View>
-    <ScrollView ref={scroll} style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
-      <View style={{ gap: 12 }}><Text accessibilityRole="header" style={[uiText.screenTitle, { color: ink }]}>{video?.title ?? COMMUNITY_VIDEO_PREVIEW.title}</Text></View>
-      {!!(video ? video.synopsis : COMMUNITY_VIDEO_PREVIEW.synopsis) && <Text selectable style={[uiText.body, { color: muted, lineHeight: 27 }]}>{video ? video.synopsis : COMMUNITY_VIDEO_PREVIEW.synopsis}</Text>}
-      <View style={s.socials}>{([
-        { id: 'instagram', label: 'Instagram', url: video?.instagram_url },
-        { id: 'tiktok', label: 'TikTok', url: video?.tiktok_url },
-        { id: 'youtube', label: 'YouTube', url: video?.youtube_url },
-      ] as const).map(platform => <Pressable key={platform.id} accessibilityRole="button" accessibilityLabel={`${platform.label}${platform.url ? ', watch video' : ', video link coming soon'}`} accessibilityState={{ disabled: !platform.url || opening }} disabled={!platform.url || opening} onPress={() => void watch(platform.url ?? undefined)} style={s.social}><Image source={SOCIAL_APP_ICON_SOURCES[platform.id]} contentFit="contain" style={s.socialIcon} /><Text style={{ color: muted, fontSize: 13, fontWeight: '800' }}>{platform.label}</Text></Pressable>)}</View>
+    <Stack.Screen options={{ headerShown: false, animation: reduced ? 'fade' : 'slide_from_right' }} />
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+      <View style={{ height: posterH }}>
+        <Image accessible={false} source={video ? { uri: video.thumbnail_url } : COMMUNITY_VIDEO_POSTER} placeholder={COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={{ left: '70%', top: '40%' }} transition={reduced ? 0 : 180} style={StyleSheet.absoluteFill} />
+        <ReaderMaterialGradient colors={['#120D0AA6', '#120D0A00', '#120D0A00', ground]} locations={[0, .22, .5, 1]} style={StyleSheet.absoluteFill} />
+      </View>
+      <View style={{ paddingHorizontal: 20, marginTop: -64, gap: 10 }}>
+        <FilmBadge label={video ? `Short ${filmNumber(video, videos)}` : 'Coming soon'}/>
+        <Text accessibilityRole="header" style={s.title}>{title}</Text>
+        {video && <Text style={s.meta}>{new Date(video.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text>}
+
+        {video ? <>
+          <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={main ? `Watch on ${main.label}` : 'Watch the short'} disabled={opening || !mainUrl} onPress={() => void watch(mainUrl)} style={[s.watch, { opacity: opening ? .7 : 1 }]}>
+            {main ? <Image source={main.icon} contentFit="contain" style={s.watchIcon}/> : <SFSymbol name="play.fill" size={16} color="#17120F"/>}
+            <Text style={s.watchText}>{opening ? 'Opening…' : main ? `Watch on ${main.label}` : 'Watch the short'}</Text>
+          </Pressable>
+          {others.length > 0 && <View style={{ flexDirection: 'row', gap: 10 }}>
+            {others.map(p => <Pressable key={p.id} accessibilityRole="button" accessibilityLabel={`Watch on ${p.label}`} disabled={opening} onPress={() => void watch(p.url)} style={s.alt}>
+              <Image source={p.icon} contentFit="contain" style={{ width: 20, height: 20, borderRadius: 5 }}/>
+              <Text style={{ ...uiText.supporting, fontWeight: '800', color: ink }}>{p.label}</Text>
+            </Pressable>)}
+          </View>}
+          <View style={s.icons}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Share this short" onPress={share} style={s.iconBtn}><SFSymbol name="square.and.arrow.up" size={21} color={ink}/><Text style={s.iconLabel}>Share</Text></Pressable>
+          </View>
+        </> : <View style={[s.watch, { backgroundColor: '#FFF1E429' }]}><Text style={[s.watchText, { color: muted }]}>Coming soon</Text></View>}
+
+        {!!error && <Text accessibilityLiveRegion="polite" style={[uiText.supporting, { color: ink }]}>{error}</Text>}
+        {!!synopsis && <Text selectable style={s.body}>{synopsis}</Text>}
+
+        {more.length > 0 && <>
+          <Text accessibilityRole="header" style={s.moreTitle}>More like this</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {more.map(other => <Pressable key={other.id} accessibilityRole="button" accessibilityLabel={other.title} onPress={() => openOther(other)} style={[s.poster, { width: (width - 40 - 16) / 3 }]}>
+              <Image recyclingKey={other.id} source={{ uri: other.thumbnail_url }} placeholder={COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={{ left: '70%', top: '40%' }} style={StyleSheet.absoluteFill}/>
+              <ReaderMaterialGradient colors={['#120D0A00', '#120D0AEB']} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%' }}/>
+              <Text numberOfLines={3} style={s.posterTitle}>{other.title}</Text>
+            </Pressable>)}
+          </View>
+        </>}
+      </View>
     </ScrollView>
-    {video && <View style={s.footer}>{!!error && <Text accessibilityLiveRegion="polite" style={[uiText.supporting, { color: ink }]}>{error}</Text>}<Pressable feedback="action" accessibilityRole="button" accessibilityState={{ disabled: !video || opening }} disabled={!video || opening} onPress={() => void watch()} style={[buttonStyles.primary, { backgroundColor: video ? action.backgroundColor : surface, flexDirection: 'row', gap: 10 }]}>{video && <SFSymbol name="play.fill" size={18} color={action.color} />}<Text style={[buttonStyles.label, { color: video ? action.color : muted }]}>{opening ? 'Opening…' : video ? 'Watch video' : 'Coming soon'}</Text></Pressable></View>}
-  </SafeAreaView>
-    <Modal visible={collectionOpen} presentationStyle="pageSheet" animationType={reduced ? 'fade' : 'slide'} onRequestClose={() => setCollectionOpen(false)}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#211D19' }} edges={['top', 'bottom']}>
-        <View style={[s.header, { paddingTop: 24 }]}><Text accessibilityRole="header" style={[uiText.sectionTitle, { color: ink, flex: 1 }]}>All videos</Text><CloseButton color={ink} style={{ backgroundColor: '#302920' }} onPress={() => setCollectionOpen(false)} accessibilityLabel="Close video collection" /></View>
-        <FlatList data={collection} numColumns={2} keyExtractor={item => item.id} columnWrapperStyle={{ gap: 16 }} contentContainerStyle={{ padding: 24, gap: 24 }} renderItem={({ item, index }) => <Pressable accessibilityRole="button" accessibilityLabel={`${item.title}${index === 0 ? ', newest video' : ''}`} accessibilityState={{ selected: item.id === (video?.id ?? 'preview') }} onPress={() => { setSelectedId(item.id); setError(''); scroll.current?.scrollTo({ y: 0, animated: false }); setCollectionOpen(false); }} style={{ flex: 1, maxWidth: '48%', gap: 10 }}>
-          <View style={{ aspectRatio: 3 / 4, borderRadius: 18, borderCurve: 'continuous', overflow: 'hidden', backgroundColor: '#302920', borderWidth: item.id === (video?.id ?? 'preview') ? 2 : 0, borderColor: ink }}><Image source={item.thumbnail_url ? { uri: item.thumbnail_url } : COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={{ left: '76%', top: '50%' }} style={StyleSheet.absoluteFill} />{index === 0 && <View style={{ position: 'absolute', left: 10, top: 10, backgroundColor: '#000000B3', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 }}><Text style={{ color: ink, fontSize: 12, fontWeight: '800' }}>New</Text></View>}</View>
-          <Text style={{ color: ink, fontSize: 17, lineHeight: 23, fontWeight: '800' }}>{item.title}</Text>
-        </Pressable>} />
-      </SafeAreaView>
-    </Modal>
+    <View style={[s.bar, { top: insets.top + 4 }]}><BubbleBackButton onPress={back} color={ink} backgroundColor="#120D0A66" accessibilityLabel="Back to Closer Shorts" /></View>
   </View>;
 }
+
 const s = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: contentLayout.gutter, paddingTop: contentLayout.screenTop, paddingBottom: 20, gap: 12 },
-  selector: { minHeight: 44, paddingHorizontal: 20, borderRadius: 24, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  content: { flexGrow: 1, justifyContent: 'flex-end', paddingHorizontal: contentLayout.gutter, paddingTop: 180, paddingBottom: 24, gap: 20 },
-  socials: { flexDirection: 'row', justifyContent: 'center', gap: 32, paddingTop: 8 },
-  social: { minWidth: 60, minHeight: 76, alignItems: 'center', gap: 10 },
-  socialIcon: { width: 44, height: 44, borderRadius: 12, borderCurve: 'continuous' },
-  footer: { paddingHorizontal: contentLayout.gutter, paddingTop: 12, paddingBottom: 16, gap: 12 },
+  bar: { position: 'absolute', left: 16 },
+  title: { ...uiText.screenTitle, fontSize: 34, lineHeight: 36, letterSpacing: -.9, color: ink },
+  meta: { ...uiText.supporting, fontWeight: '700', color: muted },
+  watch: { marginTop: 8, height: 54, borderRadius: 14, borderCurve: 'continuous', backgroundColor: ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  watchIcon: { width: 24, height: 24, borderRadius: 6 },
+  watchText: { ...uiText.body, fontWeight: '800', color: '#17120F' },
+  alt: { flex: 1, height: 46, borderRadius: 12, borderCurve: 'continuous', backgroundColor: '#FFF1E41A', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  icons: { flexDirection: 'row', gap: 28, marginTop: 8, paddingLeft: 4 },
+  iconBtn: { minWidth: 44, minHeight: 52, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  iconLabel: { fontSize: 12, fontWeight: '700', color: muted },
+  body: { ...uiText.body, fontSize: 16, lineHeight: 25, color: '#E9D9C6', marginTop: 8 },
+  moreTitle: { ...uiText.sectionTitle, fontSize: 18, lineHeight: 22, fontWeight: '900', color: ink, marginTop: 18 },
+  poster: { aspectRatio: 2 / 3, borderRadius: 12, borderCurve: 'continuous', overflow: 'hidden', backgroundColor: '#2A1E17', justifyContent: 'flex-end' },
+  posterTitle: { fontSize: 14, lineHeight: 15, fontWeight: '900', color: ink, padding: 8 },
 });

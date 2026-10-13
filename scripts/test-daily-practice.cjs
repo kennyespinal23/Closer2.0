@@ -17,8 +17,13 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/dailyPractice.ts','ut
   assert.equal(current.saved.prayer,true); assert.equal(current.saved.quiz,true); assert.equal(current.saved.quizScore,2);
   fail=true; await assert.rejects(()=>current.save('action')); fail=false;
   assert.equal(exportsObject.useDailyPractice('test').saved.action,undefined);
+  await current.saveActionPlan('reach-out', 'reminder-1');
+  assert.equal(exportsObject.useDailyPractice('test').saved.actionChoice, 'reach-out');
+  assert.equal(exportsObject.useDailyPractice('test').saved.action, undefined);
+  fail=true; await assert.rejects(()=>current.saveActionPlan('pray')); fail=false;
+  assert.equal(exportsObject.useDailyPractice('test').saved.actionReminderId, 'reminder-1');
   day='2026-10-05'; const tomorrow=exportsObject.useDailyPractice('test'); await tomorrow.save('action');
   const next=exportsObject.useDailyPractice('test'); assert.equal(next.saved.prayer,undefined); assert.equal(next.saved.quiz,undefined); assert.equal(next.saved.action,true);
   assert.equal(JSON.parse(data.get('closer.daily-practice.test.2026-10-04.v2')).quizScore,2);
-  console.log('PASS: migration, shared completion, quiz score, failed-save rollback, and next-day reset');
+  console.log('PASS: migration, shared completion, quiz score, failed-save rollback, action-plan persistence, and next-day reset');
 })().catch(e=>{console.error(e);process.exitCode=1});

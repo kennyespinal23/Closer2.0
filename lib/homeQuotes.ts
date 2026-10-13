@@ -12,6 +12,10 @@ export type { HomeQuote, HomeQuoteFont, HomeQuoteSegment } from "@/assets/data/h
 export type HomeQuoteSlot = "morning" | "evening" | "night";
 
 const QUOTES = (HOME_QUOTES_FILE.quotes ?? []) as ReadonlyArray<HomeQuote>;
+/** Home headlines are Scripture only, so every one can show where it comes from. */
+export const quoteText = (quote: HomeQuote) => quote.segments.map(segment => segment.text).join("").trim();
+// Past ~90 characters a 32pt headline runs to five lines and pushes today's card off the first screen.
+const SCRIPTURE = QUOTES.filter(quote => !!quote.reference && quoteText(quote).length <= 90);
 
 /** Local calendar key `YYYY-M-D` (no leading zeros — hash only). */
 export function localDateKey(date: Date = new Date()): string {
@@ -65,7 +69,7 @@ export function quotesForDay(date: Date = new Date()): {
   night: HomeQuote | null;
 } {
   const key = localDateKey(date);
-  const pool = QUOTES;
+  const pool = SCRIPTURE.length ? SCRIPTURE : QUOTES;
   if (!pool.length) {
     return { morning: null, evening: null, night: null };
   }

@@ -1,44 +1,85 @@
-import { CloseButton } from "@/components/CloseButton";
-import { ContextualReaderTip } from "./ContextualReaderTip";
-import { useEffect, useState } from "react";
-import { BackHandler, Pressable, ScrollView, View, useWindowDimensions } from "react-native";
+import { useEffect } from "react";
+import { BackHandler, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "@/components/CloserText";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from "react-native-reanimated";
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HIGHLIGHT_COLORS, type HighlightColorId } from "@/state/annotations";
+import { useResolvedScheme } from "@/state/theme";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-import { SFSymbol } from "./Symbol";
-import { systemText } from "@/lib/typography";
+import { uiText } from "@/lib/typography";
+import * as haptics from "@/lib/haptics";
+import { ContextualReaderTip } from "./ContextualReaderTip";
+import { SFSymbol, type SFSymbolName } from "./Symbol";
 
-/** Compact palette anchored near the press, with no sheet or verse preview. */
-export function ReaderVerseTools({ anchorY, reference, currentHighlight, notes = [], multi = false, onColor, onNote, onEditNote, onAI, onShare, onClose }: {
-  anchorY: number; reference: string; currentHighlight?: HighlightColorId | null;
+/**
+ * The verse card: tap a verse and it rises from the bottom. The reference,
+ * your highlight colours, then Meaning, Note and Share. While choosing
+ * several verses there's no scrim, so you can keep tapping the page.
+ */
+export function ReaderVerseTools({ reference, currentHighlight, notes = [], multi = false, onColor, onNote, onEditNote, onAI, onShare, onClose }: {
+  anchorY?: number; reference: string; currentHighlight?: HighlightColorId | null;
   notes?: ReadonlyArray<{ id: string; text: string }>;
   multi?: boolean; onColor: (color: HighlightColorId | null) => void; onNote: () => void;
   onEditNote?: (id: string) => void; onAI: () => void; onShare: () => void; onClose: () => void;
 }) {
-  const { width, height } = useWindowDimensions(), insets = useSafeAreaInsets();
-  const reduced = useReducedMotion(), progress = useSharedValue(reduced ? 1 : 0);
-  useEffect(() => { progress.value = reduced ? 1 : withTiming(1, { duration: 140, easing: Easing.out(Easing.cubic) }); }, []);
-  useEffect(() => { const subscription = BackHandler.addEventListener("hardwareBackPress", () => { onClose(); return true; }); return () => subscription.remove(); }, [onClose]);
-  const style = useAnimatedStyle(() => ({ opacity: progress.value, transform: [{ scale: .96 + .04 * progress.value }] }));
-  const compact = width < 400;
-  const [panelHeight, setPanelHeight] = useState((compact ? 146 : 100) + 62 + (notes.length ? 44 : 0));
-  const above = anchorY - panelHeight - 16 >= insets.top + 60;
-  const top = Math.max(insets.top + 60, Math.min(height - insets.bottom - panelHeight - 20, above ? anchorY - panelHeight - 16 : anchorY + 28));
-  const icon = (name: "note.text" | "sparkles" | "square.and.arrow.up", label: string, action: () => void) => <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={action} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>{name === "note.text" ? <View style={{ width: 23, height: 25, backgroundColor: "#F9D96B", borderRadius: 2, transform: [{ rotate: "-6deg" }] }}><View style={{ position: "absolute", bottom: 0, right: 0, width: 7, height: 7, backgroundColor: "#C6A441", borderTopLeftRadius: 2 }} /></View> : <SFSymbol name={name} size={21} color="#F9F0EB" />}</Pressable>;
+  const insets = useSafeAreaInsets(), reduced = useReducedMotion(), dark = useResolvedScheme() === "dark";
+  const t = { paper: dark ? "#26211C" : "#FFFDFA", ink: dark ? "#F7F0E6" : "#17120F", muted: dark ? "#BBAA99" : "#6E645C", soft: dark ? "#FFFFFF12" : "#F3EEE8", line: dark ? "#FFFFFF24" : "#17120F2E", grab: dark ? "#FFFFFF2E" : "#17120F2E" };
+  const shown = useSharedValue(reduced ? 1 : 0);
+  useEffect(() => { if (!reduced) shown.value = withTiming(1, { duration: 360, easing: Easing.bezier(.2, .9, .25, 1) }); }, [reduced, shown]);
+  useEffect(() => { const sub = BackHandler.addEventListener("hardwareBackPress", () => { onClose(); return true; }); return () => sub.remove(); }, [onClose]);
+  const rise = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - shown.value) * 320 }] }));
+  const scrim = useAnimatedStyle(() => ({ opacity: shown.value }));
+
+  const action = (icon: SFSymbolName, label: string, onPress: () => void, key = false) =>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={() => { haptics.soft(); onPress(); }} style={[s.act, { backgroundColor: key ? t.ink : t.soft }]}>
+      <SFSymbol name={icon} size={21} color={key ? t.paper : t.ink}/>
+      <Text style={{ fontSize: 13, lineHeight: 16, fontWeight: "800", color: key ? t.paper : t.ink }}>{label}</Text>
+    </Pressable>;
+
   return <View pointerEvents="box-none" accessibilityViewIsModal={!multi} style={{ position: "absolute", inset: 0, zIndex: 190 }}>
-    {!multi && <Pressable accessibilityRole="button" accessibilityLabel="Dismiss verse tools" onPress={onClose} style={{ position: "absolute", inset: 0 }} />}
-    <Animated.View onLayout={event => { const measured = Math.ceil(event.nativeEvent.layout.height); setPanelHeight(old => old === measured ? old : measured); }} style={[{ position: "absolute", top, alignSelf: "center", maxWidth: width - 24, backgroundColor: "#2A241F", borderWidth: 1, borderColor: "#63584F", borderRadius: 16, paddingHorizontal: 8, paddingBottom: 6, boxShadow: "0 10px 24px #00000044" }, style]}>
-      <View style={{ flexDirection: "row", alignItems: "center", paddingLeft: 8 }}><Text numberOfLines={1} style={{ ...systemText.caption1, flex: 1, color: "#D8CEC5" }}>{reference}</Text><CloseButton accessibilityRole="button" accessibilityLabel="Done selecting verses" onPress={onClose} style={{ minWidth: 44, height: 44, alignItems: "center", justifyContent: "center" }} color="#D8CEC5" /></View>
-      <View style={{ flexDirection: compact ? "column" : "row", alignItems: "center" }}>
-        <View style={{ flexDirection: "row" }}>{HIGHLIGHT_COLORS.map(color => <Pressable key={color.id} accessibilityRole="button" accessibilityLabel={currentHighlight === color.id ? `Remove ${color.name} highlight` : `${color.name} highlight`} accessibilityState={{ selected: currentHighlight === color.id }} onPress={() => onColor(currentHighlight === color.id ? null : color.id)} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><View style={{ width: 25, height: 25, borderRadius: 13, backgroundColor: color.swatch, borderWidth: currentHighlight === color.id ? 2 : 0, borderColor: "white", alignItems: "center", justifyContent: "center" }}>{currentHighlight === color.id && <SFSymbol name="checkmark" size={12} color="#201810" />}</View></Pressable>)}</View>
-        {!compact && <View style={{ width: 1, height: 26, marginHorizontal: 3, backgroundColor: "#FFFFFF33" }} />}
-        <View style={{ flexDirection: "row", gap: compact ? 24 : 0 }}>{icon("note.text", "Add a sticky note", onNote)}{icon("sparkles", "Understand verse with AI", onAI)}{icon("square.and.arrow.up", "Share verse", onShare)}</View>
+    {!multi && <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "#17120F38" }, scrim]}><Pressable accessibilityRole="button" accessibilityLabel="Dismiss verse tools" onPress={onClose} style={{ flex: 1 }}/></Animated.View>}
+    <Animated.View style={[s.sheet, { backgroundColor: t.paper, paddingBottom: Math.max(insets.bottom, 12) + 4 }, rise]}>
+      <View style={[s.grab, { backgroundColor: t.grab }]}/>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <Text accessibilityRole="header" numberOfLines={1} style={{ ...uiText.supporting, fontWeight: "800", color: t.muted, flex: 1 }}>{reference}</Text>
+        {multi && <Pressable accessibilityRole="button" accessibilityLabel="Done selecting verses" onPress={onClose} hitSlop={10}><Text style={{ ...uiText.supporting, fontWeight: "800", color: t.ink }}>Done</Text></Pressable>}
       </View>
-      <ContextualReaderTip id="verse-tools" text="Choose a color to highlight, or the sticky note to write a thought." color="#D8CEC5"/>
-      {notes.length > 0 && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>{notes.map((note, i) => <Pressable key={note.id} accessibilityRole="button" accessibilityLabel={`Edit note ${i + 1}`} onPress={() => onEditNote?.(note.id)} style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 12 }}><Text numberOfLines={1} style={{ ...systemText.caption1, color: "#F9D96B", maxWidth: 150 }}>{note.text || `Note ${i + 1}`}</Text></Pressable>)}</ScrollView>}
-      <View pointerEvents="none" style={{ position: "absolute", left: "46%", ...(above ? { bottom: -7 } : { top: -7 }), width: 12, height: 12, backgroundColor: "#2A241F", transform: [{ rotate: "45deg" }] }} />
+
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 14 }}>
+        {HIGHLIGHT_COLORS.map(color => {
+          const on = currentHighlight === color.id;
+          return <Pressable key={color.id} hitSlop={4} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={on ? `Remove ${color.name} highlight` : `${color.name} highlight`}
+            onPress={() => { haptics.tick(); onColor(on ? null : color.id); }}
+            style={[s.swatch, { backgroundColor: color.swatch }, on && { borderWidth: 3, borderColor: t.paper, boxShadow: `0 0 0 2px ${t.ink}` }]}>
+            {on && <SFSymbol name="checkmark" size={15} color="#FFFFFF" weight="bold"/>}
+          </Pressable>;
+        })}
+        {!!currentHighlight && <Pressable accessibilityRole="button" accessibilityLabel="Remove highlight" onPress={() => { haptics.tick(); onColor(null); }} style={{ marginLeft: "auto", minHeight: 40, justifyContent: "center" }}>
+          <Text style={{ ...uiText.supporting, fontWeight: "800", color: t.muted }}>Clear</Text>
+        </Pressable>}
+      </View>
+
+      <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>
+        {action("sparkles", "Meaning", onAI, true)}
+        {action("note.text", "Note", onNote)}
+        {action("square.and.arrow.up", "Share", onShare)}
+      </View>
+
+      {notes.length > 0 && <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }} contentContainerStyle={{ gap: 8 }}>
+        {notes.map((note, i) => <Pressable key={note.id} accessibilityRole="button" accessibilityLabel={`Edit note ${i + 1}`} onPress={() => onEditNote?.(note.id)} style={s.note}>
+          <View style={{ width: 4, alignSelf: "stretch", borderRadius: 2, backgroundColor: "#FFC93C" }}/>
+          <Text numberOfLines={1} style={{ ...uiText.supporting, fontSize: 14, fontWeight: "700", color: t.ink, maxWidth: 190 }}>{note.text || `Note ${i + 1}`}</Text>
+        </Pressable>)}
+      </ScrollView>}
+      <ContextualReaderTip id="verse-tools" text="Choose a colour to highlight, or Note to write a thought." color={t.muted}/>
     </Animated.View>
   </View>;
 }
+
+const s = StyleSheet.create({
+  sheet: { position: "absolute", left: 8, right: 8, bottom: 8, borderRadius: 34, borderCurve: "continuous", paddingTop: 10, paddingHorizontal: 20, boxShadow: "0 -2px 6px #0000000F, 0 -20px 50px -20px #28140A66" },
+  grab: { width: 36, height: 5, borderRadius: 3, alignSelf: "center", marginBottom: 14 },
+  swatch: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  act: { flex: 1, height: 70, borderRadius: 22, borderCurve: "continuous", alignItems: "center", justifyContent: "center", gap: 6 },
+  note: { minHeight: 40, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#FFF4CC66" },
+});

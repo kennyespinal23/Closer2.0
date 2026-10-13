@@ -15,7 +15,7 @@ import { findExpressBook } from "@/constants/expressBooks";
 import { useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-import { systemText, uiText, typography } from "@/lib/typography";
+import { systemText, uiText } from "@/lib/typography";
 import { buttonStyles } from "@/lib/buttonStyles";
 import { paperActionColors } from "@/lib/paperControls";
 import * as haptics from "@/lib/haptics";
@@ -145,12 +145,12 @@ export function LibraryShelf({ books, selectedId, onSelect, onPick, departure, a
     <Animated.View pointerEvents={opening ? "none" : "auto"} style={[{ paddingHorizontal: 24, gap: 12 }, detailsStyle]}>
       <Text style={{ ...systemText.footnote, fontWeight: "700", color: colors.textSecondary }}>{book.testament === "old" ? "Old Testament" : "New Testament"} · {book.category}</Text>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-        <Text accessibilityRole="header" style={{ ...typography.devotionalTitle, fontWeight: "900", flexShrink: 1, color: colors.ink }}>{book.name}</Text>
+        <Text accessibilityRole="header" style={{ ...uiText.sectionTitle, flexShrink: 1, color: colors.ink }}>{book.name}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel={`About ${book.name}`} onPress={() => { if (moving.value) return; haptics.soft(); router.push(`/book/${book.id}`); }} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
           <SFSymbol name="info.circle" size={22} color={colors.textSecondary}/>
         </Pressable>
       </View>
-      <Text style={{ fontSize: 16, lineHeight: 23, fontWeight: "600", color: colors.textSecondary, minHeight: 44, flexShrink: 0 }}>{getBookTheme(book.id)}</Text>
+      <Text style={{ ...uiText.body, color: colors.textSecondary, minHeight: 44, flexShrink: 0 }}>{getBookTheme(book.id)}</Text>
       {read > 0 && <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 4 }}>
         <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: book.chapters, now: read, text: `${read} of ${book.chapters} chapters read` }} style={{ flex: 1, height: 8, borderRadius: 4, overflow: "hidden", backgroundColor: colors.border }}>
           <View style={{ width: `${read / book.chapters * 100}%`, height: 8, borderRadius: 4, backgroundColor: colors.ink }} />

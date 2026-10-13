@@ -19,6 +19,8 @@ export const NEW_YORK = SCRIPTURE_FONT;
 
 /** Shared visual hierarchy. Native compact navigation titles retain platform sizing. */
 export const uiText = {
+  // Large numeric focal points, such as streaks; not a page-heading replacement.
+  displayNumber: {fontFamily: SF_PRO, fontSize:112, lineHeight:120, fontWeight:"900", letterSpacing:-1.6, fontVariant:["tabular-nums"]} satisfies TextStyle,
   screenTitle: {fontFamily: SF_PRO, fontSize:36, lineHeight:42, fontWeight:'900', letterSpacing:-.72} satisfies TextStyle,
   sectionTitle: {fontFamily: SF_PRO, fontSize:24, lineHeight:30, fontWeight:'800'} satisfies TextStyle,
   body: {fontFamily: SF_PRO, fontSize:17, lineHeight:25, fontWeight:'400'} satisfies TextStyle,
@@ -325,3 +327,17 @@ export function fromLegacy(family: LegacyFontFamily): TextStyle {
       return { fontFamily: SF_PRO, fontWeight: fontWeight.extrabold };
   }
 }
+
+/** Daily-walk editorial scale, measured from closer-redesign reference screens.
+ * Keep these separate from navigation titles and the shared 17pt button label. */
+export const dailyText = {
+  // Nunito Black needs native ascender space; tight CSS-style leading clips the dots/caps on iOS.
+  homeTitle: { ...uiText.screenTitle, fontSize: 46, lineHeight: 58, letterSpacing: -1.6 },
+  compactHomeTitle: { ...uiText.screenTitle, fontSize: 40, lineHeight: 50 },
+  overviewTitle: { ...uiText.screenTitle, fontSize: 38, lineHeight: 40, letterSpacing: -1 },
+  cardTitle: { ...uiText.sectionTitle, fontSize: 26, lineHeight: 28, letterSpacing: -.5 },
+  dayNumber: { ...uiText.sectionTitle, fontSize: 30, lineHeight: 32 },
+  prayer: { ...uiText.body, fontSize: 22, lineHeight: 32, fontWeight: '600' },
+  compactPrayer: { ...uiText.body, fontSize: 19, lineHeight: 28, fontWeight: '600' },
+  quote: { ...uiText.body, fontSize: 22, lineHeight: 29, fontWeight: '800' },
+} satisfies Record<string, TextStyle>;

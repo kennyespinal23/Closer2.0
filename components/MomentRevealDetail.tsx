@@ -11,11 +11,14 @@ import { ReaderMaterialGradient } from './ReaderMaterialGradient';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import { ReaderMomentArt } from './ReaderMomentArt';
 import { SFSymbol } from './Symbol';
+import { MOMENTS_IN_ORDER, WARM_CATEGORY, collectedLabel, plateLabel } from '@/lib/momentOrder';
+import { useBibleMomentCollection } from '@/state/bibleMoments';
 
 export type MomentDetailOrigin = { x:number; y:number; width:number; height:number; pillColor:string; shadeColor:string; edgeColor:string; scale:number };
 /** Detail remains inside the reveal modal, preserving its book-colored atmosphere. */
 export function MomentRevealDetail({moment,origin,onBack,onClose,preview,previewRoundtrip=false,progress,gloss}:{moment:BibleMoment;origin:MomentDetailOrigin;onBack:()=>void;onClose:()=>void;preview:boolean;previewRoundtrip?:boolean;progress:SharedValue<number>;gloss:SharedValue<number>}) {
   const [artOpen,setArtOpen]=useState(false);
+  const {collectedAt}=useBibleMomentCollection();
   const reduced=useReducedMotion();
   const rootRef=useRef<View>(null), thumbRef=useRef<View>(null);
   const [destination,setDestination]=useState<{x:number;y:number;rootX:number;rootY:number}|null>(null);
@@ -58,10 +61,12 @@ export function MomentRevealDetail({moment,origin,onBack,onClose,preview,preview
     <Animated.ScrollView style={{flex:1}} onLayout={e=>setViewport(e.nativeEvent.layout.height)} onContentSizeChange={(_,h)=>setContentHeight(h)} onScroll={onScroll} scrollEventThrottle={16} scrollEnabled={arrived} contentContainerStyle={{paddingHorizontal:24,paddingTop:18,paddingBottom:16}} showsVerticalScrollIndicator indicatorStyle="white">
       <View style={{flexDirection:'row',gap:16,minHeight:cardHeight+12,alignItems:'center'}}>
         <View ref={thumbRef} collapsable={false} onLayout={measureDestination} style={{width:cardWidth,height:cardHeight}}><Animated.View style={[styles.thumb,{width:cardWidth,height:cardHeight},thumbnailStyle]}><Pressable disabled={!arrived} accessibilityRole="button" accessibilityLabel="View artwork full screen" onPress={()=>setArtOpen(true)} style={{flex:1}}><ReaderMomentArt moment={moment}/></Pressable></Animated.View></View>
-        <Animated.View style={[{flex:1,gap:10},copy]}><Text style={styles.category}>{MOMENT_CATEGORIES[moment.category].name.toUpperCase()}</Text><Text accessibilityRole="header" style={styles.title}>{moment.title}</Text><Text style={styles.reference}>{moment.reference}</Text></Animated.View>
+        <Animated.View style={[{flex:1,gap:10},copy]}><View style={{flexDirection:'row',alignItems:'center',gap:7}}><View style={{width:8,height:8,borderRadius:4,backgroundColor:WARM_CATEGORY[moment.category]}}/><Text style={styles.category}>{MOMENT_CATEGORIES[moment.category].name.toUpperCase()}</Text></View><Text accessibilityRole="header" style={styles.title}>{moment.title}</Text><Text style={styles.reference}>{moment.reference}</Text></Animated.View>
       </View>
       <Animated.View style={copy}>
-        <Text selectable style={styles.quote}>“{moment.happened}”</Text>
+        <View style={{flexDirection:'row',alignItems:'center',gap:8,marginTop:18}}><View style={styles.tick}><SFSymbol name="checkmark" size={11} color="#4A2C20"/></View><Text style={{color:'#F1E2CF',fontSize:13,fontWeight:'700'}}>{preview?'Collected':collectedLabel(collectedAt[moment.id])} · {plateLabel(moment)} of {MOMENTS_IN_ORDER.length}</Text></View>
+        <ReaderMaterialGradient horizontal colors={['#E4B57899','#E4B57800']} style={{height:1,marginTop:18}}/>
+        <Text selectable style={styles.quote}>“{moment.happened.replace(/^[“"]+|[”"]+$/g, '')}”</Text>
 
         <View style={{paddingHorizontal:2,marginTop:8}}><Text accessibilityRole="header" style={styles.sectionTitle}>Why it matters</Text><Text selectable style={styles.body}>{moment.importance}</Text></View>
         {preview && <Text style={{color:'#bda58f',fontSize:12,marginTop:24}}>Developer preview · Progress unchanged</Text>}
@@ -81,4 +86,4 @@ export function MomentRevealDetail({moment,origin,onBack,onClose,preview,preview
     {artOpen&&<MomentArtworkViewer moment={moment} onClose={()=>setArtOpen(false)}/>}
   </View>;
 }
-const styles=StyleSheet.create({nav:{height:48,flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:12},icon:{width:44,height:44,alignItems:'center',justifyContent:'center'},navTitle:{fontSize:14,fontWeight:'600',color:'#ccbaa8'},thumb:{width:76,height:105,borderRadius:9,borderCurve:'continuous',overflow:'hidden',borderWidth:1,borderColor:'#e4b578',boxShadow:'1px 2px 0 #a58152, 0 6px 14px #00000033'},category:{fontSize:11,letterSpacing:1.4,color:'#dfa778',fontWeight:'600'},title:{...uiText.screenTitle,color:'#fff3e3'},reference:{fontSize:15,color:'#cbb49f'},quote:{fontFamily:'NunitoMedium',fontWeight:'500',fontSize:22,lineHeight:31,color:'#f9ead6',borderLeftWidth:2,borderLeftColor:'#c78353',paddingLeft:16,marginTop:24,marginBottom:24},note:{padding:20,borderWidth:1,borderColor:'#d1a37420',borderRadius:19,borderCurve:'continuous',backgroundColor:'#ead0af09',marginBottom:19},sectionTitle:{...uiText.sectionTitle,color:'#fff3e3',marginBottom:10},body:{fontSize:17,lineHeight:25,color:'#d5c1ac'},check:{width:21,height:21,borderRadius:11,backgroundColor:'#2e8b51',alignItems:'center',justifyContent:'center'},button:{minHeight:50,borderRadius:27,backgroundColor:'#fff1da',alignItems:'center',justifyContent:'center',padding:14}});
+const styles=StyleSheet.create({nav:{height:48,flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:12},icon:{width:44,height:44,alignItems:'center',justifyContent:'center'},navTitle:{fontSize:14,fontWeight:'600',color:'#ccbaa8'},thumb:{width:76,height:105,borderRadius:9,borderCurve:'continuous',overflow:'hidden',borderWidth:1,borderColor:'#e4b578',boxShadow:'1px 2px 0 #a58152, 0 6px 14px #00000033'},category:{fontSize:12,letterSpacing:1.4,color:'#E9B949',fontWeight:'800'},tick:{width:20,height:20,borderRadius:10,backgroundColor:'#E9B949',alignItems:'center',justifyContent:'center'},title:{...uiText.screenTitle,color:'#fff3e3'},reference:{fontSize:15,color:'#cbb49f'},quote:{fontFamily:'NunitoMedium',fontWeight:'500',fontSize:22,lineHeight:31,color:'#f9ead6',borderLeftWidth:2,borderLeftColor:'#c78353',paddingLeft:16,marginTop:20,marginBottom:24},note:{padding:20,borderWidth:1,borderColor:'#d1a37420',borderRadius:19,borderCurve:'continuous',backgroundColor:'#ead0af09',marginBottom:19},sectionTitle:{...uiText.sectionTitle,color:'#fff3e3',marginBottom:10},body:{fontSize:17,lineHeight:25,color:'#d5c1ac'},check:{width:21,height:21,borderRadius:11,backgroundColor:'#2e8b51',alignItems:'center',justifyContent:'center'},button:{minHeight:50,borderRadius:27,backgroundColor:'#fff1da',alignItems:'center',justifyContent:'center',padding:14}});

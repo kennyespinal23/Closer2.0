@@ -17,6 +17,7 @@ export type ModalNavBarProps = {
   closeAccessibilityLabel?: string;
   /** Defaults to a filled-circle xmark chip. */
   leading?: ReactNode;
+  horizontalPadding?: number;
 };
 
 /**
@@ -28,6 +29,7 @@ export function ModalNavBar({
   onClose,
   closeAccessibilityLabel = "Close",
   leading,
+  horizontalPadding = 16,
 }: ModalNavBarProps) {
   const [pressed, setPressed] = useState(false);
   const colors = useColors();
@@ -37,7 +39,7 @@ export function ModalNavBar({
     <View
       style={{
         paddingTop: insets.top,
-        paddingHorizontal: 16,
+        paddingHorizontal: horizontalPadding,
         paddingBottom: 8,
       }}
     >

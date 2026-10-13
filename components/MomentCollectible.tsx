@@ -124,7 +124,7 @@ export function MomentCollectibleDetail({ moment, source, onClose, embedded = fa
         <GestureDetector gesture={readingGesture}><ScrollView style={{ flex: 1, minHeight: 0 }} contentContainerStyle={{ padding: 24, paddingBottom: 32, gap: 16 }} nestedScrollEnabled showsVerticalScrollIndicator indicatorStyle={dark ? "white" : "black"}>
           <Text style={{ ...systemText.footnote, color: muted }}>{moment.reference}</Text>
           <Text accessibilityRole="header" style={{ ...systemText.title2, fontWeight: "700", color: ink }}>{moment.title}</Text>
-          <Text style={{ ...systemText.body, lineHeight: 25, color: muted }}>“{moment.happened}”</Text>
+          <Text style={{ ...systemText.body, lineHeight: 25, color: muted }}>“{moment.happened.replace(/^[“"]+|[”"]+$/g, '')}”</Text>
           <Text style={{ ...systemText.headline, color: ink, marginTop: 6 }}>Why it matters</Text>
           <Text style={{ ...systemText.body, lineHeight: 25, color: ink }}>{moment.importance}</Text>
           <Text style={{ ...systemText.caption2, color: muted, paddingTop: 12 }}>Closer · Bible Moments</Text>

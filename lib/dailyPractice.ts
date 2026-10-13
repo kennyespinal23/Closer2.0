@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { todayISO } from '@/state/progress';
 export type Practice = 'prayer' | 'quiz' | 'action';
-export type DailyPractice = Partial<Record<Practice, boolean>> & { quizScore?: number };
+export type DailyPractice = Partial<Record<Practice, boolean>> & { quizScore?: number; actionChoice?: string; actionReminderId?: string };
 export const DAILY_STEPS = ['prayer', 'reading', 'quiz', 'action'] as const;
 export type DailyStep = typeof DAILY_STEPS[number];
 const listeners = new Set<() => void>();
@@ -41,5 +41,11 @@ export function useDailyPractice(cardId: string) {
     await AsyncStorage.setItem(key, JSON.stringify(next));
     cache.set(key, next); listeners.forEach(notify => notify());
   };
-  return { saved: cache.get(key) ?? {}, ready: cache.has(key), error, save, key };
+  const saveActionPlan = async (actionChoice: string, actionReminderId?: string) => {
+    const current = await load(key, cardId);
+    const next = { ...current, actionChoice, actionReminderId };
+    await AsyncStorage.setItem(key, JSON.stringify(next));
+    cache.set(key, next); listeners.forEach(notify => notify());
+  };
+  return { saveActionPlan, saved: cache.get(key) ?? {}, ready: cache.has(key), error, save, key };
 }

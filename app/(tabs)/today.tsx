@@ -768,6 +768,8 @@ export default function TodayScreen() {
           continueReading
             ? {
                 label: `Continue · ${continueReading.book.name} ${continueReading.chapter}`,
+                title: `${continueReading.book.name} ${continueReading.chapter}`,
+                bookId: continueReading.book.id,
                 accessibilityLabel: `Continue reading ${continueReading.book.name} chapter ${continueReading.chapter}. ${continueReading.hint}`,
                 onPress: handleContinueReading,
               }

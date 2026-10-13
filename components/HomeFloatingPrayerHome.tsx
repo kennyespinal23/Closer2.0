@@ -4,7 +4,7 @@ import { HomeDailyPath } from "./HomeDailyPath";
 import { contentText, contentLayout } from "@/lib/contentStyles";
 import { useAmbientMotionEnabled } from "@/lib/useAmbientMotionEnabled";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, forwardRef } from "react";
-import { Animated, Easing, Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View, type View as RNView } from "react-native";
+import { AppState, Animated, Easing, Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View, type View as RNView } from "react-native";
 import { Text } from "@/components/CloserText";
 import { Image } from "expo-image";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
@@ -688,7 +688,7 @@ export type HomeFloatingPrayerHomeProps = {
   /** Returns true when navigation leaves home (e.g. streak screen). */
   onCompleteCard: (card: FloatingScriptureCard) => (() => void) | undefined;
   bottomInset: number;
-  continueReading?: { label: string; accessibilityLabel: string; onPress: () => void };
+  continueReading?: { label: string; title?: string; bookId?: string; accessibilityLabel: string; onPress: () => void };
   streakCount?: number;
   onStreakPress?: () => void;
 };
@@ -778,9 +778,11 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
     const refresh = () => setHomeQuote(resolveHomeQuote());
     refresh();
     const unsub = subscribeHomeQuotePreview(refresh);
+    const appState = AppState.addEventListener("change", state => { if (state === "active") refresh(); });
     const id = setInterval(refresh, 60_000);
     return () => {
       unsub();
+      appState.remove();
       clearInterval(id);
     };
   }, []);
@@ -1210,7 +1212,7 @@ export const HomeFloatingPrayerHome = memo(function HomeFloatingPrayerHome({
 
   return (
     <View style={{ flex: 1, backgroundColor: "transparent" }}>
-      <HomeDailyPath card={card} completed={unlockedToday} onRead={item => setLetter(item)} onStreak={onStreakPress} streak={streakCount} bottomInset={bottomInset} continueReading={continueReading} />
+      <HomeDailyPath homeQuote={homeQuote} card={card} completed={unlockedToday} onReadingComplete={item => { onCompleteCard(item); }} onRead={item => setLetter(item)} onStreak={onStreakPress} streak={streakCount} bottomInset={bottomInset} continueReading={continueReading} />
 
       <DailyExperience visible={letter !== null} kind="reading" card={letter ?? lastLetter.current} onClose={() => { setLetter(null); if (Platform.OS !== "ios") { const navigate = afterLetter.current; afterLetter.current = undefined; navigate?.(); } }} onComplete={() => { afterLetter.current = onCompleteCard(lastLetter.current); }} onDismiss={() => { const navigate = afterLetter.current; afterLetter.current = undefined; navigate?.(); }} />
 

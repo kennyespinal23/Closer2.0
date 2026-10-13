@@ -87,6 +87,8 @@ export type HomeDevotionalCarouselProps = {
    */
   continueReading?: {
     label: string;
+    title?: string;
+    bookId?: string;
     accessibilityLabel: string;
     onPress: () => void;
   };

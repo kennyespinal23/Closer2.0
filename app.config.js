@@ -17,6 +17,20 @@ module.exports = ({ config }) => {
     return includeDeviceActivity || name !== "react-native-device-activity";
   });
 
+  // OTA publication evaluates plugins but must not recopy native extension files.
+  // Native builds retain the plugin's normal target generation behavior.
+  if (process.env.EAS_SKIP_AUTO_FINGERPRINT === "1") {
+    const index = plugins.findIndex(entry =>
+      (Array.isArray(entry) ? entry[0] : entry) === "react-native-device-activity"
+    );
+    if (index !== -1) {
+      const entry = plugins[index];
+      plugins[index] = ["react-native-device-activity", {
+        ...(Array.isArray(entry) ? entry[1] : {}), copyToTargetFolder: false,
+      }];
+    }
+  }
+
   const googleIosUrlScheme = process.env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME;
   if (googleIosUrlScheme) {
     plugins.push([

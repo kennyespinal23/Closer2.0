@@ -1,3 +1,4 @@
+import { updateNightPrayer, useNightPrayer } from "@/lib/nightPrayer";
 import { buttonStyles } from "@/lib/buttonStyles";
 import { ProfileAudioPreview } from "@/components/audio/ProfileAudioPlayer";
 import { ProfileJourney, PROFILE_PALETTE } from "@/components/ProfileJourney";
@@ -102,6 +103,7 @@ export default function ProfileTabScreen() {
   const showDevShortcuts = isInternalBuild() || devToolsEnabled;
   const { resetApp, restartApp } = useDevAppReset();
   const { streak } = useProgress();
+  const nightPrayer = useNightPrayer();
   const colors = useColors();
   const { pref: themePref } = useTheme();
   const [revealPreview, setRevealPreview] = useState<BibleRevealKind | null>(null);
@@ -359,6 +361,18 @@ export default function ProfileTabScreen() {
             title="Developer"
             footer="Internal QA only. Reset and Restart wipe every provider on disk — progress, notes, focus sessions, reminders — then route to a fresh entry."
           >
+            <SettingsToggleRow
+              icon={<SFSymbol name="moon.stars" size={16} color={colors.ink} />}
+              label="Night prayer on Home"
+              sublabel={nightPrayer.devAlways ? "Showing on Home now · Turn off to remove it" : "Put the night prayer card on Home at any hour"}
+              value={nightPrayer.devAlways}
+              onValueChange={(next) => {
+                haptics.soft();
+                // Turning it on brings back the waiting card, even if you already prayed tonight.
+                updateNightPrayer(next ? { devAlways: true, lastPrayed: null } : { devAlways: false });
+              }}
+              showDivider
+            />
             <SettingsLinkRow label="Preview audio player" sublabel="Compact bar & expanded controls · No audio" onPress={() => setAudioPreview(true)} showDivider />
             {([
               ['moment', 'Preview Moment reveal'],

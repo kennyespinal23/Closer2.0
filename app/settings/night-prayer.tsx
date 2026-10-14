@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FeedbackPressable as Pressable } from "@/components/FeedbackPressable";
 import { Text } from "@/components/CloserText";
 import { SFSymbol } from "@/components/Symbol";
-import { NIGHT, NightSky } from "@/components/NightPrayer";
+import { NIGHT, NightPrayerFlow, NightSky } from "@/components/NightPrayer";
 import { NIGHT_TOPICS, formatNightTime, updateNightPrayer, useNightPrayer } from "@/lib/nightPrayer";
 import { uiText } from "@/lib/typography";
 import * as haptics from "@/lib/haptics";
@@ -19,7 +19,7 @@ export default function NightPrayerSettings() {
   const navigation = useNavigation(), headerHeight = useHeaderHeight(), inset = useSafeAreaInsets();
   const { scheme } = useTheme(), dark = scheme === "dark", n = useNightPrayer();
   useLayoutEffect(() => { navigation.setOptions({ title: "" }); }, [navigation]);
-  const [blocked, setBlocked] = useState(false);
+  const [blocked, setBlocked] = useState(false), [preview, setPreview] = useState(false);
   useEffect(() => { void getNotificationPermission().then(p => setBlocked(p === "denied")); }, [n.enabled]);
   const t = { ink: dark ? "#F7F0E6" : "#17120F", muted: dark ? "#BBAA99" : "#6E645C", card: dark ? "#2A241F" : "#FFFFFF", line: dark ? "#FFFFFF14" : "#17120F14", soft: dark ? "#FFFFFF12" : "#F3EEE8" };
   const nudge = (min: number) => {
@@ -41,6 +41,10 @@ export default function NightPrayerSettings() {
       <NightSky width="100%" height="100%" stars={7}/>
       <Text style={{ fontSize: 22, lineHeight: 26, fontWeight: "900", letterSpacing: -.5, color: NIGHT.moon }}>Lay today down.</Text>
       <Text style={{ fontSize: 14, lineHeight: 19, fontWeight: "600", color: NIGHT.lav, marginTop: 6 }}>A card on Home each night. Say how today felt, then pray before you sleep.</Text>
+      <Pressable onPress={() => { haptics.soft(); setPreview(true); }} accessibilityRole="button" style={s.preview}>
+        <SFSymbol name="play.fill" size={13} color={NIGHT.ink}/>
+        <Text style={{ fontSize: 15, fontWeight: "900", color: NIGHT.ink }}>Preview night prayer</Text>
+      </Pressable>
     </View>
 
     <View style={[s.card, { backgroundColor: t.card }]}>
@@ -74,11 +78,13 @@ export default function NightPrayerSettings() {
       })}
     </View>
     <Text style={{ fontSize: 13, lineHeight: 18, fontWeight: "600", color: t.muted, marginTop: 12, marginHorizontal: 4 }}>Up to three. They’re picked for you each night, and you can change them in the moment.</Text>
+    <NightPrayerFlow visible={preview} onClose={() => setPreview(false)}/>
   </ScrollView>;
 }
 
 const s = StyleSheet.create({
-  hero: { marginTop: 20, height: 150, borderRadius: 26, borderCurve: "continuous", overflow: "hidden", padding: 18, justifyContent: "flex-end" },
+  preview: { alignSelf: "flex-start", marginTop: 14, height: 40, paddingHorizontal: 16, borderRadius: 20, backgroundColor: NIGHT.moon, flexDirection: "row", alignItems: "center", gap: 7 },
+  hero: { marginTop: 20, borderRadius: 26, borderCurve: "continuous", overflow: "hidden", padding: 18, justifyContent: "flex-end" },
   card: { marginTop: 16, borderRadius: 22, borderCurve: "continuous", boxShadow: "0 1px 2px #502D0A0F, 0 10px 24px -18px #502D0A59" },
   row: { minHeight: 62, paddingHorizontal: 16, paddingVertical: 10, flexDirection: "row", alignItems: "center", gap: 10 },
   divider: { position: "absolute", top: 0, left: 16, right: 0, height: StyleSheet.hairlineWidth },

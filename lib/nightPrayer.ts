@@ -19,7 +19,7 @@ export type NightPrayerSettings = {
   /** Every night you said Amen, newest first. */
   log: NightPrayerEntry[];
 };
-export type NightPrayerEntry = { night: string; at: number; feelings: string[]; topics: string[] };
+export type NightPrayerEntry = { night: string; at: number; feelings: string[]; topics: string[]; answeredAt?: number };
 
 export const NIGHT_TOPICS = ["Hope", "Faith", "Strength", "Wisdom", "Peace", "Rest", "Family", "Health", "Success", "Life", "Courage", "Patience", "Provision", "Forgiveness"] as const;
 export const NIGHT_FEELINGS = {
@@ -77,7 +77,12 @@ export function nightKey(now = new Date()) {
 /** Saying Amen: marks tonight done and keeps what you prayed for. */
 export function recordNightPrayer(feelings: string[], topics: string[]) {
   const night = nightKey();
-  updateNightPrayer({ lastPrayed: night, log: [{ night, at: Date.now(), feelings, topics }, ...snapshot.log.filter(e => e.night !== night)].slice(0, 400) });
+  updateNightPrayer({ lastPrayed: night, log: [{ night, at: Date.now(), feelings, topics, answeredAt: snapshot.log.find(e => e.night === night)?.answeredAt }, ...snapshot.log.filter(e => e.night !== night)].slice(0, 400) });
+}
+
+/** Mark a night's prayer answered, or not. */
+export function setNightPrayerAnswered(night: string, answered: boolean) {
+  updateNightPrayer({ log: snapshot.log.map(e => e.night === night ? { ...e, answeredAt: answered ? Date.now() : undefined } : e) });
 }
 
 /** Tonight's prayer is said: the card stays, marked done, until 4am. */

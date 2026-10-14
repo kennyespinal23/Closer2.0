@@ -18,6 +18,8 @@ import { useReducedMotion } from '@/lib/useReducedMotion';
 import { uiText } from '@/lib/typography';
 import { BIBLE_MOMENTS } from '@/constants/bibleMoments';
 import { MOMENTS_IN_ORDER } from '@/lib/momentOrder';
+import { useNightPrayer } from '@/lib/nightPrayer';
+import { NightSky } from './NightPrayer';
 import { ProfileActivitySheet } from "./ProfileActivitySheet";
 import { StreakFireAnimation } from './StreakFireAnimation';
 import { EnamelAchievement } from './EnamelAchievement';
@@ -42,7 +44,7 @@ export function ProfileJourney({name,joinedAt,avatar,onAvatar,onSettings}:{name:
   const router=useRouter(),dark=useResolvedScheme()==='dark',p=PROFILE_PALETTE[dark?'dark':'light'],reduced=useReducedMotion(),insets=useSafeAreaInsets();
   const {fontScale,width}=useWindowDimensions(),{streak,engagedDates}=useProgress(),{counts}=useAnnotations(),{ids,hydrated}=useBibleMomentCollection(),{achievements}=useAchievements();
   const [activity,setActivity]=useState(false),[nextOpen,setNextOpen]=useState(false);
-  const week=buildCurrentWeek(engagedDates);
+  const week=buildCurrentWeek(engagedDates),nights=useNightPrayer().log.length;
   const earned=achievements.filter(a=>a.value>=a.target).length;
   const next=achievements.find(a=>a.category==='Streaks'&&a.value<a.target);
   const progress=next?Math.min(streak.current/next.target,1):1;
@@ -121,7 +123,7 @@ export function ProfileJourney({name,joinedAt,avatar,onAvatar,onSettings}:{name:
       </Animated.View>
 
       {/* things you've kept */}
-      <Text accessibilityRole="header" style={{fontSize:22,lineHeight:26,fontWeight:'900',letterSpacing:-.5,color:p.ink,marginTop:26,marginBottom:12,marginLeft:2}}>{earned+ids.length+counts.highlights+counts.notes>1?'Things you’ve kept':'Things you’ll keep'}</Text>
+      <Text accessibilityRole="header" style={{fontSize:22,lineHeight:26,fontWeight:'900',letterSpacing:-.5,color:p.ink,marginTop:26,marginBottom:12,marginLeft:2}}>{earned+ids.length+counts.highlights+nights>1?'Things you’ve kept':'Things you’ll keep'}</Text>
       <View style={{flexDirection:'row',flexWrap:'wrap',gap:12}}>
         <Animated.View entering={arrival(2)}>
           <Pressable accessibilityRole="button" accessibilityLabel={`Bible Moments. ${ids.length} of ${MOMENTS_IN_ORDER.length} collected`} onPress={()=>go('/rhythm?section=moments' as Href)} style={[tile,lift]}>
@@ -158,13 +160,13 @@ export function ProfileJourney({name,joinedAt,avatar,onAvatar,onSettings}:{name:
           </Pressable>
         </Animated.View>
         <Animated.View entering={arrival(5)}>
-          <Pressable accessibilityRole="button" accessibilityLabel={`Reflections. ${counts.notes} notes`} onPress={()=>go('/notes')} style={[tile,lift,counts.notes?{backgroundColor:dark?'#2A221D':'#EADCCB'}:ghost(dark)]}>
-            {counts.notes>0?<View pointerEvents="none" style={s.art}>
-              <View style={[s.paper,{backgroundColor:dark?'#3A2F27':'#FFFBF4'}]}>{[1,1,.7,.85].map((w,i)=><View key={i} style={{height:2,width:`${w*100}%`,backgroundColor:dark?'#5A4A3E':'#D9C6B0'}}/>)}</View>
-              <View style={{position:'absolute',left:92,top:30}}><SFSymbol name="pencil" size={44} color={dark?'#E9B949':'#8E4A22'}/></View>
-            </View>:<GhostIcon icon="pencil" dark={dark}/>}
-            <Text style={[s.tt,{color:dark?'#F1E1D2':counts.notes?'#3A2219':p.ink}]}>Reflections</Text>
-            <Text style={[s.ts,{color:dark?'#BBAA99':counts.notes?'#6E5240':p.muted}]}>{counts.notes?`${counts.notes} ${counts.notes===1?'note':'notes'}`:'Write after you read'}</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel={`Night prayers. ${nights} ${nights===1?'night':'nights'} prayed`} onPress={()=>go('/prayers' as Href)} style={[tile,lift,{backgroundColor:'#1F1028'}]}>
+            <NightSky width="100%" height="100%" stars={6}/>
+            <View pointerEvents="none" style={[s.art,{flexDirection:'row',alignItems:'center',justifyContent:'center',gap:6}]}>
+              {Array.from({length:5},(_,i)=>{const lit=i>=5-Math.min(5,nights);return <View key={i} style={{width:i===4?34:22,height:i===4?34:22,borderRadius:17,overflow:'hidden',backgroundColor:lit?undefined:'#FBF2F61A'}}>{lit&&<ReaderMaterialGradient colors={['#FFFBEA','#F2E6C4','#D9C79A']} style={StyleSheet.absoluteFill}/>}</View>;})}
+            </View>
+            <Text style={[s.tt,{color:'#FBF2F6'}]}>Night prayers</Text>
+            <Text style={[s.ts,{color:'#D2C3DC'}]}>{nights?`${nights} ${nights===1?'night':'nights'} prayed`:'Your first night is ahead'}</Text>
           </Pressable>
         </Animated.View>
       </View>

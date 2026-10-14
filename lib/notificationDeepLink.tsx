@@ -73,6 +73,7 @@ const KNOWN_KINDS = new Set([
   "before-the-noise",
   "study-session",
   "shield-return",
+  "night-prayer",
 ]);
 
 /**

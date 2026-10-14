@@ -16,6 +16,7 @@ import { usePreferences } from "@/state/preferences";
 import { useReadingGoal } from "@/state/readingGoal";
 import { useSubscription } from "@/state/subscription";
 import { useTheme } from "@/state/theme";
+import { formatNightTime, useNightPrayer } from "@/lib/nightPrayer";
 
 const CREAM = "#FFF1E4";
 
@@ -30,7 +31,7 @@ export default function SettingsIndex() {
   const router = useRouter(), navigation = useNavigation(), headerHeight = useHeaderHeight(), inset = useSafeAreaInsets();
   const { answers } = useOnboarding(), { pref, scheme } = useTheme(), { isPro } = useSubscription();
   const { translation } = usePreferences(), { goalMinutes } = useReadingGoal();
-  const reminder = useReminder();
+  const reminder = useReminder(), night = useNightPrayer();
   useLayoutEffect(() => { navigation.setOptions({ title: "" }); }, [navigation]);
   const dark = scheme === "dark";
   const t = { ink: dark ? "#F7F0E6" : "#17120F", muted: dark ? "#BBAA99" : "#6E645C", card: dark ? "#2A241F" : "#FFFFFF", line: dark ? "#FFFFFF14" : "#17120F14", chev: dark ? "#8F857C" : "#B5ABA2" };
@@ -41,6 +42,7 @@ export default function SettingsIndex() {
   const groups: [string, Row[]][] = [
     ["Your day", [
       { icon: "bell", color: "#E2391F", label: "Morning reminder", value: reminder.enabled ? reminder.label : "Off", onPress: () => open("/settings/notifications") },
+      { icon: "moon.stars", color: "#42204F", label: "Night prayer", value: night.enabled ? formatNightTime(night.hour, night.minute) : "Off", onPress: () => open("/settings/night-prayer") },
       { icon: "target", color: "#C98A1E", label: "Reading goal", value: goalMinutes ? `${goalMinutes} min` : undefined, onPress: () => open("/settings/reading-goal") },
       { icon: "hand.raised", color: "#8E4A22", label: "My Blocks", sub: "Quiet the apps that pull you away", onPress: () => open("/settings/study-sessions") },
     ]],

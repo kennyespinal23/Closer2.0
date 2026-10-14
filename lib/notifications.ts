@@ -235,6 +235,41 @@ export async function cancelDailyReminder(): Promise<void> {
   await removeKey(STORAGE_KEYS.beforeNoiseNotificationId);
 }
 
+/** Night prayer: one daily notification at the time chosen in Settings → Night prayer. */
+const NIGHT_PRAYER_ID_KEY = "closer.nightPrayer.notificationId.v1";
+export async function scheduleNightPrayerReminder(time: DailyReminderTime): Promise<string> {
+  await cancelNightPrayerReminder();
+  const id = await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "Night prayer",
+      body: "Lay today down. Two minutes to pray before you sleep.",
+      data: { kind: "night-prayer", route: "/today?night=1" },
+      sound: "default",
+    },
+    trigger: {
+      type: SchedulableTriggerInputTypes.DAILY,
+      hour: clampHour(time.hour),
+      minute: clampMinute(time.minute),
+      ...(Platform.OS === "android" ? { channelId: ANDROID_CHANNEL_ID } : {}),
+    },
+  });
+  await saveJSON(NIGHT_PRAYER_ID_KEY, id);
+  return id;
+}
+export async function cancelNightPrayerReminder(): Promise<void> {
+  const existingId = await loadJSON<string>(NIGHT_PRAYER_ID_KEY);
+  if (!existingId) return;
+  try { await Notifications.cancelScheduledNotificationAsync(existingId); } catch { /* already gone */ }
+  await removeKey(NIGHT_PRAYER_ID_KEY);
+}
+/** Dev: the night prayer notification in 5 seconds, to test the tap through to Home. */
+export async function fireTestNightPrayerNow(): Promise<string> {
+  return await Notifications.scheduleNotificationAsync({
+    content: { title: "Night prayer", body: "Lay today down. Two minutes to pray before you sleep.", data: { kind: "night-prayer", route: "/today?night=1" }, sound: "default" },
+    trigger: { type: SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 5 },
+  });
+}
+
 /**
  * Get the persisted notification id, if any. Mostly useful for
  * settings UI that wants to render a "scheduled / not scheduled"

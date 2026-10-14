@@ -17,7 +17,7 @@ import { Modal, Platform, ScrollView, StyleSheet, View, useWindowDimensions } fr
 import { Text } from "@/components/CloserText";
 import Animated, { Easing, Extrapolation, type SharedValue, cancelAnimation, interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useOnboarding } from "@/state/onboarding";
 import { useProgress } from "@/state/progress";
@@ -29,8 +29,11 @@ import { BIBLE_MOMENTS } from "@/constants/bibleMoments";
 import { ReaderMomentArt } from "./ReaderMomentArt";
 import { SealedEnvelope, TomorrowLetter } from "./TomorrowLetter";
 import { YouSheet } from "./YouSheet";
+import { DAY_AFTER_FULL, DAY_AFTER_PEEK, DayAfterCard, DayAfterSheet } from "./StillWriting";
 import { APP_CANVAS, SkyGradient } from "./HomeSkyGradient";
 import { TiltedBook } from "./TiltedBook";
+import { NightPrayerCard, NightPrayerDoneCard, NightPrayerFlow } from "./NightPrayer";
+import { isNightPrayerDue, tonightsNightPrayer, useNightPrayer } from "@/lib/nightPrayer";
 import { ReaderMaterialGradient } from "./ReaderMaterialGradient";
 import { SFSymbol, type SFSymbolName } from "./Symbol";
 import * as haptics from "@/lib/haptics";
@@ -47,14 +50,43 @@ export function HomeDailyPath({ card, homeQuote, completed, onRead, onReadingCom
   const compact = fontScale > 1.2;
   const smallPhone = width < 380;
   const [overview, setOverview] = useState(false);
+  const night = useNightPrayer(), [nightOpen, setNightOpen] = useState(false), [clock, setClock] = useState(() => Date.now());
+  useEffect(() => { const t = setInterval(() => setClock(Date.now()), 60_000); return () => clearInterval(t); }, []);
+  const nightDue = night.hydrated && isNightPrayerDue(night, new Date(clock));
+  const nightDone = night.hydrated ? tonightsNightPrayer(night, new Date(clock)) : null;
+  // Tapping the night prayer notification lands here with ?night=1.
+  const { night: nightParam } = useLocalSearchParams<{ night?: string }>();
+  useEffect(() => {
+    if (nightParam !== "1") return;
+    setNightOpen(true);
+    router.setParams({ night: undefined });
+  }, [nightParam]); // eslint-disable-line react-hooks/exhaustive-deps
   const finishAfterDismiss = useRef(false);
   const pendingHistory = useRef<(() => void) | null>(null);
   const router = useRouter(), insets = useSafeAreaInsets(), dark = useResolvedScheme() === "dark", reduced = useReducedMotion();
   const tabContentStyle = useTabContentFade(reduced);
   const scrollY = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler(e => { scrollY.value = e.contentOffset.y; });
+  // Today folds while Tomorrow unfolds, over the same stretch of scroll: the
+  // paintings drift out and shrink away, the day number and date close up,
+  // and the title with its four steps stays.
+  const foldOn = !compact && !reduced && !!MOMENTS.find(m => m.day === card.day + 1);
+  const foldDistance = tomorrowGrowDistance(height);
+  const artH = smallPhone ? 146 : 156;
+  const todayPile = useAnimatedStyle(() => {
+    const p = foldOn ? interpolate(scrollY.value, [0, foldDistance], [0, 1], Extrapolation.CLAMP) : 0;
+    return { height: artH * (1 - p), opacity: 1 - p, transform: [{ translateX: 24 * p }, { scale: 1 - .25 * p }] };
+  });
+  const todayMeta = useAnimatedStyle(() => {
+    const p = foldOn ? interpolate(scrollY.value, [0, foldDistance], [0, 1], Extrapolation.CLAMP) : 0;
+    return { height: 72 * (1 - p), opacity: interpolate(p, [0, .6], [1, 0], Extrapolation.CLAMP) };
+  });
+  const todayFold = useAnimatedStyle(() => {
+    const p = foldOn ? interpolate(scrollY.value, [0, foldDistance], [0, 1], Extrapolation.CLAMP) : 0;
+    return { minHeight: compact ? 0 : 188 * (1 - p) };
+  });
   const { answers } = useOnboarding(), { sermonCompletions, completeDailyTasks, hydrated } = useProgress();
-  const [active, setActive] = useState<DailyStep | null>(null), [weekPicker, setWeekPicker] = useState(false), [tomorrowOpen, setTomorrowOpen] = useState(false), [youOpen, setYouOpen] = useState(false);
+  const [active, setActive] = useState<DailyStep | null>(null), [weekPicker, setWeekPicker] = useState(false), [tomorrowOpen, setTomorrowOpen] = useState(false), [youOpen, setYouOpen] = useState(false), [dayAfterOpen, setDayAfterOpen] = useState(false);
   const lastPractice = useRef<DailyStep>("prayer");
   if (active) lastPractice.current = active;
   const sheetPractice = active ?? lastPractice.current;
@@ -84,6 +116,9 @@ export function HomeDailyPath({ card, homeQuote, completed, onRead, onReadingCom
   const companionArt = BIBLE_MOMENTS.filter(m => m.bookId === todayArt.bookId && m.id !== todayArt.id).sort((a, b) => Math.abs(a.chapter - todayArt.chapter) - Math.abs(b.chapter - todayArt.chapter));
   const paintings = [todayArt, companionArt[0] ?? todayArt, companionArt[1] ?? todayArt];
   const tomorrow = MOMENTS.find(m => m.day === card.day + 1);
+  // Home holds three cards at most: at night the prayer takes the third place.
+  const dayAfter = nightDue || nightDone ? undefined : MOMENTS.find(m => m.day === card.day + 2);
+  const dayAfterName = new Date(Date.now() + 2 * 86_400_000).toLocaleDateString("en-US", { weekday: "long" });
   const quote = homeQuote?.segments.map(segment => segment.text).join("").trim();
   const title = quote || card.title;
   const titleStyle = (() => {
@@ -106,26 +141,31 @@ export function HomeDailyPath({ card, homeQuote, completed, onRead, onReadingCom
   const dismiss = () => { if (!saving) { setWeekPicker(false); if (active) { finishAfterDismiss.current = true; setTimeout(() => { if (finishAfterDismiss.current) { finishAfterDismiss.current = false; setOverview(false); } }, 1000); /* iOS sometimes skips the modal's onDismiss */ setActive(null); } else setOverview(false); } };
   return <View style={{ flex: 1, backgroundColor: background }}>
     {dark ? <ReaderMaterialGradient colors={["#4A3420", "#211D19"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 420 }} /> : <SkyGradient />}
-    <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} snapToOffsets={tomorrow && !compact && !reduced ? [0, tomorrowGrowDistance(height)] : undefined} snapToEnd={false} style={tabContentStyle} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + contentLayout.screenTop, paddingHorizontal: 20, paddingBottom: bottomInset + 28 + (tomorrow && !compact && !reduced ? TOMORROW_FULL - TOMORROW_PEEK : 0), gap: 24 }}>
+    <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} snapToOffsets={tomorrow && !compact && !reduced ? (dayAfter ? [0, tomorrowGrowDistance(height), tomorrowGrowDistance(height) * 2] : [0, tomorrowGrowDistance(height)]) : undefined} snapToEnd={false} style={tabContentStyle} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + contentLayout.screenTop, paddingHorizontal: 20, paddingBottom: bottomInset + 28 + (tomorrow && !compact && !reduced ? TOMORROW_FULL - TOMORROW_PEEK + (dayAfter ? DAY_AFTER_FULL - DAY_AFTER_PEEK : 0) : 0), gap: 24 }}>
       <View style={s.top}>
         <Pressable onPress={() => { haptics.soft(); setYouOpen(true); }} accessibilityRole="button" accessibilityLabel="You: profile and settings" style={[s.avatar, { backgroundColor: "#FF4326" }]}>{firstName ? <Text style={{ ...uiText.sectionTitle, color: "#FFF" }}>{firstName[0].toUpperCase()}</Text> : <SFSymbol name="person.fill" color="#FFF" size={22}/>}</Pressable>
         <View style={{ flex: 1, gap: 2 }}>{!!firstName && <Text style={{ ...uiText.body, fontWeight: "800", color: ink }}>{firstName}</Text>}{streak > 1 && <Pressable onPress={onStreak} accessibilityRole="button" accessibilityLabel={`${streak} day streak`} hitSlop={{ top: 10, bottom: 10 }} style={{ alignSelf: "flex-start" }}><Text style={{ ...uiText.supporting, color: firstName ? muted : ink, fontWeight: firstName ? "500" : "800" }}>{streak} days in a row</Text></Pressable>}</View>
         {continueReading && <ReadingPill {...continueReading} ink={ink} surface={surface} reduced={reduced} scrollY={scrollY}/>}
       </View>
       <View style={{ gap: 14, marginTop: 4 }}><Text accessibilityRole="header" style={{ ...titleStyle, color: ink }}>{title}</Text>{!!quote && !!homeQuote?.reference && <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}><View style={{ width: 18, height: 2, borderRadius: 1, backgroundColor: muted }}/><Text style={{ ...uiText.supporting, color: muted }}>{homeQuote.reference}</Text></View>}</View>
-      <Pressable feedback="action" onPress={() => { haptics.soft(); setOverview(true); }} accessibilityRole="button" accessibilityLabel={`Open today's walk, ${card.title}, ${count} of 4 complete`} style={[s.featureCard, { backgroundColor: "#FFD04B", minHeight: compact ? undefined : 232, justifyContent: "space-between" }]}>
+      {nightDue && <NightPrayerCard onPress={() => setNightOpen(true)}/>}
+      {nightDone && <NightPrayerDoneCard entry={nightDone} onPress={() => { haptics.soft(); router.push("/prayers" as never); }}/>}
+      <Pressable feedback="action" onPress={() => { haptics.soft(); setOverview(true); }} accessibilityRole="button" accessibilityLabel={`Open today's walk, ${card.title}, ${count} of 4 complete`} style={[s.featureCard, { backgroundColor: "#FFB83A", justifyContent: "space-between" }]}><Animated.View style={todayFold}>
         <View style={{ flexDirection: compact ? "column-reverse" : "row", alignItems: "center", gap: 16 }}>
-          <View style={{ flex: 1, alignSelf: "stretch", gap: 8 }}><Text style={{ ...dailyText.dayNumber, color: "#8E4A2280", fontVariant: ["tabular-nums"] }}>{String(card.day).padStart(2, "0")}</Text><Text style={{ ...uiText.supporting, color: "#8E4A22", marginTop: -6 }}>Today · {card.scriptureReference}</Text><Text style={{ ...dailyText.cardTitle, color: "#6A2B10", marginTop: 16 }}>{card.title}</Text></View>
-          <View accessible={false} accessibilityElementsHidden style={{ width: compact ? 180 : smallPhone ? 124 : 146, height: smallPhone && !compact ? 146 : 156 }}>
+          <View style={{ flex: 1, alignSelf: "stretch", gap: 8 }}><Animated.View style={[{ gap: 8, overflow: "hidden" }, todayMeta]}><Text style={{ ...dailyText.dayNumber, color: "#8E4A2280", fontVariant: ["tabular-nums"] }}>{String(card.day).padStart(2, "0")}</Text><Text style={{ ...uiText.supporting, color: "#8E4A22", marginTop: -6, marginBottom: 16 }}>Today · {card.scriptureReference}</Text></Animated.View><Text style={{ ...dailyText.cardTitle, color: "#6A2B10" }}>{card.title}</Text></View>
+          <Animated.View accessible={false} accessibilityElementsHidden style={[{ width: compact ? 180 : smallPhone ? 124 : 146, height: smallPhone && !compact ? 146 : 156 }, todayPile]}>
             {[1, 2, 0].map((offset, i) => <View key={offset} style={[s.painting, { width: smallPhone && !compact ? 88 : 106, height: smallPhone && !compact ? 124 : 144, left: i === 0 ? 0 : i === 1 ? 37 : 22, top: i === 0 ? 20 : i === 1 ? 2 : 30, transform: [{ rotate: i === 0 ? "-12deg" : i === 1 ? "8deg" : "-4deg" }] }]}><ReaderMomentArt moment={paintings[offset]}/></View>)}
-          </View>
+          </Animated.View>
         </View>
         {count === 4 ? <View style={s.kept}><View style={s.keptDot}><SFSymbol name="checkmark" size={13} color="#FFF"/></View><Text style={{ ...uiText.supporting, fontWeight: "800", color: "#6A2B10" }}>Today, kept</Text></View> : <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
           {ACTIONS.map((a, i) => <View key={a.id} style={[s.token, { marginLeft: i ? -6 : 0, backgroundColor: done(a.id) ? "#A93620" : "#FFEFC2" }]}><SFSymbol name={done(a.id) ? "checkmark" : a.icon} size={16} color={done(a.id) ? "#FFF" : "#6A2B10"}/></View>)}
           <Text style={{ ...uiText.supporting, color: "#8E4A22", marginLeft: 12 }}>{count} of 4</Text>
         </View>}
-      </Pressable>
+      </Animated.View></Pressable>
       {tomorrow && <TomorrowCard onPress={() => { haptics.soft(); setTomorrowOpen(true); }} day={tomorrow.day} dark={dark} grow={!compact && !reduced} smallPhone={smallPhone} scrollY={scrollY} viewport={height}/>}
+      {/* The day after tomorrow: still being written. Unfolds once Tomorrow has fully opened. */}
+      {dayAfter && <DayAfterCard day={dayAfter.day} weekday={dayAfterName} dark={dark} grow={!compact && !reduced} scrollY={scrollY}
+        from={tomorrowGrowDistance(height)} to={tomorrowGrowDistance(height) * 2} onPress={() => { haptics.soft(); setDayAfterOpen(true); }}/>}
       <View style={{ flexDirection: compact || smallPhone ? "column" : "row", gap: 12 }}>
         <Pressable onPress={() => setWeekPicker(true)} accessibilityRole="button" style={[s.homeLink, { backgroundColor: surface }]}><SFSymbol name="calendar" color={ink} size={20}/><Text style={{ ...uiText.body, color: ink }}>Your daily walk</Text><SFSymbol name="chevron.right" color={muted} size={12}/></Pressable>
         <Pressable onPress={() => router.push("/check-in")} accessibilityRole="button" accessibilityLabel="How are you, really? Check in" style={[s.homeLink, { backgroundColor: surface }]}><SFSymbol name="heart" color={ink} size={20}/><Text style={{ ...uiText.body, color: ink }}>Check in</Text></Pressable>
@@ -140,6 +180,8 @@ export function HomeDailyPath({ card, homeQuote, completed, onRead, onReadingCom
     onOpenToday={() => { const action = () => { setOverview(true); }; if (Platform.OS === "ios") pendingHistory.current = action; setTomorrowOpen(false); if (Platform.OS !== "ios") action(); }}
     onDismiss={() => { const action = pendingHistory.current; pendingHistory.current = null; action?.(); }}/>}
   <YouSheet visible={youOpen} onClose={() => setYouOpen(false)}/>
+  <NightPrayerFlow visible={nightOpen} onClose={() => setNightOpen(false)}/>
+  {dayAfter && <DayAfterSheet visible={dayAfterOpen} day={dayAfter.day} weekday={dayAfterName} onClose={() => setDayAfterOpen(false)}/>}
   <Modal visible={weekPicker} onDismiss={() => { const action = pendingHistory.current; pendingHistory.current = null; action?.(); }} animationType={reduced ? "fade" : "slide"} presentationStyle="pageSheet" onRequestClose={dismiss}><ReaderMaterialGradient colors={dark ? ["#372B22", "#1D1916"] : ["#EBD8BE", "#FFF9EE"]} style={{ flex: 1 }}><View style={{ alignItems: "flex-end", padding: 20 }}><CloseButton onPress={dismiss} accessibilityRole="button" accessibilityLabel="Close" style={s.close} color={ink} /></View><ScrollView contentContainerStyle={{ padding: 28, paddingBottom: 60, gap: 24 }}><Text style={{ ...uiText.screenTitle, color: ink }}>Your weeks</Text>{Array.from({ length: currentWeek }, (_, i) => i + 1).map(w => <Pressable key={w} onPress={() => { setWeek(w); }} style={[s.row, { borderTopColor: border }]}><Text style={{ color: ink, fontSize: 18, flex: 1 }}>Week {w}</Text>{week === w && <SFSymbol name="checkmark" color={SUCCESS_GREEN} size={18} />}</Pressable>)}<Text style={{ ...uiText.sectionTitle, color: ink }}>Week {week}</Text>{days.map(day => <Pressable key={day.day} disabled={day.day > card.day} accessibilityRole="button" onPress={() => { const action = () => { if (day.day === card.day) { setOverview(true); } else onRead(toHomeCard(day)); }; if (Platform.OS === "ios") pendingHistory.current = action; setWeekPicker(false); if (Platform.OS !== "ios") action(); }} style={[s.row, { marginHorizontal: 0, borderTopColor: border }]}><Text style={{ ...uiText.supporting, color: muted }}>{day.day}</Text><Text style={{ ...uiText.body, color: ink, flex: 1 }}>{day.day > card.day ? "A letter waiting for you" : day.title}</Text><SFSymbol name={day.day > card.day ? "lock" : "chevron.right"} color={muted} size={16}/></Pressable>)}</ScrollView></ReaderMaterialGradient></Modal>
   </View>;
 }
@@ -228,7 +270,7 @@ const s = StyleSheet.create({
   avatar: { width: 48, height: 48, borderRadius: 16, borderCurve: "continuous", alignItems: "center", justifyContent: "center" },
   featureCard: { padding: 22, borderRadius: 28, borderCurve: "continuous", overflow: "hidden" },
   painting: { position: "absolute", borderRadius: 12, borderWidth: 3, borderColor: "#FFF9EE", overflow: "hidden", boxShadow: "0 6px 12px #00000026" },
-  token: { width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: "#FFD04B", alignItems: "center", justifyContent: "center" },
+  token: { width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: "#FFB83A", alignItems: "center", justifyContent: "center" },
   kept: { flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 8, marginTop: 12, paddingLeft: 6, paddingRight: 14, height: 36, borderRadius: 18, backgroundColor: "#FFF4CC" },
   keptDot: { width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "#E2391F" },
   tomorrowPeek: { position: "absolute", top: 0, left: 0, right: 0, height: TOMORROW_PEEK, paddingHorizontal: 20, flexDirection: "row", alignItems: "center", gap: 14 },

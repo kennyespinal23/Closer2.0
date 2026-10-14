@@ -1,3 +1,4 @@
+import { Alert } from "react-native";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { Text } from "@/components/CloserText";
@@ -21,6 +22,9 @@ import {
 } from "@/lib/homeQuotes";
 import * as haptics from "@/lib/haptics";
 import { useDevTools } from "@/state/devTools";
+import { nightKey, updateNightPrayer, useNightPrayer } from "@/lib/nightPrayer";
+import { fireTestNightPrayerNow, requestNotificationPermission } from "@/lib/notifications";
+import { NightPrayerFlow } from "@/components/NightPrayer";
 import { useMoments } from "@/state/moments";
 import { useColors } from "@/state/theme";
 
@@ -56,6 +60,8 @@ import { useColors } from "@/state/theme";
 export default function DeveloperToolsScreen() {
   const { enabled, setEnabled, unlockAllMilestones, setUnlockAllMilestones } =
     useDevTools();
+  const night = useNightPrayer();
+  const [nightOpen, setNightOpen] = useState(false);
   const {
     todaysMoment,
     catalogPosition,
@@ -124,6 +130,42 @@ export default function DeveloperToolsScreen() {
           onValueChange={(next) => {
             haptics.soft();
             setUnlockAllMilestones(next);
+          }}
+          showDivider
+        />
+        <SettingsLinkRow
+          icon={<SFSymbol name="moon.stars" size={18} color={colors.ink} weight="semibold" />}
+          label="Open night prayer"
+          sublabel="Start the full flow right now, at any hour"
+          onPress={() => { haptics.soft(); setNightOpen(true); }}
+          showDivider
+        />
+        <SettingsLinkRow
+          icon={<SFSymbol name="arrow.counterclockwise" size={18} color={colors.ink} weight="semibold" />}
+          label="Reset tonight’s night prayer"
+          sublabel={night.lastPrayed === nightKey() ? "Prayed tonight. Reset to see the waiting card again" : "Not prayed yet tonight"}
+          onPress={() => { haptics.soft(); updateNightPrayer({ lastPrayed: null }); }}
+          showDivider
+        />
+        <SettingsToggleRow
+          icon={<SFSymbol name="moon.stars" size={18} color={colors.ink} weight="semibold" />}
+          label="Show night prayer now"
+          sublabel="Puts the night card on Home at any hour, even after Amen"
+          value={night.devAlways}
+          onValueChange={(next) => {
+            haptics.soft();
+            updateNightPrayer({ devAlways: next, ...(next && night.lastPrayed === nightKey() ? { lastPrayed: null } : {}) });
+          }}
+          showDivider
+        />
+        <SettingsLinkRow
+          icon={<SFSymbol name="bell.badge" size={18} color={colors.ink} weight="semibold" />}
+          label="Send night prayer notification"
+          sublabel="Arrives in 5 seconds. Lock the phone to see it"
+          onPress={async () => {
+            haptics.soft();
+            if (await requestNotificationPermission() !== "granted") { Alert.alert("Notifications are off", "Turn them on for Closer in iOS Settings."); return; }
+            await fireTestNightPrayerNow();
           }}
         />
       </SettingsSection>
@@ -266,6 +308,7 @@ export default function DeveloperToolsScreen() {
           it on here.
         </Text>
       </View>
+    <NightPrayerFlow visible={nightOpen} onClose={() => setNightOpen(false)} />
     </SettingsScaffold>
   );
 }

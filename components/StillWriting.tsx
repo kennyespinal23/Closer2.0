@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Modal, StyleSheet, View } from "react-native";
-import Animated, { Easing, Extrapolation, type SharedValue, cancelAnimation, interpolate, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
+import Animated, { Easing, Extrapolation, type SharedValue, cancelAnimation, interpolate, useAnimatedStyle, useDerivedValue, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import Svg, { Path, Rect } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "@/components/CloserText";
@@ -10,6 +10,7 @@ import { SFSymbol } from "./Symbol";
 import { dailyText, uiText } from "@/lib/typography";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useReminder } from "@/lib/useReminder";
+import { focusAmount, useFocusMoment } from "@/lib/homeFocus";
 import { useResolvedScheme } from "@/state/theme";
 
 /**
@@ -67,29 +68,34 @@ export function PencilPage({ width, progress }: { width: number; progress?: Shar
 export const DAY_AFTER_PEEK = 76, DAY_AFTER_FULL = 200;
 
 /**
- * The third card on Home. Rests as a slim tan row; once Tomorrow has fully
- * opened, keep scrolling and this one unfolds too, showing the page in progress.
+ * The third card on Home. Rests as a slim tan row with the page out of
+ * sight. At its stop the page comes up out of the notebook and the scroll
+ * writes it, a line for each quarter of the way; settled, the pencil adds
+ * half a word and stops, because it is still being written.
  */
-export function DayAfterCard({ day, weekday, dark, grow, scrollY, from, to, onPress }: {
-  day: number; weekday: string; dark: boolean; grow: boolean; scrollY: SharedValue<number>; from: number; to: number; onPress: () => void;
+export function DayAfterCard({ day, weekday, dark, grow, scrollY, settled, distance, stop, last, onPress }: {
+  day: number; weekday: string; dark: boolean; grow: boolean; scrollY: SharedValue<number>; settled: SharedValue<number>; distance: number; stop: number; last: number; onPress: () => void;
 }) {
-  const p = (y: number) => { "worklet"; return interpolate(y, [from, to], [0, 1], Extrapolation.CLAMP); };
-  const card = useAnimatedStyle(() => ({ height: DAY_AFTER_PEEK + (DAY_AFTER_FULL - DAY_AFTER_PEEK) * p(scrollY.value), marginHorizontal: 20 * (1 - p(scrollY.value)) }));
-  const peek = useAnimatedStyle(() => ({ opacity: interpolate(p(scrollY.value), [.3, .42], [1, 0], Extrapolation.CLAMP) }));
-  const full = useAnimatedStyle(() => ({ opacity: interpolate(p(scrollY.value), [.42, .56], [0, 1], Extrapolation.CLAMP), transform: [{ translateY: 10 * (1 - p(scrollY.value)) }] }));
+  const e = useDerivedValue(() => focusAmount(scrollY.value, stop, last, distance));
+  const m = useFocusMoment(settled, stop, 450);
+  const writing = useDerivedValue(() => e.value * .82 + m.value * e.value * .1);
+  // The stack folds the card (FoldStack); the page's rise inside it is a transform.
+  const peek = useAnimatedStyle(() => ({ opacity: interpolate(e.value, [.15, .4], [1, 0], Extrapolation.CLAMP) }));
+  const full = useAnimatedStyle(() => ({ opacity: interpolate(e.value, [.6, .9], [0, 1], Extrapolation.CLAMP) }));
+  const page = useAnimatedStyle(() => ({ transformOrigin: "center bottom", transform: [{ translateY: -48 * e.value }, { rotate: `${6 * e.value}deg` }] }));
   const bg = dark ? "#2A221D" : "#EADCCB", ink = dark ? "#E9D9C6" : "#4A3A2E", muted = dark ? "#A8907C" : "#7C6B5B", num = dark ? "#8F7A68" : "#9C8573";
   const label = `${weekday}. Day ${day}. Still being written.`;
-  const fullContent = <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-    <View style={{ flex: 1, gap: 6 }}>
-      <Text style={{ ...dailyText.dayNumber, color: num, fontVariant: ["tabular-nums"] }}>{String(day).padStart(2, "0")}</Text>
-      <Text style={{ ...uiText.supporting, color: muted, marginTop: -4 }}>{weekday}</Text>
-      <Text style={{ ...dailyText.cardTitle, color: ink, marginTop: 10 }}>Still being written</Text>
-    </View>
-    <View style={{ transform: [{ rotate: "6deg" }] }}><PencilPage width={118}/></View>
+  const fullText = <View style={{ gap: 6 }}>
+    <Text style={{ ...dailyText.dayNumber, color: num, fontVariant: ["tabular-nums"] }}>{String(day).padStart(2, "0")}</Text>
+    <Text style={{ ...uiText.supporting, color: muted, marginTop: -4 }}>{weekday}</Text>
+    <Text style={{ ...dailyText.cardTitle, color: ink, marginTop: 10, maxWidth: 160 }}>Still being written</Text>
   </View>;
-  if (!grow) return <Pressable feedback="action" onPress={onPress} accessibilityRole="button" accessibilityLabel={label} style={[s.full, { backgroundColor: bg, marginTop: -12 }]}>{fullContent}</Pressable>;
-  return <Pressable feedback="action" onPress={onPress} accessibilityRole="button" accessibilityLabel={label} style={{ marginTop: -12 }}>
-    <Animated.View style={[s.card, { backgroundColor: bg }, card]}>
+  if (!grow) return <Pressable feedback="action" onPress={onPress} accessibilityRole="button" accessibilityLabel={label} style={[s.full, { backgroundColor: bg, marginTop: -12 }]}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}><View style={{ flex: 1 }}>{fullText}</View><View style={{ transform: [{ rotate: "6deg" }] }}><PencilPage width={118}/></View></View>
+  </Pressable>;
+  return <Pressable feedback="action" onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
+    <View style={[s.card, { backgroundColor: bg, height: DAY_AFTER_FULL }]}>
+      <Animated.View style={[{ position: "absolute", right: 26, top: 84 }, page]}><PencilPage width={120} progress={writing}/></Animated.View>
       <Animated.View style={[s.peek, peek]}>
         <Text style={{ ...dailyText.dayNumber, fontSize: 22, lineHeight: 26, color: num, fontVariant: ["tabular-nums"] }}>{String(day).padStart(2, "0")}</Text>
         <View style={{ flex: 1 }}>
@@ -98,8 +104,8 @@ export function DayAfterCard({ day, weekday, dark, grow, scrollY, from, to, onPr
         </View>
         <SFSymbol name="pencil" size={16} color={num}/>
       </Animated.View>
-      <Animated.View style={[s.fullLayer, full]}>{fullContent}</Animated.View>
-    </Animated.View>
+      <Animated.View style={[s.fullLayer, full]}>{fullText}</Animated.View>
+    </View>
   </Pressable>;
 }
 
@@ -151,7 +157,7 @@ const s = StyleSheet.create({
   card: { borderRadius: 24, borderCurve: "continuous", overflow: "hidden" },
   full: { borderRadius: 28, borderCurve: "continuous", padding: 22 },
   peek: { position: "absolute", top: 0, left: 0, right: 0, height: DAY_AFTER_PEEK, paddingHorizontal: 20, flexDirection: "row", alignItems: "center", gap: 16 },
-  fullLayer: { position: "absolute", top: 0, left: 0, right: 0, height: DAY_AFTER_FULL, padding: 22, justifyContent: "center" },
+  fullLayer: { position: "absolute", top: 26, left: 22 },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingTop: 16 },
   facts: { marginHorizontal: 20, marginBottom: 16, borderRadius: 22, borderCurve: "continuous", backgroundColor: "#FFF8EE", paddingHorizontal: 18 },
   fact: { minHeight: 64, flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 10 },

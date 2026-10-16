@@ -46,7 +46,7 @@ export default function PrayersScreen() {
 
   return <View style={{ flex: 1, backgroundColor: NIGHT.deep }}>
     <StatusBar style="light"/>
-    <View style={[StyleSheet.absoluteFill, { height: 520 }]}><NightSky width="100%" height="100%" stars={5}/></View>
+    <NightSky fade/>
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: inset.top + 6, paddingHorizontal: 20, paddingBottom: inset.bottom + 48 }}>
       <View style={{ flexDirection: "row", alignItems: "center", height: 48 }}>
         <Pressable onPress={() => { haptics.soft(); goBackOr(router, "/(tabs)/profile"); }} accessibilityRole="button" accessibilityLabel="Back" style={s.round}><SFSymbol name="chevron.left" size={17} color={NIGHT.moon} weight="bold"/></Pressable>

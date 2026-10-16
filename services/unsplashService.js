@@ -177,7 +177,6 @@ export const SERMON_TYPE_UNSPLASH_QUERIES = {
   misconceptions: "clear azure blue sky open field landscape",
   testimonies: "coastal ocean waves bright day landscape",
   questions: "night sky stars milky way landscape",
-  "prayer-nights": "dark starry night sky peaceful landscape",
 };
 
 export const getHeroImage = async (typeId, day, illustrationPrompt) => {

@@ -55,8 +55,20 @@ export function resolveSermonType(_typeName?: string): SermonType {
   return getSermonTypeById("daily-church") ?? SERMON_TYPES[0]!;
 }
 
-export function resolveSermonTypeForMoment(_moment: Moment): SermonType {
-  return resolveSermonType();
+const SHORT_LABEL: Record<string, string> = {
+  "daily-church": "Daily Church", "jesus-only": "Jesus Only", "letters-struggling": "A struggling letter", "letters-grateful": "A grateful letter",
+  "character-studies": "Character study", "deep-verse": "Deep verse", "misconceptions": "Misconception", "testimonies": "Testimony",
+  "questions": "Hard question",
+};
+/** The category's name short enough for a card line, e.g. "Hard question". */
+export function devotionalLabel(moment: Pick<Moment, "day">): string {
+  const type = resolveSermonTypeForMoment(moment);
+  return SHORT_LABEL[type.id] ?? type.name;
+}
+
+/** Devotional categories rotate by day: day 1 is Daily Church, day 2 Jesus Only, and round again every ten days. */
+export function resolveSermonTypeForMoment(moment: Pick<Moment, "day">): SermonType {
+  return SERMON_TYPES[((moment.day - 1) % SERMON_TYPES.length + SERMON_TYPES.length) % SERMON_TYPES.length] ?? resolveSermonType();
 }
 
 /**

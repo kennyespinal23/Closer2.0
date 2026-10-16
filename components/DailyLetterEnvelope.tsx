@@ -14,11 +14,11 @@ export function DailyLetterEnvelope({ opened, day, title, onRevealed }: { opened
   useEffect(() => {
     if (!opened) { seal.value = flap.value = paper.value = halves.value = 0; return; }
     const ease = Easing.bezier(.23, 1, .32, 1);
-    seal.value = withTiming(1, { duration: reduced ? 0 : 240 });
-    halves.value = withDelay(reduced ? 0 : 240, withTiming(1, { duration: reduced ? 0 : 900, easing: ease }));
-    flap.value = withDelay(reduced ? 0 : 540, withTiming(1, { duration: reduced ? 0 : 900, easing: ease }));
-    paper.value = withDelay(reduced ? 0 : 1440, withTiming(1, { duration: reduced ? 0 : 900, easing: ease }));
-    const timer = setTimeout(() => callback.current(), reduced ? 120 : 3100);
+    seal.value = withTiming(1, { duration: reduced ? 0 : 160 });
+    halves.value = withDelay(reduced ? 0 : 140, withTiming(1, { duration: reduced ? 0 : 420, easing: ease }));
+    flap.value = withDelay(reduced ? 0 : 260, withTiming(1, { duration: reduced ? 0 : 420, easing: ease }));
+    paper.value = withDelay(reduced ? 0 : 560, withTiming(1, { duration: reduced ? 0 : 420, easing: ease }));
+    const timer = setTimeout(() => callback.current(), reduced ? 120 : 1000);
     return () => { clearTimeout(timer); [seal, flap, paper, halves].forEach(cancelAnimation); };
   }, [opened, reduced, seal, flap, paper, halves]);
   const stamp = useAnimatedStyle(() => ({ opacity: seal.value < 1 ? 1 : 0, transform: [{ scale: 1 - .12 * seal.value }] }));

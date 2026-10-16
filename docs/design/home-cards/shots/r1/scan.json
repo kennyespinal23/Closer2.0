@@ -1,0 +1,566 @@
+{
+  "surfaces": [
+    {
+      "name": "1-today-open",
+      "type": "screen",
+      "fails": [
+        "Text clipped: \"?\" cut by its container",
+        "Text on an image/illustration fails contrast over part of its ground (4.24:1, needs 4.5): \"Today\". Add a scrim, move it, or change the ink."
+      ],
+      "warns": [
+        "Default-reach font in use (Nunito). Defend it or replace it.",
+        "6 distinct left edges in the left third. Align to fewer verticals.",
+        "Three saturated hue families (0°, 48°, 24°). Is each one earning its place?"
+      ],
+      "facts": {
+        "os": "ios",
+        "kind": "core",
+        "fonts": {
+          "Nunito": 17
+        },
+        "sizes": [
+          40,
+          30,
+          26,
+          22,
+          17,
+          15,
+          13,
+          11
+        ],
+        "weights": [
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "leftEdges": 6,
+        "words": 38,
+        "headline": "30px, 1 words, 1 line(s)",
+        "accentHues": [
+          0,
+          48,
+          24
+        ],
+        "cards": 5
+      }
+    },
+    {
+      "name": "2-today-to-tomorrow",
+      "type": "screen",
+      "fails": [
+        "Something sits on top of text: \"Your daily walk\" under a div.fadeb; \"Check in\" under a div.fadeb. Move one; mark a floating bar data-float, or the view under a sheet data-behind.",
+        "Text clipped: \"?\" cut by its container",
+        "Text on an image/illustration fails contrast over part of its ground (4.30:1, needs 4.5): \"Today\". Add a scrim, move it, or change the ink.",
+        "The status-bar icons is lost on what sits under it (1.13:1). Use data-chrome=\"light\" / data-home, or change the art under it."
+      ],
+      "warns": [
+        "Default-reach font in use (Nunito). Defend it or replace it.",
+        "Text inside the system's safe areas: \"2 days in a row\" (status bar); \"Genesis 3\" (status bar)",
+        "Lines of text touching vertically (ink under 2pt apart): \"Rooted in love, Established in\" / \"?\"",
+        "Three saturated hue families (0°, 48°, 24°). Is each one earning its place?"
+      ],
+      "facts": {
+        "os": "ios",
+        "kind": "state",
+        "fonts": {
+          "Nunito": 14
+        },
+        "sizes": [
+          40,
+          26,
+          22,
+          17,
+          15,
+          13,
+          11
+        ],
+        "weights": [
+          "400",
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "leftEdges": 5,
+        "words": 23,
+        "headline": "22px, 1 words, 1 line(s)",
+        "accentHues": [
+          0,
+          48,
+          24
+        ],
+        "cards": 5
+      }
+    },
+    {
+      "name": "3-tomorrow-open",
+      "type": "screen",
+      "fails": [
+        "Text on an image/illustration fails contrast over part of its ground (4.30:1, needs 4.5): \"Today\". Add a scrim, move it, or change the ink.",
+        "The status-bar clock is lost on what sits under it (1.13:1). Use data-chrome=\"light\" / data-home, or change the art under it."
+      ],
+      "warns": [
+        "Default-reach font in use (Nunito). Defend it or replace it.",
+        "Text inside the system's safe areas: \"Rooted in love, Establis\" (status bar)"
+      ],
+      "facts": {
+        "os": "ios",
+        "kind": "state",
+        "fonts": {
+          "Nunito": 17
+        },
+        "sizes": [
+          40,
+          30,
+          26,
+          22,
+          17,
+          15,
+          13,
+          11
+        ],
+        "weights": [
+          "400",
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "leftEdges": 4,
+        "words": 28,
+        "headline": "30px, 1 words, 1 line(s)",
+        "accentHues": [
+          48,
+          24
+        ],
+        "cards": 5
+      }
+    },
+    {
+      "name": "4-tomorrow-to-dayafter",
+      "type": "screen",
+      "fails": [
+        "Text on an image/illustration fails contrast over part of its ground (1.13:1, needs 3): \"Rooted in love, Established in faith, Gr\". Add a scrim, move it, or change the ink.",
+        "Text on an image/illustration fails contrast over part of its ground (4.30:1, needs 4.5): \"Today\". Add a scrim, move it, or change the ink."
+      ],
+      "warns": [
+        "Default-reach font in use (Nunito). Defend it or replace it.",
+        "Text inside the system's safe areas: \"Rooted in love, Establis\" (status bar)",
+        "Three saturated hue families (48°, 24°, 0°). Is each one earning its place?"
+      ],
+      "facts": {
+        "os": "ios",
+        "kind": "state",
+        "fonts": {
+          "Nunito": 13
+        },
+        "sizes": [
+          40,
+          30,
+          26,
+          17,
+          15,
+          13,
+          11
+        ],
+        "weights": [
+          "400",
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "leftEdges": 4,
+        "words": 19,
+        "headline": "30px, 1 words, 1 line(s)",
+        "accentHues": [
+          48,
+          24,
+          0
+        ],
+        "cards": 5
+      }
+    },
+    {
+      "name": "5-dayafter-open",
+      "type": "screen",
+      "fails": [
+        "Text on an image/illustration fails contrast over part of its ground (4.30:1, needs 4.5): \"Today\". Add a scrim, move it, or change the ink."
+      ],
+      "warns": [
+        "Default-reach font in use (Nunito). Defend it or replace it.",
+        "Text inside the system's safe areas: \"Rooted in love, Establis\" (status bar); \"Colossians 2:7\" (status bar)",
+        "Three saturated hue families (48°, 24°, 0°). Is each one earning its place?"
+      ],
+      "facts": {
+        "os": "ios",
+        "kind": "state",
+        "fonts": {
+          "Nunito": 15
+        },
+        "sizes": [
+          40,
+          30,
+          26,
+          17,
+          15,
+          13,
+          11
+        ],
+        "weights": [
+          "400",
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "leftEdges": 4,
+        "words": 26,
+        "headline": "30px, 1 words, 1 line(s)",
+        "accentHues": [
+          48,
+          24,
+          0
+        ],
+        "cards": 5
+      }
+    },
+    {
+      "name": "6-night-open",
+      "type": "screen",
+      "fails": [
+        "Text overlapping text: \"Lay today down.\" / \"Say how today felt, then pray \"",
+        "Coloured zero-offset glow shadow x4.",
+        "Text on an image/illustration fails contrast over part of its ground (4.24:1, needs 4.5): \"Today\". Add a scrim, move it, or change the ink."
+      ],
+      "warns": [
+        "Default-reach font in use (Nunito). Defend it or replace it.",
+        "Three saturated hue families (0°, 48°, 24°). Is each one earning its place?",
+        "5 different shadow styles. Depth has three levels with one shadow style each (finish.md §4)."
+      ],
+      "facts": {
+        "os": "ios",
+        "kind": "state",
+        "fonts": {
+          "Nunito": 14
+        },
+        "sizes": [
+          40,
+          34,
+          26,
+          17,
+          15,
+          13,
+          11
+        ],
+        "weights": [
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "leftEdges": 4,
+        "words": 38,
+        "headline": "34px, 3 words, 1 line(s)",
+        "accentHues": [
+          0,
+          48,
+          24
+        ],
+        "cards": 6
+      }
+    },
+    {
+      "name": "7-night-to-today",
+      "type": "screen",
+      "fails": [
+        "Text clipped: \"?\" cut by its container",
+        "Coloured zero-offset glow shadow x1.",
+        "Text on an image/illustration fails contrast over part of its ground (4.26:1, needs 4.5): \"Today\". Add a scrim, move it, or change the ink.",
+        "The status-bar icons is lost on what sits under it (1.13:1). Use data-chrome=\"light\" / data-home, or change the art under it."
+      ],
+      "warns": [
+        "Default-reach font in use (Nunito). Defend it or replace it.",
+        "Text inside the system's safe areas: \"2 days in a row\" (status bar); \"Genesis 3\" (status bar)",
+        "Three saturated hue families (0°, 48°, 24°). Is each one earning its place?"
+      ],
+      "facts": {
+        "os": "ios",
+        "kind": "state",
+        "fonts": {
+          "Nunito": 12
+        },
+        "sizes": [
+          40,
+          34,
+          26,
+          17,
+          15,
+          13,
+          11
+        ],
+        "weights": [
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "leftEdges": 5,
+        "words": 28,
+        "headline": "34px, 3 words, 1 line(s)",
+        "accentHues": [
+          0,
+          48,
+          24
+        ],
+        "cards": 6
+      }
+    },
+    {
+      "name": "8-night-slim-today-open",
+      "type": "screen",
+      "fails": [
+        "Text clipped: \"?\" cut by its container",
+        "Text overlapping text: \"Lay today down.\" / \"Before you sleep · 2 min\"",
+        "Coloured zero-offset glow shadow x1.",
+        "Text on an image/illustration fails contrast over part of its ground (4.30:1, needs 4.5): \"Today\". Add a scrim, move it, or change the ink.",
+        "The status-bar clock is lost on what sits under it (1.13:1). Use data-chrome=\"light\" / data-home, or change the art under it."
+      ],
+      "warns": [
+        "Default-reach font in use (Nunito). Defend it or replace it.",
+        "Text inside the system's safe areas: \"Rooted in love, Establis\" (status bar)",
+        "Three saturated hue families (48°, 24°, 0°). Is each one earning its place?"
+      ],
+      "facts": {
+        "os": "ios",
+        "kind": "state",
+        "fonts": {
+          "Nunito": 16
+        },
+        "sizes": [
+          40,
+          34,
+          30,
+          26,
+          17,
+          15,
+          13,
+          11
+        ],
+        "weights": [
+          "400",
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "leftEdges": 4,
+        "words": 34,
+        "headline": "34px, 3 words, 1 line(s)",
+        "accentHues": [
+          48,
+          24,
+          0
+        ],
+        "cards": 6
+      }
+    },
+    {
+      "name": "9-rest-open",
+      "type": "screen",
+      "fails": [
+        "Something sits on top of text: \"Your daily walk\" under a div.fadeb; \"Check in\" under a div.fadeb. Move one; mark a floating bar data-float, or the view under a sheet data-behind.",
+        "Coloured zero-offset glow shadow x1.",
+        "Text on an image/illustration fails contrast over part of its ground (4.30:1, needs 4.5): \"Today\". Add a scrim, move it, or change the ink."
+      ],
+      "warns": [
+        "Default-reach font in use (Nunito). Defend it or replace it.",
+        "Lines of text touching vertically (ink under 2pt apart): \"Rest now.\" / \"You prayed for peace and stren\"",
+        "7 distinct left edges in the left third. Align to fewer verticals.",
+        "Three saturated hue families (0°, 48°, 24°). Is each one earning its place?"
+      ],
+      "facts": {
+        "os": "ios",
+        "kind": "state",
+        "fonts": {
+          "Nunito": 17
+        },
+        "sizes": [
+          40,
+          26,
+          22,
+          17,
+          15,
+          13,
+          11
+        ],
+        "weights": [
+          "400",
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "leftEdges": 7,
+        "words": 40,
+        "headline": "22px, 2 words, 1 line(s)",
+        "accentHues": [
+          0,
+          48,
+          24
+        ],
+        "cards": 5
+      }
+    },
+    {
+      "name": "10-rest-slim-today-open",
+      "type": "screen",
+      "fails": [
+        "Text clipped: \"?\" cut by its container",
+        "Coloured zero-offset glow shadow x1.",
+        "Text on an image/illustration fails contrast over part of its ground (4.30:1, needs 4.5): \"Today\". Add a scrim, move it, or change the ink.",
+        "The status-bar clock is lost on what sits under it (1.13:1). Use data-chrome=\"light\" / data-home, or change the art under it."
+      ],
+      "warns": [
+        "Default-reach font in use (Nunito). Defend it or replace it.",
+        "Text inside the system's safe areas: \"Rooted in love, Establis\" (status bar)",
+        "Three saturated hue families (48°, 24°, 0°). Is each one earning its place?"
+      ],
+      "facts": {
+        "os": "ios",
+        "kind": "state",
+        "fonts": {
+          "Nunito": 16
+        },
+        "sizes": [
+          40,
+          30,
+          26,
+          22,
+          17,
+          15,
+          13,
+          11
+        ],
+        "weights": [
+          "400",
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "leftEdges": 5,
+        "words": 32,
+        "headline": "30px, 1 words, 1 line(s)",
+        "accentHues": [
+          48,
+          24,
+          0
+        ],
+        "cards": 5
+      }
+    },
+    {
+      "name": "living-day",
+      "type": "screen",
+      "fails": [
+        "Text on an image/illustration fails contrast over part of its ground (4.30:1, needs 4.5): \"Today\". Add a scrim, move it, or change the ink.",
+        "The status-bar clock is lost on what sits under it (1.13:1). Use data-chrome=\"light\" / data-home, or change the art under it."
+      ],
+      "warns": [
+        "Default-reach font in use (Nunito). Defend it or replace it.",
+        "Text inside the system's safe areas: \"Rooted in love, Establis\" (status bar)"
+      ],
+      "facts": {
+        "os": "ios",
+        "kind": "core",
+        "fonts": {
+          "Nunito": 17
+        },
+        "sizes": [
+          40,
+          30,
+          26,
+          22,
+          17,
+          15,
+          13,
+          11
+        ],
+        "weights": [
+          "400",
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "leftEdges": 4,
+        "words": 28,
+        "headline": "30px, 1 words, 1 line(s)",
+        "accentHues": [
+          48,
+          24
+        ],
+        "cards": 5
+      }
+    },
+    {
+      "name": "living-night",
+      "type": "screen",
+      "fails": [
+        "Text overlapping text: \"Lay today down.\" / \"Say how today felt, then pray \"",
+        "Coloured zero-offset glow shadow x1.",
+        "Text on an image/illustration fails contrast over part of its ground (4.24:1, needs 4.5): \"Today\". Add a scrim, move it, or change the ink."
+      ],
+      "warns": [
+        "Default-reach font in use (Nunito). Defend it or replace it.",
+        "Three saturated hue families (0°, 48°, 24°). Is each one earning its place?"
+      ],
+      "facts": {
+        "os": "ios",
+        "kind": "state",
+        "fonts": {
+          "Nunito": 14
+        },
+        "sizes": [
+          40,
+          34,
+          26,
+          17,
+          15,
+          13,
+          11
+        ],
+        "weights": [
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "leftEdges": 4,
+        "words": 38,
+        "headline": "34px, 3 words, 1 line(s)",
+        "accentHues": [
+          0,
+          48,
+          24
+        ],
+        "cards": 6
+      }
+    }
+  ],
+  "exports": []
+}

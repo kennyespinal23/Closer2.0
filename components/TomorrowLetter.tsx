@@ -19,8 +19,8 @@ import * as haptics from "@/lib/haptics";
 const CREAM = "#FFF1E4", CREAM_2 = "#FFF1E4B3", SUN = "#FFC93C", SEAL = "#E2391F";
 
 /** Tomorrow's letter: cream envelope, flap closed, red cross seal. */
-export function SealedEnvelope({ width, tilt = 7 }: { width: number; tilt?: number }) {
-  return <View accessible={false} style={{ transform: [{ rotate: `${tilt}deg` }], boxShadow: "0 10px 18px -8px #00000073", borderRadius: 10 }}>
+export function SealedEnvelope({ width, tilt = 7, shadow = true }: { width: number; tilt?: number; shadow?: boolean }) {
+  return <View accessible={false} style={{ transform: [{ rotate: `${tilt}deg` }], boxShadow: shadow ? "0 10px 18px -8px #00000073" : undefined, borderRadius: 10 }}>
     <Svg width={width} height={width * 104 / 150} viewBox="0 0 150 104">
       <Rect x={0} y={0} width={150} height={104} rx={10} fill="#F4E6D3"/>
       <Path d="M2 100 62 54M148 100 88 54" stroke="#E2CDB2" strokeWidth={2} fill="none"/>
@@ -37,12 +37,14 @@ export function SealedEnvelope({ width, tilt = 7 }: { width: number; tilt?: numb
  * a hint of where it comes from, when it opens, and today's progress.
  * The seal answers a tap with a small "not yet" wiggle.
  */
-export function TomorrowLetter({ visible, day, todayCount, onClose, onOpenToday, onDismiss }: {
+export function TomorrowLetter({ visible, day, todayCount, todayTotal = 4, onClose, onOpenToday, onDismiss }: {
   visible: boolean;
   /** Catalog day of the locked letter. */
   day: number;
   /** Today's steps done, 0–4. */
   todayCount: number;
+  /** How many steps today holds (two to four). */
+  todayTotal?: number;
   onClose: () => void;
   /** Close this sheet and open today's walk. */
   onOpenToday: () => void;
@@ -53,7 +55,7 @@ export function TomorrowLetter({ visible, day, todayCount, onClose, onOpenToday,
   const letter = findDevotionalByDay(day);
   const from = letter ? `From ${letter.reference.replace(/:.*$/, "")} · ${devotionalDurationMin(letter)} min` : null;
   const reminder = answers.notificationsEnabled && answers.dailyReminderTime ? formatReminderTime(answers.dailyReminderTime) : null;
-  const kept = todayCount >= 4;
+  const kept = todayCount >= todayTotal;
 
   const tilt = useSharedValue(-5);
   const wiggle = (delay = 0) => {
@@ -101,10 +103,10 @@ export function TomorrowLetter({ visible, day, todayCount, onClose, onOpenToday,
           <SFSymbol name="sun.max" size={20} color={SUN}/>
           <View style={{ flex: 1 }}>
             <Text style={{ ...uiText.body, fontWeight: "800", color: CREAM }}>{kept ? "Today is kept" : "Today's walk"}</Text>
-            <Text style={{ ...uiText.supporting, fontSize: 13, lineHeight: 18, color: CREAM_2 }}>{kept ? "All four done" : `${todayCount} of 4 done`}</Text>
+            <Text style={{ ...uiText.supporting, fontSize: 13, lineHeight: 18, color: CREAM_2 }}>{kept ? "All done" : `${todayCount} of ${todayTotal} done`}</Text>
           </View>
           <View style={{ flexDirection: "row", gap: 4 }} accessible={false}>
-            {[0, 1, 2, 3].map(i => <View key={i} style={[s.dot, i < todayCount && { backgroundColor: SEAL }]}>{i < todayCount && <SFSymbol name="checkmark" size={10} color="#FFF"/>}</View>)}
+            {Array.from({ length: todayTotal }, (_, i) => i).map(i => <View key={i} style={[s.dot, i < todayCount && { backgroundColor: SEAL }]}>{i < todayCount && <SFSymbol name="checkmark" size={10} color="#FFF"/>}</View>)}
           </View>
         </View>
       </View>

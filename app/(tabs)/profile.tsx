@@ -42,7 +42,7 @@ import {
   relativeTime,
   routeForVerse,
 } from "@/lib/annotationsFormat";
-import { findMomentByDay, resolveSermonType } from "@/lib/moments";
+import { findMomentByDay, resolveSermonType, resolveSermonTypeForMoment } from "@/lib/moments";
 import {
   type Highlight,
   type Note,
@@ -158,7 +158,7 @@ export default function ProfileTabScreen() {
       .map((day) => {
         const moment = findMomentByDay(day);
         if (!moment) return null;
-        return { moment, type: resolveSermonType() };
+        return { moment, type: resolveSermonTypeForMoment(moment) };
       })
       .filter(
         (

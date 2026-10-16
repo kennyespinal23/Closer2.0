@@ -57,7 +57,6 @@ const TYPE_EMOJI: Record<string, string> = {
   misconceptions: "💡",
   testimonies: "🗣️",
   questions: "❓",
-  "prayer-nights": "🌙",
 };
 
 export type DevotionalCarouselCard = {

@@ -1,3 +1,4 @@
+import { dailyStepsFor } from "@/lib/dailySteps";
 import { useRef, useState } from 'react';
 import { ScrollView, Switch, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
@@ -41,7 +42,7 @@ export function DailySmallStep({ card, completed, onComplete, onClose }: { card:
     } finally { saving.current = false; setBusy(false); }
   };
   return <View style={{ flex: 1, backgroundColor: '#FBF9F6', paddingTop: inset.top }}>
-    <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingTop: 8, alignItems: 'center', gap: 16 }}><CloseButton onPress={onClose} disabled={busy} color="#17120F" style={{ backgroundColor: "#ECE6DE" }}/><View style={{ flex: 1 }}><DailyStoryProgress completed={completed} active="action" color="#FF4326" track="#DDD6CD"/></View></View>
+    <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingTop: 8, alignItems: 'center', gap: 16 }}><CloseButton onPress={onClose} disabled={busy} color="#17120F" style={{ backgroundColor: "#ECE6DE" }}/><View style={{ flex: 1 }}><DailyStoryProgress steps={dailyStepsFor(card.day)} completed={completed} active="action" color="#FF4326" track="#DDD6CD"/></View></View>
     <ScrollView contentContainerStyle={{ padding: 20, gap: 10 }}><Text style={{ ...uiText.supporting, color: '#786554' }}>One small step</Text><Text accessibilityRole="header" style={{ ...uiText.screenTitle, color: '#17120F' }}>Take the word with you.</Text><Text style={{ ...uiText.supporting, color: '#786554' }}>Pick one to do before tonight.</Text>
       {options.map(option => <Pressable key={option.id} feedback="action" accessibilityRole="radio" accessibilityState={{ checked: selected === option.id }} disabled={busy} onPress={() => { setSelected(option.id); haptics.soft(); }} style={{ backgroundColor: selected === option.id ? '#FFD455' : '#FFF', padding: 18, paddingRight: 56, borderWidth: 1, borderColor: '#17120F18', borderRadius: 24, borderCurve: 'continuous', gap: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><SFSymbol name={option.icon} size={16} color="#786554"/><Text style={{ ...uiText.supporting, color: '#786554', flex: 1 }}>{option.title}</Text></View><Text style={{ ...uiText.body, fontWeight: '800', color: '#17120F' }}>{option.text}</Text><View style={{ position: "absolute", right: 18, top: "50%", marginTop: -14 }}><SFSymbol name={selected === option.id ? "checkmark.circle.fill" : "circle"} color={selected === option.id ? "#6A2B10" : "#CFC8C0"} size={28}/></View>

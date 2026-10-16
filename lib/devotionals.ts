@@ -15,6 +15,7 @@
 
 import DEVOTIONALS_RAW from "@/assets/data/devotionals.json";
 import type { DevotionalDay } from "@/assets/data/devotionals";
+import type { FloatingScriptureCard } from "@/constants/homePrototype";
 import { natureBackdropQueryForDay } from "@/services/unsplashService";
 
 export type { DevotionalDay };
@@ -99,16 +100,7 @@ export function devotionalDurationMin(day: DevotionalDay): number {
  * Illustration prompt is a curated nature/atmosphere Unsplash
  * query (never the sermon title — titles return random portraits).
  */
-export function toHomeCard(day: DevotionalDay): {
-  id: string;
-  scriptureReference: string;
-  scriptureText: string;
-  story: string;
-  insight: string;
-  title: string;
-  illustrationPrompt: string;
-  day: number;
-} {
+export function toHomeCard(day: DevotionalDay): FloatingScriptureCard {
   return {
     id: `day-${day.day}`,
     scriptureReference: day.reference,
@@ -118,5 +110,7 @@ export function toHomeCard(day: DevotionalDay): {
     title: day.title,
     illustrationPrompt: natureBackdropQueryForDay(day.day),
     day: day.day,
+    // Per-category extras, when the day has them.
+    character: day.character, keyWord: day.keyWord, myth: day.myth, question: day.question, prayer: day.prayer,
   };
 }

@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Closer Home cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="file:///Users/kennyespinal23/.claude/skills/app-designer-pro/assets/device.css">
+<style>
+:root {
+  --canvas: #211D19; --canvas-lit: #4A3420;
+  --ink: #F7F0E6; --muted: #BBAA99; --surface: #302820;
+  /* Today wears its category: Hard question. */
+  --q-lit: #4A3624; --q-mid: #33261C; --q-far: #261D17; --q-gold: #FFC21A; --q-num: #FFFFFF8C; --q-chip: #FFFFFFEB; --q-chip-ink: #2A1206;
+  /* Tomorrow: the sealed letter. */
+  --t-bg: #4A2C20; --t-ink: #FFF1E4; --t-muted: #D8BDA5; --paper: #F4E6D3; --seal: #C8342A;
+  /* The day after: the page in progress. */
+  --d-bg: #2A221D; --d-ink: #E9D9C6; --d-muted: #A8907C; --d-num: #8F7A68; --d-paper: #FFF8EE; --d-line: #E6D6C2; --graphite: #5A4A3E;
+  /* Night. */
+  --n-moon: #FBF2F6; --n-lav: #D2C3DC; --n-candle: #FFC93C; --n-ink: #2A1233; --n-deep: #1A0C26;
+  --fold: 140px;
+}
+.screen { font-family: "Nunito", var(--sf-rounded); background: var(--canvas); color: var(--ink); }
+.screen .bg { position: absolute; inset: 0 0 auto 0; height: 420px; background: linear-gradient(180deg, var(--canvas-lit), var(--canvas)); }
+.scroll { position: absolute; inset: 0; overflow: hidden; }
+.content { position: absolute; left: 20px; right: 20px; top: 0; padding-top: 78px; display: flex; flex-direction: column; gap: 24px; transform: translateY(calc(var(--y, 0) * var(--fold) * -1)); }
+
+/* Header */
+.top { display: flex; align-items: center; gap: 12px; }
+.avatar { width: 44px; height: 44px; border-radius: 14px; background: #FF4326; display: grid; place-items: center; color: #fff; }
+.streak { flex: 1; font-size: 17px; font-weight: 800; }
+.pill { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px 0 6px; border-radius: 22px; background: #2E2620; font-weight: 800; font-size: 17px; }
+.pill .bk { width: 32px; height: 32px; border-radius: 16px; background: #F3D9A0; border: 2px solid #C8342A; display: grid; place-items: center; }
+.quote { font-size: 40px; line-height: 48px; font-weight: 900; letter-spacing: -1.4px; margin-top: 4px; }
+.ref { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 15px; font-weight: 500; margin-top: -10px; }
+.ref::before { content: ""; width: 18px; height: 2px; border-radius: 1px; background: var(--muted); }
+
+/* Every card: the frame follows the scroll; what's inside is its own. */
+.card { position: relative; border-radius: 28px; overflow: hidden; flex: none; }
+.card .ground { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
+.card .layer { position: absolute; }
+.k { font-size: 13px; line-height: 17px; font-weight: 800; letter-spacing: .2px; }
+.num { font-size: 30px; line-height: 32px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ct { font-size: 26px; line-height: 28px; font-weight: 800; letter-spacing: -.5px; }
+/* show when open / show when slim, with a short dead zone so they never overlap */
+.when-open { opacity: clamp(0, calc((var(--e) - .5) / .35), 1); }
+.when-slim { opacity: clamp(0, calc((.35 - var(--e)) / .25), 1); }
+
+/* ── Today: the page you're on. Art leaves sideways, the title stays. ── */
+.today { height: calc(104px + 120px * var(--e)); }
+.today .when-open { opacity: clamp(0, calc((var(--e) - .62) / .28), 1); }
+.today .when-slim { opacity: clamp(0, calc((.45 - var(--e)) / .2), 1); }
+.today .ground { background: radial-gradient(125% 110% at 88% 0%, var(--q-lit), var(--q-mid) 45%, var(--q-far)); box-shadow: inset 0 0 0 1.5px #FFC21A47; }
+.today .glyph { right: -14px; top: -44px; font-size: 290px; line-height: 300px; font-weight: 900; letter-spacing: -10px; color: var(--q-gold);
+  transform-origin: right top;
+  transform: translate(calc((1 - var(--e)) * 30px), calc((1 - var(--e)) * 34px)) scale(calc(.3 + .7 * var(--e)));
+  opacity: calc(.5 + .5 * var(--e)); }
+.today .meta { left: 22px; top: 22px; transform: translateY(calc((1 - var(--e)) * -10px)); }
+.today .meta .k { color: var(--q-gold); font-size: 15px; line-height: 20px; margin-top: 2px; white-space: nowrap; }
+.today .meta .num { color: var(--q-num); }
+.today .kicker { left: 22px; top: 20px; display: flex; align-items: center; gap: 8px; color: var(--q-gold); }
+.today .kicker .dots { display: flex; gap: 4px; margin-left: 2px; }
+.today .kicker .dots i { width: 7px; height: 7px; border-radius: 4px; box-shadow: inset 0 0 0 1.5px #FFC21A; }
+.today .kicker .dots i.on { background: var(--q-gold); }
+.today .title { left: 22px; top: calc(42px + 54px * var(--e)); width: 240px; color: #fff; transform-origin: left top; transform: scale(calc(.77 + .23 * var(--e))); }
+.today .steps { left: 22px; top: 166px; display: flex; gap: 6px; align-items: center; }
+.today .steps .tok { width: 36px; height: 36px; border-radius: 18px; background: var(--q-chip); color: var(--q-chip-ink); display: grid; place-items: center; box-shadow: 0 2px 6px #0000001F;
+  /* moment: the four steps land one after another */
+  transform: translateY(calc((1 - clamp(0, calc(var(--m, 1) * 1.6 - var(--i) * .2), 1)) * -14px)); }
+.today .steps .tok.on { background: var(--q-gold); }
+.today .steps .k { color: var(--q-gold); font-size: 15px; margin-left: 6px; }
+
+/* ── Tomorrow: the sealed letter comes forward. Depth, not width. ── */
+.tomorrow { margin: -12px calc(10px * (1 - var(--e))) 0; height: calc(92px + 148px * var(--e)); }
+.tomorrow .ground { background: linear-gradient(180deg, #53321F, var(--t-bg)); box-shadow: inset 0 0 0 .5px #FFF1E42E; }
+.tomorrow .ground::after { content: ""; position: absolute; inset: 0; background: #00000033; opacity: calc(1 - var(--e)); }
+.tomorrow .env { width: 150px; height: 104px; transform-origin: right top;
+  right: calc(24px - 2px * var(--e)); top: calc(26px + 42px * var(--e));
+  transform: scale(calc(.373 + .627 * var(--e))) rotate(calc(7deg - 10deg * var(--e) + 3deg * var(--m, 1) * var(--e)));
+  filter: drop-shadow(0 calc(4px + 14px * var(--e)) calc(6px + 14px * var(--e)) #00000080); }
+.tomorrow .env .glint { position: absolute; left: 55px; top: 38px; width: 40px; height: 40px; border-radius: 20px; overflow: hidden; }
+.tomorrow .env .glint::after { content: ""; position: absolute; top: -10px; bottom: -10px; width: 14px; background: linear-gradient(90deg, #FFFFFF00, #FFFFFFB3, #FFFFFF00);
+  transform: rotate(20deg); left: calc(-20px + 70px * var(--m, 0)); opacity: calc(var(--e) * (1 - var(--m, 0)) * 1.6); }
+.tomorrow .when-open { opacity: clamp(0, calc((var(--e) - .6) / .3), 1); }
+.tomorrow .when-slim { opacity: clamp(0, calc((.4 - var(--e)) / .25), 1); }
+.dayafter .when-open { opacity: clamp(0, calc((var(--e) - .6) / .3), 1); }
+.tomorrow .row { left: 22px; right: 96px; top: 0; height: 92px; display: flex; align-items: center; gap: 12px; }
+.tomorrow .row .k { color: var(--t-muted); font-weight: 600; }
+.tomorrow .row b { display: block; font-size: 17px; line-height: 23px; font-weight: 800; color: var(--t-ink); }
+.tomorrow .open { left: 22px; top: 24px; width: 160px; }
+.tomorrow .open .num { color: #FFF1E466; }
+.tomorrow .open .k { color: var(--t-muted); font-size: 15px; line-height: 20px; font-weight: 600; margin-top: -2px; }
+.tomorrow .open .ct { color: var(--t-ink); margin-top: 14px; }
+.lockchip { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 7px 12px; border-radius: 16px; background: #FFFFFF12; color: var(--t-muted); font-size: 15px; font-weight: 600; }
+
+/* ── The day after: the page comes up out of the notebook, written by the scroll. ── */
+.dayafter { margin: -12px calc(20px * (1 - var(--e))) 0; height: calc(76px + 124px * var(--e)); }
+.dayafter .ground { background: var(--d-bg); box-shadow: inset 0 0 0 .5px #FFFFFF14; }
+.dayafter .row { left: 20px; right: 20px; top: 0; height: 76px; display: flex; align-items: center; gap: 14px; }
+.dayafter .row .n { font-size: 22px; line-height: 26px; font-weight: 800; color: var(--d-num); font-variant-numeric: tabular-nums; }
+.dayafter .row .k { color: var(--d-muted); font-weight: 600; }
+.dayafter .row b { display: block; font-size: 17px; line-height: 23px; font-weight: 800; color: var(--d-ink); }
+.dayafter .open { left: 22px; top: 26px; }
+.dayafter .open .num { color: var(--d-num); }
+.dayafter .open .k { color: var(--d-muted); font-size: 15px; line-height: 20px; font-weight: 600; margin-top: -2px; }
+.dayafter .open .ct { color: var(--d-ink); margin-top: 12px; width: 150px; }
+.dayafter .sheet { right: 26px; width: 120px; height: 94px; top: calc(84px - 48px * var(--e)); transform: rotate(calc(6deg * var(--e))); transform-origin: center bottom;
+  background: var(--d-paper); border-radius: 7px; box-shadow: 0 8px 18px -8px #00000099; overflow: hidden; }
+.dayafter .sheet .margin { position: absolute; left: 8px; top: 0; bottom: 0; width: 1.4px; background: #F2B8A8; }
+.dayafter .sheet .rule { position: absolute; left: 14px; right: 14px; height: 1px; background: var(--d-line); }
+.dayafter .sheet .ink { position: absolute; left: 14px; height: 4px; border-radius: 2px; background: var(--graphite); opacity: .8; }
+.dayafter .pencil { width: 40px; height: 40px; }
+
+/* ── Night prayer: the sky closes like an eyelid; the moon becomes the button. ── */
+.night { height: calc(104px + 196px * var(--e)); border-radius: 32px; box-shadow: 0 24px 40px -22px #320F3CE6; }
+.night .ground { background: var(--n-deep) url("../../../assets/backdrops/night-sky.jpg") center top / cover; }
+.night .ground::after { content: ""; position: absolute; inset: 0; background: #12071A94; }
+.night .tag { left: 22px; top: 22px; display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 15px; background: #FBF2F61F; color: var(--n-moon); font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.night .tag i { width: 7px; height: 7px; border-radius: 4px; background: var(--n-candle); box-shadow: 0 0 0 3px #FFC93C40; }
+.night .title { left: 22px; bottom: calc(46px + 94px * var(--e)); transform-origin: left bottom; transform: scale(calc(.74 + .26 * var(--e))); white-space: nowrap;
+  font-size: 34px; line-height: 36px; font-weight: 900; letter-spacing: -1px; color: var(--n-moon); }
+.night .sub { left: 22px; bottom: 24px; font-size: 13px; line-height: 17px; font-weight: 700; color: var(--n-lav); }
+.night .extra { left: 22px; right: 22px; bottom: 22px; }
+.night .extra p { margin: 0; font-size: 15px; line-height: 20px; font-weight: 600; color: var(--n-lav); }
+.night .btn { margin-top: 16px; height: 52px; border-radius: 26px; background: var(--n-moon); color: var(--n-ink); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 800; }
+.night .moon { width: 66px; height: 66px; right: 22px; transform-origin: right top;
+  top: calc(30px * (1 - var(--e)) + 22px * var(--e) + 18px * (1 - var(--m, 1)) * var(--e));
+  transform: scale(calc(.667 + .333 * var(--e))); }
+.moonface { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(70% 70% at 35% 35%, #FFFBEA, #F2E6C4 60%, #D9C79A);
+  box-shadow: 0 0 0 9px #FBF2F60D, 0 0 0 21px #FBF2F608; display: grid; place-items: center; color: var(--n-ink); }
+.night .moon .arrow { opacity: clamp(0, calc((.4 - var(--e)) / .3), 1); transform: scale(1.5); }
+.twinkle { position: absolute; width: 5px; height: 5px; border-radius: 3px; background: #fff;
+  opacity: calc(var(--e) * sin(var(--m, 0) * 3.1416)); }
+
+/* ── Prayed tonight: the lamp dims. Full moon to crescent. ── */
+.rest { height: calc(80px + 44px * var(--e)); border-radius: 32px; }
+.rest .ground { background: var(--n-deep) url("../../../assets/backdrops/night-sky.jpg") center top / cover; }
+.rest .ground::after { content: ""; position: absolute; inset: 0; background: #12071A94; }
+.rest .head { left: 20px; right: 20px; top: 18px; display: flex; align-items: center; gap: 14px; }
+.rest .tick { width: 44px; height: 44px; border-radius: 22px; background: var(--n-candle); color: var(--n-ink); display: grid; place-items: center; box-shadow: 0 0 0 5px #FFC93C33; flex: none; }
+.rest .k { color: var(--n-candle); letter-spacing: .9px; white-space: nowrap; text-transform: uppercase; }
+.rest h3 { margin: 4px 0 0; font-size: 22px; line-height: 26px; font-weight: 900; letter-spacing: -.5px; color: var(--n-moon); }
+.rest .rmoon { width: 44px; height: 44px; margin-left: auto; position: relative; border-radius: 50%; overflow: hidden; flex: none; }
+.rest .rmoon .shade { position: absolute; inset: 0; border-radius: 50%; background: #1F1128; transform: translateX(calc(14px + 34px * var(--e))); }
+.rest .line { left: 20px; right: 20px; top: 76px; font-size: 15px; line-height: 20px; font-weight: 600; color: var(--n-lav); }
+
+/* Links + chrome */
+.links { display: flex; gap: 12px; }
+.links div { flex: 1; height: 56px; border-radius: 20px; background: var(--surface); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 17px; }
+.tabbar { position: absolute; left: 16px; right: 16px; bottom: 26px; height: 64px; border-radius: 32px; display: flex; align-items: center; padding: 0 6px; background: #2A2420E6; box-shadow: inset 0 0 0 .5px #FFFFFF26, 0 10px 30px #00000066; }
+.tabbar a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 700; color: #CFC2B4; }
+.tabbar a.on { color: #FF8257; background: #FFFFFF14; border-radius: 26px; height: 52px; justify-content: center; }
+.edge { position: absolute; left: 0; right: 0; top: 0; height: 104px; background: linear-gradient(180deg, #2E241BF2 0%, #2E241BD9 55%, #2E241B00); pointer-events: none; opacity: min(1, calc(var(--y, 0) * 3)); }
+.fadeb { position: absolute; left: 0; right: 0; bottom: 0; height: 120px; background: linear-gradient(180deg, #211D1900, #211D19E6 45%, #211D19); pointer-events: none; }
+svg.i { display: block; }
+</style>
+</head>
+<body>
+
+<template id="home">
+  <div class="bg"></div>
+  <div class="scroll" data-scrolls><div class="content">
+    <div class="top">
+      <div class="avatar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M4 20.5c0-4.2 3.6-6.8 8-6.8s8 2.6 8 6.8z"/></svg></div>
+      <div class="streak">2 days in a row</div>
+      <div class="pill"><span class="bk"><svg class="i" width="14" height="16" viewBox="0 0 14 16"><rect x="1" y="1" width="12" height="14" rx="2" fill="#6B3A1E"/><path d="M7 4v7M4.5 6.5h5" stroke="#F3D9A0" stroke-width="1.6" stroke-linecap="round"/></svg></span>Genesis 3</div>
+    </div>
+    <div class="quote" data-ugc>Rooted in love, Established in faith, Growing in grace.</div>
+    <div class="ref">Colossians 2:7</div>
+    <div class="slots"></div>
+    <div class="links">
+      <div><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Your daily walk</div>
+      <div><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7.5-4.6-7.5-10A4.2 4.2 0 0 1 12 7.6 4.2 4.2 0 0 1 19.5 10C19.5 15.4 12 20 12 20z"/></svg>Check in</div>
+    </div>
+  </div></div>
+  <div class="fadeb" data-float></div><div class="edge" data-float></div>
+  <nav class="tabbar" data-float>
+    <a class="on"><svg class="i" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2 2.8 11h2.7v9h5v-5.5h3V20h5v-9h2.7z"/></svg>Today</a>
+    <a><svg class="i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><path d="m15.5 5.2 3.8-1 2.4 15-3.8.8z"/></svg>Bible</a>
+    <a><svg class="i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="8.5" cy="8.5" r="3"/><circle cx="16" cy="8.5" r="3"/><path d="M3 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5M13.5 14.3c.8-.2 1.6-.3 2.5-.3 3 0 5 2 5 5"/></svg>Community</a>
+    <a><svg class="i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c0-4 3.4-6.5 7.5-6.5s7.5 2.5 7.5 6.5"/></svg>Profile</a>
+  </nav>
+</template>
+
+<template id="c-today">
+  <div class="card today" data-card="today">
+    <div class="ground"></div>
+    <div class="ground" style="background:none" data-bleed><div class="layer glyph" data-art>?</div></div>
+    <div class="layer meta when-open"><div class="num">09</div><div class="k">Hard question · Genesis 4:15</div></div>
+    <div class="layer kicker when-slim k">09 · Hard question <span class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></span></div>
+    <div class="layer title ct" data-ugc>A Mark of Protection</div>
+    <div class="layer steps when-open">
+      <span class="tok on" style="--i:0"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+      <span class="tok on" style="--i:1"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+      <span class="tok" style="--i:2"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5.5h16v10H10l-4.5 4v-4H4z"/><path d="M10.3 8.6a1.8 1.8 0 1 1 2.4 1.7c-.5.2-.7.6-.7 1.1M12 13.4v.1" stroke-linecap="round"/></svg></span>
+      <span class="tok" style="--i:3"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg></span>
+      <span class="k">2 of 4</span>
+    </div>
+  </div>
+</template>
+
+<template id="c-tomorrow">
+  <div class="card tomorrow" data-card="tomorrow">
+    <div class="ground"></div>
+    <div class="layer row when-slim">
+      <div style="flex:1"><div class="k" style="display:flex;align-items:center;gap:6px"><svg class="i" width="11" height="13" viewBox="0 0 15 17" fill="#D8BDA5"><rect x="1" y="7" width="13" height="10" rx="2.5"/><path d="M4 7.5V5a3.5 3.5 0 0 1 7 0v2.5" stroke="#D8BDA5" stroke-width="2" fill="none"/></svg>10 · Tomorrow</div><b>A letter waiting for you</b></div>
+    </div>
+    <div class="layer open when-open">
+      <div class="num">10</div><div class="k">Tomorrow</div>
+      <div class="ct">A letter waiting for you</div>
+      <div class="lockchip"><svg class="i" width="12" height="14" viewBox="0 0 15 17" fill="#D8BDA5"><rect x="1" y="7" width="13" height="10" rx="2.5"/><path d="M4 7.5V5a3.5 3.5 0 0 1 7 0v2.5" stroke="#D8BDA5" stroke-width="2" fill="none"/></svg>Opens tomorrow</div>
+    </div>
+    <div class="layer env">
+      <svg class="i" width="150" height="104" viewBox="0 0 150 104"><rect width="150" height="104" rx="10" fill="#F4E6D3"/><path d="M2 100 62 54M148 100 88 54" stroke="#E2CDB2" stroke-width="2" fill="none"/><path d="M5 4Q75 72 145 4Z" fill="#EAD7BD"/><path d="M3 4 75 58 147 4" stroke="#D3BC9D" stroke-width="2.5" stroke-linejoin="round" fill="none"/><circle cx="75" cy="58" r="15" fill="#C8342A"/><path d="M75 50v16M69 55.5h12" stroke="#F4E6D3" stroke-width="2.8" stroke-linecap="round"/></svg>
+      <div class="glint"></div>
+    </div>
+  </div>
+</template>
+
+<template id="c-dayafter">
+  <div class="card dayafter" data-card="dayafter">
+    <div class="ground">
+      <div class="layer sheet"><div class="margin"></div>
+        <div class="rule" style="top:22px"></div><div class="rule" style="top:38px"></div><div class="rule" style="top:54px"></div><div class="rule" style="top:70px"></div>
+        <div class="ink" data-line="0" style="top:18px"></div><div class="ink" data-line="1" style="top:34px"></div><div class="ink" data-line="2" style="top:50px"></div><div class="ink" data-line="3" style="top:66px"></div>
+        <svg class="layer pencil" viewBox="0 0 60 60"><path d="M14 46 46 14l6 6-32 32Z" fill="#FFC12E"/><path d="M14 46 46 14l2 2-32 32Z" fill="#FFD455"/><path d="M46 14l4-4a3 3 0 0 1 4 0l2 2a3 3 0 0 1 0 4l-4 4Z" fill="#E2391F"/><path d="M14 46 8 52l2 2 6-6Z" fill="#F4E6D3"/><path d="M8 52l-2 4 4-2Z" fill="#5A4A3E"/></svg>
+      </div>
+    </div>
+    <div class="layer row when-slim">
+      <span class="n">11</span>
+      <div style="flex:1"><div class="k">Saturday</div><b>Still being written</b></div>
+      <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8F7A68" stroke-width="1.8" stroke-linejoin="round"><path d="M4 20l1-4.5L16 4.5l3.5 3.5-11 11z"/><path d="M14 7l3.5 3.5"/></svg>
+    </div>
+    <div class="layer open when-open"><div class="num">11</div><div class="k">Saturday</div><div class="ct">Still being written</div></div>
+  </div>
+</template>
+
+<template id="c-night">
+  <div class="card night" data-card="night">
+    <div class="ground"><span class="twinkle" style="left:72%;top:16%"></span><span class="twinkle" style="left:16%;top:40%"></span><span class="twinkle" style="left:58%;top:34%"></span></div>
+    <div class="layer tag when-open"><i></i>Night prayer</div>
+    <div class="layer moon"><div class="moonface"><svg class="i arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>
+    <div class="layer title">Lay today down.</div>
+    <div class="layer sub when-slim">Before you sleep · 2 min</div>
+    <div class="layer extra when-open">
+      <p>Say how today felt, then pray before you sleep.</p>
+      <div class="btn">Begin <svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    </div>
+  </div>
+</template>
+
+<template id="c-rest">
+  <div class="card rest" data-card="rest">
+    <div class="ground"></div>
+    <div class="layer head">
+      <span class="tick"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+      <div><div class="k">Prayed tonight · 7:02 PM</div><h3>Rest now.</h3></div>
+      <span class="rmoon"><span class="moonface" style="display:block"></span><span class="shade"></span></span>
+    </div>
+    <div class="layer line when-open">You prayed for peace and strength.</div>
+  </div>
+</template>
+
+<!-- Day: Today → Tomorrow → the day after -->
+<section class="screen" data-name="1-today-open" data-kind="core" data-theme="dark" data-chrome="light" data-time="9:41" data-stops="today,tomorrow,dayafter" data-y="0"></section>
+<section class="screen" data-name="2-today-to-tomorrow" data-kind="state" data-theme="dark" data-chrome="light" data-time="9:41" data-stops="today,tomorrow,dayafter" data-y="0.5"></section>
+<section class="screen" data-name="3-tomorrow-open" data-kind="state" data-theme="dark" data-chrome="light" data-time="9:41" data-stops="today,tomorrow,dayafter" data-y="1" data-m="0.45"></section>
+<section class="screen" data-name="4-tomorrow-to-dayafter" data-kind="state" data-theme="dark" data-chrome="light" data-time="9:41" data-stops="today,tomorrow,dayafter" data-y="1.55"></section>
+<section class="screen" data-name="5-dayafter-open" data-kind="state" data-theme="dark" data-chrome="light" data-time="9:41" data-stops="today,tomorrow,dayafter" data-y="2" data-m="0.6"></section>
+
+<!-- Night, before praying: Night → Today → Tomorrow -->
+<section class="screen" data-name="6-night-open" data-kind="state" data-theme="dark" data-chrome="light" data-time="21:14" data-stops="night,today,tomorrow" data-y="0" data-m="0.5"></section>
+<section class="screen" data-name="7-night-to-today" data-kind="state" data-theme="dark" data-chrome="light" data-time="21:14" data-stops="night,today,tomorrow" data-y="0.5"></section>
+<section class="screen" data-name="8-night-slim-today-open" data-kind="state" data-theme="dark" data-chrome="light" data-time="21:14" data-stops="night,today,tomorrow" data-y="1"></section>
+
+<!-- Night, after praying: Rest → Today → Tomorrow -->
+<section class="screen" data-name="9-rest-open" data-kind="state" data-theme="dark" data-chrome="light" data-time="22:10" data-stops="rest,today,tomorrow" data-y="0"></section>
+<section class="screen" data-name="10-rest-slim-today-open" data-kind="state" data-theme="dark" data-chrome="light" data-time="22:10" data-stops="rest,today,tomorrow" data-y="1"></section>
+
+<!-- Living: the day sequence, scrolled and settled, one card at a time -->
+<section class="screen" data-name="living-day" data-kind="core" data-theme="dark" data-chrome="light" data-time="9:41" data-stops="today,tomorrow,dayafter" data-y="0" data-motion="9600" data-freeze="2200" data-live></section>
+<section class="screen" data-name="living-night" data-kind="state" data-theme="dark" data-chrome="light" data-time="21:14" data-stops="night,today,tomorrow" data-y="0" data-motion="9600" data-freeze="600" data-live></section>
+
+<script>
+const focusAmount = (y, stop, last) => {
+  const t = y - stop;
+  if ((t < 0 && stop === 0) || (t > 0 && stop === last)) return 1;
+  return 1 - Math.min(1, Math.abs(t));
+};
+const clamp01 = v => Math.max(0, Math.min(1, v));
+const LINES = [1, .92, .74, .5];
+
+function build(screen) {
+  screen.innerHTML = document.getElementById("home").innerHTML;
+  const slots = screen.querySelector(".slots");
+  const stops = screen.dataset.stops.split(",");
+  for (const id of stops) slots.insertAdjacentHTML("beforebegin", document.getElementById("c-" + id).innerHTML);
+  slots.remove();
+}
+
+/** Lays every card out for scroll position y (in stops) and the settled card's moment m. */
+function render(screen, y, m) {
+  const stops = screen.dataset.stops.split(","), last = stops.length - 1;
+  screen.querySelector(".content").style.setProperty("--y", y); screen.querySelector(".edge").style.setProperty("--y", y);
+  const settled = Math.abs(y - Math.round(y)) < .001 ? Math.round(y) : -1;
+  stops.forEach((id, i) => {
+    const card = screen.querySelector(`[data-card="${id}"]`);
+    const e = focusAmount(y, i, last);
+    card.style.setProperty("--e", e.toFixed(4));
+    card.style.setProperty("--m", (i === settled ? m : (e > .99 ? 1 : 0)).toFixed(4));
+    if (id === "dayafter") writePage(card, e, i === settled ? m : 0);
+  });
+}
+
+/** The day after's page: scrolling writes the first lines, settling writes half a word more. */
+function writePage(card, e, m) {
+  const p = clamp01(e * .82 + m * .1);
+  const sheetW = 120, pad = 14, lineW = sheetW - pad * 2;
+  let tipX = pad, tipY = 18;
+  card.querySelectorAll(".ink").forEach((el, i) => {
+    const local = clamp01(p * LINES.length - i);
+    el.style.width = (lineW * LINES[i] * local) + "px";
+    if (local > 0) { tipX = pad + lineW * LINES[i] * local; tipY = 18 + 16 * i; }
+  });
+  const pen = card.querySelector(".pencil");
+  pen.style.left = (tipX - 6) + "px"; pen.style.top = (tipY - 36) + "px";
+  pen.style.transform = `rotate(${-4 + 6 * Math.sin(p * 40)}deg)`;
+  pen.style.opacity = clamp01((e - .5) / .3);
+}
+
+/* The living loop: rest, scroll to the next stop, settle (the moment plays), repeat, return. */
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const BEATS = [[0, 600, 0, 0], [600, 1300, 0, 1], [1300, 3600, 1, 1], [3600, 4300, 1, 2], [4300, 6800, 2, 2], [6800, 7700, 2, 0], [7700, 9600, 0, 0]];
+function timeline(t) {
+  for (const [a, b, from, to] of BEATS) if (t >= a && t < b) {
+    if (from === to) { const since = (BEATS.find(x => x[1] === a) ? t - a : t + 1900); return { y: from, m: clamp01(since / 600) }; }
+    return { y: from + (to - from) * ease((t - a) / (b - a)), m: 0 };
+  }
+  return { y: 0, m: 1 };
+}
+
+const screens = [...document.querySelectorAll("section.screen[data-stops]")];
+screens.forEach(build);
+screens.forEach(s => render(s, parseFloat(s.dataset.y), s.dataset.m !== undefined ? parseFloat(s.dataset.m) : 1));
+
+const live = screens.filter(s => s.hasAttribute("data-live"));
+// reel.mjs installs a fake clock in January 2026; anywhere else, hold the freeze frame.
+const recording = Date.now() < Date.parse("2026-06-01");
+const start = performance.now();
+function tick() {
+  for (const s of live) {
+    const loop = parseFloat(s.dataset.motion);
+    const t = recording ? (((Date.now() - Date.parse("2026-01-01T09:41:05")) % loop) + loop) % loop : parseFloat(s.dataset.freeze);
+    const { y, m } = timeline(t);
+    render(s, y, m);
+  }
+  if (recording) requestAnimationFrame(tick);
+}
+tick();
+</script>
+<script src="file:///Users/kennyespinal23/.claude/skills/app-designer-pro/assets/device.js"></script>
+</body>
+</html>

@@ -66,8 +66,8 @@ function PrayingHands({ size, prayed, rise }: { size: number; prayed: boolean; r
 }
 
 /** Completion is saved only after a full hold, never on a partial press. */
-export function DailyPrayer({ completed, onComplete, onContinue, onClose }: {
-  completed: Partial<Record<DailyStep, boolean>>;
+export function DailyPrayer({ steps, completed, onComplete, onContinue, onClose }: {
+  steps: ReadonlyArray<DailyStep>; completed: Partial<Record<DailyStep, boolean>>;
   onComplete: () => Promise<void> | void; onContinue: () => void; onClose: () => void;
 }) {
   const { height } = useWindowDimensions();
@@ -127,7 +127,7 @@ export function DailyPrayer({ completed, onComplete, onContinue, onClose }: {
   return <ReaderMaterialGradient colors={['#3A2219', '#24140E']} style={{ flex: 1, paddingTop: inset.top, backgroundColor: '#24140E' }}>
     <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, gap: 16 }}>
       <CloseButton onPress={onClose} disabled={busy} color="#FFF1E4" style={{ backgroundColor: '#FFFFFF15' }} accessibilityLabel="Close prayer"/>
-      <View style={{ flex: 1 }}><DailyStoryProgress completed={{ ...completed, prayer: prayed }} active="prayer" fraction={.08} color={prayed ? '#FF4326' : '#FFF1E4'} track="#FFFFFF22"/></View>
+      <View style={{ flex: 1 }}><DailyStoryProgress steps={steps} completed={{ ...completed, prayer: prayed }} active="prayer" fraction={.08} color={prayed ? '#FF4326' : '#FFF1E4'} track="#FFFFFF22"/></View>
     </View>
     <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 20 }} showsVerticalScrollIndicator={false}>
       <Pressable accessible={false} onPress={() => setRevealed(true)} style={{ alignItems: 'center' }}>

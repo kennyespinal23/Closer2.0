@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Closer card openings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="file:///Users/kennyespinal23/.claude/skills/app-designer-pro/assets/device.css">
+<script src="days.js"></script>
+<style>
+.screen { font-family: "Nunito", var(--sf-rounded); background: #211D19; color: #F7F0E6; }
+.abs { position: absolute; }
+.home { position: absolute; inset: 0; transform-origin: 50% 40%; }
+.home .bg { position: absolute; inset: 0 0 auto 0; height: 420px; background: linear-gradient(180deg, #4A3420, #211D19); }
+.quote { position: absolute; left: 20px; right: 20px; top: 140px; font-size: 38px; line-height: 44px; font-weight: 900; letter-spacing: -1.3px; }
+.card { position: absolute; left: 20px; top: 300px; width: 362px; height: 224px; border-radius: 28px; overflow: hidden; }
+.ground { position: absolute; inset: 0; }
+.artbox { position: absolute; left: 20px; top: 0; width: 362px; height: 224px; transform-origin: right top; }
+.artbox > * { position: absolute; }
+.l { position: absolute; left: 22px; }
+.num { font-size: 30px; line-height: 32px; font-weight: 800; }
+.lab { font-size: 15px; line-height: 20px; font-weight: 800; margin-top: 2px; white-space: nowrap; }
+.ct { font-size: 26px; line-height: 28px; font-weight: 800; letter-spacing: -.5px; width: 240px; }
+.tok { width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; }
+.ov { position: absolute; inset: 0; }
+.sheet { position: absolute; left: 0; right: 0; top: 340px; bottom: 0; background: #1E1A16; border-radius: 32px 32px 0 0; padding: 22px 20px 0; transform-origin: top center; }
+.row { display: flex; align-items: center; gap: 12px; height: 58px; border-bottom: .5px solid #FFFFFF14; }
+.dotc { width: 40px; height: 40px; border-radius: 20px; display: grid; place-items: center; flex: none; }
+.cta { position: absolute; left: 20px; right: 20px; bottom: 50px; height: 56px; border-radius: 28px; display: grid; place-items: center; font-size: 17px; font-weight: 800; }
+.finger { position: absolute; width: 54px; height: 54px; border-radius: 27px; background: #FFFFFF59; box-shadow: 0 0 0 2px #FFFFFF80; }
+</style>
+</head>
+<body>
+<script>
+const T = (ground, light, label, accent, accentInk, ink) => ({ ground, light, label, accent, accentInk, ink: ink ?? (light ? "#2A1206" : "#FFFFFF"), num: light ? "#2A120680" : "#FFFFFF8C", chip: light ? "#2A1206E0" : "#FFFFFFEB", chipIcon: light ? "#FFF6E6" : "#2A1206" });
+const CATS = [
+  { id: "daily-church", day: 1, label: "Daily Church", name: "Sunrise", line: "Today’s word, for an ordinary morning.", theme: T(["#FFE45C", "#FFC21A", "#FF9F0A"], true, "#8A3B00", "#FFC21A", "#2A1206", "#3A1500") },
+  { id: "jesus-only", day: 2, label: "Jesus Only", name: "Through the full stop", line: "No noise. Just Him.", theme: T(["#FF5A4E", "#E0233A", "#A80F2A"], false, "#FFE27A", "#FF4B55", "#FFFFFF") },
+  { id: "letters-struggling", day: 3, label: "A struggling letter", name: "The letter unfolds", line: "A letter found in someone’s journal.", theme: T(["#2BD58C", "#13A06A", "#0A6B47"], false, "#FFE0C9", "#2BD58C", "#06301F") },
+  { id: "letters-grateful", day: 4, label: "A grateful letter", name: "The card opens", line: "The same voice, from the other side.", theme: T(["#FFB3C6", "#FF7A9E", "#F24F7F"], true, "#6E0B2C", "#FF7A9E", "#3A0716", "#3A0716") },
+  { id: "character-studies", day: 5, label: "Character study", name: "The name, written out", line: "One life, up close.", theme: T(["#FFB15C", "#FF7A1A", "#E2500A"], false, "#FFF1E0", "#FF8A2B", "#2A1000"), who: "ADAM" },
+  { id: "deep-verse", day: 6, label: "Deep verse", name: "Through the lens", line: "A familiar verse, seen for the first time.", theme: T(["#3A2E44", "#231B2A", "#18121C"], false, "#FFC21A", "#FFC21A", "#2A1206") },
+  { id: "misconceptions", day: 7, label: "Misconception", name: "The strike", line: "The lie. Then the truth.", theme: T(["#FFFFFF", "#FFF9EE", "#FFF1DA"], true, "#6E645C", "#FF2E1F", "#FFFFFF") },
+  { id: "testimonies", day: 8, label: "Testimony", name: "It rolls in", line: "God is still moving today.", theme: T(["#4BE08F", "#1FB868", "#0E8A4C"], false, "#FFF6B0", "#4BE08F", "#06301F") },
+  { id: "questions", day: 9, label: "Hard question", name: "The dot drops", line: "The question, asked out loud.", theme: T(["#4A3624", "#33261C", "#261D17"], false, "#FFC21A", "#FFC21A", "#2A1206") },
+];
+const clamp = v => Math.max(0, Math.min(1, v)), lerp = (a, b, t) => a + (b - a) * t, ramp = (v, a, b) => clamp((v - a) / (b - a));
+const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const out = x => 1 - Math.pow(1 - x, 3);
+const back = x => { const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const bounce = x => { const n = 7.5625, d = 2.75; if (x < 1 / d) return n * x * x; if (x < 2 / d) return n * (x -= 1.5 / d) * x + .75; if (x < 2.5 / d) return n * (x -= 2.25 / d) * x + .9375; return n * (x -= 2.625 / d) * x + .984375; };
+const CX = 20, CY = 300, CW = 362, CH = 224;
+const grad = th => `radial-gradient(125% 110% at 88% 0%, ${th.ground[0]}, ${th.ground[1]} 45%, ${th.ground[2]})`;
+const check = c => `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>`;
+const ICON = {
+  prayer: '<path d="M8 21v-7l3-9a1.5 1.5 0 0 1 3 .5L13 11h5a2 2 0 0 1 2 2.3l-1 5.4A3 3 0 0 1 16 21z"/>',
+  reading: '<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4 7 8 6 8-6"/>',
+  quiz: '<path d="M4 5.5h16v10H10l-4.5 4v-4H4z"/>',
+  action: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/>' };
+const icon = (k, c) => `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg>`;
+
+/* Each category's art, laid out in the 362 × 224 card box (as components/CategoryArt.tsx draws it). */
+const ART = {
+  "daily-church": () => `<svg class="sun" width="380" height="380" viewBox="0 0 380 380" style="right:-96px;top:-110px"><defs><radialGradient id="sf" cx="40%" cy="35%" r="60%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#FFF6C9"/><stop offset="1" stop-color="#FFE27A"/></radialGradient></defs><circle class="r1" cx="190" cy="190" r="190" fill="#fff" opacity=".12"/><circle class="r2" cx="190" cy="190" r="162" fill="#fff" opacity=".22"/><circle cx="190" cy="190" r="135" fill="url(#sf)"/></svg>`,
+  "jesus-only": () => `<div class="him" style="right:-14px;top:-14px;font-size:132px;line-height:140px;font-weight:900;letter-spacing:-8px;color:#FFFFFF33">Him<span style="color:#FFE27A">.</span></div>`,
+  "letters-struggling": () => `<div class="q" style="right:4px;top:-46px;font-size:300px;line-height:320px;font-weight:900;color:#FFB38A;transform:rotate(-6deg)">“</div>`,
+  "letters-grateful": () => `<div class="q" style="right:4px;top:-46px;font-size:300px;line-height:320px;font-weight:900;color:#7A0E33">”</div>`,
+  "character-studies": c => `<div class="name" style="right:-10px;top:92px;font-size:100px;line-height:104px;font-weight:900;letter-spacing:-5px;white-space:nowrap;color:#FFFFFF42"><span style="color:#3A1200">${c.who[0]}</span>${[...c.who.slice(1)].map(x => `<span class="ch">${x}</span>`).join("")}</div>`,
+  "deep-verse": () => `<div style="width:250px;right:-30px;top:22px;font-size:34px;line-height:34px;font-weight:900;letter-spacing:-1.2px;color:#FFFFFF24">And I will put enmity between you and the <span style="color:#FFC21A">woman</span></div><div style="right:58px;top:64px;width:104px;height:104px;border-radius:52px;box-shadow:inset 0 0 0 4px #F7F0E6"></div><div style="right:28px;top:172px;width:44px;height:8px;border-radius:4px;background:#F7F0E6;transform:rotate(40deg)"></div>`,
+  "misconceptions": () => `<div style="right:-6px;top:30px;font-size:150px;line-height:156px;font-weight:900;letter-spacing:-6px;color:#2A12061F">LIE</div><div class="strike" style="right:-14px;top:96px;width:270px;height:12px;border-radius:6px;background:#FF2E1F;transform:rotate(-12deg)"></div>`,
+  "testimonies": () => `<svg class="ring" width="220" height="220" viewBox="0 0 220 220" style="right:-40px;top:-30px"><defs><path id="rp" d="M110 30a80 80 0 1 1 0 160a80 80 0 1 1 0-160"/></defs><text fill="#FFFFFFD9" font-size="17" font-weight="900" letter-spacing="4" font-family="Nunito"><textPath href="#rp">STILL MOVING · STILL MOVING · STILL MOVING ·</textPath></text><circle cx="110" cy="110" r="22" fill="#FFE14D"/></svg>`,
+  "questions": () => `<div class="qm" style="right:-14px;top:-40px;font-size:290px;line-height:300px;font-weight:900;letter-spacing:-10px;color:#FFC21A;transform-origin:50% 70%">?</div>`,
+};
+
+function cardFace(c, d) {
+  const th = c.theme;
+  return `<div class="l" style="top:22px"><div class="num" style="color:${th.num}">${String(c.day).padStart(2, "0")}</div><div class="lab" style="color:${th.label}">${c.label} · ${d.reference}</div></div>
+    <div class="l ct" style="top:96px;color:${th.ink}">${d.title}</div>
+    <div class="l" style="top:166px;display:flex;gap:6px;align-items:center">${["prayer", "reading", "quiz", "action"].map((k, i) => `<span class="tok" style="background:${i === 0 ? th.accent : th.chip}">${i === 0 ? check(th.accentInk) : icon(k, th.chipIcon)}</span>`).join("")}<span style="font-size:15px;font-weight:800;color:${th.label};margin-left:6px">1 of 4</span></div>`;
+}
+
+function screenHTML(c) {
+  const d = window.DAYS[c.day - 1], th = c.theme;
+  const rows = [["prayer", "Daily prayer", "A prayer for today"], ["reading", "Scripture and word", "A letter for today"], ["quiz", "Quick check", "Reflect on today’s word"], ["action", "One small step", "Something to do before tonight"]];
+  return `
+  <div class="home"><div class="bg"></div>
+    <div class="abs" style="left:20px;top:78px;width:44px;height:44px;border-radius:14px;background:#FF4326"></div>
+    <div class="quote">He who dwells in the shelter of the Most High.</div>
+    <div class="card"><div class="ground" style="background:${grad(th)}"></div></div>
+    <div class="abs" style="left:30px;right:30px;top:536px;height:92px;border-radius:28px;background:#4A2C20"></div>
+    <div class="abs" style="left:20px;right:20px;top:652px;height:56px;border-radius:20px;background:#302820"></div>
+    <div class="dim abs" style="inset:0;background:#000;opacity:0"></div></div>
+  <div class="ov">
+    <div class="ovground ground" style="background:${grad(th)}"></div>
+    <div class="artbox" data-art data-bleed>${ART[c.id](c)}</div>
+    <div class="cardtext abs" style="left:${CX}px;top:${CY}px;width:${CW}px;height:${CH}px">${cardFace(c, d)}</div>
+    <div class="ovhead abs" style="left:20px;right:20px;top:62px;height:44px;display:flex;align-items:center;justify-content:space-between">
+      <span style="width:44px;height:44px;border-radius:22px;background:${th.light ? "#2A12061A" : "#FFFFFF2E"};display:grid;place-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${th.ink}" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></span>
+      <span style="font-size:15px;font-weight:800;color:${th.ink}">${String(c.day).padStart(2, "0")} · ${c.label}</span></div>
+    <div class="sheet"><div class="sheetin">
+      <div style="font-size:15px;color:#BBAA99">${d.reference}</div>
+      <div style="font-size:34px;line-height:38px;font-weight:900;letter-spacing:-1px;margin-top:6px">${d.title}</div>
+      <div style="font-size:15px;font-weight:700;color:${th.accent === "#FFFFFF" ? th.label : th.accent};margin-top:6px">${c.line}</div>
+      <div style="margin-top:10px">${rows.map(([k, title, sub], i) => `<div class="row"><span class="dotc" style="background:${i === 0 ? "#FF4326" : i === 1 ? th.accent : "#2E2823"}">${i === 0 ? check("#fff") : icon(k, i === 1 ? th.accentInk : "#BBAA99")}</span><div style="flex:1"><div style="font-size:17px;line-height:21px;font-weight:800">${title}</div><div style="font-size:13px;line-height:18px;color:#BBAA99">${sub}</div></div>${i === 1 ? `<span style="font-size:15px;color:#BBAA99">Next</span>` : ""}</div>`).join("")}</div>
+    </div></div>
+    <div class="cta" data-cta style="background:${th.accent};color:${th.accentInk}">Open today’s letter</div>
+    <div class="extra abs" style="inset:0;pointer-events:none"></div>
+  </div>
+  <div class="finger" style="left:${CX + 230}px;top:${CY + 120}px;opacity:0"></div>`;
+}
+
+/* The shared opening: the card's rectangle grows to the screen, its words fade, the art travels to the top, the sheet rises. */
+function base(S, t) {
+  const g = ease(ramp(t, 0, .7));
+  const top = lerp(CY, 0, g), left = lerp(CX, 0, g), right = lerp(402 - CX - CW, 0, g), bottom = lerp(874 - CY - CH, 0, g), r = lerp(28, 0, g);
+  S.ov.style.clipPath = `inset(${top}px ${right}px ${bottom}px ${left}px round ${r}px)`;
+  S.art.style.transform = `translate(${lerp(0, 20, g)}px, ${lerp(CY, 70, g)}px) scale(${lerp(1, 1.18, g)})`;
+  S.cardtext.style.opacity = 1 - ramp(t, 0, .22);
+  S.head.style.opacity = ramp(t, .6, .9);
+  const sh = out(ramp(t, .42, .9));
+  S.sheet.style.transform = `translateY(${lerp(560, 0, sh)}px)`;
+  S.cta.style.transform = `translateY(${lerp(200, 0, sh)}px)`;
+  S.home.style.transform = `scale(${lerp(1, .94, g)})`; S.dim.style.opacity = .35 * g;
+}
+
+/* Each category's beat on top of (or instead of) the shared opening. */
+const BEAT = {
+  "daily-church"(S, t) {
+    base(S, t);
+    // The sun rises the last stretch and the ground brightens from dusk to morning.
+    const rise = out(ramp(t, .05, .8));
+    S.q(".sun").style.transform = `translateY(${lerp(80, 0, rise)}px) scale(${lerp(.86, 1, rise)})`;
+    S.extra.innerHTML = `<div style="position:absolute;inset:0;background:linear-gradient(200deg,#FF7A1A,#E2400A);opacity:${.5 * (1 - rise)};clip-path:${S.ov.style.clipPath}"></div>`;
+    const pulse = Math.sin(ramp(t, .6, 1) * Math.PI);
+    S.q(".r1").setAttribute("r", 190 * (1 + .08 * pulse)); S.q(".r2").setAttribute("r", 162 * (1 + .05 * pulse));
+  },
+  "jesus-only"(S, t) {
+    base(S, t);
+    // Through the full stop: the gold dot grows over the screen, then opens from its centre like a ring, and the page is inside it.
+    const grow = ease(ramp(t, .06, .4)), hole = ease(ramp(t, .38, .78));
+    const x = lerp(CX + 340, 201, grow), y = lerp(CY + 104, 437, grow), size = lerp(24, 2000, grow), inner = hole * 1000;
+    S.extra.innerHTML = hole < 1 ? `<div style="position:absolute;left:${x - size / 2}px;top:${y - size / 2}px;width:${size}px;height:${size}px;border-radius:50%;background:radial-gradient(circle, transparent ${inner}px, #FFE27A ${inner + 1}px)"></div>` : "";
+    S.q(".him").style.opacity = ramp(t, .55, .9);
+  },
+  "letters-struggling"(S, t) {
+    base(S, t);
+    // The sheet comes down like a folded letter opening, hinged at its top edge.
+    const open = back(ramp(t, .4, .95));
+    S.sheet.style.transform = `perspective(900px) rotateX(${lerp(-92, 0, open)}deg)`;
+    S.sheet.style.opacity = ramp(t, .38, .46);
+    S.q(".q").style.transform = `translateY(${-14 * Math.sin(ramp(t, .5, 1) * Math.PI)}px) rotate(-6deg)`;
+  },
+  "letters-grateful"(S, t) {
+    // The card opens like a greeting card: its front swings away on a left hinge, then the inside fills the screen.
+    base(S, ramp(t, .32, 1));
+    const swing = ease(ramp(t, .02, .46));
+    const th = CATS[3].theme, d = window.DAYS[3];
+    S.extra.innerHTML = swing < .5 ? `<div style="position:absolute;left:${CX}px;top:${CY}px;width:${CW}px;height:${CH}px;border-radius:28px;overflow:hidden;transform-origin:left center;transform:perspective(1200px) rotateY(${-180 * swing}deg);background:${grad(th)};box-shadow:${-40 * swing}px 20px 40px -20px #00000099">
+      <div style="position:absolute;right:4px;top:-46px;font-size:300px;line-height:320px;font-weight:900;color:#7A0E33">”</div>${cardFace(CATS[3], d)}</div>` : `<div style="position:absolute;left:${CX - CW * (swing - .5) * .4}px;top:${CY}px;width:${CW * (swing - .5) * .8}px;height:${CH}px;border-radius:28px 0 0 28px;background:#C9446A;opacity:${1 - ramp(t, .4, .55)}"></div>`;
+    S.cardtext.style.opacity = 0;
+    S.q(".q").style.transform = `scale(${1 + .08 * Math.sin(ramp(t, .7, 1) * Math.PI)})`;
+  },
+  "character-studies"(S, t) {
+    base(S, t);
+    // The name gathers into its initial as the card lifts, then is written out letter by letter at the top.
+    const chars = S.qa(".ch");
+    chars.forEach((ch, i) => {
+      const gone = ramp(t, 0, .2), back = clamp(ramp(t, .55, .95) * 1.6 - i * .3);
+      ch.style.opacity = t < .5 ? 1 - gone : back;
+      ch.style.display = "inline-block";
+      ch.style.transform = `translateY(${t < .5 ? 0 : 14 * (1 - back)}px)`;
+    });
+  },
+  "deep-verse"(S, t) {
+    base(S, t);
+    // Through the lens: the page opens as a circle growing out of the lens.
+    const g = out(ramp(t, 0, .8)), r = lerp(50, 1050, g), cx = CX + 142 + 88 + 52, cy = CY + 22 + 64 + 52;
+    S.ov.style.clipPath = `circle(${r}px at ${cx}px ${cy}px)`;
+    S.art.style.transform = `translate(${lerp(0, 20, g)}px, ${lerp(CY, 70, g)}px) scale(${lerp(1, 1.18, g)})`;
+    S.extra.innerHTML = `<div style="position:absolute;left:${cx - r}px;top:${cy - r}px;width:${2 * r}px;height:${2 * r}px;border-radius:50%;box-shadow:inset 0 0 0 ${lerp(4, 10, g)}px #F7F0E6;opacity:${1 - ramp(t, .35, .7)}"></div>`;
+  },
+  "misconceptions"(S, t) {
+    base(S, t);
+    // A red strike sweeps the screen; the page is uncovered in its wake.
+    const p = ease(ramp(t, .3, .72)), x = lerp(-700, 520, p);
+    S.extra.innerHTML = t > .28 && t < .8 ? `<div style="position:absolute;left:${x}px;top:${437 - 70}px;width:620px;height:140px;background:#FF2E1F;transform:rotate(-12deg);opacity:${1 - ramp(t, .7, .8)}"></div>` : "";
+    S.sheet.style.clipPath = `inset(0 ${100 - clamp(p * 1.2) * 100}% 0 0)`;
+    S.cta.style.clipPath = S.sheet.style.clipPath;
+    S.q(".strike").style.transform = `rotate(-12deg) scaleX(${ramp(t, .75, 1)})`; S.q(".strike").style.transformOrigin = "left center";
+  },
+  "testimonies"(S, t) {
+    base(S, t);
+    // The ring rolls across the screen and the page unrolls behind it.
+    const g = ease(ramp(t, .04, .78)), cx = lerp(CX + 362 + 40 - 110, -130, g), cy = lerp(CY - 30 + 110, 470, g), turn = (lerp(CX + 312, -130, g) - (CX + 312)) / 80 * 57.3;
+    // The page unrolls behind the ring: everything to its right is uncovered.
+    S.sheet.style.clipPath = `inset(0 0 0 ${Math.max(0, cx)}px)`; S.cta.style.clipPath = `inset(0 0 0 ${Math.max(0, cx - 20)}px)`;
+    S.sheet.style.transform = `translateY(${lerp(560, 0, out(ramp(t, 0, .3)))}px)`; S.cta.style.transform = "none";
+    S.q(".ring").style.opacity = ramp(t, .8, 1);
+    S.extra.innerHTML = t > 0 && t < .82 ? `<svg width="220" height="220" viewBox="0 0 220 220" style="position:absolute;left:${cx - 110}px;top:${cy - 110}px;transform:rotate(${turn}deg)"><defs><path id="rpx" d="M110 30a80 80 0 1 1 0 160a80 80 0 1 1 0-160"/></defs><text fill="#FFFFFFD9" font-size="17" font-weight="900" letter-spacing="4" font-family="Nunito"><textPath href="#rpx">STILL MOVING · STILL MOVING · STILL MOVING ·</textPath></text><circle cx="110" cy="110" r="22" fill="#FFE14D"/></svg>` : "";
+  },
+  "questions"(S, t) {
+    base(S, t);
+    // The dot drops out of the question mark, bounces, and becomes the button that starts the walk.
+    const fall = bounce(ramp(t, .12, .62)), morph = ease(ramp(t, .62, .86));
+    const x0 = CX + 280, y0 = CY + 222, x1 = 201, y1 = 874 - 50 - 28;
+    const cx = lerp(lerp(x0, 230, fall), x1, morph), cy = lerp(y0, y1, fall);
+    const w = lerp(64, 362, morph), h = lerp(64, 56, morph);
+    S.extra.innerHTML = t > .1 && t < .95 ? `<div style="position:absolute;left:${cx - w / 2}px;top:${cy - h / 2}px;width:${w}px;height:${h}px;border-radius:${h / 2}px;background:#FFC21A"></div>` : "";
+    S.cta.style.transform = "none"; S.cta.style.opacity = ramp(t, .84, .95);
+    S.q(".qm").style.transform = `rotate(${12 * Math.sin(ramp(t, .1, .7) * Math.PI)}deg)`;
+  },
+};
+
+/* One loop: rest on Home, tap, open, hold on the walk, close, rest. */
+const LOOP = 5200;
+function timeline(T) {
+  if (T < 700) return { t: 0, finger: ramp(T, 380, 520), press: ramp(T, 560, 700) };
+  if (T < 1700) return { t: ramp(T, 700, 1700), finger: 1 - ramp(T, 700, 820), press: 1 - ramp(T, 700, 800) };
+  if (T < 3900) return { t: 1, finger: 0, press: 0 };
+  if (T < 4500) return { t: 1 - ease(ramp(T, 3900, 4500)), finger: 0, press: 0 };
+  return { t: 0, finger: 0, press: 0 };
+}
+
+for (const c of CATS) document.write(`<section class="screen" data-name="o${String(c.day).padStart(2, "0")}-${c.id}" data-kind="state" data-theme="dark" data-chrome="light" data-time="8:12" data-motion="${LOOP}" data-freeze="1150" data-palette="identity">${screenHTML(c)}</section>`);
+
+const screens = [...document.querySelectorAll("section.screen")].map((el, i) => {
+  const S = { el, c: CATS[i], ov: el.querySelector(".ov"), art: el.querySelector(".artbox"), cardtext: el.querySelector(".cardtext"), head: el.querySelector(".ovhead"), sheet: el.querySelector(".sheet"), cta: el.querySelector(".cta"), extra: el.querySelector(".extra"), home: el.querySelector(".home"), dim: el.querySelector(".dim"), finger: el.querySelector(".finger") };
+  S.q = sel => el.querySelector(sel); S.qa = sel => [...el.querySelectorAll(sel)];
+  return S;
+});
+function frame() {
+  const recording = Date.now() < Date.parse("2026-06-01");
+  for (const S of screens) {
+    const T = recording ? (((Date.now() - Date.parse("2026-01-01T09:41:05")) % LOOP) + LOOP) % LOOP : parseFloat(S.el.dataset.freeze);
+    const { t, finger, press } = timeline(T);
+    S.sheet.style.opacity = 1; S.sheet.style.clipPath = ""; S.cta.style.clipPath = ""; S.cta.style.opacity = 1;
+    BEAT[S.c.id](S, t);
+    S.finger.style.opacity = finger; S.finger.style.transform = `scale(${1 - .12 * press})`;
+    S.el.querySelector(".card").style.transform = `scale(${1 - .015 * press})`;
+  }
+  if (recording) requestAnimationFrame(frame);
+}
+document.fonts.ready.then(frame);
+frame();
+</script>
+<script src="file:///Users/kennyespinal23/.claude/skills/app-designer-pro/assets/device.js"></script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Closer readings by category</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="file:///Users/kennyespinal23/.claude/skills/app-designer-pro/assets/device.css">
+<script src="days.js"></script>
+<style>
+.screen { font-family: "Nunito", var(--sf-rounded); }
+.page { position: absolute; inset: 0; overflow: hidden; }
+.scroll { position: absolute; inset: 0; overflow: hidden; }
+.top { position: absolute; left: 20px; right: 20px; top: 62px; height: 48px; display: flex; align-items: center; gap: 14px; z-index: 5; }
+.x { width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; flex: none; }
+.bars { flex: 1; display: flex; gap: 8px; }
+.bars i { flex: 1; height: 6px; border-radius: 3px; }
+.cta { position: absolute; left: 20px; right: 20px; bottom: 50px; height: 56px; border-radius: 28px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 17px; font-weight: 800; z-index: 5; }
+.fadeb { position: absolute; left: 0; right: 0; bottom: 0; height: 150px; z-index: 4; pointer-events: none; }
+.eyebrow { font-size: 13px; line-height: 17px; font-weight: 800; letter-spacing: 1.1px; text-transform: uppercase; }
+.meta { font-size: 15px; line-height: 20px; font-weight: 600; }
+h1 { margin: 0; font-size: 36px; line-height: 40px; font-weight: 900; letter-spacing: -1px; }
+p { margin: 0; }
+.body { font-size: 17px; line-height: 26px; font-weight: 500; }
+.art { border-radius: 24px; overflow: hidden; background-size: cover; background-position: center; }
+</style>
+</head>
+<body>
+<script>
+const D = n => window.DAYS[n - 1];
+const paras = d => d.story.split(/\n\n+/);
+const IMG = f => `../../../assets/bible-moments/${f}`;
+const check = c => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>`;
+const xIcon = c => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`;
+/** Shared chrome: close, the four steps (reading in progress), and the button. Each category colours it. */
+const chrome = ({ xBg, xInk, on, track, ctaBg, ctaInk, fade, label = "I’ve read it", progress = .35 }) => `
+  <div class="top"><span class="x" style="background:${xBg}">${xIcon(xInk)}</span>
+    <div class="bars"><i style="background:linear-gradient(90deg, ${on} ${progress * 100}%, ${track} ${progress * 100}%)"></i><i style="background:${track}"></i><i style="background:${track}"></i><i style="background:${track}"></i></div></div>
+  <div class="fadeb" data-float style="background:linear-gradient(180deg, ${fade}00, ${fade}F2 55%, ${fade})"></div>
+  <div class="cta" data-cta data-float style="background:${ctaBg};color:${ctaInk}">${check(ctaInk)}${label}</div>`;
+const screen = (name, body, opts = {}) => document.write(`<section class="screen" data-name="${name}" data-kind="${opts.kind || "detail"}" data-time="7:42" ${opts.chrome ? `data-chrome="${opts.chrome}"` : ""} data-palette="identity"><div class="page">${body}</div></section>`);
+/** Split a verse into narration and the words someone speaks (in quotes). */
+const spoken = (v, color) => v.replace(/'([^']+)'/g, `<span style="color:${color}">‘$1’</span>`);
+</script>
+
+<!-- 1 · DAILY CHURCH: the morning service. The sun rises over the header; the reading is set like an order of service. -->
+<script>
+{ const d = D(1), [p1, p2] = paras(d);
+screen("r01-daily-church", `
+  <div style="position:absolute;inset:0;background:#FFF8EA"></div>
+  <div style="position:absolute;left:0;right:0;top:0;height:400px;background:radial-gradient(120% 100% at 85% 0%, #FFE45C, #FFC21A 45%, #FF9F0A);overflow:hidden">
+    <svg width="380" height="380" viewBox="0 0 380 380" style="position:absolute;right:-110px;top:40px"><defs><radialGradient id="s1" cx="40%" cy="35%" r="60%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#FFF6C9"/><stop offset="1" stop-color="#FFE27A"/></radialGradient></defs><circle cx="190" cy="190" r="190" fill="#fff" opacity=".14"/><circle cx="190" cy="190" r="162" fill="#fff" opacity=".24"/><circle cx="190" cy="190" r="135" fill="url(#s1)"/></svg>
+    <div style="position:absolute;left:20px;right:150px;top:150px">
+      <div class="eyebrow" style="color:#8A3B00">Daily Church · Day ${d.day}</div>
+      <h1 style="color:#3A1500;margin-top:10px;font-size:40px;line-height:44px">${d.title}</h1>
+    </div>
+  </div>
+  <div class="scroll" data-scrolls><div style="position:absolute;left:0;right:0;top:330px;background:#FFF8EA;border-radius:32px 32px 0 0;padding:28px 20px 0;box-shadow:0 -10px 30px -12px #8A3B0040">
+    <div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:15px;font-weight:900;color:#B5400A;width:22px">1</span><div style="flex:1">
+      <div class="eyebrow" style="color:#8A3B00">The reading · ${d.reference}</div>
+      <p style="margin-top:10px;font-size:23px;line-height:31px;font-weight:800;color:#3A1500">${d.verse}</p></div></div>
+    <div style="height:1px;background:#3A150017;margin:24px 0 22px 36px"></div>
+    <div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:15px;font-weight:900;color:#B5400A;width:22px">2</span><div style="flex:1">
+      <div class="eyebrow" style="color:#8A3B00">The message</div>
+      <p class="body" style="margin-top:10px;color:#3A1500">${p1}</p></div></div>
+  </div></div>
+  ${chrome({ xBg: "#FFFFFF59", xInk: "#3A1500", on: "#3A1500", track: "#3A150026", ctaBg: "#3A1500", ctaInk: "#FFF6C9", fade: "#FFF8EA" })}`); }
+</script>
+
+<!-- 2 · JESUS ONLY: red letters. What He said, set in red; everything else steps back. -->
+<script>
+{ const d = D(2), [p1] = paras(d);
+screen("r02-jesus-only", `
+  <div style="position:absolute;inset:0;background:#FFF7F2"></div>
+  <div data-art data-bleed style="position:absolute;right:-18px;top:96px;font-size:150px;line-height:150px;font-weight:900;letter-spacing:-9px;color:#E0233A14">Him<span style="color:#FFC21A">.</span></div>
+  <div class="scroll" data-scrolls><div style="position:absolute;left:20px;right:20px;top:136px">
+    <div class="eyebrow" style="color:#C21A33">Jesus Only · Day ${d.day}</div>
+    <h1 style="color:#2A0A10;margin-top:10px;max-width:300px">${d.title}</h1>
+    <div style="margin-top:26px;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:5px;background:#E0233A"></span><span class="meta" style="color:#8A5560">His words are in red · ${d.reference}</span></div>
+    <p style="margin-top:12px;font-size:24px;line-height:33px;font-weight:800;color:#5A3A40">${spoken(d.verse, "#D11A36")}</p>
+    <div style="height:2px;width:40px;background:#E0233A;border-radius:1px;margin:28px 0 22px"></div>
+    <p class="body" style="color:#2A0A10">${p1}</p>
+  </div></div>
+  ${chrome({ xBg: "#F4E6E2", xInk: "#2A0A10", on: "#E0233A", track: "#2A0A1022", ctaBg: "#C21A33", ctaInk: "#FFFFFF", fade: "#FFF7F2" })}`); }
+</script>
+
+<!-- 3 · A STRUGGLING LETTER: Dear friend. The reading is a letter on lined paper, written to someone having a hard day. -->
+<script>
+{ const d = D(3), [p1, p2] = paras(d);
+screen("r03-letters-struggling", `
+  <div style="position:absolute;inset:0;background:radial-gradient(120% 80% at 85% 0%, #2BD58C, #13A06A 45%, #0A6B47)"></div>
+  <div data-art data-bleed style="position:absolute;right:6px;top:70px;font-size:240px;line-height:240px;font-weight:900;color:#FFB38A;transform:rotate(-6deg)">“</div>
+  <div class="scroll" data-scrolls><div style="position:absolute;left:14px;right:14px;top:170px;bottom:-40px;background:#FFFBF2;border-radius:18px;transform:rotate(-1.2deg);box-shadow:0 20px 40px -18px #0A3A2899;
+      background-image:linear-gradient(#FFFBF2 0 0), repeating-linear-gradient(180deg, transparent 0 31px, #CFE3D8 31px 32px);background-size:100% 100px, 100% 100%;background-repeat:no-repeat, repeat;background-position:0 0, 0 20px">
+    <div style="position:absolute;left:30px;top:0;bottom:0;width:1.5px;background:#F2B8A8"></div>
+    <div style="padding:26px 22px 0 46px">
+      <div class="meta" style="color:#5F7A6C">${d.reference} · Day ${d.day}</div>
+      <div style="font-family:Caveat;font-size:38px;line-height:32px;font-weight:700;color:#0A6B47;margin-top:30px">Dear friend,</div>
+      <p class="body" style="color:#22332B;line-height:32px;margin-top:12px">${p1}</p>
+      <div style="margin:18px -6px 0 -10px;padding:16px 18px;background:#FFE0C9;border-radius:6px;transform:rotate(1.4deg);box-shadow:0 6px 14px -8px #00000055;position:relative">
+        <div style="position:absolute;right:18px;top:-12px;width:14px;height:34px;border:3px solid #9AA8A0;border-radius:8px"></div>
+        <p style="font-size:19px;line-height:26px;font-weight:800;color:#5A2410">“${d.verse}”</p>
+        <div class="meta" style="color:#8A4A2A;margin-top:8px;font-size:13px">${d.reference}</div></div>
+    </div>
+  </div></div>
+  ${chrome({ xBg: "#FFFFFF33", xInk: "#FFFFFF", on: "#FFFFFF", track: "#FFFFFF40", ctaBg: "#0A6B47", ctaInk: "#FFFFFF", fade: "#FFFBF2" })}`); }
+</script>
+
+<!-- 4 · A GRATEFUL LETTER: the thank-you card. The verse is the front of the card; inside, the story; at the end, one line of thanks you write. -->
+<script>
+{ const d = D(4), [p1] = paras(d);
+screen("r04-letters-grateful", `
+  <div style="position:absolute;inset:0;background:#FFEFF3"></div>
+  <div class="scroll" data-scrolls>
+  <div style="position:absolute;left:20px;right:20px;top:128px;height:290px;border-radius:26px;background:radial-gradient(120% 110% at 88% 0%, #FFB3C6, #FF7A9E 45%, #F24F7F);overflow:hidden;box-shadow:0 18px 30px -18px #A0123F99">
+    <svg data-art data-bleed width="120" height="102" viewBox="0 0 150 128" style="position:absolute;right:22px;top:22px"><path d="M20 0h44v52c0 40-18 66-52 76l-8-16c18-8 26-22 26-40H20z M86 0h44v52c0 40-18 66-52 76l-8-16c18-8 26-22 26-40H86z" fill="#7A0E33"/></svg>
+    <div style="position:absolute;left:22px;right:22px;bottom:22px">
+      <div class="eyebrow" style="color:#5A0A24">A grateful letter · Day ${d.day}</div>
+      <h1 style="color:#3A0716;margin-top:8px;font-size:30px;line-height:34px">${d.title}</h1>
+      <div class="meta" style="color:#5A0A24;margin-top:8px">${d.reference}</div></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;height:0;border-top:1.5px dashed #7A0E3340"></div>
+  </div>
+  <div style="position:absolute;left:20px;right:20px;top:446px">
+    <p style="font-size:21px;line-height:29px;font-weight:800;color:#3A0716">${spoken(d.verse, "#B0124A")}</p>
+    <p class="body" style="color:#4A1A2A;margin-top:18px">${p1}</p>
+  </div></div>
+  ${chrome({ xBg: "#FFFFFF80", xInk: "#3A0716", on: "#B0124A", track: "#3A071626", ctaBg: "#7A0E33", ctaInk: "#FFFFFF", fade: "#FFEFF3" })}`); }
+</script>
+
+<!-- 4b · the end of the grateful letter: one line of thanks -->
+<script>
+{ const d = D(4);
+screen("r04b-grateful-end", `
+  <div style="position:absolute;inset:0;background:#FFEFF3"></div>
+  <div class="scroll" data-scrolls><div style="position:absolute;left:20px;right:20px;top:132px">
+    <div style="padding:22px;border-radius:24px;background:#3A0716"><div class="eyebrow" style="color:#FFB3C6">Carry this with you</div>
+      <p style="margin-top:12px;font-size:21px;line-height:28px;font-weight:800;color:#FFF0F4">${d.insight}</p></div>
+    <div style="margin-top:28px;padding:22px;border-radius:24px;background:#FFFFFF;box-shadow:0 10px 26px -16px #A0123F66">
+      <div style="font-family:Caveat;font-size:34px;line-height:34px;font-weight:700;color:#B0124A">Thank you for…</div>
+      <div style="margin-top:14px;height:1.5px;background:#E8C6D0"></div><div style="margin-top:34px;height:1.5px;background:#E8C6D0"></div>
+      <div class="meta" style="color:#8A5A68;margin-top:14px">One line, just for you. It stays on this phone.</div></div>
+    <svg data-art data-bleed width="64" height="54" viewBox="0 0 150 128" style="display:block;margin:26px 0 0 auto"><path d="M20 0h44v52c0 40-18 66-52 76l-8-16c18-8 26-22 26-40H20z M86 0h44v52c0 40-18 66-52 76l-8-16c18-8 26-22 26-40H86z" fill="#7A0E33"/></svg>
+  </div></div>
+  ${chrome({ xBg: "#FFFFFF80", xInk: "#3A0716", on: "#B0124A", track: "#3A071626", ctaBg: "#7A0E33", ctaInk: "#FFFFFF", fade: "#FFEFF3", label: "Save and finish", progress: .9 })}`, { kind: "state" }); }
+</script>
+
+<!-- 5 · CHARACTER STUDY: the profile. The person's name is the header; the story reads as scenes. -->
+<script>
+{ const d = D(5), [p1, p2] = paras(d);
+screen("r05-character-studies", `
+  <div style="position:absolute;inset:0;background:#FFF4EA"></div>
+  <div style="position:absolute;left:0;right:0;top:0;height:372px;background:radial-gradient(120% 100% at 88% 0%, #FFB15C, #FF7A1A 45%, #E2500A);overflow:hidden">
+    <div data-art data-bleed style="position:absolute;left:14px;top:118px;font-size:150px;line-height:150px;font-weight:900;letter-spacing:-7px;color:#FFFFFF47;white-space:nowrap"><span style="color:#3A1200">A</span>DAM</div>
+    <div style="position:absolute;left:20px;right:20px;bottom:24px">
+      <div class="eyebrow" style="color:#FFF1E0">Character study · Day ${d.day}</div>
+      <h1 style="color:#FFFFFF;margin-top:8px">${d.title}</h1></div>
+  </div>
+  <div class="scroll" data-scrolls><div style="position:absolute;left:20px;right:20px;top:396px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${["The first man", "Genesis 2–5", "Hiding in the garden"].map(t => `<span style="padding:8px 14px;border-radius:18px;background:#FFE3CC;color:#5A2600;font-size:15px;font-weight:800">${t}</span>`).join("")}</div>
+    <div style="margin-top:24px;display:flex;gap:14px"><div style="flex:none;width:40px;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="width:36px;height:36px;border-radius:18px;background:#3A1200;color:#FFF1E0;display:grid;place-items:center;font-weight:900;font-size:15px">1</span><span style="flex:1;width:2px;background:#3A120022"></span></div>
+      <div><div class="eyebrow" style="color:#B04A0A">Scene one</div><p class="body" style="color:#2A1000;margin-top:6px">${p1}</p></div></div>
+  </div></div>
+  ${chrome({ xBg: "#FFFFFF40", xInk: "#FFFFFF", on: "#FFFFFF", track: "#FFFFFF4D", ctaBg: "#3A1200", ctaInk: "#FFF1E0", fade: "#FFF4EA" })}`); }
+</script>
+
+<!-- 6 · DEEP VERSE: one verse, slowly. The verse fills the first screen; scrolling lights it phrase by phrase; the key word opens a word study. -->
+<script>
+{ const d = D(6);
+const words = d.verse.split(" "), lit = 13;
+screen("r06-deep-verse", `
+  <div style="position:absolute;inset:0;background:radial-gradient(120% 70% at 88% 0%, #3A2E44, #231B2A 50%, #18121C)"></div>
+  <div class="scroll" data-scrolls><div style="position:absolute;left:20px;right:20px;top:128px">
+    <div class="eyebrow" style="color:#FFC21A">Deep verse · ${d.reference}</div>
+    <p style="margin-top:16px;font-size:34px;line-height:40px;font-weight:900;letter-spacing:-1px">${words.map((w, i) => {
+      const key = w.replace(/\W/g, "") === "enmity";
+      return key ? `<span style="color:#FFC21A;position:relative">${w}<span style="position:absolute;left:-6px;top:-6px;right:-6px;bottom:-4px;border:3px solid #F7F0E6;border-radius:26px"></span></span>` : `<span style="color:${i < lit ? "#F7F0E6" : "#F7F0E638"}">${w}</span>`;
+    }).join(" ")}</p>
+    <div style="margin-top:28px;padding:20px;border-radius:22px;background:#FFFFFF0F;box-shadow:inset 0 0 0 1px #FFFFFF14">
+      <div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:26px;font-weight:900;color:#FFC21A">enmity</span><span class="meta" style="color:#B8A8C4">Hebrew ’êbâ</span></div>
+      <p class="body" style="color:#E9DFF0;margin-top:8px">Hostility that does not fade on its own. Here, God promises it, so the serpent never gets an easy peace with us.</p></div>
+  </div></div>
+  ${chrome({ xBg: "#FFFFFF14", xInk: "#F7F0E6", on: "#FFC21A", track: "#FFFFFF24", ctaBg: "#FFC21A", ctaInk: "#2A1206", fade: "#18121C", label: "I’ve read it" })}`, { chrome: "light" }); }
+</script>
+
+<!-- 7 · MISCONCEPTION: struck through. What people say comes first, crossed out as you read; then what the text says. -->
+<script>
+{ const d = D(7), [p1] = paras(d);
+screen("r07-misconceptions", `
+  <div style="position:absolute;inset:0;background:linear-gradient(180deg, #FFFFFF, #FFF6E8)"></div>
+  <div class="scroll" data-scrolls><div style="position:absolute;left:20px;right:20px;top:128px">
+    <div class="eyebrow" style="color:#6E645C">Misconception · Day ${d.day}</div>
+    <h1 style="color:#2A1206;margin-top:8px">${d.title}</h1>
+    <div style="margin-top:28px;padding:22px;border-radius:24px;background:#F6EEE4">
+      <div class="eyebrow" style="color:#6E645C">What people say</div>
+      <p style="margin-top:10px;font-size:25px;line-height:32px;font-weight:800;color:#2A120699;position:relative">“After they sinned, God walked away from them.”
+        <span style="position:absolute;left:-6px;right:-4px;top:46%;height:6px;border-radius:3px;background:#FF2E1F;transform:rotate(-3deg)"></span></p></div>
+    <div style="margin-top:26px"><div class="eyebrow" style="color:#E0230F">What Genesis says · ${d.reference}</div>
+      <p style="margin-top:10px;font-size:24px;line-height:32px;font-weight:900;color:#2A1206">${d.verse}</p></div>
+    <p class="body" style="color:#3A2A20;margin-top:20px">${p1}</p>
+  </div></div>
+  ${chrome({ xBg: "#F1ECE6", xInk: "#2A1206", on: "#FF2E1F", track: "#2A120622", ctaBg: "#2A1206", ctaInk: "#FFFFFF", fade: "#FFF6E8" })}`); }
+</script>
+
+<!-- 8 · TESTIMONY: then, the turn, now. The story runs down a line that fills as you read. -->
+<script>
+{ const d = D(8), [p1, p2, p3] = paras(d);
+const node = (label, text, done, last) => `<div style="display:flex;gap:16px"><div style="flex:none;width:22px;display:flex;flex-direction:column;align-items:center">
+  <span style="width:22px;height:22px;border-radius:11px;background:${done ? "#1FB868" : "#FFFFFF"};box-shadow:inset 0 0 0 3px #1FB868"></span>${last ? "" : `<span style="flex:1;width:3px;margin:4px 0;border-radius:2px;background:linear-gradient(180deg,#1FB868 ${done ? 100 : 0}%, #CDEBD9 0)"></span>`}</div>
+  <div style="padding-bottom:22px"><div class="eyebrow" style="color:#0A6E3C">${label}</div><p class="body" style="color:#123322;margin-top:6px">${text}</p></div></div>`;
+screen("r08-testimonies", `
+  <div style="position:absolute;inset:0;background:#F2FBF5"></div>
+  <div style="position:absolute;left:0;right:0;top:0;height:300px;background:radial-gradient(120% 100% at 88% 0%, #4BE08F, #1FB868 45%, #0E8A4C);overflow:hidden">
+    <svg data-art data-bleed width="220" height="220" viewBox="0 0 220 220" style="position:absolute;right:-46px;top:60px;transform:rotate(30deg)"><defs><path id="rp8" d="M110 30a80 80 0 1 1 0 160a80 80 0 1 1 0-160"/></defs><text fill="#FFFFFFD9" font-size="17" font-weight="900" letter-spacing="4" font-family="Nunito"><textPath href="#rp8">STILL MOVING · STILL MOVING · STILL MOVING ·</textPath></text><circle cx="110" cy="110" r="22" fill="#FFE14D"/></svg>
+    <div style="position:absolute;left:20px;right:150px;bottom:26px"><div class="eyebrow" style="color:#FFF6B0">Testimony · Day ${d.day}</div><h1 style="color:#fff;margin-top:8px">${d.title}</h1></div>
+  </div>
+  <div class="scroll" data-scrolls><div style="position:absolute;left:20px;right:20px;top:326px">
+    ${node("Then", p1, true)}${node("The turn", p2, false)}${node("Now", p3, false, true)}
+  </div></div>
+  ${chrome({ xBg: "#FFFFFF40", xInk: "#FFFFFF", on: "#FFFFFF", track: "#FFFFFF4D", ctaBg: "#0A6E3C", ctaInk: "#FFFFFF", fade: "#F2FBF5" })}`); }
+</script>
+
+<!-- 9 · HARD QUESTION: sit with it. The question leads; the answer waits under a cover until you hold it. -->
+<script>
+{ const d = D(9), [p1] = paras(d);
+const body = revealed => `
+  <div style="position:absolute;inset:0;background:radial-gradient(120% 70% at 88% 0%, #4A3624, #33261C 50%, #261D17)"></div>
+  <div data-art data-bleed style="position:absolute;right:-20px;top:70px;font-size:300px;line-height:300px;font-weight:900;letter-spacing:-10px;color:#FFC21A1F">?</div>
+  <div class="scroll" data-scrolls><div style="position:absolute;left:20px;right:20px;top:${revealed ? 128 : 150}px">
+    <div class="eyebrow" style="color:#FFC21A">Hard question · ${d.reference}</div>
+    ${revealed ? "" : `<h1 style="color:#FFFFFF;margin-top:14px;font-size:40px;line-height:44px">Why would God protect a murderer?</h1>
+    <p class="body" style="color:#E3D3BF;margin-top:22px">${p1}</p>`}
+    <div style="margin-top:${revealed ? 16 : 28}px;padding:22px;border-radius:24px;background:${revealed ? "#FFC21A" : "#FFFFFF0F"};box-shadow:${revealed ? "0 18px 30px -18px #000" : "inset 0 0 0 1.5px #FFC21A59"};position:relative;overflow:hidden">
+      <div class="eyebrow" style="color:${revealed ? "#5A3A00" : "#FFC21A"}">One answer</div>
+      <p style="margin-top:10px;font-size:22px;line-height:29px;font-weight:800;color:${revealed ? "#2A1206" : "transparent"};${revealed ? "" : "text-shadow:0 0 12px #FFC21A66"}">${d.insight}</p>
+      ${revealed ? "" : `<div style="position:absolute;inset:44px 0 0;display:flex;align-items:center;justify-content:center;gap:10px;color:#FFC21A;font-size:17px;font-weight:800"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC21A" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="#FFC21A"/></svg>Hold to see it</div>`}
+    </div>
+    ${revealed ? `<p class="body" style="color:#E3D3BF;margin-top:22px">It is not the only answer. Tomorrow’s reading picks it up again.</p>` : ""}
+  </div></div>
+  ${chrome({ xBg: "#FFFFFF14", xInk: "#F7F0E6", on: "#FFC21A", track: "#FFFFFF24", ctaBg: "#FFC21A", ctaInk: "#2A1206", fade: "#261D17", progress: revealed ? .9 : .5 })}`;
+screen("r09-questions", body(false), { chrome: "light" });
+screen("r09b-questions-answer", body(true), { chrome: "light", kind: "state" }); }
+</script>
+
+<!-- 10 · PRAYER NIGHT: by moonlight. A night page; the reading ends by praying it back. -->
+<script>
+{ const d = D(10), [p1] = paras(d);
+screen("r10-prayer-nights", `
+  <div style="position:absolute;inset:0;background:#1A0C26 url(../../../assets/backdrops/night-sky.jpg) center top / cover"></div><div style="position:absolute;inset:0;background:linear-gradient(180deg,#12071A80,#12071AB3 45%,#0E0514F2)"></div>
+  ${[[60, 150, 3], [300, 120, 2], [180, 210, 2], [340, 260, 3], [40, 300, 2]].map(([x, y, r]) => `<i style="position:absolute;left:${x}px;top:${y}px;width:${r * 2}px;height:${r * 2}px;border-radius:${r}px;background:#FFF2CC;opacity:.8"></i>`).join("")}
+  <svg data-art data-bleed width="120" height="120" viewBox="0 0 200 200" style="position:absolute;right:26px;top:112px;transform:rotate(-24deg)"><path d="M100 10 A90 90 0 1 0 100 190 A100 100 0 1 1 100 10Z" fill="#FFF2CC"/></svg>
+  <div class="scroll" data-scrolls><div style="position:absolute;left:20px;right:20px;top:250px">
+    <div class="eyebrow" style="color:#FFE27A">Prayer night · Day ${d.day}</div>
+    <h1 style="color:#FFF6E8;margin-top:8px">${d.title}</h1>
+    <p style="margin-top:20px;font-size:21px;line-height:30px;font-weight:700;color:#EADCF0">“${d.verse}”</p>
+    <div class="meta" style="color:#C9B6D6;margin-top:8px">${d.reference}</div>
+    <div style="margin-top:26px;padding:22px;border-radius:24px;background:#FFF2CC14;box-shadow:inset 0 0 0 1px #FFF2CC26">
+      <div class="eyebrow" style="color:#FFE27A">Pray it back</div>
+      <p style="margin-top:10px;font-size:21px;line-height:30px;font-weight:800;color:#FFF6E8">Lord, when everything around me feels bent the wrong way, let my one life be found faithful to You.</p></div>
+  </div></div>
+  ${chrome({ xBg: "#FFFFFF14", xInk: "#FFF6E8", on: "#FFE27A", track: "#FFFFFF24", ctaBg: "#FFF2CC", ctaInk: "#2A1233", fade: "#0E0514", label: "Amen" })}`, { chrome: "light" }); }
+</script>
+
+<script>
+document.querySelectorAll(".scroll p, .scroll h1").forEach(el => el.setAttribute("data-ugc", ""));
+document.querySelectorAll(".scroll").forEach(sc => { const kids = [...sc.children], top = Math.min(...kids.map(k => parseFloat(k.style.top) || 0)); sc.style.top = top + "px"; kids.forEach(k => k.style.top = ((parseFloat(k.style.top) || 0) - top) + "px"); });
+</script>
+<script src="file:///Users/kennyespinal23/.claude/skills/app-designer-pro/assets/device.js"></script>
+</body>
+</html>

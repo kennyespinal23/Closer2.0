@@ -19,11 +19,11 @@ export const dailyPushExit = (values: ExitAnimationsValues) => {
 
 export const dailyReadingReveal = () => {
   'worklet';
-  const timing = { duration: 800, easing: Easing.bezier(.23, 1, .32, 1) };
+  const timing = { duration: 340, easing: Easing.bezier(.23, 1, .32, 1) };
   return { initialValues: { opacity: 0, transform: [{ scale: .94 }] }, animations: { opacity: withTiming(1, timing), transform: [{ scale: withTiming(1, timing) }] } };
 };
 export const dailyLetterExit = () => {
   'worklet';
-  const timing = { duration: 800, easing: Easing.bezier(.23, 1, .32, 1) };
+  const timing = { duration: 300, easing: Easing.bezier(.23, 1, .32, 1) };
   return { initialValues: { opacity: 1, transform: [{ scale: 1 }] }, animations: { opacity: withTiming(0, timing), transform: [{ scale: withTiming(1.35, timing) }] } };
 };

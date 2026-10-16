@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { canCompleteDailyTasks } from "@/lib/dailyTaskCompletion";
+import { dailyStepsFor } from "@/lib/dailySteps";
 import { removeKey, STORAGE_KEYS, usePersistence } from "@/lib/storage";
 
 /**
@@ -20,7 +21,7 @@ import { removeKey, STORAGE_KEYS, usePersistence } from "@/lib/storage";
  * for streaks. Chapter reads are tracked separately for the reader's
  * own UI (Continue Reading, auto-mark logic, Library) but they do
  * NOT count toward the streak. The streak is intentionally tied to
- * all four daily tasks as the daily anchor.
+ * every task the day holds as the daily anchor.
  *
  * Streak philosophy (deliberate, see help.tsx FAQ):
  *   • Encouraging, never shaming
@@ -104,7 +105,7 @@ export type ProgressState = {
   sermonCompletions: ReadonlyArray<SermonCompletion>;
 
   /**
-   * Sorted, unique dates the user completed all four daily tasks on.
+   * Sorted, unique dates the user completed every task the day held (lib/dailySteps).
    * The single source of truth for streaks and the weekly journey
    * dots. Tied to the full daily practice (not chapter reads) so the
    * streak rewards the daily anchor behavior the app is built around.
@@ -334,10 +335,12 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   );
 
   const completeDailyTasks = useCallback((day: number, practice: { prayer?: boolean; quiz?: boolean; action?: boolean }) => {
-    if (!practice.prayer || !practice.quiz || !practice.action) return;
+    // Days hold different steps; only the ones this day holds are needed.
+    const steps = dailyStepsFor(day);
+    if (!steps.every(step => step === "reading" || practice[step])) return;
     setState(previous => {
       const today = todayISO();
-      if (previous.engagedDates.includes(today) || !canCompleteDailyTasks(day, today, practice, previous.sermonCompletions)) return previous;
+      if (previous.engagedDates.includes(today) || !canCompleteDailyTasks(day, today, practice, previous.sermonCompletions, steps)) return previous;
       return { ...previous, engagedDates: withTodayEngaged(previous.engagedDates) };
     });
   }, [withTodayEngaged]);

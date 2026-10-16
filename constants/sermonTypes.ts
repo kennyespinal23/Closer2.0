@@ -76,7 +76,6 @@ export type SermonType = {
    *   misconceptions     → lightbulb.fill         (the "ohhh" moment)
    *   testimonies        → quote.bubble.fill      (real stories)
    *   questions          → questionmark.circle.fill (the asked thing)
-   *   prayer-nights      → moon.stars.fill        (before sleep)
    *
    * Typed against `sf-symbols-typescript` so call sites get TS
    * autocomplete for the full SF Symbol catalog.
@@ -226,29 +225,14 @@ export const SERMON_TYPES: readonly SermonType[] = [
     illustration: require("../assets/sermon-types/illustrations/doorway-path.jpg"),
     iconSymbol: "questionmark.circle.fill",
   },
-  {
-    id: "prayer-nights",
-    displayNum: "10",
-    name: "Prayer Nights",
-    tagline: "Almost no prose. Just presence.",
-    description:
-      "Less reading, more breathing. A guided prayer rhythm to soften your heart before you sleep.",
-    accent: "#4F7CFF",
-    hero: require("../assets/sermon-types/prayer-nights.png"),
-    // Crescent moon over deep-blue clouds — the literal time of
-    // day this type is meant for. Matches the "before you
-    // sleep" closing line of the description.
-    illustration: require("../assets/sermon-types/illustrations/moon-stars.jpg"),
-    iconSymbol: "moon.stars.fill",
-  },
 ];
 
 /**
  * Returns today's sermon type using a deterministic day-of-year rotation.
  *
  * The same user opening the app at 9am and 9pm on the same day sees the
- * same type. Tomorrow they see the next one. After 10 days the cycle
- * resets — over a year, each type lands on ~36 different days.
+ * same type. Tomorrow they see the next one. After nine days the cycle
+ * resets — over a year, each type lands on ~40 different days.
  *
  * A real implementation will eventually be backend-driven (per-user
  * personalization, scheduled drops, etc). This is enough to make the

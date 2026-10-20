@@ -1,0 +1,33 @@
+import type { ImageSourcePropType } from "react-native";
+
+/** The alternate home-screen icons (app.json → expo-alternate-app-icons). `id` is the native icon name. */
+export const APP_ICONS: { id: string; label: string; thumb: ImageSourcePropType }[] = [
+  { id: "Aurora", label: "Aurora", thumb: require("@/assets/app-icons/thumbs/Aurora.png") },
+  { id: "Berry", label: "Berry", thumb: require("@/assets/app-icons/thumbs/Berry.png") },
+  { id: "Blush", label: "Blush", thumb: require("@/assets/app-icons/thumbs/Blush.png") },
+  { id: "Citrus", label: "Citrus", thumb: require("@/assets/app-icons/thumbs/Citrus.png") },
+  { id: "CottonCandy", label: "Cotton Candy", thumb: require("@/assets/app-icons/thumbs/CottonCandy.png") },
+  { id: "DeepSea", label: "Deep Sea", thumb: require("@/assets/app-icons/thumbs/DeepSea.png") },
+  { id: "Dream", label: "Dream", thumb: require("@/assets/app-icons/thumbs/Dream.png") },
+  { id: "Earth", label: "Earth", thumb: require("@/assets/app-icons/thumbs/Earth.png") },
+  { id: "Ember", label: "Ember", thumb: require("@/assets/app-icons/thumbs/Ember.png") },
+  { id: "Forest", label: "Forest", thumb: require("@/assets/app-icons/thumbs/Forest.png") },
+  { id: "GoldenHour", label: "Golden Hour", thumb: require("@/assets/app-icons/thumbs/GoldenHour.png") },
+  { id: "Lagoon", label: "Lagoon", thumb: require("@/assets/app-icons/thumbs/Lagoon.png") },
+  { id: "Lime", label: "Lime", thumb: require("@/assets/app-icons/thumbs/Lime.png") },
+  { id: "Mist", label: "Mist", thumb: require("@/assets/app-icons/thumbs/Mist.png") },
+  { id: "Mountain", label: "Mountain", thumb: require("@/assets/app-icons/thumbs/Mountain.png") },
+  { id: "Night", label: "Night", thumb: require("@/assets/app-icons/thumbs/Night.png") },
+  { id: "Ocean", label: "Ocean", thumb: require("@/assets/app-icons/thumbs/Ocean.png") },
+  { id: "Paper", label: "Paper", thumb: require("@/assets/app-icons/thumbs/Paper.png") },
+  { id: "Peach", label: "Peach", thumb: require("@/assets/app-icons/thumbs/Peach.png") },
+  { id: "Periwinkle", label: "Periwinkle", thumb: require("@/assets/app-icons/thumbs/Periwinkle.png") },
+  { id: "Sage", label: "Sage", thumb: require("@/assets/app-icons/thumbs/Sage.png") },
+  { id: "Sand", label: "Sand", thumb: require("@/assets/app-icons/thumbs/Sand.png") },
+  { id: "Sky", label: "Sky", thumb: require("@/assets/app-icons/thumbs/Sky.png") },
+  { id: "Storm", label: "Storm", thumb: require("@/assets/app-icons/thumbs/Storm.png") },
+  { id: "Sunrise", label: "Sunrise", thumb: require("@/assets/app-icons/thumbs/Sunrise.png") },
+  { id: "Sunset", label: "Sunset", thumb: require("@/assets/app-icons/thumbs/Sunset.png") },
+  { id: "Twilight", label: "Twilight", thumb: require("@/assets/app-icons/thumbs/Twilight.png") },
+  { id: "VioletSky", label: "Violet Sky", thumb: require("@/assets/app-icons/thumbs/VioletSky.png") },
+];

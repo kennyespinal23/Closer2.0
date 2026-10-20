@@ -18,7 +18,7 @@ export function LibraryBookCover({ book, width = 104 }: { book: Book; width?: nu
   const id = `binding${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   return <View style={{ width, height: width * 1.42, borderRadius: 4, backgroundColor: "#E0D2BA", boxShadow: "0 2px 3px #140A0438, 3px 10px 18px -5px #140A0466" }}>
     {[5, 3, 1].map((offset, i) => <View key={offset} style={{ position: "absolute", inset: 0, left: offset, right: -offset, top: i, bottom: -i, borderRadius: 3, backgroundColor: ["#C9B89C", "#E0D2BA", "#F4EBDD"][i] }} />)}
-    <Image source={getBookCover(book.id)} contentFit="fill" transition={0} style={{ width, height: width * 1.42, borderRadius: 3 }} />
+    <Image source={getBookCover(book.id)} contentFit="cover" transition={0} style={{ width, height: width * 1.42, borderRadius: 3 }} />
     <Svg pointerEvents="none" width={width} height={width * 1.42} style={{ position: "absolute", top: 0, left: 0 }}>
       <Defs><LinearGradient id={id} x1="0%" y1="0%" x2="100%" y2="8%"><Stop offset="0%" stopColor="#000000" stopOpacity={.22} /><Stop offset="7%" stopColor="#000000" stopOpacity={.1} /><Stop offset="11.5%" stopColor="#FFFFFF" stopOpacity={.32} /><Stop offset="17%" stopColor="#FFFFFF" stopOpacity={.06} /><Stop offset="27%" stopColor="#FFFFFF" stopOpacity={0} /><Stop offset="100%" stopColor="#000000" stopOpacity={.08} /></LinearGradient></Defs>
       <Rect width={width} height={width * 1.42} rx={3} fill={`url(#${id})`} />

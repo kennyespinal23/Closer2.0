@@ -1,3 +1,6 @@
+import { setStatusBarStyle } from "expo-status-bar";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import type { HomeQuote } from "@/lib/homeQuotes";
 import { type CardOrigin, DailyWalkOverview } from "./DailyWalkOverview";
 import { type DailyStep, useDailyPractice } from '@/lib/dailyPractice';
@@ -41,6 +44,25 @@ import { ReaderMaterialGradient } from "./ReaderMaterialGradient";
 import { SFSymbol, type SFSymbolName } from "./Symbol";
 import * as haptics from "@/lib/haptics";
 import { focusAmount, useFocusMoment } from "@/lib/homeFocus";
+import { type DeckItem, deckPalette, mix } from "./HomeDeck";
+import { SCENE_COLORS } from "@/constants/sceneColors";
+import { tone } from "./community/togetherKit";
+import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
+import { findAvatar } from "@/constants/avatars";
+import { getBibleMomentArt } from "@/constants/bibleMomentArt";
+import { getMilestoneBadge } from "@/lib/milestoneBadges";
+import { MILESTONES } from "@/lib/milestones";
+import { useCheckIns } from "@/state/checkIns";
+import { findMood } from "@/constants/moods";
+import { formatNightTime } from "@/lib/nightPrayer";
+import { Image } from "expo-image";
+import { BlurView } from "expo-blur";
+import { StatusBar } from "expo-status-bar";
+import { bookIdFromReference, syncWidgets } from "@/lib/widgetSync";
+import { paintedCover } from "@/constants/paintedCovers";
+
+const NIGHT_SKY = require("@/assets/backdrops/night-sky.jpg");
+const NEVER_LEAVE = require("@/assets/bible-moments/never-leave.jpg");
 
 type Practice = "prayer" | "quiz" | "action";
 const ACTIONS: { id: Practice | "reading"; title: string; icon: SFSymbolName }[] = [
@@ -163,30 +185,117 @@ export function HomeDailyPath({ card, homeQuote, completed, onRead, onReadingCom
         <Pressable onPress={() => router.push("/check-in")} accessibilityRole="button" accessibilityLabel="How are you, really? Check in" style={[s.homeLink, { backgroundColor: surface }]}><SFSymbol name="heart" color={ink} size={20}/><Text style={{ ...uiText.body, color: ink }}>Check in</Text></Pressable>
       </View>;
   const linksHeight = compact || smallPhone ? 124 : 56;
-  return <View style={{ flex: 1, backgroundColor: background }}>
-    {dark ? <ReaderMaterialGradient colors={["#4A3420", "#211D19"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 420 }} /> : <SkyGradient />}
-    <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} snapToOffsets={foldOn ? Array.from({ length: lastStop + 1 }, (_, i) => i * foldDistance) : undefined} snapToEnd={false} style={tabContentStyle} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + contentLayout.screenTop, paddingHorizontal: 20, paddingBottom: bottomInset + 28, gap: 24,
-      // Always leave enough scroll for the page to rest on the last card's stop.
-      minHeight: foldOn ? height + lastStop * foldDistance : undefined }}>
-      <View style={s.top}>
-        <Pressable onPress={() => { haptics.soft(); setYouOpen(true); }} accessibilityRole="button" accessibilityLabel="You: profile and settings" style={[s.avatar, { backgroundColor: "#FF4326" }]}>{firstName ? <Text style={{ ...uiText.sectionTitle, color: "#FFF" }}>{firstName[0].toUpperCase()}</Text> : <SFSymbol name="person.fill" color="#FFF" size={22}/>}</Pressable>
-        <View style={{ flex: 1, gap: 2 }}>{!!firstName && <Text style={{ ...uiText.body, fontWeight: "800", color: ink }}>{firstName}</Text>}{streak > 1 && <Pressable onPress={onStreak} accessibilityRole="button" accessibilityLabel={`${streak} day streak`} hitSlop={{ top: 10, bottom: 10 }} style={{ alignSelf: "flex-start" }}><Text style={{ ...uiText.supporting, color: firstName ? muted : ink, fontWeight: firstName ? "500" : "800" }}>{streak} days in a row</Text></Pressable>}</View>
-        {continueReading && <ReadingPill {...continueReading} ink={ink} surface={surface} reduced={reduced} scrollY={scrollY}/>}
+  // ── The deck: past days, the verse, today's steps, night prayer, tomorrow. One card in front.
+  const pal = useMemo(() => deckPalette(categoryId), [categoryId]);
+  const { log: checkIns } = useCheckIns();
+  const todayISO = new Date(clock).toLocaleDateString("en-CA");
+  const checkedIn = [...checkIns].reverse().find(c => c.dateISO === todayISO), mood = checkedIn ? findMood(checkedIn.moodId) : null;
+  const startStep = (id: DailyStep) => { haptics.soft(); setOverviewOrigin(null); setOverview(true); setTimeout(() => openTask(id as Practice | "reading"), reduced ? 150 : 520); };
+  const STEP_COPY: Record<string, { title: string; sentence: string; chip: string; icon: SFSymbolName; verb: string }> = {
+    reading: { title: card.title, sentence: card.scriptureReference, chip: "Read", icon: "book", verb: "Read" },
+    prayer: { title: "Pray it back", sentence: "Tell God the story you just read, in your own words.", chip: "Pray", icon: "hands.sparkles", verb: "Pray it back" },
+    quiz: { title: "Quick check", sentence: "A few questions on today’s story.", chip: "Quick check", icon: "questionmark.bubble", verb: "Start the check" },
+    action: { title: "One small step", sentence: "Carry today’s word into one moment.", chip: "Small step", icon: "sun.max", verb: "Take the step" },
+  };
+  const artFor = (m: { id: string }) => getBibleMomentArt(m.id) ?? null;
+  const tomorrowArt = tomorrow ? art(tomorrow.reference) : null;
+  const items: (DeckItem & { act: { label: string; run: () => void } })[] = [];
+  if (card.day > 1) items.push({ key: "past", art: artFor(paintings[2]!), tint: SCENE_COLORS[paintings[2]!.id], blurred: true, label: "Your weeks", title: "Look back", sentence: `Days 1 to ${card.day - 1}`, done: true, chip: { icon: "calendar", label: `${card.day - 1} days` },
+    accessibilityLabel: "Look back at your weeks", onPress: () => setWeekPicker(true), act: { label: "See your weeks", run: () => setWeekPicker(true) } });
+  const firstOpen = steps.find(id => !done(id));
+  if (quote) items.push({ key: "verse", art: null, done: true, label: "For today", title: homeQuote?.reference ?? "For today", sentence: "Carry it with you.",
+    over: <View style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center", padding: 18 }]}><Text numberOfLines={6} style={{ ...uiText.body, fontSize: 18, lineHeight: 24, fontWeight: "700", color: pal.theme.light ? "#FFFFFF" : pal.theme.label, textAlign: "center" }}>“{quote}”</Text></View>,
+    accessibilityLabel: `For today. ${quote}. ${homeQuote?.reference ?? ""}`, onPress: () => { setOverviewOrigin(null); setOverview(true); },
+    act: firstOpen ? { label: STEP_COPY[firstOpen]!.verb, run: () => startStep(firstOpen) } : { label: "Open today’s walk", run: () => { setOverviewOrigin(null); setOverview(true); } } });
+  steps.forEach((id, i) => { const c = STEP_COPY[id]!, isDone = done(id);
+    items.push({ key: id, art: artFor(paintings[i % paintings.length]!), tint: SCENE_COLORS[paintings[i % paintings.length]!.id], chip: { icon: c.icon, label: c.chip }, label: `Step ${i + 1} of ${steps.length}`, title: c.title, sentence: c.sentence, done: isDone, stamp: isDone ? "KEPT" : undefined,
+      accessibilityLabel: `Step ${i + 1} of ${steps.length}. ${c.title}.${isDone ? " Done." : ""}`, onPress: () => { setOverviewOrigin(null); setOverview(true); },
+      act: { label: isDone ? "Open again" : c.verb, run: () => startStep(id) } }); });
+  if (night.enabled || nightDue || nightDone) items.push({ key: "night", art: NIGHT_SKY, tint: SCENE_COLORS["never-leave"], night: true, chip: { icon: "moon.fill", label: formatNightTime(night.hour, night.minute) }, label: "Night prayer", title: "Lay today down.", sentence: "Say how today felt, then pray before you sleep.",
+    done: !!nightDone, stamp: nightDone ? "PRAYED" : undefined, over: <View style={{ position: "absolute", right: 16, top: 16, width: 46, height: 46, borderRadius: 23, backgroundColor: "#F6EDCF", boxShadow: "0 0 0 8px #FBF2F612, 0 0 0 18px #FBF2F608" }}/>,
+    accessibilityLabel: nightDone ? "Night prayer, prayed tonight" : "Night prayer. Lay today down.", onPress: () => nightDone ? router.push("/prayers" as never) : setNightOpen(true),
+    act: nightDone ? { label: "See tonight’s prayer", run: () => router.push("/prayers" as never) } : { label: nightDue ? "Begin" : "Pray now", run: () => setNightOpen(true) } });
+  if (tomorrow && tomorrowArt) items.push({ key: "tomorrow", art: artFor(tomorrowArt), tint: SCENE_COLORS[tomorrowArt.id], blurred: true, chip: { icon: "lock.fill", label: "In the morning" }, label: `Day ${tomorrow.day}`, title: "A letter waiting for you", sentence: devotionalLabel({ day: tomorrow.day }),
+    over: <View style={{ position: "absolute", left: 10, right: 10, top: 10, borderRadius: 16, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: pal.chrome, alignItems: "center" }}><Text style={{ ...uiText.supporting, fontSize: 11, lineHeight: 14, fontWeight: "800", letterSpacing: .8, color: "#FFFFFFB8" }}>TOMORROW</Text><Text style={{ ...uiText.sectionTitle, fontSize: 20, lineHeight: 24, fontWeight: "800", color: "#FFFFFF" }}>Your letter opens</Text></View>,
+    accessibilityLabel: `Tomorrow, day ${tomorrow.day}. A letter waiting for you.`, onPress: () => setTomorrowOpen(true), act: { label: "Peek at tomorrow", run: () => setTomorrowOpen(true) } });
+  const defaultIndex = Math.max(0, (() => {
+    const at = (k: string) => items.findIndex(i => i.key === k);
+    if (nightDue && (!firstOpen || at("night") >= 0)) return at("night");
+    if (firstOpen) return at(firstOpen);
+    if (at("tomorrow") >= 0) return at("tomorrow");
+    return items.length - 1;
+  })());
+  const [picked, setPicked] = useState<{ key: string; at: string } | null>(null);
+  // A swipe holds until the day's state moves on; then the deck returns to what's now.
+  const stateKey = `${card.day}:${count}:${nightDue}:${!!nightDone}`;
+  const deckIndex = picked && picked.at === stateKey ? Math.max(0, items.findIndex(i => i.key === picked.key)) : defaultIndex;
+  const front = items[deckIndex] ?? items[0]!;
+  // Other mounted screens can leave the bar dark; this room is always dark, so claim it on focus.
+  useFocusEffect(useCallback(() => { setStatusBarStyle("light", true); }, []));
+  const streakBadge = getMilestoneBadge(Math.max(0, MILESTONES.filter(m => m.day <= streak).length - 1));
+  const weekday = new Date(clock).toLocaleDateString("en-US", { weekday: "long" }) + (nightDue ? " night" : "");
+  // ── The hero: one big card in the day's colour, the scene rising into it, one action. Nothing else.
+  const isNight = front.key === "night";
+  // The card wears the colour of its own picture; the day's category stays as a dot in the chip.
+  const heroTone = tone(front.tint ?? pal.theme.ground[1]);
+  const floor = "#0B0909";
+  const heroArt = isNight ? NEVER_LEAVE : front.art;
+  const HEADLINE: Record<string, string> = { reading: card.title, prayer: "Pray it back", quiz: "Quick check", action: "One small step", night: "Lay today down", tomorrow: "A letter waits", verse: "For today", past: "Look back" };
+  const PILL: Record<string, string> = { reading: card.scriptureReference, prayer: card.title, quiz: card.title, action: card.title, night: "Say how today felt", tomorrow: "It opens in the morning", verse: homeQuote?.reference ?? card.scriptureReference, past: `Days 1 to ${card.day - 1}` };
+  // The widgets mirror this card: the next open step on its scene, the verse on its book's cover, night prayer's hour.
+  const widgetStepIndex = firstOpen ? steps.indexOf(firstOpen) : -1, widgetPainting = widgetStepIndex >= 0 ? paintings[widgetStepIndex % paintings.length]! : null;
+  const widgetVerseRef = homeQuote?.reference ?? card.scriptureReference, widgetBook = bookIdFromReference(widgetVerseRef);
+  const widgetJSON = JSON.stringify({
+    date: todayISO, streak, keptToday: count === total, stepsDone: count, stepsTotal: total,
+    step: firstOpen && widgetPainting ? { key: firstOpen, headline: HEADLINE[firstOpen] ?? STEP_COPY[firstOpen]!.title, title: card.title, label: `Step ${widgetStepIndex + 1} of ${steps.length}`, art: widgetPainting.id, tint: SCENE_COLORS[widgetPainting.id] ?? "#A47D28" } : null,
+    verse: { text: (quote || card.scriptureText || "").trim(), reference: widgetVerseRef, book: widgetBook, tint: paintedCover(widgetBook)?.color ?? "#A47D28" },
+    night: night.hydrated ? { enabled: night.enabled, hour: night.hour, minute: night.minute, doneDate: nightDone ? todayISO : null } : null,
+  });
+  useEffect(() => { if (ready && hydrated) syncWidgets(JSON.parse(widgetJSON)); }, [widgetJSON, ready, hydrated]);
+  const after = items.slice(deckIndex + 1).find(i => !i.done && i.key !== "past");
+  const nextLine = after ? after.key === "night" ? `Then, tonight at ${formatNightTime(night.hour, night.minute)} · Night prayer` : after.key === "tomorrow" ? "Tomorrow, a letter opens" : `Then · ${HEADLINE[after.key] ?? after.title}` : "Today, kept";
+  const kicker = isNight ? "Night prayer" : front.key === "tomorrow" ? `Day ${tomorrow?.day ?? card.day + 1}` : `${devotionalLabel({ day: card.day })} · ${front.label}`;
+  const avatarSource = answers.avatarPhotoUri ? { uri: answers.avatarPhotoUri } : findAvatar(answers.avatarId)?.source;
+  const heroH = Math.min(660, height - insets.top - 6 - 54 - bottomInset - 12 - 44);
+  return <View style={{ flex: 1, backgroundColor: floor }}>
+    <StatusBar style="light"/>
+    <Animated.View style={[{ flex: 1, paddingTop: insets.top + 6, paddingBottom: bottomInset + 12 }, tabContentStyle]}>
+      <View style={{ height: 50, flexDirection: "row", alignItems: "center", paddingHorizontal: 16 }}>
+        <View style={{ width: 44 }}/>
+        <Pressable accessibilityRole="button" accessibilityLabel={`${weekday}. Day ${card.day}. ${streak} days in a row`} onPress={onStreak} style={{ flex: 1, alignItems: "center" }}>
+          <Text accessibilityRole="header" style={{ ...uiText.body, fontSize: 19, lineHeight: 23, fontWeight: "900", color: "#FFFFFF" }}>{weekday}</Text>
+          <Text style={{ ...uiText.supporting, fontSize: 12, lineHeight: 15, fontWeight: "700", color: mix("#FFFFFF", floor, .45) }}>Day {card.day}{streak > 0 ? ` · ${streak} ${streak === 1 ? "day" : "days"} in a row` : ""}</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Your profile" onPress={() => router.navigate("/profile" as never)} style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", backgroundColor: mix(floor, "#FFFFFF", .1), alignItems: "center", justifyContent: "center" }}>
+          {avatarSource ? <Image source={avatarSource} contentFit="cover" style={StyleSheet.absoluteFill}/> : <SFSymbol name="person.fill" size={18} color="#FFFFFFB8"/>}
+        </Pressable>
       </View>
-      <View style={{ gap: 14, marginTop: 4 }}><Text accessibilityRole="header" style={{ ...titleStyle, color: ink }}>{title}</Text>{!!quote && !!homeQuote?.reference && <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}><View style={{ width: 18, height: 2, borderRadius: 1, backgroundColor: muted }}/><Text style={{ ...uiText.supporting, color: muted }}>{homeQuote.reference}</Text></View>}</View>
-      {foldOn ? <FoldStack scrollY={scrollY} distance={foldDistance} last={lastStop} items={([
-        nightDue && { key: "night", stop: 0, slim: NIGHT_SLIM, open: NIGHT_FULL, gap: 24, radius: 32, node: nightCard },
-        nightDone && { key: "rest", stop: 0, slim: REST_SLIM, open: REST_FULL, gap: 24, radius: 32, node: restCard },
-        { key: "today", stop: todayStop, slim: TODAY_SLIM, open: TODAY_FULL, gap: tomorrow ? 12 : 24, radius: 28, node: todayCard },
-        tomorrow && { key: "tomorrow", stop: tomorrowStop, slim: TOMORROW_PEEK, open: TOMORROW_FULL, gap: dayAfter ? 12 : 24, radius: 28, node: tomorrowCard },
-        dayAfter && { key: "dayAfter", stop: dayAfterStop, slim: DAY_AFTER_PEEK, open: DAY_AFTER_FULL, gap: 24, radius: 24, node: dayAfterCard },
-        { key: "links", stop: null, slim: linksHeight, open: linksHeight, gap: 0, radius: 0, node: links },
-      ] as (FoldItem | false | null | undefined)[]).filter((x): x is FoldItem => !!x)}/> : <>
-        {nightCard}{restCard}{todayCard}{tomorrowCard}{dayAfterCard}{links}
-      </>}
-      {!!error && !active && <Text style={{ color: muted }}>{error}</Text>}
-    </Animated.ScrollView>
-    <View pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: bottomInset + 36 }}><ReaderMaterialGradient colors={[`${background}00`, `${background}E6`, background]} locations={[0, .45, 1]} style={{ flex: 1 }}/></View>
+      <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={`${kicker}. ${HEADLINE[front.key] ?? front.title}. Open today's walk`} onPress={() => { haptics.soft(); front.onPress(); }}
+        style={{ height: heroH, marginHorizontal: 14, marginTop: 4, borderRadius: 34, borderCurve: "continuous", overflow: "hidden", boxShadow: `0 30px 60px -30px ${heroTone.c}CC, 0 0 0 1px ${heroTone.c}4D` }}>
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: heroTone.deep }]}/>
+        {heroArt != null && <View style={StyleSheet.absoluteFill}>
+          <Image source={heroArt as never} contentFit="cover" blurRadius={front.blurred ? 18 : 0} style={StyleSheet.absoluteFill} transition={0}/>
+          <ReaderMaterialGradient pointerEvents="none" colors={[heroTone.deep, `${heroTone.deep}D9`, `${heroTone.deep}00`]} locations={[0, .24, .52]} style={StyleSheet.absoluteFill}/>
+        </View>}
+        <View style={{ alignSelf: "center", marginTop: 26, height: 28, paddingLeft: 8, paddingRight: 12, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: mix(heroTone.deep, "#000000", .3), boxShadow: "inset 0 1px 0 #FFFFFF1A" }}>
+          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: isNight ? "#FFC93C" : pal.theme.ground[1] }}/>
+          <Text style={{ ...uiText.supporting, fontSize: 13, lineHeight: 17, fontWeight: "800", color: heroTone.t1 }}>{kicker}</Text>
+        </View>
+        <Text numberOfLines={2} adjustsFontSizeToFit minimumFontScale={.6} style={{ ...uiText.screenTitle, fontSize: 58, lineHeight: 56, fontWeight: "900", letterSpacing: -2.4, textTransform: "uppercase", color: heroTone.t1, textAlign: "center", marginTop: 10, paddingHorizontal: 16 }}>{HEADLINE[front.key] ?? front.title}</Text>
+        <BlurView intensity={40} tint="dark" style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 78, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 12, paddingLeft: 20, paddingRight: 12, backgroundColor: `${heroTone.deep}99`, boxShadow: "inset 0 1px 0 #FFFFFF2E" }}>
+          <View style={{ flex: 1 }}>
+            <Text numberOfLines={1} style={{ ...uiText.body, fontSize: 16, lineHeight: 20, fontWeight: "800", color: heroTone.t1 }}>{PILL[front.key] ?? front.sentence ?? front.title}</Text>
+            {!!front.sentence && ["reading", "prayer", "quiz", "action"].includes(front.key) && <Text numberOfLines={1} style={{ ...uiText.supporting, fontSize: 13, lineHeight: 17, fontWeight: "700", color: heroTone.t2 }}>{front.sentence}</Text>}
+          </View>
+          <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={front.act.label} disabled={!ready || saving} onPress={() => { haptics.soft(); front.act.run(); }}
+            style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px -8px #000", opacity: ready ? 1 : .6 }}>
+            <SFSymbol name="arrow.right" size={18} color={heroTone.deep}/>
+          </Pressable>
+        </BlurView>
+      </Pressable>
+      <Text style={{ ...uiText.supporting, fontSize: 14, fontWeight: "700", color: mix("#FFFFFF", floor, .48), textAlign: "center", marginTop: 16 }}>{nextLine}</Text>
+      {!!error && !active && <Text style={{ ...uiText.supporting, color: mix("#FFFFFF", floor, .4), textAlign: "center", marginTop: 6 }}>{error}</Text>}
+    </Animated.View>
     <DailyWalkOverview visible={overview} origin={overviewOrigin} card={card} paintings={paintings} completed={{ ...saved, reading: completed }} ready={ready && !saving} onClose={dismiss} onTask={openTask}>
       <DailyExperience visible={active !== null} kind={sheetPractice} card={card} onClose={() => { if (!saving) setActive(null); }} onComplete={mark} onDismiss={() => { if (finishAfterDismiss.current) { finishAfterDismiss.current = false; setOverview(false); } }} onFinish={dismiss} onContinue={continueFlow}/>
     </DailyWalkOverview>

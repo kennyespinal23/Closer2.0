@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { endActivity, showActivity } from "@/lib/liveActivity";
 import { Modal, ScrollView, StyleSheet, View } from "react-native";
 import Animated, { Easing, Extrapolation, type SharedValue, cancelAnimation, interpolate, useAnimatedStyle, useDerivedValue, useSharedValue, withDelay, withRepeat, withTiming } from "react-native-reanimated";
 import { Image } from "expo-image";
@@ -164,6 +165,19 @@ export function NightPrayerFlow({ visible, onClose }: { visible: boolean; onClos
     const t = setTimeout(() => setReady(true), 900 + (prayer.length - 1) * 2100 + 1400);
     return () => clearTimeout(t);
   }, [step, reduced, revealAll, prayer.length]);
+  // The Live Activity keeps night prayer on the Lock Screen and in the Dynamic Island while you pray.
+  useEffect(() => {
+    const look = { art: "m-never-leave", tint: "#2033A2" };
+    if (!visible) { endActivity("night"); return; }
+    const praying = topics.length ? `Praying for ${topics.map(t => t.toLowerCase()).join(", ").replace(/, ([^,]*)$/, " and $1")}` : "Say it aloud, or just read along";
+    if (step === 3) { endActivity("night", { kicker: "Night prayer", headline: "Rest now.", detail: "You gave today back. Tomorrow is his too.", progress: 1, done: true }, 15 * 60); return; }
+    const copy = [
+      { headline: "How was today, really?", detail: "Pick as many as are true." },
+      { headline: "What to pray for", detail: "Pick up to three." },
+      { headline: "Lay today down", detail: praying },
+    ][step]!;
+    showActivity("night", look, { kicker: "Night prayer", ...copy, progress: (step + 1) / 3 });
+  }, [visible, step, topics]);
   const toggle = (list: string[], set: (v: string[]) => void, v: string) => set(list.includes(v) ? list.filter(x => x !== v) : [...list, v]);
   const amen = () => { haptics.thud(); recordNightPrayer(feelings, topics); setStep(3); };
 

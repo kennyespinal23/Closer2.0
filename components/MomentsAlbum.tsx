@@ -1,312 +1,192 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
-import Animated, { Easing, Extrapolation, cancelAnimation, interpolate, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withSpring, withTiming } from "react-native-reanimated";
+import { useMemo, useState } from "react";
+import { Modal, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, type Href } from "expo-router";
-import Svg, { Circle, Path } from "react-native-svg";
+import { StatusBar } from "expo-status-bar";
+import Svg, { Circle } from "react-native-svg";
 import { Text } from "@/components/CloserText";
-import { CloseButton } from "@/components/CloseButton";
+import { FeedbackPressable as Pressable } from "@/components/FeedbackPressable";
 import { ReaderMaterialGradient } from "@/components/ReaderMaterialGradient";
-import { ReaderMomentArt } from "@/components/ReaderMomentArt";
 import { SFSymbol } from "@/components/Symbol";
-import { TiltedBook, bookCoverColor } from "@/components/TiltedBook";
 import { BibleMomentReveal } from "@/components/BibleMomentReveal";
-import { type BibleMoment, type MomentCategory } from "@/constants/bibleMoments";
+import { FLOOR, INK_FAINT, INK_SOFT, RoundButton, tone } from "@/components/community/togetherKit";
+import { MOMENT_CATEGORIES, type BibleMoment, type MomentCategory } from "@/constants/bibleMoments";
+import { getBibleMomentArt } from "@/constants/bibleMomentArt";
 import { findBookById } from "@/constants/books";
-import { GILT, MOMENTS_IN_ORDER, WARM_CATEGORY, WARM_CATEGORY_NAME, plateLabel } from "@/lib/momentOrder";
-import { uiText } from "@/lib/typography";
+import { MOMENTS_IN_ORDER, collectedLabel } from "@/lib/momentOrder";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import * as haptics from "@/lib/haptics";
 import { hydrateBibleMoments, useBibleMomentCollection } from "@/state/bibleMoments";
-import { useResolvedScheme } from "@/state/theme";
 
 /**
- * Bible Moments as a collector's album. A dark cover with the newest three
- * paintings in gold frames, the count in gold, and a strip that runs from
- * Genesis to Revelation with one tick per Moment. Below, the album pages:
- * every Moment in Bible order, grouped by book. Collected ones show their
- * painting in a gilt frame with a plate number; the rest are sealed backs
- * that say where to find them.
+ * Bible Moments as an album on a near-black page. Each moment is its painting; each of the five
+ * categories owns its colour (MOMENT_CATEGORIES). Collected moments are lit; the rest wait as softly
+ * blurred paintings that say where to read them.
  */
 type Filter = MomentCategory | "all";
-const CATEGORIES = Object.keys(WARM_CATEGORY) as MomentCategory[];
-const DAY = 86_400_000;
+const CATEGORIES = Object.keys(MOMENT_CATEGORIES) as MomentCategory[];
+const SHORT: Record<MomentCategory, string> = { "turning-points": "Turning points", prophecy: "Prophecy", lessons: "Lessons", changed: "Changed by Jesus", promises: "Promises" };
+const SET_NAME: Record<MomentCategory, string> = { "turning-points": "Where the story turns", prophecy: "Promised long before", lessons: "Stories Jesus told", changed: "People Jesus met", promises: "What God promised" };
+const dotOf = (c: MomentCategory) => MOMENT_CATEGORIES[c].dark;
+const readRoute = (m: BibleMoment) => `/book/${m.bookId}/${m.chapter}?focus=${m.verse}` as Href;
+const chapterRef = (m: BibleMoment) => `${findBookById(m.bookId)?.name ?? m.bookId} ${m.chapter}`;
 
-function useAlbumTheme() {
-  const dark = useResolvedScheme() === "dark";
-  return { dark, page: dark ? "#1B1815" : "#FBF9F6", ink: dark ? "#F7F0E6" : "#17120F", muted: dark ? "#BBAA99" : "#6E645C", line: dark ? "#FFFFFF1F" : "#17120F1A", sheet: dark ? "#26211C" : "#FFFDFA" };
-}
-
-/** A gold frame: a lit gold gradient behind, the content inset by `edge`. */
-function Gilt({ edge = 3, radius = 14, children, style }: { edge?: number; radius?: number; children: React.ReactNode; style?: object }) {
-  return <View style={[{ borderRadius: radius, overflow: "hidden", padding: edge, backgroundColor: GILT[1] }, style]}>
-    <ReaderMaterialGradient colors={GILT} locations={[0, .35, .55, 1]} horizontal style={StyleSheet.absoluteFill}/>
-    <View style={{ flex: 1, borderRadius: radius - edge, overflow: "hidden" }}>{children}</View>
-  </View>;
-}
-
-function Plate({ moment }: { moment: BibleMoment }) {
-  return <View style={s.plate}><View style={[s.plateDot, { backgroundColor: WARM_CATEGORY[moment.category] }]}/><Text style={s.plateText}>{plateLabel(moment)}</Text></View>;
-}
-
-/** A sealed Moment: dark card back, dashed gold border, gold cross, its number. */
-function SealedBack({ label, big = false }: { label?: string; big?: boolean }) {
-  return <View style={[s.back, big && { width: 120, borderRadius: 18 }]}>
-    <ReaderMaterialGradient colors={["#4A2C20", "#2E1A12"]} style={StyleSheet.absoluteFill}/>
-    <View style={[s.backInner, big && { borderRadius: 12 }]}/>
-    <Svg width={big ? 40 : 30} height={big ? 40 : 30} viewBox="0 0 30 30"><Circle cx={15} cy={15} r={11} fill="none" stroke="#FFC93C" strokeWidth={1.6} opacity={.7}/><Path d="M15 8.5v13M10 13h10" stroke="#FFC93C" strokeWidth={2.4} strokeLinecap="round"/></Svg>
-    {!!label && <Text style={s.backNo}>{label}</Text>}
-  </View>;
-}
-
-// Where each fan card rests: the newest in front, the two before it tilted out to the sides.
-// The page slides up for ~400ms first; the deal waits for it so you actually see the cards fan out.
-const FAN = [
-  { left: -64, top: 0, width: 128, height: 172, rotate: -2, z: 2, delay: 0 },
-  { left: -150, top: 26, width: 112, height: 150, rotate: -10, z: 1, delay: 140 },
-  { left: 38, top: 26, width: 112, height: 150, rotate: 9, z: 1, delay: 220 },
-];
-
-/**
- * One card of the cover's fan. On open the cards start stacked in the middle
- * and deal out to their places on a soft spring. The front card then floats
- * gently and a slow shine crosses it every few seconds.
- */
-function FanCard({ slot, moment, play }: { slot: number; moment?: BibleMoment; play: boolean }) {
-  const reduced = useReducedMotion(), f = FAN[slot];
-  const deal = useSharedValue(reduced ? 1 : 0), float = useSharedValue(0), shine = useSharedValue(0);
-  useEffect(() => {
-    if (!play) return;
-    if (reduced) { deal.value = 1; return; }
-    deal.value = withDelay(450 + f.delay, withSpring(1, { damping: 15, stiffness: 120, mass: .9 }));
-    if (slot === 0) {
-      float.value = withDelay(1500, withRepeat(withTiming(1, { duration: 2600, easing: Easing.inOut(Easing.sin) }), -1, true));
-      shine.value = withDelay(1700, withRepeat(withSequence(withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.cubic) }), withDelay(3800, withTiming(0, { duration: 0 }))), -1));
-    }
-    return () => { cancelAnimation(float); cancelAnimation(shine); };
-  }, [play, reduced, slot, f.delay, deal, float, shine]);
-  // Start stacked on the front card's spot, smaller and flat, then spread out.
-  const card = useAnimatedStyle(() => {
-    const p = deal.value;
-    return {
-      opacity: Math.min(1, p * 2.5),
-      transform: [
-        { translateX: (FAN[0].left + (FAN[0].width - f.width) / 2 - f.left) * (1 - p) },
-        { translateY: (f.top === 0 ? 14 : -10) * (1 - p) - 5 * float.value },
-        { rotate: `${f.rotate * p}deg` },
-        { scale: .86 + .14 * p },
-      ],
-    };
-  });
-  const sweep = useAnimatedStyle(() => ({ opacity: shine.value > 0 && shine.value < 1 ? 1 : 0, transform: [{ translateX: -160 + 360 * shine.value }, { rotate: "18deg" }] }));
-  return <Animated.View style={[{ position: "absolute", left: "50%", marginLeft: f.left, top: f.top, width: f.width, height: f.height, zIndex: f.z, boxShadow: "0 24px 34px -18px #000000B3" }, card]}>
-    {moment ? <Gilt style={{ flex: 1 }}><ReaderMomentArt moment={moment}/>
-      {slot === 0 && !reduced && <Animated.View pointerEvents="none" style={[{ position: "absolute", top: -60, bottom: -60, width: 70 }, sweep]}><ReaderMaterialGradient horizontal colors={["#FFFFFF00", "#FFF7DC66", "#FFFFFF00"]} style={StyleSheet.absoluteFill}/></Animated.View>}
-    </Gilt> : <SealedBack/>}
-  </Animated.View>;
-}
-
-/** The gold count ticks up to the total as the cards land. */
-function CountUp({ to, ready }: { to: number; ready: boolean }) {
-  const reduced = useReducedMotion();
-  const [n, setN] = useState(reduced ? to : 0);
-  useEffect(() => {
-    if (!ready) return;
-    if (reduced || to === 0) { setN(to); return; }
-    let frame = 0; const start = Date.now() + 600;
-    const tick = () => {
-      const t = Math.min(1, Math.max(0, (Date.now() - start) / 900));
-      setN(Math.round(to * (1 - Math.pow(1 - t, 3))));
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [to, ready, reduced]);
-  return <Text style={s.countBig}>{ready ? n : "–"}</Text>;
-}
-
-export function MomentsAlbum({ onClose }: { onClose: () => void }) {
-  const router = useRouter(), t = useAlbumTheme(), inset = useSafeAreaInsets(), { width } = useWindowDimensions();
+export function MomentsAlbum({ onClose, onReadRequest }: { onClose: () => void; onReadRequest?: (moment: BibleMoment) => void }) {
+  const insets = useSafeAreaInsets(), router = useRouter(), { width } = useWindowDimensions();
   const { ids, collectedAt, hydrated, error } = useBibleMomentCollection();
-  const [filter, setFilter] = useState<Filter>("all");
-  const [open, setOpen] = useState<BibleMoment | null>(null);
-  const [sealed, setSealed] = useState<BibleMoment | null>(null);
-  const [foil, setFoil] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>("all"), [open, setOpen] = useState<BibleMoment | null>(null), [foil, setFoil] = useState<string | null>(null);
   const earned = useMemo(() => new Set(ids), [ids]);
+  const read = (m: BibleMoment) => { haptics.soft(); if (onReadRequest) { onReadRequest(m); return; } onClose(); setTimeout(() => router.push(readRoute(m)), 350); };
   const total = MOMENTS_IN_ORDER.length;
-  const newest = useMemo(() => [...ids].sort((a, b) => (collectedAt[b] ?? 0) - (collectedAt[a] ?? 0)), [ids, collectedAt]);
-  const fan = newest.slice(0, 3).map(id => MOMENTS_IN_ORDER.find(m => m.id === id)).filter((m): m is BibleMoment => !!m);
-  const books = useMemo(() => {
-    const map = new Map<string, BibleMoment[]>();
-    for (const m of MOMENTS_IN_ORDER) map.set(m.bookId, [...(map.get(m.bookId) ?? []), m]);
-    return [...map.entries()];
-  }, []);
-  const completeBooks = books.filter(([, ms]) => ms.every(m => earned.has(m.id))).map(([id]) => findBookById(id)?.name ?? id);
-  const shown = books.map(([bookId, ms]) => [bookId, filter === "all" ? ms : ms.filter(m => m.tags.includes(filter))] as const).filter(([, ms]) => ms.length);
-  const cardWidth = Math.floor((width - 40 - 24) / 3) - 1;
-  const scrollY = useSharedValue(0), coverH = useSharedValue(560);
-  const onScroll = useAnimatedScrollHandler(e => { scrollY.value = e.contentOffset.y; });
-  const barH = inset.top + 60;
-  const coverFold = useAnimatedStyle(() => {
-    const p = interpolate(scrollY.value, [0, Math.max(1, coverH.value - barH)], [0, 1], Extrapolation.CLAMP);
-    return { opacity: interpolate(p, [0, .7], [1, 0], Extrapolation.CLAMP), transform: [{ translateY: Math.max(0, scrollY.value) * .45 }, { scale: 1 - .1 * p }] };
-  });
-  const barIn = useAnimatedStyle(() => {
-    const end = coverH.value - barH;
-    return { opacity: interpolate(scrollY.value, [end - 60, end], [0, 1], Extrapolation.CLAMP), transform: [{ translateY: interpolate(scrollY.value, [end - 60, end], [-8, 0], Extrapolation.CLAMP) }] };
-  });
-  const read = (m: BibleMoment) => router.push(`/book/${m.bookId}/${m.chapter}?focus=${m.verse}` as Href);
+  const tile = (width - 32 - 20) / 3;
 
-  return <View style={{ flex: 1, backgroundColor: t.page }}>
-    <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: inset.bottom + 40 }}>
-      {/* the cover: its contents drift, shrink and fade as it folds away under the bar */}
-      <View onLayout={e => { coverH.value = e.nativeEvent.layout.height; }} style={[s.cover, { paddingTop: inset.top + 60 }]}>
-        <ReaderMaterialGradient colors={["#5A3526", "#3A2219", "#24140E"]} locations={[0, .5, 1]} style={StyleSheet.absoluteFill}/>
-        <Animated.View style={coverFold}>
-        <Text style={s.eyebrow}>Your Bible Moments</Text>
-        <View style={s.fan} accessible={false}>
-          {[1, 2, 0].map(slot => <FanCard key={slot} slot={slot} moment={fan[slot]} play={hydrated}/>)}
-        </View>
-        <View style={s.count} accessible accessibilityLabel={`${ids.length} of ${total} Bible Moments collected`}>
-          <CountUp to={ids.length} ready={hydrated}/>
-          <View style={{ flexShrink: 1 }}>
-            <Text style={{ ...uiText.body, fontWeight: "800", color: "#FFF1E4" }}>of {total} collected</Text>
-            <Text style={{ ...uiText.supporting, color: "#D8BDA5" }}>{completeBooks.length === 0 ? ids.length ? "Keep reading to fill your first book" : "Tap a glowing verse while you read" : completeBooks.length <= 2 ? `${completeBooks.join(" and ")} complete` : `${completeBooks.length} books complete`}</Text>
-          </View>
-        </View>
-        <View style={s.strip} accessibilityLabel="Moments across the Bible, in order">
-          {MOMENTS_IN_ORDER.map(m => <View key={m.id} style={[s.tick, earned.has(m.id) ? s.tickOn : null]}/>)}
-        </View>
-        <View style={s.stripLabels}><Text style={s.stripLabel}>Genesis</Text><Text style={s.stripLabel}>Revelation</Text></View>
-        </Animated.View>
+  // The nearest silver foil card: the book with the fewest moments still to find.
+  const books = useMemo(() => {
+    const by = new Map<string, BibleMoment[]>();
+    MOMENTS_IN_ORDER.forEach(m => by.set(m.bookId, [...(by.get(m.bookId) ?? []), m]));
+    return [...by.entries()].map(([bookId, list]) => ({ bookId, total: list.length, have: list.filter(m => earned.has(m.id)).length }));
+  }, [earned]);
+  const nearest = books.filter(b => b.have < b.total && b.have > 0).sort((a, b) => (a.total - a.have) - (b.total - b.have))[0]
+    ?? books.filter(b => b.have < b.total).sort((a, b) => a.total - b.total)[0];
+  const silvers = books.filter(b => b.have === b.total);
+
+  const inFilter = (m: BibleMoment) => filter === "all" || m.tags.includes(filter);
+  const next = MOMENTS_IN_ORDER.find(m => inFilter(m) && !earned.has(m.id));
+  const groups = filter === "all" ? CATEGORIES.map(c => ({ c, list: MOMENTS_IN_ORDER.filter(m => m.category === c) })) : [{ c: filter, list: MOMENTS_IN_ORDER.filter(m => m.tags.includes(filter)) }];
+  const catTone = filter === "all" ? null : tone(MOMENT_CATEGORIES[filter].tint);
+  const catHave = filter === "all" ? 0 : groups[0]!.list.filter(m => earned.has(m.id)).length, catTotal = filter === "all" ? 0 : groups[0]!.list.length;
+
+  const Medal = ({ fraction, label, ring, ink }: { fraction: number; label: string; ring: string; ink: string }) => <View style={{ width: 58, height: 58, alignItems: "center", justifyContent: "center" }}>
+    <Svg width={58} height={58} style={StyleSheet.absoluteFill}><Circle cx={29} cy={29} r={26} stroke="#FFFFFF1F" strokeWidth={5} fill="none"/><Circle cx={29} cy={29} r={26} stroke={ring} strokeWidth={5} fill="none" strokeLinecap="round" strokeDasharray={`${Math.max(.03, fraction) * 163.4} 164`} transform="rotate(-90 29 29)"/></Svg>
+    <ReaderMaterialGradient colors={["#F4F5F7", "#B9BEC6", "#858B94"]} style={{ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 15, fontWeight: "900", color: ink }}>{label}</Text></ReaderMaterialGradient>
+  </View>;
+
+  return <View style={{ flex: 1, backgroundColor: FLOOR }}>
+    <StatusBar style="light"/>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + 6, paddingBottom: insets.bottom + 40 }}>
+      <View style={{ paddingHorizontal: 16 }}><RoundButton icon="xmark" label="Close" onPress={onClose}/></View>
+      <View style={{ paddingHorizontal: 22, marginTop: 10 }}>
+        <Text accessibilityRole="header" style={{ fontSize: 34, lineHeight: 40, fontWeight: "900", letterSpacing: -.7, color: "#FCFCFC" }}>Bible moments</Text>
+        <Text style={{ marginTop: 4, fontSize: 15, fontWeight: "700", color: INK_SOFT }}>{error ? "Your collection couldn’t be loaded." : !hydrated ? "Gathering your moments…" : <><Text style={{ fontWeight: "800", color: "#FFFFFF" }}>{ids.length}</Text> of {total} collected · found as you read</>}</Text>
+        {!!error && <Pressable accessibilityRole="button" onPress={() => void hydrateBibleMoments()} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ fontSize: 15, fontWeight: "800", color: "#FFFFFF" }}>Try again</Text></Pressable>}
       </View>
 
-      {!!error && <Pressable onPress={() => void hydrateBibleMoments()} style={{ margin: 20 }}><Text style={{ ...uiText.body, color: t.ink }}>Your collection couldn’t load. Tap to try again.</Text></Pressable>}
+      {/* The next badge: the category set when filtered, otherwise the nearest silver foil book */}
+      {hydrated && (catTone ? <View style={{ marginHorizontal: 16, marginTop: 16, borderRadius: 24, padding: 14, flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: catTone.mid, boxShadow: "inset 0 1px 0 #FFFFFF1F" }}>
+          <Medal fraction={catHave / Math.max(1, catTotal)} label={String(catHave)} ring={dotOf(filter as MomentCategory)} ink={catTone.deep}/>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 11, lineHeight: 14, fontWeight: "800", letterSpacing: .9, color: catTone.t3 }}>{SHORT[filter as MomentCategory].toUpperCase()} · {catHave} OF {catTotal}</Text>
+            <Text style={{ marginTop: 2, fontSize: 17, fontWeight: "800", color: catTone.t1 }}>{SET_NAME[filter as MomentCategory]}</Text>
+            <Text style={{ marginTop: 2, fontSize: 13, fontWeight: "700", color: catTone.t2 }}>{catHave === catTotal ? "Set complete. Every one is yours." : `${catTotal - catHave} more to finish the set`}</Text>
+          </View>
+        </View> : nearest && <View style={{ marginHorizontal: 16, marginTop: 16, borderRadius: 24, padding: 14, flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: "#211C1A", boxShadow: "inset 0 1px 0 #FFFFFF14" }}>
+          <Medal fraction={nearest.have / nearest.total} label={String(nearest.have)} ring="#E9D6AB" ink="#4A4F57"/>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 11, lineHeight: 14, fontWeight: "800", letterSpacing: .9, color: INK_FAINT }}>NEXT SILVER · {findBookById(nearest.bookId)?.name.toUpperCase()}</Text>
+            <Text style={{ marginTop: 2, fontSize: 17, fontWeight: "800", color: "#F4EFEC" }}>{nearest.total - nearest.have === 1 ? "One more moment" : `${nearest.total - nearest.have} more moments`}</Text>
+            <Text style={{ marginTop: 2, fontSize: 13, fontWeight: "700", color: INK_SOFT }}>Find them all in {findBookById(nearest.bookId)?.name} for its silver foil card</Text>
+          </View>
+        </View>)}
 
-      {/* filters */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingTop: 20 }}>
-        <Pressable onPress={() => setFilter("all")} accessibilityRole="button" accessibilityState={{ selected: filter === "all" }} style={[s.chip, filter === "all" ? { backgroundColor: t.ink } : { borderWidth: 1, borderColor: t.line }]}>
-          <Text style={{ ...uiText.supporting, fontWeight: "800", color: filter === "all" ? t.page : t.ink }}>All <Text style={{ color: t.muted }}>{ids.length}</Text></Text>
-        </Pressable>
-        {CATEGORIES.map(c => {
-          const inCat = MOMENTS_IN_ORDER.filter(m => m.tags.includes(c)), got = inCat.filter(m => earned.has(m.id)).length, on = filter === c;
-          return <Pressable key={c} onPress={() => { haptics.tick(); setFilter(on ? "all" : c); }} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={`${WARM_CATEGORY_NAME[c]}, ${got} of ${inCat.length}`}
-            style={[s.chip, on ? { borderWidth: 2, borderColor: t.ink } : { borderWidth: 1, borderColor: t.line }]}>
-            {got === inCat.length ? <SFSymbol name="checkmark.seal.fill" size={14} color={WARM_CATEGORY[c]}/> : <View style={[s.dot, { backgroundColor: WARM_CATEGORY[c] }]}/>}
-            <Text style={{ ...uiText.supporting, fontWeight: "800", color: t.ink }}>{WARM_CATEGORY_NAME[c]} <Text style={{ color: t.muted, fontWeight: "700" }}>{got}/{inCat.length}</Text></Text>
-          </Pressable>;
-        })}
+      {/* Category chips, each with its colour */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
+        {(["all", ...CATEGORIES] as Filter[]).map(f => { const on = f === filter, t = f === "all" ? null : tone(MOMENT_CATEGORIES[f].tint); return <Pressable key={f} accessibilityRole="button" accessibilityState={{ selected: on }} onPress={() => { haptics.tick(); setFilter(f); }}
+          style={{ height: 36, paddingLeft: f === "all" ? 14 : 10, paddingRight: 14, borderRadius: 18, flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: on ? (t ? t.mid : "#FFF8F2") : "#FFFFFF12", boxShadow: on && t ? "inset 0 1px 0 #FFFFFF22" : undefined }}>
+          {f !== "all" && <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: dotOf(f) }}/>}
+          <Text style={{ fontSize: 13, fontWeight: "800", color: on ? (t ? t.t1 : "#1A1412") : "#E8E3E0" }}>{f === "all" ? "All" : SHORT[f]}</Text>
+        </Pressable>; })}
       </ScrollView>
 
-      {/* the album pages */}
-      {hydrated && shown.map(([bookId, ms]) => {
-        const book = findBookById(bookId), all = books.find(([id]) => id === bookId)?.[1] ?? ms;
-        const got = all.filter(m => earned.has(m.id)).length, complete = got === all.length;
-        return <View key={bookId} style={{ paddingHorizontal: 20, marginTop: 30 }}>
-          <View style={s.bookHead}>
-            <TiltedBook size={22} tilt={-12} color={bookCoverColor(book?.order ?? 1)}/>
-            <Text style={{ ...uiText.sectionTitle, fontSize: 22, lineHeight: 26, fontWeight: "900", color: t.ink, flex: 1 }}>{book?.name ?? bookId}</Text>
-            {complete ? <Pressable onPress={() => { haptics.soft(); setFoil(bookId); }} accessibilityRole="button" accessibilityLabel={`${book?.name} complete. Open the seal`} style={s.complete}>
-              <View style={s.completeSeal}><SFSymbol name="checkmark" size={11} color="#6A2B10"/></View>
-              <Text style={{ ...uiText.supporting, fontSize: 13, fontWeight: "800", color: "#6A2B10" }}>Complete</Text>
-            </Pressable> : <Text style={{ ...uiText.supporting, fontSize: 13, fontWeight: "800", color: t.muted }}>{got} of {all.length}</Text>}
-          </View>
-          <View style={s.grid}>
-            {ms.map(m => {
-              const have = earned.has(m.id), fresh = have && Date.now() - (collectedAt[m.id] ?? 0) < DAY;
-              return <Pressable key={m.id} onPress={() => { haptics.soft(); if (have) setOpen(m); else setSealed(m); }} accessibilityRole="button"
-                accessibilityLabel={have ? `${m.event}, ${m.reference}. Collected. Open` : `Sealed Moment in ${book?.name} ${m.chapter}. Read there to collect it`}
-                style={({ pressed }) => ({ width: cardWidth, gap: 6, opacity: pressed ? .75 : 1 })}>
-                {have ? <Gilt edge={2.5} radius={14} style={{ width: cardWidth, height: cardWidth * 4 / 3, boxShadow: "0 1px 2px #502D0A14, 0 14px 24px -14px #502D0A73" }}>
-                  <ReaderMomentArt moment={m}/>
-                  <Plate moment={m}/>
-                </Gilt> : <View style={{ width: cardWidth, height: cardWidth * 4 / 3 }}><SealedBack label={plateLabel(m)}/></View>}
-                <Text numberOfLines={2} style={{ ...uiText.supporting, width: cardWidth, fontSize: 13, lineHeight: 16, fontWeight: have ? "800" : "700", color: have ? t.ink : t.muted }}>{have ? m.event : `${book?.name} ${m.chapter}`}</Text>
-                {have && <Text style={{ ...uiText.supporting, fontSize: 12, lineHeight: 14, color: t.muted }}>{m.chapter}:{m.verse}{fresh ? " · New" : ""}</Text>}
-              </Pressable>;
-            })}
-          </View>
-        </View>;
-      })}
-    </Animated.ScrollView>
+      {/* Next to discover */}
+      {hydrated && next && (() => { const t = tone(MOMENT_CATEGORIES[next.category].tint), art = getBibleMomentArt(next.id); return <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={`Next to discover: ${next.title}. Read ${chapterRef(next)}`} onPress={() => read(next)}
+        style={{ marginHorizontal: 16, marginTop: 16, height: 170, borderRadius: 26, overflow: "hidden", flexDirection: "row", alignItems: "flex-end", padding: 16, backgroundColor: t.deep, boxShadow: "0 20px 34px -20px #000" }}>
+        {art && <Image source={art} contentFit="cover" blurRadius={8} style={[StyleSheet.absoluteFill, { transform: [{ scale: 1.08 }] }]}/>}
+        <ReaderMaterialGradient pointerEvents="none" colors={[`${t.deep}00`, `${t.deep}EB`]} locations={[.2, 1]} style={StyleSheet.absoluteFill}/>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 11, lineHeight: 14, fontWeight: "800", letterSpacing: .9, color: t.t3 }}>NEXT TO DISCOVER</Text>
+          <Text numberOfLines={1} style={{ marginTop: 3, fontSize: 20, lineHeight: 24, fontWeight: "900", color: t.t1 }}>{next.title}</Text>
+          <Text style={{ marginTop: 3, fontSize: 14, fontWeight: "700", color: t.t2 }}>Read {chapterRef(next)} to find it</Text>
+        </View>
+        <View style={{ height: 46, paddingHorizontal: 16, borderRadius: 23, backgroundColor: "#FFFFFF", flexDirection: "row", alignItems: "center", gap: 6 }}><SFSymbol name="book" size={14} color={t.deep}/><Text style={{ fontSize: 15, fontWeight: "800", color: t.deep }}>Read</Text></View>
+      </Pressable>; })()}
 
-    {/* the folded cover: a slim bar that takes over once the big one has gone */}
-    <Animated.View pointerEvents="none" style={[s.bar, { height: inset.top + 60 }, barIn]}>
-      <ReaderMaterialGradient colors={["#4A2C20", "#24140E"]} style={StyleSheet.absoluteFill}/>
-      <View style={[s.barRow, { top: inset.top + 8 }]}>
-        {fan[0] ? <Gilt edge={1.5} radius={7} style={{ width: 30, height: 40, transform: [{ rotate: "-4deg" }] }}><ReaderMomentArt moment={fan[0]}/></Gilt> : null}
-        <Text style={s.barCount}>{ids.length}</Text>
-        <Text style={s.barText}>of {total} collected</Text>
-      </View>
-    </Animated.View>
-    <CloseButton onPress={onClose} color="#FFF1E4" style={[s.close, { top: inset.top + 4 }]}/>
+      {/* Silver foil cards already earned */}
+      {silvers.length > 0 && <>
+        <Header title="Silver foil" count={`${silvers.length}`}/>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
+          {silvers.map(b => <Pressable key={b.bookId} accessibilityRole="button" accessibilityLabel={`${findBookById(b.bookId)?.name} silver foil card`} onPress={() => { haptics.soft(); setFoil(b.bookId); }}
+            style={{ height: 44, paddingHorizontal: 14, borderRadius: 22, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#2A2725", boxShadow: "inset 0 1px 0 #FFFFFF22" }}>
+            <ReaderMaterialGradient colors={["#F4F5F7", "#B9BEC6"]} style={{ width: 18, height: 18, borderRadius: 9 }}/><Text style={{ fontSize: 14, fontWeight: "800", color: "#E8E3E0" }}>{findBookById(b.bookId)?.name}</Text>
+          </Pressable>)}
+        </ScrollView>
+      </>}
 
-    <SealedSheet moment={sealed} onClose={() => setSealed(null)} onRead={m => { setSealed(null); setTimeout(() => read(m), 280); }}/>
-    {open && <BibleMomentReveal autoPlay request={{ collected: true, kind: "moment", moment: open }} onClose={() => setOpen(null)}/>}
+      {/* The album */}
+      {hydrated && groups.map(({ c, list }) => <View key={c}>
+        {filter === "all" ? <Header title={SHORT[c]} count={`${list.filter(m => earned.has(m.id)).length} of ${list.length}`}/> : <View style={{ height: 16 }}/>}
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 16 }}>
+          {list.map(m => <Tile key={m.id} moment={m} size={tile} have={earned.has(m.id)} onPress={() => { haptics.soft(); if (earned.has(m.id)) setOpen(m); else read(m); }}/>)}
+        </View>
+      </View>)}
+    </ScrollView>
+    {open && <MomentPage moment={open} collectedAt={collectedAt[open.id]} onClose={() => setOpen(null)} onRead={() => { const m = open; setOpen(null); read(m); }}/>}
     {foil && <BibleMomentReveal request={{ collected: true, kind: "silver", bookId: foil }} onClose={() => setFoil(null)}/>}
   </View>;
 }
 
-/** Tapping a sealed card: where it waits, and a way straight there. Slides up on one smooth curve. */
-function SealedSheet({ moment, onClose, onRead }: { moment: BibleMoment | null; onClose: () => void; onRead: (m: BibleMoment) => void }) {
-  const t = useAlbumTheme(), inset = useSafeAreaInsets(), reduced = useReducedMotion();
-  const last = useRef<BibleMoment | null>(null);
-  if (moment) last.current = moment;
-  const [mounted, setMounted] = useState(!!moment);
-  const shown = useSharedValue(0), h = useSharedValue(600);
-  useEffect(() => {
-    if (moment) { setMounted(true); shown.value = withTiming(1, { duration: reduced ? 150 : 380, easing: Easing.bezier(.2, .9, .25, 1) }); }
-    else if (mounted) shown.value = withTiming(0, { duration: reduced ? 120 : 260, easing: Easing.in(Easing.cubic) }, done => { if (done) runOnJS(setMounted)(false); });
-  }, [moment]); // eslint-disable-line react-hooks/exhaustive-deps
-  const scrim = useAnimatedStyle(() => ({ opacity: shown.value }));
-  const rise = useAnimatedStyle(() => reduced ? { opacity: shown.value } : { transform: [{ translateY: (1 - shown.value) * h.value }] });
-  const m = moment ?? last.current;
-  if (!m) return null;
-  const where = `${findBookById(m.bookId)?.name ?? m.bookId} ${m.chapter}`;
-  return <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose}>
-    <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "#17120F52" }, scrim]}><Pressable accessibilityLabel="Close" onPress={onClose} style={{ flex: 1 }}/></Animated.View>
-    <Animated.View onLayout={e => { h.value = e.nativeEvent.layout.height + 16; }} style={[s.sheet, { backgroundColor: t.sheet, paddingBottom: inset.bottom + 8 }, rise]}>
-      <View style={[s.grab, { backgroundColor: t.line }]}/>
-      <View style={{ transform: [{ rotate: "-4deg" }], width: 120, height: 160, boxShadow: "0 20px 30px -16px #28140A99" }}><SealedBack big label={plateLabel(m)}/></View>
-      <Text accessibilityRole="header" style={{ ...uiText.screenTitle, fontSize: 28, lineHeight: 30, color: t.ink, marginTop: 22, textAlign: "center" }}>Still sealed</Text>
-      <Text style={{ ...uiText.body, color: t.muted, textAlign: "center", marginTop: 8, maxWidth: 300 }}>This one is waiting in {where}. Read there and it’s yours.</Text>
-      <Pressable onPress={() => onRead(m)} accessibilityRole="button" style={[s.cta, { backgroundColor: t.ink }]}>
-        <SFSymbol name="book" size={18} color={t.page}/>
-        <Text style={{ ...uiText.body, fontWeight: "800", color: t.page }}>Read {where}</Text>
-      </Pressable>
-    </Animated.View>
-  </Modal>;
+function Header({ title, count }: { title: string; count: string }) {
+  return <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", paddingHorizontal: 22, marginTop: 24, marginBottom: 12 }}>
+    <Text accessibilityRole="header" style={{ fontSize: 20, lineHeight: 25, fontWeight: "900", letterSpacing: -.3, color: "#FCFCFC" }}>{title}</Text>
+    <Text style={{ fontSize: 13, fontWeight: "800", color: INK_FAINT, fontVariant: ["tabular-nums"] }}>{count}</Text>
+  </View>;
 }
 
-const s = StyleSheet.create({
-  cover: { paddingHorizontal: 20, paddingBottom: 26, borderBottomLeftRadius: 34, borderBottomRightRadius: 34, borderCurve: "continuous", overflow: "hidden" },
-  close: { position: "absolute", left: 16, width: 44, height: 44, backgroundColor: "#FFF1E41F", zIndex: 6 },
-  bar: { position: "absolute", left: 0, right: 0, top: 0, zIndex: 5, overflow: "hidden", boxShadow: "0 8px 20px -10px #00000080" },
-  barRow: { position: "absolute", left: 72, right: 20, flexDirection: "row", alignItems: "center", gap: 10 },
-  barCount: { ...uiText.screenTitle, fontSize: 26, lineHeight: 30, letterSpacing: -.8, color: "#E9B949" },
-  barText: { ...uiText.supporting, fontWeight: "800", color: "#FFF1E4" },
-  eyebrow: { ...uiText.supporting, fontSize: 13, lineHeight: 16, fontWeight: "800", letterSpacing: 1.6, textTransform: "uppercase", color: "#E9B949", textAlign: "center" },
-  fan: { height: 190, marginTop: 18 },
-  count: { flexDirection: "row", alignItems: "flex-end", justifyContent: "center", gap: 10, marginTop: 18 },
-  countBig: { ...uiText.screenTitle, fontSize: 76, lineHeight: 90, letterSpacing: -3, color: "#E9B949", marginBottom: -10, paddingTop: 4, fontVariant: ["tabular-nums"] },
-  strip: { flexDirection: "row", alignItems: "flex-end", gap: 1.5, height: 22, marginTop: 20 },
-  tick: { flex: 1, height: 12, borderRadius: 2, backgroundColor: "#FFF1E424" },
-  tickOn: { height: 22, backgroundColor: "#E9B949" },
-  stripLabels: { flexDirection: "row", justifyContent: "space-between", marginTop: 6 },
-  stripLabel: { ...uiText.supporting, fontSize: 13, lineHeight: 16, fontWeight: "700", color: "#D8BDA5" },
-  chip: { height: 40, paddingHorizontal: 14, borderRadius: 20, flexDirection: "row", alignItems: "center", gap: 8 },
-  dot: { width: 10, height: 10, borderRadius: 5 },
-  bookHead: { flexDirection: "row", alignItems: "center", gap: 12, paddingBottom: 14 },
-  complete: { minHeight: 32, paddingLeft: 4, paddingRight: 10, borderRadius: 16, flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#FFF0B8" },
-  completeSeal: { width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: "#E9B949" },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, rowGap: 16 },
-  plate: { position: "absolute", left: 5, top: 5, height: 20, paddingLeft: 5, paddingRight: 7, borderRadius: 10, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#24140EC7" },
-  plateDot: { width: 7, height: 7, borderRadius: 4 },
-  plateText: { ...uiText.supporting, fontSize: 11, lineHeight: 13, fontWeight: "800", color: "#FFE7A0" },
-  back: { flex: 1, borderRadius: 14, overflow: "hidden", alignItems: "center", justifyContent: "center" },
-  backInner: { position: "absolute", top: 7, left: 7, right: 7, bottom: 7, borderRadius: 9, borderWidth: 1.5, borderStyle: "dashed", borderColor: "#FFC93C59" },
-  backNo: { position: "absolute", bottom: 10, ...uiText.supporting, fontSize: 11, lineHeight: 13, fontWeight: "800", color: "#FFC93C99" },
-  sheet: { position: "absolute", left: 8, right: 8, bottom: 8, borderRadius: 36, borderCurve: "continuous", paddingTop: 10, paddingHorizontal: 20, alignItems: "center", boxShadow: "0 -20px 50px -20px #28140A66" },
-  grab: { width: 36, height: 5, borderRadius: 3, marginBottom: 20 },
-  cta: { alignSelf: "stretch", height: 56, borderRadius: 28, marginTop: 22, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
-});
+/** A moment in the album: its painting when collected; blurred, with where to read it, when not. */
+function Tile({ moment, size, have, onPress }: { moment: BibleMoment; size: number; have: boolean; onPress: () => void }) {
+  const art = getBibleMomentArt(moment.id);
+  return <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={have ? `${moment.title}. Collected. Open` : `Not collected yet. Read ${chapterRef(moment)}`} onPress={onPress}
+    style={{ width: size, height: size * 4 / 3, borderRadius: 18, borderCurve: "continuous", overflow: "hidden", backgroundColor: "#1E1A18", boxShadow: "inset 0 0 0 1px #FFFFFF14, 0 12px 20px -14px #000" }}>
+    {art && <Image source={art} contentFit="cover" blurRadius={have ? 0 : 7} style={[StyleSheet.absoluteFill, !have && { opacity: .78, transform: [{ scale: 1.1 }] }]}/>}
+    <ReaderMaterialGradient pointerEvents="none" colors={["#00000000", "#000000B8"]} locations={[.45, 1]} style={StyleSheet.absoluteFill}/>
+    {have ? <View style={{ position: "absolute", left: 8, top: 8, width: 9, height: 9, borderRadius: 5, backgroundColor: dotOf(moment.category), boxShadow: "0 0 0 2px #0006" }}/>
+      : <View style={{ position: "absolute", left: "50%", top: "38%", width: 34, height: 34, marginLeft: -17, marginTop: -17, borderRadius: 17, backgroundColor: "#FFFFFF1F", alignItems: "center", justifyContent: "center" }}><SFSymbol name="lock.fill" size={13} color="#E8E3E0"/></View>}
+    <Text numberOfLines={2} style={{ position: "absolute", left: 9, right: 9, bottom: 9, fontSize: 12, lineHeight: 15, fontWeight: have ? "800" : "700", color: have ? "#FFFFFF" : "#C9C1BD" }}>{have ? moment.title : chapterRef(moment)}</Text>
+  </Pressable>;
+}
+
+/** One collected moment: the painting large, its verse, why it matters, and where to read it. */
+function MomentPage({ moment, collectedAt, onClose, onRead }: { moment: BibleMoment; collectedAt?: number; onClose: () => void; onRead: () => void }) {
+  const insets = useSafeAreaInsets(), reduced = useReducedMotion(), { height } = useWindowDimensions();
+  const t = tone(MOMENT_CATEGORIES[moment.category].tint), art = getBibleMomentArt(moment.id);
+  return <Modal visible presentationStyle="fullScreen" animationType={reduced ? "fade" : "slide"} onRequestClose={onClose}>
+    <StatusBar style="light"/>
+    <View style={{ flex: 1, backgroundColor: FLOOR }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}>
+        <View style={{ height: height * .56 }}>
+          {art && <Image source={art} contentFit="cover" style={StyleSheet.absoluteFill}/>}
+          <ReaderMaterialGradient pointerEvents="none" colors={["#00000066", "#00000000", "#00000000", `${t.deep}D9`, FLOOR]} locations={[0, .24, .5, .82, 1]} style={StyleSheet.absoluteFill}/>
+        </View>
+        <View style={{ marginTop: -96, paddingHorizontal: 22 }}>
+          <View style={{ alignSelf: "flex-start", height: 28, paddingLeft: 9, paddingRight: 11, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: t.mid, boxShadow: "inset 0 1px 0 #FFFFFF22" }}>
+            <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: dotOf(moment.category) }}/><Text style={{ fontSize: 12, fontWeight: "800", color: t.t1 }}>{SHORT[moment.category]}</Text>
+          </View>
+          <Text accessibilityRole="header" style={{ marginTop: 10, fontSize: 32, lineHeight: 36, fontWeight: "900", letterSpacing: -.6, color: t.t1 }}>{moment.title}</Text>
+          <Text style={{ marginTop: 4, fontSize: 14, fontWeight: "800", color: t.t3 }}>{moment.reference}</Text>
+          <View style={{ marginTop: 16, paddingLeft: 14, borderLeftWidth: 3, borderLeftColor: dotOf(moment.category) }}><Text style={{ fontSize: 17, lineHeight: 25, fontWeight: "700", color: "#F4EFEC" }}>{moment.happened}</Text></View>
+          <Text style={{ marginTop: 14, fontSize: 15, lineHeight: 22, fontWeight: "700", color: "#B8B0AC" }}>{moment.importance}</Text>
+          <View style={{ marginTop: 14, flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: "#E9D6AB", alignItems: "center", justifyContent: "center" }}><SFSymbol name="checkmark" size={9} color="#3A2A10"/></View>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: INK_FAINT }}>{collectedLabel(collectedAt)}</Text>
+          </View>
+        </View>
+      </ScrollView>
+      <View style={{ position: "absolute", left: 16, right: 16, top: insets.top + 4 }}><RoundButton icon="chevron.left" label="Back to moments" onPress={onClose}/></View>
+      <View style={{ position: "absolute", left: 16, right: 16, bottom: insets.bottom + 10 }}>
+        <Pressable feedback="action" accessibilityRole="button" onPress={onRead} style={{ height: 56, borderRadius: 28, backgroundColor: "#FFF8F2", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: `0 14px 30px -12px ${t.c}CC` }}>
+          <SFSymbol name="book" size={16} color={t.deep}/><Text style={{ fontSize: 17, fontWeight: "800", color: t.deep }}>Read it in {chapterRef(moment)}</Text>
+        </Pressable>
+      </View>
+    </View>
+  </Modal>;
+}

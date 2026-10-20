@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Linking, StyleSheet, View, useWindowDimensions } from "react-native";
-import Animated, { Easing, FadeIn, FadeInDown, FadeOut, interpolate, interpolateColor, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from "react-native-reanimated";
+import Animated, { Easing, FadeIn, FadeOut, interpolate, interpolateColor, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "@/components/CloserText";
@@ -104,7 +104,7 @@ function MiniTalk({ card, art, onProgress }: Props) {
         <View style={{ flexDirection: "row", gap: 6 }}>{points.map((_, i) => <View key={i} style={{ width: 28, height: 6, borderRadius: 3, backgroundColor: i < found.length ? "#FFC21A" : "#3A150022" }}/>)}</View>
         <Text style={[t.meta, { color: "#8A3B00" }]}>{found.length === points.length ? "The whole talk, found" : `${found.length} of ${points.length} found`}</Text>
       </View>
-      {found.length === points.length && <Animated.View entering={FadeInDown.springify().damping(16)} style={{ marginTop: 14, padding: 16, borderRadius: 20, backgroundColor: "#FFE9B0" }}><Text selectable style={{ color: "#5A2A00", fontSize: 17, lineHeight: 24, fontWeight: "800" }}>{card.insight}</Text></Animated.View>}
+      {found.length === points.length && <Animated.View entering={FadeIn.duration(220)} style={{ marginTop: 14, padding: 16, borderRadius: 20, backgroundColor: "#FFE9B0" }}><Text selectable style={{ color: "#5A2A00", fontSize: 17, lineHeight: 24, fontWeight: "800" }}>{card.insight}</Text></Animated.View>}
     </View>
     {open !== null && <>
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "#3A1500" }, scrim]}><Pressable accessibilityRole="button" accessibilityLabel="Close point" onPress={hide} style={{ flex: 1 }}/></Animated.View>
@@ -114,7 +114,7 @@ function MiniTalk({ card, art, onProgress }: Props) {
           <Eyebrow color="#B5400A">Point {open + 1} of {points.length}</Eyebrow>
           <Text style={{ fontSize: 24, lineHeight: 29, fontWeight: "900", color: "#3A1500", marginTop: 8, letterSpacing: -.5 }}>{firstSentence(points[open]!)}</Text>
           {!!rest(points[open]!) && <Animated.Text entering={FadeIn.delay(220)} selectable style={[t.body, { color: "#3A1500", marginTop: 10 }]}>{rest(points[open]!)}</Animated.Text>}
-          {open === points.length - 1 && <Animated.View entering={FadeInDown.delay(360)} style={{ marginTop: 14, padding: 14, borderRadius: 18, backgroundColor: "#FFE9B0" }}><Text selectable style={{ color: "#5A2A00", fontSize: 17, lineHeight: 24, fontWeight: "800" }}>“{card.scriptureText}”</Text></Animated.View>}
+          {open === points.length - 1 && <Animated.View entering={FadeIn.duration(220)} style={{ marginTop: 14, padding: 14, borderRadius: 18, backgroundColor: "#FFE9B0" }}><Text selectable style={{ color: "#5A2A00", fontSize: 17, lineHeight: 24, fontWeight: "800" }}>“{card.scriptureText}”</Text></Animated.View>}
         </Animated.View>
       </GestureDetector>
     </>}
@@ -200,12 +200,12 @@ function LetterThread({ card, onProgress }: Props) {
     </View>
     <Animated.ScrollView ref={scroll} style={{ position: "absolute", left: 0, right: 0, top: top + 56, bottom }} contentContainerStyle={{ padding: 16, gap: 8 }} showsVerticalScrollIndicator={false}>
       {lines.map((l, i) => l.from === "verse"
-        ? <Animated.View key={i} entering={FadeInDown.springify().damping(15)} style={{ alignSelf: "flex-start", maxWidth: "86%", padding: 16, borderRadius: 22, borderBottomLeftRadius: 6, backgroundColor: "#FFE0C9" }}>
+        ? <Animated.View key={i} entering={FadeIn.duration(220)} style={{ alignSelf: "flex-start", maxWidth: "86%", padding: 16, borderRadius: 22, borderBottomLeftRadius: 6, backgroundColor: "#FFE0C9" }}>
             <Eyebrow color="#8A4A2A">{card.scriptureReference}</Eyebrow><Text selectable style={{ fontSize: 19, lineHeight: 25, fontWeight: "800", color: "#5A2410", marginTop: 6 }}>“{l.text}”</Text></Animated.View>
-        : <Animated.View key={i} entering={FadeInDown.springify().damping(16)} style={{ alignSelf: l.from === "me" ? "flex-end" : "flex-start", maxWidth: "80%", paddingHorizontal: 16, paddingVertical: 12, borderRadius: 22, ...(l.from === "me" ? { borderBottomRightRadius: 6, backgroundColor: "#FFFFFF" } : { borderBottomLeftRadius: 6, backgroundColor: "#FFF4E6" }) }}>
+        : <Animated.View key={i} entering={FadeIn.duration(220)} style={{ alignSelf: l.from === "me" ? "flex-end" : "flex-start", maxWidth: "80%", paddingHorizontal: 16, paddingVertical: 12, borderRadius: 22, ...(l.from === "me" ? { borderBottomRightRadius: 6, backgroundColor: "#FFFFFF" } : { borderBottomLeftRadius: 6, backgroundColor: "#FFF4E6" }) }}>
             <Text selectable style={{ fontSize: 17, lineHeight: 23, fontWeight: "600", color: l.from === "me" ? "#0B3A28" : "#22332B" }}>{l.text}</Text></Animated.View>)}
       {typing && <TypingDots/>}
-      {waiting && <Animated.View entering={FadeInDown.delay(150)} style={{ alignItems: "flex-end", gap: 8, marginTop: 10 }}>
+      {waiting && <Animated.View entering={FadeIn.duration(180)} style={{ alignItems: "flex-end", gap: 8, marginTop: 10 }}>
         <Text style={{ fontSize: 13, fontWeight: "800", color: "#BFE3CF" }}>Choose a reply</Text>
         {REPLIES[Math.min(stage, REPLIES.length - 1)]!.map(r => <Pressable key={r} onPress={() => reply(r)} accessibilityRole="button" style={{ paddingHorizontal: 18, paddingVertical: 12, borderRadius: 22, backgroundColor: "#FFFFFF1F", borderWidth: 1.5, borderColor: "#FFFFFF59" }}><Text style={{ color: "#FFFFFF", fontSize: 17, fontWeight: "700" }}>{r}</Text></Pressable>)}
       </Animated.View>}
@@ -291,7 +291,7 @@ function GraphicNovel({ card, art, onProgress }: Props) {
         <Pressable onPress={() => next(page + 1)} accessibilityRole="button" accessibilityLabel={`${s.caption} ${s.text}. Next page`} style={{ flex: 1 }}>
           <ReaderMomentArt moment={paintings[page]!}/>
           <View style={{ position: "absolute", left: 12, top: 12, right: 60, alignItems: "flex-start" }}><Text style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: "#FFF6D6", color: "#2A1000", fontSize: 14, lineHeight: 18, fontWeight: "800", boxShadow: "2px 2px 0 #2A1000" }}>{s.caption}</Text></View>
-          <Animated.View key={page} entering={FadeInDown.delay(420).springify().damping(14)} style={{ position: "absolute", left: 16, right: 16, bottom: 16, padding: 14, backgroundColor: "#FFFFFF", borderWidth: 3, borderColor: "#2A1000", borderRadius: 22 }}>
+          <Animated.View key={page} entering={FadeIn.duration(220)} style={{ position: "absolute", left: 16, right: 16, bottom: 16, padding: 14, backgroundColor: "#FFFFFF", borderWidth: 3, borderColor: "#2A1000", borderRadius: 22 }}>
             <Text selectable style={{ fontSize: 17, lineHeight: 23, fontWeight: "800", color: "#2A1000" }}>{s.text}</Text></Animated.View>
           {page < scenes.length - 1 && <View style={{ position: "absolute", right: 12, top: 12, width: 34, height: 34, borderRadius: 17, backgroundColor: "#E2500A", alignItems: "center", justifyContent: "center" }}><SFSymbol name="arrow.right" size={15} color="#FFFFFF" weight="bold"/></View>}
         </Pressable>
@@ -324,7 +324,7 @@ function StudyDesk({ card, onProgress }: Props) {
         <Eyebrow color="#8A6A4A">Deep verse · {card.scriptureReference}</Eyebrow>
         <Text style={{ marginTop: 12, fontSize: 22, lineHeight: 34, fontWeight: "800", color: "#2A1A10" }} onPress={mark}>{before}<Animated.Text style={hlStyle}>{phrase}</Animated.Text>{after}</Text>
         {step === 0 && <Pressable onPress={mark} accessibilityRole="button" style={{ marginTop: 14, alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, backgroundColor: "#2A1A10" }}><View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: "#FFD84D" }}/><Text style={{ color: "#FFF1E0", fontSize: 15, fontWeight: "800" }}>Highlight the heart of it</Text></Pressable>}
-        {step >= 2 && <Animated.View entering={FadeInDown.springify().damping(12).withInitialValues({ transform: [{ translateY: -40 }, { rotate: "14deg" }] })} style={{ marginTop: 16, alignSelf: "flex-end", width: "62%", padding: 14, backgroundColor: "#FFE36B", transform: [{ rotate: "3deg" }], boxShadow: "0 10px 16px -10px #00000080" }}>
+        {step >= 2 && <Animated.View entering={FadeIn.duration(220)} style={{ marginTop: 16, alignSelf: "flex-end", width: "62%", padding: 14, backgroundColor: "#FFE36B", transform: [{ rotate: "3deg" }], boxShadow: "0 10px 16px -10px #00000080" }}>
           <Text style={{ fontFamily: HANDWRITTEN, fontSize: 15, lineHeight: 20, color: "#4A3200" }}>{card.keyWord?.meaning ?? card.insight}</Text></Animated.View>}
       </View>
       {step >= 2 && <Animated.View entering={FadeIn.delay(400)} style={{ gap: 10 }}>
@@ -441,14 +441,14 @@ function BranchingQuestion({ card, onProgress }: Props) {
     <Animated.ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: top, paddingHorizontal: 24, paddingBottom: bottom + 20 }} showsVerticalScrollIndicator={false}>
       <Eyebrow color="#FFC21A">Honest question · {card.scriptureReference}</Eyebrow>
       <Text accessibilityRole="header" style={{ marginTop: 10, fontSize: current === undefined ? 34 : 22, lineHeight: current === undefined ? 39 : 27, fontWeight: "900", letterSpacing: -.8, color: current === undefined ? "#FFFFFF" : "#C9B59D" }}>{card.question ?? card.title}</Text>
-      {current !== undefined && <Animated.View key={current} entering={FadeInDown.springify().damping(15)} style={{ marginTop: 18, gap: 12 }}>
+      {current !== undefined && <Animated.View key={current} entering={FadeIn.duration(220)} style={{ marginTop: 18, gap: 12 }}>
         <View style={{ alignSelf: "flex-start", paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18, borderWidth: 1.5, borderColor: "#FFC21A", backgroundColor: "#FFC21A1F" }}><Text style={{ color: "#FFC21A", fontSize: 17, fontWeight: "800" }}>{branches[current]!.ask}</Text></View>
         <View style={{ padding: 20, borderRadius: 24, backgroundColor: "#FFC21A" }}>
           {branches[current]!.ref && <Text selectable style={{ fontSize: 19, lineHeight: 25, fontWeight: "900", color: "#2A1206", marginBottom: 10 }}>“{card.scriptureText}”</Text>}
           <Text selectable style={{ fontSize: 17, lineHeight: 24, fontWeight: "600", color: "#2A1206" }}>{branches[current]!.answer}</Text>
         </View>
       </Animated.View>}
-      {remaining.length > 0 && <Animated.View key={`r${path.length}`} entering={FadeInDown.delay(current === undefined ? 0 : 350)} style={{ marginTop: 26, gap: 10 }}>
+      {remaining.length > 0 && <Animated.View key={`r${path.length}`} entering={FadeIn.duration(220)} style={{ marginTop: 26, gap: 10 }}>
         <Text style={{ fontSize: 15, fontWeight: "800", color: "#C9B59D" }}>{current === undefined ? "What are you actually thinking?" : "Then you might wonder"}</Text>
         {remaining.map(i => <Pressable key={i} onPress={() => choose(i)} accessibilityRole="button" style={{ padding: 18, borderRadius: 22, backgroundColor: "#FFFFFF0F", borderWidth: 1.5, borderColor: "#FFC21A59", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <Text style={{ flex: 1, color: "#F7F0E6", fontSize: 18, lineHeight: 23, fontWeight: "800" }}>{branches[i]!.ask}</Text><SFSymbol name="arrow.right" size={15} color="#FFC21A" weight="bold"/></Pressable>)}

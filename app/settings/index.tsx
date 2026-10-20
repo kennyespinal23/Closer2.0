@@ -48,6 +48,7 @@ export default function SettingsIndex() {
     ]],
     ["Reading", [
       { icon: "book", color: "#2D5238", label: "Bible translation", value: translation?.name, onPress: () => open("/settings/translation") },
+      { icon: "app.badge", color: "#FF4326", label: "App icon", onPress: () => open("/settings/app-icon") },
       { icon: "textformat.size", color: "#3A2219", label: "Text and appearance", value: pref === "system" ? "Automatic" : pref === "dark" ? "Dark" : "Light", onPress: () => open("/settings/appearance") },
     ]],
     ["Account", [

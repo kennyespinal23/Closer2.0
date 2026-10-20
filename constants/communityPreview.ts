@@ -1,6 +1,6 @@
 /** Illustrative content from the user's HTML prototype, never presented as a live feed. */
 export type PrayerNote = { id: string; text: string; author: string; tag: "Request" | "Praise" | "Answered"; count: number; age: string; color: string; mine?: boolean; update?: string; encouragements?: string[] };
-export type StudyGroup = { id: string; name: string; bookId: string; chapter: number; schedule: string; members: string[]; question: string; replies: { author: string; text: string }[]; joined?: boolean; mine?: boolean; prayer?: { text: string; author: string }; prayerPrayed?: boolean };
+export type StudyGroup = { id: string; name: string; bookId: string; chapter: number; schedule: string; members: string[]; question: string; replies: { author: string; text: string }[]; joined?: boolean; mine?: boolean; prayer?: { text: string; author: string }; prayerPrayed?: boolean; prayers?: PrayerNote[]; prayedIds?: string[] };
 export type CommunityPreviewState = { notes: PrayerNote[]; prayed: string[]; groups: StudyGroup[]; tutorialSeen: boolean; groupTutorialSeen?: boolean };
 export const NOTE_COLORS = ["#FFF6B8", "#FFE3DB", "#DDF0FD", "#FBEFD6", "#FDE7C8"];
 export const COMMUNITY_PREVIEW: CommunityPreviewState = {

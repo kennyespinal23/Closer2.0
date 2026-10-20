@@ -1,3 +1,6 @@
+import { useRouter, type Href } from "expo-router";
+import { Platform } from "react-native";
+import { MomentsAlbum } from "./MomentsAlbum";
 import { buttonStyles } from '@/lib/buttonStyles';
 import { contentLayout } from '@/lib/contentStyles';
 import { useEffect, useRef, useState, type RefObject } from "react";
@@ -21,7 +24,10 @@ export function ReaderMomentExperience({ moment, onFinish, pocketRef, showcase, 
   moment: BibleMoment | null; onFinish: () => void; pocketRef: RefObject<View | null>;
   showcase: boolean; onCloseShowcase: () => void; bookId: string; onCollected: () => void;
 }) {
-  const colors = useColors(), insets = useSafeAreaInsets();
+  const colors = useColors(), insets = useSafeAreaInsets(), router = useRouter();
+  const pendingRead = useRef<Href | null>(null);
+  const openPendingRead=()=>{const route=pendingRead.current;pendingRead.current=null;if(route)router.push(route);};
+  const [viewingCollection,setViewingCollection] = useState(false);
   const [queue,setQueue] = useState<BibleRevealRequest[]>([]);
   const [rewards,setRewards] = useState<MomentCategory[]>([]);
   const [saveError,setSaveError] = useState(false), [attempt,setAttempt] = useState(0);
@@ -45,12 +51,13 @@ export function ReaderMomentExperience({ moment, onFinish, pocketRef, showcase, 
     const handler=BackHandler.addEventListener('hardwareBackPress',()=>{onCloseShowcase();return true;});
     return()=>handler.remove();
   },[showcase,onCloseShowcase]);
+  const continueReading=()=>{setViewingCollection(false);setQueue([]);setRewards([]);onFinish();};
   const finishReveal=()=>{if(queue.length<=1)onFinish();setQueue(q=>q.slice(1));};
   const closeCurrent=()=>{if(queue.length)finishReveal();else if(moment)onFinish();else setRewards([]);};
   // One native presenter for saving, the reveal queue, existing cards and rewards.
   // Swapping Modal hosts while a save resolves races UIKit presentation/dismissal.
-  if(queue.length || moment || rewards.length)return <Modal visible animationType="fade" presentationStyle="fullScreen" onRequestClose={closeCurrent}>
-    {queue.length?<BibleMomentReveal embedded autoPlay={queue[0].kind==='moment'} key={queue[0].kind+(queue[0].moment?.id??'')} request={queue[0]} onClose={finishReveal}/>
+  if(queue.length || moment || rewards.length)return <Modal visible animationType="fade" presentationStyle="fullScreen" onDismiss={openPendingRead} onRequestClose={()=>viewingCollection?setViewingCollection(false):closeCurrent()}>
+    {viewingCollection?<MomentsAlbum onClose={()=>setViewingCollection(false)} onReadRequest={m=>{pendingRead.current=`/book/${m.bookId}/${m.chapter}?focus=${m.verse}` as Href;continueReading();if(Platform.OS!=="ios")setTimeout(openPendingRead,0);}}/>:queue.length?<BibleMomentReveal embedded autoPlay={queue[0].kind==='moment'} key={queue[0].kind+(queue[0].moment?.id??'')} request={queue[0]} onClose={finishReveal} onContinueReading={continueReading} onSeeMoments={()=>setViewingCollection(true)}/>
     :moment?<View style={{flex:1,backgroundColor:'#211d18',justifyContent:'center',padding:contentLayout.gutter,gap:24}}><Text style={{...systemText.title2,color:'#fff5e8',textAlign:'center'}}>{saveError?'Couldn’t save this Moment':'Keeping your Moment…'}</Text>{saveError&&<Pressable accessibilityRole="button" onPress={()=>setAttempt(a=>a+1)} style={[buttonStyles.primary,{backgroundColor:'#fff2db'}]}><Text style={[buttonStyles.label,{color:'#30251E'}]}>Try again</Text></Pressable>}<Pressable accessibilityRole="button" onPress={onFinish} style={{minHeight:44,alignItems:'center',justifyContent:'center'}}><Text style={[{ color:'#fff5e8' }, buttonStyles.textLabel]}>Back to reading</Text></Pressable></View>
     :<View style={{flex:1,backgroundColor:colors.surface,paddingTop:insets.top+24,paddingHorizontal:24,paddingBottom:insets.bottom+24}}><ScrollView>{rewards.map(category=><MomentCategoryReward key={category} category={category} expanded/>)}</ScrollView><Pressable accessibilityRole="button" onPress={()=>setRewards([])} style={buttonStyles.primary}><Text style={[buttonStyles.label,{color:colors.ink}]}>Done</Text></Pressable></View>}
   </Modal>;

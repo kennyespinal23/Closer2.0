@@ -52,6 +52,7 @@ export default function SettingsLayout() {
         >
           <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
           <Stack.Screen name="appearance" options={{ title: "Appearance" }} />
+          <Stack.Screen name="app-icon" options={{ title: "App icon" }} />
           <Stack.Screen name="reading-goal" options={{ title: "Reading Goal" }} />
           <Stack.Screen name="translation" options={{ title: "Bible Translation" }} />
           <Stack.Screen name="focus" options={{ title: "Focus mode" }} />

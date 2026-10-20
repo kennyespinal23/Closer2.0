@@ -41,6 +41,13 @@ import { SCREEN_H_PAD } from "@/lib/layout";
 import { useProgress } from "@/state/progress";
 import { useColors, useResolvedScheme } from "@/state/theme";
 
+// Match the current Home/Together canvas while keeping the native type system.
+function useLibraryColors() {
+  const colors = useColors();
+  const dark = useResolvedScheme() === "dark";
+  return dark ? { ...colors, bg: "#0B0909", surface: "#221D1C", ink: "#FCFCFC", textSecondary: "#BCB3AF", border: "#FFFFFF14" } : colors;
+}
+
 /**
  * Fallback when the native tab bar hasn't reported a height yet
  * (provider starts at 0). Apple's visible UITabBar content height.
@@ -85,7 +92,7 @@ export default function LibraryScreen() {
 
 function BibleLibrary() {
   const router = useRouter();
-  const colors = useColors();
+  const colors = useLibraryColors();
   const [doorReplay, setDoorReplay] = useState(0);
   const canvasRef = useRef<View>(null);
   const openingRef = useRef(false);
@@ -109,11 +116,11 @@ function BibleLibrary() {
   const measuredTabBarHeight = useBottomTabBarHeight();
   const focusSpacing = useFocusMiniPlayerSpacing();
   const [libraryMode, setLibraryMode] = useState<"browse" | "guided">("browse");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const viewChanged = useRef(false);
   useEffect(() => {
     let active = true;
-    void loadJSON<string>(STORAGE_KEYS.bibleLibraryView).then(saved => {
+    void loadJSON<string>(`${STORAGE_KEYS.bibleLibraryView}.refined`).then(saved => {
       if (active && !viewChanged.current && (saved === "grid" || saved === "list")) setViewMode(saved);
     });
     return () => { active = false; };
@@ -122,7 +129,7 @@ function BibleLibrary() {
     viewChanged.current = true;
     setViewMode(next);
     haptics.tick();
-    void saveJSON(STORAGE_KEYS.bibleLibraryView, next);
+    void saveJSON(`${STORAGE_KEYS.bibleLibraryView}.refined`, next);
   };
   const { lastVisited, hasReadChapter } = useProgress();
   const [shelfJump, setShelfJump] = useState(0);
@@ -163,7 +170,7 @@ function BibleLibrary() {
     // during native tab swaps. Scroll content still carries its own
     // surface fills; cards and search sit on solid dark chrome.
     <SafeAreaView ref={canvasRef} collapsable={false} className="flex-1" style={{ backgroundColor: colors.bg }} edges={["top"]}>
-      <LibraryAtmosphere bookId={libraryMode === "browse" && viewMode === "grid" ? (filteredBooks.find(book => book.id === selectedBookId) ?? filteredBooks[0])?.id : undefined} />
+      {shelfView && <LibraryAtmosphere bookId={(filteredBooks.find(book => book.id === selectedBookId) ?? filteredBooks[0])?.id} />}
       <Animated.ScrollView style={[{ flex: 1 }, tabContentStyle]}
         scrollEnabled={!shelfView}
         bounces={!shelfView}
@@ -194,7 +201,7 @@ function BibleLibrary() {
             collectionId={collectionId} collections={viewMode === "grid" ? COLLECTIONS : availableCollections}
             onSelect={id => { haptics.tick(); setCollectionId(id); }} />
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Search Bible books" onPress={() => { setSearchSession(session => session + 1); setSearchOpen(true); }} style={[searchStyles.field, { marginHorizontal: 24, backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Search Bible books" onPress={() => { setSearchSession(session => session + 1); setSearchOpen(true); }} style={[searchStyles.field, { marginHorizontal: 22, backgroundColor: colors.surface, borderColor: colors.border }]}>
           <SFSymbol name="magnifyingglass" size={20} color={colors.textSecondary} /><Text style={[searchStyles.text, { color: colors.textSecondary }]}>Find a book</Text>
         </Pressable>
         </Animated.View>
@@ -204,7 +211,7 @@ function BibleLibrary() {
             either "what I was just reading" or "what's available
             to read" — never both fighting for the first scroll. */}
         {continueReading && viewMode === "list" && (
-            <View style={{ paddingHorizontal: SCREEN_H_PAD }}>
+            <View style={{ paddingHorizontal: 22 }}>
               <ContinueReadingHero
                 onPick={pickBook}
                 book={continueReading.book}
@@ -244,7 +251,7 @@ function BibleLibrary() {
       {doorReplay > 0 && <LibraryDoors key={doorReplay} replay={doorReplay} />}
       <BibleSearch key={searchSession} visible={searchOpen} onClose={() => setSearchOpen(false)} onPick={book => {
         setSearchOpen(false);
-        router.push(`/book/${book.id}`);
+        pickBook(book, {x:0,y:0,width:0,height:0});
       }} />
     </SafeAreaView>
   );
@@ -273,7 +280,7 @@ function SectionHeader({
   onSelect: (id: string) => void;
 }) {
   const scheme = useResolvedScheme();
-  const colors = useColors();
+  const colors = useLibraryColors();
   return (
     <View
       className="flex-row items-center justify-between"
@@ -322,20 +329,27 @@ function SectionHeader({
  * symmetric on every device without hardcoding.
  */
 function BookList({ books, onPick }: { books: ReadonlyArray<Book>; onPick: (book: Book, frame: LibraryBookFrame) => void }) {
-  const colors = useColors();
-  return <View style={{ marginHorizontal: SCREEN_H_PAD, borderRadius: 20, borderCurve: "continuous", overflow: "hidden", backgroundColor: colors.surface }}>
+  const colors = useLibraryColors();
+  return <View style={{ marginHorizontal: 22, borderRadius: 26, borderCurve: "continuous", overflow: "hidden", backgroundColor: colors.surface }}>
     {books.map((book, index) => <BookListRow key={book.id} book={book} last={index === books.length - 1} onPick={onPick} />)}
   </View>;
 }
 function BookListRow({ book, last, onPick }: { book: Book; last: boolean; onPick: (book: Book, frame: LibraryBookFrame) => void }) {
-  const colors = useColors();
-  const coverRef = useRef<View>(null);
-  return <Pressable accessibilityRole="button" accessibilityLabel={`Open ${book.name}, ${book.chapters} ${book.chapters === 1 ? "chapter" : "chapters"}`}
-    onPress={() => { haptics.soft(); coverRef.current?.measureInWindow((x, y, width, height) => onPick(book, { x, y, width, height })); }}
-    style={{ flexDirection: "row", alignItems: "center", gap: 20, padding: 18, borderBottomWidth: last ? 0 : 1, borderBottomColor: colors.border }}>
-    <View ref={coverRef} collapsable={false}><LibraryBookCover book={book} width={62} /></View>
-    <View style={{ flex: 1, gap: 6 }}><ThemedText variant="headline">{book.name}</ThemedText><ThemedText variant="subheadline" color="secondary" numberOfLines={2}>{getBookTheme(book.id)}</ThemedText><BookStatus book={book} /></View>
-  </Pressable>;
+  const colors = useLibraryColors(), router = useRouter();
+  const open = () => { haptics.soft(); onPick(book, { x: 0, y: 0, width: 0, height: 0 }); };
+  return <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginHorizontal: 16, paddingVertical: 16, minHeight: 132, borderBottomWidth: last ? 0 : .5, borderBottomColor: colors.border }}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name}`} onPress={open}><LibraryBookCover book={book} width={54} /></Pressable>
+    <View style={{ flex: 1 }}>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name}`} onPress={open} style={{flexShrink:1,minHeight:36,justifyContent:"center"}}><Text style={{fontSize:17,lineHeight:25,fontWeight:"700",color:colors.ink}}>{book.name}</Text></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={`About ${book.name}`} onPress={()=>router.push(`/book/${book.id}`)} style={{width:44,height:44,alignItems:"center",justifyContent:"center"}}><SFSymbol name="info.circle" size={17} color={colors.textSecondary}/></Pressable>
+      </View>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Read ${book.name}`} onPress={open}>
+        <Text numberOfLines={2} style={{fontSize:15,lineHeight:22,color:colors.textSecondary}}>{getBookTheme(book.id)}</Text>
+        <View style={{marginTop:6}}><BookStatus book={book}/></View>
+      </Pressable>
+    </View>
+  </View>;
 }
 
 function BookStatus({ book }: { book: Book }) {
@@ -358,7 +372,7 @@ function BookStatus({ book }: { book: Book }) {
 function BibleSearch({ visible, onClose, onPick }: {
   visible: boolean; onClose: () => void; onPick: (book: Book) => void;
 }) {
-  const colors = useColors();
+  const colors = useLibraryColors();
   const scheme = useResolvedScheme();
   const reduced = useReducedMotion();
   const input = useRef<TextInput>(null);
@@ -416,9 +430,9 @@ function BibleSearch({ visible, onClose, onPick }: {
 // ─────────────────────────────────────────────────────────────────
 
 function EmptyState({ query }: { query: string }) {
-  const colors = useColors();
+  const colors = useLibraryColors();
   return (
-    <View className="mt-12 items-center" style={{ paddingHorizontal: SCREEN_H_PAD }}>
+    <View className="mt-12 items-center" style={{ paddingHorizontal: 22 }}>
       <View className="w-12 h-12 rounded-2xl bg-surface border border-border items-center justify-center mb-4">
         <SearchIcon size={18} stroke={colors.inkSubtle} />
       </View>
@@ -462,13 +476,13 @@ function ContinueReadingHero({ book, chapter, onPress, onPick }: {
   book: Book; chapter: number; onPress: () => void;
   onPick: (book: Book, frame: LibraryBookFrame) => void;
 }) {
-  const colors = useColors();
+  const colors = useLibraryColors();
   const action = paperActionColors(useResolvedScheme() === "dark");
   const { chaptersRead } = useProgress();
   const read = new Set(chaptersRead.filter(item => item.bookId === book.id && item.chapter >= 1 && item.chapter <= book.chapters).map(item => item.chapter)).size;
-  return <View style={{ flexDirection: "row", alignItems: "center", gap: 22, paddingTop: 16, paddingBottom: 28 }}>
+  return <View style={{ flexDirection: "row", alignItems: "center", gap: 22, paddingTop: 24, paddingBottom: 28 }}>
     <BookReaderPreparation bookId={book.id} chapter={chapter} />
-    <View style={{ transform: [{ rotate: "-4deg" }], marginLeft: 4 }}><LibraryBook book={book} width={110} onPick={onPick} /><View pointerEvents="none" style={{ position: "absolute", bottom: -17, right: 22, width: 12, height: 30, backgroundColor: "#FF5A36" }}><View style={{ position: "absolute", bottom: -1, left: 0, borderLeftWidth: 6, borderRightWidth: 6, borderBottomWidth: 7, borderLeftColor: "transparent", borderRightColor: "transparent", borderBottomColor: colors.bg }} /></View></View>
+    <View style={{ transform: [{ rotate: "-4deg" }], marginLeft: 4 }}><LibraryBook book={book} width={104} onPick={onPick} /><View pointerEvents="none" style={{ position: "absolute", bottom: -17, right: 22, width: 12, height: 30, backgroundColor: "#FF5A36" }}><View style={{ position: "absolute", bottom: -1, left: 0, borderLeftWidth: 6, borderRightWidth: 6, borderBottomWidth: 7, borderLeftColor: "transparent", borderRightColor: "transparent", borderBottomColor: colors.bg }} /></View></View>
     <View style={{ flex: 1, gap: 6 }}><Text style={{ ...systemText.footnote, color: "#FF5A36" }}>Where you left off</Text><ThemedText variant="title2" numberOfLines={2}>{book.name}</ThemedText><ThemedText variant="subheadline" color="secondary">Chapter {chapter} of {book.chapters}</ThemedText><Pressable accessibilityRole="button" accessibilityLabel={`Keep reading ${book.name}, chapter ${chapter}`} onPress={onPress} style={[buttonStyles.primary, { marginTop: 8, backgroundColor: action.backgroundColor }]}><Text style={[buttonStyles.label, { color: action.color }]}>Keep reading</Text></Pressable></View>
   </View>;
 }

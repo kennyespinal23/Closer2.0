@@ -150,6 +150,8 @@ export default function TabsLayout() {
           // tab bars don't animate either; tapping a tab is
           // atomic. Disabling here matches that feel.
           disablePageAnimations
+          // Icons only, like the Home design; each tab keeps its title as its VoiceOver label.
+          labeled={false}
         >
           <NativeTabs.Screen
             name="today"

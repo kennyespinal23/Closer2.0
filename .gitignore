@@ -49,3 +49,6 @@ ios/expo-run.log
 
 # Full-resolution Bible Moment artwork; optimized assets are committed.
 assets/bible-moments/original/
+
+# Local native build output
+/build/

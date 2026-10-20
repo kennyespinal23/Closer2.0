@@ -1,13 +1,13 @@
 import type { ImageSourcePropType } from "react-native";
 import { findBookById, type BookCategory } from "./books";
 import { LIBRARY_BOOK_ART } from "./libraryBookArt";
-import { PLACEHOLDER_COVERS } from "./placeholderCovers";
+import { PAINTED_COVERS } from "./paintedCovers";
 
-// All book surfaces share the exported illustrated placeholders. Legacy art is archived in assets/book-covers.
+// All book surfaces use the October 2026 cover set, mapped to canonical book IDs.
 export type CoverBloom = { inner: string; outer: string };
 
 export function getBookCover(bookId: string): ImageSourcePropType | null {
-  return PLACEHOLDER_COVERS[bookId] ?? null;
+  return PAINTED_COVERS[bookId]?.source ?? null;
 }
 
 export function getCoverBloom(bookId: string): CoverBloom | null {
@@ -17,7 +17,7 @@ export function getCoverBloom(bookId: string): CoverBloom | null {
 }
 
 export function hasBookCover(bookId: string): boolean {
-  return PLACEHOLDER_COVERS[bookId] != null;
+  return PAINTED_COVERS[bookId] != null;
 }
 
 /**

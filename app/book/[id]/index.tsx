@@ -223,16 +223,16 @@ function BookDetail({ book, prepareReader = true }: { book: Book; prepareReader?
         <View style={{ backgroundColor: colors.bg, minHeight: height - focusSpacing, justifyContent: "flex-end", paddingTop: insets.top + 64 + artSpace, paddingBottom: Math.max(insets.bottom, 20) + 16 }}>
           <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
             <SkyGradient />
-            {cover && <Image source={cover} contentFit="contain" transition={0} style={{ position: "absolute", top: insets.top + 70, alignSelf: "center", width: Math.min(210, width * .5), height: Math.min(298, artSpace - 10) }} />}
+            {cover && <Image source={cover} contentFit="cover" transition={0} style={StyleSheet.absoluteFill} />}
 
-            {dark && <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+            {<Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
               <Defs><LinearGradient id="bookHeroShade" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor="#000000" stopOpacity={0.24} />
-                <Stop offset="0.35" stopColor="#000000" stopOpacity={0} />
-                <Stop offset="0.53" stopColor="#000000" stopOpacity={0.30} />
-                <Stop offset="0.68" stopColor="#000000" stopOpacity={0.85} />
-                <Stop offset="0.83" stopColor="#000000" stopOpacity={1} />
-                <Stop offset="1" stopColor="#000000" />
+                <Stop offset="0" stopColor={colors.bg} stopOpacity={0.24} />
+                <Stop offset="0.35" stopColor={colors.bg} stopOpacity={0} />
+                <Stop offset="0.53" stopColor={colors.bg} stopOpacity={0.30} />
+                <Stop offset="0.68" stopColor={colors.bg} stopOpacity={0.85} />
+                <Stop offset="0.83" stopColor={colors.bg} stopOpacity={1} />
+                <Stop offset="1" stopColor={colors.bg} />
               </LinearGradient></Defs>
               <Rect width="100%" height="100%" fill="url(#bookHeroShade)" />
             </Svg>}

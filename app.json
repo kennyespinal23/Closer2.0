@@ -23,7 +23,11 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryUsageDescription": "Allow Closer to access your photos.",
-        "NSPhotoLibraryAddUsageDescription": "Allow Closer to save scripture images to your photo library."
+        "NSPhotoLibraryAddUsageDescription": "Allow Closer to save scripture images to your photo library.",
+        "UIBackgroundModes": [
+          "audio"
+        ],
+        "NSSupportsLiveActivities": true
       }
     },
     "android": {
@@ -81,6 +85,45 @@
           "photosPermission": "Choose a profile photo for Closer.",
           "cameraPermission": false,
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-alternate-app-icons",
+        [
+          "./assets/app-icons/alternates/Aurora.png",
+          "./assets/app-icons/alternates/Berry.png",
+          "./assets/app-icons/alternates/Blush.png",
+          "./assets/app-icons/alternates/Citrus.png",
+          "./assets/app-icons/alternates/CottonCandy.png",
+          "./assets/app-icons/alternates/DeepSea.png",
+          "./assets/app-icons/alternates/Dream.png",
+          "./assets/app-icons/alternates/Earth.png",
+          "./assets/app-icons/alternates/Ember.png",
+          "./assets/app-icons/alternates/Forest.png",
+          "./assets/app-icons/alternates/GoldenHour.png",
+          "./assets/app-icons/alternates/Lagoon.png",
+          "./assets/app-icons/alternates/Lime.png",
+          "./assets/app-icons/alternates/Mist.png",
+          "./assets/app-icons/alternates/Mountain.png",
+          "./assets/app-icons/alternates/Night.png",
+          "./assets/app-icons/alternates/Ocean.png",
+          "./assets/app-icons/alternates/Paper.png",
+          "./assets/app-icons/alternates/Peach.png",
+          "./assets/app-icons/alternates/Periwinkle.png",
+          "./assets/app-icons/alternates/Sage.png",
+          "./assets/app-icons/alternates/Sand.png",
+          "./assets/app-icons/alternates/Sky.png",
+          "./assets/app-icons/alternates/Storm.png",
+          "./assets/app-icons/alternates/Sunrise.png",
+          "./assets/app-icons/alternates/Sunset.png",
+          "./assets/app-icons/alternates/Twilight.png",
+          "./assets/app-icons/alternates/VioletSky.png"
+        ]
+      ],
+      [
+        "./plugins/withPodDeploymentTarget",
+        {
+          "target": "16.0"
         }
       ]
     ],

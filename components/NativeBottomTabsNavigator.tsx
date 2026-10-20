@@ -126,6 +126,8 @@ type NativeBottomTabsNavigatorProps = {
    * internal prop surface.
    */
   disablePageAnimations?: boolean;
+  /** Show tab titles under the icons. False gives an icons-only bar; titles stay as VoiceOver labels. */
+  labeled?: boolean;
 };
 
 type Props = DefaultNavigatorOptions<
@@ -155,6 +157,7 @@ function NativeBottomTabsNavigator({
   scrollEdgeAppearance,
   minimizeBehavior,
   disablePageAnimations,
+  labeled,
 }: Props) {
   const { state, descriptors, navigation, NavigationContent } =
     useNavigationBuilder<
@@ -196,6 +199,7 @@ function NativeBottomTabsNavigator({
   return (
     <NavigationContent>
       <TabView
+        labeled={labeled}
         navigationState={{ index: state.index, routes }}
         onIndexChange={(index) => {
           const route = state.routes[index];

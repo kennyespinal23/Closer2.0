@@ -10,5 +10,5 @@ export function FeedbackPressable({ style, onPressIn, onPressOut, feedback = "ro
   const opacity = StyleSheet.flatten(style)?.opacity;
   const baseOpacity = typeof opacity === "number" ? opacity : 1;
   const motion = useAnimatedStyle(() => ({ opacity: baseOpacity * (1 - .16 * p.value), ...(feedback === "action" ? { transform: [{ scale: !reduced ? 1 - .02 * p.value : 1 }] } : {}) }));
-  return <AnimatedPressable {...props} style={[style, motion]} onPressIn={event => { p.value = withTiming(1, { duration: reduced ? 0 : 90 }); onPressIn?.(event); }} onPressOut={event => { p.value = reduced ? 0 : withSpring(0, { stiffness: 420, damping: 32 }); onPressOut?.(event); }} />;
+  return <AnimatedPressable {...props} style={[style, motion]} onPressIn={event => { p.value = withTiming(1, { duration: reduced ? 0 : 90 }); onPressIn?.(event); }} onPressOut={event => { p.value = reduced ? 0 : withSpring(0, { stiffness: 420, damping: 38, overshootClamping: true }); onPressOut?.(event); }} />;
 }

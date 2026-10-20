@@ -27,6 +27,7 @@ import { FocusProvider, useFocus } from "@/state/focus";
 import { MomentsProvider, useMoments } from "@/state/moments";
 import { OnboardingProvider, useOnboarding } from "@/state/onboarding";
 import { PreferencesProvider, usePreferences } from "@/state/preferences";
+import { ListeningProvider } from "@/state/listening";
 import { ProgressProvider, useProgress } from "@/state/progress";
 import {
   ReadingGoalProvider,
@@ -100,6 +101,7 @@ export default function RootLayout() {
         <SubscriptionProvider>
         <OnboardingProvider>
           <PreferencesProvider>
+            <ListeningProvider>
             <AnnotationsProvider>
               <ProgressProvider>
                 <CheckInsProvider>
@@ -159,6 +161,7 @@ export default function RootLayout() {
                 </CheckInsProvider>
               </ProgressProvider>
             </AnnotationsProvider>
+            </ListeningProvider>
           </PreferencesProvider>
         </OnboardingProvider>
         </SubscriptionProvider>

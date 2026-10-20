@@ -757,7 +757,8 @@ export default function TodayScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "transparent" }}>
-      {isFocused ? <StatusBar style={canvasScheme === "light" ? "dark" : "light"} /> : null}
+      {/* Home is a dark room in both appearances (the hero card), so its bar is always light. */}
+      {isFocused ? <StatusBar style="light" /> : null}
       <HomeDevotionalCarousel
         cards={carouselCards}
         onCompletedPress={handleOpenCompleted}

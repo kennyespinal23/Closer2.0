@@ -1,4 +1,5 @@
 import { updateNightPrayer, useNightPrayer } from "@/lib/nightPrayer";
+import { PROFILE_FLOOR, ProfileStory } from "@/components/ProfileStory";
 import { buttonStyles } from "@/lib/buttonStyles";
 import { ProfileAudioPreview } from "@/components/audio/ProfileAudioPlayer";
 import { ProfileJourney, PROFILE_PALETTE } from "@/components/ProfileJourney";
@@ -253,7 +254,7 @@ export default function ProfileTabScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: PROFILE_PALETTE[scheme].bg, overflow: "hidden" }}
+      style={{ flex: 1, backgroundColor: PROFILE_FLOOR, overflow: "hidden" }}
       edges={[]}
     >
 
@@ -262,100 +263,8 @@ export default function ProfileTabScreen() {
         contentContainerStyle={{ paddingBottom: tabContentClearance(tabHeight, insets.bottom, focusSpacing) }}
         showsVerticalScrollIndicator={false}
       >
-        <ProfileJourney name={firstName} joinedAt={typeof answers.joinedAt === "number" ? answers.joinedAt : undefined} avatar={answers.avatarPhotoUri ? {uri: answers.avatarPhotoUri} : selectedAvatar?.source} onAvatar={() => setAvatarPickerOpen(true)} onSettings={() => navigateTo("/settings")} />
-        <ProfileVerse />
-        <View style={{ marginHorizontal: contentLayout.gutter, marginTop: 4, gap: 16 }}>
-          <Pressable accessibilityRole="button" accessibilityState={{ expanded: savedExpanded }} onPress={() => setSavedExpanded(!savedExpanded)} style={{ minHeight: 52, flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <SFSymbol name="bookmark" size={22} color={colors.ink} />
-            <Text style={[{ fontSize: 15, fontWeight: "600", color: colors.ink, flex: 1 }]}>Saved for you</Text>
-            <SFSymbol name={savedExpanded ? "chevron.up" : "chevron.down"} size={14} color={colors.inkMuted} />
-          </Pressable>
-          {savedExpanded && <SegmentedControl appearance={scheme} values={["Devotionals", "Highlights", "Notes"]} selectedIndex={savedTab} onChange={event => setSavedTab(event.nativeEvent.selectedSegmentIndex)} style={{ height: 44 }} />}
-        </View>
-        {savedExpanded && savedTab === 0 && <>
-        <SectionHeader
-          title="Devotionals"
-          count={savedCount}
-          ink={colors.ink}
-          inkSubtle={colors.textSecondary}
-        />
-        {recentSavedSermons.length === 0 ? (
-          <ProfileEmptyCard
-            title="No saved sermons yet"
-            body="Tap Save on the closing screen of any sermon to keep it here for re-reading."
-          />
-        ) : (
-          <View className="px-5 mt-2 gap-2">
-            {recentSavedSermons.map(({ moment, type }) => (
-              <ProfileSavedSermonRow
-                key={moment.day}
-                title={moment.title}
-                typeName={type.name}
-                accent={type.accent}
-                onPress={() => navigateTo(`/saved-sermon/${moment.day}` as Href)}
-              />
-            ))}
-          </View>
-        )}
-
-        </>}
-        {savedExpanded && savedTab === 1 && <>
-        <SectionHeader
-          title="Highlights"
-          count={annotationCounts.highlights}
-          onSeeAll={() => navigateTo("/highlights")}
-          ink={colors.ink}
-          inkSubtle={colors.textSecondary}
-        />
-        {recentHighlights.length === 0 ? (
-          <ProfileEmptyCard
-            title="No highlights yet"
-            body="Long-press any verse to mark it — your highlights collect here."
-          />
-        ) : (
-          <View className="px-5 mt-2 gap-2">
-            {recentHighlights.map((highlight) => (
-              <ProfileHighlightRow
-                key={highlight.key}
-                highlight={highlight}
-                onPress={() => navigateTo(routeForVerse(highlight))}
-              />
-            ))}
-          </View>
-        )}
-
-        </>}
-        {savedExpanded && savedTab === 2 && <>
-        <SectionHeader
-          title="Notes"
-          count={annotationCounts.notes}
-          onSeeAll={() => navigateTo("/notes")}
-          ink={colors.ink}
-          inkSubtle={colors.textSecondary}
-        />
-        {recentNotes.length === 0 ? (
-          <ProfileEmptyCard
-            title="No notes yet"
-            body="Write your first reflection from any verse — long-press to open the menu."
-          />
-        ) : (
-          <View className="px-5 mt-2 gap-2">
-            {recentNotes.map((note) => (
-              <ProfileNoteRow
-                key={note.noteId}
-                note={note}
-                onPress={() => navigateTo(routeForVerse(note))}
-              />
-            ))}
-          </View>
-        )}
-
-        </>}
-
-        <View style={{ marginHorizontal: 21, marginTop: 12 }}>
-          <SettingsSection><SettingsLinkRow label="Settings & preferences" icon={<SFSymbol name="gearshape" size={20} color={colors.ink}/>} onPress={() => navigateTo("/settings")} /></SettingsSection>
-          <Text style={{ fontSize: 13, lineHeight: 18, fontWeight: "500", textAlign: "center", color: colors.inkMuted, marginVertical: 26 }}>Small beginnings. A meaningful journey.</Text>
-        </View>
+        <ProfileStory name={(answers.name || "").trim() || firstName} joinedAt={typeof answers.joinedAt === "number" ? answers.joinedAt : undefined} avatar={answers.avatarPhotoUri ? {uri: answers.avatarPhotoUri} : selectedAvatar?.source} onAvatar={() => setAvatarPickerOpen(true)} onSettings={() => navigateTo("/settings")}
+          saved={recentSavedSermons.map(({ moment, type }) => ({ day: moment.day, title: moment.title, typeName: type.name }))}/>
         {showDevShortcuts ? (
           <SettingsSection
             title="Developer"

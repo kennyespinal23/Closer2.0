@@ -292,8 +292,17 @@ export function useTheme(): ThemeContextValue {
  *   <Path stroke={colors.ink} ... />
  */
 export function useColors(): ColorPalette {
-  return useTheme().colors;
+  const base = useTheme().colors;
+  const override = useContext(ColorsOverrideContext);
+  return useMemo(() => override ? { ...base, ...override } : base, [base, override]);
 }
+
+/**
+ * Lets one screen re-tint the palette for everything inside it (the reader wears each
+ * chapter's painting colour). Anything not overridden falls through to the active theme.
+ */
+const ColorsOverrideContext = createContext<Partial<ColorPalette> | null>(null);
+export const ColorsOverride = ColorsOverrideContext.Provider;
 
 /**
  * Convenience hook — returns the resolved scheme string. Useful for

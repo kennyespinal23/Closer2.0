@@ -1,5 +1,5 @@
 import { findVerseStartLines, paginateLines } from "@/lib/readerPagination";
-import { getChapterTitle, chapterHeadingHeight } from "@/lib/chapterTitles";
+import { getChapterTitle, chapterHeadingHeight, splitChapterTitle, CHAPTER_ART_HEIGHT } from "@/lib/chapterTitles";
 
 import { CloseButton } from "@/components/CloseButton";
 import { buttonStyles } from "@/lib/buttonStyles";
@@ -21,7 +21,9 @@ import { ReaderMomentExperience, ReaderMomentPocket, ReaderRibbon } from "@/comp
 import { ReaderSheet } from "@/components/ReaderSheet";
 import { TranslationCards } from "@/components/TranslationCards";
 import { ReaderNativeButton } from "@/components/ReaderNativeButton";
-import { ReaderListeningPanel } from "@/components/audio/ReaderListeningPanel";
+import { ListeningMiniPlayer } from "@/components/audio/ListeningMiniPlayer";
+import { useListening, useSpeakingVerse } from "@/state/listening";
+import { listenTone } from "@/components/audio/BibleAudioView";
 import { MomentShimmerText } from "@/components/MomentShimmerText";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
@@ -48,9 +50,10 @@ import { AppleSheet } from "@/components/AppleSheet";
 import { SheetModalHeader } from "@/components/SheetModalHeader";
 import { NativeReaderControls } from "@/components/NativeReaderControls";
 import { ReaderTutorial } from "@/components/ReaderTutorial";
-import { MomentThoughtBubble } from "@/components/MomentThoughtBubble";
+import { MomentCollectFlow } from "@/components/MomentCollectFlow";
+import { VerseShareSheet } from "@/components/VerseShareSheet";
 import { MomentVerseText } from "@/components/BibleMoment";
-import { findBibleMoment, MOMENT_CATEGORIES, type BibleMoment } from "@/constants/bibleMoments";
+import { BIBLE_MOMENTS, findBibleMoment, MOMENT_CATEGORIES, type BibleMoment } from "@/constants/bibleMoments";
 import { VerseMeaningCard } from "@/components/VerseMeaningCard";
 import { BookCover } from "@/components/BookCover";
 import { SFSymbol } from "@/components/Symbol";
@@ -74,6 +77,7 @@ import {
 import {
   TEXT_SIZES,
   TRANSLATIONS,
+  findTextSize,
   type TextSizeId,
   type Translation,
   type TranslationId,
@@ -82,7 +86,12 @@ import {
 import { hasLocalBundle } from "@/lib/localBibles";
 import { useProgress } from "@/state/progress";
 import { useReadingGoal } from "@/state/readingGoal";
-import { useColors, useResolvedScheme, useTheme } from "@/state/theme";
+import { ColorsOverride, useColors, useResolvedScheme, useTheme } from "@/state/theme";
+import { chapterLook, chapterOpenerArt, chapterPalette } from "@/lib/chapterLook";
+import { getBibleMomentArt } from "@/constants/bibleMomentArt";
+import { paintedCover } from "@/constants/paintedCovers";
+import { Image as ExpoImage } from "expo-image";
+import { ReaderMaterialGradient } from "@/components/ReaderMaterialGradient";
 import { goBackOr } from "@/lib/navigation";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { minTouchTarget, spacing } from "@/constants/spacing";
@@ -173,7 +182,7 @@ function readerPaginationKey(
   pageContentWidth: number,
   pageContentHeight: number,
 ): string {
-  return `verse-safe-v3:${translationId}:${bookId}:${chapter}:${textSizeId}:${PixelRatio.getFontScale()}:${Math.round(pageContentWidth)}x${Math.round(pageContentHeight)}`;
+  return `verse-safe-v4:${translationId}:${bookId}:${chapter}:${textSizeId}:${PixelRatio.getFontScale()}:${Math.round(pageContentWidth)}x${Math.round(pageContentHeight)}`;
 }
 
 type ReaderPaginationContext = {
@@ -387,7 +396,7 @@ function ChapterReaderContent() {
     chrome?: string;
   }>();
   const router = useRouter();
-  const colors = useColors();
+  const themeColors = useColors();
 
   const routeBookId = id ?? "";
   const routeChapter = parseInt(chapterParam ?? "", 10);
@@ -409,6 +418,11 @@ function ChapterReaderContent() {
   const [viewportChapter, setViewportChapter] = useState(
     Number.isFinite(routeChapter) ? routeChapter : 1,
   );
+  // On dark paper the reader wears the chapter's painting colour (lib/chapterLook).
+  const { tone: readerTone } = useReaderTone();
+  const look = useMemo(() => chapterLook(viewportBookId, viewportChapter), [viewportBookId, viewportChapter]);
+  const chapterColors = useMemo(() => readerTone === "dark" ? chapterPalette(look.color) : null, [readerTone, look.color]);
+  const colors = useMemo(() => chapterColors ? { ...themeColors, ...chapterColors } : themeColors, [themeColors, chapterColors]);
   const [pagerMountKey, setPagerMountKey] = useState("");
   const [measureTarget, setMeasureTarget] = useState<{
     bookId: string;
@@ -549,6 +563,12 @@ function ChapterReaderContent() {
   // fan out across every verse in the selection.
   const pendingMoment = useRef<BibleMoment | null>(null);
   const [discoveredMoment, setDiscoveredMoment] = useState<BibleMoment | null>(null);
+  const [shareTarget, setShareTarget] = useState<{ reference: string; text: string } | null>(null);
+  // Dev-only: ?chrome=moment opens the chapter's Bible Moment on mount, for screenshots.
+  useEffect(() => { if (__DEV__ && chromeParam?.startsWith("verse")) { const n = Number(chromeParam.slice(5)) || 16; setTimeout(() => setActiveVerse(n), 1200); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (__DEV__ && chromeParam === "contents") setTimeout(() => setContentsOpen(true), 1200); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (__DEV__ && chromeParam === "share") setShareTarget({ reference: "John 3:16", text: "For God so loved the world, that he gave his one and only Son, that whoever believes in him should not perish, but have eternal life." }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (__DEV__ && chromeParam === "moment") { const m = BIBLE_MOMENTS.find(x => x.bookId === routeBookId && x.chapter === routeChapter); if (m) setDiscoveredMoment(m); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const momentTouchY = useRef(180);
   const [momentArrival, setMomentArrival] = useState(0);
   const [momentShowcase, setMomentShowcase] = useState(false);
@@ -1366,7 +1386,10 @@ function ChapterReaderContent() {
   }, [goalToastVisible, goalToastAnim]);
 
   // ─── Contents drawer (Apple-Books chapter list) ─────────────────
-  const [listeningOpen, setListeningOpen] = useState(false);
+  const listeningOpen = false;
+  const listening = useListening();
+  // Listen opens the full player for the chapter on screen; the voice keeps going when you come back.
+  const openListen = () => { haptics.soft(); router.push(`/book/${viewportBookId}/audio?chapter=${viewportChapter}` as never); };
   const [contentsOpen, setContentsOpen] = useState(__DEV__ && chromeParam === "contents");
   useEffect(() => { if (__DEV__ && chromeParam === "contents") setContentsOpen(true); }, [chromeParam]);
   const pendingExpress = useRef(false);
@@ -1570,10 +1593,11 @@ function ChapterReaderContent() {
 
   const [chromeSheetOpen, setChromeSheetOpen] = useState(false);
   const [socialSheetOpen, setSocialSheetOpen] = useState(false);
-  const chrome = useReaderChrome(!verticalReading || !!(activeVerse !== null || selectionMode || editingNote || discoveredMoment || collectMoment || momentShowcase || meaningOpen || listeningOpen || contentsOpen || chromeSheetOpen || socialSheetOpen), readerFocused, verticalReading ? 3000 : 4200);
+  // The buttons fade away while you read and come back with a tap; they stay up while a sheet or card is open.
+  const chrome = useReaderChrome(!!(activeVerse !== null || selectionMode || editingNote || discoveredMoment || collectMoment || momentShowcase || meaningOpen || listeningOpen || contentsOpen || chromeSheetOpen || socialSheetOpen || !!shareTarget), readerFocused, 3500);
 
   return (
-    <ReaderChromeBusyContext.Provider value={setSocialSheetOpen}><View onTouchStart={event => { momentTouchY.current = event.nativeEvent.pageY; chrome.onTouch(); }} style={{ flex: 1, backgroundColor: colors.bg }}>
+    <ColorsOverride value={chapterColors}><ReaderChromeBusyContext.Provider value={setSocialSheetOpen}><View onTouchStart={event => { momentTouchY.current = event.nativeEvent.pageY; chrome.onTouch(); }} style={{ flex: 1, backgroundColor: colors.bg }}>
       {!verticalReading && <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 7, borderRightWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSecondary, opacity: 0.45 }} />}
       {verticalReading && <Svg pointerEvents="none" width="100%" height="100%" style={{position:"absolute",inset:0}}><Defs><LinearGradient id="readerPaperWash" x1="1" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={readerScheme === "dark" ? "#916035" : "#D5BD97"} stopOpacity={0.12}/><Stop offset="1" stopColor={colors.bg} stopOpacity={0}/></LinearGradient></Defs><Rect width="100%" height="100%" fill="url(#readerPaperWash)"/></Svg>}
       {readerFocused && <StatusBar style={readerScheme === "dark" ? "light" : "dark"} />}
@@ -1588,7 +1612,7 @@ function ChapterReaderContent() {
             pocketRef={pocketRef}
             momentArrival={momentArrival}
             collecting={!!collectMoment}
-            onAudio={() => { haptics.soft(); setListeningOpen(true); }}
+            onAudio={openListen}
             onContents={() => setContentsOpen(true)}
             textSizeId={textSize.id}
             onChangeTextSize={setTextSize}
@@ -1915,7 +1939,7 @@ function ChapterReaderContent() {
           </View>
         )}
 
-        {!verticalReading && !selectionMode && <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 24, right: 24, bottom: 8, gap: 8, backgroundColor: colors.bg }, chrome.bottomStyle]}>
+        {!verticalReading && !selectionMode && !listening.active && <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 24, right: 24, bottom: 8, gap: 8, backgroundColor: colors.bg }, chrome.bottomStyle]}>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}><Text style={{ ...systemText.caption1, color: colors.inkMuted }}>Chapter {chapter} of {book.chapters}</Text><Text style={{ ...systemText.caption1, color: colors.inkMuted }}>{Math.round(headerProgress * 100)}%</Text></View>
           <ReaderProgressBar progress={headerProgress} total={data?.verses.length ?? 1} color={colors.inkMuted} track={colors.border}/>
         </Animated.View>}
@@ -1936,12 +1960,12 @@ function ChapterReaderContent() {
         ) : null}
       </View>
 
-      {!listeningOpen && <ReaderDock style={chrome.bottomStyle} visible={chrome.visible} bottom={insets.bottom}
+      {!listening.active && <ReaderDock style={chrome.bottomStyle} visible={chrome.visible} bottom={insets.bottom}
         prev={getAdjacent(book.id, chapter, "prev")} next={getAdjacent(book.id, chapter, "next")}
-        onGo={target => { haptics.soft(); goto(target); }} onListen={() => { haptics.soft(); setListeningOpen(true); }}/>}
-      <ReaderListeningPanel visible={listeningOpen} onClose={() => setListeningOpen(false)} bookId={book.id} bookName={book.name} chapter={chapter} />
+        onGo={target => { haptics.soft(); goto(target); }} onListen={openListen}/>}
+      <ListeningMiniPlayer bottom={Math.max(insets.bottom, 12) + 4} onOpen={() => listening.target && router.push(`/book/${listening.target.bookId}/audio?chapter=${listening.target.chapter}` as never)} />
       <ReaderTutorial />
-      {discoveredMoment && <MomentThoughtBubble moment={discoveredMoment} anchorY={momentTouchY.current} onClose={() => setDiscoveredMoment(null)} onCollect={() => { setCollectOrigin(null); const moment = discoveredMoment; setDiscoveredMoment(null); setCollectMoment(moment); }} />}
+      {discoveredMoment && <MomentCollectFlow moment={discoveredMoment} onClose={() => { setDiscoveredMoment(null); setMomentArrival(value => value + 1); }} />}
       <ReaderMomentExperience origin={collectOrigin} onCollected={() => setMomentArrival(value => value + 1)} moment={collectMoment} onFinish={() => setCollectMoment(null)} pocketRef={pocketRef} showcase={momentShowcase} onCloseShowcase={() => setMomentShowcase(false)} bookId={book.id} />
       <VerseMeaningCard
         visible={meaningOpen}
@@ -1988,9 +2012,25 @@ function ChapterReaderContent() {
         }}
         onEditNote={noteId => { const verse = activeVerse; setActiveVerse(null); if (verse !== null) setEditingNote({ verses: [verse], noteId }); }}
         onAI={() => { haptics.soft(); setMeaningOpen(true); }}
-        onShare={() => { if (selectionMode) void shareSelected(); else { void handleShare(); setActiveVerse(null); } }}
+        verseText={!selectionMode && activeVerseData ? normalizeVerseBody(activeVerseData.text).replace(/\s*\n\s*/g, " ") : undefined}
+        count={selectionMode ? selectedVerses.length : 1}
+        onListen={() => {
+          // Read aloud from the first chosen verse; the mini player and highlight follow.
+          const first = selectionMode ? selectedVerses[0] : activeVerse;
+          const index = data?.verses.findIndex(v => v.number === first) ?? -1;
+          if (index >= 0) listening.playFrom(book.id, chapter, index);
+          setActiveVerse(null); exitSelection();
+        }}
+        onShare={() => {
+          const numbers = selectionMode ? selectedVerses : activeVerse !== null ? [activeVerse] : [];
+          const text = numbers.map(n => data?.verses.find(v => v.number === n)?.text ?? "").map(t => normalizeVerseBody(t).replace(/\s*\n\s*/g, " ").trim()).filter(Boolean).join(" ");
+          if (text) setShareTarget({ reference: selectionMode ? formatVerseRange(book.name, chapter, selectedVerses) : `${book.name} ${chapter}:${activeVerse}`, text });
+          setActiveVerse(null); exitSelection();
+        }}
         onClose={() => { setActiveVerse(null); exitSelection(); }}
       />}
+      {shareTarget && <VerseShareSheet bookId={book.id} chapter={chapter} reference={shareTarget.reference} text={shareTarget.text} translation={translation.id.toUpperCase()}
+        onShareText={() => void shareVerse({ text: shareTarget.text, reference: shareTarget.reference, translation: translation.name })} onClose={() => setShareTarget(null)} />}
 
       {/* ─── Note editor ──────────────────────────────────────
           Same modal handles both "add new" and "edit existing" —
@@ -2041,7 +2081,7 @@ function ChapterReaderContent() {
         onCancel={() => setEditingNote(null)}
       />
       </SafeAreaView>
-    </View></ReaderChromeBusyContext.Provider>
+    </View></ReaderChromeBusyContext.Provider></ColorsOverride>
   );
 }
 
@@ -2130,6 +2170,9 @@ function VerseFlow({
   const { ids: collectedMomentIds } = useBibleMomentCollection();
   const colors = useColors();
   const scheme = useResolvedScheme();
+  // The verse being read aloud wears the book's colour.
+  const speakingVerse = useSpeakingVerse(bookId, chapter);
+  const speakingFill = hexAlpha(listenTone(bookId).c, scheme === "dark" ? .42 : .2);
 
   const [brushLines, setBrushLines] = useState<Array<{ x: number; y: number; width: number; height: number; verse: number }>>([]);
   const baseFontSize = 18 * scale;
@@ -2275,14 +2318,12 @@ function VerseFlow({
                 fontSize: baseFontSize,
                 lineHeight: baseLineHeight,
                 letterSpacing: -0.1,
-                textDecorationLine: isCollected ? "underline" : "none",
-                textDecorationColor: "#FF5A3666",
                 color: moment && !isCollected && !isSelected ? MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"] : colors.ink,
               }}
             >
               {normalizeVerseBody(v.text)}
             </Text>}
-            {isCollected && <Text accessibilityLabel="Bible Moment collected" style={{ color: scheme === "dark" ? "#34C759" : "#248A3D", fontFamily: "System", fontWeight: "800", fontSize: baseFontSize }}> ✓</Text>}
+            {moment && onVerseLongPress && <MomentChip moment={moment} collected={isCollected} lineHeight={baseLineHeight} onPress={() => onVersePress(v.number)}/>}
           </>
         );
 
@@ -2296,6 +2337,7 @@ function VerseFlow({
         // invisible against the light background).
         const baseBg = isSelected
           ? `${colors.ink}2E`
+          : v.number === speakingVerse ? speakingFill
           : brushLines.length ? "transparent" : v.highlight?.fill ?? "transparent";
 
         // Branch the wrapper element instead of computing a union
@@ -2836,7 +2878,7 @@ function ReaderPageView({
     >
       {vertical && <Text style={{ color: colors.inkMuted, fontSize: 12, fontWeight: "600", marginBottom: 22 }}>{bookName} {chapter}:{pageVerses[0]?.number}{pageVerses.length > 1 ? `–${pageVerses[pageVerses.length - 1]?.number}` : ""}</Text>}
       {isFirst && !vertical ? (
-        <ChapterHeading bookId={bookId} bookName={bookName} chapter={chapter} scale={scale} />
+        <ChapterHeading bookId={bookId} bookName={bookName} chapter={chapter} scale={scale} verses={verses} />
       ) : null}
       <VerseFlow
         verses={pageVerses}
@@ -2863,26 +2905,66 @@ function ReaderPageView({
   );
 }
 
+/**
+ * Under a verse that holds a Bible Moment: its painting in a circle and a line. Before it's collected
+ * it invites a tap; after, it quietly remembers. Inline in the verse text so pagination measures it.
+ */
+function MomentChip({ moment, collected, lineHeight, onPress }: { moment: BibleMoment; collected: boolean; lineHeight: number; onPress: () => void }) {
+  const colors = useColors();
+  const scheme = useResolvedScheme();
+  const art = getBibleMomentArt(moment.id);
+  const cat = MOMENT_CATEGORIES[moment.category];
+  const h = Math.min(30, lineHeight - 2);
+  return <Text>{"\n"}<View style={{ height: lineHeight, justifyContent: "center" }}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={collected ? `${moment.title}, in your moments` : `A Bible Moment, ${moment.title}. Tap to collect`} hitSlop={6}
+      style={{ height: h, borderRadius: h / 2, flexDirection: "row", alignItems: "center", gap: 7, paddingLeft: 3, paddingRight: 11, alignSelf: "flex-start",
+        backgroundColor: collected ? `${colors.ink}12` : scheme === "dark" ? mixHex(cat.tint, colors.bg, .45) : `${cat.light}1F`, borderWidth: collected ? 0 : StyleSheet.hairlineWidth, borderColor: `${scheme === "dark" ? cat.dark : cat.light}66` }}>
+      <View style={{ width: h - 6, height: h - 6, borderRadius: (h - 6) / 2, overflow: "visible" }}>
+        {art && <ExpoImage source={art} contentFit="cover" style={{ width: h - 6, height: h - 6, borderRadius: (h - 6) / 2, borderWidth: collected ? 0 : 1.5, borderColor: scheme === "dark" ? cat.dark : cat.light }}/>}
+        {collected && <View style={{ position: "absolute", right: -3, bottom: -3, width: 13, height: 13, borderRadius: 7, backgroundColor: colors.ink, alignItems: "center", justifyContent: "center" }}><SFSymbol name="checkmark" size={7} weight="black" color={colors.bg}/></View>}
+      </View>
+      <Text style={{ fontFamily: "System", fontSize: 13, fontWeight: "800", color: collected ? colors.inkSecondary : scheme === "dark" ? "#FFE3EA" : cat.light }}>{collected ? `${moment.title} · in your moments` : "A Bible Moment · tap to collect"}</Text>
+    </Pressable>
+  </View></Text>;
+}
+
+const mixHex = (a: string, b: string, t: number) => { const h = (x: string) => [1, 3, 5].map(i => parseInt(x.slice(i, i + 2), 16)); const x = h(a), y = h(b); return "#" + x.map((v, i) => Math.round(v + (y[i]! - v) * t).toString(16).padStart(2, "0")).join(""); };
+
 function ChapterHeading({
   bookId,
   bookName,
   chapter,
   scale,
+  verses,
 }: {
   bookId: string;
   bookName: string;
   chapter: number;
   scale: number;
+  verses?: { text: string }[];
 }) {
   const colors = useColors();
   const { width, fontScale } = useWindowDimensions();
   const k = Math.sqrt(scale);
-  return <View accessibilityRole="header" accessibilityLabel={`${bookName} ${chapter}: ${getChapterTitle(bookId, chapter)}`} style={{ height: chapterHeadingHeight(bookId, chapter, width - 48, scale, fontScale), flexDirection: "row", alignItems: "center", gap: 16, paddingBottom: 12 }}>
-    <Text accessible={false} style={{ fontSize: 64 * k, lineHeight: 76 * k, fontWeight: "900", letterSpacing: -2, color: colors.ink, fontVariant: ["tabular-nums"] }}>{chapter}</Text>
-    <View style={{ flex: 1, gap: 4 }}>
-      <Text accessible={false} style={{ fontSize: 11, lineHeight: 15, fontWeight: "800", letterSpacing: 1.1, textTransform: "uppercase", color: colors.inkMuted }}>{bookName}</Text>
-      <Text accessible={false} style={{ fontSize: 17 * k, lineHeight: 23 * k, fontWeight: "800", color: colors.ink }}>{getChapterTitle(bookId, chapter)}</Text>
+  const { main, sub } = splitChapterTitle(bookId, chapter);
+  const art = chapterOpenerArt(bookId, chapter);
+  const minutes = verses ? Math.max(1, Math.round(verses.reduce((n, v) => n + v.text.split(/\s+/).length, 0) / 200)) : null;
+  // The painting opens the chapter, fading into the page; the number sits on the seam, then the title.
+  return <View accessibilityRole="header" accessibilityLabel={`${bookName} ${chapter}: ${getChapterTitle(bookId, chapter)}`} style={{ height: chapterHeadingHeight(bookId, chapter, width - 48, scale, fontScale) }}>
+    {art ? <View pointerEvents="none" style={{ height: CHAPTER_ART_HEIGHT, marginTop: -16, marginHorizontal: -24, overflow: "hidden" }}>
+      <ExpoImage source={art} contentFit="cover" contentPosition="center" style={StyleSheet.absoluteFill} transition={200}/>
+      <ReaderMaterialGradient colors={[colors.bg, `${colors.bg}00`, `${colors.bg}33`, colors.bg]} locations={[0, .38, .66, 1]} style={StyleSheet.absoluteFill}/>
+    </View> : null}
+    <View style={{ marginTop: art ? -52 : 12, flexDirection: "row", alignItems: "flex-end", gap: 14 }}>
+      <Text accessible={false} allowFontScaling style={{ fontSize: 92 * k, lineHeight: 116 * k, fontWeight: "900", letterSpacing: -4, color: colors.ink, fontVariant: ["tabular-nums"] }}>{chapter}</Text>
+      <View style={{ flex: 1, paddingBottom: 10 * k, gap: 3 }}>
+        <Text accessible={false} numberOfLines={1} style={{ fontSize: 12, lineHeight: 15, fontWeight: "800", letterSpacing: 1, textTransform: "uppercase", color: colors.inkSubtle }}>{bookName} · Chapter {chapter}</Text>
+        {verses && <Text accessible={false} numberOfLines={1} style={{ fontSize: 13, lineHeight: 17, fontWeight: "700", color: colors.inkSubtle }}>{verses.length} verses · about {minutes} min</Text>}
+      </View>
     </View>
+    <Text accessible={false} style={{ marginTop: 12, fontSize: 30 * k, lineHeight: 40 * k, fontWeight: "900", letterSpacing: -.9, color: colors.ink }}>{main}</Text>
+    {sub && <Text accessible={false} style={{ marginTop: 6, fontSize: 16 * k, lineHeight: 22 * k, fontWeight: "700", color: colors.inkSecondary }}>{sub}</Text>}
+    <View style={{ height: 1, backgroundColor: colors.border, marginTop: 18 }}/>
   </View>;
 }
 
@@ -2950,6 +3032,11 @@ function EndMatterPage({
   const [advancing, setAdvancing] = useState(false);
   const nextBook = next ? findBookById(next.bookId) : null;
   const prevBook = prev ? findBookById(prev.bookId) : null;
+  const { ids: collectedIds } = useBibleMomentCollection();
+  const foundHere = BIBLE_MOMENTS.filter(m => m.bookId === book.id && m.chapter === chapter && collectedIds.includes(m.id));
+  const nextLook = next ? chapterLook(next.bookId, next.chapter) : chapterLook(book.id, chapter);
+  const nextTitle = next ? splitChapterTitle(next.bookId, next.chapter) : { main: "", sub: null };
+  const nextTone = { deep: mixHex(nextLook.color, "#000000", .55), t1: mixHex("#FFFFFF", nextLook.color, .1), t2: mixHex("#FFFFFF", nextLook.color, .38) };
 
   // Resolve CTA copy from the 4 states above. Kept as plain locals
   // (not a switch) so each branch's label + sublabel sit next to
@@ -3005,86 +3092,40 @@ function EndMatterPage({
       }}
       showsVerticalScrollIndicator={false}
     >
-      <View className="items-center pt-6 pb-8">
-        <Text
-          className="text-[11px] tracking-[1px] uppercase"
-          style={{
-            fontFamily: "System",
-            fontWeight: "700",
-            color: alreadyRead ? colors.inkMuted : colors.inkSubtle,
-          }}
-        >
-          {alreadyRead ? "Chapter complete" : "End of chapter"}
-        </Text>
-        <Text
-          className="text-ink mt-3"
-          style={[
-            systemText.largeTitle,
-            { fontWeight: "800" },
-          ]}
-        >
-          {book.name} {chapter}
-        </Text>
-        <ChapterOrnament />
+      {/* The chapter, done: what you found in it, then the next chapter wearing its own painting. */}
+      <View style={{ alignItems: "center", paddingTop: 24, paddingBottom: 26 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 7, height: 30, paddingHorizontal: 13, borderRadius: 15, backgroundColor: `${colors.ink}12` }}>
+          <SFSymbol name={alreadyRead ? "checkmark" : "sparkle"} size={12} color={colors.inkMuted}/>
+          <Text style={{ fontSize: 13, fontWeight: "800", color: colors.inkMuted }}>{alreadyRead ? "Chapter read" : "End of chapter"}</Text>
+        </View>
+        <Text accessibilityRole="header" style={{ marginTop: 14, fontSize: 44, lineHeight: 46, fontWeight: "900", letterSpacing: -1.6, color: colors.ink, textAlign: "center" }}>{book.name} {chapter}, done.</Text>
+        {foundHere.length > 0 && <Text style={{ marginTop: 8, fontSize: 15, lineHeight: 21, fontWeight: "700", color: colors.inkSecondary, textAlign: "center" }}>
+          You collected <Text style={{ fontWeight: "900", color: "#FFC2CF" }}>{foundHere.map(m => m.title).join(" and ")}</Text> on the way.
+        </Text>}
       </View>
 
-      <Pressable
-        onPress={handlePrimary}
-        disabled={advancing}
-        accessibilityRole="button"
-        accessibilityLabel={
-          showFreshConfirm ? "Marked as read, advancing" : primaryLabel
-        }
-        style={({ pressed }) => ({
-          backgroundColor: colors.primary,
-          borderRadius: 18,
-          paddingVertical: 16,
-          paddingHorizontal: 24,
-          alignItems: "center",
-          justifyContent: "center",
-          opacity: pressed ? 0.9 : advancing ? 0.92 : 1,
-          shadowColor: "#000000",
-          shadowOpacity: 0.35,
-          shadowRadius: 18,
-          shadowOffset: { width: 0, height: 10 },
-        })}
-      >
-        {showFreshConfirm ? (
-          <View className="flex-row items-center">
-            <PrimaryCheckIcon color={colors.primaryFg} />
-            <Text
-              style={[{ color: colors.primaryFg, marginLeft: 8 }, buttonStyles.label]}
-            >
-              Marked as Read
-            </Text>
+      {next && nextBook ? (
+        <Pressable onPress={handlePrimary} disabled={advancing} accessibilityRole="button" accessibilityLabel={`${showFreshConfirm ? "Marked as read. " : ""}Keep reading, ${nextBook.name} ${next.chapter}, ${nextTitle.main}`}
+          style={{ height: 300, borderRadius: 30, borderCurve: "continuous", overflow: "hidden", backgroundColor: nextTone.deep, boxShadow: `0 26px 50px -24px ${nextTone.deep}, 0 0 0 1px ${nextLook.color}66` }}>
+          {nextLook.art && <ExpoImage source={nextLook.art} contentFit="cover" style={StyleSheet.absoluteFill}/>}
+          <ReaderMaterialGradient colors={[`${nextTone.deep}00`, `${nextTone.deep}00`, nextTone.deep]} locations={[0, .3, .82]} style={StyleSheet.absoluteFill}/>
+          <View style={{ position: "absolute", left: 20, right: 20, bottom: 18 }}>
+            <Text style={{ fontSize: 12, fontWeight: "800", letterSpacing: 1, color: nextTone.t2, textTransform: "uppercase" }}>Next · {nextBook.name} {next.chapter}</Text>
+            <Text numberOfLines={2} style={{ marginTop: 4, fontSize: 26, lineHeight: 29, fontWeight: "900", letterSpacing: -.7, color: nextTone.t1 }}>{nextTitle.main}</Text>
+            <View style={{ marginTop: 14, flexDirection: "row", alignItems: "center", justifyContent: "flex-end" }}>
+              <View style={{ height: 46, paddingHorizontal: 20, borderRadius: 23, backgroundColor: "#FFFFFF", flexDirection: "row", alignItems: "center", gap: 6 }}>
+                {showFreshConfirm ? <PrimaryCheckIcon color={nextTone.deep} /> : null}
+                <Text style={{ fontSize: 15, fontWeight: "800", color: nextTone.deep }}>{showFreshConfirm ? "Marked as read" : "Keep reading"}</Text>
+                {!showFreshConfirm && <SFSymbol name="chevron.right" size={12} weight="bold" color={nextTone.deep}/>}
+              </View>
+            </View>
           </View>
-        ) : (
-          <>
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "700",
-                color: colors.primaryFg,
-                fontSize: 17,
-              }}
-            >
-              {primaryLabel}
-            </Text>
-            <Text
-              style={{
-                fontFamily: "System",
-                fontWeight: "500",
-                color: colors.primaryFg,
-                fontSize: 12,
-                marginTop: 4,
-                opacity: 0.65,
-              }}
-            >
-              {primarySublabel}
-            </Text>
-          </>
-        )}
-      </Pressable>
+        </Pressable>
+      ) : (
+        <Pressable onPress={handlePrimary} disabled={advancing} accessibilityRole="button" style={{ height: 54, borderRadius: 27, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ fontSize: 17, fontWeight: "800", color: colors.bg }}>{showFreshConfirm ? "Marked as read" : primaryLabel}</Text>
+        </Pressable>
+      )}
 
       {!alreadyRead && (
         <Text
@@ -3534,8 +3575,9 @@ function ReaderToolbar({
   const isLight = scheme === "light";
   const { readingLayout, setReadingLayout } = usePreferences();
   const pendingSettingsAction = useRef<"audio" | "translation" | null>(null);
+  // On dark paper the sheets wear the chapter's colour, like the page behind them.
   const settingsPalette = tone === "dark"
-    ? { bg: "#201C18", ink: "#FBF1E3", muted: "#C1AC94", control: "#34312B", line: "#FFFFFF16" }
+    ? { bg: colors.surface, ink: colors.ink, muted: colors.inkSecondary, control: `${colors.ink}14`, line: colors.border }
     : tone === "sepia"
     ? { bg: "#EAD8B8", ink: "#392C20", muted: "#766046", control: "#DCC6A2", line: "#49301B28" }
     : { bg: "#FAF2E4", ink: "#32261F", muted: "#796654", control: "#E7DECF", line: "#49301B20" };
@@ -3646,10 +3688,9 @@ function ReaderToolbar({
               </Pressable>
             </View>
           </View>
-          <View style={{ width: 96, flexDirection: "row", gap: 8, alignItems: "center" }}>
-          <View ref={pocketRef} collapsable={false}>
-            <ReaderMomentPocket onPress={onMoments} arrival={momentArrival} collecting={collecting}/>
-          </View>
+          <View style={{ width: 96, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "flex-end" }}>
+          {/* Moments now arrive at the verse and the chapter's end; the pocket stays as an anchor only. */}
+          <View ref={pocketRef} collapsable={false}/>
           <Pressable accessibilityRole="button" accessibilityLabel="Reading settings" onPress={() => { setDraftTextSize(textSizeId); setTextSizeOpen(true); }} style={{ width: 44, height: 44, borderRadius: 22, borderCurve: "continuous", borderWidth: StyleSheet.hairlineWidth, borderColor: isLight ? "#D3C4B2" : colors.border, backgroundColor: isLight ? "#EDE3D6" : colors.surface, alignItems: "center", justifyContent: "center" }}>
             <Text style={{ color: colors.ink, fontSize: 15, fontWeight: "900" }}>Aa</Text>
           </Pressable>
@@ -3689,42 +3730,61 @@ function ReaderToolbar({
         detents={["auto"]}
         grabber
       >
-        <View style={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 32 }}>
-          <View style={{ marginBottom: sheetSpace.section }}><SheetHeading title="Read your way" onDone={() => setTextSizeOpen(false)} ink={settingsPalette.ink} background={settingsPalette.bg}/></View>
-          <View style={{ flexDirection: "row", gap: 10 }}>
+        <View style={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 28 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <Text accessibilityRole="header" style={{ fontSize: 24, fontWeight: "900", letterSpacing: -.5, color: settingsPalette.ink }}>Read your way</Text>
+            <Pressable onPress={() => setTextSizeOpen(false)} accessibilityRole="button" style={{ height: 40, paddingHorizontal: 18, borderRadius: 20, backgroundColor: tone === "dark" ? "#FFFFFF" : settingsPalette.ink, justifyContent: "center" }}><Text style={{ fontSize: 15, fontWeight: "800", color: tone === "dark" ? colors.bg : settingsPalette.bg }}>Done</Text></Pressable>
+          </View>
+          {/* A slice of the page at the size and paper you're choosing; it changes as you do. */}
+          {(() => {
+            const paper = tone === "dark" ? colors.bg : tone === "sepia" ? "#F2E4CC" : "#FFFBF4";
+            const ink = tone === "dark" ? colors.ink : tone === "sepia" ? "#34281E" : "#30271F";
+            const k = findTextSize(draftTextSize).scale;
+            return <View accessible accessibilityLabel="Preview of the page" style={{ marginTop: 16, height: 118, borderRadius: 22, borderCurve: "continuous", overflow: "hidden", backgroundColor: paper, borderWidth: StyleSheet.hairlineWidth, borderColor: settingsPalette.line, paddingHorizontal: 18, paddingVertical: 14 }}>
+              <Text style={{ fontFamily: NEW_YORK, fontSize: 18 * k, lineHeight: 30 * k, color: ink, paddingRight: 6 }}><Text style={{ fontSize: 11, fontWeight: "800", color: tone === "dark" ? colors.inkSubtle : "#8A7359" }}>16  </Text>For God so loved the world, that he gave his one and only Son, that whoever believes in him should not perish</Text>
+              <ReaderMaterialGradient pointerEvents="none" colors={[`${paper}00`, paper]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 40 }}/>
+            </View>;
+          })()}
+          <View style={{ marginTop: 16, flexDirection: "row", gap: 4, padding: 4, borderRadius: 22, borderCurve: "continuous", backgroundColor: settingsPalette.control }}>
             {([
-              { title: "Read", detail: "Page by page", icon: "book", selected: readingLayout === "pages", action: () => { setReadingLayout("pages"); setTextSizeOpen(false); } },
-              { title: "Scroll", detail: "One verse at a time", icon: "arrow.up.arrow.down", selected: readingLayout !== "pages", action: () => { setReadingLayout("verse"); setTextSizeOpen(false); } },
-              { title: "Listen", detail: "Read aloud", icon: "headphones", selected: false, action: () => { pendingSettingsAction.current = "audio"; setTextSizeOpen(false); } },
-            ] as const).map(mode => <Pressable key={mode.title} accessibilityRole="button" accessibilityLabel={`${mode.title} reading mode`} accessibilityState={{ selected: mode.selected }} onPress={() => { haptics.tick(); mode.action(); }} style={{ flex: 1, minHeight: 116, padding: 12, gap: 8, borderRadius: 16, borderCurve: "continuous", borderWidth: 1.5, borderColor: mode.selected ? settingsPalette.ink : settingsPalette.line, backgroundColor: mode.selected ? settingsPalette.control : "transparent" }}>
-              <SFSymbol name={mode.icon} size={21} color={mode.selected ? settingsPalette.ink : settingsPalette.muted}/>
-              <View style={{ gap: 4 }}><Text style={[buttonStyles.compactLabel, { textAlign: "left", color: settingsPalette.ink }]}>{mode.title}</Text><Text style={[sheetText.metadata, { fontSize: 12, lineHeight: 17, color: settingsPalette.muted }]}>{mode.detail}</Text></View>
-            </Pressable>)}
+              { title: "Pages", icon: "book", selected: readingLayout === "pages", action: () => { setReadingLayout("pages"); setTextSizeOpen(false); } },
+              { title: "Scroll", icon: "arrow.up.arrow.down", selected: readingLayout !== "pages", action: () => { setReadingLayout("verse"); setTextSizeOpen(false); } },
+              { title: "Listen", icon: "headphones", selected: false, action: () => { pendingSettingsAction.current = "audio"; setTextSizeOpen(false); } },
+            ] as const).map(mode => {
+              const onBg = tone === "dark" ? "#FFFFFF" : settingsPalette.ink, onInk = tone === "dark" ? colors.bg : settingsPalette.bg;
+              return <Pressable key={mode.title} accessibilityRole="button" accessibilityLabel={`${mode.title} reading mode`} accessibilityState={{ selected: mode.selected }} onPress={() => { haptics.tick(); mode.action(); }}
+                style={{ flex: 1, height: 52, borderRadius: 18, borderCurve: "continuous", alignItems: "center", justifyContent: "center", gap: 2, backgroundColor: mode.selected ? onBg : "transparent" }}>
+                <SFSymbol name={mode.icon} size={16} color={mode.selected ? onInk : settingsPalette.muted}/>
+                <Text style={{ fontSize: 14, fontWeight: "800", color: mode.selected ? onInk : settingsPalette.muted }}>{mode.title}</Text>
+              </Pressable>;
+            })}
           </View>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 24, marginBottom: 8 }}>
-            <Text style={[sheetText.section, { color: settingsPalette.muted }]}>Text size</Text>
-            <Text style={[sheetText.section, { color: settingsPalette.muted }]}>{TEXT_SIZES.find(s => s.id === draftTextSize)?.name}</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 8, minHeight: 54, borderRadius: 16, borderCurve: "continuous", backgroundColor: settingsPalette.control }}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Smaller text" onPress={() => setDraftTextSize(TEXT_SIZES[Math.max(0, TEXT_SIZES.findIndex(s => s.id === draftTextSize) - 1)].id)} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><Text style={{ color: settingsPalette.ink, fontSize: 17 }}>A</Text></Pressable>
+          <View style={{ marginTop: 14, flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Smaller text" onPress={() => setDraftTextSize(TEXT_SIZES[Math.max(0, TEXT_SIZES.findIndex(s => s.id === draftTextSize) - 1)].id)} style={{ width: 40, height: 44, alignItems: "center", justifyContent: "center" }}><Text style={{ color: settingsPalette.muted, fontSize: 15, fontWeight: "800" }}>A</Text></Pressable>
             <Host style={{ flex: 1, height: 44 }} colorScheme={scheme}>
               <ExpoUISlider min={0} max={TEXT_SIZES.length - 1} steps={TEXT_SIZES.length - 2} value={Math.max(0, TEXT_SIZES.findIndex(s => s.id === draftTextSize))} color={settingsPalette.ink} onValueChange={value => { const next = TEXT_SIZES[Math.round(value)]; if (next && next.id !== draftTextSize) { haptics.tick(); setDraftTextSize(next.id); } }}/>
             </Host>
-            <Pressable accessibilityRole="button" accessibilityLabel="Larger text" onPress={() => setDraftTextSize(TEXT_SIZES[Math.min(TEXT_SIZES.length - 1, TEXT_SIZES.findIndex(s => s.id === draftTextSize) + 1)].id)} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><Text style={{ color: settingsPalette.ink, fontSize: 25 }}>A</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Larger text" onPress={() => setDraftTextSize(TEXT_SIZES[Math.min(TEXT_SIZES.length - 1, TEXT_SIZES.findIndex(s => s.id === draftTextSize) + 1)].id)} style={{ width: 40, height: 44, alignItems: "center", justifyContent: "center" }}><Text style={{ color: settingsPalette.muted, fontSize: 24, fontWeight: "800" }}>A</Text></Pressable>
           </View>
-          <Text style={[sheetText.section, { color: settingsPalette.muted, marginTop: 24, marginBottom: 12 }]}>Page theme</Text>
-          <View style={{ flexDirection: "row", gap: 10 }}>
+          <View style={{ marginTop: 14, flexDirection: "row", gap: 10 }}>
             {([
-              { id: "light", label: "Light", bg: "#FFFAF1", ink: "#32261F" },
-              { id: "sepia", label: "Sepia", bg: "#DAC29D", ink: "#392C20" },
-              { id: "dark", label: "Dark", bg: "#302923", ink: "#FFF4E3" },
-            ] as const).map(option => <Pressable key={option.id} accessibilityRole="button" accessibilityLabel={`${option.label} appearance`} accessibilityState={{ selected: tone === option.id }} onPress={() => { haptics.tick(); setTone(option.id); }} style={{ flex: 1, borderRadius: 18, borderCurve: "continuous", padding: 3, borderWidth: 2, borderColor: tone === option.id ? settingsPalette.ink : "transparent" }}>
-              <View style={{ minHeight: 50, borderRadius: 13, borderCurve: "continuous", backgroundColor: option.bg, alignItems: "center", justifyContent: "center" }}><Text style={[buttonStyles.compactLabel, { color: option.ink }]}>{option.label}</Text></View>
-            </Pressable>)}
+              { id: "light", label: "Light", bg: "#FFFBF4", ink: "#30271F", sub: "#746758" },
+              { id: "sepia", label: "Sepia", bg: "#F2E4CC", ink: "#34281E", sub: "#6E5A45" },
+              { id: "dark", label: "Dark", bg: tone === "dark" ? colors.bg : "#1A1830", ink: tone === "dark" ? colors.ink : "#E8E6F5", sub: tone === "dark" ? colors.inkSecondary : "#B7B3D6" },
+            ] as const).map(option => {
+              const on = tone === option.id;
+              return <Pressable key={option.id} accessibilityRole="button" accessibilityLabel={`${option.label} page`} accessibilityState={{ selected: on }} onPress={() => { haptics.tick(); setTone(option.id); }}
+                style={{ flex: 1, height: 72, borderRadius: 18, borderCurve: "continuous", backgroundColor: option.bg, alignItems: "center", justifyContent: "center", gap: 2,
+                  borderWidth: on ? 3 : StyleSheet.hairlineWidth, borderColor: on ? (tone === "dark" ? "#FFFFFF" : settingsPalette.ink) : settingsPalette.line }}>
+                <Text style={{ fontSize: 20, fontWeight: "800", color: option.ink }}>Aa</Text>
+                <Text style={{ fontSize: 12, fontWeight: "800", color: option.sub }}>{option.label}</Text>
+              </Pressable>;
+            })}
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel={`Translation, ${translation.fullName}`} onPress={() => { pendingSettingsAction.current = "translation"; setTextSizeOpen(false); }} style={{ marginTop: 24, paddingTop: 20, minHeight: 54, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: settingsPalette.line, flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <Text style={{ color: settingsPalette.ink, fontSize: 15 }}>Translation</Text>
-            <Text numberOfLines={1} style={{ flex: 1, textAlign: "right", color: settingsPalette.muted, fontSize: 13 }}>{translation.fullName} · {translation.tag}</Text>
+          {tone === "dark" && <Text style={{ marginTop: 10, fontSize: 12, lineHeight: 16, fontWeight: "700", color: settingsPalette.muted }}>Dark wears each chapter’s colour.</Text>}
+          <Pressable accessibilityRole="button" accessibilityLabel={`Translation, ${translation.fullName}`} onPress={() => { pendingSettingsAction.current = "translation"; setTextSizeOpen(false); }} style={{ marginTop: 14, minHeight: 56, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: settingsPalette.line, flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Text style={{ color: settingsPalette.ink, fontSize: 15, fontWeight: "800" }}>Translation</Text>
+            <Text numberOfLines={1} style={{ flex: 1, textAlign: "right", color: settingsPalette.muted, fontSize: 14, fontWeight: "700" }}>{translation.fullName}</Text>
             <SFSymbol name="chevron.right" size={11} color={settingsPalette.muted}/>
           </Pressable>
         </View>
@@ -4271,7 +4331,6 @@ function ContentsModal({
   bookName,
   totalChapters,
   currentChapter,
-  chapterPageCounts,
   hasReadChapter,
   onSelect,
   onExpress,
@@ -4288,51 +4347,63 @@ function ContentsModal({
   onSelect: (chapter: number) => void;
   onExpress?: () => void;
 }) {
+  // A table of contents: every chapter with its title, ticks for what you've read,
+  // the painting of any Bible Moment in it, and where you are, in the chapter's colours.
   const { tone } = useReaderTone();
+  const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { width, fontScale } = useWindowDimensions();
-  const columns = Math.max(2, Math.min(5, Math.floor((width - 48 + 8) / (48 * Math.max(1, fontScale) + 8))));
-  const palette = tone === "dark"
-    ? { bg: "#201C18", ink: "#FBF1E3", muted: "#C1AC94", tile: "#29231D", selected: "#352A20", border: "#FFFFFF12" }
+  const dark = tone === "dark";
+  const palette = dark
+    ? { bg: colors.surface, ink: colors.ink, muted: colors.inkSecondary, faint: colors.inkSubtle, tick: `${colors.ink}29`, here: mixHex(chapterLook(bookId, currentChapter).color, colors.surface, .45), hereLine: `${colors.ink}59`, button: "#FFFFFF", buttonInk: colors.bg }
     : tone === "sepia"
-    ? { bg: "#EAD8B8", ink: "#392C20", muted: "#766046", tile: "#E2CEAC", selected: "#D5BB92", border: "#49301B20" }
-    : { bg: "#FAF2E4", ink: "#32261F", muted: "#796654", tile: "#F2E8D9", selected: "#E6D5BD", border: "#49301B16" };
-  const rows = Array.from({ length: Math.ceil(totalChapters / columns) }, (_, row) =>
-    Array.from({ length: columns }, (_, column) => row * columns + column + 1));
+    ? { bg: "#FAEFDD", ink: "#34281E", muted: "#6E5A45", faint: "#8A7359", tick: "#34281E1F", here: "#EAD8B8", hereLine: "#34281E40", button: "#34281E", buttonInk: "#FAEFDD" }
+    : { bg: "#FFFBF4", ink: "#30271F", muted: "#6E6152", faint: "#8E8070", tick: "#30271F1A", here: "#F1E6D6", hereLine: "#30271F33", button: "#30271F", buttonInk: "#FFFBF4" };
+  const readCount = Array.from({ length: totalChapters }, (_, k) => hasReadChapter(bookId, k + 1)).filter(Boolean).length;
+  const cover = paintedCover(bookId)?.source;
+  const ROW = 60;
   return (
     <ReaderSheet
       visible={visible}
       onClose={onClose}
-      detents={[0.6, 1]}
+      detents={[0.7, 1]}
       backgroundColor={palette.bg}
       scrollable
       header={
-        <View style={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 24, backgroundColor: palette.bg }}>
-          <SheetHeading title={bookName} onDone={onClose} ink={palette.ink} background={palette.bg}/>
-          <Text style={[sheetText.supporting, { color: palette.muted, marginTop: 24 }]}>Choose a chapter</Text>
+        <View style={{ paddingHorizontal: 20, paddingTop: 28, paddingBottom: 12, backgroundColor: palette.bg }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+            {cover && <ExpoImage source={cover} contentFit="cover" style={{ width: 48, height: 64, borderRadius: 12 }}/>}
+            <View style={{ flex: 1 }}>
+              <Text accessibilityRole="header" style={{ fontSize: 28, lineHeight: 31, fontWeight: "900", letterSpacing: -.8, color: palette.ink }}>{bookName}</Text>
+              <Text style={{ marginTop: 3, fontSize: 14, fontWeight: "700", color: palette.faint }}>{readCount} of {totalChapters} read</Text>
+            </View>
+            <Pressable onPress={onClose} accessibilityRole="button" style={{ height: 40, paddingHorizontal: 18, borderRadius: 20, backgroundColor: palette.button, justifyContent: "center" }}><Text style={{ fontSize: 15, fontWeight: "800", color: palette.buttonInk }}>Done</Text></Pressable>
+          </View>
+          <View style={{ marginTop: 14, height: 4, borderRadius: 2, backgroundColor: palette.tick, overflow: "hidden" }}><View style={{ width: `${readCount / Math.max(1, totalChapters) * 100}%`, height: 4, backgroundColor: palette.ink }}/></View>
         </View>
       }
     >
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: Math.max(30, insets.bottom + 16), gap: 8 }} showsVerticalScrollIndicator={false}>
-        {rows.map((row, index) => <View key={index} style={{ flexDirection: "row", gap: 8 }}>
-          {row.map(c => {
-            if (c > totalChapters) return <View key={c} style={{ flex: 1 }}/>;
-            const current = c === currentChapter;
-            const read = hasReadChapter(bookId, c);
-            return <Pressable key={c} accessibilityRole="button" accessibilityState={{ selected: current }} accessibilityLabel={`${bookName} chapter ${c}${current ? ", current chapter" : ""}${read ? ", completed" : ""}`} onPress={() => { haptics.soft(); onSelect(c); }} style={{
-              flex: 1, minHeight: 48, paddingVertical: 12, alignItems: "center", justifyContent: "center",
-              borderRadius: 12, borderCurve: "continuous", borderWidth: current ? 1.5 : 1,
-              borderColor: current ? palette.muted : palette.border,
-              backgroundColor: current ? palette.selected : palette.tile,
-            }}>
-              <Text style={{ color: current ? palette.ink : palette.muted, fontSize: 17, fontWeight: current ? "600" : "400", fontVariant: ["tabular-nums"] }}>{c}</Text>
-              {read && <View style={{ position: "absolute", right: 4, top: 4 }}><SFSymbol name="checkmark" size={8} color={tone === "dark" ? "#8BD3AB" : "#287746"}/></View>}
-            </Pressable>;
-          })}
-        </View>)}
-        {onExpress && <Pressable accessibilityRole="button" onPress={onExpress} style={{ minHeight: 44, marginTop: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 }}>
-          <SFSymbol name="bolt" size={15} color={palette.muted}/>
-          <Text style={[{ color: palette.muted }, buttonStyles.textLabel]}>Read Express</Text>
+      <ScrollView contentOffset={{ x: 0, y: Math.max(0, (currentChapter - 3) * ROW) }} contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: Math.max(30, insets.bottom + 16) }} showsVerticalScrollIndicator={false}>
+        {Array.from({ length: totalChapters }, (_, k) => k + 1).map(c => {
+          const current = c === currentChapter, read = hasReadChapter(bookId, c);
+          const moment = BIBLE_MOMENTS.find(m => m.bookId === bookId && m.chapter === c);
+          const art = moment ? getBibleMomentArt(moment.id) : null;
+          const title = splitChapterTitle(bookId, c).main;
+          return <Pressable key={c} accessibilityRole="button" accessibilityState={{ selected: current }} accessibilityLabel={`Chapter ${c}, ${title}${current ? ", you're here" : ""}${read ? ", read" : ""}`}
+            onPress={() => { haptics.soft(); onSelect(c); }}
+            style={{ minHeight: ROW, paddingHorizontal: 12, borderRadius: 18, borderCurve: "continuous", flexDirection: "row", alignItems: "center", gap: 14,
+              backgroundColor: current ? palette.here : "transparent", borderWidth: current ? 1.5 : 0, borderColor: palette.hereLine }}>
+            <Text style={{ width: 36, textAlign: "center", fontSize: 22, fontWeight: "900", letterSpacing: -.5, color: current ? palette.ink : palette.muted, fontVariant: ["tabular-nums"] }}>{c}</Text>
+            <View style={{ flex: 1, paddingVertical: 10 }}>
+              <Text numberOfLines={2} style={{ fontSize: 15, lineHeight: 20, fontWeight: "700", color: read && !current ? palette.muted : palette.ink }}>{title}</Text>
+              {current && <Text style={{ marginTop: 2, fontSize: 12, fontWeight: "800", color: palette.faint }}>You’re here</Text>}
+            </View>
+            {art && <ExpoImage source={art} contentFit="cover" style={{ width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: dark ? MOMENT_CATEGORIES[moment!.category].dark : MOMENT_CATEGORIES[moment!.category].light }}/>}
+            {read ? <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: palette.tick, alignItems: "center", justifyContent: "center" }}><SFSymbol name="checkmark" size={10} weight="bold" color={palette.ink}/></View> : <View style={{ width: 22 }}/>}
+          </Pressable>;
+        })}
+        {onExpress && <Pressable accessibilityRole="button" onPress={onExpress} style={{ marginTop: 14, marginHorizontal: 8, height: 50, borderRadius: 25, backgroundColor: palette.tick, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <SFSymbol name="bolt" size={15} color={palette.ink}/>
+          <Text style={{ fontSize: 15, fontWeight: "800", color: palette.ink }}>Read Express</Text>
         </Pressable>}
       </ScrollView>
     </ReaderSheet>

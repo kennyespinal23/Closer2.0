@@ -323,6 +323,12 @@ function AppShell() {
             modal so the close affordance is an X (no
             back chevron) and the screen reads as a stats
             canvas rather than a drill-down. */}
+        {/* Interactive stories: a full-screen web view (app/stories.tsx). It
+            draws its own close button, so it slides up like a separate room. */}
+        <Stack.Screen
+          name="stories"
+          options={{ presentation: "fullScreenModal", animation: "slide_from_bottom", gestureEnabled: false }}
+        />
         <Stack.Screen
           name="rhythm"
           options={{

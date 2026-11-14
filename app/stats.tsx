@@ -68,7 +68,7 @@ export default function StatsScreen() {
           destinations (Notifications, Translation, etc.). */}
       <View className="flex-row items-center px-4 pt-2 pb-3">
         <BubbleBackButton
-          onPress={() => goBackOr(router, "/(tabs)/profile")}
+          onPress={() => goBackOr(router, "/profile")}
         />
         <Text
           className="text-ink text-[17px] flex-1 text-center"

@@ -154,7 +154,7 @@ export default function StudyLandingScreen() {
     //     dismiss settles first.
     router.dismissAll();
     setTimeout(() => {
-      router.push("/(tabs)/library" as never);
+      router.push("/library" as never);
     }, 0);
   };
 

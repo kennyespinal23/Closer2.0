@@ -30,7 +30,7 @@ export default function ExpressScreen() {
   if (!book || !express) return <View style={{ flex: 1, backgroundColor: colors.bg, justifyContent: "center", padding: 28, paddingTop: insets.top }}>
     <Text accessibilityRole="header" style={{ color: colors.ink, fontSize: 26, fontWeight: "700" }}>Read the full story</Text>
     <Text style={{ color: colors.inkMuted, fontSize: 17, lineHeight: 26, marginTop: 12 }}>This book doesn't have an Express version. Its full text is ready to read.</Text>
-    <Pressable accessibilityRole="button" onPress={() => book ? router.replace(`/book/${book.id}/1`) : goBackOr(router, "/(tabs)/library")} style={{ minHeight: 48, justifyContent: "center", marginTop: 24 }}><Text style={[{ color: colors.ink }, buttonStyles.label]}>{book ? "Read full book" : "Back to Bible"}</Text></Pressable>
+    <Pressable accessibilityRole="button" onPress={() => book ? router.replace(`/book/${book.id}/1`) : goBackOr(router, "/library")} style={{ minHeight: 48, justifyContent: "center", marginTop: 24 }}><Text style={[{ color: colors.ink }, buttonStyles.label]}>{book ? "Read full book" : "Back to Bible"}</Text></Pressable>
   </View>;
   return <ExpressReader key={book.id} book={book} express={express} />;
 }

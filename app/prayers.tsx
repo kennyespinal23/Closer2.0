@@ -49,7 +49,7 @@ export default function PrayersScreen() {
     <NightSky fade/>
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: inset.top + 6, paddingHorizontal: 20, paddingBottom: inset.bottom + 48 }}>
       <View style={{ flexDirection: "row", alignItems: "center", height: 48 }}>
-        <Pressable onPress={() => { haptics.soft(); goBackOr(router, "/(tabs)/profile"); }} accessibilityRole="button" accessibilityLabel="Back" style={s.round}><SFSymbol name="chevron.left" size={17} color={NIGHT.moon} weight="bold"/></Pressable>
+        <Pressable onPress={() => { haptics.soft(); goBackOr(router, "/profile"); }} accessibilityRole="button" accessibilityLabel="Back" style={s.round}><SFSymbol name="chevron.left" size={17} color={NIGHT.moon} weight="bold"/></Pressable>
         <View style={{ flex: 1 }}/>
         <Text style={s.kicker}>Your prayers</Text>
       </View>

@@ -3302,7 +3302,7 @@ function Header({
     // would animate forward (slide from the right) — the "opposite
     // direction" mismatch. Fall back to the book detail (or library)
     // only when there's no stack history, e.g. a cold deep link.
-    goBackOr(router, bookId ? `/book/${bookId}` : "/(tabs)/library");
+    goBackOr(router, bookId ? `/book/${bookId}` : "/library");
   };
 
   return (
@@ -4527,7 +4527,7 @@ function NotFound({ message }: { message: string }) {
         <Pressable
           onPress={() => {
             if (router.canGoBack()) router.back();
-            else router.replace("/(tabs)/library");
+            else router.replace("/library");
           }}
           className="mt-6 px-5 py-3 rounded-full bg-primary"
         >

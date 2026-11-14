@@ -9,5 +9,5 @@ export default function DevMomentReveal() {
   const {kind,book,play,detail,moment,collected,roundtrip}=useLocalSearchParams<{kind?:string;book?:string;play?:string;detail?:string;moment?:string;collected?:string;roundtrip?:string}>();
   const router=useRouter(), {enabled}=useDevTools();
   if(!isInternalBuild()&&!enabled)return <View/>;
-  return <BibleMomentReveal key={`${kind}-${book}-${play}-${collected}-${roundtrip}-${moment}`} preview autoPlay={play==='1'} previewDetail={detail==='1'||roundtrip==='1'} previewRoundtrip={roundtrip==='1'} request={{collected:collected==='1',kind:kinds.includes(kind as BibleRevealKind)?kind as BibleRevealKind:'moment',bookId:book??'genesis',moment:BIBLE_MOMENTS.find(item=>item.id===moment)}} onClose={()=>router.canGoBack()?router.back():router.replace('/(tabs)/profile')}/>;
+  return <BibleMomentReveal key={`${kind}-${book}-${play}-${collected}-${roundtrip}-${moment}`} preview autoPlay={play==='1'} previewDetail={detail==='1'||roundtrip==='1'} previewRoundtrip={roundtrip==='1'} request={{collected:collected==='1',kind:kinds.includes(kind as BibleRevealKind)?kind as BibleRevealKind:'moment',bookId:book??'genesis',moment:BIBLE_MOMENTS.find(item=>item.id===moment)}} onClose={()=>router.canGoBack()?router.back():router.replace('/profile')}/>;
 }

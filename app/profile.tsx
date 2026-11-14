@@ -304,8 +304,8 @@ export default function ProfileTabScreen() {
               showDivider
               onPress={() => { haptics.soft(); setReaderTutorialOpen(true); }}
             />
-            <SettingsLinkRow icon={<SFSymbol name="person.2" size={16} color={colors.ink}/>} label="Replay Community tutorial" onPress={() => router.push({ pathname: "/(tabs)/community", params: { tutorial: "community", replay: String(Date.now()) } })} showDivider />
-            <SettingsLinkRow icon={<SFSymbol name="book" size={16} color={colors.ink}/>} label="Replay Study Groups tutorial" onPress={() => router.push({ pathname: "/(tabs)/community", params: { tutorial: "groups", replay: String(Date.now()) } })} showDivider />
+            <SettingsLinkRow icon={<SFSymbol name="person.2" size={16} color={colors.ink}/>} label="Replay Community tutorial" onPress={() => router.push({ pathname: "/community", params: { tutorial: "community", replay: String(Date.now()) } })} showDivider />
+            <SettingsLinkRow icon={<SFSymbol name="book" size={16} color={colors.ink}/>} label="Replay Study Groups tutorial" onPress={() => router.push({ pathname: "/community", params: { tutorial: "groups", replay: String(Date.now()) } })} showDivider />
             <SettingsLinkRow
               icon={
                 <SFSymbol

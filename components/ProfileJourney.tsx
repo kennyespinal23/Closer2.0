@@ -172,7 +172,7 @@ export function ProfileJourney({name,joinedAt,avatar,onAvatar,onSettings}:{name:
       </View>
 
       <View style={[s.rows,{backgroundColor:p.surface},lift]}>
-        {([['bell','#C98A1E','Activity',()=>{haptics.soft();setActivity(true);}],['person.2','#3A2219','Community and study groups',()=>go('/(tabs)/community')]] as [SFSymbolName,string,string,()=>void][]).map(([icon,color,label,onPress],i)=>
+        {([['bell','#C98A1E','Activity',()=>{haptics.soft();setActivity(true);}],['person.2','#3A2219','Community and study groups',()=>go('/community')]] as [SFSymbolName,string,string,()=>void][]).map(([icon,color,label,onPress],i)=>
           <Pressable key={label} accessibilityRole="button" onPress={onPress} style={s.row}>
             {i>0&&<View style={[s.divider,{backgroundColor:p.line}]}/>}
             <View style={[s.ri,{backgroundColor:dark&&color==='#3A2219'?'#5A3526':color}]}><SFSymbol name={icon} size={17} color="#FFF"/></View>

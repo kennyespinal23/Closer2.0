@@ -19,6 +19,7 @@ import {
 } from "@/lib/notifications";
 import { useNotificationDeepLink } from "@/lib/notificationDeepLink";
 import { AuthProvider, useAuth } from "@/state/auth";
+import { useDevRoute } from "@/lib/devRoute";
 import { SubscriptionProvider } from "@/state/subscription";
 import { AnnotationsProvider, useAnnotations } from "@/state/annotations";
 import { CheckInsProvider, useCheckIns } from "@/state/checkIns";
@@ -181,6 +182,12 @@ export default function RootLayout() {
  * the screen background and status bar style flip with the active
  * theme without a re-render of the entire RootLayout.
  */
+/** Development only: lets dev-route.json send the app to a screen (lib/devRoute.ts). */
+function DevRoute() {
+  useDevRoute();
+  return null;
+}
+
 function AppShell() {
   const skyTop = useSkyTop();
   const canvasScheme = useResolvedScheme();
@@ -197,6 +204,7 @@ function AppShell() {
           lib/notificationDeepLink.tsx for the three paths
           this handles (cold / warm / foreground). */}
       <NotificationDeepLinkHandler />
+      <DevRoute />
       <BibleReadingRewards />
       <ScheduledBlockGuard />
       {/* LaunchSplash — orange brand canvas + Closer+ wordmark.
@@ -249,7 +257,7 @@ function AppShell() {
         />
         {/* Profile used to live here as a transparentModal drawer
             launched from the home avatar. It was promoted to a
-            first-class TAB (see app/(tabs)/profile.tsx) when the
+            first-class TAB (see app/profile.tsx) when the
             tab bar was consolidated to Home / Library / Profile,
             so there's no longer a top-level profile route to
             register — the avatar tap on home now switches the
@@ -329,6 +337,11 @@ function AppShell() {
         <Stack.Screen
           name="stories"
           options={{ presentation: "fullScreenModal", animation: "slide_from_bottom", gestureEnabled: false }}
+        />
+        {/* A Closer lesson: the Page prototype in a full-screen web view (app/lesson/[id].tsx). */}
+        <Stack.Screen
+          name="lesson/[id]"
+          options={{ presentation: "fullScreenModal", animation: "fade", gestureEnabled: false }}
         />
         <Stack.Screen
           name="pixel"

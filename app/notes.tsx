@@ -233,7 +233,7 @@ function Header({
       }}
     >
       <BubbleBackButton
-        onPress={() => goBackOr(router, "/(tabs)/profile")}
+        onPress={() => goBackOr(router, "/profile")}
       />
       <Text
         style={[systemText.headline, { flex: 1, textAlign: "center", fontWeight: "700", color: colors.ink }]}

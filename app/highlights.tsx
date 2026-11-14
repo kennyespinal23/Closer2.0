@@ -93,7 +93,7 @@ export default function HighlightsScreen() {
     <ReaderMaterialGradient colors={[t.wash, `${t.page}00`]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 300 }}/>
     <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
       <View style={s.bar}>
-        <BubbleBackButton onPress={() => goBackOr(router, "/(tabs)/profile")}/>
+        <BubbleBackButton onPress={() => goBackOr(router, "/profile")}/>
         {highlights.length > 1 && <Pressable onPress={() => { haptics.tick(); setSort(v => v === "book" ? "newest" : "book"); }} accessibilityRole="button" accessibilityLabel={`Sorted ${sort === "book" ? "by book" : "newest first"}. Change order`} style={[s.sort, { backgroundColor: t.soft }]}>
           <SFSymbol name="arrow.up.arrow.down" size={13} color={t.ink}/>
           <Text style={{ ...uiText.supporting, fontWeight: "800", color: t.ink }}>{sort === "book" ? "By book" : "Newest"}</Text>

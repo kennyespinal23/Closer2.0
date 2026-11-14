@@ -73,7 +73,7 @@ export default function BookOverviewScreen() {
             Head back to the Library and try another.
           </Text>
           <Pressable
-            onPress={() => goBackOr(router, "/(tabs)/library")}
+            onPress={() => goBackOr(router, "/library")}
             className="mt-6 px-5 py-3 rounded-full bg-primary"
             style={{ minHeight: minTouchTarget, justifyContent: "center" }}
           >
@@ -307,7 +307,7 @@ function BookDetail({ book, prepareReader = true }: { book: Book; prepareReader?
       </Animated.View>
       <View style={{ position: "absolute", top: 0, left: 0, right: 0, paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 8, flexDirection: "row", justifyContent: "space-between" }} pointerEvents="box-none">
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg }, headerShade]} />
-        <BubbleBackButton onPress={() => goBackOr(router, "/(tabs)/library")} />
+        <BubbleBackButton onPress={() => goBackOr(router, "/library")} />
         <Animated.View pointerEvents="none" accessibilityElementsHidden={!headerTitleVisible} importantForAccessibility={headerTitleVisible ? "auto" : "no-hide-descendants"} style={[{ position: "absolute", left: 76, right: 76, top: insets.top + 8, height: 48, justifyContent: "center" }, headerTitleStyle]}>
           <Text accessibilityRole="header" numberOfLines={1} ellipsizeMode="tail" maxFontSizeMultiplier={1.4} style={[systemText.headline, { color: colors.ink, textAlign: "center" }]}>{book.name}</Text>
         </Animated.View>
@@ -347,7 +347,7 @@ function NotFoundHeader() {
       }}
     >
       <BubbleBackButton
-        onPress={() => goBackOr(router, "/(tabs)/library")}
+        onPress={() => goBackOr(router, "/library")}
         color={ink}
       />
     </View>

@@ -1,4 +1,3 @@
-import { useResolvedScheme } from "@/state/theme";
 import { View } from "react-native";
 import type {
   ParamListBase,
@@ -6,7 +5,6 @@ import type {
 } from "@react-navigation/native";
 import { withLayoutContext } from "expo-router";
 import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
-import { SkyGradient, useSkyTop } from "@/components/HomeSkyGradient";
 import {
   createNativeBottomTabsNavigator,
   type NativeBottomTabsNavigationEventMap,
@@ -99,94 +97,25 @@ const NativeTabs = withLayoutContext<
  * control everywhere the user navigates.
  */
 export default function TabsLayout() {
-  // Day/night zenith fill so tab swaps never flash black under the sky.
-  const skyTop = useSkyTop();
-  const scheme = useResolvedScheme();
-
-  // Layered structure (back → front):
-  //   1. Outer View with sky-top fill — prevents a black flash
-  //      during scene transitions under the transparent stack.
-  //   2. NativeTabs — the actual native iOS UITabBarController.
-  //      Each tab screen renders directly under it; the native
-  //      bar handles its own safe-area inset automatically.
-  //   3. FocusMiniPlayer — floats above the bar when active.
-  //
-  // FocusMiniPlayer mounting rationale (preserved from the pre-
-  // native-bar build): mounted INSIDE the (tabs) layout (rather
-  // than at the root) so react-native-screens' native view
-  // controllers don't occlude the sibling on iOS.
+  // The Page prototype's home: four tabs on cream, red for the one you're on (closer-page Today · Explore · Saved · You).
   return (
-    <View style={{ flex: 1, backgroundColor: skyTop }}>
-      <SkyGradient />
+    <View style={{ flex: 1, backgroundColor: "#FFF7EB" }}>
       <View style={{ flex: 1 }}>
         <NativeTabs
-          tabBarActiveTintColor={scheme === "dark" ? "#FF6A4F" : "#D9381C"}
-          tabBarInactiveTintColor={scheme === "light" ? "#66584D" : TAB_BAR_INACTIVE}
-          // Force our custom tints onto the iOS 26+ Liquid Glass
-          // tab bar. Without this the package returns nil for the
-          // inactive tint on iOS 26+ (see TabViewProps.swift's
-          // `effectiveInactiveTintColor`), and iOS paints the
-          // inactive labels in its own greige formula tuned for
-          // the glass material — which lands at ~3:1 contrast
-          // against the dark glass, below the HIG AAA bar this
-          // project targets for navigation text. The `baked` mode
-          // applies our tints at draw time so #B5B5B5 actually
-          // reaches the labels.
+          tabBarActiveTintColor="#D92B2F"
+          tabBarInactiveTintColor="#7A847E"
+          // keep our tints on the iOS 26 Liquid Glass bar (see NativeBottomTabsNavigator)
           experimentalBakedTintColors
           hapticFeedbackEnabled
-          // `scrollEdgeAppearance: "transparent"` lets content
-          // bleed under the bar's edge and only paints the bar's
-          // material when there's scrolled content underneath —
-          // matches Health / Fitness / Gentler Streak which all
-          // hide the hairline when content sits flush with the
-          // safe-area inset.
           scrollEdgeAppearance="transparent"
-          // Kill the cross-fade between tabs. With the package
-          // default the UITabBarController plays a 1-frame
-          // crossfade that briefly shows the previous tab's
-          // snapshot on top of the new one — visible to the user
-          // as "I see Library/Profile for a flash when I tap
-          // Home." Apple's first-party Settings / Music / Phone
-          // tab bars don't animate either; tapping a tab is
-          // atomic. Disabling here matches that feel.
+          // tapping a tab is atomic, as in Apple's own apps
           disablePageAnimations
-          // Filled icons with names, from the Closer basics picks.
           labeled
         >
-          <NativeTabs.Screen
-            name="today"
-            options={{
-              title: "Today",
-              sfSymbol: { default: "house.fill", selected: "house.fill" },
-            }}
-          />
-          <NativeTabs.Screen
-            name="library"
-            options={{
-              title: "Bible",
-              sfSymbol: {
-                default: "books.vertical.fill",
-                selected: "books.vertical.fill",
-              },
-            }}
-          />
-          <NativeTabs.Screen
-            name="community"
-            options={{
-              title: "Community",
-              sfSymbol: {
-                default: "person.2.fill",
-                selected: "person.2.fill",
-              },
-            }}
-          />
-          <NativeTabs.Screen
-            name="profile"
-            options={{
-              title: "You",
-              sfSymbol: { default: "person.fill", selected: "person.fill" },
-            }}
-          />
+          <NativeTabs.Screen name="today" options={{ title: "Today", sfSymbol: { default: "house.fill", selected: "house.fill" } }} />
+          <NativeTabs.Screen name="explore" options={{ title: "Explore", sfSymbol: { default: "safari.fill", selected: "safari.fill" } }} />
+          <NativeTabs.Screen name="saved" options={{ title: "Saved", sfSymbol: { default: "bookmark.fill", selected: "bookmark.fill" } }} />
+          <NativeTabs.Screen name="you" options={{ title: "You", sfSymbol: { default: "person.fill", selected: "person.fill" } }} />
         </NativeTabs>
       </View>
       <FocusMiniPlayer />

@@ -6,7 +6,7 @@ import { useResolvedScheme } from "@/state/theme";
 
 /** Shared atmospheric canvas, derived from the library's day/evening palette. */
 export const APP_CANVAS = {
-  light: ["#FBF3EC", "#F1E1D2", "#EBD7C1"],
+  light: ["#FFFFFF", "#FFFFFF", "#FFFFFF"],
   dark: [DARK_CANVAS.background, DARK_CANVAS.background, DARK_CANVAS.background],
 } as const;
 export const SKY_TOP_DAY = APP_CANVAS.light[0];

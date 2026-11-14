@@ -64,6 +64,7 @@ export default function RootLayout() {
     NunitoRegular: require("../assets/fonts/nunito/nunito-400.ttf"),
     NunitoMedium: require("../assets/fonts/nunito/nunito-500.ttf"),
     NunitoSemiBold: require("../assets/fonts/nunito/nunito-600.ttf"),
+    NunitoSemiBoldItalic: require("../assets/fonts/nunito/nunito-600-italic.ttf"),
     NunitoBold: require("../assets/fonts/nunito/nunito-700.ttf"),
     NunitoExtraBold: require("../assets/fonts/nunito/nunito-800.ttf"),
     NunitoBlack: require("../assets/fonts/nunito/nunito-900.ttf"),
@@ -328,6 +329,10 @@ function AppShell() {
         <Stack.Screen
           name="stories"
           options={{ presentation: "fullScreenModal", animation: "slide_from_bottom", gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="pixel"
+          options={{ presentation: "fullScreenModal", animation: "fade", gestureEnabled: false }}
         />
         <Stack.Screen
           name="rhythm"

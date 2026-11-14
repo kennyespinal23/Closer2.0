@@ -150,14 +150,14 @@ export default function TabsLayout() {
           // tab bars don't animate either; tapping a tab is
           // atomic. Disabling here matches that feel.
           disablePageAnimations
-          // Icons only, like the Home design; each tab keeps its title as its VoiceOver label.
-          labeled={false}
+          // Filled icons with names, from the Closer basics picks.
+          labeled
         >
           <NativeTabs.Screen
             name="today"
             options={{
               title: "Today",
-              sfSymbol: { default: "house", selected: "house.fill" },
+              sfSymbol: { default: "house.fill", selected: "house.fill" },
             }}
           />
           <NativeTabs.Screen
@@ -165,7 +165,7 @@ export default function TabsLayout() {
             options={{
               title: "Bible",
               sfSymbol: {
-                default: "books.vertical",
+                default: "books.vertical.fill",
                 selected: "books.vertical.fill",
               },
             }}
@@ -175,7 +175,7 @@ export default function TabsLayout() {
             options={{
               title: "Community",
               sfSymbol: {
-                default: "person.2",
+                default: "person.2.fill",
                 selected: "person.2.fill",
               },
             }}
@@ -183,8 +183,8 @@ export default function TabsLayout() {
           <NativeTabs.Screen
             name="profile"
             options={{
-              title: "Profile",
-              sfSymbol: { default: "person", selected: "person.fill" },
+              title: "You",
+              sfSymbol: { default: "person.fill", selected: "person.fill" },
             }}
           />
         </NativeTabs>

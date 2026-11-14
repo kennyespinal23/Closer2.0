@@ -38,6 +38,14 @@ export const spacing = {
 export type SpacingToken = keyof typeof spacing;
 
 /**
+ * Basics picker (2026-11-09): one corner family and snug spacing.
+ * Cards, rows and boxes use `radius.card`; text boxes `radius.field`;
+ * buttons and chips are full pills. Items on a screen sit `itemGap` apart.
+ */
+export const radius = { card: 24, field: 18, pill: 999 } as const;
+export const itemGap = 10;
+
+/**
  * Named aliases for the primary scale (intent over bare numbers).
  */
 export const space = {

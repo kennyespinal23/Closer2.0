@@ -4,6 +4,7 @@ import { Stack, useRouter } from "expo-router";
 import { FocusMiniPlayer } from "@/components/FocusMiniPlayer";
 import { goBackOr } from "@/lib/navigation";
 import { useColors } from "@/state/theme";
+export { SettingsErrorBoundary as ErrorBoundary } from "@/components/SettingsErrorBoundary";
 
 /**
  * Nested stack for `/settings/*`.

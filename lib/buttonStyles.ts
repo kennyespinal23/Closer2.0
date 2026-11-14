@@ -15,7 +15,7 @@ export const buttonStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: { ...typography.button, fontWeight: '800', lineHeight: 24, letterSpacing: 0, textAlign: 'center', flexShrink: 1 },
+  label: { ...typography.button, fontWeight: '700', lineHeight: 24, letterSpacing: 0, textAlign: 'center', flexShrink: 1 },
   compactLabel: { fontFamily: 'System', fontSize: 15, lineHeight: 20, fontWeight: '700', letterSpacing: 0, textAlign: 'center', flexShrink: 1 },
   textLabel: { fontFamily: 'System', fontSize: 15, lineHeight: 22, fontWeight: '600', letterSpacing: 0, textAlign: 'center', flexShrink: 1 },
 });

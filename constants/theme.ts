@@ -148,12 +148,12 @@ export type ColorPalette = {
   destructive: string;
 };
 
-/** Profile's warm dark canvas is shared by ordinary app screens. */
+/** Deep wine dark canvas (basics picker, 2026-11-09), shared by ordinary app screens. */
 export const DARK_CANVAS = {
-  background: "#211D19",
-  surface: "#302920",
-  raised: "#3B332A",
-  recessed: "#1B1714",
+  background: "#1C1012",
+  surface: "#2C1A1C",
+  raised: "#382326",
+  recessed: "#160C0E",
 } as const;
 
 export const DARK_COLORS: ColorPalette = {
@@ -203,9 +203,9 @@ export const DARK_COLORS: ColorPalette = {
   // standard inset-card elevation, not a separate tint. Keeping
   // these in lockstep means the whole chrome reads as one
   // material instead of two slightly-different darks.
-  accentSoft: "#1C1C1E",
-  border: "#2C2C2E",
-  borderStrong: "#3A3A3C",
+  accentSoft: DARK_CANVAS.surface,
+  border: "#3A2427",
+  borderStrong: "#4A3033",
   // Apple's systemBlue in dark mode — the iOS selection blue.
   // Used for chips and multi-select states across onboarding.
   select: "#0A84FF",
@@ -292,16 +292,17 @@ export const LIGHT_COLORS: ColorPalette = {
   //   • v3 #F8F7F4 — cooler daylight white
   //   • v4 #FDF6EC — warmer cream
   //   • v5 (this) #F9F0EB — soft blush cream
-  bg: "#F1E1D2",
-  surface: "#FFFFFF",
+  //   • v6 (this, basics picker 2026-11-09) white page, cards a step darker
+  bg: "#FFFFFF",
+  surface: "#F3F1EF",
   // Light-mode counterparts to the dark elevation steps.
   // Surface inversion holds: pure white cards (#FFFFFF) lift
   // above the cream page (#F9F0EB), and an inset chip on top
   // of a white card uses a hair-warm gray (#F4F1EB) for the
   // next elevation step. Symmetric to dark mode's
   // bg → surfaceSecondary → surfaceTertiary progression.
-  surfaceSecondary: "#FFFFFF",
-  surfaceTertiary: "#F4F1EB",
+  surfaceSecondary: "#F3F1EF",
+  surfaceTertiary: "#ECE9E6",
   // Light mode: there's no "darker than utility" tier — the
   // light palette is built around white. Devotional card
   // collapses to the same pure-white surface used by
@@ -311,7 +312,7 @@ export const LIGHT_COLORS: ColorPalette = {
   // semantic doesn't carry; the editorial hierarchy in
   // light mode comes from typography weight, not surface
   // darkness.
-  devotionalSurface: "#FFFFFF",
+  devotionalSurface: "#F3F1EF",
   ink: "#0F0F0F",
   // V2: bumped from #6B6B72 (Apple's stock secondaryLabel,
   // ~5.3:1 on white — AA pass / AAA fail) to #3A3A3F so the
@@ -345,9 +346,9 @@ export const LIGHT_COLORS: ColorPalette = {
   accent: "#0F0F0F",
   // Accent-soft mirrors the bg warmth — used by avatar wells and
   // chip backdrops which should feel inset rather than floating.
-  accentSoft: "#F0EDE8",
-  border: "#E8E4DD",
-  borderStrong: "#D8D3CA",
+  accentSoft: "#F3F1EF",
+  border: "#E7E3DF",
+  borderStrong: "#D6D1CC",
   // Apple's systemBlue in light mode.
   select: "#007AFF",
   selectSoft: "rgba(0, 122, 255, 0.12)",

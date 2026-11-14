@@ -6,6 +6,7 @@ import { type CardOrigin, DailyWalkOverview } from "./DailyWalkOverview";
 import { type DailyStep, useDailyPractice } from '@/lib/dailyPractice';
 import { dailyStepsFor } from '@/lib/dailySteps';
 import { contentLayout } from "@/lib/contentStyles";
+import { itemGap, radius } from "@/constants/spacing";
 import { dailyText, uiText } from "@/lib/typography";
 
 import { buttonStyles } from "@/lib/buttonStyles";
@@ -17,7 +18,7 @@ import { FeedbackPressable as Pressable } from "./FeedbackPressable";
 import { SUCCESS_GREEN } from "./SuccessFeedback";
 import { DailyExperience } from "./DailyExperience";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Modal, Platform, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { type ImageSourcePropType, Modal, Platform, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Text } from "@/components/CloserText";
 import Animated, { Easing, Extrapolation, type SharedValue, cancelAnimation, interpolate, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 
@@ -41,6 +42,7 @@ import { TiltedBook } from "./TiltedBook";
 import { NIGHT_FULL, NIGHT_SLIM, NightPrayerCard, NightPrayerDoneCard, NightPrayerFlow, REST_FULL, REST_SLIM } from "./NightPrayer";
 import { isNightPrayerDue, tonightsNightPrayer, useNightPrayer } from "@/lib/nightPrayer";
 import { ReaderMaterialGradient } from "./ReaderMaterialGradient";
+import { isInternalBuild } from "@/lib/isInternalBuild";
 import { SFSymbol, type SFSymbolName } from "./Symbol";
 import * as haptics from "@/lib/haptics";
 import { focusAmount, useFocusMoment } from "@/lib/homeFocus";
@@ -233,12 +235,11 @@ export function HomeDailyPath({ card, homeQuote, completed, onRead, onReadingCom
   // Other mounted screens can leave the bar dark; this room is always dark, so claim it on focus.
   useFocusEffect(useCallback(() => { setStatusBarStyle("light", true); }, []));
   const streakBadge = getMilestoneBadge(Math.max(0, MILESTONES.filter(m => m.day <= streak).length - 1));
-  const weekday = new Date(clock).toLocaleDateString("en-US", { weekday: "long" }) + (nightDue ? " night" : "");
   // ── The hero: one big card in the day's colour, the scene rising into it, one action. Nothing else.
   const isNight = front.key === "night";
   // The card wears the colour of its own picture; the day's category stays as a dot in the chip.
+  const pixelTest = isInternalBuild();
   const heroTone = tone(front.tint ?? pal.theme.ground[1]);
-  const floor = "#0B0909";
   const heroArt = isNight ? NEVER_LEAVE : front.art;
   const HEADLINE: Record<string, string> = { reading: card.title, prayer: "Pray it back", quiz: "Quick check", action: "One small step", night: "Lay today down", tomorrow: "A letter waits", verse: "For today", past: "Look back" };
   const PILL: Record<string, string> = { reading: card.scriptureReference, prayer: card.title, quiz: card.title, action: card.title, night: "Say how today felt", tomorrow: "It opens in the morning", verse: homeQuote?.reference ?? card.scriptureReference, past: `Days 1 to ${card.day - 1}` };
@@ -252,49 +253,77 @@ export function HomeDailyPath({ card, homeQuote, completed, onRead, onReadingCom
     night: night.hydrated ? { enabled: night.enabled, hour: night.hour, minute: night.minute, doneDate: nightDone ? todayISO : null } : null,
   });
   useEffect(() => { if (ready && hydrated) syncWidgets(JSON.parse(widgetJSON)); }, [widgetJSON, ready, hydrated]);
-  const after = items.slice(deckIndex + 1).find(i => !i.done && i.key !== "past");
-  const nextLine = after ? after.key === "night" ? `Then, tonight at ${formatNightTime(night.hour, night.minute)} · Night prayer` : after.key === "tomorrow" ? "Tomorrow, a letter opens" : `Then · ${HEADLINE[after.key] ?? after.title}` : "Today, kept";
   const kicker = isNight ? "Night prayer" : front.key === "tomorrow" ? `Day ${tomorrow?.day ?? card.day + 1}` : `${devotionalLabel({ day: card.day })} · ${front.label}`;
   const avatarSource = answers.avatarPhotoUri ? { uri: answers.avatarPhotoUri } : findAvatar(answers.avatarId)?.source;
-  const heroH = Math.min(660, height - insets.top - 6 - 54 - bottomInset - 12 - 44);
-  return <View style={{ flex: 1, backgroundColor: floor }}>
+  // ── Today (picks, 2026-11-09): the painting runs edge to edge behind the bars, the headline sits bottom left on it,
+  // one big pill starts the step, and the rest of the day follows as chips. The page wears the painting's colour.
+  const page = dark ? mix(front.tint ?? pal.theme.ground[1], "#000000", .72) : mix(front.tint ?? pal.theme.ground[1], "#FFFFFF", .86);
+  const pageInk = dark ? "#FFFFFF" : "#17120E", chipBg = dark ? mix(page, "#FFFFFF", .1) : "#FFFFFFD9", chipWell = dark ? mix(page, "#FFFFFF", .18) : mix(page, "#17120E", .08);
+  const weekdayName = new Date(clock).toLocaleDateString("en-US", { weekday: "long" });
+  const tonight = nightDue || !!nightDone;
+  const dayName = tonight ? "Tonight" : weekdayName, dayLine = tonight ? `Day ${card.day} · ${weekdayName}` : `Day ${card.day}`;
+  const pillText = kicker + (mood ? ` · Feeling ${mood.echo}` : "");
+  type RestChip = { key: string; label: string; done?: boolean; image?: ImageSourcePropType; icon?: SFSymbolName; a11y: string; onPress: () => void };
+  const rest: RestChip[] = [];
+  steps.forEach(id => { if (id === front.key) return; const c = STEP_COPY[id]!, d = done(id); rest.push({ key: id, label: d ? `${c.chip}, done` : c.chip, done: d, icon: c.icon, a11y: `${c.title}${d ? ", done" : ""}`, onPress: () => startStep(id) }); });
+  rest.push(mood ? { key: "mood", label: mood.label, image: mood.image, a11y: `You checked in: ${mood.label}`, onPress: () => router.push("/check-in") }
+    : { key: "checkin", label: "Check in", icon: "heart.fill", a11y: "How are you, really? Check in", onPress: () => router.push("/check-in") });
+  if ((night.enabled || nightDue || nightDone) && front.key !== "night") rest.push({ key: "night", label: nightDone ? "Prayed tonight" : `Night prayer · ${formatNightTime(night.hour, night.minute)}`, done: !!nightDone, icon: "moon.fill",
+    a11y: nightDone ? "Night prayer, prayed tonight" : "Night prayer", onPress: () => nightDone ? router.push("/prayers" as never) : setNightOpen(true) });
+  // Interactive stories: guided conversations with Jesus in lit rooms (app/stories.tsx)
+  rest.push({ key: "stories", label: "Stories", icon: "sparkles", a11y: "Interactive stories", onPress: () => router.push("/stories" as never) });
+  if (tomorrow && front.key !== "tomorrow" && (tonight || count === total)) rest.push({ key: "tomorrow", label: "Tomorrow", icon: "envelope.fill", a11y: "Tomorrow. A letter waiting for you.", onPress: () => setTomorrowOpen(true) });
+  return <View style={{ flex: 1, backgroundColor: page }}>
     <StatusBar style="light"/>
-    <Animated.View style={[{ flex: 1, paddingTop: insets.top + 6, paddingBottom: bottomInset + 12 }, tabContentStyle]}>
-      <View style={{ height: 50, flexDirection: "row", alignItems: "center", paddingHorizontal: 16 }}>
-        <View style={{ width: 44 }}/>
-        <Pressable accessibilityRole="button" accessibilityLabel={`${weekday}. Day ${card.day}. ${streak} days in a row`} onPress={onStreak} style={{ flex: 1, alignItems: "center" }}>
-          <Text accessibilityRole="header" style={{ ...uiText.body, fontSize: 19, lineHeight: 23, fontWeight: "900", color: "#FFFFFF" }}>{weekday}</Text>
-          <Text style={{ ...uiText.supporting, fontSize: 12, lineHeight: 15, fontWeight: "700", color: mix("#FFFFFF", floor, .45) }}>Day {card.day}{streak > 0 ? ` · ${streak} ${streak === 1 ? "day" : "days"} in a row` : ""}</Text>
-        </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Your profile" onPress={() => router.navigate("/profile" as never)} style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", backgroundColor: mix(floor, "#FFFFFF", .1), alignItems: "center", justifyContent: "center" }}>
-          {avatarSource ? <Image source={avatarSource} contentFit="cover" style={StyleSheet.absoluteFill}/> : <SFSymbol name="person.fill" size={18} color="#FFFFFFB8"/>}
-        </Pressable>
-      </View>
-      <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={`${kicker}. ${HEADLINE[front.key] ?? front.title}. Open today's walk`} onPress={() => { haptics.soft(); front.onPress(); }}
-        style={{ height: heroH, marginHorizontal: 14, marginTop: 4, borderRadius: 34, borderCurve: "continuous", overflow: "hidden", boxShadow: `0 30px 60px -30px ${heroTone.c}CC, 0 0 0 1px ${heroTone.c}4D` }}>
+    <Animated.View style={[{ flex: 1, paddingBottom: Math.max(insets.bottom + 64, bottomInset - 36) }, tabContentStyle]}>
+      <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={`${pillText}. ${HEADLINE[front.key] ?? front.title}. Open today's walk`} onPress={() => { haptics.soft(); front.onPress(); }} style={{ flex: 1, justifyContent: "flex-end", overflow: "hidden" }}>
         <View style={[StyleSheet.absoluteFill, { backgroundColor: heroTone.deep }]}/>
-        {heroArt != null && <View style={StyleSheet.absoluteFill}>
-          <Image source={heroArt as never} contentFit="cover" blurRadius={front.blurred ? 18 : 0} style={StyleSheet.absoluteFill} transition={0}/>
-          <ReaderMaterialGradient pointerEvents="none" colors={[heroTone.deep, `${heroTone.deep}D9`, `${heroTone.deep}00`]} locations={[0, .24, .52]} style={StyleSheet.absoluteFill}/>
-        </View>}
-        <View style={{ alignSelf: "center", marginTop: 26, height: 28, paddingLeft: 8, paddingRight: 12, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: mix(heroTone.deep, "#000000", .3), boxShadow: "inset 0 1px 0 #FFFFFF1A" }}>
-          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: isNight ? "#FFC93C" : pal.theme.ground[1] }}/>
-          <Text style={{ ...uiText.supporting, fontSize: 13, lineHeight: 17, fontWeight: "800", color: heroTone.t1 }}>{kicker}</Text>
-        </View>
-        <Text numberOfLines={2} adjustsFontSizeToFit minimumFontScale={.6} style={{ ...uiText.screenTitle, fontSize: 58, lineHeight: 56, fontWeight: "900", letterSpacing: -2.4, textTransform: "uppercase", color: heroTone.t1, textAlign: "center", marginTop: 10, paddingHorizontal: 16 }}>{HEADLINE[front.key] ?? front.title}</Text>
-        <BlurView intensity={40} tint="dark" style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 78, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 12, paddingLeft: 20, paddingRight: 12, backgroundColor: `${heroTone.deep}99`, boxShadow: "inset 0 1px 0 #FFFFFF2E" }}>
-          <View style={{ flex: 1 }}>
-            <Text numberOfLines={1} style={{ ...uiText.body, fontSize: 16, lineHeight: 20, fontWeight: "800", color: heroTone.t1 }}>{PILL[front.key] ?? front.sentence ?? front.title}</Text>
-            {!!front.sentence && ["reading", "prayer", "quiz", "action"].includes(front.key) && <Text numberOfLines={1} style={{ ...uiText.supporting, fontSize: 13, lineHeight: 17, fontWeight: "700", color: heroTone.t2 }}>{front.sentence}</Text>}
+        {heroArt != null && <Image source={heroArt as never} contentFit="cover" blurRadius={front.blurred ? 18 : 0} style={StyleSheet.absoluteFill} transition={0}/>}
+        {/* Dark under the bars and under the words, then into the page only below the button, so text reads in both themes. */}
+        <ReaderMaterialGradient pointerEvents="none" colors={["#00000085", "#00000000", "#00000000", "#00000080", "#00000099", page]} locations={[0, .24, .42, .64, .8, 1]} style={StyleSheet.absoluteFill}/>
+        <View style={{ paddingHorizontal: 20, paddingBottom: 44, gap: itemGap }}>
+          <Text accessibilityRole="header" numberOfLines={3} adjustsFontSizeToFit minimumFontScale={.7} style={{ ...uiText.screenTitle, fontSize: 36, lineHeight: 40, color: "#FFFFFF", textShadowColor: "#00000070", textShadowRadius: 14, textShadowOffset: { width: 0, height: 2 } }}>{HEADLINE[front.key] ?? front.title}</Text>
+          <Text numberOfLines={1} style={{ ...uiText.supporting, fontSize: 14, lineHeight: 18, fontWeight: "800", color: "#FFFFFFD9", textAlign: "center" }}>{PILL[front.key] ?? front.sentence ?? front.title}</Text>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={front.act.label} disabled={!ready || saving} onPress={() => { haptics.soft(); front.act.run(); }}
+              style={{ flex: 1, height: 56, borderRadius: radius.pill, backgroundColor: "#FFFFFF", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, opacity: ready ? 1 : .6 }}>
+              <Text style={{ ...uiText.body, fontSize: 17, lineHeight: 22, fontWeight: "700", color: "#17120E" }}>{front.act.label}</Text>
+              <SFSymbol name="arrow.right" size={16} weight="semibold" color="#17120E"/>
+            </Pressable>
+            {/* Test (internal builds only): today's devotional as a pixel story. See app/pixel.tsx. */}
+            {pixelTest && <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={`Step in: Day ${card.day} as a pixel story`} onPress={() => { haptics.soft(); router.push(`/pixel?day=${card.day}` as never); }}
+              style={{ flex: 1, height: 56, borderRadius: radius.pill, backgroundColor: "#140C0E8C", borderWidth: 1.5, borderColor: "#FFFFFF66", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <SFSymbol name="play.fill" size={14} color="#FFFFFF"/>
+              <Text style={{ ...uiText.body, fontSize: 17, lineHeight: 22, fontWeight: "700", color: "#FFFFFF" }}>Step in</Text>
+            </Pressable>}
           </View>
-          <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={front.act.label} disabled={!ready || saving} onPress={() => { haptics.soft(); front.act.run(); }}
-            style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px -8px #000", opacity: ready ? 1 : .6 }}>
-            <SFSymbol name="arrow.right" size={18} color={heroTone.deep}/>
-          </Pressable>
-        </BlurView>
+        </View>
       </Pressable>
-      <Text style={{ ...uiText.supporting, fontSize: 14, fontWeight: "700", color: mix("#FFFFFF", floor, .48), textAlign: "center", marginTop: 16 }}>{nextLine}</Text>
-      {!!error && !active && <Text style={{ ...uiText.supporting, color: mix("#FFFFFF", floor, .4), textAlign: "center", marginTop: 6 }}>{error}</Text>}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
+        {rest.map(c => <Pressable key={c.key} feedback="action" accessibilityRole="button" accessibilityLabel={c.a11y} onPress={() => { haptics.soft(); c.onPress(); }}
+          style={{ height: 40, borderRadius: radius.pill, backgroundColor: chipBg, flexDirection: "row", alignItems: "center", gap: 8, paddingLeft: 6, paddingRight: 14 }}>
+          <View style={{ width: 28, height: 28, borderRadius: 14, overflow: "hidden", alignItems: "center", justifyContent: "center", backgroundColor: c.done ? pageInk : c.image ? "#FFFFFF" : chipWell }}>
+            {c.image ? <Image source={c.image} contentFit="cover" style={StyleSheet.absoluteFill}/> : <SFSymbol name={c.done ? "checkmark" : c.icon ?? "circle"} size={13} weight="bold" color={c.done ? page : pageInk}/>}
+          </View>
+          <Text style={{ ...uiText.body, fontSize: 15, lineHeight: 20, fontWeight: "700", color: pageInk, opacity: c.done ? .7 : 1 }}>{c.label}</Text>
+        </Pressable>)}
+      </ScrollView>
+      {!!error && !active && <Text style={{ ...uiText.supporting, color: pageInk, opacity: .6, textAlign: "center", marginTop: 6 }}>{error}</Text>}
+      <View pointerEvents="box-none" style={{ position: "absolute", top: insets.top + 6, left: 20, right: 16, gap: 12 }}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Pressable accessibilityRole="button" accessibilityLabel={`${dayName}. Day ${card.day}. ${streak} ${streak === 1 ? "day" : "days"} in a row. Open your streak`} onPress={onStreak} style={{ flex: 1 }}>
+            <Text style={{ ...uiText.screenTitle, fontSize: 32, lineHeight: 36, color: "#FFFFFF" }}>{dayName}</Text>
+            <Text style={{ ...uiText.supporting, fontSize: 12, lineHeight: 15, fontWeight: "800", letterSpacing: 1.1, textTransform: "uppercase", color: "#FFFFFFBF" }}>{dayLine}</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Your profile" onPress={() => router.navigate("/profile" as never)} style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", backgroundColor: "#FFFFFF26", alignItems: "center", justifyContent: "center" }}>
+            {avatarSource ? <Image source={avatarSource} contentFit="cover" style={StyleSheet.absoluteFill}/> : <SFSymbol name="person.fill" size={18} color="#FFFFFFB8"/>}
+          </Pressable>
+        </View>
+        <View pointerEvents="none" style={{ alignSelf: "center", maxWidth: "100%", height: 28, paddingLeft: 9, paddingRight: 12, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: "#00000066" }}>
+          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isNight || nightDone ? "#FFC93C" : pal.theme.ground[1] }}/>
+          <Text numberOfLines={1} style={{ ...uiText.supporting, fontSize: 13, lineHeight: 17, fontWeight: "800", color: "#FFFFFF", flexShrink: 1 }}>{pillText}</Text>
+        </View>
+      </View>
     </Animated.View>
     <DailyWalkOverview visible={overview} origin={overviewOrigin} card={card} paintings={paintings} completed={{ ...saved, reading: completed }} ready={ready && !saving} onClose={dismiss} onTask={openTask}>
       <DailyExperience visible={active !== null} kind={sheetPractice} card={card} onClose={() => { if (!saving) setActive(null); }} onComplete={mark} onDismiss={() => { if (finishAfterDismiss.current) { finishAfterDismiss.current = false; setOverview(false); } }} onFinish={dismiss} onContinue={continueFlow}/>

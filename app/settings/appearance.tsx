@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import * as haptics from "@/lib/haptics";
 import { useOsReducedMotion } from "@/lib/useReducedMotion";
-import { NEW_YORK } from "@/lib/typography";
+import { READER_FONT } from "@/lib/typography";
 import {
   SettingsLinkRow,
   SettingsScaffold,
@@ -175,7 +175,7 @@ export default function AppearanceScreen() {
             <Text
               style={{
                 color: colors.ink,
-                fontFamily: NEW_YORK, fontWeight: "500",
+                fontFamily: READER_FONT, fontWeight: "500",
                 fontSize: Math.round(20 * currentTextSize.scale),
                 lineHeight: Math.round(28 * currentTextSize.scale),
               }}

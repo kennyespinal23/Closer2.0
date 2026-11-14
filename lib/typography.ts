@@ -13,7 +13,9 @@ import { type TextStyle } from "react-native";
 export const SF_PRO = "System";
 
 /** Shared upright reading face for Scripture and devotional passages. */
-export const SCRIPTURE_FONT = "NunitoMedium";
+export const SCRIPTURE_FONT = "NunitoSemiBoldItalic";
+/** Whole chapters in the reader stay upright; italic is for verses set apart. */
+export const READER_FONT = "NunitoMedium";
 /** Compatibility alias for existing reading surfaces. */
 export const NEW_YORK = SCRIPTURE_FONT;
 
@@ -21,8 +23,8 @@ export const NEW_YORK = SCRIPTURE_FONT;
 export const uiText = {
   // Large numeric focal points, such as streaks; not a page-heading replacement.
   displayNumber: {fontFamily: SF_PRO, fontSize:112, lineHeight:120, fontWeight:"900", letterSpacing:-1.6, fontVariant:["tabular-nums"]} satisfies TextStyle,
-  screenTitle: {fontFamily: SF_PRO, fontSize:36, lineHeight:42, fontWeight:'900', letterSpacing:-.72} satisfies TextStyle,
-  sectionTitle: {fontFamily: SF_PRO, fontSize:24, lineHeight:30, fontWeight:'800'} satisfies TextStyle,
+  screenTitle: {fontFamily: SF_PRO, fontSize:36, lineHeight:42, fontWeight:'800', letterSpacing:-.72} satisfies TextStyle,
+  sectionTitle: {fontFamily: SF_PRO, fontSize:24, lineHeight:30, fontWeight:'700'} satisfies TextStyle,
   body: {fontFamily: SF_PRO, fontSize:17, lineHeight:25, fontWeight:'400'} satisfies TextStyle,
   supporting: {fontFamily: SF_PRO, fontSize:15, lineHeight:22, fontWeight:'500'} satisfies TextStyle,
 } as const;
@@ -115,7 +117,7 @@ const smallLabel: TextStyle = {
   letterSpacing: 0.8,
 };
 
-/** Scripture callouts use Nunito Medium with generous leading. */
+/** Scripture callouts use Nunito SemiBold Italic with generous leading. */
 const reflectiveQuote: TextStyle = {
   fontFamily: NEW_YORK,
   fontStyle: "normal",
@@ -139,7 +141,7 @@ const photoQuote: TextStyle = {
 
 /** Reader body. Callers scale size and leading; measurement uses this same face. */
 const readerBody: TextStyle = {
-  fontFamily: NEW_YORK,
+  fontFamily: READER_FONT,
   fontWeight: "500",
   fontSize: 18,
   lineHeight: 30,

@@ -95,7 +95,7 @@ import { ReaderMaterialGradient } from "@/components/ReaderMaterialGradient";
 import { goBackOr } from "@/lib/navigation";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { minTouchTarget, spacing } from "@/constants/spacing";
-import { NEW_YORK, SF_PRO, systemText, typography } from "@/lib/typography";
+import { READER_FONT, SF_PRO, systemText, typography } from "@/lib/typography";
 import { BubbleBackButton } from "@/components/BubbleBackButton";
 
 /**
@@ -2248,7 +2248,7 @@ function VerseFlow({
     <Text
       onTextLayout={handleTextLayout}
       style={{
-        fontFamily: NEW_YORK,
+        fontFamily: READER_FONT,
         fontWeight: "500",
         fontSize: baseFontSize,
         lineHeight: baseLineHeight,
@@ -2310,10 +2310,10 @@ function VerseFlow({
               active={momentMotionActive && !isSelected && !v.highlight}
               dark={scheme === "dark"}
               color={isSelected ? colors.ink : MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"]}
-              style={{ fontFamily: NEW_YORK, fontWeight: "500", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1 }}
+              style={{ fontFamily: READER_FONT, fontWeight: "500", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1 }}
             /> : <Text
               style={{
-                fontFamily: NEW_YORK,
+                fontFamily: READER_FONT,
                 fontWeight: "500",
                 fontSize: baseFontSize,
                 lineHeight: baseLineHeight,
@@ -2363,7 +2363,7 @@ function VerseFlow({
                 onPress={() => onVerseLongPress(v.number)}
                 onUnlock={() => onVersePress(v.number)}
                 glowColor={isCollected ? "transparent" : MOMENT_CATEGORIES[moment.category][scheme === "dark" ? "dark" : "light"]}
-                style={{ fontFamily: NEW_YORK, fontWeight: "500", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1, color: colors.ink, backgroundColor: baseBg }}
+                style={{ fontFamily: READER_FONT, fontWeight: "500", fontSize: baseFontSize, lineHeight: baseLineHeight, letterSpacing: -0.1, color: colors.ink, backgroundColor: baseBg }}
               >{inner}</MomentVerseText>
             ) : isFocus ? (
               <NunitoAnimatedText
@@ -2375,7 +2375,7 @@ function VerseFlow({
                     : undefined
                 }
                 style={{
-                  fontFamily: NEW_YORK,
+                  fontFamily: READER_FONT,
                   fontWeight: "500",
                   fontSize: baseFontSize,
                   lineHeight: baseLineHeight,
@@ -2396,7 +2396,7 @@ function VerseFlow({
                     : undefined
                 }
                 style={{
-                  fontFamily: NEW_YORK,
+                  fontFamily: READER_FONT,
                   fontWeight: "500",
                   fontSize: baseFontSize,
                   lineHeight: baseLineHeight,
@@ -3741,7 +3741,7 @@ function ReaderToolbar({
             const ink = tone === "dark" ? colors.ink : tone === "sepia" ? "#34281E" : "#30271F";
             const k = findTextSize(draftTextSize).scale;
             return <View accessible accessibilityLabel="Preview of the page" style={{ marginTop: 16, height: 118, borderRadius: 22, borderCurve: "continuous", overflow: "hidden", backgroundColor: paper, borderWidth: StyleSheet.hairlineWidth, borderColor: settingsPalette.line, paddingHorizontal: 18, paddingVertical: 14 }}>
-              <Text style={{ fontFamily: NEW_YORK, fontSize: 18 * k, lineHeight: 30 * k, color: ink, paddingRight: 6 }}><Text style={{ fontSize: 11, fontWeight: "800", color: tone === "dark" ? colors.inkSubtle : "#8A7359" }}>16  </Text>For God so loved the world, that he gave his one and only Son, that whoever believes in him should not perish</Text>
+              <Text style={{ fontFamily: READER_FONT, fontSize: 18 * k, lineHeight: 30 * k, color: ink, paddingRight: 6 }}><Text style={{ fontSize: 11, fontWeight: "800", color: tone === "dark" ? colors.inkSubtle : "#8A7359" }}>16  </Text>For God so loved the world, that he gave his one and only Son, that whoever believes in him should not perish</Text>
               <ReaderMaterialGradient pointerEvents="none" colors={[`${paper}00`, paper]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 40 }}/>
             </View>;
           })()}

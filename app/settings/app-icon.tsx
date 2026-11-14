@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Alert, View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
+import { requireOptionalNativeModule } from "expo-modules-core";
 import { Text } from "@/components/CloserText";
 import { FeedbackPressable as Pressable } from "@/components/FeedbackPressable";
 import { SettingsScaffold } from "@/components/SettingsScaffold";
@@ -14,7 +15,7 @@ type IconsModule = { supportsAlternateIcons: boolean; setAlternateAppIcon: (name
 
 /** The native module only exists in builds made after the icons were added; older builds show a note instead of crashing. */
 function loadIcons(): IconsModule | null {
-  try { return require("expo-alternate-app-icons") as IconsModule; } catch { return null; }
+  return requireOptionalNativeModule<IconsModule>("ExpoAlternateAppIcons");
 }
 
 const ORIGINAL = { id: null as string | null, label: "Original", thumb: require("@/assets/icon.png") };
@@ -40,7 +41,7 @@ export default function AppIconScreen() {
         {supported ? "Choose how Closer looks on your home screen. iOS will confirm the change." : "Changing the icon needs the latest version of Closer. Update the app to choose one."}
       </Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
-        {[ORIGINAL, ...APP_ICONS].map(icon => { const on = icon.id === current; return <Pressable key={icon.label} feedback="action" accessibilityRole="button" accessibilityLabel={`${icon.label} icon`} accessibilityState={{ selected: on, disabled: !supported }}
+        {[ORIGINAL, ...APP_ICONS].map(icon => { const on = icon.id === current; return <Pressable key={icon.label} feedback="action" accessibilityRole="button" accessibilityLabel={`${icon.label} icon`} disabled={!supported || busy} accessibilityState={{ selected: on, disabled: !supported || busy }}
           onPress={() => void choose(icon.id)} style={{ width: size, alignItems: "center", opacity: supported ? 1 : .5 }}>
           <View style={{ width: size, height: size, borderRadius: size * .225, borderCurve: "continuous", overflow: "hidden", boxShadow: on ? `0 0 0 3px ${c.bg}, 0 0 0 5.5px ${c.ink}` : "0 6px 12px -6px #0006" }}>
             <Image source={icon.thumb} contentFit="cover" style={{ width: "100%", height: "100%" }}/>

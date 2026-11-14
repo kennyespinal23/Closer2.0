@@ -1,5 +1,5 @@
 import { updateNightPrayer, useNightPrayer } from "@/lib/nightPrayer";
-import { PROFILE_FLOOR, ProfileStory } from "@/components/ProfileStory";
+import { ProfileStory } from "@/components/ProfileStory";
 import { buttonStyles } from "@/lib/buttonStyles";
 import { ProfileAudioPreview } from "@/components/audio/ProfileAudioPlayer";
 import { ProfileJourney, PROFILE_PALETTE } from "@/components/ProfileJourney";
@@ -254,7 +254,7 @@ export default function ProfileTabScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: PROFILE_FLOOR, overflow: "hidden" }}
+      style={{ flex: 1, backgroundColor: colors.bg, overflow: "hidden" }}
       edges={[]}
     >
 

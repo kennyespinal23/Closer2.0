@@ -11,6 +11,7 @@ import { avatarForName, findAvatar } from "@/constants/avatars";
 import { useOnboarding } from "@/state/onboarding";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import * as haptics from "@/lib/haptics";
+import { useColors } from "@/state/theme";
 
 /* Together: a near-black room where every card wears the colour of what's on it.
    People wear their avatar's colour, groups wear their book's. Text inside a card is
@@ -65,13 +66,14 @@ export function Glass({ children, style, onPress, accessibilityLabel }: { childr
 export function RoundButton({ icon, label, onPress, size = 44 }: { icon: SFSymbolName; label: string; onPress: () => void; size?: number }) {
   return <Glass onPress={() => { haptics.soft(); onPress(); }} accessibilityLabel={label} style={{ width: size, height: size, borderRadius: size / 2 }}><SFSymbol name={icon} size={17} color="#FFFFFFD9"/></Glass>;
 }
-/** Section header: bold white on the left, one quiet glass pill on the right. */
+/** Section header: the title on the left, one quiet pill on the right. */
 export function Section({ title, action }: { title: string; action?: { label: string; icon?: SFSymbolName; onPress: () => void } }) {
+  const colors = useColors();
   return <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 22, marginTop: 26, marginBottom: 12 }}>
-    <Text accessibilityRole="header" style={{ fontSize: 20, lineHeight: 25, fontWeight: "900", letterSpacing: -.3, color: "#FCFCFC" }}>{title}</Text>
+    <Text accessibilityRole="header" style={{ fontSize: 22, lineHeight: 28, fontWeight: "700", letterSpacing: -.3, color: colors.ink }}>{title}</Text>
     {action && <Pressable feedback="action" accessibilityRole="button" onPress={() => { haptics.soft(); action.onPress(); }} hitSlop={6}
-      style={{ height: 34, paddingHorizontal: 14, borderRadius: 17, flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#FFFFFF1A" }}>
-      {action.icon && <SFSymbol name={action.icon} size={13} color="#E8E3E0"/>}<Text style={{ fontSize: 14, fontWeight: "800", color: "#E8E3E0" }}>{action.label}</Text>
+      style={{ height: 34, paddingHorizontal: 14, borderRadius: 17, flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.surface }}>
+      {action.icon && <SFSymbol name={action.icon} size={13} color={colors.ink}/>}<Text style={{ fontSize: 14, fontWeight: "700", color: colors.ink }}>{action.label}</Text>
     </Pressable>}
   </View>;
 }

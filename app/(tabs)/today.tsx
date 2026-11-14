@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { Page } from "@/components/page/Page";
@@ -10,6 +11,7 @@ import { dailyPick } from "@/lib/closer-page/content/daily";
 import { TONE } from "@/lib/closer-page/content/library";
 import type { Action, Mood } from "@/lib/closer-page/page/states";
 import { useCloserPage } from "@/state/closerPage";
+import { TomorrowSheet } from "@/components/closer/TomorrowSheet";
 
 /**
  * Today: one experience, one button. The story card's shape, filled with the day's pick in its own category colour
@@ -19,6 +21,7 @@ export default function TodayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { finished } = useCloserPage();
+  const [tmrOpen, setTmrOpen] = useState(false);
   const [poke, setPoke] = useState<{ act: Action; mood: Mood; n: number }>({ act: "enter", mood: "neutral", n: 0 });
   const now = new Date();
   const dateKey = now.toDateString();
@@ -62,7 +65,7 @@ export default function TodayScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeIn.delay(350)}>
-          <Pressable onPress={() => open(tomorrow.lesson.id)} accessibilityRole="button" accessibilityLabel={`Tomorrow: ${tomorrow.lesson.title}`}
+          <Pressable onPress={() => { void Haptics.selectionAsync(); setTmrOpen(true); }} accessibilityRole="button" accessibilityLabel={`Tomorrow: ${tomorrow.lesson.title}`} accessibilityHint="Shows when it opens"
             style={{ marginTop: 28 }}>
             <View style={{ backgroundColor: K.creamDeep, borderRadius: 22, paddingHorizontal: 20, paddingVertical: 16, flexDirection: "row", alignItems: "center", gap: 12 }}>
             <View style={{ flex: 1 }}>
@@ -74,6 +77,7 @@ export default function TodayScreen() {
           </Pressable>
         </Animated.View>
       </ScrollView>
+      <TomorrowSheet open={tmrOpen} pick={tomorrow} onClose={() => setTmrOpen(false)} />
     </View>
   );
 }

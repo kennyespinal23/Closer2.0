@@ -10,9 +10,9 @@
     "newArchEnabled": true,
     "runtimeVersion": "closer-native-20261020",
     "splash": {
-      "image": "./assets/splash-closer.png",
+      "image": "./assets/splash-page.png",
       "resizeMode": "cover",
-      "backgroundColor": "#F93104"
+      "backgroundColor": "#FFF7EB"
     },
     "ios": {
       "icon": "./assets/icon.png",

@@ -42,7 +42,6 @@ export default function YouScreen() {
           </Row>
         </Group>
         <Group title="More in Closer">
-          <Row label="Read the Bible" onPress={() => router.push("/library" as never)} chevron />
           <Row label="Community" onPress={() => router.push("/community" as never)} chevron />
           <Row label="All settings" onPress={() => router.push("/settings" as never)} chevron />
         </Group>

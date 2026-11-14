@@ -10,7 +10,8 @@ import { K, Label, PressButton, nunito } from "@/components/closer/kit";
 import { dailyPick } from "@/lib/closer-page/content/daily";
 import { TONE } from "@/lib/closer-page/content/library";
 import type { Action, Mood } from "@/lib/closer-page/page/states";
-import { useCloserPage } from "@/state/closerPage";
+import { dayKey, streakOf, useCloserPage } from "@/state/closerPage";
+import Svg, { Path } from "react-native-svg";
 import { TomorrowSheet } from "@/components/closer/TomorrowSheet";
 
 /**
@@ -20,7 +21,8 @@ import { TomorrowSheet } from "@/components/closer/TomorrowSheet";
 export default function TodayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { finished } = useCloserPage();
+  const { finished, days } = useCloserPage();
+  const streak = streakOf(days), litToday = !!days[dayKey(new Date())]?.length;
   const [tmrOpen, setTmrOpen] = useState(false);
   const [poke, setPoke] = useState<{ act: Action; mood: Mood; n: number }>({ act: "enter", mood: "neutral", n: 0 });
   const now = new Date();
@@ -37,7 +39,15 @@ export default function TodayScreen() {
     <View style={{ flex: 1, backgroundColor: K.cream }}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 24, paddingHorizontal: 20, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
-        <Label>{now.toLocaleDateString("en-US", { weekday: "long" })} · {now.toLocaleDateString("en-US", { month: "long", day: "numeric" })}</Label>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Label>{now.toLocaleDateString("en-US", { weekday: "long" })} · {now.toLocaleDateString("en-US", { month: "long", day: "numeric" })}</Label>
+          <Pressable accessibilityRole="button" accessibilityLabel={`${streak} day streak. Open your streak`} onPress={() => { void Haptics.selectionAsync(); router.push("/streak" as never); }} hitSlop={8}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 5, height: 34, paddingLeft: 10, paddingRight: 12, borderRadius: 17, backgroundColor: litToday ? "#FFE7C2" : K.creamDeep }}>
+              <Svg width={14} height={16} viewBox="0 0 14 16"><Path d="M7 0C8 4 13 5.5 13 10a6 6 0 0 1-12 0c0-2.5 1.5-4 3-5 .3 1.6 1 2.6 2 3C6 5 5.6 2.5 7 0z" fill={litToday ? "#F07B12" : "#C9BBA6"} /></Svg>
+              <Text style={nunito(900, 15, { color: litToday ? "#B5530F" : K.inkFaint })}>{streak}</Text>
+            </View>
+          </Pressable>
+        </View>
         <Text accessibilityRole="header" style={nunito(900, 34, { color: K.ink, letterSpacing: -1, lineHeight: 36, marginTop: 8 })}>{hello} Got a few minutes?</Text>
 
         <Animated.View entering={FadeInDown.springify().damping(24).delay(100)} style={{ marginTop: 60, marginBottom: 8 }}>
@@ -51,7 +61,7 @@ export default function TodayScreen() {
                 onTap={() => setPoke(p => ({ act: p.n % 3 === 2 ? "spin" : "hop", mood: p.n % 3 === 1 ? "cheeky" : "excited", n: p.n + 1 }))} />
             </View>
             <Label color={t.fg} style={{ opacity: 0.7 }}>Today · {shelf.label}</Label>
-            <Text style={nunito(900, big, { color: t.fg, letterSpacing: -big * 0.035, lineHeight: big * 1.0, marginTop: 12 })}>{lesson.title}</Text>
+            <Text style={nunito(900, big, { color: t.fg, letterSpacing: -big * 0.035, lineHeight: big * 1.12, marginTop: 10 })}>{lesson.title}</Text>
             <Text style={nunito(700, 18, { color: t.fg, opacity: 0.8, lineHeight: 24, marginTop: 12, maxWidth: 270 })}>{lesson.subtitle}</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 20 }}>
               {[lesson.scripture.split(" · ")[0], `${lesson.minutes} min`].map(s => (

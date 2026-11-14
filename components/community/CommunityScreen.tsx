@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text as RNText, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { Easing, FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Path } from 'react-native-svg';
 import { Text } from '@/components/CloserText';
@@ -19,7 +19,7 @@ import { PrayerPage } from './PrayerPage';
 import { AskSheet } from './AskSheet';
 import { Face, Faces, memberFor, personFor, tone, useMe } from './togetherKit';
 import { type PrayerNote, type StudyGroup } from '@/constants/communityPreview';
-import { useCommunityVideos, COMMUNITY_VIDEO_POSTER, COMMUNITY_VIDEO_PREVIEW, type CommunityVideo } from '@/lib/communityVideo';
+import { useCommunityVideos, COMMUNITY_VIDEO_POSTER, COMMUNITY_VIDEO_PREVIEW, filmFocus, filmImage, type CommunityVideo } from '@/lib/communityVideo';
 import { findBookById } from '@/constants/books';
 import { paintedCover } from '@/constants/paintedCovers';
 import { useReducedMotion } from '@/lib/useReducedMotion';
@@ -58,7 +58,7 @@ export function CommunityScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 12, paddingTop: 12, paddingBottom: 6 }}>
           {videos.slice(1).map((v, i) => <Pressable key={v.id} accessibilityRole="button" accessibilityLabel={v.title} onPress={() => openFilmPage(v)} style={{ width: 132 }}>
             <View style={st.poster}>
-              <Image recyclingKey={v.id} source={{ uri: v.thumbnail_url }} placeholder={COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={{ left: '70%', top: '40%' }} style={StyleSheet.absoluteFill} />
+              <Image recyclingKey={v.id} source={filmImage(v)} placeholder={COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={filmFocus(v)} style={StyleSheet.absoluteFill} />
               <ReaderMaterialGradient pointerEvents="none" colors={['#00000000', '#000000C0']} locations={[.45, 1]} style={StyleSheet.absoluteFill} />
               {i === 0 && <View style={st.newTag}><RNText style={nunito(900, 10.5, { color: '#2A1C05' })}>NEW</RNText></View>}
               <View style={{ paddingBottom: 10, width: '100%' }}><FilmTitle title={v.title} size="poster" /></View>
@@ -102,17 +102,22 @@ function Billboard({ films, all, topInset, me, onMe, onInfo }: { films: Communit
   const [i, setI] = useState(0), [opening, setOpening] = useState(false);
   const pager = useRef<ScrollView>(null);
   const f = films[i] ?? null;
+  const url = f ? (f.youtube_url ?? platformsFor(f)[0]?.url ?? f.watch_url) : '';
   const watch = async () => {
     if (!f || opening) return;
     setOpening(true); haptics.soft();
-    try { await openFilm(f.youtube_url ?? platformsFor(f)[0]?.url ?? f.watch_url); } finally { setOpening(false); }
+    try { await openFilm(url); } finally { setOpening(false); }
   };
   const go = (k: number) => { setI(k); pager.current?.scrollTo({ x: k * width, animated: !reduced }); };
+  // the poster drifts slowly, like a trailer still (none with reduce motion)
+  const drift = useSharedValue(1);
+  useEffect(() => { if (!reduced) drift.value = withRepeat(withTiming(1.08, { duration: 12000, easing: Easing.inOut(Easing.quad) }), -1, true); }, [reduced, drift]);
+  const driftStyle = useAnimatedStyle(() => ({ transform: [{ scale: drift.value }] }));
   return <View style={{ height: HERO_H, backgroundColor: GROUND }}>
     <ScrollView ref={pager} horizontal pagingEnabled showsHorizontalScrollIndicator={false} scrollEnabled={films.length > 1}
       onMomentumScrollEnd={e => { const k = Math.round(e.nativeEvent.contentOffset.x / width); if (k !== i) { setI(k); haptics.tick(); } }}>
-      {(films.length ? films : [null]).map((v, k) => <View key={v?.id ?? 'preview'} style={{ width, height: HERO_H }}>
-        <Image source={v ? { uri: v.thumbnail_url } : COMMUNITY_VIDEO_POSTER} placeholder={COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={{ left: '70%', top: '40%' }} transition={reduced ? 0 : 200} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
+      {(films.length ? films : [null]).map((v, k) => <View key={v?.id ?? 'preview'} style={{ width, height: HERO_H, overflow: 'hidden' }}>
+        <Animated.View style={[StyleSheet.absoluteFill, driftStyle]}><Image source={v ? filmImage(v) : COMMUNITY_VIDEO_POSTER} placeholder={COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={v ? filmFocus(v) : { left: '70%', top: '40%' }} transition={reduced ? 0 : 200} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors /></Animated.View>
       </View>)}
     </ScrollView>
     <ReaderMaterialGradient pointerEvents="none" colors={['#120D0AD1', '#120D0A0D', '#120D0A1F', '#120D0AF0', GROUND]} locations={[0, .22, .44, .8, 1]} style={StyleSheet.absoluteFill} />
@@ -130,11 +135,11 @@ function Billboard({ films, all, topInset, me, onMe, onInfo }: { films: Communit
         <View style={{ marginTop: 12, width: '100%' }}><FilmTitle title={f?.title ?? COMMUNITY_VIDEO_PREVIEW.title} size="hero" /></View>
       </Animated.View>
       {f && <View style={{ flexDirection: 'row', gap: 10, marginTop: 18 }}>
-        <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={`Watch ${f.title}`} disabled={opening} onPress={() => void watch()} style={{ height: 52 }}>
+        <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={url ? `Watch ${f.title}` : `${f.title}: coming soon`} disabled={opening || !url} onPress={() => void watch()} style={{ height: 52, opacity: url ? 1 : 0.85 }}>
           <View style={st.watchLip} />
           <View style={[st.watch, { opacity: opening ? .7 : 1 }]}>
             <Svg width={14} height={14} viewBox="0 0 16 16"><Path d="M4 2.5v11l9-5.5z" fill="#17120F" /></Svg>
-            <RNText style={nunito(800, 17, { color: '#17120F' })}>{opening ? 'Opening…' : 'Watch'}</RNText>
+            <RNText style={nunito(800, 17, { color: '#17120F' })}>{opening ? 'Opening…' : url ? 'Watch' : 'Coming soon'}</RNText>
           </View>
         </Pressable>
         <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={`About ${f.title}`} onPress={() => onInfo(f)} style={st.info}>

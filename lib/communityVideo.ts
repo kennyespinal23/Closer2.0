@@ -3,7 +3,28 @@ import { AppState } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getSupabase } from './supabase';
-export type CommunityVideo = { id: string; title: string; watch_url: string; thumbnail_url: string; published_at: string; synopsis?: string; instagram_url?: string | null; tiktok_url?: string | null; youtube_url?: string | null };
+export type CommunityVideo = { id: string; title: string; watch_url: string; thumbnail_url: string; published_at: string; synopsis?: string; instagram_url?: string | null; tiktok_url?: string | null; youtube_url?: string | null;
+  /** bundled films: the poster in the app, and where to centre it when cropped */
+  poster?: number; focus?: { left: string; top: string } };
+
+/**
+ * Closer Shorts bundled in the app (test content): shown when the films table has nothing (or can't be reached), so
+ * Community always has films. Links are added when the films are posted; until then Watch says they're coming.
+ */
+export const LOCAL_FILMS: CommunityVideo[] = [
+  { id: "local-i-got-lost", title: "I Got lost on the way", watch_url: "", thumbnail_url: "", published_at: "2026-11-09T12:00:00Z", poster: require("@/assets/films/i-got-lost.jpg"), focus: { left: "70%", top: "40%" },
+    synopsis: "After six hours searching the ocean, a rescue officer finally finds a missing family.\nBut instead of going home, he stays out in the dark with Jesus.\nThere, he admits something he’s never been able to say out loud." },
+  { id: "local-reach-for-me", title: "Reach for Me", watch_url: "", thumbnail_url: "", published_at: "2026-11-02T12:00:00Z", poster: require("@/assets/films/reach-for-me.jpg"), focus: { left: "56%", top: "50%" },
+    synopsis: "A man trying to quit drinking sits in the rain outside the bar, bottle in hand. Jesus sits down beside him." },
+  { id: "local-i-cant-sleep", title: "I Can’t Sleep", watch_url: "", thumbnail_url: "", published_at: "2026-10-26T12:00:00Z", poster: require("@/assets/films/i-cant-sleep.jpg"), focus: { left: "50%", top: "38%" },
+    synopsis: "Late at night, with the lamp still on, a boy lies awake and can’t stop thinking." },
+  { id: "local-the-gift", title: "The Gift", watch_url: "", thumbnail_url: "", published_at: "2026-10-19T12:00:00Z", poster: require("@/assets/films/the-gift.jpg"), focus: { left: "42%", top: "50%" },
+    synopsis: "A girl waits in the wings, looking out at the lights on the stage." },
+];
+
+/** The image for a film: its bundled poster, or its thumbnail from the films table. */
+export const filmImage = (v: CommunityVideo) => (v.poster ?? { uri: v.thumbnail_url });
+export const filmFocus = (v: CommunityVideo) => v.focus ?? { left: "70%", top: "40%" };
 export const COMMUNITY_VIDEO_PREVIEW = {
   title: 'I Got lost on the way',
   synopsis: 'After six hours searching the ocean, a rescue officer finally finds a missing family.\nBut instead of going home, he stays out in the dark with Jesus.\nThere, he admits something he’s never been able to say out loud.',
@@ -52,7 +73,7 @@ export function useCommunityVideos() {
     const subscription = AppState.addEventListener('change', state => { if (state === 'active') void update(); });
     return () => { live = false; subscription.remove(); };
   }, []));
-  return video;
+  return video.length ? video : LOCAL_FILMS;
 }
 
 /** Community keeps featuring the newest film; the video page offers the collection. */

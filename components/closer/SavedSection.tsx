@@ -19,19 +19,19 @@ import { closerPage, useCloserPage } from "@/state/closerPage";
  * their landscapes, verse cards, and your reflections under a lock, only on this device. A filter on top; Page
  * perches on the first thing and nods when you change it.
  */
-type Filter = "All" | "Books" | "Cases" | "Threads" | "Psalms" | "Verses" | "Reflections";
+export type Filter = "All" | "Books" | "Cases" | "Threads" | "Psalms" | "Verses" | "Reflections";
 
-export function SavedSection() {
+export function SavedSection({ initial = "All", only }: { initial?: Filter; only?: Filter[] } = {}) {
   const router = useRouter();
   const { finished, verses, notes } = useCloserPage();
-  const [filter, setFilter] = useState<Filter>("All");
+  const [filter, setFilter] = useState<Filter>(initial);
   const [nod, setNod] = useState(0);
   const done = finished.map(id => LESSONS[id]).filter((l): l is Lesson => !!l);
   const books = done.filter(l => l.book), cases = done.filter(l => l.case), threads = done.filter(l => l.kind === "Connection"), psalms = done.filter(l => l.psalm);
   const others = done.filter(l => !l.book && !l.case && l.kind !== "Connection" && !l.psalm);
   const counts: Record<Filter, number> = { All: 1, Books: books.length, Cases: cases.length, Threads: threads.length, Psalms: psalms.length, Verses: verses.length, Reflections: notes.length };
-  const filters = (Object.keys(counts) as Filter[]).filter(f => f === "All" || counts[f] > 0);
-  const show = (f: Filter) => filter === "All" || filter === f;
+  const filters = (Object.keys(counts) as Filter[]).filter(f => (f === "All" || counts[f] > 0) && (!only || only.includes(f)));
+  const show = (f: Filter) => (filter === "All" && (!only || only.includes(f))) || filter === f;
   const open = (l: Lesson) => router.push(`/lesson/${l.id}` as never);
   const empty = verses.length + notes.length + done.length === 0;
   let perched = false;

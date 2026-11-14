@@ -15,7 +15,7 @@ export function BookCard({ book }: { book: Book }) {
   return (
     <View style={{ backgroundColor: BOOK.pale, borderRadius: 22, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 }}>
       <Text style={nunito(800, 11, { letterSpacing: 1.6, color: ink, opacity: 0.6 })}>BOOK CARD · {GENRES[book.genre].toUpperCase()}</Text>
-      <Text style={nunito(900, 34, { color: ink, letterSpacing: -1.2, lineHeight: 36 })}>{book.name}</Text>
+      <Text style={nunito(900, 34, { color: ink, letterSpacing: -1.2, lineHeight: 42, marginTop: 4 })}>{book.name}</Text>
       <Text style={nunito(800, 13, { color: ink, opacity: 0.7 })}>{book.title} · {book.chapterLengths.length} {book.chapterWord ?? "chapters"}</Text>
       <Text style={nunito(800, 16, { color: ink, marginTop: 12, lineHeight: 21 })}>{book.summary.overview}</Text>
       {label("Structure")}

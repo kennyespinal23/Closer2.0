@@ -147,7 +147,7 @@ function Hero({ book, chapter, started, read, topInset, onSearch, onBook, onRead
       <View style={{ marginTop: 150 }}>
         <NText style={nunito(800, 12.5, { color: "#FFFFFFD9", letterSpacing: 1.75, textTransform: "uppercase" })}>{started ? "Where you left off" : "Start here"}</NText>
         <Pressable accessibilityRole="button" accessibilityLabel={`About ${book.name}`} onPress={onBook}>
-          <NText numberOfLines={2} adjustsFontSizeToFit minimumFontScale={.7} style={nunito(900, 48, { color: "#FFFFFF", letterSpacing: -1.7, lineHeight: 50, marginTop: 2, ...shadow })}>{book.name}</NText>
+          <NText numberOfLines={2} adjustsFontSizeToFit minimumFontScale={.7} style={nunito(900, 48, { color: "#FFFFFF", letterSpacing: -1.7, lineHeight: 58, marginTop: 6, ...shadow })}>{book.name}</NText>
         </Pressable>
         <NText style={nunito(800, 16, { color: "#FFFFFFE6", marginTop: 6 })}>
           {started ? `Chapter ${chapter} of ${book.chapters} · ${read} read` : `${book.chapters} chapters · a good first book`}

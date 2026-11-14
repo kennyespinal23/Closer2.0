@@ -42,7 +42,7 @@ export function FilmTitle({ title, keyWord, size = "hero", color = "#FFFFFF" }: 
     <View accessible accessibilityRole="header" accessibilityLabel={title} style={{ alignItems: "center", alignSelf: "center", width: z.width as `${number}%` }}>
       {!!top && small(top)}
       <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.4}
-        style={{ fontFamily: "Oswald_700Bold", fontSize: z.key, lineHeight: z.key * 1.02, letterSpacing: z.key * 0.02, color, textTransform: "uppercase", textAlign: "center", transform: [{ scaleY: 1.12 }], marginTop: z.key * 0.1, marginBottom: -z.key * 0.14 }}>
+        style={{ fontFamily: "Oswald_700Bold", fontSize: z.key, lineHeight: z.key * 1.5, letterSpacing: z.key * 0.02, color, textTransform: "uppercase", textAlign: "center", transform: [{ scaleY: 1.12 }], marginTop: -z.key * 0.12, marginBottom: -z.key * 0.24 }}>
         {key}
       </Text>
       {!!bottom && <View style={{ marginTop: z.gap }}>{small(bottom)}</View>}

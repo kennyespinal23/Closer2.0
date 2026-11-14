@@ -24,7 +24,7 @@ import { SFSymbol } from "@/components/Symbol";
 import { ReaderTutorial } from "@/components/ReaderTutorial";
 import { BibleIntroScreen } from "@/components/BibleIntroScreen";
 import { ProfilePhotoSheet } from "@/components/ProfilePhotoSheet";
-import { useBottomTabBarHeight } from "react-native-bottom-tabs";
+import { useSafeTabBarHeight as useBottomTabBarHeight } from "@/lib/useSafeTabBarHeight";
 import { useFocusMiniPlayerSpacing } from "@/components/FocusMiniPlayer";
 import { tabContentClearance } from "@/lib/tabContentClearance";
 import {

@@ -14,7 +14,7 @@ import { SFSymbol } from '@/components/Symbol';
 import { K, nunito } from '@/components/closer/kit';
 import { openFilm, platformsFor } from '@/components/films';
 import { FilmTitle } from '@/components/FilmTitle';
-import { useCommunityVideos, COMMUNITY_VIDEO_POSTER, COMMUNITY_VIDEO_PREVIEW, type CommunityVideo } from '@/lib/communityVideo';
+import { useCommunityVideos, COMMUNITY_VIDEO_POSTER, COMMUNITY_VIDEO_PREVIEW, filmFocus, filmImage, type CommunityVideo } from '@/lib/communityVideo';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import * as haptics from '@/lib/haptics';
 
@@ -56,6 +56,7 @@ export default function CommunityVideoScreen() {
     if (!ok) setError('The short couldn’t open. Please try again.');
     launching.current = false; setOpening(false);
   };
+  const hasLinks = places.length > 0 || !!video?.watch_url;
   const onWatch = () => { haptics.soft(); if (places.length > 1) setChoose(true); else void watch(places[0]?.url ?? video?.watch_url); };
   const share = () => { if (!video) return; haptics.soft(); void Share.share({ message: `${video.title}, a Closer Short\n${places[0]?.url ?? video.watch_url}`.trim() }); };
   const openOther = (other: CommunityVideo) => { haptics.soft(); router.replace({ pathname: '/community-video', params: { id: other.id } }); };
@@ -71,7 +72,7 @@ export default function CommunityVideoScreen() {
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
       <View style={{ height: 380, overflow: 'hidden' }}>
         <Animated.View style={[StyleSheet.absoluteFill, zoomStyle]}>
-          <Image accessible={false} source={video ? { uri: video.thumbnail_url } : COMMUNITY_VIDEO_POSTER} placeholder={COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={{ left: '70%', top: '40%' }} transition={reduced ? 0 : 180} style={StyleSheet.absoluteFill} />
+          <Image accessible={false} source={video ? filmImage(video) : COMMUNITY_VIDEO_POSTER} placeholder={COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={video ? filmFocus(video) : { left: '70%', top: '40%' }} transition={reduced ? 0 : 180} style={StyleSheet.absoluteFill} />
         </Animated.View>
         <ReaderMaterialGradient pointerEvents="none" colors={['#120D0A8C', '#120D0A00', '#120D0A00', GROUND]} locations={[0, .3, .58, 1]} style={StyleSheet.absoluteFill} />
       </View>
@@ -80,11 +81,11 @@ export default function CommunityVideoScreen() {
         <RNText style={nunito(600, 14, { color: SOFT, marginTop: 8 })}>{video ? `${year} · Short film` : 'Coming soon'}</RNText>
 
         {video ? <>
-          <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={`Watch ${title}`} disabled={opening} onPress={onWatch} style={{ alignSelf: 'stretch', height: 58, marginTop: 20 }}>
+          <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={hasLinks ? `Watch ${title}` : `${title}: coming soon`} disabled={opening || !hasLinks} onPress={onWatch} style={{ alignSelf: 'stretch', height: 58, marginTop: 20, opacity: hasLinks ? 1 : 0.85 }}>
             <View style={st.watchLip} />
             <View style={[st.watch, { opacity: opening ? .7 : 1 }]}>
               <Svg width={14} height={14} viewBox="0 0 16 16"><Path d="M4 2.5v11l9-5.5z" fill="#17120F" /></Svg>
-              <RNText style={nunito(800, 17, { color: '#17120F' })}>{opening ? 'Opening…' : 'Watch'}</RNText>
+              <RNText style={nunito(800, 17, { color: '#17120F' })}>{opening ? 'Opening…' : hasLinks ? 'Watch' : 'Coming soon'}</RNText>
             </View>
           </Pressable>
           <View style={{ flexDirection: 'row', gap: 48, marginTop: 16 }}>
@@ -106,7 +107,7 @@ export default function CommunityVideoScreen() {
         <RNText accessibilityRole="header" style={nunito(900, 20, { color: INK, letterSpacing: -0.4, marginTop: 30, paddingHorizontal: 22 })}>More films</RNText>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 22, gap: 12, paddingTop: 12 }}>
           {more.map(other => <Pressable key={other.id} accessibilityRole="button" accessibilityLabel={other.title} onPress={() => openOther(other)} style={st.poster}>
-            <Image recyclingKey={other.id} source={{ uri: other.thumbnail_url }} placeholder={COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={{ left: '70%', top: '40%' }} style={StyleSheet.absoluteFill} />
+            <Image recyclingKey={other.id} source={filmImage(other)} placeholder={COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={filmFocus(other)} style={StyleSheet.absoluteFill} />
             <ReaderMaterialGradient pointerEvents="none" colors={['#00000000', '#000000C0']} locations={[.45, 1]} style={StyleSheet.absoluteFill} />
             <View style={{ paddingBottom: 9, width: '100%' }}><FilmTitle title={other.title} size="poster" /></View>
           </Pressable>)}
@@ -122,19 +123,34 @@ export default function CommunityVideoScreen() {
     {/* Watch, then choose where */}
     <Modal visible={choose} transparent animationType={reduced ? 'fade' : 'slide'} onRequestClose={() => setChoose(false)}>
       <RNPressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setChoose(false)} style={{ flex: 1, backgroundColor: '#0000008C' }} />
-      <View style={[st.sheet, { paddingBottom: insets.bottom + 20 }]}>
-        <RNText style={nunito(800, 20, { color: INK })}>Watch “{title}”</RNText>
-        <RNText style={nunito(600, 14, { color: SOFT, marginTop: 2 })}>It opens in the app you choose.</RNText>
-        <View style={{ gap: 8, marginTop: 14 }}>
-          {places.map(p => <Pressable key={p.id} feedback="action" accessibilityRole="button" accessibilityLabel={`Watch on ${p.label}`} onPress={() => void watch(p.url)} style={st.place}>
-            <Image source={p.icon} contentFit="contain" style={{ width: 28, height: 28, borderRadius: 7 }} />
-            <RNText style={nunito(800, 16, { color: INK, flex: 1 })}>{p.label}</RNText>
-            <RNText style={nunito(700, 14, { color: SOFT })}>Watch ↗</RNText>
+      <View style={[st.sheet, { paddingBottom: insets.bottom + 18 }]}>
+        <View style={{ alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: '#FFFFFF33' }} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 16 }}>
+          <Image source={video ? filmImage(video) : COMMUNITY_VIDEO_POSTER} placeholder={COMMUNITY_VIDEO_POSTER} contentFit="cover" contentPosition={video ? filmFocus(video) : { left: '70%', top: '40%' }} style={{ width: 52, height: 72, borderRadius: 10 }} />
+          <View style={{ flex: 1 }}>
+            <RNText style={nunito(800, 11.5, { color: K.gold, letterSpacing: 1.8, textTransform: 'uppercase' })}>Watch</RNText>
+            <RNText numberOfLines={1} style={nunito(800, 19, { color: INK })}>{title}</RNText>
+            {!!year && <RNText style={nunito(600, 13, { color: SOFT })}>{year} · Short film</RNText>}
+          </View>
+          <RNPressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setChoose(false)} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#FFFFFF1A', alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start' }}>
+            <SFSymbol name="xmark" size={14} weight="bold" color={INK} />
+          </RNPressable>
+        </View>
+        <View style={{ marginTop: 16, borderRadius: 20, overflow: 'hidden', backgroundColor: '#FFFFFF0F' }}>
+          {places.map((p, k) => <Pressable key={p.id} feedback="action" accessibilityRole="button" accessibilityLabel={`Watch on ${p.label}`} onPress={() => void watch(p.url)}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: k ? 1 : 0, borderTopColor: '#FFFFFF14' }}>
+            <Image source={p.icon} contentFit="contain" style={{ width: 44, height: 44, borderRadius: 11 }} />
+            <View style={{ flex: 1 }}>
+              <RNText style={nunito(800, 16.5, { color: INK })}>{p.label}</RNText>
+              <RNText style={nunito(600, 13, { color: SOFT })}>Opens in the {p.label} app</RNText>
+            </View>
+            <View style={{ height: 36, borderRadius: 18, paddingHorizontal: 14, backgroundColor: K.cream, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <RNText style={nunito(800, 14, { color: '#17120F' })}>Watch</RNText>
+              <SFSymbol name="arrow.up.right" size={11} weight="bold" color="#17120F" />
+            </View>
           </Pressable>)}
         </View>
-        <RNPressable accessibilityRole="button" onPress={() => setChoose(false)} style={{ height: 48, alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
-          <RNText style={nunito(800, 15, { color: SOFT })}>Cancel</RNText>
-        </RNPressable>
+        <RNText style={nunito(600, 12.5, { color: SOFT, textAlign: 'center', marginTop: 14 })}>You’ll leave Closer to watch. Come back anytime.</RNText>
       </View>
     </Modal>
   </View>;
@@ -147,6 +163,5 @@ const st = StyleSheet.create({
   watchLip: { position: 'absolute', left: 0, right: 0, top: 4, height: 54, borderRadius: 16, backgroundColor: '#00000066' },
   iconBtn: { minWidth: 56, minHeight: 52, alignItems: 'center', justifyContent: 'center', gap: 5 },
   poster: { width: 112, height: 168, borderRadius: 16, borderCurve: 'continuous', overflow: 'hidden', backgroundColor: '#2A1E17', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: SHEET, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 18, paddingTop: 20 },
-  place: { height: 58, borderRadius: 14, backgroundColor: '#FFFFFF12', flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14 },
+  sheet: { backgroundColor: SHEET, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingHorizontal: 18, paddingTop: 10 },
 });

@@ -7,10 +7,12 @@ import Animated, { useAnimatedStyle, withSpring } from "react-native-reanimated"
 import { Page } from "@/components/page/Page";
 import { K, Title, nunito } from "@/components/closer/kit";
 import { closerPage, useCloserPage } from "@/state/closerPage";
+import { SavedSection } from "@/components/closer/SavedSection";
+import { GroupsShelf } from "@/components/community/GroupsShelf";
 
 /**
- * You: a few preferences and nothing else, as in the prototype. The rest of Closer (the Bible, Community, the full
- * settings) stays one tap away under “More in Closer”.
+ * You: everything you kept (the Saved shelf lives here now, so Community can have a tab), then a few preferences.
+ * The full settings stay one tap away under “More in Closer”.
  */
 export default function YouScreen() {
   const router = useRouter();
@@ -27,6 +29,9 @@ export default function YouScreen() {
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 24, paddingHorizontal: 20, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
         <Title>You</Title>
+        <SavedSection />
+        <GroupsShelf />
+        <Text accessibilityRole="header" style={nunito(900, 22, { color: K.ink, letterSpacing: -0.4, marginTop: 48 })}>Settings</Text>
         <Group title="Reading">
           <Row label="Bible translation" value="World English Bible" />
           <Row label="Daily reminder" sub={settings.reminder ? "8:00 AM" : "Off"}>
@@ -42,7 +47,6 @@ export default function YouScreen() {
           </Row>
         </Group>
         <Group title="More in Closer">
-          <Row label="Community" onPress={() => router.push("/community" as never)} chevron />
           <Row label="All settings" onPress={() => router.push("/settings" as never)} chevron />
         </Group>
         <Group title="Privacy">

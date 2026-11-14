@@ -97,7 +97,7 @@ const NativeTabs = withLayoutContext<
  * control everywhere the user navigates.
  */
 export default function TabsLayout() {
-  // The Page prototype's home: five tabs on cream, red for the one you're on (closer-page Today · Bible · Explore · Saved · You).
+  // The Page prototype's home: five tabs on cream, red for the one you're on (closer-page Today · Bible · Explore · Community · You; Saved lives in You).
   return (
     <View style={{ flex: 1, backgroundColor: "#FFF7EB" }}>
       <View style={{ flex: 1 }}>
@@ -115,7 +115,7 @@ export default function TabsLayout() {
           <NativeTabs.Screen name="today" options={{ title: "Today", sfSymbol: { default: "house.fill", selected: "house.fill" } }} />
           <NativeTabs.Screen name="library" options={{ title: "Bible", sfSymbol: { default: "book.fill", selected: "book.fill" } }} />
           <NativeTabs.Screen name="explore" options={{ title: "Explore", sfSymbol: { default: "safari.fill", selected: "safari.fill" } }} />
-          <NativeTabs.Screen name="saved" options={{ title: "Saved", sfSymbol: { default: "bookmark.fill", selected: "bookmark.fill" } }} />
+          <NativeTabs.Screen name="community" options={{ title: "Community", sfSymbol: { default: "person.2.fill", selected: "person.2.fill" } }} />
           <NativeTabs.Screen name="you" options={{ title: "You", sfSymbol: { default: "person.fill", selected: "person.fill" } }} />
         </NativeTabs>
       </View>

@@ -6,6 +6,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts, ShantellSans_700Bold } from "@expo-google-fonts/shantell-sans";
+import { Oswald_300Light, Oswald_700Bold } from "@expo-google-fonts/oswald";
 // Nunito is the interface face; Scripture and handwritten accents retain their own fonts.
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { View } from "react-native";
@@ -62,6 +63,9 @@ ensureAndroidChannel().catch(() => {
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     ShantellSans_700Bold,
+    // film titles only (Closer Shorts), see components/FilmTitle.tsx
+    Oswald_300Light,
+    Oswald_700Bold,
     NunitoRegular: require("../assets/fonts/nunito/nunito-400.ttf"),
     NunitoMedium: require("../assets/fonts/nunito/nunito-500.ttf"),
     NunitoSemiBold: require("../assets/fonts/nunito/nunito-600.ttf"),

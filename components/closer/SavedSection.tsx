@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown, LinearTransition } from "react-native-reanimated";
 import Svg, { Path, Rect } from "react-native-svg";
 import { Page } from "@/components/page/Page";
 import { BookCard } from "@/components/closer/BookCard";
-import { K, Title, nunito } from "@/components/closer/kit";
+import { K, nunito } from "@/components/closer/kit";
 import { MiniNetwork, PsalmTile } from "@/components/closer/Shelves";
 import { LESSONS } from "@/lib/closer-page/content";
 import { TONE } from "@/lib/closer-page/content/library";
@@ -17,15 +15,14 @@ import type { Lesson } from "@/lib/closer-page/lesson/types";
 import { closerPage, useCloserPage } from "@/state/closerPage";
 
 /**
- * Saved: everything you keep stays the thing it was. Book cards, filed cases, the networks you pulled, psalms as
+ * Saved, inside You: everything you keep stays the thing it was. Book cards, filed cases, the networks you pulled, psalms as
  * their landscapes, verse cards, and your reflections under a lock, only on this device. A filter on top; Page
  * perches on the first thing and nods when you change it.
  */
 type Filter = "All" | "Books" | "Cases" | "Threads" | "Psalms" | "Verses" | "Reflections";
 
-export default function SavedScreen() {
+export function SavedSection() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { finished, verses, notes } = useCloserPage();
   const [filter, setFilter] = useState<Filter>("All");
   const [nod, setNod] = useState(0);
@@ -45,15 +42,12 @@ export default function SavedScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: K.cream }}>
-      <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 24, paddingHorizontal: 20, paddingBottom: 140, flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-        <Title>Saved</Title>
+    <View>
         {empty ? (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: 60 }}>
-            <Page size={120} mood="thinking" look={0.6} />
+          <View style={{ alignItems: "center", marginTop: 24, borderRadius: 24, backgroundColor: K.creamDeep, paddingHorizontal: 24, paddingVertical: 28 }}>
+            <Page size={84} mood="thinking" look={0.6} />
             <Text style={nunito(900, 22, { color: K.ink, marginTop: 24 })}>Nothing here yet.</Text>
-            <Text style={nunito(700, 16, { color: K.inkSoft, textAlign: "center", marginTop: 8, maxWidth: 260, lineHeight: 21 })}>Finish a book, file a case or save a verse, and I’ll keep it here for you.</Text>
+            <Text style={nunito(700, 16, { color: K.inkSoft, textAlign: "center", marginTop: 8, maxWidth: 260, lineHeight: 21 })}>Finish today’s story, file a case or save a verse, and I’ll keep it here for you.</Text>
           </View>
         ) : (
           <>
@@ -153,7 +147,6 @@ export default function SavedScreen() {
             </View>
           </>
         )}
-      </ScrollView>
     </View>
   );
 }

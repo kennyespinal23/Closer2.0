@@ -5,6 +5,7 @@ let Speech: typeof SpeechTypes | undefined;
 let setAudioModeAsync: typeof import("expo-audio").setAudioModeAsync | undefined;
 try { Speech = require("expo-speech"); } catch { /* available after a native update */ }
 try { setAudioModeAsync = require("expo-audio").setAudioModeAsync; } catch { /* available after a native update */ }
+import { audioSessionFor, speechActive } from "@/lib/audioSession";
 import { fetchChapter } from "@/lib/bible";
 import { findBookById } from "@/constants/books";
 import { usePreferences } from "@/state/preferences";
@@ -38,7 +39,6 @@ function spoken(text: string) {
 
 // Only one chapter speaks at a time, across every screen.
 let session = 0;
-let audioModeSet = false;
 const PACE = 0.82;
 // A listening activity left over from a previous launch has nothing behind it now.
 endActivity("listen");
@@ -52,7 +52,8 @@ export function useChapterSpeech({ bookId, chapter, rate = 1, onChapterEnd }: { 
   const [error, setError] = useState<string | undefined>();
   const mine = useRef(0), verseRef = useRef(0), statusRef = useRef<SpeechStatus>("idle"), endRef = useRef(onChapterEnd);
   endRef.current = onChapterEnd;
-  const set = (s: SpeechStatus) => { statusRef.current = s; setStatus(s); };
+  // while it reads, the reader owns the audio session; when it stops, Closer's sounds get it back
+  const set = (s: SpeechStatus) => { statusRef.current = s; setStatus(s); speechActive.on = s !== "idle"; };
 
   const play = useCallback(async (fromIndex = verseRef.current) => {
     if (!Speech || !setAudioModeAsync) { setError("Update Closer in TestFlight to listen to chapters."); return; }
@@ -61,7 +62,7 @@ export function useChapterSpeech({ bookId, chapter, rate = 1, onChapterEnd }: { 
     set("loading"); setError(undefined);
     try {
       await Speech?.stop();
-      if (!audioModeSet) { await setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: "doNotMix" }); audioModeSet = true; }
+      await audioSessionFor("speech");
       const [data, voice] = await Promise.all([fetchChapter(bookId, chapter, translation.id), bestVoice()]);
       if (session !== token) return;
       const verses = data.verses;

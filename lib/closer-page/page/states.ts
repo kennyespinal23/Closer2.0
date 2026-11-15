@@ -75,7 +75,7 @@ export const IDLE = {
 export const QUIET_MOODS: Mood[] = ["tender", "moved", "thinking"];
 
 /* Where Page can stand on the lesson stage, as a share of the stage. "bubble" is where his words sit. */
-export type Anchor = "hero" | "center" | "top" | "left" | "right" | "corner" | "low" | "off";
+export type Anchor = "hero" | "center" | "top" | "left" | "right" | "corner" | "low" | "off" | "beside";
 export const ANCHORS: Record<Anchor, { x: number; y: number; scale: number; bubble: "below" | "right" | "left" | "none" }> = {
   hero:   { x: 0.5,  y: 0.30, scale: 1.35, bubble: "below" },
   center: { x: 0.5,  y: 0.26, scale: 1.0,  bubble: "below" },
@@ -85,4 +85,6 @@ export const ANCHORS: Record<Anchor, { x: number; y: number; scale: number; bubb
   corner: { x: 0.86, y: 0.07, scale: 0.46, bubble: "none" },
   low:    { x: 0.5,  y: 0.62, scale: 1.1,  bubble: "below" },
   off:    { x: 1.4,  y: 0.1,  scale: 0.5,  bubble: "none" },
+  // beside his words, Duolingo-style: medium size on the left, his bubble to his right, level with him
+  beside: { x: 0.15, y: 0.17, scale: 0.6,  bubble: "right" },
 };

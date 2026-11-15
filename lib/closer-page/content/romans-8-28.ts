@@ -19,6 +19,8 @@ export const romans828 = {
   scripture: "Romans 8",
   minutes: 5,
   theme: "burgundy",
+  // trial: Page fades back once he points at something (CLOSER-PICKS.md)
+  handoff: true,
   blocks: [
     // 1. Introduction
     {
@@ -70,8 +72,10 @@ export const romans828 = {
       page: { at: "top", mood: "curious" },
       before: [
         { say: "Want to see something else?", mood: "excited", act: "hop", open: true },
-        { say: "Look at what Paul was talking about earlier.", show: "verse", mood: "curious" },
+        { say: "Look at what Paul was talking about earlier.", show: "verse", mood: "curious", handoff: "corner", light: "verse" },
       ],
+      // trial: the spotlight, one subject at a time (CLOSER-PICKS.md)
+      spotlight: true,
       verse: { text: "For I consider that the sufferings of this present time are not worthy to be compared with the glory which will be revealed toward us.", ref: "Romans 8:18", translation: WEB },
       hint: "Tap the marked words",
       links: [
@@ -79,12 +83,12 @@ export const romans828 = {
         { phrase: "the glory which will be revealed toward us", label: "Glory to come", note: "And this outweighs it. It’s not even close." },
       ],
       after: [
-        { say: "Paul knew life could be painful.", at: "top", mood: "tender", open: false },
-        { say: "He wasn’t promising that nothing bad would happen.", mood: "thinking" },
-        { say: "His hope was in what God could do.", mood: "moved", act: "nod" },
-        { say: "And 8:28 is for those who love God, called according to his purpose.", mood: "thinking" },
-        { say: "Then Paul asks one more question.", show: "more", mood: "curious", act: "tilt" },
-        { say: "His answer: nothing can. Not even the hard things.", mood: "happy", act: "hop" },
+        { say: "Paul knew life could be painful.", at: "top", mood: "tender", open: false, light: 0 },
+        { say: "He wasn’t promising that nothing bad would happen.", mood: "thinking", light: 0 },
+        { say: "His hope was in what God could do.", mood: "moved", act: "nod", light: 1 },
+        { say: "And 8:28 is for those who love God, called according to his purpose.", mood: "thinking", light: "none" },
+        { say: "Then Paul asks one more question.", show: "more", mood: "curious", act: "tilt", light: "more" },
+        { say: "His answer: nothing can. Not even the hard things.", mood: "happy", act: "hop", light: "more" },
       ],
       more: { text: "Who shall separate us from the love of Christ?", ref: "Romans 8:35", translation: WEB },
     },
@@ -98,7 +102,7 @@ export const romans828 = {
       prompt: "Drag the true one into place, or tap it",
       after: [
         { say: "There it is.", mood: "moved", act: "nod" },
-        { say: "Here’s the heart of it.", show: "takeaway", mood: "moved" },
+        { say: "Here’s the heart of it.", show: "takeaway", mood: "moved", handoff: "corner" },
       ],
       takeaway: "God’s promise isn’t that life will always be easy. It’s that suffering doesn’t place us beyond his purposes.",
     },

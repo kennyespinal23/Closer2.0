@@ -59,6 +59,7 @@ export const library: Shelf[] = [
   {
     id: "psalms", label: "Psalms & Emotions", promise: "Bring your feelings, in the psalmists’ words.", entries: [
       { id: "ps-13", title: "When God Feels Far Away", sub: "Sadness · Psalm 13", tone: "seaglass", lessonId: "psalm-13" },
+      { id: "ps-13-classic", title: "When God Feels Far Away (before)", sub: "To compare · Psalm 13", tone: "seaglass", lessonId: "psalm-13-classic" },
       ...PSALM_PLANS.map(p => ({ id: `ps-${p.id}`, title: p.title, sub: `${p.feeling} · Psalm ${p.psalm}`, tone: "seaglass" as const, lessonId: `psalm-${p.psalm}` })),
     ],
   },

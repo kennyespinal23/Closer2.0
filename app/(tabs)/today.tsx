@@ -1,7 +1,9 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { feel } from "@/lib/feedback";
+import { isInternalBuild } from "@/lib/isInternalBuild";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
@@ -21,9 +23,24 @@ import { TomorrowSheet } from "@/components/closer/TomorrowSheet";
 export default function TodayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { finished, days } = useCloserPage();
+  const { finished, days, hydrated } = useCloserPage();
   const streak = streakOf(days), litToday = !!days[dayKey(new Date())]?.length;
+  // the day's first lesson lights today: the streak sound plays when you come back here and see it
+  const wasLit = useRef<boolean | null>(null), streakDue = useRef(false);
+  useEffect(() => {
+    if (!hydrated) return;
+    if (wasLit.current === false && litToday) streakDue.current = true;
+    wasLit.current = litToday;
+  }, [hydrated, litToday]);
+  useFocusEffect(useCallback(() => {
+    if (!streakDue.current) return;
+    streakDue.current = false;
+    const t = setTimeout(() => feel("streak"), 600);
+    return () => clearTimeout(t);
+  }, []));
+  const { tmr } = useLocalSearchParams<{ tmr?: string }>(); // ?tmr=1 (testing builds) opens Tomorrow
   const [tmrOpen, setTmrOpen] = useState(false);
+  useEffect(() => { if (tmr && isInternalBuild()) setTmrOpen(true); }, [tmr]);
   const [poke, setPoke] = useState<{ act: Action; mood: Mood; n: number }>({ act: "enter", mood: "neutral", n: 0 });
   const now = new Date();
   const dateKey = now.toDateString();

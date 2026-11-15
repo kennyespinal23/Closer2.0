@@ -43,7 +43,14 @@ export const MYTH_TYPES: Record<MythType, { label: string; means: string }> = {
 export type Cue = { at?: Anchor; mood?: Mood; act?: Action; look?: number; open?: boolean };
 
 /** One thing Page says. `show` names a piece of the block to reveal with this line. */
-export type Line = Cue & { say: string; show?: string };
+export type Line = Cue & { say: string; show?: string;
+  /** in a handoff lesson, what Page does after this line: "fade" steps back where he is (the default for a line
+      that shows something), "corner" flies up to the corner for a big reading moment, false stays */
+  handoff?: Handoff | false;
+  /** in a spotlight block, what's lit while this line is up: a marked phrase (its index), the whole verse, the further
+      verse ("more"), or nothing ("none": Page's line is the subject). Everything else steps back. */
+  light?: number | "verse" | "more" | "none" };
+export type Handoff = "fade" | "corner";
 
 /** Scripture, word for word from the named translation */
 export type Verse = { text: string; ref: string; translation: string };
@@ -173,7 +180,7 @@ export type PsalmMovement = {
   hinge?: { word: string; verse: number; note: string };
   pairs?: { before: { text: string; verse: number }; after: { text: string; verse: number }; note: string }[];
 };
-export type Psalm = { number: number; title: string; about: string; verses: Verse[]; movements: PsalmMovement[]; key: Verse };
+export type Psalm = { number: number; title: string; about: string; /** `about`, cut to one short line, for focus lessons */ brief?: string; verses: Verse[]; movements: PsalmMovement[]; key: Verse };
 
 export type Block =
   /** Page talks. The last line's button is `reply`. */
@@ -335,7 +342,7 @@ export type Block =
       fragments: Fragment[]; strands: Strand[]; pattern: { title: string; body: string; say: string }; after: Line[];
     }
   /** EmotionEntrance: an optional "how are you?"; nothing is saved, and every answer leads to today's psalm */
-  | { kind: "entrance"; theme?: Theme; page?: Cue; prompt: string; options: { text: string; reply: string }[]; skip: string; notice: string }
+  | { kind: "entrance"; theme?: Theme; page?: Cue; prompt: string; options: { text: string; reply: string }[]; skip: string; notice: string; /** the notice, cut to one short line, for focus lessons */ brief?: string }
   /** Meet the psalm: Page's lines, then its opening verses */
   | { kind: "psalmMeet"; theme?: Theme; page?: Cue; before: Line[]; show: [number, number]; after: Line[] }
   /** One movement of the psalm, met through its own interaction */
@@ -358,6 +365,8 @@ export type Block =
       a balance tips when you've seen both. Lines can show "more" for a further verse. */
   | {
       kind: "context"; theme?: Theme; page?: Cue; before: Line[]; verse: Verse; hint: string;
+      /** Spotlight (trial): one subject at a time. Each line's `light` says what's lit; the rest dims. */
+      spotlight?: boolean;
       links: { phrase: string; label: string; note: string }[]; after: Line[]; more?: Verse;
       /** balance: the second side outweighs the first. shift: from the first to the second. pair: two clues side by side. */
       visual?: "balance" | "shift" | "pair" | "steps" | "none";
@@ -448,5 +457,11 @@ export type Lesson = {
   book?: Book;
   /** for Psalms & Emotions: the psalm itself, which every psalm block reads */
   psalm?: Psalm;
+  /** A tidier lesson (trial): Page stays the guide; each instruction is said once, by Page, so buttons just act; small
+      print is cut to one short line. */
+  focus?: boolean;
+  /** Handoff (trial): once Page points at something, he and his bubble fade back so the content is the subject.
+      He comes back when he speaks again or reacts to you. */
+  handoff?: boolean;
   blocks: Block[];
 };

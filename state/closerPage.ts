@@ -6,7 +6,7 @@ import type { Verse } from "@/lib/closer-page/lesson/types";
    notes you chose to keep, and two comfort settings. Nothing here is sent anywhere. */
 
 export type CloserNote = { ref: string; text: string; at: string };
-export type CloserSettings = { largeText: boolean; reduceMotion: boolean; reminder: boolean };
+export type CloserSettings = { largeText: boolean; reduceMotion: boolean; reminder: boolean; sound: boolean };
 /** days you finished something: "2026-11-14" -> lesson ids, in order */
 export type CloserDays = Record<string, string[]>;
 type State = { finished: string[]; days: CloserDays; verses: Verse[]; notes: CloserNote[]; settings: CloserSettings; hydrated: boolean };
@@ -36,7 +36,7 @@ export function streakOf(days: CloserDays, now = new Date()) {
 
 const KEY = "closer.page.v1";
 const listeners = new Set<() => void>();
-let snap: State = { finished: [], days: {}, verses: [], notes: [], settings: { largeText: false, reduceMotion: false, reminder: true }, hydrated: false };
+let snap: State = { finished: [], days: {}, verses: [], notes: [], settings: { largeText: false, reduceMotion: false, reminder: true, sound: true }, hydrated: false };
 let loading: Promise<void> | null = null;
 
 const emit = () => listeners.forEach(l => l());
@@ -76,6 +76,9 @@ export const closerPage = {
   /** Delete everything the lessons kept on this device */
   clear() { set({ finished: [], days: {}, verses: [], notes: [] }); },
 };
+
+/** The settings right now, for code outside React (sounds) */
+export const closerSettings = () => snap.settings;
 
 export function useCloserPage() {
   const state = useSyncExternalStore(cb => { listeners.add(cb); return () => { listeners.delete(cb); }; }, () => snap);

@@ -11,6 +11,7 @@ import { GroupsShelf } from "@/components/community/GroupsShelf";
 import { Face, useMe } from "@/components/community/togetherKit";
 import { LESSONS } from "@/lib/closer-page/content";
 import { TONE, library } from "@/lib/closer-page/content/library";
+import { constellations } from "@/lib/closer-page/content/discovery";
 import { useBibleMomentCollection } from "@/state/bibleMoments";
 import { dayKey, streakOf, useCloserPage } from "@/state/closerPage";
 import * as haptics from "@/lib/haptics";
@@ -32,6 +33,7 @@ export default function YouScreen() {
   const week = (() => { const d = new Date(), out: boolean[] = []; for (let i = 6; i >= 0; i--) { const x = new Date(d); x.setDate(d.getDate() - i); out.push(!!days[dayKey(x)]?.length); } return out; })();
   const thisWeek = week.filter(Boolean).length;
   const done = finished.map(id => LESSONS[id]).filter(Boolean).reverse();
+  const stars = constellations(finished).reduce((n, c) => n + c.stars.filter(s => s.finished).length, 0);
   const toneOf = (id: string) => { for (const s of library) { const e = s.entries.find(x => x.lessonId === id); if (e) return { ...TONE[e.tone], label: s.label }; } return { ...TONE.forest, label: "" }; };
 
   return (
@@ -67,6 +69,7 @@ export default function YouScreen() {
           <Door bg="#682C42" icon={<SFSymbol name="quote.opening" size={16} weight="bold" color="#FFFFFF" />} title="Saved verses" sub={verses.length ? `${verses.length} to come back to` : "Save one from any story"} onPress={() => go("/kept/verses")} />
           <Door bg={K.inkSoft} icon={<SFSymbol name="lock.fill" size={16} color="#FFFFFF" />} title="Reflections" sub={notes.length ? `${notes.length} · only on this phone` : "Only on this phone"} onPress={() => go("/kept/reflections")} />
           <Door bg="#B85A9C" icon={<SFSymbol name="rectangle.on.rectangle" size={16} weight="bold" color="#FFFFFF" />} title="Bible moments" sub={`${moments.length} of 78 found`} onPress={() => go("/rhythm?section=moments")} />
+          <Door bg="#0E1729" icon={<SFSymbol name="sparkles" size={17} weight="bold" color="#FFFFFF" />} title="Connections" sub={stars ? `${stars} ${stars === 1 ? "star" : "stars"} lit in your sky` : "How your stories link up"} onPress={() => go("/discoveries")} />
         </View>
 
         {/* finished */}

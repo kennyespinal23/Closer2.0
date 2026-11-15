@@ -51,6 +51,7 @@ import { mysteryHiddenYears } from "./mystery-hidden-years";
 import { markOverview } from "./book-mark";
 import { connectLamb } from "./connect-lamb";
 import { psalm13Experience } from "./psalm-13";
+import { psalm13Case } from "./psalm-13-case";
 import { psalm56Experience } from "./psalm-56";
 import { psalm4Experience } from "./psalm-4";
 import { psalm100Experience } from "./psalm-100";
@@ -77,5 +78,5 @@ import { revelationOverview } from "./book-revelation";
 
 /* Every playable lesson, by id. Adding a story: write its file, add it here, point a library entry at it. */
 export const LESSONS: Record<string, Lesson> = Object.fromEntries(
-  ([lazarus, lostSheep, zacchaeus, jonah, ruth, storm, romans828, moreThanYouCanHandle, godHelps, money, threeWiseMen, apple, whySuffering, unansweredPrayer, godFarAway, godExists, forgiveAnyone, johnNewton, augustine, corrieTenBoom, csLewis, georgeMuller, brotherLawrence, harrietTubman, jesusWashedFeet, jesusZacchaeus, jesusStorm, jesusWept, jesusWell, jesusPeterSank, everydayPromotion, everydayMessage, everydayAhead, everydayApology, everydayNoticed, everydayLie, everydayBoundaries, everydayIgnored, everydayDinner, prayNoWords, ...prayMore, mysteryArk, mysteryNephilim, mysteryHebrews, mysteryTribes, mysteryThorn, mysteryEden, mysteryStar, mysteryHiddenYears, psalm13Experience, psalm56Experience, psalm4Experience, psalm100Experience, psalm142Experience, psalm126Experience, psalm51Experience, psalm42Experience, psalm8Experience, psalm150Experience, connectLamb, connectBread, connectShepherd, connectDwelling, markOverview, genesisOverview, exodusOverview, ruthOverview, psalmsOverview, proverbsOverview, isaiahOverview, lukeOverview, johnOverview, romansOverview, jamesOverview, revelationOverview] as Lesson[]).map(l => [l.id, l]),
+  ([lazarus, lostSheep, zacchaeus, jonah, ruth, storm, romans828, moreThanYouCanHandle, godHelps, money, threeWiseMen, apple, whySuffering, unansweredPrayer, godFarAway, godExists, forgiveAnyone, johnNewton, augustine, corrieTenBoom, csLewis, georgeMuller, brotherLawrence, harrietTubman, jesusWashedFeet, jesusZacchaeus, jesusStorm, jesusWept, jesusWell, jesusPeterSank, everydayPromotion, everydayMessage, everydayAhead, everydayApology, everydayNoticed, everydayLie, everydayBoundaries, everydayIgnored, everydayDinner, prayNoWords, ...prayMore, mysteryArk, mysteryNephilim, mysteryHebrews, mysteryTribes, mysteryThorn, mysteryEden, mysteryStar, mysteryHiddenYears, psalm13Case, psalm13Experience, psalm56Experience, psalm4Experience, psalm100Experience, psalm142Experience, psalm126Experience, psalm51Experience, psalm42Experience, psalm8Experience, psalm150Experience, connectLamb, connectBread, connectShepherd, connectDwelling, markOverview, genesisOverview, exodusOverview, ruthOverview, psalmsOverview, proverbsOverview, isaiahOverview, lukeOverview, johnOverview, romansOverview, jamesOverview, revelationOverview] as Lesson[]).map(l => [l.id, l]),
 );

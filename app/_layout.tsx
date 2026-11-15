@@ -2,6 +2,7 @@ import { BibleReadingRewards } from "@/components/BibleReadingRewards";
 import "../global.css";
 
 import { useEffect } from "react";
+import { preloadSounds } from "@/lib/sound";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
@@ -75,6 +76,9 @@ export default function RootLayout() {
     NunitoBlack: require("../assets/fonts/nunito/nunito-900.ttf"),
 
   });
+
+  // Closer's sounds load in the background so the first one isn't late
+  useEffect(() => { preloadSounds(); }, []);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {

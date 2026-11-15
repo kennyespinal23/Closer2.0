@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import * as Haptics from "expo-haptics";
+import { feel, type Moment } from "@/lib/feedback";
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
@@ -16,10 +17,10 @@ import { closerPage, useCloserPage } from "@/state/closerPage";
 export default function LessonScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { verses, settings } = useCloserPage();
+  const { verses, settings, finished } = useCloserPage();
   // set once, before the page loads; later changes come back to us as messages
   const boot = useMemo(
-    () => `window.__CLOSER_APP__=${JSON.stringify({ lesson: id, saved: verses.map(v => v.ref), largeText: settings.largeText, reduceMotion: settings.reduceMotion })};true;`,
+    () => `window.__CLOSER_APP__=${JSON.stringify({ lesson: id, saved: verses.map(v => v.ref), finished, largeText: settings.largeText, reduceMotion: settings.reduceMotion })};true;`,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [id],
   );
@@ -31,9 +32,18 @@ export default function LessonScreen() {
       case "finished": closerPage.finish(String(msg.id)); break;
       case "verse": closerPage.saveVerse(msg.verse as never, !!msg.saved); break;
       case "note": closerPage.keepNote(msg.note as never); break;
+      // a moment that gets a sound and a buzz together
+      case "feel": feel(msg.moment as Moment); break;
       case "haptic":
-        if (msg.style === "success") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        else void Haptics.impactAsync(msg.style === "medium" ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
+        switch (msg.style) {
+          case "success": void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); break;
+          case "warning": void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning); break;
+          case "selection": void Haptics.selectionAsync(); break;
+          case "medium": void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); break;
+          case "rigid": void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid); break;
+          case "soft": void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft); break;
+          default: void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
         break;
     }
   }, [router]);

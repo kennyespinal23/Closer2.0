@@ -41,6 +41,9 @@ export default function CloserSettingsScreen() {
           <Row label="Reduce motion" sub="Page still moves, just less">
             <Toggle on={settings.reduceMotion} label="Reduce motion" onChange={v => closerPage.settings({ reduceMotion: v })} />
           </Row>
+          <Row label="Sounds" sub="Quiet when your phone is on silent">
+            <Toggle on={settings.sound} label="Sounds" onChange={v => closerPage.settings({ sound: v })} />
+          </Row>
         </Group>
         <Group title="More">
           <Row label="All settings" onPress={() => router.push("/settings" as never)} chevron />

@@ -17,6 +17,7 @@ export const psalm13: Psalm = {
   number: 13,
   title: "Psalm 13",
   about: "A short prayer of six verses. In many Bibles its heading names David, and tradition attributes it to him.",
+  brief: "A prayer of six verses.",
   verses: [
     v("How long, Yahweh?\nWill you forget me forever?\nHow long will you hide your face from me?", "Psalm 13:1"),
     v("How long shall I take counsel in my soul,\nhaving sorrow in my heart every day?\nHow long shall my enemy triumph over me?", "Psalm 13:2"),
@@ -70,10 +71,12 @@ export const psalm13: Psalm = {
 };
 
 export const psalm13Experience = PsalmExperience(psalm13, {
-  id: "psalm-13",
+  id: "psalm-13-classic",
   title: "When God Feels Far Away",
   subtitle: "Psalm 13 · the cry, the plea, the trust",
   minutes: 5,
+  // the tidy-up trial (CLOSER-PICKS.md, Lesson focus): only this lesson, for now
+  focus: true,
   entrance: {
     prompt: "How are you feeling today?",
     options: [
@@ -86,6 +89,7 @@ export const psalm13Experience = PsalmExperience(psalm13, {
       { text: "I’d rather just explore", reply: "Of course. Let’s explore." },
     ],
     skip: "Skip for now",
+    brief: "Your answer isn’t saved.",
     notice: "This one is Psalm 13, often read when God feels far away. That’s a suggestion, not a rule. Other psalms are in the library. Your answer isn’t saved.",
   },
   meet: {

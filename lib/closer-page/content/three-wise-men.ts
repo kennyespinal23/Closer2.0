@@ -26,8 +26,15 @@ export const threeWiseMen = {
   theme: "navy",
   blocks: [
     {
+      kind: "dialogue",
+      page: { at: "hero", act: "enter", mood: "curious" },
+      lines: [{ say: "Every nativity scene has them. Let’s check the count.", mood: "cheeky", act: "hop" }],
+      display: { text: "Three wise men?", sub: "Misconception · Matthew 2" },
+      reply: "Count again",
+    },
+    {
       kind: "claim",
-      page: { at: "hero", act: "enter", mood: "excited" },
+      page: { at: "hero", mood: "excited" },
       claim,
       lines: [
         { say: "Picture a nativity scene.", mood: "happy" },

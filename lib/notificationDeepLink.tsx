@@ -98,6 +98,9 @@ function extractRoute(
   if (typeof data.kind !== "string" || !KNOWN_KINDS.has(data.kind)) {
     return null;
   }
+  // The daily reminder always opens Today. Reminders scheduled by older builds still carry
+  // their old route (the retired /sermon screens), so the stored route is ignored for them.
+  if (data.kind === "before-the-noise") return "/today";
   if (typeof data.route !== "string" || data.route.length === 0) return null;
   // The router accepts string Hrefs at runtime; the cast keeps the
   // typed-routes feature happy without us having to enumerate every

@@ -3,6 +3,7 @@ import { SchedulableTriggerInputTypes } from "expo-notifications";
 import { Platform } from "react-native";
 import { loadJSON, removeKey, saveJSON } from "@/lib/storage";
 import { requestNotificationPermission } from "@/lib/notifications";
+import { fill, strings } from "@/lib/i18n";
 
 /**
  * The one-off reminder set from the Tomorrow sheet on Today: a single notification at 7:00 the next morning, saying
@@ -31,7 +32,7 @@ export async function setTomorrowReminder(title: string): Promise<"set" | "denie
   at.setDate(at.getDate() + 1);
   at.setHours(REMIND_HOUR, 0, 0, 0);
   const id = await Notifications.scheduleNotificationAsync({
-    content: { title: "Closer", body: `Today’s is ready: ${title}.`, data: { kind: "tomorrow", route: "/today" }, sound: "default" },
+    content: { title: "Closer", body: fill(strings().native.tomorrow.notification, { title }), data: { kind: "tomorrow", route: "/today" }, sound: "default" },
     trigger: { type: SchedulableTriggerInputTypes.DATE, date: at, ...(Platform.OS === "android" ? { channelId: "before-the-noise" } : {}) },
   });
   await saveJSON<Stored>(KEY, { day: dayKey(at), id });

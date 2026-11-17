@@ -25,8 +25,15 @@ export const money = {
   theme: "navy",
   blocks: [
     {
+      kind: "dialogue",
+      page: { at: "hero", act: "enter", mood: "curious" },
+      lines: [{ say: "A famous line about money. Let’s check the wording.", mood: "cheeky", act: "hop" }],
+      display: { text: "Money is the root of all evil?", sub: "Misconception · 1 Timothy 6" },
+      reply: "Read the whole line",
+    },
+    {
       kind: "claim",
-      page: { at: "hero", act: "enter", mood: "excited" },
+      page: { at: "hero", mood: "excited" },
       claim,
       lines: [
         { say: "Okay. This one is almost a verse.", mood: "cheeky", act: "stare" },

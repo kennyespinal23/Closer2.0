@@ -12,19 +12,23 @@ import { paintedCover } from "@/constants/paintedCovers";
 import type { StudyGroup } from "@/constants/communityPreview";
 import * as haptics from "@/lib/haptics";
 import { Face, INK_FAINT, INK_SOFT, ToneGround, tone, useMe } from "./togetherKit";
+import { fill, plural, useStrings } from "@/lib/i18n";
 
-const templates: { title: string; name: string; book: string; pace: number; icon: SFSymbolName }[] = [
-  { title: "A partner", name: "Us two", book: "ruth", pace: 0, icon: "heart" },
-  { title: "Family", name: "Our family", book: "genesis", pace: 0, icon: "house" },
-  { title: "Friends", name: "Friends in John", book: "john", pace: 1, icon: "person.2" },
-  { title: "Small group", name: "Our Bible study", book: "acts", pace: 2, icon: "book" },
+/* who it's for: the words (title, suggested name) are in the lists, in the same order (native.createGroup.templates) */
+const TEMPLATES: { book: string; pace: number; icon: SFSymbolName }[] = [
+  { book: "ruth", pace: 0, icon: "heart" },
+  { book: "genesis", pace: 0, icon: "house" },
+  { book: "john", pace: 1, icon: "person.2" },
+  { book: "acts", pace: 2, icon: "book" },
 ];
 const books = ["john", "ruth", "psalms", "genesis", "luke", "acts", "proverbs", "philippians", "james"];
-const PACES = ["Daily", "3 times a week", "Weekly"], SCHEDULE = ["Reads daily", "Three times a week", "Meets weekly"], PER_WEEK = [7, 3, 1];
+const PER_WEEK = [7, 3, 1];
 
 /** Start a group: who it's for, one book (the painted covers), how often, with a live preview of the group. */
 export function CreateStudyGroup({ onClose, onSave }: { onClose: () => void; onSave: (group: StudyGroup) => void }) {
   const insets = useSafeAreaInsets(), reduced = useReducedMotion(), me = useMe();
+  const s = useStrings().native.createGroup;
+  const templates = TEMPLATES.map((tp, i) => ({ ...tp, ...s.templates[i]! })), PACES = s.paces;
   const [template, setTemplate] = useState<number | null>(null), [name, setName] = useState(""), [bookId, setBookId] = useState("john"), [pace, setPace] = useState(1), [created, setCreated] = useState(false);
   const group = useRef<StudyGroup | null>(null);
   const book = findBookById(bookId), cover = paintedCover(bookId), t = tone(cover?.color ?? "#5B4A9A");
@@ -32,7 +36,7 @@ export function CreateStudyGroup({ onClose, onSave }: { onClose: () => void; onS
   const ready = template !== null && !!name.trim();
   const save = () => {
     if (group.current || !ready) return;
-    group.current = { id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name: name.trim(), bookId, chapter: 1, schedule: SCHEDULE[pace]!, members: [me.name], mine: true, joined: true, question: `What made you want to read ${book?.name} together?`, replies: [] };
+    group.current = { id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name: name.trim(), bookId, chapter: 1, schedule: s.schedules[pace]!, members: [me.name], mine: true, joined: true, question: fill(s.firstQuestion, { book: book?.name ?? "" }), replies: [] };
     haptics.success(); setCreated(true);
   };
   const finish = () => { if (group.current) { const value = group.current; group.current = null; onSave(value); } else onClose(); };
@@ -50,30 +54,30 @@ export function CreateStudyGroup({ onClose, onSave }: { onClose: () => void; onS
           <Image source={cover.source} contentFit="cover" style={StyleSheet.absoluteFill}/><View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 6, backgroundColor: "#00000040" }}/>
         </Animated.View>}
         <Text accessibilityRole="header" style={{ marginTop: 30, fontSize: 30, lineHeight: 35, fontWeight: "900", letterSpacing: -.6, color: t.t1, textAlign: "center" }}>{name.trim()}</Text>
-        <Text style={{ marginTop: 8, fontSize: 16, lineHeight: 22, fontWeight: "700", color: t.t2, textAlign: "center" }}>{book?.name}, {PACES[pace]!.toLowerCase()}. About {weeks} {weeks === 1 ? "week" : "weeks"}.</Text>
+        <Text style={{ marginTop: 8, fontSize: 16, lineHeight: 22, fontWeight: "700", color: t.t2, textAlign: "center" }}>{plural(weeks, s.made, { book: book?.name ?? "", pace: PACES[pace]!.toLowerCase() })}</Text>
         <Animated.View entering={reduced ? undefined : ZoomIn.delay(180).springify().damping(14)} style={{ marginTop: 22, flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Face person={me} size={52} ring={t.t3}/>
           {[0, 1, 2].map(i => <View key={i} style={{ width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: "#FFFFFF40", alignItems: "center", justifyContent: "center" }}><SFSymbol name="plus" size={16} color={t.t3}/></View>)}
         </Animated.View>
-        <Text style={{ marginTop: 16, fontSize: 13, lineHeight: 18, fontWeight: "600", color: t.t3, textAlign: "center" }}>Invitations open when Community goes live. For now your group is saved on this device.</Text>
+        <Text style={{ marginTop: 16, fontSize: 13, lineHeight: 18, fontWeight: "600", color: t.t3, textAlign: "center" }}>{s.madeNote}</Text>
       </View>
       <Pressable feedback="action" accessibilityRole="button" onPress={finish} style={{ marginHorizontal: 26, marginBottom: insets.bottom + 16, height: 56, borderRadius: 28, backgroundColor: "#FFF8F2", alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ fontSize: 17, fontWeight: "800", color: t.deep }}>Open the group</Text>
+        <Text style={{ fontSize: 17, fontWeight: "800", color: t.deep }}>{s.open}</Text>
       </Pressable>
     </View> :
     <View style={{ flex: 1, backgroundColor: "#191514" }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={{ height: 52, paddingHorizontal: 20, flexDirection: "row", alignItems: "center", marginTop: 6 }}>
-          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={10}><Text style={{ fontSize: 16, fontWeight: "700", color: INK_SOFT }}>Cancel</Text></Pressable>
+          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={10}><Text style={{ fontSize: 16, fontWeight: "700", color: INK_SOFT }}>{s.cancel}</Text></Pressable>
         </View>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}>
-          <Text accessibilityRole="header" style={{ fontSize: 28, lineHeight: 33, fontWeight: "900", letterSpacing: -.6, color: "#FFFFFF" }}>Start a study group</Text>
-          <Label>WHO IT’S FOR</Label>
+          <Text accessibilityRole="header" style={{ fontSize: 28, lineHeight: 33, fontWeight: "900", letterSpacing: -.6, color: "#FFFFFF" }}>{s.title}</Text>
+          <Label>{s.who}</Label>
           <View style={{ marginTop: 10, flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {templates.map((tp, i) => <Chip key={tp.title} on={template === i} label={tp.title} icon={tp.icon} onPress={() => { setTemplate(i); setName(tp.name); setBookId(tp.book); setPace(tp.pace); }}/>)}
           </View>
           {template !== null && <Animated.View entering={reduced ? undefined : FadeInDown.springify().damping(22)}>
-            <Label>ONE BOOK, TOGETHER</Label>
+            <Label>{s.book}</Label>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20 }} contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 8, gap: 12 }}>
               {books.map(id => { const b = findBookById(id)!, c = paintedCover(id), on = id === bookId; return <Pressable key={id} accessibilityRole="button" accessibilityLabel={b.name} accessibilityState={{ selected: on }} onPress={() => { setBookId(id); haptics.tick(); }} style={{ alignItems: "center", gap: 7 }}>
                 <View style={{ width: 70, height: 104, borderTopLeftRadius: 5, borderBottomLeftRadius: 5, borderTopRightRadius: 12, borderBottomRightRadius: 12, overflow: "hidden", boxShadow: on ? "0 0 0 3px #191514, 0 0 0 5.5px #FFF8F2" : "0 10px 18px -10px #000" }}>
@@ -82,20 +86,20 @@ export function CreateStudyGroup({ onClose, onSave }: { onClose: () => void; onS
                 <Text style={{ fontSize: 12, fontWeight: on ? "800" : "700", color: on ? "#FFFFFF" : INK_SOFT }}>{b.name}</Text>
               </Pressable>; })}
             </ScrollView>
-            <Label>HOW OFTEN</Label>
+            <Label>{s.often}</Label>
             <View style={{ marginTop: 10, flexDirection: "row", gap: 8 }}>{PACES.map((p, i) => <Chip key={p} on={pace === i} label={p} onPress={() => setPace(i)}/>)}</View>
             <View style={{ marginTop: 18, borderRadius: 24, padding: 14, flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: t.mid, boxShadow: "inset 0 1px 0 #FFFFFF1F" }}>
               {cover && <View style={{ width: 46, height: 68, borderTopLeftRadius: 4, borderBottomLeftRadius: 4, borderTopRightRadius: 9, borderBottomRightRadius: 9, overflow: "hidden" }}><Image source={cover.source} contentFit="cover" style={StyleSheet.absoluteFill}/></View>}
               <View style={{ flex: 1 }}>
-                <TextInput accessibilityLabel="Group name" value={name} onChangeText={setName} maxLength={40} placeholder="Group name" placeholderTextColor={t.t3} style={{ fontSize: 17, fontWeight: "800", color: t.t1, paddingVertical: 2 }}/>
-                <Text style={{ marginTop: 2, fontSize: 13, fontWeight: "700", color: t.t2 }}>{book?.chapters} chapters · {PACES[pace]!.toLowerCase()} · about {weeks} {weeks === 1 ? "week" : "weeks"}</Text>
+                <TextInput accessibilityLabel={s.name} value={name} onChangeText={setName} maxLength={40} placeholder={s.name} placeholderTextColor={t.t3} style={{ fontSize: 17, fontWeight: "800", color: t.t1, paddingVertical: 2 }}/>
+                <Text style={{ marginTop: 2, fontSize: 13, fontWeight: "700", color: t.t2 }}>{plural(weeks, s.plan, { chapters: book?.chapters ?? "", pace: PACES[pace]!.toLowerCase() })}</Text>
               </View>
               <SFSymbol name="pencil" size={14} color={t.t3}/>
             </View>
           </Animated.View>}
         </ScrollView>
         <Pressable feedback="action" accessibilityRole="button" disabled={!ready} onPress={save} style={{ marginHorizontal: 20, marginBottom: insets.bottom + 12, height: 56, borderRadius: 28, backgroundColor: "#FFF8F2", alignItems: "center", justifyContent: "center", opacity: ready ? 1 : .4 }}>
-          <Text style={{ fontSize: 17, fontWeight: "800", color: "#2A1206" }}>Create group</Text>
+          <Text style={{ fontSize: 17, fontWeight: "800", color: "#2A1206" }}>{s.create}</Text>
         </Pressable>
       </KeyboardAvoidingView>
     </View>}

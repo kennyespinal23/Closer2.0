@@ -79,12 +79,13 @@ export default function SettingsIndex() {
       <View style={s.edit}><Text style={{ fontSize: 14, fontWeight: "800", color: CREAM }}>Edit</Text></View>
     </Pressable>
 
-    <Pressable onPress={() => isPro ? void Linking.openURL("https://apps.apple.com/account/subscriptions") : open("/onboarding/paywall")} accessibilityRole="button" style={s.plus}>
+    {/* The old paywall is gone; members can still manage their plan here. */}
+    {isPro && <Pressable onPress={() => void Linking.openURL("https://apps.apple.com/account/subscriptions")} accessibilityRole="button" style={s.plus}>
       <ReaderMaterialGradient colors={["#FFD455", "#FFC12E"]} style={StyleSheet.absoluteFill}/>
       <View style={s.plusIcon}><SFSymbol name="star" size={20} color="#6A2B10"/></View>
       <View style={{ flex: 1 }}><Text style={{ fontSize: 16, fontWeight: "900", color: "#6A2B10" }}>Closer Plus</Text><Text style={{ fontSize: 13, fontWeight: "600", color: "#8E4A22", marginTop: 1 }}>{isPro ? "You’re a member · Manage subscription" : "Keep walking after week one"}</Text></View>
       <SFSymbol name="chevron.right" size={14} color="#6A2B10"/>
-    </Pressable>
+    </Pressable>}
 
     {groups.map(([title, rows]) => <View key={title} style={{ marginTop: 26 }}>
       <Text style={[s.gh, { color: t.muted }]}>{title}</Text>

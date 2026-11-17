@@ -26,8 +26,15 @@ export const apple = {
   theme: "navy",
   blocks: [
     {
+      kind: "dialogue",
+      page: { at: "hero", act: "enter", mood: "curious" },
+      lines: [{ say: "Something everybody “knows” about Eden. Let’s check it.", mood: "cheeky", act: "hop" }],
+      display: { text: "Was it an apple?", sub: "Misconception · Genesis 2–3" },
+      reply: "Check the fruit",
+    },
+    {
       kind: "claim",
-      page: { at: "hero", act: "enter", mood: "excited" },
+      page: { at: "hero", mood: "excited" },
       claim,
       lines: [
         { say: "Okay. The garden of Eden. The forbidden fruit.", mood: "cheeky", act: "stare" },

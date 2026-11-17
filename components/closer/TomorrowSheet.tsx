@@ -10,6 +10,7 @@ import { SealedEnvelope } from "@/components/TomorrowLetter";
 import type { Daily } from "@/lib/closer-page/content/daily";
 import { clearTomorrowReminder, dayKey, REMIND_LABEL, setTomorrowReminder, tomorrowReminderDay } from "@/lib/tomorrowReminder";
 import { useReducedMotion } from "@/lib/useReducedMotion";
+import { fill, useStrings } from "@/lib/i18n";
 
 /**
  * Tapping Tomorrow on Today: a letter waiting for you. The brown ember sheet from the first Home, with tomorrow's
@@ -43,6 +44,7 @@ export function TomorrowSheet({ open, pick, onClose }: { open: boolean; pick: Da
   const [denied, setDenied] = useState(false);
   const [busy, setBusy] = useState(false);
   const { lesson, shelf } = pick;
+  const s = useStrings().native.tomorrow;
 
   useEffect(() => {
     if (!open) return;
@@ -79,7 +81,7 @@ export function TomorrowSheet({ open, pick, onClose }: { open: boolean; pick: Da
   return (
     <Modal visible={open} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <Animated.View entering={FadeIn.duration(reduce ? 0 : 220)} exiting={FadeOut.duration(180)} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(20,12,8,.45)" }}>
-        <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" />
+        <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityRole="button" accessibilityLabel={s.close} />
       </Animated.View>
       <Animated.View
         entering={reduce ? FadeIn.duration(150) : SlideInDown.duration(320).easing(EASE)}
@@ -95,19 +97,19 @@ export function TomorrowSheet({ open, pick, onClose }: { open: boolean; pick: Da
           <View style={{ alignSelf: "center", width: 40, height: 5, borderRadius: 3, backgroundColor: "#FFF1E433", marginBottom: 22 }} />
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: 18 }}>
-            <Pressable onPress={wiggle} accessibilityRole="image" accessibilityLabel="Sealed letter. Opens at midnight." accessibilityHint="Not yet">
+            <Pressable onPress={wiggle} accessibilityRole="image" accessibilityLabel={s.letterA11y} accessibilityHint={s.letterHint}>
               <Animated.View style={envelope}><SealedEnvelope width={112} tilt={0} /></Animated.View>
             </Pressable>
             <View style={{ flex: 1 }}>
-              <Text style={nunito(800, 12, { color: CREAM_2, letterSpacing: 1.6, textTransform: "uppercase" })}>Tomorrow · {shelf.label}</Text>
+              <Text style={nunito(800, 12, { color: CREAM_2, letterSpacing: 1.6, textTransform: "uppercase" })}>{fill(s.from, { shelf: shelf.label })}</Text>
               <Text accessibilityRole="header" style={nunito(900, 26, { color: CREAM, letterSpacing: -0.7, lineHeight: 28, marginTop: 6 })}>{lesson.title}</Text>
-              <Text style={nunito(700, 14.5, { color: CREAM_2, marginTop: 6 })}>{lesson.scripture.split(" · ")[0]} · {lesson.minutes} min</Text>
+              <Text style={nunito(700, 14.5, { color: CREAM_2, marginTop: 6 })}>{fill(s.meta, { passage: lesson.scripture.split(" · ")[0], n: lesson.minutes })}</Text>
             </View>
           </View>
 
-          <Text style={nunito(800, 17, { color: CREAM, marginTop: 24 })}>A letter waiting for you. It opens at midnight.</Text>
-          <View accessible accessibilityLabel={`Opens in ${left.h} hours ${left.m} minutes`} style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
-            {([[left.h, "hours"], [left.m, "min"], [left.s, "sec"]] as const).map(([v, l]) => (
+          <Text style={nunito(800, 17, { color: CREAM, marginTop: 24 })}>{s.waiting}</Text>
+          <View accessible accessibilityLabel={fill(s.opensIn, { h: left.h, m: left.m })} style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+            {([[left.h, s.hours], [left.m, s.min], [left.s, s.sec]] as const).map(([v, l]) => (
               <View key={l} style={{ flex: 1, backgroundColor: "#FFF1E414", borderRadius: 16, paddingTop: 9, paddingBottom: 7, alignItems: "center" }}>
                 <Text style={nunito(900, 24, { color: CREAM, letterSpacing: -0.4, fontVariant: ["tabular-nums"] })}>{pad(v)}</Text>
                 <Text style={nunito(800, 10.5, { color: CREAM_2, letterSpacing: 1.3, textTransform: "uppercase" })}>{l}</Text>
@@ -116,19 +118,19 @@ export function TomorrowSheet({ open, pick, onClose }: { open: boolean; pick: Da
           </View>
 
           <Pressable onPress={toggle} accessibilityRole="button" accessibilityState={{ selected: remind, busy }} style={{ marginTop: 18 }}
-            accessibilityLabel={remind ? `Reminder set for ${REMIND_LABEL}. Tap to cancel.` : `Remind me at ${REMIND_LABEL}`}>
+            accessibilityLabel={remind ? fill(s.reminderSetA11y, { time: REMIND_LABEL }) : fill(s.remindMe, { time: REMIND_LABEL })}>
             <View style={{ height: 56, borderRadius: 28, backgroundColor: remind ? "#FFF1E41F" : CREAM, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
               {remind ? <Tick color={SUN} /> : <Bell color={COAL} />}
-              <Text style={nunito(800, 17, { color: remind ? CREAM : COAL })}>{remind ? `I’ll remind you at ${REMIND_LABEL}` : `Remind me at ${REMIND_LABEL}`}</Text>
+              <Text style={nunito(800, 17, { color: remind ? CREAM : COAL })}>{remind ? fill(s.reminderSet, { time: REMIND_LABEL }) : fill(s.remindMe, { time: REMIND_LABEL })}</Text>
             </View>
           </Pressable>
           {denied && (
             <Pressable onPress={() => void Linking.openSettings()} accessibilityRole="link">
-              <Text style={nunito(700, 14, { color: CREAM_2, textAlign: "center", marginTop: 10 })}>Notifications are off for Closer. <Text style={{ color: SUN, fontFamily: "NunitoExtraBold" }}>Turn them on in Settings</Text></Text>
+              <Text style={nunito(700, 14, { color: CREAM_2, textAlign: "center", marginTop: 10 })}>{s.notificationsOff} <Text style={{ color: SUN, fontFamily: "NunitoExtraBold" }}>{s.turnOn}</Text></Text>
             </Pressable>
           )}
           <Pressable onPress={onClose} accessibilityRole="button" style={{ height: 50, alignItems: "center", justifyContent: "center", marginTop: 6 }}>
-            <Text style={nunito(800, 16, { color: CREAM_2 })}>Okay</Text>
+            <Text style={nunito(800, 16, { color: CREAM_2 })}>{s.okay}</Text>
           </Pressable>
         </View>
       </Animated.View>

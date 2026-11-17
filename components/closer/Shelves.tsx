@@ -9,6 +9,7 @@ import { CONN } from "@/lib/closer-page/lesson/connTokens";
 import type { Block, Lesson } from "@/lib/closer-page/lesson/types";
 import { K, nunito } from "./kit";
 import { Landscape } from "./Motifs";
+import { fill, useStrings } from "@/lib/i18n";
 
 /* Inside a category: each shelf drawn as the thing it holds. Case files stacked with their stamps, books as spines
    sized by length, connections as tiny networks, psalms as their landscapes, testimonies as portraits. Categories
@@ -32,18 +33,19 @@ function Press({ onPress, label, style, children }: { onPress: () => void; label
 
 /* Bible Mysteries: case files, stacked */
 function CaseShelf({ shelf, onOpen }: Props) {
+  const s = useStrings().native.shelves;
   return (
     <View style={{ paddingTop: 12 }}>
       {shelf.entries.map((e, i) => {
         const l = lessonOf(e);
         return (
           <Animated.View key={e.id} entering={FadeInDown.delay(i * 50).springify().damping(22)} style={{ marginTop: i ? -10 : 0, zIndex: i, transform: [{ rotate: `${tilt[i % tilt.length]}deg` }] }}>
-            <Press onPress={() => onOpen(e)} label={`Case ${l?.case?.id}: ${l?.title ?? e.title}, ${l?.case?.status ?? ""}`}>
+            <Press onPress={() => onOpen(e)} label={fill(s.caseA11y, { id: l?.case?.id ?? "", title: l?.title ?? e.title, status: l?.case?.status ?? "" })}>
               <View style={{ position: "absolute", left: 16, top: -10, width: 64, height: 14, borderTopLeftRadius: 6, borderTopRightRadius: 6, backgroundColor: "#56301E" }} />
               <View style={{ backgroundColor: "#F4DCC0", borderRadius: 14, borderTopLeftRadius: 4, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 20, shadowColor: "#56301E", shadowOpacity: 0.28, shadowRadius: 10, shadowOffset: { width: 0, height: 6 } }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                   <Text style={nunito(900, 11, { letterSpacing: 1.6, color: "#A45536" })}>CASE {l?.case?.id}</Text>
-                  <Text style={nunito(900, 9.5, { letterSpacing: 1.2, color: "#A45536", borderWidth: 2, borderColor: "#A45536", borderRadius: 5, paddingHorizontal: 6, transform: [{ rotate: "-5deg" }] })}>{(l?.case?.status ?? "Soon").toUpperCase()}</Text>
+                  <Text style={nunito(900, 9.5, { letterSpacing: 1.2, color: "#A45536", borderWidth: 2, borderColor: "#A45536", borderRadius: 5, paddingHorizontal: 6, transform: [{ rotate: "-5deg" }] })}>{(l?.case?.status ?? s.soon).toUpperCase()}</Text>
                 </View>
                 <Text style={nunito(900, 19, { color: "#56301E", letterSpacing: -0.4, marginTop: 4 })}>{l?.title ?? e.title}</Text>
               </View>
@@ -135,13 +137,14 @@ export function PsalmTile({ lesson, sub, onPress, height = 150 }: { lesson?: Les
   );
 }
 function PsalmShelf({ shelf, onOpen }: Props) {
+  const s = useStrings().native.shelves;
   return (
     <View style={{ paddingTop: 12, flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
       {shelf.entries.map(e => {
         const l = lessonOf(e);
         return (
           <View key={e.id} style={{ width: "48%" }}>
-            <PsalmTile lesson={l} sub={`${e.sub.split(" · ")[0]} · Psalm ${l?.psalm?.number ?? ""}`} onPress={() => onOpen(e)} />
+            <PsalmTile lesson={l} sub={fill(s.psalmSub, { feeling: e.sub.split(" · ")[0], n: l?.psalm?.number ?? "" })} onPress={() => onOpen(e)} />
           </View>
         );
       })}
@@ -177,6 +180,7 @@ function PortraitShelf({ shelf, onOpen }: Props) {
 
 /* Everything else: the coloured tiles */
 function TileShelf({ shelf, onOpen }: Props) {
+  const s = useStrings().native.shelves;
   return (
     <View style={{ paddingTop: 12, flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
       {shelf.entries.map((e, i) => {
@@ -184,7 +188,7 @@ function TileShelf({ shelf, onOpen }: Props) {
         return (
           <View key={e.id} style={{ width: i === 0 ? "100%" : "47.8%" }}>
             <Press onPress={() => onOpen(e)} label={e.title} style={{ height: i === 0 ? 166 : 146, backgroundColor: t.bg, borderRadius: 24, padding: 16, justifyContent: "flex-end" }}>
-              {!e.lessonId && <Text style={nunito(800, 11, { position: "absolute", right: 12, top: 12, color: t.fg, opacity: 0.8, letterSpacing: 1, backgroundColor: "rgba(0,0,0,.15)", borderRadius: 99, overflow: "hidden", paddingHorizontal: 10, paddingVertical: 4 })}>SOON</Text>}
+              {!e.lessonId && <Text style={nunito(800, 11, { position: "absolute", right: 12, top: 12, color: t.fg, opacity: 0.8, letterSpacing: 1, backgroundColor: "rgba(0,0,0,.15)", borderRadius: 99, overflow: "hidden", paddingHorizontal: 10, paddingVertical: 4 })}>{s.soon.toUpperCase()}</Text>}
               <Text style={nunito(900, i === 0 ? 30 : 19, { color: t.fg, letterSpacing: -0.6, lineHeight: i === 0 ? 31 : 20 })}>{e.title}</Text>
               <Text style={nunito(700, 13, { color: t.fg, opacity: 0.7, marginTop: 6 })}>{e.sub}</Text>
             </Press>

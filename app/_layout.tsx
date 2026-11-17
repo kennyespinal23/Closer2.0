@@ -46,6 +46,7 @@ import {
   useStudySessions,
 } from "@/state/studySessions";
 import { ThemeProvider, useTheme, useResolvedScheme } from "@/state/theme";
+import { restoreLocale } from "@/lib/i18n";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   /* splash screen may already be hidden; safe to ignore */
@@ -77,8 +78,8 @@ export default function RootLayout() {
 
   });
 
-  // Closer's sounds load in the background so the first one isn't late
-  useEffect(() => { preloadSounds(); }, []);
+  // Closer's sounds load in the background so the first one isn't late; the chosen language comes back too
+  useEffect(() => { preloadSounds(); void restoreLocale(); }, []);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
@@ -258,11 +259,6 @@ function AppShell() {
           name="(tabs)"
           options={{ animation: "fade" }}
         />
-        {/* Keep the welcome starfield continuous as the globe opening begins. */}
-        <Stack.Screen
-          name="onboarding"
-          options={{ animation: "fade", animationDuration: 500 }}
-        />
         {/* Profile used to live here as a transparentModal drawer
             launched from the home avatar. It was promoted to a
             first-class TAB (see app/profile.tsx) when the
@@ -297,13 +293,6 @@ function AppShell() {
         <Stack.Screen
           name="highlights"
           options={{ animation: "slide_from_right" }}
-        />
-        <Stack.Screen
-          name="completed-sermons"
-          options={{
-            animation: "slide_from_right",
-            headerShown: false,
-          }}
         />
         {/* Per-check-in detail page (app/check-ins/[id].tsx).
             Drill-down semantics matching notes / highlights —
@@ -391,17 +380,6 @@ function AppShell() {
           options={{
             presentation: "modal",
             animation: "slide_from_bottom",
-          }}
-        />
-        {/* Sermon flow — fade from home so the shared Unsplash
-            backdrop reads as one continuous photograph while
-            copy dissolves into the scripture quote. */}
-        <Stack.Screen
-          name="sermon"
-          options={{
-            animation: "fade",
-            animationDuration: 650,
-            contentStyle: { backgroundColor: "#0A0A0A" },
           }}
         />
       </Stack>

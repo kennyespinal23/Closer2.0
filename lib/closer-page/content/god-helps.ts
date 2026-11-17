@@ -22,8 +22,15 @@ export const godHelps = {
   theme: "navy",
   blocks: [
     {
+      kind: "dialogue",
+      page: { at: "hero", act: "enter", mood: "curious" },
+      lines: [{ say: "A saying almost everyone thinks is a verse. Let’s check it.", mood: "cheeky", act: "hop" }],
+      display: { text: "God helps those who help themselves?", sub: "Misconception · Romans 5 · Ephesians 2" },
+      reply: "Look it up",
+    },
+    {
       kind: "claim",
-      page: { at: "hero", act: "enter", mood: "excited" },
+      page: { at: "hero", mood: "excited" },
       claim,
       lines: [
         { say: "This one gets quoted like a verse all the time.", mood: "cheeky", act: "stare" },

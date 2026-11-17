@@ -1,3 +1,4 @@
+import { strings } from "../i18n";
 import type { Lesson } from "../lesson/types";
 import { LESSONS } from "./index";
 import { library } from "./library";
@@ -46,18 +47,21 @@ export type Connection = {
   editorialStatus: EditorialStatus;
 };
 
-export const CONNECTION_TYPES: Record<ConnectionType, { label: string; page: string }> = {
-  continue_story: { label: "Continue the story", page: "There’s more to this story." },
-  go_deeper: { label: "Go deeper", page: "Want to see where this leads?" },
-  bigger_picture: { label: "Bigger picture", page: "That reminds me of something." },
-  everyday_application: { label: "Everyday application", page: "This one shows up in real life." },
+/* The labels are UI words, kept in the translation lists (i18n/en/explore.ts); these read them in the current language
+   each time they're used. */
+const label = (t: ConnectionType) => ({ get label() { return strings().explore.connection[t].label; }, get page() { return strings().explore.connection[t].page; } });
+export const CONNECTION_TYPES: Record<ConnectionType, { readonly label: string; readonly page: string }> = {
+  continue_story: label("continue_story"),
+  go_deeper: label("go_deeper"),
+  bigger_picture: label("bigger_picture"),
+  everyday_application: label("everyday_application"),
 };
 
 export const BASIS: Record<ConnectionBasis, string> = {
-  text: "Same passage",
-  narrative: "Later in the story",
-  theme: "A shared theme",
-  application: "One way to live it",
+  get text() { return strings().explore.basis.text; },
+  get narrative() { return strings().explore.basis.narrative; },
+  get theme() { return strings().explore.basis.theme; },
+  get application() { return strings().explore.basis.application; },
 };
 
 /* Lessons that aren't published yet but have a link waiting for them. A link to one stays hidden until the lesson
@@ -106,6 +110,24 @@ const ABOUT: Record<string, { characters?: string[]; themes: string[] }> = {
   "everyday-promotion": { themes: ["jealousy"] },
   "everyday-ahead": { themes: ["comparison", "contentment"] },
   "john-newton": { characters: ["John Newton"], themes: ["forgiveness", "grace"] },
+  "science-big-bang": { characters: ["Georges Lemaître"], themes: ["creation", "the universe", "faith and science"] },
+  "theology-cross": { characters: ["Jesus"], themes: ["the cross", "sacrifice", "Passover"] },
+  "theology-freewill": { themes: ["providence", "freedom", "prayer"] },
+  "theology-spirit": { characters: ["Jesus", "Peter"], themes: ["the Holy Spirit", "the Trinity"] },
+  "science-earth-age": { themes: ["creation", "deep time", "faith and science"] },
+  "science-evolution": { themes: ["creation", "human origins", "faith and science"] },
+  "science-fine-tuning": { themes: ["creation", "the universe", "faith and science"] },
+  "theology-praying": { characters: ["Jesus", "John the Baptist"], themes: ["who Jesus is", "the Trinity", "prayer"] },
+  "history-bible": { characters: ["Eusebius", "Athanasius"], themes: ["Scripture", "church history"] },
+  "history-first": { characters: ["Stephen", "Pliny the Younger", "Perpetua"], themes: ["persecution", "church history"] },
+  "history-split": { characters: ["Martin Luther"], themes: ["unity", "church history"] },
+  "heart-reminder": { characters: ["Jesus"], themes: ["God’s love"] },
+  "heart-close": { themes: ["nearness to God", "prayer"] },
+  "heart-lately": { themes: ["worry", "gratitude", "prayer"] },
+  "heart-afraid": { themes: ["confession", "fear", "prayer"] },
+  "poem-loved": { themes: ["God’s love", "forgiveness"] },
+  "poem-far": { themes: ["nearness to God", "coming home"] },
+  "poem-today": { themes: ["gratitude"] },
 };
 
 const c = (s: string, t: string, type: ConnectionType, basis: ConnectionBasis, priority: 1 | 2 | 3, curiosityHook: string, explanation: string, editorialStatus: EditorialStatus = "approved"): Connection =>
@@ -113,6 +135,64 @@ const c = (s: string, t: string, type: ConnectionType, basis: ConnectionBasis, p
 
 /* The curated links. Read both lessons before adding one, and say how they really relate. */
 export const CONNECTIONS: Connection[] = [
+  // Church History, Heart to Heart and Closer Poetry
+  c("history-bible", "history-first", "bigger_picture", "narrative", 1,
+    "Who carried these books from city to city, at real risk?",
+    "The books were copied and read in the churches the next experience follows, from Jerusalem to Rome, through the years of persecution."),
+  c("history-first", "history-split", "continue_story", "narrative", 1,
+    "One church survived Rome. How did it become many?",
+    "The story goes on past 313: the creed of 381, then the divisions of 1054 and 1517, and what all three families still share."),
+  c("history-split", "theology-praying", "go_deeper", "theme", 2,
+    "The creed they all still share starts with Father, Son and Spirit.",
+    "Every branch confesses the Trinity in the Nicene Creed. The Jordan scene shows where Christians first saw it."),
+  c("heart-close", "poem-far", "go_deeper", "theme", 1,
+    "Feeling far away? There’s a poem about the road back.",
+    "Both lean on Luke 15:20: the father sees his son while he is still far off, and runs. The poem walks that road."),
+  c("poem-far", "god-far-away", "go_deeper", "theme", 1,
+    "Why does God sometimes feel far away? An honest look.",
+    "The poem is about the feeling; Big Questions looks at why it happens, with Psalm 13 and other honest prayers."),
+  c("heart-lately", "heart-close", "go_deeper", "theme", 2,
+    "After what’s on your heart: how close does God feel?",
+    "One conversation is about what you’re carrying, the other about where you feel you stand with God. Both go at your pace."),
+  c("heart-afraid", "psalm-51", "go_deeper", "theme", 2,
+    "David wrote down what he was afraid to say to God.",
+    "Psalm 51 is a prayer of confession said out loud, the kind of honesty the conversation makes room for."),
+  c("poem-loved", "heart-reminder", "go_deeper", "theme", 1,
+    "A short pause with four true things to remember.",
+    "The poem ends “You are still loved.” A Little Reminder sets that beside the Scripture it rests on, then prays."),
+  c("poem-today", "pray-gratitude", "everyday_application", "application", 2,
+    "Turn today’s thank-you into a habit of prayer.",
+    "The poem gathers one day’s gifts. Learning to Pray shows a way to give thanks like that every day, from Philippians 4."),
+  // the six new experiences
+  c("theology-cross", "connect-lamb", "go_deeper", "text", 1,
+    "The Passover lamb runs from Exodus to Revelation. Want to follow the whole thread?",
+    "Both read Exodus 12 and John 1:29. This one asks why the cross; that one traces the lamb through the whole Bible."),
+  c("theology-spirit", "theology-praying", "bigger_picture", "text", 1,
+    "At the Jordan the Father spoke too. So who was Jesus praying to?",
+    "Both read the baptism in Matthew 3:16–17. This one follows the Spirit; that one asks how the Father and the Son relate."),
+  c("theology-freewill", "unanswered-prayer", "everyday_application", "theme", 1,
+    "If God already knows, why pray? And why do some prayers go unanswered?",
+    "This one touches prayer under God’s foreknowledge; that one takes up prayers that seem to go unanswered. A shared theme, not the same passage."),
+  c("science-earth-age", "science-big-bang", "bigger_picture", "theme", 1,
+    "The earth is 4.54 billion years old. The universe is older still. How do we know?",
+    "Deep time on Earth, then deep time for the cosmos: the Big Bang lab works with the same kinds of evidence on a bigger scale."),
+  c("science-evolution", "science-earth-age", "go_deeper", "theme", 1,
+    "Evolution needs deep time. How do scientists know the earth is old?",
+    "The tree of life spans millions of years; the earth-age lab shows how rocks and radioactive decay measure that time."),
+  c("science-fine-tuning", "god-exists", "bigger_picture", "theme", 1,
+    "Fine-tuning makes many people wonder. What other reasons do Christians give?",
+    "Fine-tuning is one argument people weigh; that one sets out several reasons Christians give for believing in God."),
+  // the universe
+  c("science-big-bang", "god-exists", "bigger_picture", "theme", 1,
+    "The heavens make many people wonder. What reasons do Christians give for God?",
+    "Both look at creation and what it points to. This one asks what science can and can’t show; that one weighs the reasons Christians give."),
+  // the Father and the Son
+  c("theology-praying", "it-is-written", "continue_story", "narrative", 1,
+    "Right after the voice from heaven, the Spirit led Jesus somewhere hard. Where?",
+    "Matthew 4:1 follows straight on from the baptism in Matthew 3:16–17. The first test begins “If you are the Son of God…”"),
+  c("theology-praying", "pray-teach-me", "everyday_application", "application", 2,
+    "Jesus prayed to his Father. Then he taught his friends to say “Our Father” too.",
+    "The Lord’s Prayer opens with “Our Father in heaven” (Matthew 6:9): the relationship this lesson finds in Jesus’ prayers, offered to those who follow him."),
   // Peter
   c("jesus-peter-sank", "jesus-restores-peter", "continue_story", "narrative", 1,
     "Peter’s story didn’t end on the water. What happened after he denied Jesus?",
@@ -361,9 +441,16 @@ export const THREADS: Thread[] = [
   { id: "forgiving", sky: "The Open Hand", name: "Forgiving", note: "From a camp to an ordinary week", lessons: ["corrie-ten-boom", "everyday-apology", "john-newton", "forgive-anyone"] },
   { id: "serving", sky: "The Towel", name: "Serving quietly", note: "Work nobody sees", lessons: ["jesus-washed-feet", "brother-lawrence", "everyday-noticed"] },
   { id: "ruth", sky: "The Road Home", name: "Ruth", note: "Two widows and a field", lessons: ["ruth", "book-ruth"] },
-  { id: "exodus", sky: "The Bread", name: "Out of Egypt", note: "From Passover to John", lessons: ["connect-lamb", "connect-bread", "book-john", "jesus-well"] },
+  { id: "exodus", sky: "The Bread", name: "Out of Egypt", note: "From Passover to John", lessons: ["connect-lamb", "connect-bread", "book-john", "jesus-well", "theology-cross"] },
   { id: "psalm51", sky: "The Clean Heart", name: "Psalm 51", note: "Saying sorry to God", lessons: ["psalm-51", "pray-forgive"] },
   { id: "suffering", sky: "The Tears", name: "When it hurts", note: "Suffering, read honestly", lessons: ["more-than-you-can-handle", "romans-8-28", "why-suffering", "jesus-wept"] },
+  { id: "cosmos", sky: "The Heavens", name: "In the beginning", note: "The universe, and the questions under it", lessons: ["science-big-bang", "god-exists", "science-earth-age", "science-evolution", "science-fine-tuning"] },
+  { id: "father", sky: "The Voice", name: "The Father’s Son", note: "A baptism, a wilderness and a prayer", lessons: ["theology-praying", "it-is-written", "pray-teach-me", "theology-spirit"] },
+  { id: "choosing", sky: "The Crossroads", name: "Choosing", note: "Freedom, prayer and trust", lessons: ["theology-freewill", "unanswered-prayer"] },
+  { id: "church", sky: "The Lamp", name: "Passed on", note: "Copied, carried, divided, shared", lessons: ["history-bible", "history-first", "history-split", "theology-praying"] },
+  { id: "home", sky: "The Porch Light", name: "Coming home", note: "Far off, and seen", lessons: ["heart-close", "poem-far", "god-far-away", "heart-lately"] },
+  { id: "loved", sky: "The Candle", name: "Still loved", note: "As you are", lessons: ["poem-loved", "heart-reminder", "heart-afraid", "psalm-51"] },
+  { id: "thanks", sky: "The Cup", name: "Thank you", note: "One ordinary, given day", lessons: ["poem-today", "pray-gratitude"] },
   { id: "comparing", sky: "The Mirror", name: "Everyone else", note: "Jealousy and enough", lessons: ["everyday-promotion", "everyday-ahead"] },
 ];
 export const threadOf = (cn: Connection) => THREADS.find(t => t.lessons.includes(cn.sourceExperienceId) && t.lessons.includes(cn.targetExperienceId));

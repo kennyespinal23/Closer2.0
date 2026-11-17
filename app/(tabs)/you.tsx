@@ -1,7 +1,9 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { useRouter, type Href } from "expo-router";
+import { useLocalSearchParams, useRouter, type Href } from "expo-router";
+import Animated, { ZoomIn } from "react-native-reanimated";
+import { BookCover } from "@/components/closer/BookCover";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { Page } from "@/components/page/Page";
@@ -10,11 +12,11 @@ import { K, nunito } from "@/components/closer/kit";
 import { GroupsShelf } from "@/components/community/GroupsShelf";
 import { Face, useMe } from "@/components/community/togetherKit";
 import { LESSONS } from "@/lib/closer-page/content";
-import { TONE, library } from "@/lib/closer-page/content/library";
 import { constellations } from "@/lib/closer-page/content/discovery";
 import { useBibleMomentCollection } from "@/state/bibleMoments";
 import { dayKey, streakOf, useCloserPage } from "@/state/closerPage";
 import * as haptics from "@/lib/haptics";
+import { date, fill, plural, useStrings } from "@/lib/i18n";
 
 /**
  * You (CLOSER-PICKS.md, "You tab": B, like Speak): your face and name, three numbers, one card of doors (streak, your
@@ -25,23 +27,29 @@ export default function YouScreen() {
   const { finished, days, verses, notes } = useCloserPage();
   const { ids: moments } = useBibleMomentCollection();
   const [n, setN] = useState(0);
+  const s = useStrings().native.you, you = useStrings().native.community.you; // useMe() falls back to this when no name was given
   const go = (to: string) => { haptics.soft(); router.push(to as Href); };
 
   const streak = streakOf(days);
   const firstDay = Object.keys(days).sort()[0];
-  const since = firstDay ? new Date(Number(firstDay.slice(0, 4)), Number(firstDay.slice(5, 7)) - 1, 1).toLocaleDateString("en-US", { month: "long", year: new Date().getFullYear() === Number(firstDay.slice(0, 4)) ? undefined : "numeric" }) : null;
+  const since = firstDay ? date(new Date(Number(firstDay.slice(0, 4)), Number(firstDay.slice(5, 7)) - 1, 1), { month: "long", year: new Date().getFullYear() === Number(firstDay.slice(0, 4)) ? undefined : "numeric" }) : null;
   const week = (() => { const d = new Date(), out: boolean[] = []; for (let i = 6; i >= 0; i--) { const x = new Date(d); x.setDate(d.getDate() - i); out.push(!!days[dayKey(x)]?.length); } return out; })();
   const thisWeek = week.filter(Boolean).length;
-  const done = finished.map(id => LESSONS[id]).filter(Boolean).reverse();
+  // My Discoveries: every experience finished, once, as a book (newest first). It Is Written is the welcome, not a book.
+  const books = finished.filter(id => id !== "it-is-written").map(id => LESSONS[id]).filter(Boolean).reverse();
+  const c = useStrings().collect;
+  // arriving from "See it in My Discoveries" after collecting a book: scroll to the shelf and let that book hop
+  const { focus } = useLocalSearchParams<{ focus?: string }>();
+  const page = useRef<ScrollView>(null), shelfY = useRef(0);
+  useEffect(() => { if (focus) { const t = setTimeout(() => page.current?.scrollTo({ y: Math.max(0, shelfY.current - 90), animated: true }), 350); return () => clearTimeout(t); } }, [focus]);
   const stars = constellations(finished).reduce((n, c) => n + c.stars.filter(s => s.finished).length, 0);
-  const toneOf = (id: string) => { for (const s of library) { const e = s.entries.find(x => x.lessonId === id); if (e) return { ...TONE[e.tone], label: s.label }; } return { ...TONE.forest, label: "" }; };
 
   return (
     <View style={{ flex: 1, backgroundColor: K.cream }}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 6, paddingHorizontal: 20, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={page} contentContainerStyle={{ paddingTop: insets.top + 6, paddingHorizontal: 20, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
         <View style={{ alignItems: "flex-end" }}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Settings" onPress={() => go("/closer-settings")} hitSlop={8} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
+          <Pressable accessibilityRole="button" accessibilityLabel={s.settings} onPress={() => go("/closer-settings")} hitSlop={8} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
             <SFSymbol name="gearshape" size={23} weight="semibold" color={K.inkFaint} />
           </Pressable>
         </View>
@@ -51,50 +59,51 @@ export default function YouScreen() {
           <View style={{ borderRadius: 48, borderWidth: 4, borderColor: "#FFFFFF", shadowColor: "#EADFCC", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 0 }}>
             <Face person={me} size={84} />
           </View>
-          <Text accessibilityRole="header" style={nunito(900, 28, { color: K.ink, letterSpacing: -0.6, lineHeight: 36, marginTop: 10 })}>{me.name && me.name !== "You" ? me.name : "Hi, friend"}</Text>
-          <Text style={nunito(700, 14, { color: K.inkFaint })}>{since ? `With Closer since ${since}` : "Welcome to Closer"}</Text>
+          <Text accessibilityRole="header" style={nunito(900, 28, { color: K.ink, letterSpacing: -0.6, lineHeight: 36, marginTop: 10 })}>{me.name && me.name !== you ? me.name : s.hiFriend}</Text>
+          <Text style={nunito(700, 14, { color: K.inkFaint })}>{since ? fill(s.since, { since }) : s.welcome}</Text>
         </View>
 
         {/* three numbers */}
         <View style={{ flexDirection: "row", marginTop: 22 }}>
-          <Stat bg="#FFE7C2" icon={<Flame />} n={streak} label={streak === 1 ? "DAY STREAK" : "DAY STREAK"} />
-          <Stat bg={K.forest} icon={<SFSymbol name="checkmark" size={19} weight="heavy" color="#FFFFFF" />} n={finished.length} label="STORIES DONE" />
-          <Stat bg="#B85A9C" icon={<SFSymbol name="rectangle.on.rectangle" size={17} weight="bold" color="#FFFFFF" />} n={moments.length} label="MOMENTS" />
+          <Stat bg="#FFE7C2" icon={<Flame />} n={streak} label={plural(streak, s.statStreak)} />
+          <Stat bg={K.forest} icon={<SFSymbol name="checkmark" size={19} weight="heavy" color="#FFFFFF" />} n={finished.length} label={plural(finished.length, s.statDone)} />
+          <Stat bg="#B85A9C" icon={<SFSymbol name="rectangle.on.rectangle" size={17} weight="bold" color="#FFFFFF" />} n={moments.length} label={plural(moments.length, s.statMoments)} />
         </View>
 
         {/* one card of doors */}
         <View style={{ marginTop: 24, borderRadius: 22, backgroundColor: "#FFFFFF", shadowColor: "#17251F", shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 6 } }}>
-          <Door first bg="#F07B12" icon={<Flame white />} title="Streak" sub={streak ? `${streak} ${streak === 1 ? "day" : "days"}. You came ${thisWeek} ${thisWeek === 1 ? "time" : "times"} this week` : "Finish today’s story to start one"} onPress={() => go("/streak")} />
-          <Door bg={K.forest} icon={<SFSymbol name="calendar" size={18} weight="bold" color="#FFFFFF" />} title="Your days" sub="Every story you finished" onPress={() => go("/kept/days")} />
-          <Door bg="#682C42" icon={<SFSymbol name="quote.opening" size={16} weight="bold" color="#FFFFFF" />} title="Saved verses" sub={verses.length ? `${verses.length} to come back to` : "Save one from any story"} onPress={() => go("/kept/verses")} />
-          <Door bg={K.inkSoft} icon={<SFSymbol name="lock.fill" size={16} color="#FFFFFF" />} title="Reflections" sub={notes.length ? `${notes.length} · only on this phone` : "Only on this phone"} onPress={() => go("/kept/reflections")} />
-          <Door bg="#B85A9C" icon={<SFSymbol name="rectangle.on.rectangle" size={16} weight="bold" color="#FFFFFF" />} title="Bible moments" sub={`${moments.length} of 78 found`} onPress={() => go("/rhythm?section=moments")} />
-          <Door bg="#0E1729" icon={<SFSymbol name="sparkles" size={17} weight="bold" color="#FFFFFF" />} title="Connections" sub={stars ? `${stars} ${stars === 1 ? "star" : "stars"} lit in your sky` : "How your stories link up"} onPress={() => go("/discoveries")} />
+          <Door first bg="#F07B12" icon={<Flame white />} title={s.streak} sub={streak ? `${plural(streak, s.streakDays)} ${plural(thisWeek, s.streakWeek)}` : s.streakNone} onPress={() => go("/streak")} />
+          <Door bg={K.forest} icon={<SFSymbol name="calendar" size={18} weight="bold" color="#FFFFFF" />} title={s.days} sub={s.daysSub} onPress={() => go("/kept/days")} />
+          <Door bg="#682C42" icon={<SFSymbol name="quote.opening" size={16} weight="bold" color="#FFFFFF" />} title={s.verses} sub={verses.length ? plural(verses.length, s.versesSub) : s.versesNone} onPress={() => go("/kept/verses")} />
+          <Door bg={K.inkSoft} icon={<SFSymbol name="lock.fill" size={16} color="#FFFFFF" />} title={s.reflections} sub={notes.length ? fill(s.reflectionsSub, { n: notes.length }) : s.reflectionsNone} onPress={() => go("/kept/reflections")} />
+          <Door bg="#B85A9C" icon={<SFSymbol name="rectangle.on.rectangle" size={16} weight="bold" color="#FFFFFF" />} title={s.moments} sub={fill(s.momentsSub, { n: moments.length, of: 78 })} onPress={() => go("/rhythm?section=moments")} />
+          <Door bg="#0E1729" icon={<SFSymbol name="sparkles" size={17} weight="bold" color="#FFFFFF" />} title={s.connections} sub={stars ? plural(stars, s.connectionsSub) : s.connectionsNone} onPress={() => go("/discoveries")} />
         </View>
 
-        {/* finished */}
-        {done.length > 0 && <>
-          <Head title="Finished" action="View all" onPress={() => go("/kept/finished")} />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20 }} contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingTop: 10 }}>
-            {done.slice(0, 8).map(l => {
-              const t = toneOf(l.id);
-              return (
-                <Pressable key={l.id} accessibilityRole="button" accessibilityLabel={l.title} onPress={() => go(`/lesson/${l.id}`)} style={{ width: 104 }}>
-                  <View style={{ height: 134, borderRadius: 16, backgroundColor: t.bg, padding: 10, justifyContent: "flex-end" }}>
-                    <Text numberOfLines={4} style={nunito(900, 14, { color: t.fg, lineHeight: 17 })}>{l.title}</Text>
-                  </View>
-                  <Text numberOfLines={1} style={nunito(800, 12, { color: K.inkFaint, marginTop: 6 })}>{t.label}</Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </>}
+        {/* My Discoveries: the books on your shelf; tap one to read it again */}
+        {books.length > 0 && <View onLayout={e => { shelfY.current = e.nativeEvent.layout.y; }}>
+          <Head title={c.shelf.title} action={plural(books.length, c.books)} onPress={() => go("/kept/finished")} />
+          <View style={{ marginTop: 12, borderRadius: 24, backgroundColor: K.creamDeep, paddingTop: 18, overflow: "hidden" }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 14, alignItems: "flex-end", paddingTop: 4 }}>
+              {books.slice(0, 12).map(l => {
+                const book = <BookCover lesson={l} w={92} />;
+                return (
+                  <Pressable key={l.id} accessibilityRole="button" accessibilityLabel={fill(c.shelf.open, { title: l.title })} onPress={() => go(`/lesson/${l.id}`)} style={({ pressed }) => ({ paddingRight: 6, transform: [{ translateY: pressed ? 3 : 0 }] })}>
+                    {focus === l.id ? <Animated.View key={focus} entering={ZoomIn.delay(450).springify().damping(9)}>{book}</Animated.View> : book}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+            <View style={{ marginHorizontal: 12, height: 12, borderRadius: 6, backgroundColor: "#8A6A4E", shadowColor: "#5E4734", shadowOpacity: 1, shadowRadius: 0, shadowOffset: { width: 0, height: 4 } }} />
+            <Text style={nunito(700, 13, { color: K.inkFaint, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14 })}>{c.shelf.hint}</Text>
+          </View>
+        </View>}
 
         <GroupsShelf />
 
         <View style={{ alignItems: "center", paddingTop: 40 }}>
           <Page size={70} mood={n % 2 ? "happy" : "neutral"} act={n ? "spin" : "idle"} actKey={n} onTap={() => setN(n + 1)} />
-          <Text style={nunito(700, 14.5, { color: K.inkSoft, fontStyle: "italic", textAlign: "center", marginTop: 10, maxWidth: 240 })}>The Lord is always closer than you think.</Text>
+          <Text style={nunito(700, 14.5, { color: K.inkSoft, fontStyle: "italic", textAlign: "center", marginTop: 10, maxWidth: 240 })}>{s.footer}</Text>
         </View>
       </ScrollView>
     </View>

@@ -10,6 +10,7 @@ import { usePreferences } from "@/state/preferences";
 import { useProgress } from "@/state/progress";
 import { useReadingGoal } from "@/state/readingGoal";
 import { useStudySessions } from "@/state/studySessions";
+import { closerPage } from "@/state/closerPage";
 
 /**
  * Full app wipe used by internal QA shortcuts (Profile → Developer).
@@ -39,6 +40,7 @@ export function useDevAppReset() {
     resetFocus();
     resetStudySessions().catch(() => {});
     cancelDailyReminder().catch(() => {});
+    closerPage.clear();
   }, [
     resetOnboarding,
     progress,
@@ -58,7 +60,7 @@ export function useDevAppReset() {
 
   const restartApp = useCallback(() => {
     wipeAllState();
-    router.replace("/onboarding/attribution");
+    router.replace("/");
   }, [router, wipeAllState]);
 
   return { resetApp, restartApp };

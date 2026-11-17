@@ -7,9 +7,10 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import Svg, { Circle, Path } from "react-native-svg";
 import { Page } from "@/components/page/Page";
 import { K, Label, Title, nunito } from "@/components/closer/kit";
-import { MOTIFS } from "@/components/closer/Motifs";
+import { MOTIFS } from "@/lib/closer-page/ui/Motifs";
 import { LESSONS } from "@/lib/closer-page/content";
 import { library, TONE, type Entry, type Shelf } from "@/lib/closer-page/content/library";
+import { fill, plural, useStrings } from "@/lib/i18n";
 
 /**
  * Explore: one full-width band per category, in its colour, with its signature object and a one-line promise. Tap a
@@ -21,6 +22,7 @@ export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
   const [q, setQ] = useState("");
   const [poke, setPoke] = useState(0);
+  const s = useStrings().native.explore;
   const results = useMemo(() => search(q), [q]);
   const openEntry = (e: Entry) => { if (e.lessonId && LESSONS[e.lessonId]) router.push(`/lesson/${e.lessonId}` as never); };
 
@@ -28,16 +30,16 @@ export default function ExploreScreen() {
     <View style={{ flex: 1, backgroundColor: K.cream }}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 24, paddingHorizontal: 20, paddingBottom: 140 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <Title>Explore</Title>
+        <Title>{s.title}</Title>
         <View style={{ marginTop: 16, height: 48, borderRadius: 16, backgroundColor: K.creamDeep, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16 }}>
           <Svg width={18} height={18} viewBox="0 0 24 24"><Circle cx="10" cy="10" r="7" fill="none" stroke={K.inkSoft} strokeWidth={2.6} /><Path d="m15 15 6 6" stroke={K.inkSoft} strokeWidth={2.6} strokeLinecap="round" /></Svg>
-          <TextInput value={q} onChangeText={setQ} placeholder="A passage, a person, a topic…" placeholderTextColor={K.inkSoft} accessibilityLabel="Search"
+          <TextInput value={q} onChangeText={setQ} placeholder={s.searchPlaceholder} placeholderTextColor={K.inkSoft} accessibilityLabel={s.search}
             style={[nunito(700, 16, { color: K.ink, flex: 1, height: "100%" })]} returnKeyType="search" clearButtonMode="while-editing" />
         </View>
 
         {q.trim() ? (
           <Animated.View entering={FadeIn} style={{ marginTop: 16, gap: 8 }}>
-            {results.length === 0 && <Text style={nunito(700, 15, { color: K.inkSoft, textAlign: "center", marginTop: 24 })}>Nothing yet for “{q}”.</Text>}
+            {results.length === 0 && <Text style={nunito(700, 15, { color: K.inkSoft, textAlign: "center", marginTop: 24 })}>{fill(s.noResults, { q })}</Text>}
             {results.map(({ e, shelf, detail }) => (
               <Pressable key={e.id} onPress={() => openEntry(e)} accessibilityRole="button" accessibilityLabel={`${e.title}, ${shelf.label}`}
                 style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: K.creamDeep, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 12 }}>
@@ -51,20 +53,20 @@ export default function ExploreScreen() {
           </Animated.View>
         ) : (
           <View style={{ marginTop: 20, gap: 12 }}>
-            {library.map((s, i) => {
-              const t = TONE[s.entries[0]?.tone ?? "forest"];
-              const Motif = MOTIFS[s.id];
-              const ready = s.entries.filter(e => e.lessonId).length;
+            {library.map((sh, i) => {
+              const t = TONE[sh.entries[0]?.tone ?? "forest"];
+              const Motif = MOTIFS[sh.id];
+              const ready = sh.entries.filter(e => e.lessonId).length;
               return (
-                <Animated.View key={s.id} entering={FadeInDown.delay(Math.min(i, 6) * 40).springify().damping(28)}>
-                  <Pressable onPress={() => router.push(`/shelf/${s.id}` as never)} accessibilityRole="button" accessibilityLabel={`${s.label}. ${s.promise ?? ""}`}
+                <Animated.View key={sh.id} entering={FadeInDown.delay(Math.min(i, 6) * 40).springify().damping(28)}>
+                  <Pressable onPress={() => router.push(`/shelf/${sh.id}` as never)} accessibilityRole="button" accessibilityLabel={`${sh.label}. ${sh.promise ?? ""}`}
                     style={({ pressed }) => ({ transform: [{ translateY: pressed ? 4 : 0 }] })}>
                     <View style={{ position: "absolute", left: 0, right: 0, top: 5, bottom: -5, borderRadius: 24, backgroundColor: "rgba(0,0,0,.18)" }} />
                     <View style={{ minHeight: Motif ? 112 : 88, borderRadius: 24, backgroundColor: t.bg, flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 16, paddingLeft: i === 1 ? 54 : 20, paddingRight: 12, overflow: "hidden" }}>
                       <View style={{ flex: 1 }}>
-                        <Text style={nunito(900, 21, { color: t.fg, letterSpacing: -0.4, lineHeight: 23 })}>{s.label}</Text>
-                        {!!s.promise && <Text style={nunito(700, 13, { color: t.fg, opacity: 0.85, marginTop: 4, lineHeight: 17 })}>{s.promise}</Text>}
-                        <Text style={nunito(900, 11, { color: t.fg, opacity: 0.6, letterSpacing: 1.3, marginTop: 6 })}>{ready ? `${ready} READY` : "COMING SOON"}</Text>
+                        <Text style={nunito(900, 21, { color: t.fg, letterSpacing: -0.4, lineHeight: 23 })}>{sh.label}</Text>
+                        {!!sh.promise && <Text style={nunito(700, 13, { color: t.fg, opacity: 0.85, marginTop: 4, lineHeight: 17 })}>{sh.promise}</Text>}
+                        <Text style={nunito(900, 11, { color: t.fg, opacity: 0.6, letterSpacing: 1.3, marginTop: 6 })}>{ready ? plural(ready, s.ready) : s.comingSoon}</Text>
                       </View>
                       {Motif && <Motif />}
                     </View>

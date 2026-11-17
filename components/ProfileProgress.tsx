@@ -14,12 +14,11 @@ import { StreakFireAnimation } from "./StreakFireAnimation";
 import { SFSymbol, type SFSymbolName } from "./Symbol";
 export function ProfileProgress() {
   const colors = useColors(), router = useRouter(), reduced = useReducedMotion();
-  const { streak, totalCompletions, engagedDates } = useProgress();
+  const { streak, engagedDates } = useProgress();
   const { ids } = useBibleMomentCollection();
   const { achievements, finishedBooks } = useAchievements();
   const week = buildCurrentWeek(engagedDates);
   return <View style={{ paddingHorizontal: 20, gap: 28 }}><View style={{ flexDirection: "row", gap: 10 }}>{[
-    {label:"Letters read", value:totalCompletions, icon:"envelope", route:"/completed-sermons"},
     {label:"Books finished", value:finishedBooks, icon:"book.closed", route:"/library"},
     {label:"Moments found", value:ids.length, icon:"rectangle.on.rectangle", route:"/rhythm?section=moments"},
   ].map((s,i) => <Animated.View key={s.label} entering={reduced ? undefined : FadeInDown.delay(i*55).springify().damping(18)} style={{ flex: 1 }}><Pressable accessibilityRole="button" onPress={() => router.push(s.route as any)} style={{ paddingVertical: 16, paddingHorizontal: 6, alignItems: "center", gap: 8, backgroundColor: colors.surface, borderRadius: 14, boxShadow: "0 3px 0 #9D724033" }}><SFSymbol name={s.icon as SFSymbolName} size={28} color="#D97450" /><Text style={{ color: colors.ink, fontSize: 28, fontWeight: "700" }}>{s.value}</Text><Text style={{ color: colors.inkMuted, fontSize: 12, textAlign: "center" }}>{s.label}</Text></Pressable></Animated.View>)}</View>

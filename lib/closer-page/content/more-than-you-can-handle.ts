@@ -27,8 +27,15 @@ export const moreThanYouCanHandle = {
   blocks: [
     // 1. The claim (MisconceptionClaim + TruthChoice)
     {
+      kind: "dialogue",
+      page: { at: "hero", act: "enter", mood: "curious" },
+      lines: [{ say: "A line people say when life gets heavy. Let’s check it.", mood: "cheeky", act: "hop" }],
+      display: { text: "God won’t give you more than you can handle?", sub: "Misconception · 1 Corinthians 10 · 2 Corinthians 1" },
+      reply: "Look it up",
+    },
+    {
       kind: "claim",
-      page: { at: "hero", act: "enter", mood: "excited" },
+      page: { at: "hero", mood: "excited" },
       claim,
       lines: [
         { say: "Okay, I’ve heard this one a lot.", mood: "cheeky", act: "stare" },

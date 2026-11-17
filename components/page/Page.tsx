@@ -16,6 +16,7 @@ import Animated, {
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
 import * as Haptics from "expo-haptics";
 import { ACTIONS, HELD, IDLE, QUIET_MOODS, SPARKS, type Action, type Mood } from "@/lib/closer-page/page/states";
+import { useStrings } from "@/lib/i18n";
 
 /**
  * Page, Closer's storykeeper, drawn natively: a chunky red book with an open-book face and a yellow bookmark.
@@ -75,7 +76,9 @@ function play(action: Action, sv: Record<Prop, SharedValue<number>>, scale: numb
   }
 }
 
-export function Page({ mood = "neutral", act = "idle", actKey = 0, look = 0, size = 160, shadow = true, onTap, label = "Page, your guide" }: PageProps) {
+export function Page({ mood = "neutral", act = "idle", actKey = 0, look = 0, size = 160, shadow = true, onTap, label: given }: PageProps) {
+  const s = useStrings().native.page;
+  const label = given ?? s.label;
   const reduce = useReducedMotion();
   const [tapMood, setTapMood] = useState<Mood | null>(null);
   const [blink, setBlink] = useState(false);

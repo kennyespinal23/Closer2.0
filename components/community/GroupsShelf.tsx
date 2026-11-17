@@ -7,6 +7,7 @@ import { GroupPage } from "./GroupPage";
 import { CreateStudyGroup } from "./CreateStudyGroup";
 import { useCommunity } from "@/state/community";
 import * as haptics from "@/lib/haptics";
+import { plural, useStrings } from "@/lib/i18n";
 
 /**
  * Your groups, under You (CLOSER-PICKS.md, "After the films: only the prayer wall; groups live under You"): each
@@ -20,6 +21,7 @@ export function GroupsShelf() {
   const pendingRead = useRef<{ bookId: string; chapter: number } | null>(null);
   const group = state.groups.find(g => g.id === groupId);
   const joined = state.groups.filter(g => g.joined);
+  const t = useStrings().native.groups;
   const close = () => {
     setGroupId(null);
     const target = pendingRead.current; pendingRead.current = null;
@@ -29,15 +31,15 @@ export function GroupsShelf() {
   return (
     <View style={{ marginTop: 40 }}>
       <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
-        <Text accessibilityRole="header" style={nunito(900, 22, { color: K.ink, letterSpacing: -0.4 })}>Your groups</Text>
-        <Text style={nunito(800, 13.5, { color: K.inkFaint })}>{joined.length} reading</Text>
+        <Text accessibilityRole="header" style={nunito(900, 22, { color: K.ink, letterSpacing: -0.4 })}>{t.title}</Text>
+        <Text style={nunito(800, 13.5, { color: K.inkFaint })}>{plural(joined.length, t.reading)}</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20 }} contentContainerStyle={{ paddingHorizontal: 20, gap: 12, paddingTop: 12, paddingBottom: 6 }}>
         {joined.map(g => <GroupCover key={g.id} group={g} small onOpen={() => setGroupId(g.id)} />)}
-        <Pressable accessibilityRole="button" accessibilityLabel="Start a group" disabled={!hydrated} onPress={() => { haptics.soft(); setCreating(true); }}
+        <Pressable accessibilityRole="button" accessibilityLabel={t.start} disabled={!hydrated} onPress={() => { haptics.soft(); setCreating(true); }}
           style={{ width: 120, height: 240, borderRadius: 24, backgroundColor: K.creamDeep, alignItems: "center", justifyContent: "center", gap: 10 }}>
           <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: K.cream, alignItems: "center", justifyContent: "center" }}><Text style={nunito(900, 24, { color: K.ink })}>+</Text></View>
-          <Text style={nunito(900, 14, { color: K.ink, textAlign: "center", lineHeight: 18 })}>Start a{"\n"}group</Text>
+          <Text style={nunito(900, 14, { color: K.ink, textAlign: "center", lineHeight: 18 })}>{t.startTile}</Text>
         </Pressable>
       </ScrollView>
       {group && <GroupPage key={group.id} group={group} onClose={close} onChange={g => update(s => ({ ...s, groups: s.groups.map(old => old.id === g.id ? g : old) }))}

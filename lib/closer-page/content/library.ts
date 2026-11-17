@@ -5,6 +5,11 @@ import { FUTURE_BOOKS } from "./books";
 import { BOOK } from "../lesson/bookTokens";
 import { CONN } from "../lesson/connTokens";
 import { PSALM } from "../lesson/psalmTokens";
+import { THEO } from "../lesson/theoTokens";
+import { LAB } from "../lesson/labTokens";
+import { HIST } from "../lesson/historyTokens";
+import { HEART } from "../lesson/heartTokens";
+import { POEM } from "../lesson/poemTokens";
 import { PSALM_PLANS } from "./psalms-plan";
 import { GENRES } from "../lesson/types";
 
@@ -15,6 +20,7 @@ export type Shelf = { id: string; label: string; entries: Entry[]; /** one line 
 export const library: Shelf[] = [
   {
     id: "jesus", label: "Jesus Only", promise: "Sit with Jesus in the moments the Gospels tell.", entries: [
+      { id: "j-written", title: "It Is Written", sub: "Matthew 4 · 5 min", tone: "wine", lessonId: "it-is-written" },
       { id: "j-feet", title: "The King Who Washed Feet", sub: "John 13 · 5 min", tone: "wine", lessonId: "jesus-washed-feet" },
       { id: "j-tree", title: "The Man in the Tree", sub: "Luke 19 · 5 min", tone: "wine", lessonId: "jesus-zacchaeus" },
       { id: "j-storm", title: "The Storm That Obeyed Him", sub: "Mark 4 · 5 min", tone: "wine", lessonId: "jesus-storm" },
@@ -105,6 +111,44 @@ export const library: Shelf[] = [
     ],
   },
   {
+    id: "heart", label: "Heart to Heart", promise: "Talk with Page about you and God. Nothing is kept unless you say so.", entries: [
+      { id: "h-reminder", title: "A Little Reminder", sub: "A pause in your day · 3 min", tone: "ember", lessonId: "heart-reminder" },
+      { id: "h-close", title: "How Close Do You Feel to God?", sub: "A conversation · 5 min", tone: "ember", lessonId: "heart-close" },
+      { id: "h-lately", title: "What’s Been on Your Heart Lately?", sub: "A conversation · 5 min", tone: "ember", lessonId: "heart-lately" },
+      { id: "h-afraid", title: "Is There Something You’ve Been Afraid to Tell God?", sub: "A conversation · 5 min", tone: "ember", lessonId: "heart-afraid" },
+    ],
+  },
+  {
+    id: "poetry", label: "Closer Poetry", promise: "Small poems from Scripture, to read slowly and pray.", entries: [
+      { id: "po-loved", title: "You Are Still Loved", sub: "A quiet poem · 3 min", tone: "dusk", lessonId: "poem-loved" },
+      { id: "po-far", title: "When I Feel Far Away", sub: "A poem you walk through · 5 min", tone: "dusk", lessonId: "poem-far" },
+      { id: "po-today", title: "Thank You for Today", sub: "A poem you help write · 4 min", tone: "dusk", lessonId: "poem-today" },
+    ],
+  },
+  {
+    id: "history", label: "Church History", promise: "Two thousand years of people who passed the faith on.", entries: [
+      { id: "ch-bible", title: "How Did We Get the Bible?", sub: "The Scriptorium · 5 min", tone: "lapis", lessonId: "history-bible" },
+      { id: "ch-first", title: "What Happened to the First Christians?", sub: "Rome, AD 30–313 · 5 min", tone: "lapis", lessonId: "history-first" },
+      { id: "ch-split", title: "Why Did Christianity Split?", sub: "1054 · 1517 · 5 min", tone: "lapis", lessonId: "history-split" },
+    ],
+  },
+  {
+    id: "theology", label: "Christian Theology", promise: "The deepest questions of the faith, discovered in Scripture.", entries: [
+      { id: "th-praying", title: "If Jesus Is God, Who Was He Praying To?", sub: "Matthew 3 · John 17 · 5 min", tone: "indigo", lessonId: "theology-praying" },
+      { id: "th-cross", title: "Why Did Jesus Have to Die?", sub: "Exodus 12 · Isaiah 53 · John 19 · 5 min", tone: "indigo", lessonId: "theology-cross" },
+      { id: "th-freewill", title: "If God Knows the Future, Do We Have Free Will?", sub: "Choice Explorer · 5 min", tone: "indigo", lessonId: "theology-freewill" },
+      { id: "th-spirit", title: "Who Is the Holy Spirit?", sub: "Matthew 3 · John 14 · Acts 2 · 5 min", tone: "indigo", lessonId: "theology-spirit" },
+    ],
+  },
+  {
+    id: "science", label: "Faith & Science", promise: "Big questions about the universe, with faith and science at one table.", entries: [
+      { id: "fs-bigbang", title: "Can You Believe in God and the Big Bang?", sub: "Discovery Lab · 5 min", tone: "cosmos", lessonId: "science-big-bang" },
+      { id: "fs-earth", title: "How Old Is the Earth?", sub: "Deep Time Explorer · 5 min", tone: "cosmos", lessonId: "science-earth-age" },
+      { id: "fs-evolution", title: "Did Humans Really Evolve?", sub: "Tree of Life · 5 min", tone: "cosmos", lessonId: "science-evolution" },
+      { id: "fs-tuning", title: "Is the Universe Fine-Tuned for Life?", sub: "Universe Simulator · 5 min", tone: "cosmos", lessonId: "science-fine-tuning" },
+    ],
+  },
+  {
     id: "testimonies", label: "Testimonies", promise: "Real lives, told carefully, from the record.", entries: [
       { id: "t-newton", title: "The man behind Amazing Grace", sub: "John Newton · 1725–1807", tone: "walnut", lessonId: "john-newton" },
       { id: "t-augustine", title: "The restless heart", sub: "Augustine of Hippo · 354–430", tone: "walnut", lessonId: "augustine" },
@@ -167,5 +211,13 @@ export const TONE: Record<Entry["tone"], { bg: string; fg: string }> = {
   sky: { bg: BOOK.primary, fg: BOOK.ink },
   orchid: { bg: CONN.primary, fg: "#FFFFFF" },
   seaglass: { bg: PSALM.primary, fg: PSALM.dark },
+  indigo: { bg: THEO.primary, fg: THEO.light },
+  cosmos: { bg: LAB.band, fg: LAB.bandInk },
+  lapis: { bg: HIST.primary, fg: HIST.light },
+  ember: { bg: HEART.band, fg: HEART.bandInk },
+  dusk: { bg: POEM.band, fg: POEM.bandInk },
   cream: { bg: "#F3E6D2", fg: "#17251F" },
 };
+
+/** the shelf an experience lives on (its category), for its colours and artwork */
+export const shelfOf = (lessonId: string) => library.find(s => s.entries.some(e => e.lessonId === lessonId));

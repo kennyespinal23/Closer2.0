@@ -13,6 +13,7 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 import { bestStreakOf, dayKey, streakOf, useCloserPage } from "@/state/closerPage";
 import * as haptics from "@/lib/haptics";
 import { isInternalBuild } from "@/lib/isInternalBuild";
+import { fill, plural, useStrings } from "@/lib/i18n";
 
 /**
  * Your streak (CLOSER-PICKS.md, "Streak page": A2, like Numo): one big flame with the number inside it on a warm
@@ -20,11 +21,11 @@ import { isInternalBuild } from "@/lib/isInternalBuild";
  * A day counts when you finish a story.
  */
 const PEACH = "#FFE9D6", ORANGE = "#F07B12", DEEP = "#B5530F", TEXT = "#8A4B12";
-const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
 export default function StreakScreen() {
   const router = useRouter(), insets = useSafeAreaInsets(), reduce = useReducedMotion();
   const { days: realDays } = useCloserPage();
+  const s = useStrings().native.streak;
   // testing builds only: /streak?demo=12 shows a 12-day streak (5 of them this week, today not yet done)
   const { demo } = useLocalSearchParams<{ demo?: string }>();
   const days = useMemo(() => {
@@ -41,18 +42,18 @@ export default function StreakScreen() {
   const week = useMemo(() => {
     const now = new Date(), mon = new Date(now);
     mon.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-    return DAYS.map((d, i) => {
+    return s.weekdays.map((d, i) => {
       const x = new Date(mon); x.setDate(mon.getDate() + i);
       const k = dayKey(x), today = k === dayKey(now);
       return { d, done: !!days[k]?.length, today, future: x > now && !today };
     });
-  }, [days]);
+  }, [days, s]);
 
-  const line = streak === 0 ? "Finish today’s story to light it." :
-    !doneToday ? "Finish today’s story to keep it going." :
-    streak >= best && streak > 1 ? "Your longest yet. Keep going." :
-    streak === 1 ? "Day one. That’s how it starts." : `Your best is ${best}. You’re on your way.`;
-  const cheer = doneToday ? `Tomorrow makes ${streak + 1}!` : streak ? `Today makes ${streak + 1}!` : "Let’s start one today!";
+  const line = streak === 0 ? s.lineStart :
+    !doneToday ? s.lineKeep :
+    streak >= best && streak > 1 ? s.lineLongest :
+    streak === 1 ? s.lineDayOne : fill(s.lineBest, { best });
+  const cheer = doneToday ? fill(s.tomorrowMakes, { n: streak + 1 }) : streak ? fill(s.todayMakes, { n: streak + 1 }) : s.startToday;
 
   // the flame breathes; the number sits still inside it
   const flick = useSharedValue(1);
@@ -72,12 +73,12 @@ export default function StreakScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }} showsVerticalScrollIndicator={false}>
         <View style={{ backgroundColor: PEACH, paddingTop: insets.top + 8, paddingHorizontal: 20, paddingBottom: 26, alignItems: "center" }}>
           <View style={{ alignSelf: "stretch" }}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => router.back()} hitSlop={8} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
+            <Pressable accessibilityRole="button" accessibilityLabel={s.close} onPress={() => router.back()} hitSlop={8} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
               <SFSymbol name="xmark" size={19} weight="bold" color={DEEP} />
             </Pressable>
           </View>
 
-          <View accessible accessibilityLabel={`${streak} day streak`} style={{ width: 200, height: 228, alignItems: "center" }}>
+          <View accessible accessibilityLabel={plural(streak, s.streakA11y)} style={{ width: 200, height: 228, alignItems: "center" }}>
             <Animated.View style={[{ position: "absolute", left: 0, top: 0, transformOrigin: "50% 100%" }, flameStyle]}>
               <Svg width={200} height={228} viewBox="0 0 14 16">
                 <Path d="M7 0C8 4 13 5.5 13 10a6 6 0 0 1-12 0c0-2.5 1.5-4 3-5 .3 1.6 1 2.6 2 3C6 5 5.6 2.5 7 0z" fill={streak ? ORANGE : "#E9C9A8"} />
@@ -86,15 +87,15 @@ export default function StreakScreen() {
             <Text adjustsFontSizeToFit numberOfLines={1} style={nunito(900, streak > 99 ? 70 : 92, { color: K.cream, position: "absolute", top: 98, left: 20, right: 20, textAlign: "center", lineHeight: streak > 99 ? 96 : 120, letterSpacing: -2 })}>{streak}</Text>
           </View>
 
-          <Text style={nunito(900, 30, { color: "#D2580A", marginTop: 4, lineHeight: 38 })}>{streak === 1 ? "day streak" : "day streak"}</Text>
+          <Text style={nunito(900, 30, { color: "#D2580A", marginTop: 4, lineHeight: 38 })}>{plural(streak, s.dayStreak)}</Text>
           <Text style={nunito(800, 15, { color: TEXT, marginTop: 2, textAlign: "center" })}>{line}</Text>
           <PressButton style={{ marginTop: 18, alignSelf: "stretch" }} tone={{ face: ORANGE, lip: DEEP, text: "#FFFFFF" }} onPress={keepGoing}>
-            {doneToday ? "Done for today" : "Keep it going"}
+            {doneToday ? s.done : s.keepGoing}
           </PressButton>
         </View>
 
         <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
-          <View accessible accessibilityLabel={`This week: ${week.filter(w => w.done).length} days`} style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <View accessible accessibilityLabel={plural(week.filter(w => w.done).length, s.weekA11y)} style={{ flexDirection: "row", justifyContent: "space-between" }}>
             {week.map(w => (
               <View key={w.d} style={{ alignItems: "center", gap: 6 }}>
                 <Text style={nunito(900, 12, { color: w.today ? ORANGE : K.inkFaint })}>{w.d}</Text>
@@ -115,14 +116,14 @@ export default function StreakScreen() {
           </View>
 
           <View style={{ flexDirection: "row", gap: 8, marginTop: 22 }}>
-            {[[String(best), "Best streak"], [String(Object.keys(days).filter(k => days[k].length).length), "Days in all"]].map(([n, l]) => (
+            {[[String(best), s.best], [String(Object.keys(days).filter(k => days[k].length).length), s.allDays]].map(([n, l]) => (
               <View key={l} style={{ flex: 1, backgroundColor: "#FFFFFF", borderRadius: 18, paddingHorizontal: 14, paddingVertical: 12, shadowColor: "#EADFCC", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 0 }}>
                 <Text style={nunito(900, 22, { color: K.ink, lineHeight: 28 })}>{n}</Text>
                 <Text style={nunito(800, 12.5, { color: K.inkFaint })}>{l}</Text>
               </View>
             ))}
           </View>
-          <Text style={nunito(700, 13, { color: K.inkFaint, textAlign: "center", marginTop: 18 })}>A day counts when you finish a story.</Text>
+          <Text style={nunito(700, 13, { color: K.inkFaint, textAlign: "center", marginTop: 18 })}>{s.rule}</Text>
         </View>
       </ScrollView>
     </View>

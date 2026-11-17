@@ -25,6 +25,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { type Book, BOOKS, findBookById } from "@/constants/books";
 import { K, nunito } from "@/components/closer/kit";
 import * as haptics from "@/lib/haptics";
+import { fill, plural, useStrings } from "@/lib/i18n";
 import { computeContinueReading } from "@/lib/continueReading";
 import { SCREEN_H_PAD } from "@/lib/layout";
 import { useProgress } from "@/state/progress";
@@ -65,6 +66,7 @@ function BibleLibrary() {
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
   const openingRef = useRef(false);
+  const s = useStrings().native.bible;
   useFocusEffect(useCallback(() => { openingRef.current = false; }, []));
   const { lastVisited, hasReadChapter, chaptersRead } = useProgress();
   const continueReading = useMemo(() => computeContinueReading(lastVisited, hasReadChapter), [lastVisited, hasReadChapter]);
@@ -104,9 +106,9 @@ function BibleLibrary() {
           onBook={() => openBook(hero)} onRead={() => openReader(hero, heroCh)} />
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: GUTTER, gap: 8, paddingTop: 20 }}>
-          <Chip label="Old Testament" selected={view === "old"} onPress={() => changeView("old")} />
-          <Chip label="New Testament" selected={view === "new"} onPress={() => changeView("new")} />
-          <Chip label="✦ Reading path" selected={view === "path"} onPress={() => changeView("path")} />
+          <Chip label={s.old} selected={view === "old"} onPress={() => changeView("old")} />
+          <Chip label={s.new} selected={view === "new"} onPress={() => changeView("new")} />
+          <Chip label={`✦ ${s.path}`} selected={view === "path"} onPress={() => changeView("path")} />
         </ScrollView>
 
         <MomentsCard onPress={() => { haptics.soft(); router.push("/rhythm?section=moments" as Href); }} />
@@ -133,6 +135,7 @@ function Hero({ book, chapter, started, read, topInset, onSearch, onBook, onRead
 }) {
   const art = getBookCover(book.id);
   const color = paintedCover(book.id)?.color ?? K.ink;
+  const s = useStrings().native.bible;
   const round = { width: 44, height: 44, borderRadius: 22, backgroundColor: "#FFFFFF33", alignItems: "center" as const, justifyContent: "center" as const };
   const shadow = { textShadowColor: "#00000059", textShadowRadius: 12, textShadowOffset: { width: 0, height: 2 } };
   return <View style={{ backgroundColor: color }}>
@@ -141,23 +144,23 @@ function Hero({ book, chapter, started, read, topInset, onSearch, onBook, onRead
     <ReaderMaterialGradient pointerEvents="none" colors={["#0000006B", "#0000000D", "#00000040", color]} locations={[0, .32, .55, .96]} style={StyleSheet.absoluteFill} />
     <View style={{ paddingHorizontal: GUTTER, paddingTop: topInset + 12, paddingBottom: 24 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <NText accessibilityRole="header" style={nunito(900, 34, { flex: 1, color: "#FFFFFF", letterSpacing: -1, ...shadow })}>Library</NText>
-        <Pressable accessibilityRole="button" accessibilityLabel="Find a book" onPress={onSearch} style={round}><SFSymbol name="magnifyingglass" size={19} weight="bold" color="#FFFFFF" /></Pressable>
+        <NText accessibilityRole="header" style={nunito(900, 34, { flex: 1, color: "#FFFFFF", letterSpacing: -1, ...shadow })}>{s.library}</NText>
+        <Pressable accessibilityRole="button" accessibilityLabel={s.findBook} onPress={onSearch} style={round}><SFSymbol name="magnifyingglass" size={19} weight="bold" color="#FFFFFF" /></Pressable>
       </View>
       <View style={{ marginTop: 150 }}>
-        <NText style={nunito(800, 12.5, { color: "#FFFFFFD9", letterSpacing: 1.75, textTransform: "uppercase" })}>{started ? "Where you left off" : "Start here"}</NText>
-        <Pressable accessibilityRole="button" accessibilityLabel={`About ${book.name}`} onPress={onBook}>
+        <NText style={nunito(800, 12.5, { color: "#FFFFFFD9", letterSpacing: 1.75, textTransform: "uppercase" })}>{started ? s.leftOff : s.startHere}</NText>
+        <Pressable accessibilityRole="button" accessibilityLabel={fill(s.about, { book: book.name })} onPress={onBook}>
           <NText numberOfLines={2} adjustsFontSizeToFit minimumFontScale={.7} style={nunito(900, 48, { color: "#FFFFFF", letterSpacing: -1.7, lineHeight: 58, marginTop: 6, ...shadow })}>{book.name}</NText>
         </Pressable>
         <NText style={nunito(800, 16, { color: "#FFFFFFE6", marginTop: 6 })}>
-          {started ? `Chapter ${chapter} of ${book.chapters} · ${read} read` : `${book.chapters} chapters · a good first book`}
+          {started ? fill(s.heroStarted, { chapter, of: book.chapters, read }) : plural(book.chapters, s.heroNew)}
         </NText>
-        <Pressable accessibilityRole="button" accessibilityLabel={`${started ? "Keep reading" : "Start reading"} ${book.name}, chapter ${chapter}`} onPress={onRead} style={{ marginTop: 20, alignSelf: "flex-start" }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={fill(started ? s.keepA11y : s.startA11y, { book: book.name, chapter })} onPress={onRead} style={{ marginTop: 20, alignSelf: "flex-start" }}>
           {({ pressed }) => <View style={{ height: 61 }}>
             <View style={{ position: "absolute", left: 0, right: 0, top: 5, height: 56, borderRadius: 28, backgroundColor: "#00000038" }} />
             <View style={{ height: 56, borderRadius: 28, backgroundColor: "#FFFFFF", paddingHorizontal: 28, flexDirection: "row", alignItems: "center", gap: 10, transform: [{ translateY: pressed ? 4 : 0 }] }}>
               <Svg width={14} height={14} viewBox="0 0 16 16"><Path d="M4 2.5v11l9-5.5z" fill={color} /></Svg>
-              <NText style={nunito(900, 18, { color })}>{started ? "Keep reading" : "Start reading"}</NText>
+              <NText style={nunito(900, 18, { color })}>{started ? s.keep : s.start}</NText>
             </View>
           </View>}
         </Pressable>
@@ -178,8 +181,9 @@ function MomentsCard({ onPress }: { onPress: () => void }) {
   const { ids } = useBibleMomentCollection();
   const got = MOMENTS_IN_ORDER.filter(m => ids.includes(m.id));
   const order = new Map(ids.map((id, i) => [id, i]));
+  const s = useStrings().native.bible;
   const show = [...got].sort((a, b) => (order.get(b.id) ?? 0) - (order.get(a.id) ?? 0)).slice(0, 3);
-  return <Pressable accessibilityRole="button" accessibilityLabel={`Bible moments, ${got.length} of ${MOMENTS_IN_ORDER.length} collected`} onPress={onPress} style={{ marginHorizontal: GUTTER, marginTop: 16 }}>
+  return <Pressable accessibilityRole="button" accessibilityLabel={fill(s.momentsA11y, { n: got.length, of: MOMENTS_IN_ORDER.length })} onPress={onPress} style={{ marginHorizontal: GUTTER, marginTop: 16 }}>
     {({ pressed }) => <View style={{ height: 93 }}>
       <View style={{ position: "absolute", left: 0, right: 0, top: 5, height: 88, borderRadius: 24, backgroundColor: "#000000" }} />
       <View style={{ height: 88, borderRadius: 24, backgroundColor: K.ink, flexDirection: "row", alignItems: "center", gap: 16, paddingHorizontal: 16, transform: [{ translateY: pressed ? 4 : 0 }] }}>
@@ -192,9 +196,9 @@ function MomentsCard({ onPress }: { onPress: () => void }) {
           })}
         </View>
         <View style={{ flex: 1 }}>
-          <NText style={nunito(800, 12, { color: K.gold, letterSpacing: 1.7, textTransform: "uppercase" })}>Bible moments</NText>
-          <NText style={nunito(900, 18, { color: K.cream })}>{got.length} of {MOMENTS_IN_ORDER.length} collected</NText>
-          <NText numberOfLines={2} style={nunito(700, 13.5, { color: "#FFF7EBB3" })}>{got.length ? "Find more as you read." : "They’re hidden in the chapters. Read to find them."}</NText>
+          <NText style={nunito(800, 12, { color: K.gold, letterSpacing: 1.7, textTransform: "uppercase" })}>{s.moments}</NText>
+          <NText style={nunito(900, 18, { color: K.cream })}>{fill(s.momentsCount, { n: got.length, of: MOMENTS_IN_ORDER.length })}</NText>
+          <NText numberOfLines={2} style={nunito(700, 13.5, { color: "#FFF7EBB3" })}>{got.length ? s.momentsMore : s.momentsNone}</NText>
         </View>
       </View>
     </View>}
@@ -204,7 +208,8 @@ function MomentsCard({ onPress }: { onPress: () => void }) {
 function BookRow({ book, first, read, onPress }: { book: Book; first: boolean; read: number; onPress: () => void }) {
   const art = getBookCover(book.id);
   const done = read >= book.chapters;
-  return <Pressable accessibilityRole="button" accessibilityLabel={`${book.name}. ${getBookTheme(book.id) ?? ""}${read ? ` ${read} of ${book.chapters} chapters read` : ""}`} onPress={onPress}
+  const s = useStrings().native.bible;
+  return <Pressable accessibilityRole="button" accessibilityLabel={`${book.name}. ${getBookTheme(book.id) ?? ""}${read ? ` ${fill(s.rowRead, { n: read, of: book.chapters })}` : ""}`} onPress={onPress}
     style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: first ? 0 : 2, borderTopColor: K.cream }}>
     <View style={{ width: 44, height: 69 }}>
       <View style={{ position: "absolute", left: 0, right: 0, top: 3, height: 66, borderRadius: 9, backgroundColor: "#0000002E" }} />
@@ -237,6 +242,7 @@ function BibleSearch({ visible, onClose, onPick }: {
   const reduced = useReducedMotion();
   const input = useRef<TextInput>(null);
   const [query, setQuery] = useState("");
+  const s = useStrings().native.bible;
   const pendingBook = useRef<Book | null>(null);
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -254,30 +260,30 @@ function BibleSearch({ visible, onClose, onPick }: {
       <View style={{ padding: 20, paddingBottom: 12, flexDirection: "row", alignItems: "center", gap: 12 }}>
         <View style={[searchStyles.field, { flex: 1, backgroundColor: colors.surface, borderColor: colors.border }]}>
           <SFSymbol name="magnifyingglass" size={20} color={colors.textSecondary} />
-          <TextInput ref={input} autoFocus defaultValue="" onChangeText={setQuery} placeholder="Find a book"
-            accessibilityLabel="Search Bible books" placeholderTextColor={colors.textSecondary}
+          <TextInput ref={input} autoFocus defaultValue="" onChangeText={setQuery} placeholder={s.findBook}
+            accessibilityLabel={s.searchA11y} placeholderTextColor={colors.textSecondary}
             autoCorrect={false} autoCapitalize="none" clearButtonMode="while-editing" returnKeyType="search"
             keyboardAppearance={scheme} onSubmitEditing={Keyboard.dismiss}
             style={[searchStyles.text, { color: colors.ink }]} />
         </View>
         <Pressable accessibilityRole="button" onPress={close} style={{ minHeight: 44, justifyContent: "center" }}>
-          <ThemedText variant="headline">Cancel</ThemedText>
+          <ThemedText variant="headline">{s.cancel}</ThemedText>
         </Pressable>
       </View>
       <FlatList data={results} keyExtractor={book => book.id} keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets contentContainerStyle={{ paddingHorizontal: SCREEN_H_PAD, paddingBottom: 24 }}
-        ListHeaderComponent={query.trim() ? <ThemedText variant="footnote" color="secondary" style={{ marginBottom: 12 }}>{results.length} {results.length === 1 ? "book" : "books"}</ThemedText> : null}
+        ListHeaderComponent={query.trim() ? <ThemedText variant="footnote" color="secondary" style={{ marginBottom: 12 }}>{plural(results.length, s.books)}</ThemedText> : null}
         ListEmptyComponent={query.trim() ? <EmptyState query={query} /> : <View style={{ paddingTop: 28, gap: 8 }}>
-          <ThemedText variant="title2">Find your next passage</ThemedText>
-          <ThemedText variant="callout" color="secondary">Search all 66 books by name, such as Psalms or John.</ThemedText>
+          <ThemedText variant="title2">{s.searchTitle}</ThemedText>
+          <ThemedText variant="callout" color="secondary">{s.searchHint}</ThemedText>
         </View>}
-        renderItem={({ item }) => <Pressable accessibilityRole="button" accessibilityLabel={`Open ${item.name}`}
+        renderItem={({ item }) => <Pressable accessibilityRole="button" accessibilityLabel={fill(s.open, { book: item.name })}
           onPress={() => { pendingBook.current = item; close(); }}
           style={{ flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <View style={{ width: 42 }}><BookCover book={item} variant="thumb" /></View>
           <View style={{ flex: 1, gap: 4 }}>
             <ThemedText variant="headline">{item.name}</ThemedText>
-            <ThemedText variant="footnote" color="secondary">{item.chapters} {item.chapters === 1 ? "chapter" : "chapters"} · {item.testament === "old" ? "Old Testament" : "New Testament"}</ThemedText>
+            <ThemedText variant="footnote" color="secondary">{plural(item.chapters, s.chapters)} · {item.testament === "old" ? s.old : s.new}</ThemedText>
           </View>
           <SFSymbol name="chevron.right" size={14} color={colors.textSecondary} />
         </Pressable>} />
@@ -291,22 +297,21 @@ function BibleSearch({ visible, onClose, onPick }: {
 
 function EmptyState({ query }: { query: string }) {
   const colors = useLibraryColors();
+  const s = useStrings().native.bible;
   return (
     <View className="mt-12 items-center" style={{ paddingHorizontal: 22 }}>
       <View className="w-12 h-12 rounded-2xl bg-surface border border-border items-center justify-center mb-4">
         <SearchIcon size={18} stroke={colors.inkSubtle} />
       </View>
       <ThemedText variant="callout" style={{ fontWeight: "700" }}>
-        No books match
+        {s.noMatch}
       </ThemedText>
       <ThemedText
         variant="footnote"
         color="muted"
         style={{ marginTop: 6, textAlign: "center" }}
       >
-        {query
-          ? `Nothing in the canon contains "${query}".`
-          : "Try a different search."}
+        {query ? fill(s.nothingFor, { q: query }) : s.tryAgain}
       </ThemedText>
     </View>
   );

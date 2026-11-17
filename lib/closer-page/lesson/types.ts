@@ -1,9 +1,10 @@
 import type { Action, Anchor, Mood } from "../page/states";
+import type { ExtBlock } from "./ext";
 
 /* The lesson format. A new Bible experience is a Lesson object made of these blocks:
    no new components needed. Page's look is named here (mood, act, at) and drawn in src/page. */
 
-export type Theme = "forest" | "burgundy" | "night" | "cream" | "navy" | "teal" | "walnut" | "amethyst" | "wine" | "olive" | "rose" | "copper" | "sky" | "orchid" | "seaglass";
+export type Theme = "forest" | "burgundy" | "night" | "cream" | "navy" | "teal" | "walnut" | "amethyst" | "wine" | "olive" | "rose" | "copper" | "sky" | "orchid" | "seaglass" | "indigo" | "cosmos" | "lapis" | "ember" | "dusk";
 
 /** Testimonies keep three kinds of claim apart, and say which is which on screen */
 export type Tag = "fact" | "own" | "account" | "legend" | "interpretation" | "disputed" | "text" | "context" | "reading";
@@ -180,9 +181,26 @@ export type PsalmMovement = {
   hinge?: { word: string; verse: number; note: string };
   pairs?: { before: { text: string; verse: number }; after: { text: string; verse: number }; note: string }[];
 };
+/* ---------- Christian Theology ----------
+   A guided theological mystery: you find things in a scene from Scripture, collect what passages say, and build the
+   teaching yourself before Page names it. What the text says, what the church later named it, and what stays a
+   mystery are kept visibly apart. */
+
+/* ---------- Faith & Science: the Discovery Lab ----------
+   You work the models yourself: run the universe backwards, read a galaxy's light, uncover the oldest light there is.
+   Every finding says what kind of claim it is, so what's observed, what's modelled, what it's taken to mean and what's
+   still open never blur. */
+export type LabTag = "observation" | "model" | "interpretation" | "open";
+export type Finding = { tag: LabTag; text: string };
+
+/** The three persons, as the baptism shows them: the voice from heaven, the Son in the water, the Spirit as a dove */
+export type Person = "father" | "son" | "spirit";
+
 export type Psalm = { number: number; title: string; about: string; /** `about`, cut to one short line, for focus lessons */ brief?: string; verses: Verse[]; movements: PsalmMovement[]; key: Verse };
 
 export type Block =
+  /** experiences built in their own modules (src/lesson/ext) */
+  | ExtBlock
   /** Page talks. The last line's button is `reply`. */
   | {
       kind: "dialogue"; theme?: Theme; page?: Cue; lines: Line[]; reply?: string;
@@ -409,10 +427,73 @@ export type Block =
       /** after the stone: show "call" for the call, "out" when the figure steps out, "outcome" for its verse */
       after: Line[]; call: Verse; outcome: Verse; reply?: string;
     }
+  /** The wilderness: an illustrated scene. Hold to let the days pass, sun and moon crossing the sky, until the count is
+      reached. Lines show "first" (before the days) and "then" (after them). */
+  | { kind: "wilderness"; theme?: Theme; page?: Cue; before: Line[]; first: Verse; hold: string; days: number; then: Verse; after: Line[] }
+  /** It is written: a spoken line from Scripture, traced back to where it was written. `find`: first tap these words in
+      the line yourself, and `wow` fills the screen once you have. Then drag the marked words onto the closed scroll; it
+      opens on the source, and the words the line repeats (`match`) light up in turn. `skipped`: words of the source the
+      line leaves out (lines show "skipped"). Lines show "quote" for the spoken line. */
+  | {
+      kind: "written"; theme?: Theme; page?: Cue; before: Line[];
+      quote: Verse & { who: string }; mark: string; find?: string; findHint?: string; wow?: string; wowSay?: string;
+      drag: string; source: Verse & { book: string }; match: string[]; skipped?: string; after: Line[];
+    }
+  /** TheologyScene: the Jordan at the baptism, drawn. Tap the three things the passage names (`finds`, each a phrase of
+      `verse`); then, in the voice's own line, tap who is speaking and who is spoken about (`notice`). */
+  | {
+      kind: "jordan"; theme?: Theme; page?: Cue; before: Line[]; hint: string; verse: Verse;
+      finds: { who: Person; name: string; phrase: string; say: string }[];
+      notice: { prompt: string; quote: Verse; hint: string; marks: { word: string; who: Person; label: string; say: string }[] };
+      after: Line[];
+    }
+  /** ScriptureClues: passages to open; tap their marked phrases to collect clues. Lines then show each `groups` id, and
+      the clues gather under what they say together. */
+  | {
+      kind: "clues"; theme?: Theme; page?: Cue; before: Line[]; hint: string;
+      passages: { id: string; title: string; context: string; verses: Verse[]; marks: { phrase: string; clue: string; group: string; say: string }[] }[];
+      groups: { id: string; label: string }[];
+      after: Line[];
+    }
+  /** ShieldBuilder: connect each person to the one God ("is"), then each person to the others ("is not"). The finished
+      shape is the medieval Shield of the Trinity, named only once you've built it (lines show "name"). */
+  | {
+      kind: "shield"; theme?: Theme; page?: Cue; before: Line[]; center: string;
+      persons: { who: Person; name: string; verse: Verse; say: string }[];
+      isHint: string; notHint: string;
+      pairs: { a: Person; b: Person; why: string; ref: string; say: string }[];
+      title: string; caption: string;
+      after: Line[];
+    }
+  /** ExpandingUniverse: a patch of space on a timeline you drag. Back to the start (lines `early`), then to today. */
+  | { kind: "expand"; theme?: Theme; page?: Cue; before: Line[]; hint: string; note: string; early: Line[]; back: string; after: Line[] }
+  /** Redshift: choose galaxies at different distances and compare their light with the lab's; a plot builds */
+  | {
+      kind: "redshift"; theme?: Theme; page?: Cue; before: Line[]; hint: string;
+      galaxies: { name: string; distance: string; z: number; say: string }[];
+      findings: Finding[]; after: Line[];
+    }
+  /** The oldest light: wipe the sky clear to reveal a simplified map of the cosmic microwave background */
+  | { kind: "cmb"; theme?: Theme; page?: Cue; before: Line[]; hint: string; caption: string; findings: Finding[]; after: Line[] }
+  /** Two kinds of questions: place each in science, philosophy and theology, or both. Every placement is explained. */
+  | {
+      kind: "twoKinds"; theme?: Theme; page?: Cue; before: Line[];
+      bins: { id: string; label: string }[];
+      items: { q: string; bin: string; why: string; say: string }[];
+      after: Line[];
+    }
+  /** Misreadings to check: each card is opened and stamped, with the reason and the passage */
+  | {
+      kind: "misreads"; theme?: Theme; page?: Cue; before: Line[]; hint: string; stamp: string;
+      items: { title: string; why: string; ref: string; say: string }[];
+      after: Line[];
+    }
   /** A light check that the story landed. Never graded harshly. */
   | { kind: "question"; theme?: Theme; page?: Cue; prompt: string; options: { text: string; correct?: boolean; reply: string }[] }
   /** An open question with no right answer. Page responds to whatever you pick. */
-  | { kind: "reflection"; theme?: Theme; page?: Cue; prompt: string; options: { text: string; reply: string }[] }
+  | { kind: "reflection"; theme?: Theme; page?: Cue; prompt: string; options: { text: string; reply: string }[];
+      /** a quiet way past it: moves on without choosing anything */
+      skip?: string; note?: string }
   /** A verse to carry out of the lesson */
   | { kind: "verse"; theme?: Theme; page?: Cue; before: Line[]; verse: Verse; after: Line[]; reply?: string }
   | {
@@ -443,7 +524,7 @@ export type Lesson = {
   id: string;
   title: string;
   subtitle: string;
-  kind: "Character study" | "Verse study" | "Bible story" | "Misconception" | "Big question" | "Testimony" | "Jesus only" | "Everyday faith" | "Learning to pray" | "Bible mystery" | "Book overview" | "Connection" | "Psalm";
+  kind: "Character study" | "Verse study" | "Bible story" | "Misconception" | "Big question" | "Testimony" | "Jesus only" | "Everyday faith" | "Learning to pray" | "Bible mystery" | "Book overview" | "Connection" | "Psalm" | "Christian theology" | "Faith and science" | "Church history" | "Heart to Heart" | "Closer Poetry";
   scripture: string;
   minutes: number;
   theme: Theme;
@@ -463,5 +544,8 @@ export type Lesson = {
   /** Handoff (trial): once Page points at something, he and his bubble fade back so the content is the subject.
       He comes back when he speaks again or reacts to you. */
   handoff?: boolean;
+  /** Ends gently: no streak sheet or award pop-ups straight after it. The day and any award are still recorded,
+      just not celebrated over a quiet moment. */
+  quiet?: boolean;
   blocks: Block[];
 };

@@ -8,6 +8,8 @@ type Omitted<K extends Block["kind"]> = Omit<Extract<Block, { kind: K }>, "kind"
 
 export type PsalmScript = {
   id: string; title: string; subtitle: string; minutes: number;
+  /** the reference shown on the lesson; "Psalm <number>" if left out (a translated lesson gives its own, e.g. "Salmo 13") */
+  scripture?: string;
   /** one voice per moment (see Lesson.focus) */
   focus?: boolean;
   entrance: Omitted<"entrance">;
@@ -28,7 +30,7 @@ export function PsalmExperience(psalm: Psalm, s: PsalmScript): Lesson {
     { kind: "psalmSummary", page: { at: "left", mood: "tender", act: "settle" }, ...s.close },
   ];
   return {
-    id: s.id, title: s.title, subtitle: s.subtitle, kind: "Psalm", scripture: `Psalm ${psalm.number}`, minutes: s.minutes,
+    id: s.id, title: s.title, subtitle: s.subtitle, kind: "Psalm", scripture: s.scripture ?? `Psalm ${psalm.number}`, minutes: s.minutes,
     theme: "seaglass", psalm, blocks, focus: s.focus,
   };
 }

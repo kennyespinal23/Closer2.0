@@ -12,6 +12,7 @@ import { useOnboarding } from "@/state/onboarding";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import * as haptics from "@/lib/haptics";
 import { useColors } from "@/state/theme";
+import { useStrings } from "@/lib/i18n";
 
 /* Together: a near-black room where every card wears the colour of what's on it.
    People wear their avatar's colour, groups wear their book's. Text inside a card is
@@ -41,7 +42,8 @@ export function personFor(author: string): Person {
 /** You, with the avatar you chose (or a stable one until you do). */
 export function useMe(): Person {
   const { answers } = useOnboarding();
-  const name = (answers.name || "").trim().split(/\s+/)[0] || "You";
+  const you = useStrings().native.community.you;
+  const name = (answers.name || "").trim().split(/\s+/)[0] || you;
   const chosen = findAvatar(answers.avatarId), fallback = avatarForName(name);
   return { name, source: answers.avatarPhotoUri ? { uri: answers.avatarPhotoUri } : (chosen ?? fallback).source, color: (chosen ?? fallback).color, anonymous: false };
 }
@@ -83,7 +85,9 @@ export function ToneGround({ t }: { t: Tone }) {
 }
 
 /** Press and hold to pray. The bar fills; letting go early resets. */
-export function HoldToPray({ t, done, onDone, label = "Hold to pray", doneLabel = "You prayed" }: { t: Tone; done: boolean; onDone: () => void; label?: string; doneLabel?: string }) {
+export function HoldToPray({ t, done, onDone, label: givenLabel, doneLabel: givenDone }: { t: Tone; done: boolean; onDone: () => void; label?: string; doneLabel?: string }) {
+  const all = useStrings().native, s = all.prayer;
+  const label = givenLabel ?? s.hold, doneLabel = givenDone ?? all.community.youPrayed;
   const reduced = useReducedMotion(), progress = useSharedValue(done ? 1 : 0), locked = useRef(done);
   const [holding, setHolding] = useState(false);
   useEffect(() => { if (done) { locked.current = true; progress.value = withTiming(1, { duration: 200 }); } }, [done, progress]);
@@ -91,13 +95,13 @@ export function HoldToPray({ t, done, onDone, label = "Hold to pray", doneLabel 
   const start = () => { if (locked.current) return; haptics.soft(); setHolding(true); progress.value = withTiming(1, { duration: reduced ? 400 : 1200, easing: Easing.linear }, f => { if (f) runOnJS(finish)(); }); };
   const release = () => { if (locked.current) return; cancelAnimation(progress); progress.value = withTiming(0, { duration: 160 }); setHolding(false); };
   const fill = useAnimatedStyle(() => ({ transform: [{ scaleX: progress.value }] }));
-  return <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={done ? doneLabel : label} accessibilityHint={done ? undefined : "Press and hold"} accessibilityState={{ disabled: done }}
+  return <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={done ? doneLabel : label} accessibilityHint={done ? undefined : s.holdHint} accessibilityState={{ disabled: done }}
     onPressIn={start} onPressOut={release} onAccessibilityTap={finish}
     style={{ flex: 1, height: 56, borderRadius: 28, overflow: "hidden", backgroundColor: done ? mix(t.c, "#FFF8F2", .7) : "#FFF8F2", alignItems: "center", justifyContent: "center", boxShadow: `0 14px 30px -12px ${t.c}CC` }}>
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: mix(t.c, "#FFF8F2", .68), transformOrigin: "left center" }, fill]}/>
     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
       {done ? <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: "#FFF8F2", alignItems: "center", justifyContent: "center" }}><SFSymbol name="checkmark" size={12} color={t.deep}/></View> : <SFSymbol name="heart.fill" size={16} color={t.deep}/>}
-      <Text style={{ fontSize: 17, fontWeight: "800", color: t.deep }}>{done ? doneLabel : holding ? "Keep holding" : label}</Text>
+      <Text style={{ fontSize: 17, fontWeight: "800", color: t.deep }}>{done ? doneLabel : holding ? s.keepHolding : label}</Text>
     </View>
   </Pressable>;
 }

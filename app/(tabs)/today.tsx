@@ -15,6 +15,7 @@ import type { Action, Mood } from "@/lib/closer-page/page/states";
 import { dayKey, streakOf, useCloserPage } from "@/state/closerPage";
 import Svg, { Path } from "react-native-svg";
 import { TomorrowSheet } from "@/components/closer/TomorrowSheet";
+import { date, fill, plural, useStrings } from "@/lib/i18n";
 
 /**
  * Today: one experience, one button. The story card's shape, filled with the day's pick in its own category colour
@@ -48,7 +49,8 @@ export default function TodayScreen() {
   const tomorrow = useMemo(() => dailyPick(new Date(now.getTime() + 86400000)), [dateKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const { lesson, shelf, entry } = today;
   const t = TONE[entry.tone];
-  const hello = now.getHours() < 12 ? "Morning." : now.getHours() < 18 ? "Afternoon." : "Evening.";
+  const s = useStrings().native.today;
+  const hello = now.getHours() < 12 ? s.morning : now.getHours() < 18 ? s.afternoon : s.evening;
   const big = lesson.title.length > 22 ? 34 : lesson.title.length > 12 ? 44 : 56;
   const open = (id: string) => router.push(`/lesson/${id}` as never);
 
@@ -57,15 +59,15 @@ export default function TodayScreen() {
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 24, paddingHorizontal: 20, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <Label>{now.toLocaleDateString("en-US", { weekday: "long" })} · {now.toLocaleDateString("en-US", { month: "long", day: "numeric" })}</Label>
-          <Pressable accessibilityRole="button" accessibilityLabel={`${streak} day streak. Open your streak`} onPress={() => { void Haptics.selectionAsync(); router.push("/streak" as never); }} hitSlop={8}>
+          <Label>{fill(s.dateLine, { weekday: date(now, { weekday: "long" }), date: date(now, { month: "long", day: "numeric" }) })}</Label>
+          <Pressable accessibilityRole="button" accessibilityLabel={plural(streak, s.streakA11y)} onPress={() => { void Haptics.selectionAsync(); router.push("/streak" as never); }} hitSlop={8}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 5, height: 34, paddingLeft: 10, paddingRight: 12, borderRadius: 17, backgroundColor: litToday ? "#FFE7C2" : K.creamDeep }}>
               <Svg width={14} height={16} viewBox="0 0 14 16"><Path d="M7 0C8 4 13 5.5 13 10a6 6 0 0 1-12 0c0-2.5 1.5-4 3-5 .3 1.6 1 2.6 2 3C6 5 5.6 2.5 7 0z" fill={litToday ? "#F07B12" : "#C9BBA6"} /></Svg>
               <Text style={nunito(900, 15, { color: litToday ? "#B5530F" : K.inkFaint })}>{streak}</Text>
             </View>
           </Pressable>
         </View>
-        <Text accessibilityRole="header" style={nunito(900, 34, { color: K.ink, letterSpacing: -1, lineHeight: 36, marginTop: 8 })}>{hello} Got a few minutes?</Text>
+        <Text accessibilityRole="header" style={nunito(900, 34, { color: K.ink, letterSpacing: -1, lineHeight: 36, marginTop: 8 })}>{hello}</Text>
 
         <Animated.View entering={FadeInDown.springify().damping(24).delay(100)} style={{ marginTop: 60, marginBottom: 8 }}>
           {/* the card's lip, a step darker beneath it */}
@@ -77,26 +79,26 @@ export default function TodayScreen() {
               <Page size={104} mood={poke.mood} act={poke.act} actKey={poke.n} look={-0.7} shadow={false}
                 onTap={() => setPoke(p => ({ act: p.n % 3 === 2 ? "spin" : "hop", mood: p.n % 3 === 1 ? "cheeky" : "excited", n: p.n + 1 }))} />
             </View>
-            <Label color={t.fg} style={{ opacity: 0.7 }}>Today · {shelf.label}</Label>
+            <Label color={t.fg} style={{ opacity: 0.7 }}>{fill(s.todayFrom, { shelf: shelf.label })}</Label>
             <Text style={nunito(900, big, { color: t.fg, letterSpacing: -big * 0.035, lineHeight: big * 1.12, marginTop: 10 })}>{lesson.title}</Text>
             <Text style={nunito(700, 18, { color: t.fg, opacity: 0.8, lineHeight: 24, marginTop: 12, maxWidth: 270 })}>{lesson.subtitle}</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 20 }}>
-              {[lesson.scripture.split(" · ")[0], `${lesson.minutes} min`].map(s => (
+              {[lesson.scripture.split(" · ")[0], fill(s.minutes, { n: lesson.minutes })].map(s => (
                 <Text key={s} style={nunito(800, 13, { color: t.fg, backgroundColor: "rgba(255,255,255,.14)", borderRadius: 99, overflow: "hidden", paddingHorizontal: 12, paddingVertical: 6 })}>{s}</Text>
               ))}
             </View>
             <PressButton style={{ marginTop: 28 }} tone={{ face: t.fg, lip: "rgba(0,0,0,.28)", text: t.bg }} onPress={() => open(lesson.id)}>
-              {finished.includes(lesson.id) ? "Go again" : "Begin"}
+              {finished.includes(lesson.id) ? s.again : s.begin}
             </PressButton>
           </View>
         </Animated.View>
 
         <Animated.View entering={FadeIn.delay(350)}>
-          <Pressable onPress={() => { void Haptics.selectionAsync(); setTmrOpen(true); }} accessibilityRole="button" accessibilityLabel={`Tomorrow: ${tomorrow.lesson.title}`} accessibilityHint="Shows when it opens"
+          <Pressable onPress={() => { void Haptics.selectionAsync(); setTmrOpen(true); }} accessibilityRole="button" accessibilityLabel={fill(s.tomorrowA11y, { title: tomorrow.lesson.title })} accessibilityHint={s.tomorrowHint}
             style={{ marginTop: 28 }}>
             <View style={{ backgroundColor: K.creamDeep, borderRadius: 22, paddingHorizontal: 20, paddingVertical: 16, flexDirection: "row", alignItems: "center", gap: 12 }}>
             <View style={{ flex: 1 }}>
-              <Label>Tomorrow · {tomorrow.shelf.label}</Label>
+              <Label>{fill(s.tomorrowFrom, { shelf: tomorrow.shelf.label })}</Label>
               <Text numberOfLines={1} style={nunito(800, 17, { color: K.ink, marginTop: 2 })}>{tomorrow.lesson.title}</Text>
             </View>
             <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: TONE[tomorrow.entry.tone].bg }} />

@@ -13,6 +13,7 @@ import { paintedCover } from "@/constants/paintedCovers";
 import type { PrayerNote, StudyGroup } from "@/constants/communityPreview";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import * as haptics from "@/lib/haptics";
+import { fill, plural, useStrings } from "@/lib/i18n";
 import { FLOOR, Face, Faces, INK_FAINT, RoundButton, memberFor, personFor, tone, useMe } from "./togetherKit";
 import { PrayerPage } from "./PrayerPage";
 import { AskSheet } from "./AskSheet";
@@ -30,6 +31,8 @@ export function GroupPage({ group, onClose, onRead, onChange }: { group: StudyGr
   const book = findBookById(group.bookId), cover = paintedCover(group.bookId), t = tone(cover?.color ?? "#5B4A9A");
   const [tab, setTab] = useState<"week" | "prayer">("week"), [answer, setAnswer] = useState(""), [open, setOpen] = useState<string | null>(null), [asking, setAsking] = useState(false);
   const members = group.members.map(m => memberFor(m, me));
+  const s = useStrings().native.group;
+  const c = useStrings().native.community;
   const prayers = groupPrayers(group), opened = prayers.find(p => p.id === open);
   const markPrayed = (id: string) => { if (prayedIn(group, id)) return; haptics.soft(); onChange({ ...group, prayedIds: [...(group.prayedIds ?? []), id], ...(id === `${group.id}-prayer` ? { prayerPrayed: true } : {}) }); };
   const save = () => { if (!answer.trim()) return; onChange({ ...group, replies: [...group.replies, { author: "You", text: answer.trim() }] }); setAnswer(""); haptics.soft(); };
@@ -46,60 +49,60 @@ export function GroupPage({ group, onClose, onRead, onChange }: { group: StudyGr
               {cover && <View style={{ width: 92, height: 138, borderTopLeftRadius: 6, borderBottomLeftRadius: 6, borderTopRightRadius: 14, borderBottomRightRadius: 14, overflow: "hidden", boxShadow: "0 14px 24px -12px #000" }}><Image source={cover.source} contentFit="cover" style={StyleSheet.absoluteFill}/><View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 5, backgroundColor: "#00000040" }}/></View>}
               <View style={{ flex: 1 }}>
                 <Text accessibilityRole="header" numberOfLines={2} style={{ fontSize: 28, lineHeight: 32, fontWeight: "900", letterSpacing: -.5, color: t.t1 }}>{group.name}</Text>
-                <Text style={{ marginTop: 4, fontSize: 14, lineHeight: 19, fontWeight: "700", color: t.t2 }}>{book?.name} {group.chapter} of {book?.chapters} · {group.schedule}</Text>
-                <View style={{ marginTop: 10, flexDirection: "row", alignItems: "center", gap: 8 }}><Faces people={members.slice(0, 4)} ring={t.deep}/><Text style={{ fontSize: 13, fontWeight: "800", color: t.t2 }}>{members.length} reading</Text></View>
+                <Text style={{ marginTop: 4, fontSize: 14, lineHeight: 19, fontWeight: "700", color: t.t2 }}>{fill(s.where, { book: book?.name ?? "", chapter: group.chapter, of: book?.chapters ?? "", schedule: group.schedule })}</Text>
+                <View style={{ marginTop: 10, flexDirection: "row", alignItems: "center", gap: 8 }}><Faces people={members.slice(0, 4)} ring={t.deep}/><Text style={{ fontSize: 13, fontWeight: "800", color: t.t2 }}>{plural(members.length, c.reading)}</Text></View>
               </View>
             </View>
           </View>
           <View style={{ marginHorizontal: 16, marginTop: 6, height: 40, borderRadius: 20, backgroundColor: "#FFFFFF12", flexDirection: "row", padding: 3 }}>
             {(["week", "prayer"] as const).map(k => <Pressable key={k} accessibilityRole="tab" accessibilityState={{ selected: tab === k }} onPress={() => { setTab(k); haptics.tick(); }}
               style={{ flex: 1, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: tab === k ? t.mid : "transparent" }}>
-              <Text style={{ fontSize: 14, fontWeight: "800", color: tab === k ? t.t1 : "#A8A09C" }}>{k === "week" ? "This week" : `Prayer${prayers.length ? ` · ${prayers.length}` : ""}`}</Text>
+              <Text style={{ fontSize: 14, fontWeight: "800", color: tab === k ? t.t1 : "#A8A09C" }}>{k === "week" ? s.thisWeek : prayers.length ? fill(s.prayerTabN, { n: prayers.length }) : s.prayerTab}</Text>
             </Pressable>)}
           </View>
           {tab === "week" ? <>
-            <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={`Read ${book?.name} ${group.chapter}`} onPress={() => { haptics.soft(); onRead(); }}
+            <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={fill(s.readA11y, { book: book?.name ?? "", chapter: group.chapter })} onPress={() => { haptics.soft(); onRead(); }}
               style={{ marginHorizontal: 16, marginTop: 14, borderRadius: 24, padding: 16, flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: t.mid, boxShadow: "inset 0 1px 0 #FFFFFF1F" }}>
-              <View style={{ flex: 1 }}><Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: .9, color: t.t3 }}>THIS WEEK</Text><Text style={{ marginTop: 3, fontSize: 18, lineHeight: 22, fontWeight: "800", color: t.t1 }}>{book?.name} {group.chapter}</Text></View>
+              <View style={{ flex: 1 }}><Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: .9, color: t.t3 }}>{s.thisWeekCaps}</Text><Text style={{ marginTop: 3, fontSize: 18, lineHeight: 22, fontWeight: "800", color: t.t1 }}>{book?.name} {group.chapter}</Text></View>
               <View style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: "#FFF8F2", alignItems: "center", justifyContent: "center" }}><SFSymbol name="arrow.right" size={18} color={t.deep}/></View>
             </Pressable>
             <View style={{ marginHorizontal: 22, marginTop: 22 }}>
-              <Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: .9, color: INK_FAINT }}>THIS WEEK’S QUESTION</Text>
+              <Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: .9, color: INK_FAINT }}>{s.question}</Text>
               <Text style={{ marginTop: 6, fontSize: 21, lineHeight: 27, fontWeight: "800", letterSpacing: -.3, color: "#F4EFEC" }}>{group.question}</Text>
             </View>
             {group.replies.map((r, i) => { const p = r.author === "You" ? me : personFor(r.author), pt = tone(p.color); return <View key={i} style={{ marginHorizontal: 16, marginTop: 10, borderRadius: 20, padding: 14, flexDirection: "row", gap: 12, backgroundColor: mix(p.color, "#000000", .55) }}>
-              <Face person={p} size={34} ring={pt.t3}/><View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "800", color: pt.t1 }}>{r.author}</Text><Text style={{ marginTop: 2, fontSize: 15, lineHeight: 21, fontWeight: "700", color: pt.t2 }}>{r.text}</Text></View>
+              <Face person={p} size={34} ring={pt.t3}/><View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "800", color: pt.t1 }}>{r.author === "You" ? c.you : r.author}</Text><Text style={{ marginTop: 2, fontSize: 15, lineHeight: 21, fontWeight: "700", color: pt.t2 }}>{r.text}</Text></View>
             </View>; })}
           </> : <>
             <Pressable feedback="action" accessibilityRole="button" onPress={() => { haptics.soft(); setAsking(true); }}
               style={{ marginHorizontal: 16, marginTop: 14, height: 58, borderRadius: 20, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: t.mid, boxShadow: "inset 0 1px 0 #FFFFFF1F" }}>
               <View style={{ width: 34, height: 34, borderRadius: 11, backgroundColor: mix(t.c, "#FFFFFF", .6), alignItems: "center", justifyContent: "center" }}><SFSymbol name="heart.fill" size={15} color={t.deep}/></View>
-              <Text style={{ fontSize: 16, fontWeight: "800", color: t.t1 }}>Ask the group to pray</Text>
+              <Text style={{ fontSize: 16, fontWeight: "800", color: t.t1 }}>{s.ask}</Text>
             </Pressable>
-            {prayers.map(n => { const p = n.mine ? me : personFor(n.author), pt = tone(p.color), done = prayedIn(group, n.id); return <Pressable key={n.id} accessibilityRole="button" accessibilityLabel={`Prayer from ${p.name}. ${n.text}`} onPress={() => setOpen(n.id)}
+            {prayers.map(n => { const p = n.mine ? me : personFor(n.author), pt = tone(p.color), done = prayedIn(group, n.id); return <Pressable key={n.id} accessibilityRole="button" accessibilityLabel={`${fill(c.prayerFrom, { name: p.name })} ${n.text}`} onPress={() => setOpen(n.id)}
               style={{ marginHorizontal: 16, marginTop: 10, borderRadius: 24, padding: 16, backgroundColor: mix(p.color, "#000000", .5), boxShadow: "inset 0 1px 0 #FFFFFF1A" }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}><Face person={p} size={34} ring={pt.t3}/><Text style={{ fontSize: 14, fontWeight: "800", color: pt.t1, flex: 1 }}>{n.mine ? "You" : p.name}</Text><Text style={{ fontSize: 12, fontWeight: "700", color: pt.t3 }}>{n.age}</Text></View>
-              {n.tag === "Answered" && <View style={{ alignSelf: "flex-start", marginTop: 10, height: 24, paddingHorizontal: 10, borderRadius: 12, backgroundColor: "#FFFFFF26", justifyContent: "center" }}><Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: .6, color: "#FFFFFF" }}>ANSWERED</Text></View>}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}><Face person={p} size={34} ring={pt.t3}/><Text style={{ fontSize: 14, fontWeight: "800", color: pt.t1, flex: 1 }}>{n.mine ? c.you : p.name}</Text><Text style={{ fontSize: 12, fontWeight: "700", color: pt.t3 }}>{n.age === "Now" ? c.now : n.age}</Text></View>
+              {n.tag === "Answered" && <View style={{ alignSelf: "flex-start", marginTop: 10, height: 24, paddingHorizontal: 10, borderRadius: 12, backgroundColor: "#FFFFFF26", justifyContent: "center" }}><Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: .6, color: "#FFFFFF" }}>{c.tags.Answered.toUpperCase()}</Text></View>}
               <Text style={{ marginTop: 10, fontSize: 18, lineHeight: 25, fontWeight: "800", color: pt.t1 }}>{n.text}</Text>
               {!!n.update && <Text style={{ marginTop: 6, fontSize: 15, lineHeight: 21, fontWeight: "700", color: pt.t2 }}>{n.update}</Text>}
               {!n.mine && <View style={{ marginTop: 12, flexDirection: "row", alignItems: "center", justifyContent: "flex-end" }}>
                 <Pressable feedback="action" accessibilityRole="button" accessibilityState={{ selected: done }} onPress={() => markPrayed(n.id)} hitSlop={6}
-                  style={{ height: 34, paddingHorizontal: 14, borderRadius: 17, justifyContent: "center", backgroundColor: done ? "#FFFFFF26" : "#FFF8F2" }}><Text style={{ fontSize: 13, fontWeight: "800", color: done ? "#FFFFFF" : mix(p.color, "#000000", .5) }}>{done ? "Prayed" : "Pray"}</Text></Pressable>
+                  style={{ height: 34, paddingHorizontal: 14, borderRadius: 17, justifyContent: "center", backgroundColor: done ? "#FFFFFF26" : "#FFF8F2" }}><Text style={{ fontSize: 13, fontWeight: "800", color: done ? "#FFFFFF" : mix(p.color, "#000000", .5) }}>{done ? c.prayed : c.pray}</Text></Pressable>
               </View>}
             </Pressable>; })}
-            {!prayers.length && <Text style={{ marginHorizontal: 22, marginTop: 18, fontSize: 15, lineHeight: 21, fontWeight: "600", color: INK_FAINT }}>Nothing yet. When someone asks, it shows up here for the whole group.</Text>}
+            {!prayers.length && <Text style={{ marginHorizontal: 22, marginTop: 18, fontSize: 15, lineHeight: 21, fontWeight: "600", color: INK_FAINT }}>{s.noPrayers}</Text>}
           </>}
           <Pressable accessibilityRole="button" onPress={() => { haptics.soft(); onChange({ ...group, joined: !group.joined }); }} style={{ alignSelf: "center", marginTop: 26, minHeight: 44, justifyContent: "center", paddingHorizontal: 16 }}>
-            <Text style={{ fontSize: 15, fontWeight: "800", color: group.joined ? INK_FAINT : t.t2 }}>{group.joined ? "Leave group" : "Join this group"}</Text>
+            <Text style={{ fontSize: 15, fontWeight: "800", color: group.joined ? INK_FAINT : t.t2 }}>{group.joined ? s.leave : s.join}</Text>
           </Pressable>
-          <Text style={{ marginHorizontal: 22, marginTop: 4, fontSize: 12, lineHeight: 17, fontWeight: "600", color: "#6E6764", textAlign: "center" }}>Local preview. Invitations and live discussion aren’t available yet.</Text>
+          <Text style={{ marginHorizontal: 22, marginTop: 4, fontSize: 12, lineHeight: 17, fontWeight: "600", color: "#6E6764", textAlign: "center" }}>{s.previewNote}</Text>
         </ScrollView>
         {tab === "week" && group.joined && <View style={{ position: "absolute", left: 16, right: 16, bottom: insets.bottom + 8, minHeight: 52, borderRadius: 26, paddingLeft: 18, paddingRight: 6, flexDirection: "row", alignItems: "flex-end", backgroundColor: "#24201F", boxShadow: "inset 0 1px 0 #FFFFFF14, 0 10px 24px -10px #000" }}>
-          <TextInput accessibilityLabel="Your answer" value={answer} onChangeText={setAnswer} multiline maxLength={500} placeholder="Add your answer" placeholderTextColor="#A8A09C" style={{ flex: 1, minHeight: 52, paddingVertical: 15, fontSize: 15, lineHeight: 21, color: "#F4EFEC" }}/>
-          <Pressable feedback="action" accessibilityRole="button" accessibilityLabel="Share answer" disabled={!answer.trim()} onPress={save} style={{ width: 40, height: 40, marginBottom: 6, borderRadius: 20, backgroundColor: "#FFF8F2", alignItems: "center", justifyContent: "center", opacity: answer.trim() ? 1 : .4 }}><SFSymbol name="paperplane.fill" size={15} color="#2A1206"/></Pressable>
+          <TextInput accessibilityLabel={s.answerA11y} value={answer} onChangeText={setAnswer} multiline maxLength={500} placeholder={s.answer} placeholderTextColor="#A8A09C" style={{ flex: 1, minHeight: 52, paddingVertical: 15, fontSize: 15, lineHeight: 21, color: "#F4EFEC" }}/>
+          <Pressable feedback="action" accessibilityRole="button" accessibilityLabel={s.share} disabled={!answer.trim()} onPress={save} style={{ width: 40, height: 40, marginBottom: 6, borderRadius: 20, backgroundColor: "#FFF8F2", alignItems: "center", justifyContent: "center", opacity: answer.trim() ? 1 : .4 }}><SFSymbol name="paperplane.fill" size={15} color="#2A1206"/></Pressable>
         </View>}
         <View style={{ position: "absolute", left: 16, right: 16, top: insets.top + 4, flexDirection: "row", justifyContent: "space-between" }} pointerEvents="box-none">
-          <RoundButton icon="chevron.left" label="Back" onPress={onClose}/>
+          <RoundButton icon="chevron.left" label={s.back} onPress={onClose}/>
         </View>
       </KeyboardAvoidingView>
     </View>

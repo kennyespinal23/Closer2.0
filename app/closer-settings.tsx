@@ -9,44 +9,47 @@ import { K, nunito } from "@/components/closer/kit";
 import { closerPage, useCloserPage } from "@/state/closerPage";
 import { isInternalBuild } from "@/lib/isInternalBuild";
 import { useDevAppReset } from "@/lib/useDevAppReset";
+import { chooseLocale, LOCALES, useLocale, useStrings } from "@/lib/i18n";
 
 /** Settings, behind the gear on You (CLOSER-PICKS.md, "You tab": settings is a gear, never a section). */
 export default function CloserSettingsScreen() {
   const router = useRouter(), insets = useSafeAreaInsets();
   const { settings } = useCloserPage();
   const { resetApp, restartApp } = useDevAppReset();
-  const clear = () => Alert.alert("Delete what’s stored on this device?", "Your finished lessons, saved verses and kept reflections will be removed from this phone. This can’t be undone.", [
-    { text: "Cancel", style: "cancel" },
-    { text: "Delete", style: "destructive", onPress: () => closerPage.clear() },
+  const s = useStrings().native.settings;
+  const lang = useLocale();
+  const clear = () => Alert.alert(s.clearTitle, s.clearBody, [
+    { text: s.cancel, style: "cancel" },
+    { text: s.delete, style: "destructive", onPress: () => closerPage.clear() },
   ]);
   return (
     <View style={{ flex: 1, backgroundColor: K.cream }}>
       <StatusBar style="dark" />
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 8, paddingHorizontal: 20, paddingBottom: insets.bottom + 60 }} showsVerticalScrollIndicator={false}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: K.creamDeep, alignItems: "center", justifyContent: "center" }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={s.back} onPress={() => router.back()} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: K.creamDeep, alignItems: "center", justifyContent: "center" }}>
           <SFSymbol name="chevron.left" size={17} weight="bold" color={K.ink} />
         </Pressable>
-        <Text accessibilityRole="header" style={nunito(900, 32, { color: K.ink, letterSpacing: -0.8, lineHeight: 40, marginTop: 14 })}>Settings</Text>
-        <Group title="Reading">
-          <Row label="Bible translation" value="World English Bible" />
-          <Row label="Daily reminder" sub={settings.reminder ? "8:00 AM" : "Off"}>
-            <Toggle on={settings.reminder} label="Daily reminder" onChange={v => closerPage.settings({ reminder: v })} />
+        <Text accessibilityRole="header" style={nunito(900, 32, { color: K.ink, letterSpacing: -0.8, lineHeight: 40, marginTop: 14 })}>{s.title}</Text>
+        <Group title={s.reading}>
+          <Row label={s.translation} value={s.translationName} />
+          <Row label={s.reminder} sub={settings.reminder ? s.reminderTime : s.off}>
+            <Toggle on={settings.reminder} label={s.reminder} onChange={v => closerPage.settings({ reminder: v })} />
           </Row>
         </Group>
-        <Group title="Comfort">
-          <Row label="Larger Scripture text" sub="Verses and Page’s words get bigger">
-            <Toggle on={settings.largeText} label="Larger Scripture text" onChange={v => closerPage.settings({ largeText: v })} />
+        <Group title={s.comfort}>
+          <Row label={s.largeText} sub={s.largeTextSub}>
+            <Toggle on={settings.largeText} label={s.largeText} onChange={v => closerPage.settings({ largeText: v })} />
           </Row>
-          <Row label="Reduce motion" sub="Page still moves, just less">
-            <Toggle on={settings.reduceMotion} label="Reduce motion" onChange={v => closerPage.settings({ reduceMotion: v })} />
+          <Row label={s.reduceMotion} sub={s.reduceMotionSub}>
+            <Toggle on={settings.reduceMotion} label={s.reduceMotion} onChange={v => closerPage.settings({ reduceMotion: v })} />
           </Row>
-          <Row label="Sounds" sub="Quiet when your phone is on silent">
-            <Toggle on={settings.sound} label="Sounds" onChange={v => closerPage.settings({ sound: v })} />
+          <Row label={s.sounds} sub={s.soundsSub}>
+            <Toggle on={settings.sound} label={s.sounds} onChange={v => closerPage.settings({ sound: v })} />
           </Row>
         </Group>
-        <Group title="More">
-          <Row label="All settings" onPress={() => router.push("/settings" as never)} chevron />
+        <Group title={s.more}>
+          <Row label={s.all} onPress={() => router.push("/settings" as never)} chevron />
         </Group>
         {isInternalBuild() && (
           <Group title="Developer · testing only">
@@ -57,8 +60,14 @@ export default function CloserSettingsScreen() {
             <Row label="Reset app" sub="Wipe everything on this device and start fresh" onPress={() => Alert.alert("Reset the app?", "Everything stored on this device is wiped and the app starts fresh. This can’t be undone.", [{ text: "Cancel", style: "cancel" }, { text: "Reset", style: "destructive", onPress: () => void resetApp() }])} danger />
           </Group>
         )}
-        <Group title="Privacy">
-          <Row label="Delete what’s stored on this device" sub="Finished lessons, saved verses, reflections" onPress={clear} danger />
+        {isInternalBuild() && (
+          // testing only until the Spanish lists are written; Test text shows every translatable word accented and longer
+          <Group title="Language · testing only">
+            {LOCALES.map(l => <Row key={l.id} label={l.name} sub={l.test ? "Plain English left on screen isn’t in a list yet" : undefined} value={lang === l.id ? "✓" : undefined} onPress={() => chooseLocale(l.id)} />)}
+          </Group>
+        )}
+        <Group title={s.privacy}>
+          <Row label={s.clearRow} sub={s.clearSub} onPress={clear} danger />
         </Group>
       </ScrollView>
     </View>

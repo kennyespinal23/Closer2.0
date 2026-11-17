@@ -99,10 +99,11 @@ export function ProfileStory({ name, joinedAt, avatar, onAvatar, onSettings, sav
     </View>
 
     {!isPro && <View style={{ alignSelf: "center", marginTop: 16, paddingHorizontal: 10, paddingVertical: 3, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: .8, color: t2 }}>FREE MEMBER</Text></View>}
-    <Pressable accessibilityRole="button" accessibilityLabel={isPro ? "Manage Pro membership" : "Explore Closer Pro"} onPress={() => isPro ? void Linking.openURL("https://apps.apple.com/account/subscriptions") : go("/onboarding/paywall")} style={{ marginHorizontal: GUTTER, marginTop: 10, padding: 18, borderRadius: radius.card, backgroundColor: colors.surface, flexDirection: "row", alignItems: "center", gap: 12 }}>
+    {/* The old paywall is gone; members can still manage their plan here. */}
+    {isPro && <Pressable accessibilityRole="button" accessibilityLabel={isPro ? "Manage Pro membership" : "Explore Closer Pro"} onPress={() => void Linking.openURL("https://apps.apple.com/account/subscriptions")} style={{ marginHorizontal: GUTTER, marginTop: 10, padding: 18, borderRadius: radius.card, backgroundColor: colors.surface, flexDirection: "row", alignItems: "center", gap: 12 }}>
       <View style={{ flex: 1 }}><Text style={{ fontSize: 17, fontWeight: "800", color: t1 }}>{isPro ? "Your Pro membership" : "Explore Closer Pro"}</Text><Text style={{ fontSize: 13, color: t2, marginTop: 4 }}>{isPro ? "Manage your plan" : "See what membership includes"}</Text></View>
       <SFSymbol name="chevron.right" size={13} color={t3}/>
-    </Pressable>
+    </Pressable>}
 
     {/* Bible Moments */}
     <Header label="Bible moments" count={ids.length} onSeeAll={() => go("/rhythm?section=moments" as Href)}/>
@@ -135,7 +136,6 @@ export function ProfileStory({ name, joinedAt, avatar, onAvatar, onSettings, sav
       <Row first icon="moon.fill" label="Night prayers" value={String(nights)} onPress={() => go("/prayers" as Href)}/>
       <Row icon="note.text" label="Notes" value={String(counts.notes)} onPress={() => go("/notes")}/>
       <Row icon="heart.fill" label="Check-ins" value={String(checkIns.length)} onPress={() => go("/check-in")}/>
-      {saved.length > 0 && <Row icon="bookmark.fill" label="Saved devotionals" value={String(saved.length)} onPress={() => go(`/saved-sermon/${saved[0]!.day}` as Href)}/>}
       <Row icon="gearshape.fill" label="Settings & preferences" onPress={onSettings}/>
     </View>
     <Text style={{ ...uiText.supporting, fontSize: 13, textAlign: "center", color: t3, marginVertical: 28 }}>Small beginnings. A meaningful journey.</Text>

@@ -1,4 +1,16 @@
 import type { Lesson } from "../lesson/types";
+import { locale } from "../i18n";
+import { ES_LESSONS } from "./es";
+import { poemToday } from "./poem-today";
+import { poemFar } from "./poem-far";
+import { poemLoved } from "./poem-loved";
+import { heartReminder } from "./heart-reminder";
+import { heartLately } from "./heart-lately";
+import { heartAfraid } from "./heart-afraid";
+import { heartClose } from "./heart-close";
+import { historySplit } from "./history-split";
+import { historyFirst } from "./history-first";
+import { historyBible } from "./history-bible";
 import { apple } from "./apple";
 import { godHelps } from "./god-helps";
 import { jonah } from "./jonah";
@@ -75,8 +87,23 @@ import { johnOverview } from "./book-john";
 import { romansOverview } from "./book-romans";
 import { jamesOverview } from "./book-james";
 import { revelationOverview } from "./book-revelation";
+import { itIsWritten } from "./it-is-written";
+import { theologyPraying } from "./theology-praying";
+import { scienceBigBang } from "./science-big-bang";
+import { theologyCross } from "./theology-cross";
+import { theologyFreewill } from "./theology-freewill";
+import { theologySpirit } from "./theology-spirit";
+import { scienceEarthAge } from "./science-earth-age";
+import { scienceEvolution } from "./science-evolution";
+import { scienceFineTuning } from "./science-fine-tuning";
 
-/* Every playable lesson, by id. Adding a story: write its file, add it here, point a library entry at it. */
-export const LESSONS: Record<string, Lesson> = Object.fromEntries(
-  ([lazarus, lostSheep, zacchaeus, jonah, ruth, storm, romans828, moreThanYouCanHandle, godHelps, money, threeWiseMen, apple, whySuffering, unansweredPrayer, godFarAway, godExists, forgiveAnyone, johnNewton, augustine, corrieTenBoom, csLewis, georgeMuller, brotherLawrence, harrietTubman, jesusWashedFeet, jesusZacchaeus, jesusStorm, jesusWept, jesusWell, jesusPeterSank, everydayPromotion, everydayMessage, everydayAhead, everydayApology, everydayNoticed, everydayLie, everydayBoundaries, everydayIgnored, everydayDinner, prayNoWords, ...prayMore, mysteryArk, mysteryNephilim, mysteryHebrews, mysteryTribes, mysteryThorn, mysteryEden, mysteryStar, mysteryHiddenYears, psalm13Case, psalm13Experience, psalm56Experience, psalm4Experience, psalm100Experience, psalm142Experience, psalm126Experience, psalm51Experience, psalm42Experience, psalm8Experience, psalm150Experience, connectLamb, connectBread, connectShepherd, connectDwelling, markOverview, genesisOverview, exodusOverview, ruthOverview, psalmsOverview, proverbsOverview, isaiahOverview, lukeOverview, johnOverview, romansOverview, jamesOverview, revelationOverview] as Lesson[]).map(l => [l.id, l]),
+/* Every playable lesson, by id. Adding a story: write its file, add it here, point a library entry at it.
+   In Spanish, a lesson found in content/es/ is played instead of the English one; any lesson not translated yet
+   stays in English. */
+const ENGLISH: Record<string, Lesson> = Object.fromEntries(
+  ([itIsWritten, lazarus, lostSheep, zacchaeus, jonah, ruth, storm, romans828, moreThanYouCanHandle, godHelps, money, threeWiseMen, apple, whySuffering, unansweredPrayer, godFarAway, godExists, forgiveAnyone, johnNewton, augustine, corrieTenBoom, csLewis, georgeMuller, brotherLawrence, harrietTubman, jesusWashedFeet, jesusZacchaeus, jesusStorm, jesusWept, jesusWell, jesusPeterSank, everydayPromotion, everydayMessage, everydayAhead, everydayApology, everydayNoticed, everydayLie, everydayBoundaries, everydayIgnored, everydayDinner, prayNoWords, ...prayMore, mysteryArk, mysteryNephilim, mysteryHebrews, mysteryTribes, mysteryThorn, mysteryEden, mysteryStar, mysteryHiddenYears, psalm13Case, psalm13Experience, psalm56Experience, psalm4Experience, psalm100Experience, psalm142Experience, psalm126Experience, psalm51Experience, psalm42Experience, psalm8Experience, psalm150Experience, connectLamb, connectBread, connectShepherd, connectDwelling, markOverview, genesisOverview, exodusOverview, ruthOverview, psalmsOverview, proverbsOverview, isaiahOverview, lukeOverview, johnOverview, romansOverview, jamesOverview, revelationOverview, theologyPraying, scienceBigBang, theologyCross, theologyFreewill, theologySpirit, scienceEarthAge, scienceEvolution, scienceFineTuning, historyBible, historyFirst, historySplit, heartClose, heartAfraid, heartLately, heartReminder, poemLoved, poemFar, poemToday] as Lesson[]).map(l => [l.id, l]),
 );
+
+export const LESSONS: Record<string, Lesson> = new Proxy(ENGLISH, {
+  get: (en, id) => (typeof id === "string" && locale() === "es" && ES_LESSONS[id]) || en[id as string],
+});

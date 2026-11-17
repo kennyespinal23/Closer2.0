@@ -9,7 +9,8 @@ export type ConnectionScript = {
   id: string; title: string; subtitle: string; scripture: string; minutes: number;
   intro: { lines: Line[]; display: { text: string; sub?: string }; reply: string };
   pull: Pull;
-  end: { title: string; summary: string[]; verse: Verse; refs: string[] };
+  /** body and button fall back to the English lines below; a translated lesson gives its own */
+  end: { title: string; summary: string[]; verse: Verse; refs: string[]; body?: string; button?: string };
 };
 
 export function ConnectionsExperience(s: ConnectionScript): Lesson {
@@ -20,7 +21,7 @@ export function ConnectionsExperience(s: ConnectionScript): Lesson {
       { kind: "pull", page: { at: "left", mood: "curious" }, ...s.pull },
       {
         kind: "complete", page: { at: "top", mood: "happy", act: "hop" }, calm: true, title: s.end.title,
-        body: "The Lord is always closer than you think.", summary: s.end.summary, verse: s.end.verse, refs: s.end.refs, button: "Finish",
+        body: s.end.body ?? "The Lord is always closer than you think.", summary: s.end.summary, verse: s.end.verse, refs: s.end.refs, button: s.end.button ?? "Finish",
       },
     ],
   };

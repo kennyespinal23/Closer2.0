@@ -7,6 +7,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { LESSONS_HTML } from "@/lib/interactive/lessonsHtml";
 import { closerPage, useCloserPage } from "@/state/closerPage";
+import { locale } from "@/lib/i18n";
 
 /**
  * A Closer lesson, full screen. Every lesson (stories, studies, cases, books, threads, psalms…) is the Page prototype
@@ -20,7 +21,7 @@ export default function LessonScreen() {
   const { verses, settings, finished } = useCloserPage();
   // set once, before the page loads; later changes come back to us as messages
   const boot = useMemo(
-    () => `window.__CLOSER_APP__=${JSON.stringify({ lesson: id, saved: verses.map(v => v.ref), finished, largeText: settings.largeText, reduceMotion: settings.reduceMotion })};true;`,
+    () => `window.__CLOSER_APP__=${JSON.stringify({ lesson: id, saved: verses.map(v => v.ref), finished, largeText: settings.largeText, reduceMotion: settings.reduceMotion, locale: locale() })};true;`,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [id],
   );
@@ -28,7 +29,8 @@ export default function LessonScreen() {
     let msg: { type?: string; [k: string]: unknown };
     try { msg = JSON.parse(e.nativeEvent.data); } catch { return; }
     switch (msg.type) {
-      case "close": router.back(); break;
+      // after a new book, "See it in My Discoveries" lands on the shelf in You with that book hopping
+      case "close": if (msg.to === "library") router.dismissTo({ pathname: "/you", params: { focus: String(msg.id ?? "") } }); else router.back(); break;
       case "finished": closerPage.finish(String(msg.id)); break;
       case "verse": closerPage.saveVerse(msg.verse as never, !!msg.saved); break;
       case "note": closerPage.keepNote(msg.note as never); break;

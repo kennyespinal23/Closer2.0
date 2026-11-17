@@ -76,12 +76,13 @@ export function YouSheet({ visible, onClose }: { visible: boolean; onClose: () =
       </View>
 
       {/* Closer Plus */}
-      <Pressable onPress={() => isPro ? void Linking.openURL("https://apps.apple.com/account/subscriptions") : go("/onboarding/paywall")} accessibilityRole="button" style={s.plus}>
+      {/* The old paywall is gone; members can still manage their plan here. */}
+      {isPro && <Pressable onPress={() => void Linking.openURL("https://apps.apple.com/account/subscriptions")} accessibilityRole="button" style={s.plus}>
         <ReaderMaterialGradient colors={["#FFD455", "#FFC12E"]} style={StyleSheet.absoluteFill}/>
         <View style={s.plusIcon}><SFSymbol name="star" size={17} color="#6A2B10"/></View>
         <View style={{ flex: 1 }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#6A2B10" }}>Closer Plus</Text><Text style={{ fontSize: 13, fontWeight: "600", color: "#8E4A22" }}>{isPro ? "You’re a member. Thank you." : "Keep walking after week one"}</Text></View>
         <View style={s.manage}><Text style={{ fontSize: 13, fontWeight: "800", color: "#FFF4CC" }}>{isPro ? "Manage" : "See plans"}</Text></View>
-      </Pressable>
+      </Pressable>}
 
       {/* quick settings */}
       <Text style={[s.qh, { color: t.muted }]}>Quick settings</Text>
